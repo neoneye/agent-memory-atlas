@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 366 reports.**
+**This page covers all 369 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3263,3 +3263,27 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 620 commits in nine weeks by one author, 30,541 lines of TypeScript, a desktop app and harness plugin at 0.4.6, a CLI with 54 tests and no unit suite for the store, and a nine-endpoint context-repair pilot with 1,215 captured conditions. Three of seven capability marks. A feature-status page separates current, experimental and not promised.
 - Study when: you want a person-legible answer to *what was this model told* — a reviewable retrieval, a request hash, a stale mark — or a worked example of testing a context-editing claim with immutable traces.
 - Do not copy when: you need memory that forms on its own at scale, a refusal that outlives a delete, a validity axis, or scoping across canvases; the design declined each on purpose and says so.
+
+### [`openmasq`](../systems/openmasq/)
+- Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.
+- Biggest risk: **nothing a card knows about itself keeps it out of a prompt.** `reviewedAt` and `source: "auto"` feed an inbox and no read path; every card in scope is injected whatever its state, deletion leaves no record against re-extraction, and the card's only time is its last update.
+- Most reusable component: `compaction.ts` — attribute replacement with a bounded, restorable history, a restatement rule that tolerates inflection and never folds a changed number or month, and whole-sentence eviction at saturation, all pure and tested case by case.
+- Maturity impression: Apache-2.0, 197 commits in eleven days by one author on a `dev` default branch, a desktop app at 0.9.0 with a signed macOS build, 5,274 lines of memory code with 239 test cases and a scenario suite that runs the product's own pipeline over a growing memory; two of seven capability marks.
+- Study when: you already redact and need cross-conversation memory that cannot add an egress path, or you want a worked example of selecting memory on real values and forcing the selected names into the redactor.
+- Do not copy when: you need scope, supersession on the record, a state that withholds an unreviewed fact, or a store larger than an exact kNN over every vector; the design declines each and says so.
+
+### [`no-human`](../systems/no-human/)
+- Best idea: **one install site, proven by parsing, with a guard that can fail.** `_load_active_memories` is the only place a task becomes an active rule set; a test parses the orchestrator's source for any other assignment, and a sibling test shows the parser catches the mutant forms that defeated the earlier call-counting guard.
+- Biggest risk: **auto-activation on by default with a daily cap as the only ceiling, over a store nobody has read.** Ten screened proposals a day is 300 a month; the vendor-term screen ships with eight names outside the operator's private supplement; and a second SQL route into the prompt has had each lifecycle flag added by hand after a test found it open.
+- Most reusable component: the reject verb chosen by the producer's shape — archive and keep the dedupe key for any producer that re-reads its whole input, delete for one that fires only on new evidence — with the criterion written beside the list so the next origin gets the right verb.
+- Maturity impression: MIT, 1,456 commits in eleven weeks almost all by one author, 130,065 lines of Python, 9,137 tests of which 293 in seventeen files cover the learning store, measured flood numbers written into the code, an operator directive that reversed the founding contract and is recorded as such; six of seven capability marks.
+- Study when: you want every rule a coding agent is shown to carry an origin, a scope, a use ledger and a reversible exit, or a reviewer that can never consume a rule distilled from its own verdicts.
+- Do not copy when: you need semantic recall, a memory the agent may write, more than one trust level per store, or a measurement that an injected rule changed an outcome; the ledger says on its face that it cannot give you the last.
+
+### [`engram-format`](../systems/engram-format/)
+- Best idea: **typed write outcomes and a curated bypass.** A capture returns `Duplicate`, `Similar` or `NoiseSkipped` with the matched id instead of silently writing a second copy, and a grounding or an edit goes through `write_curated` past the dedupe gate so metadata mutations cannot be swallowed by a sibling row.
+- Biggest risk: **a quarantine the default read path ignores.** `imagined = 1 AND grounded = 0` is excluded unconditionally from related, near-duplicate and link paths and only on request from search and list; everything reachable through the `MemoryBackend` trait applies no filter, and the product that decides is closed.
+- Most reusable component: `FORMAT.md` with `src/store.rs:118-135` — every KDF parameter, salt version, cipher construction and HMAC input written out so a vault owner can recompute their key and check the claim.
+- Maturity impression: Apache-2.0, three commits by one author between 30 August and 5 September 2026, 7,374 lines of Rust with 71 unit tests, one crates.io release at 0.1.5 while the README says 0.1.4 and the specification header says schema 6 against a code constant of 7; no CI, no fixture vault, no benchmark; one of seven capability marks.
+- Study when: you want an encrypted local vault with lexical and vector retrieval and a documented wire format, or a capture pipeline whose gates have names and outcome types.
+- Do not copy when: you need the memory system rather than the vault — assembly, decay scheduling, grounding evidence, review and audit are the adopter's to build, and the crate's own header describes a third layer it does not ship.

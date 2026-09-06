@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 217 of 366 screened at the report's current pin.**
+**Progress: 220 of 369 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 79 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 85 |
-| Repositories with build-time execution (`EXEC`) | 164 |
+| Repositories with an auto-run surface (`RUNS`) | 81 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 88 |
+| Repositories with build-time execution (`EXEC`) | 166 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -85,6 +85,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |
+| [`no-human`](../../content/systems/no-human.md) | `.claude-plugin/`, `server.json` |
 | [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
@@ -92,6 +93,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openexecutive`](../../content/systems/openexecutive.md) | `.claude/settings.json`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
+| [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |

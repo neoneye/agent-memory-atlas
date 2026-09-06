@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The cross-conversation memory of a
+redacting desktop chat client — one card per entity and a preferences
+profile, extracted by the same model from the pseudonymised transcript
+it already saw and un-redacted locally through the conversation's vault,
+admitted only when the entity appears verbatim in the real text, merged
+by attribute replacement with a three-deep restorable history, selected
+client-side on real values in three tiers plus one hop of cross-links
+under a character budget, re-redacted on every injection, searchable by
+the model through a lexical tier topped up by an on-device embedder, and
+reviewed in an inbox that empties by confirming; no state a card holds
+is ever withheld from a prompt, and the card's freshness is the only
+time it knows.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenMasq — Agent Memory Atlas">
+    <meta property="og:description" content="The cross-conversation
+memory of a redacting desktop chat client — one card per entity and a
+preferences profile, extracted by the same model from the pseudonymised
+transcript it already saw and un-redacted locally through the
+conversation's vault, admitted only when the entity appears verbatim in
+the real text, merged by attribute replacement with a three-deep
+restorable history, selected client-side on real values in three tiers
+plus one hop of cross-links under a character budget, re-redacted on
+every injection, searchable by the model through a lexical tier topped
+up by an on-device embedder, and reviewed in an inbox that empties by
+confirming; no state a card holds is ever withheld from a prompt, and
+the card's freshness is the only time it knows.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenMasq — Agent Memory Atlas">
+    <meta name="twitter:description" content="The cross-conversation
+memory of a redacting desktop chat client — one card per entity and a
+preferences profile, extracted by the same model from the pseudonymised
+transcript it already saw and un-redacted locally through the
+conversation's vault, admitted only when the entity appears verbatim in
+the real text, merged by attribute replacement with a three-deep
+restorable history, selected client-side on real values in three tiers
+plus one hop of cross-links under a character budget, re-redacted on
+every injection, searchable by the model through a lexical tier topped
+up by an on-device embedder, and reviewed in an inbox that empties by
+confirming; no state a card holds is ever withheld from a prompt, and
+the card's freshness is the only time it knows.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenMasq — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenMasq",
+      "description": "The cross-conversation memory of a redacting desktop chat client \u2014 one card per entity and a preferences profile, extracted by the same model from the pseudonymised transcript it already saw and un-redacted locally through the conversation's vault, admitted only when the entity appears verbatim in the real text, merged by attribute replacement with a three-deep restorable history, selected client-side on real values in three tiers plus one hop of cross-links under a character budget, re-redacted on every injection, searchable by the model through a lexical tier topped up by an on-device embedder, and reviewed in an inbox that empties by confirming; no state a card holds is ever withheld from a prompt, and the card's freshness is the only time it knows.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Real at rest, fake on the wire</p>
+          <h1>OpenMasq</h1>
+          <p class="document-deck">The cross-conversation memory of a
+redacting desktop chat client — one card per entity and a preferences
+profile, extracted by the same model from the pseudonymised transcript
+it already saw and un-redacted locally through the conversation's vault,
+admitted only when the entity appears verbatim in the real text, merged
+by attribute replacement with a three-deep restorable history, selected
+client-side on real values in three tiers plus one hop of cross-links
+under a character budget, re-redacted on every injection, searchable by
+the model through a lexical tier topped up by an on-device embedder, and
+reviewed in an inbox that empties by confirming; no state a card holds
+is ever withheld from a prompt, and the card's freshness is the only
+time it knows.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openmasq/openmasq">
+              <span>Source</span>
+              <strong>openmasq/openmasq</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openmasq/openmasq/commit/874608ec6835787a73176723812b29eb41bc1088" title="874608ec6835787a73176723812b29eb41bc1088">
+              <span>Analyzed revision</span>
+              <code>874608ec…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenMasq is a multi-model desktop chat client whose whole premise is
+that the model never sees real data: an on-device NER engine replaces
+names, organisations and numbers with believable fakes before any
+network call and a per-conversation vault restores them in the reply.
+Its memory — the <strong>Mémoire</strong> — is the one feature that has
+to hold real values durably, and the report is about how a redacting
+product does that without opening a second channel out of the machine.
+Apache-2.0; 197 commits between 25 August and 4 September 2026, 175 by
+one author and the rest by dependabot, on a <code>dev</code> default
+branch, in a pnpm monorepo with a desktop app at 0.9.0, a signed macOS
+build and a <code>FEATURES.md</code> that lists every feature with the
+file that implements it. The memory is 5,274 lines of TypeScript across
+<code>packages/ui/src/memory/</code>, <code>state/memory/</code>,
+<code>pages/Memory/</code> and the desktop main process's
+<code>embed/</code> and <code>memory_embeddings</code> modules, with 239
+test cases in 25 files and a scenario suite that drives the product's
+own pipeline over a memory that grows between conversations. The screen
+found a <code>.githooks/</code> directory and nineteen manifests inside
+the seven-day cooldown; nothing was installed or run.</p>
+<p>Three decisions define it, and each is stated in a comment with the
+measurement that forced it. Extraction reads the <strong>wire</strong> —
+the redacted replay the model has already received — and answers in
+fakes, which are un-redacted locally through the conversation's vault;
+not one new byte of real data leaves, and the vault doubles as the
+hallucination filter, because an entity the model invented resolves to
+nothing in the real text and is dropped
+(<code>memory/extract.ts:22-33</code>). Selection happens
+<strong>client-side on real values</strong>, because the model only
+holds fakes that are not even stable across conversations since a
+per-conversation salt was introduced, so it <em>cannot</em> judge which
+card is relevant (<code>memory/select.ts:20-38</code>); the selected
+entities are then forced into the vault before the user's message is
+redacted, so the same name maps to the same fake in the block and in the
+text even under the regex engine. And a card <strong>updates rather than
+stacks</strong>: a fact carrying a deadline, a budget or a contact
+replaces the sentence with the old one, a restatement keeps the richer
+wording, and what was removed goes into a three-deep history a person
+can restore, because <em>"a consolidation that overwrites its evidence
+in silence is the measured failure mode of agent memories"</em>
+(<code>memory/memoryTypes.ts:21-30</code>).</p>
+<p>It is strongest as a study in where the leaks are. The forced list is
+filtered for words of the common lexicon after a note titled « dossiers
+» redacted that word across a whole conversation, and for notorious
+brands after a forced « google » alias turned <em>Google Drive</em> into
+<em>Ostrel Drive</em> in the model's own tool errors; the pseudonym
+guard exists because a vault that had not hydrated stored the model's
+fake for <em>gouvernement français</em> as a card, with the real value
+as its alias. It is weakest as an epistemic system: a card has one
+provenance flag and one timestamp, the review inbox is advisory and
+nothing waits for it, and every card in scope reaches the prompt
+whatever its state. The product knows this — <em>"the product's most
+delicate feature where confidentiality is concerned"</em> — and the
+design spends its care on egress rather than on belief.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>card about one entity</strong>, and the
+entity's real name is the key. The extractor is told to copy names
+<em>exactly as written</em> so the anchor check can find them;
+<code>normalizeMem</code> lowercases, strips accents and separators,
+keeps dots only inside emails and preserves CJK scripts, so casing and
+spacing variants of one name hit one card. A card is born one of two
+ways: the user writes it — from the Mémoire page, a text selection's «
+Retenir », or the slash command — and carries no <code>source</code>; or
+the extraction writes it and stamps <code>source: "auto"</code>. The
+profile is a separate, always-injected paragraph for what the user says
+about themselves; a preference with no entity is routed there rather
+than to a card, and the cleanup pass migrates the note cards an older
+extractor minted for such preferences.</p>
+<p>The state a card can hold is thin on purpose. It is
+<strong>fresh</strong> while a machine write is newer than
+<code>reviewedAt</code> and within seven days — the inbox — and
+<strong>treated</strong> once a person confirms or edits it from the
+panel; nothing reads that distinction except the inbox and the graph's
+badge, so an unreviewed card injects exactly like a reviewed one. It has
+a <strong>history</strong>: each merge that replaces an attribute
+sentence or evicts one at saturation pushes the loser onto
+<code>factsLog</code>, bounded at three, and <code>restoreFact</code>
+swaps an entry back with the displaced sentence taking its place, so a
+restore is itself restorable. It can be <strong>merged</strong>: two
+same-category cards sharing a key or a token subset, or two whose e5
+vectors sit above 0.95 and whose name tokens are not disjoint, are
+proposed as a pair the person confirms, and the surviving card keeps the
+other's surfaces as aliases so recall by the old name still works. It
+<strong>dies</strong> only by deletion, with a six-second undo that
+reinserts it verbatim; there is no archive, no expiry and no record that
+a deleted fact was refused.</p>
+<p>Memory is therefore user-controlled with a machine writer, treated as
+<strong>ground truth</strong> once stored — the injected block is framed
+as <em>"contexte durable, à utiliser sans le réciter tel quel"</em> —
+and dated: every injected line carries the card's last update as
+<code>noté le DD/MM/YYYY</code>, because <em>"temporal reasoning is
+models' measured weak point on long-term memory, and a card with no date
+reads as eternally true"</em>
+(<code>memory/select.ts:147-151</code>).</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the extractor reads the redacted replay the model already saw and its answer is un-redacted through the vault, which then filters hallucinations; a card updates by attribute replacement with a restorable history; selection runs on real values before the message is redacted and the block leaves as fakes; the tool un-redacts the query and re-redacts the result</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the extractor reads the redacted replay the model already saw and its answer is un-redacted through the vault, which then filters hallucinations; a card updates by attribute replacement with a restorable history; selection runs on real values before the message is redacted and the block leaves as fakes; the tool un-redacts the query and re-redacts the result
+flowchart TD
+    W[&quot;wire slice — the redacted replay the model already saw&quot;] --&gt; X[&quot;extractor: same model, temperature 0, strict JSON, entities copied verbatim&quot;]
+    X --&gt; U[&quot;unredact through the conversation vault (fake → real)&quot;]
+    U --&gt; A{&quot;entity anchored verbatim in the real text?&quot;}
+    A -- &quot;no, and present on the wire&quot; --&gt; P[&quot;refused: an unresolved pseudonym&quot;]
+    A -- &quot;no, explicit ask&quot; --&gt; N[&quot;note card, cat autre, dedup on the fact&quot;]
+    A -- &quot;no, silent mode&quot; --&gt; D[&quot;dropped as a hallucination&quot;]
+    A -- yes --&gt; S{&quot;secret shape? sentence entity? generic word?&quot;}
+    S -- yes --&gt; D
+    S -- no --&gt; M[&quot;mergeExtraction: exact key, then org core; attribute replaces, restatement keeps the richer, loser → factsLog&quot;]
+    M --&gt; C[&quot;card — source auto, fresh until reviewedAt&quot;]
+    C --&gt; R[&quot;À revoir: Confirmer / edit / merge suggestion / delete + undo&quot;]
+    C --&gt; I[&quot;selectMemory at send: mention 3, in-vault 2, token 1, one hop of cross-links, budget 4,000 chars&quot;]
+    I --&gt; F[&quot;forced into the vault, then pseudonymised — the block leaves as fakes&quot;]
+    C --&gt; T[&quot;memory_search: lexical hits, then e5 cosine ≥ 0.88 — query un-redacted, result re-redacted&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The renderer owns the memory. <code>packages/ui/src/memory/</code> is
+pure TypeScript with no React: <code>memory.ts</code> (normalisation,
+keys, tokens, the homograph deny-list, the inbox predicate),
+<code>compaction.ts</code> (restatement, attribute replacement,
+saturation, <code>factsLog</code>, restore), <code>dedupe.ts</code>
+(suggestions and the self-healing <code>autoCleanMemory</code>),
+<code>extract.ts</code>, <code>extractParse.ts</code>,
+<code>extractExplicit.ts</code>, <code>extractSweep.ts</code> and
+<code>mergeExtraction.ts</code> (the extraction contract end to end),
+<code>select.ts</code> (injection), <code>search.ts</code> (the tool),
+<code>cluster.ts</code>, <code>graph.ts</code> and <code>force.ts</code>
+(the graph view), <code>profile.ts</code> and <code>usage.ts</code>.
+<code>state/memory/</code> holds the hooks: <code>useMemory.ts</code> is
+the CRUD over <code>settings.memoire</code>,
+<code>useMemoryExtraction.ts</code> the timers and
+<code>memoryExtractionRun.ts</code> one extraction pass,
+<code>useMemoryIndex.ts</code> the bridge to the desktop's embedder.
+<code>pages/Memory/</code> is the screen: a force-directed graph first,
+a list second, a node panel with the history, and
+<code>useMemoryReview.ts</code> for the inbox.</p>
+<p>Persistence is the settings object.
+<code>storePersistence.ts:60-90</code> strips <code>memoire</code>, the
+coffre and the prompt templates from the <code>localStorage</code> copy
+whenever a host database exists, on the stated ground that the memory is
+<em>"REAL cross-conversation PII … the coffre's at-rest regime"</em>;
+the desktop's per-account libSQL database holds it, encrypted at rest
+only in a packaged build where Electron <code>safeStorage</code> can
+protect the key (<code>apps/desktop/src/main/store/dbCrypto.ts</code>),
+plaintext under <code>pnpm dev</code>. The browser preview and mobile
+keep <code>localStorage</code> as their only store. The desktop main
+process also runs <code>embed/</code> — a bundled, sha256-verified,
+QUInt8-quantised export of <code>intfloat/multilingual-e5-small</code>
+on ONNX, loaded offline with no download path — and a
+<code>memory_embeddings</code> table of card id, model tag, text hash
+and vector, kept in step by diffing hashes and pruned when a card is
+deleted so <em>"a deleted card must not leave a vector of its PII
+behind."</em> The <code>@openmasq/sync</code> package carries
+<code>memoire</code> in its end-to-end encrypted user-data record
+alongside the vault; merging the two devices' card lists is left to
+<code>autoCleanMemory</code>'s certain cases.</p>
+<p><code>ci.yml</code> runs on pull requests and pushes through the
+shared <code>verify.yml</code>, which runs the vitest suite and gates
+releases; <code>scan.yml</code> runs static checks. The memory tests run
+in jsdom against a mock model; the live variant,
+<code>memoryLife.eval.ts</code>, is skipped without a key.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>It is a desktop app, so the memory costs nothing to stand up beyond
+the app: no service, no daemon, no separate store. A provider API key is
+needed to extract — the extraction uses the conversation's own model, or
+the free default under the Auto route — but not to store, inject or
+search; the lexical tier and the whole selection cascade run without any
+model, and the semantic tier degrades to nothing when the e5 bundle is
+absent. Fully local and offline is the design for everything except the
+model call itself. The store is human-readable in the sense that the
+page shows it and a plain-text diagnostic export dumps every card with
+its links and the thresholds that produced them; it is not repairable by
+hand outside the app, since it is a JSON field inside an encrypted
+settings row on the desktop.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>useMemoryExtraction.ts</code> arms a
+120-second idle timer after a completed turn on the active conversation,
+flushes on window blur or on switching away, and sweeps up to three
+conversations updated within seven days 45 seconds after startup; an
+explicit ask fires 800 ms after the turn settles.
+<code>runMemoryExtraction</code>
+(<code>state/memory/memoryExtractionRun.ts:76-300</code>) returns early
+unless <code>settings.memoryAuto</code> is on or the ask is explicit,
+unless the conversation's <code>memoryOff</code> is clear, and unless
+the slice past the <code>memoryWatermark</code> passes
+<code>worthExtracting</code> — at least 400 new characters of user text
+with a NER-detected name or company, or an explicit phrasing in one of
+twelve languages. It builds the wire with <code>wireSlice</code> (user
+turns only in silent mode, because extracting from the assistant's
+replies, which embed the injected memory, is <em>"the self-reinforcement
+loop"</em>) or <code>wireTurns</code> (assistant included on an explicit
+ask), calls the model with <code>extractionPrompt</code> at temperature
+0 under a 60-second timeout, retries once on an unreadable reply, and
+hands the pass to <code>sweepExtraction</code> — one call in silent
+mode, up to four on an explicit ask with the already-captured entities
+as an exclusion list (<code>memory/extractSweep.ts</code>).
+<code>resolveExtraction</code> (<code>memory/extract.ts:86-180</code>)
+un-redacts every field, strips a leading article or « chez » when the
+bare form also anchors (never for a person, whose particle is part of
+the name), drops secret shapes, sentence-shaped entities and generic
+words, refuses an alias that is generic, a single-word homograph or
+present only on the wire, and keeps a fact only when its entity anchors
+in the real text — or, on an explicit ask, turns it into a note.
+Self-preferences go to the profile. <code>mergeExtraction</code>
+(<code>memory/mergeExtraction.ts</code>) finds the card by exact key and
+then by organisation core with legal affixes stripped, same category
+only; a known fact is a no-op, a new one goes through
+<code>mergeFactsDetailed</code>, an unknown entity becomes a card with a
+pre-minted id so the caption can deep-link and undo it. The watermark
+advances whether or not anything was learned, except on an unreachable
+model.</p>
+<p><strong>Compaction.</strong> <code>mergeFactsDetailed</code>
+(<code>memory/compaction.ts:135-175</code>): if an existing sentence
+<code>restates</code> the fact — content words after glue and framing
+are removed differ by at most one mundane word each side over a shared
+core of three, with inflections tolerated and any uncovered number or
+month breaking the match — keep the richer one and log nothing; else if
+the fact carries one of the attribute words (<code>deadline</code>,
+<code>budget</code>, <code>email</code>, <code>travaille chez</code>, …)
+and a sentence already does, replace it and log the old; else append;
+then <code>clampSentences</code> evicts whole sentences oldest first
+above 600 characters, protecting the one just written.</p>
+<p><strong>Injection.</strong> <code>sendOrchestrator.ts:835-880</code>
+runs <code>selectMemory</code> before the user-message pass: score 3 for
+a whole-key mention in the typed text, 2 for a key present among the
+conversation's vault originals and NER kinds, 1 for a distinctive token,
+then one hop along <code>crossLinks</code> from score-3 seeds only, at
+most three neighbours, filled by score then <code>updatedAt</code> under
+4,000 characters with an oversized card skipped rather than stopping the
+queue. <code>formatMemoryBlock</code> writes the French block;
+<code>memoryForcedForBlock</code> lists the selected entities and
+aliases, plus any card entity that appears in the profile, as forced
+redactions, minus lexicon words, sentence fragments and brands the
+level's notoriety policy spares; <code>pseudonymize</code> then runs
+over the block with that list. Fail-closed means skip: a redaction error
+drops the block rather than sending it. The message records
+<code>memoryUsed</code> ids and <code>memorySkipped</code> diagnoses —
+budget, or a homograph typed alone — and <code>MemoryCaption.tsx</code>
+renders one line from them.</p>
+<p><strong>Tool.</strong> <code>mcpAgent.ts:1628-1652</code> handles
+<code>memory_search</code>: the query arrives in fakes and is
+un-redacted; <code>searchMemoryHybrid</code>
+(<code>memory/search.ts</code>) scores each card by the number of query
+content words in its entity, aliases and facts, sorts by score then
+recency, takes four, and tops up from
+<code>host.memoryIndex.query</code> above cosine 0.88; the result is
+re-redacted through the same vault before it reaches the model, and an
+empty store is answered with a sentence rather than an error. The tool
+is offered only when the store is non-empty and <code>memoryOff</code>
+is clear (<code>sendOrchestrator.ts:1598-1610</code>).</p>
+<p><strong>Review.</strong> <code>useMemoryReview.ts</code>:
+<code>freshCardIds</code> plus <code>duplicateSuggestions</code> make
+the inbox count; Confirmer patches <code>reviewedAt</code> pinned to the
+same instant as <code>updatedAt</code>; delete keeps the card aside for
+the toast's six seconds. <code>MemoryNodePanel.tsx:155</code> calls
+<code>restoreFact</code>. <code>useMemory.ts:40-46</code> runs
+<code>autoCleanMemory</code> on every change and applies the result if
+anything moved.</p>
+<p><strong>Index.</strong> <code>useMemoryIndex.ts</code> debounces 800
+ms, sends every card's embeddable text to <code>memoryIndexSync</code>,
+which hashes, embeds the stale ones in batches of sixteen with the
+<code>passage:</code> prefix, upserts and prunes, and returns the three
+nearest neighbours per card as cosine edges; <code>cluster.ts</code>
+keeps edges at or above 0.92, or 0.95 between two people, and unions
+them with mention links into groups the graph draws.</p>
+<p><strong>Tests.</strong> <code>memory/*.test.ts</code>,
+<code>state/memory/*.test.ts</code>,
+<code>pages/Memory/*.test.ts*</code>,
+<code>evals/memoryFlow.test.ts</code>,
+<code>evals/memoryLife.test.ts</code> with
+<code>memoryScenarios.ts</code> and <code>memoryScenarios2.ts</code>,
+<code>apps/desktop/src/main/embed/knn.test.ts</code> and
+<code>db/memoryEmbeddings.test.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryCard</code> (<code>memory/memoryTypes.ts</code>):
+<code>id</code>, <code>entity</code>, <code>aliases?</code> (at most
+six), <code>cat</code> in
+<code>personne | organisation | projet | autre</code>,
+<code>facts</code> (at most 600 characters),
+<code>factsLog?: { at, prev }[]</code> (at most three, most recent
+first), <code>source?: "auto"</code>, <code>reviewedAt?</code>,
+<code>createdAt</code>, <code>updatedAt</code>. <code>MemoryData</code>
+is <code>{ profile?: string; cards: MemoryCard[] }</code> with the
+profile at most 1,200 characters. The whole thing is the
+<code>memoire</code> field of <code>Settings</code>
+(<code>types.ts:262</code>), beside <code>memoryAuto</code> and
+<code>memoryProposalSeen</code>; a conversation carries
+<code>memoryWatermark</code> and <code>memoryOff</code>; a message
+carries <code>memoryUsed</code>, <code>memorySkipped</code>,
+<code>memoryNoted</code>, <code>memoryNotedIds</code>,
+<code>memoryUpdatedIds</code>, <code>memoryNotedFailed</code> and
+<code>memoryNotedPending</code>
+(<code>packages/schema/src/message.ts:200-215</code>), ids and codes
+only.</p>
+<p>Scope is the install. Provenance is the <code>source</code> flag and,
+for an explicit ask, the ids pinned on the reply. Time is
+<code>createdAt</code>, <code>updatedAt</code> and the history entries'
+<code>at</code>; there is no validity field, no expiry and no version
+number — the history is the version chain, bounded at three. Episodic
+material has no home here: the conversation store keeps the transcript
+and a separate, conversation-bound context-compaction summary
+(<code>useContextCompaction.ts</code>) that is explicitly <em>not</em>
+memory, since its fakes mean different people elsewhere. Multi-tenancy
+is per account on the desktop and an organisation can close the feature
+for its members remotely (<code>state/billing/featureAccess.ts</code>).
+The desktop's <code>memory_embeddings</code> row is
+<code>card_id, model, text_hash, embedding, updated_at</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two paths over one store, split on purpose because <em>"pulling on
+demand and choosing what to inject are two different questions"</em>
+(<code>memory/search.ts:11-16</code>).</p>
+<p>Injection is a cascade, not a search. Tier 3 is <code>mentions</code>
+— a normalised key of at least three characters, or two CJK glyphs,
+present at word boundaries in the typed text; tier 2 is the same test
+against the conversation's known real values joined on a hard separator;
+tier 1 is <code>mentionsToken</code> — a single distinctive token of the
+entity, excluding digits, dotted fragments, stopwords, generic terms and
+a curated list of name-noun homographs in French and English. Everything
+else is never injected and is left to the tool. From certain mentions
+only, one hop follows <code>crossLinks</code>, which pairs cards whose
+facts or aliases name another card's key, ranked by recency and capped
+at three. The budget is character-based with a fixed per-line overhead
+of 40 characters, direct hits before neighbours, and a skipped direct
+hit is recorded as a diagnosis. The block is French regardless of the
+interface language, because the model reads it and the system prompt is
+French.</p>
+<p>The tool is lexical first: <code>searchMemoryStore</code> counts
+query content words of three or more characters that are not stopwords
+against each card's text and returns the top four lines with a date;
+<code>searchMemoryHybrid</code> fills the remaining slots from the e5
+index above 0.88, a floor deliberately below the 0.92 clustering
+threshold because a query is shorter than a card and <em>"the error
+leans toward recall"</em>. The comments record the e5 baseline (about
+0.85 between unrelated texts) and the calibration corpus, and warn that
+the clustering margin is about ±0.006 and export-specific.</p>
+<p>Failure modes are the ones the code names and tests: a lone first
+name that is also a noun does not recall — on purpose, and the caption
+says so; a 2-glyph CJK name matches across a word boundary in
+unsegmented text, pinned as an accepted false positive; a note's generic
+title can be a card but never a matchable surface; a cross-category
+homonym is two cards and a fact addressed to one must not slide to the
+other. Over-recall is bounded by the budget; under-recall of a
+description that names nothing is the semantic tier's job and exists
+only on the desktop.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are deferred and gated. Silent extraction is <strong>off by
+default</strong> (<code>useMemoryExtraction.ts:12</code>), proposed once
+in the chat, and lives in Settings → Confidentialité as « Extraction
+automatique de la mémoire » rather than on the memory page; an explicit
+ask is its own consent and runs anyway. The prompt
+(<code>memory/extractParse.ts:30-78</code>) asks for durable facts only
+— never the topic of the day — with <code>entite</code> copied exactly,
+an <code>alias</code>, a category and one short sentence, a
+<code>profil</code> only for an explicit self-description whose named
+people and organisations must also appear as facts, at most six facts in
+silent mode and 25 on an explicit ask, no passwords, keys, IBANs or card
+numbers, and two homonyms kept as two facts; an explicit ask adds the
+instruction to find <em>what</em> in the previous turns, the assistant's
+included, and to invent a short title only when no proper noun fits. The
+parser scans for every balanced top-level object, reads them last first
+past <code>&lt;think&gt;</code> blocks, and distinguishes
+<em>unreadable</em> (retry once, then advance the watermark) from
+<em>empty</em>.</p>
+<p>Deduplication happens three times: on the fact (containment against
+the card's normalised facts), on the entity (exact key, then
+organisation core, same category), and for a note, on the fact against
+the profile and every card. Updates are replacements with a history;
+there is no append-only mode. Deletion is a filter on the array.
+Conflict is decided by the attribute list: a new deadline wins over the
+old one, and a date that differs is never folded as a restatement.
+Agent-generated facts do not exist as a class — the extractor reads what
+the user typed, and only on an explicit ask what the assistant said, and
+the anchor makes the model's own knowledge inadmissible. Noise is
+filtered by the char floor and the NER signal before any call, by the
+secret and sentence and generic-word checks after it, and by the
+homograph rules on aliases.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the send. Extraction runs off the critical path on
+timers with one model call per pass — the same model as the
+conversation, so its price is the conversation's — bounded at 60
+seconds, at most four calls on an explicit sweep, and zero calls when
+the gate says the slice is not worth one. The lag before a fact is
+usable is the idle timer plus the call: at least 120 seconds in silent
+mode, under a second of scheduling plus the call on an explicit ask,
+with the caption showing « Mise en mémoire… » meanwhile. No pass
+re-reads the store; <code>autoCleanMemory</code> is a pure fixpoint over
+the card array on every change, and the embedder touches only cards
+whose text hash moved. On the read path the block is bounded at 4,000
+characters, sits inside the system content, and changes whenever the
+typed text mentions a different entity, so a provider's prompt-prefix
+cache is invalidated by design on every send that recalls something
+new.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model has one affordance, <code>memory_search</code>, and no
+write tool; nothing it says becomes a memory unless the user asks for it
+to be remembered, and even then the entity has to appear in the text.
+Injection is automatic and invisible to the model except as a French
+paragraph it is told not to recite. The user has more: the page, the
+selection gesture, the slash command, the per-conversation switch in the
+redaction rules modal that cuts both directions <em>"otherwise it lies:
+the model could retrieve via the tool what the injection no longer
+gives"</em> (<code>sendOrchestrator.ts:1594-1597</code>), a dot on the
+rail icon when something was noted elsewhere, and a caption under each
+message that names what rode the send and explains a surprising
+non-recall. There is no compaction-boundary handling because there is no
+session boundary to handle: memory is cross-conversation by definition
+and the conversation's own compaction is a separate mechanism that never
+writes here. Adapting the memory to another client would mean adopting
+the redaction engine with it; every interesting decision assumes a
+vault.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Egress.</strong> The extractor reads only bytes the model
+already received; the un-redaction is local; the block and the tool
+result are pseudonymised through the conversation's engine, with the
+remembered entities forced so protection never depends on detection; and
+the forced list is filtered for lexicon words, sentence fragments and
+spared brands because each of those had caused a measured failure.
+<code>memoryFlow.test.ts</code> asserts a remembered name never appears
+in the wire even under the pure regex engine.</p>
+<p><strong>Hallucination.</strong> The anchor is the mechanism: an
+entity must be in the real text, an alias must anchor separately, and a
+value present on the wire but absent from the real text is an unresolved
+pseudonym and is refused (<code>memory/extract.ts:101-103</code>,
+<code>pseudonymGuard.test.ts</code>). The explicit path loosens this to
+a titled note and says so.</p>
+<p><strong>Provenance and uncertainty.</strong> One flag,
+<code>source: "auto"</code>, and a date. There is no confidence, no
+verification and no state that withholds a card; the inbox is a to-do
+list, and a card that never gets confirmed is injected all the same. The
+near-miss for a trust state is exactly this: <code>reviewedAt</code>
+exists, the inbox reads it, and nothing on the read path does.</p>
+<p><strong>At rest.</strong> Stored in the clear locally by design,
+since a fake is no longer stable across conversations; encrypted at rest
+through the desktop database only in packaged builds with a keychain,
+and in plaintext <code>localStorage</code> on the browser preview and
+mobile — a trade the persistence code accepts explicitly. The e5 vectors
+carry the card's meaning and live in the same database. The sync carries
+cards inside the encrypted user-data record.</p>
+<p><strong>Loss and races.</strong> Every store change is a settings
+patch through one <code>setSettings</code>; the extraction merges twice,
+once for the caption against a snapshot and once inside the updater, and
+relies on pre-minted ids and pure functions to make the two agree. A
+hung <code>host.complete</code> used to lock a conversation's extraction
+forever; the timeout is the fix and the comment records the bug.</p>
+<p><strong>Deletion.</strong> Immediate, with a six-second undo. No
+tombstone: a deleted fact can be re-extracted on the next pass if the
+conversation still says it, and the explicit sweep's exclusion list
+covers only entities currently in memory. Dismissing a merge suggestion
+is session-only.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>239 cases in 25 files, run in CI. The pure modules are tested case by
+case and most cases carry the bug that produced them in their name: the
+extractor (55 cases — the gate, the parser under thinking-model prose,
+un-redaction, the hallucination drop, the secret drop, alias rules, note
+routing, the explicit ask in every supported language, the watermark
+under each failure mode), selection (23 plus six for links — each tier,
+the short-key rule, the generic token, the homograph, the CJK accepted
+false positive, the budget's skip-not-stop, the forced list's lexicon
+and notoriety filters), dedupe (18 — surface and semantic suggestions,
+the distinct-identity rule, the data-preserving merge, the idempotent
+cleanup that never touches a user-authored card), compaction (16 —
+restatement, attribute replacement, a changed month never folded,
+whole-sentence eviction, symmetric restore), the sweep, the profile,
+usage and the graph frame.</p>
+<p>Two suites run the product's pipeline rather than a module.
+<code>memoryFlow.test.ts</code> drives <code>runWorkflow</code> in jsdom
+with a mock model and asserts the injected block is redacted under the
+regex engine, that a greeting injects only the profile, that an empty
+store offers no tool, and that <code>memory_search</code> matches real
+values against a fake query and returns re-redacted.
+<code>memoryLife.test.ts</code> runs the scenarios in
+<code>memoryScenarios.ts</code> and <code>memoryScenarios2.ts</code> —
+eight and ten phases — where each phase is a real conversation whose
+extraction seeds the next: retention, dedup, an explicit note, direct
+and token recall, silence, the tool, a memory grown by forty unrelated
+cards whose noise must stay out and whose injected lines must fit the
+budget, then homonyms precise and ambiguous, a homograph trap, an
+attribute update that contradicts, a company affix, an ambiguous search
+and a final coherence check. The same scenarios run against a live model
+in <code>memoryLife.eval.ts</code> when a key is present and write a
+dated report; <code>evals-reports/</code> in the tree holds only the
+README describing the two benches, so no live result is committed.</p>
+<p>The thresholds — 0.92, 0.95 and 0.88 — were calibrated on a
+scratchpad corpus the comments describe and the tree does not contain.
+There is no retrieval-quality benchmark beyond the scenarios, no
+measurement of extraction precision on a real corpus, and no test that
+the sync's merge of two devices' card lists converges beyond the
+cleanup's certain cases. The tests one would want are a precision and
+recall figure for the anchor filter on a multilingual transcript set,
+and a case for what happens to <code>factsLog</code> when both devices
+replaced the same attribute.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Extract from what the model already saw.</strong> If your
+system redacts, run the memory extractor over the redacted replay and
+resolve its answer locally; the egress question disappears and the
+resolution step becomes a hallucination filter for free.</li>
+<li><strong>Anchor every extracted entity verbatim, and treat a value
+present only on the wire as a pseudonym to refuse,</strong> not a note
+to keep.</li>
+<li><strong>Select on real values client-side and force the selected
+names into the redactor</strong> rather than trusting detection to catch
+a free-form name.</li>
+<li><strong>Attribute replacement with a bounded, restorable
+history.</strong> Decide which words make two sentences compete, replace
+rather than accumulate, and keep the loser where a person can put it
+back; log nothing for a pure restatement so real updates are not pushed
+out.</li>
+<li><strong>Explain the non-recall.</strong> A budget skip or a
+deliberate homograph deny is worth one line under the message; ordinary
+silence is not.</li>
+<li><strong>Write the measurement next to the threshold</strong> — the
+baseline, the corpus, the margin and the pair that set the bar.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An inbox that nothing waits for.</strong> If review is the
+trust mechanism, at least one read path should treat an unreviewed card
+differently, or the inbox is a badge.</li>
+<li><strong>A card's timestamp as its only time.</strong> Injecting
+<code>noté le</code> helps a model doubt a stale deadline; it does not
+say when the fact stopped being true.</li>
+<li><strong>Deletion without a refusal record</strong> in a system that
+re-extracts from the same conversations on a timer.</li>
+<li><strong>Language-keyed attribute and glue lists</strong> in a
+product that extracts in twelve languages; the compaction rules here
+read French.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a memory for a single person using a redacting chat client,
+sized to tens or hundreds of cards, running on their own machine, with a
+maintainer who will keep the attribute lists, the homograph list and the
+thresholds current by hand. It suits a builder who already has a vault
+and wants cross-conversation memory that cannot add an egress path, and
+who accepts that the epistemics are a review inbox and a date. It does
+not suit anything multi-user, anything that needs a fact to expire or be
+superseded on the record, anything where the model should write memory,
+or a corpus large enough that an exact O(n²) kNN over every vector is a
+cost; the design says so about the last of these itself. Walk away if
+you need scope, trust states or an audit of what changed; take the
+extraction and the injection cascade if you need a redacted product to
+remember.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What the extractor's precision is on real transcripts across the
+twelve languages the explicit-ask detector covers; the anchor drops
+hallucinations but nothing in the tree measures what it keeps.</li>
+<li>How <code>autoCleanMemory</code> behaves on a sync merge where both
+devices rewrote one card — the code says duplicates from the sync heal
+the same way, and no test seeds two histories of the same card.</li>
+<li>Whether the semantic tier changes recall in practice; it exists only
+on the desktop with the bundle baked, and the scenarios run without
+it.</li>
+<li>What the org's remote closing of the feature does to a store already
+populated on a member's machine.</li>
+<li>Whether the history's depth of three is enough once attribute
+updates arrive from several conversations in a week.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Data model and store:
+<code>packages/ui/src/memory/memoryTypes.ts</code>,
+<code>packages/ui/src/types.ts:262-270</code>,
+<code>packages/schema/src/message.ts:200-215</code>,
+<code>packages/ui/src/state/memory/useMemory.ts</code>,
+<code>packages/ui/src/state/storePersistence.ts:60-90</code>,
+<code>apps/desktop/src/main/store/dbCrypto.ts</code>,
+<code>apps/desktop/src/main/db/schema.ts:219-230</code>,
+<code>apps/desktop/src/main/db/memoryEmbeddings.ts</code>,
+<code>packages/sync/src/userdataTypes.ts:53-150</code>.</li>
+<li>Write path:
+<code>packages/ui/src/state/memory/useMemoryExtraction.ts</code>,
+<code>packages/ui/src/state/memory/memoryExtractionRun.ts</code>,
+<code>packages/ui/src/state/memory/memoryNote.ts</code>,
+<code>packages/ui/src/memory/extract.ts</code>,
+<code>extractParse.ts</code>, <code>extractExplicit.ts</code>,
+<code>extractSweep.ts</code>, <code>mergeExtraction.ts</code>,
+<code>compaction.ts</code>, <code>profile.ts</code>.</li>
+<li>Retrieval and injection:
+<code>packages/ui/src/memory/memory.ts</code>, <code>select.ts</code>,
+<code>search.ts</code>, <code>graph.ts:50-63</code>,
+<code>packages/ui/src/send/sendOrchestrator.ts:835-880,1138-1145,1594-1610</code>,
+<code>packages/ui/src/agent/mcpAgent.ts:1628-1652</code>,
+<code>packages/ui/src/components/message/MemoryCaption.tsx</code>.</li>
+<li>Review and cleanup:
+<code>packages/ui/src/pages/Memory/useMemoryReview.ts</code>,
+<code>MemoryNodePanel.tsx</code>, <code>MemoryView.tsx</code>,
+<code>packages/ui/src/memory/dedupe.ts</code>, <code>usage.ts</code>,
+<code>memoryExport.ts</code>,
+<code>packages/ui/src/containers/modals/redaction/RedactionRulesModal.tsx:37-100</code>,
+<code>packages/ui/src/pages/Settings/privacy/PrivacyTab.tsx</code>.</li>
+<li>Index and clustering:
+<code>packages/ui/src/state/memory/useMemoryIndex.ts</code>,
+<code>packages/ui/src/memory/cluster.ts</code>,
+<code>apps/desktop/src/main/embed/index.ts</code>,
+<code>model.ts</code>, <code>knn.ts</code>.</li>
+<li>Tests and evals: the 25 files named in section 4;
+<code>packages/ui/src/evals/memoryLife.ts</code>,
+<code>memoryLife.eval.ts</code>, <code>memoryScenarios.ts</code>,
+<code>memoryScenarios2.ts</code>.</li>
+<li>Documentation: <code>FEATURES.md</code> § 6,
+<code>RELEASE_NOTES.md</code>, <code>README.md</code>.</li>
+<li>Searches behind the absence claims:
+<code>rg -n 'reviewedAt' packages/ui/src --glob '!*.test.*'</code>
+(writers in <code>useMemory.ts</code> and
+<code>useMemoryReview.ts</code>, readers in
+<code>memory.ts:freshCardIds</code> and the page — none in
+<code>select.ts</code>, <code>search.ts</code> or
+<code>sendOrchestrator.ts</code>);
+<code>rg -n 'validFrom|valid_from|expires|ttl' packages/ui/src/memory</code>
+(none);
+<code>rg -n 'tombstone|rejected|dismissed' packages/ui/src/memory packages/ui/src/state/memory packages/ui/src/pages/Memory --glob '!*.test.*'</code>
+(only the session-scoped <code>dismissed</code> set in
+<code>useMemoryReview.ts</code>); <code>ls evals-reports</code>
+(README.md only);
+<code>rg -rn 'memoire' apps packages | rg -i sync</code> (the sync types
+and <code>useUserdataSync.ts</code> only).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/openmasq/openmasq/commit/874608ec6835787a73176723812b29eb41bc1088"><code class="commit-id" title="874608ec6835787a73176723812b29eb41bc1088">874608ec…</code></a>
+— first reading, at the head of the <code>dev</code> default branch, 197
+commits in. The screen found a <code>.githooks/</code> directory and
+nineteen manifests inside the seven-day cooldown; nothing was installed
+or run. Two marks: <code>human_review</code> for the inbox, the merge
+suggestions and the restorable history, <code>negative_eval</code> for
+the injection and recall cases whose positive control sits in the same
+case. <code>trust_state</code> withheld: <code>reviewedAt</code> and
+<code>source: "auto"</code> are read by the inbox and by nothing on a
+read path. <code>tombstone</code>, <code>bitemporal</code>,
+<code>scope_enforced</code> and <code>audit_log</code> withheld:
+deletion leaves no record, the only time is the last update, the store
+has no scope key, and <code>factsLog</code> is a three-deep history of
+replaced text rather than a mutation log.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

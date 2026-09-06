@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The published storage crate behind
+a closed memory product — a SQLCipher vault with a documented schema, an
+FTS5 index and a 384-dimension vector table, a capture pipeline that
+skips noise, strengthens a verbatim duplicate and refuses a
+near-verbatim paraphrase, a quarantine of imagined-and-ungrounded rows
+that some read paths honour and the default ones do not, an Ebbinghaus
+decay and a retrieval-count promotion, a sync envelope with tombstones
+and last-write-wins, and a specification that documents every constant;
+the daemon, the relay, the imagination engine and every user surface are
+elsewhere, so what this repository lets a reader verify is the format
+and the gates, not what the product does with them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engram
+Format — Agent Memory Atlas">
+    <meta property="og:description" content="The published storage crate
+behind a closed memory product — a SQLCipher vault with a documented
+schema, an FTS5 index and a 384-dimension vector table, a capture
+pipeline that skips noise, strengthens a verbatim duplicate and refuses
+a near-verbatim paraphrase, a quarantine of imagined-and-ungrounded rows
+that some read paths honour and the default ones do not, an Ebbinghaus
+decay and a retrieval-count promotion, a sync envelope with tombstones
+and last-write-wins, and a specification that documents every constant;
+the daemon, the relay, the imagination engine and every user surface are
+elsewhere, so what this repository lets a reader verify is the format
+and the gates, not what the product does with them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engram
+Format — Agent Memory Atlas">
+    <meta name="twitter:description" content="The published storage
+crate behind a closed memory product — a SQLCipher vault with a
+documented schema, an FTS5 index and a 384-dimension vector table, a
+capture pipeline that skips noise, strengthens a verbatim duplicate and
+refuses a near-verbatim paraphrase, a quarantine of
+imagined-and-ungrounded rows that some read paths honour and the default
+ones do not, an Ebbinghaus decay and a retrieval-count promotion, a sync
+envelope with tombstones and last-write-wins, and a specification that
+documents every constant; the daemon, the relay, the imagination engine
+and every user surface are elsewhere, so what this repository lets a
+reader verify is the format and the gates, not what the product does
+with them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engram Format — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engram Format",
+      "description": "The published storage crate behind a closed memory product \u2014 a SQLCipher vault with a documented schema, an FTS5 index and a 384-dimension vector table, a capture pipeline that skips noise, strengthens a verbatim duplicate and refuses a near-verbatim paraphrase, a quarantine of imagined-and-ungrounded rows that some read paths honour and the default ones do not, an Ebbinghaus decay and a retrieval-count promotion, a sync envelope with tombstones and last-write-wins, and a specification that documents every constant; the daemon, the relay, the imagination engine and every user surface are elsewhere, so what this repository lets a reader verify is the format and the gates, not what the product does with them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The open half of a closed memory</p>
+          <h1>Engram Format</h1>
+          <p class="document-deck">The published storage crate behind a
+closed memory product — a SQLCipher vault with a documented schema, an
+FTS5 index and a 384-dimension vector table, a capture pipeline that
+skips noise, strengthens a verbatim duplicate and refuses a
+near-verbatim paraphrase, a quarantine of imagined-and-ungrounded rows
+that some read paths honour and the default ones do not, an Ebbinghaus
+decay and a retrieval-count promotion, a sync envelope with tombstones
+and last-write-wins, and a specification that documents every constant;
+the daemon, the relay, the imagination engine and every user surface are
+elsewhere, so what this repository lets a reader verify is the format
+and the gates, not what the product does with them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/El-AI-Intelligence/engram-format">
+              <span>Source</span>
+              <strong>El-AI-Intelligence/engram-format</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17" title="5bb55f2c50e9de01852349930915e547b4dced17">
+              <span>Analyzed revision</span>
+              <code>5bb55f2c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-06</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engram Format is the part of a memory product its maker decided must
+stay open: the on-disk vault, its schema, its key derivation and its
+sync wire format, published as the Rust crate <code>axiom-engram</code>
+with a normative <code>FORMAT.md</code> beside it, so that <em>"any
+application, tool, or future AI can open your vault"</em> and so that
+the privacy claims are <em>"verifiable, not promised."</em> The product
+— Engram, from EL AI Intelligence — is a daemon with REST, MCP and CLI
+surfaces, a browser vault, a relay for encrypted multi-device sync, a
+Python auto-capture observer and an <em>imagination engine</em>, and
+every one of those is closed and in a private repository, as the README
+says in its third paragraph. Apache-2.0; three commits between 30 August
+and 5 September 2026 by one author; 7,374 lines of Rust in eleven files
+with 71 tests; version 0.1.5 published to crates.io on 5 September 2026
+as the crate's only release, while the README still instructs
+<code>version = "0.1.4"</code>. The screen found no auto-run surface;
+both manifests were inside the seven-day cooldown, and nothing was
+compiled or run.</p>
+<p>What is inspectable is more than a schema.
+<code>EngramStore::write_inner</code>
+(<code>src/store.rs:600-760</code>) is a capture pipeline with named
+gates and a typed outcome: a noise filter that only touches raw episodic
+captures, a dedupe on a normalised SHA-256 that strengthens the existing
+row by 0.1 rather than inserting, a paraphrase gate at cosine 0.95 when
+the caller supplies an embedding, tag normalisation against a denylist,
+and then the row, the FTS entry, the embedding, the links carried on the
+engram, semantic links above a threshold and a temporal link to the
+previous row of the same session — all in one transaction, with the
+hygiene comment explaining why FTS is kept in sync by hand (<em>"the FTS
+'delete' command is incompatible with SQLCipher's virtual-table
+handling"</em>). A quarantine convention —
+<code>imagined = 1 AND grounded = 0</code> — is written into the schema
+section of the specification and into a <code>QuarantineFilter</code>
+enum, and the near-duplicate report, the related search's vector
+fallback and semantic-link generation all exclude it unconditionally.
+The design is at its most careful on the sync side, where the envelope,
+the Argon2id parameters, the AES-256-GCM construction, the HMAC input
+and the vault-id derivation are each written out with their version
+salts.</p>
+<p>What is not inspectable is who calls any of it, and that shapes every
+judgement here. The default <code>search_by_content</code>,
+<code>list</code>, <code>search_by_layer</code>,
+<code>vector_search</code> and <code>surface_relevant</code> apply no
+quarantine filter; the <code>MemoryBackend</code> adapter that the
+crate's own <code>QemCache</code> wraps calls those defaults, so through
+the trait the quarantine does not exist. Whether the daemon's recall
+passes <code>LiveOnly</code> is a fact about closed code.
+<code>grounded</code> has no writer in the crate but its constructors
+and tests; <code>memory_evidence</code>, <code>annotations</code>,
+<code>goals</code> and <code>saved_searches</code> are created and never
+inserted into; <code>apply_weekly_consolidation</code> promotes on a
+retrieval count and deletes weak imagined rows, and nothing here distils
+an episodic run into a semantic abstraction, though the
+<code>lib.rs</code> header says that happens <em>"nightly."</em> The
+report therefore credits one mark, for a state field with a producer and
+a filter, and withholds the rest; the reader who adopts the crate gets a
+good vault and must build the epistemics.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>engram</strong>: a row with a strength that
+behaves like a trace. It is born by capture at strength 1.0 (episodic),
+by consolidation (semantic), or by the imagination engine at strength
+0.5 with <code>imagined = true, grounded = false</code>
+(<code>Engram::new_imagined</code>, <code>src/engram.rs:232-260</code>).
+Three things move it. <strong>Retrieval</strong> — any <code>get</code>
+increments <code>retrievals</code> and stamps
+<code>last_retrieved</code> (<code>touch</code>,
+<code>src/store.rs:954-961</code>), and the daily hygiene adds 0.15 to
+anything retrieved in the last day. <strong>Decay</strong> — the same
+pass computes <code>R = e^(−t/S)</code> for every row not retrieved in a
+day, with `S = 3 × (retrievals</p>
+<ul>
+<li>1)<code>days, so a row retrieved often decays slowly, and multiplies strength by</code>R<code> with a floor of 0.01 (</code>apply_daily_hygiene<code>, </code>:1840-1922<code>). **Promotion** — the weekly pass rewrites </code>layer
+= 'semantic', source =
+'consolidation'<code> on any episodic row with five or more retrievals (</code>apply_weekly_consolidation<code>, </code>:1992-2012<code>). Duplicates are folded into the existing trace rather than stored: a verbatim repeat adds 0.1 and refreshes </code>last_retrieved<code>, a paraphrase above 0.95 is reported as </code>Similar`
+and not written.</li>
+</ul>
+<p>Truth is a two-bit state. An observed row is
+<code>imagined = false</code>; a generated one is
+<code>imagined = true</code>, and it stays <strong>quarantined</strong>
+until something sets <code>grounded = true</code> — which in the crate
+is a caller mutating the struct and calling <code>write_curated</code>,
+the bypass that exists precisely so <em>"metadata mutations —
+mark-noise, ground, PATCH — must always persist"</em> past the dedupe
+gate (<code>:582-590</code>). While quarantined, a row is invisible to
+the near-duplicate report, receives and emits no semantic links, and
+never surfaces as related; it is visible to any default search, list or
+vector scan unless the caller asks for <code>LiveOnly</code>. There is
+no rejected state: a memory dies by a hard <code>delete</code>, by
+<code>purge_by_criteria</code>, or, for imagined rows only, by falling
+below strength 0.05 at the weekly pass. A <code>memory_evidence</code>
+table of <code>(memory_id, evidence_id, relationship)</code> pairs and
+an <code>annotations</code> table exist for a grounding trail; the crate
+defines them and writes to neither.</p>
+<p>Beside the vault, the <code>QemCache</code> layer holds a different
+kind of memory: a 32-bit XOR code per entry so that
+<code>subject ⊕ relation → object</code> is an O(1) lookup, warmed from
+the strongest rows at startup, written through to the vault before the
+cache, with a <code>NoveltyFilter</code> that reports a code's surprise
+as one minus its frequency in a ring buffer
+(<code>src/qem.rs:96-140</code>). The specification is explicit that
+codes are <em>"derivable from row content and never the only
+index"</em>; they are an acceleration, not a belief.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a capture passes a noise gate, a hash dedupe that strengthens the existing row, and a paraphrase gate that refuses a near-verbatim repeat, then lands with its FTS row, embedding and links in one transaction; retrieval raises strength and decay lowers it; an imagined, ungrounded row is quarantined from related, duplicate and link paths and from search only on request</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a capture passes a noise gate, a hash dedupe that strengthens the existing row, and a paraphrase gate that refuses a near-verbatim repeat, then lands with its FTS row, embedding and links in one transaction; retrieval raises strength and decay lowers it; an imagined, ungrounded row is quarantined from related, duplicate and link paths and from search only on request
+flowchart TD
+    C[&quot;capture: Engram — layer, source, content, context&quot;] --&gt; N{&quot;B1 noise? episodic captures only&quot;}
+    N -- yes --&gt; NS[&quot;NoiseSkipped, noise_skips += 1&quot;]
+    N -- no --&gt; H{&quot;B2 same normalised SHA-256 as another row?&quot;}
+    H -- yes --&gt; D[&quot;Duplicate: existing strength += 0.1, last_retrieved = now&quot;]
+    H -- no --&gt; P{&quot;B2b embedding supplied and cosine ≥ 0.95 to a live row?&quot;}
+    P -- yes --&gt; S[&quot;Similar: reported, not written&quot;]
+    P -- no --&gt; F[&quot;B5 normalise tags, auto-fill project and tags&quot;]
+    F --&gt; W[&quot;one transaction: engrams upsert, engrams_fts row, embedding, carried links, semantic links ≥ 0.35 to live rows, temporal link to the previous row of the session&quot;]
+    W --&gt; R[&quot;row: strength 1.0, retrievals 0, imagined/grounded as given&quot;]
+    R --&gt; G[&quot;get: retrievals += 1, last_retrieved = now&quot;]
+    G --&gt; HY[&quot;daily hygiene: +0.15 if retrieved today, else strength × e^(−days / 3(retrievals+1))&quot;]
+    HY --&gt; WK[&quot;weekly: episodic with ≥ 5 retrievals → semantic; imagined below 0.05 deleted&quot;]
+    R -. &quot;imagined ∧ ¬grounded&quot; .-&gt; Q[&quot;quarantined: excluded from related, near-duplicates and links; excluded from search and list only under LiveOnly&quot;]
+    Q -- &quot;caller sets grounded, write_curated&quot; --&gt; R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, not a service. <code>src/lib.rs</code> names three layers
+— <code>QemCache</code> (L1), <code>EngramStore</code> (L2,
+<em>"SQLCipher, FTS5, vector search"</em>) and a
+<code>ContextAssembler</code> (L3, <em>"owns retrieval, token-budgeted
+assembly"</em>) — and ships the first two;
+<code>rg -n 'ContextAssembler' src</code> finds only that comment.
+<code>EngramStore</code> wraps one <code>rusqlite</code> connection
+behind a tokio mutex, opened with <code>bundled-sqlcipher</code> and
+keyed either from the platform machine id
+(<code>hex(SHA-256(machine_id ‖ ":" ‖ "axiom-engram-vault-v1"))</code>,
+with a stated threat model: it defends against a stolen disk and not
+against a local user) or from a passphrase through Argon2id at 64 MiB,
+three passes, four lanes and a random 16-byte salt file, with two legacy
+derivations detected and re-keyed on open. <code>src/schema.rs</code>
+creates the tables idempotently and runs
+<code>PRAGMA user_version</code> migrations 0 through 7, rebuilding
+<code>engrams</code> by table swap where a <code>CHECK</code> constraint
+changed and re-running column ensures on every open so <em>"a vault that
+crashed mid-migration cannot claim a version it does not have."</em>
+<code>src/adapter.rs</code> implements the <code>MemoryBackend</code>
+trait over the store; <code>src/qem.rs</code> the cache;
+<code>src/embed.rs</code> the <code>Embedder</code> trait, a
+<code>NoopEmbedder</code> and, behind <code>onnx-embed</code>, an
+<code>OnnxEmbedder</code> that is in fact Candle with a HuggingFace
+tokenizer and <code>hf-hub</code> download of all-MiniLM-L6-v2;
+<code>src/noise.rs</code> the filter and the hash;
+<code>src/sync.rs</code> the serde types of the wire envelope and
+nothing that sends them.</p>
+<p>There are no background processes: <code>apply_daily_hygiene</code>,
+<code>apply_weekly_consolidation</code>,
+<code>backfill_semantic_links</code>, <code>find_near_duplicates</code>
+and <code>find_stale_state</code> are methods with no scheduler and no
+caller in the tree. Their callers, and the <em>"Python auto-capture
+observer,"</em> the REST route that validates a purge date <em>"earlier
+and maps this to a 400,"</em> and the <em>"decay report"</em> the
+comments hand results to, are all named in comments and absent from the
+repository.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Add the crate, call <code>EngramStore::open</code> or
+<code>open_with_passphrase</code> on a directory, and there is a vault:
+no server, no key needed to store anything, SQLite as the only
+dependency, and everything local and offline unless the
+<code>onnx-embed</code> feature downloads a model from the Hub on first
+use. The file is readable by any SQLCipher-aware tool given the derived
+key, which the specification tells you how to compute, and
+<code>FORMAT.md</code> § 4 is a complete column list; that is the
+product's stated reason for existing. Repairing by hand is possible
+because it is SQLite; the FTS index is the one thing a hand edit will
+desynchronise, and the crate rebuilds it only during a migration.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>EngramStore::write</code> →
+<code>write_inner(engram, None, None, true, None)</code>
+(<code>src/store.rs:563-760</code>):
+<code>crate::noise::is_noise(content, source)</code> for episodic rows;
+<code>normalized_hash</code> — shell-hook prefixes like
+<code>[89] [10:23:45] [/home/alice/engram]</code> stripped, whitespace
+collapsed, lowercased, SHA-256 — and a
+<code>SELECT id … WHERE content_hash = ?1 AND id != ?2</code> that on a
+hit returns <code>WriteOutcome::Duplicate { matched_id }</code> after
+the strength bump; <code>find_similar_embedding</code>
+(<code>:2414-2440</code>) over every stored vector at
+<code>SIMILAR_DEDUP_THRESHOLD = 0.95</code>, returning
+<code>Similar { matched_id, similarity }</code>;
+<code>normalize_tags</code> (denylist of <code>note</code>,
+<code>misc</code>, <code>random</code> and eight others, at most eight
+tags of 32 characters), <code>extract_project</code> from the context
+JSON and <code>auto_tags</code> from the source; then the upsert with
+<code>ON CONFLICT(id) DO UPDATE</code>, the FTS insert by rowid, the
+embedding <code>INSERT OR REPLACE</code>, carried links inserted only
+where the target exists, <code>generate_semantic_links</code> when both
+an embedding and a <code>LinkInferenceConfig</code> are given (default
+at most five links above 0.35, both directions, never into quarantine),
+and <code>generate_links</code> (<code>:820-860</code>): a temporal link
+of weight 0.6 to the most recent prior row with the same
+<code>context.session_id</code>, and associative links to rows sharing
+tags. <code>write_with_embedding</code> adds the vector;
+<code>write_curated</code> sets <code>gates = false</code>.</p>
+<p><strong>Retrieval.</strong> <code>get</code>
+(<code>:1080-1140</code>) with the <code>touch</code>;
+<code>search_by_content_filtered</code> (<code>:1221-1339</code>): strip
+double quotes, split on non-alphanumerics to match the
+<code>unicode61</code> tokenizer, <code>MATCH</code> the tokens joined
+by <code>AND</code> and, when that is empty, by <code>OR</code>,
+<code>ORDER BY rank</code>, with the filter's SQL appended, falling back
+to <code>LIKE '%query%' ORDER BY strength DESC</code> on an FTS parse
+error; <code>vector_search</code> (<code>:2028-2066</code>) loads every
+embedding and sorts by cosine; <code>surface_relevant</code>
+(<code>:2067-2145</code>) takes the fifty strongest rows above 0.1 and
+scores
+<code>0.3 × overlapping words longer than three + 0.4 × strength + 0.2 × e^(−days/7) + 0.1 × positive valence</code>,
+keeping scores above 0.1; <code>search_related</code>
+(<code>:1704-1765</code>) follows explicit links and then cosine
+neighbours above <code>MIN_RELATED_SIMILARITY = 0.35</code> among live
+rows; <code>search_by_tags</code>, <code>search_by_layer</code>,
+<code>list</code>, <code>list_modified_since</code>,
+<code>list_unsynced</code>, <code>digest_window</code> and
+<code>detect_temporal_patterns</code> (day-of-week and time-of-day over
+matching rows) complete the surface. Results are ordered by a stated
+total order so identical searches return identical orderings.</p>
+<p><strong>Maintenance.</strong> <code>apply_daily_hygiene</code>
+(<code>:1840-1922</code>), <code>find_near_duplicates</code>
+(<code>:1924-1965</code>, cosine at or above 0.90 over the 400 most
+recent embedded live rows, <em>"advisory, never destructive — this
+reports, the human decides"</em>), <code>find_stale_state</code>
+(<code>:1967-1990</code>, episodic rows older than seven days whose
+content contains <em>in flight</em>, <em>wip</em>, <em>todo</em>,
+<em>next steps</em> and the like),
+<code>apply_weekly_consolidation</code> (<code>:1992-2012</code>),
+<code>backfill_semantic_links</code> (<code>:1765-1818</code>),
+<code>record_consolidation_run</code> and
+<code>get_consolidation_history</code>.</p>
+<p><strong>Deletion.</strong> <code>delete</code>
+(<code>:1591-1608</code>) and <code>purge_by_criteria</code>
+(<code>:1611-1679</code>) by source, layer, project and an RFC 3339
+<code>before_date</code>, each deleting the FTS row first;
+<code>engram_links</code>, <code>engram_embeddings</code> and the
+evidence tables cascade by foreign key.</p>
+<p><strong>Sync.</strong> <code>list_unsynced</code>,
+<code>mark_synced</code>, <code>reset_synced</code> and
+<code>list_modified_since</code> (<code>:1369-1435</code>) are the local
+half; <code>src/sync.rs</code> holds <code>SyncBlob</code>,
+<code>PushRequest</code>, <code>PushResponse</code> with
+<code>accepted</code>, <code>rejected</code> and
+<code>revoked_devices</code>, and <code>PullRequest</code>; encryption,
+the relay and the client are not here.</p>
+<p><strong>Trait and cache.</strong> <code>src/trait.rs</code>
+(<code>MemoryBackend</code>, <code>Query</code>, <code>SortKey</code>,
+<code>DecayReport</code>, <code>ConsolidationReport</code>);
+<code>src/adapter.rs</code> (<code>search</code> dispatches on layer,
+then text, then tags, then list, widens the fetch to 2,000 when a
+strength floor or a sort is set, and applies <code>min_strength</code>
+and <code>sort_by</code> in memory); <code>src/qem.rs</code>
+(<code>QemCode</code>, <code>QemEncoder</code>,
+<code>NoveltyFilter</code>, <code>QemConfig</code>,
+<code>QemCache</code>).</p>
+<p><strong>Tests.</strong> The <code>#[cfg(test)]</code> modules of
+<code>src/store.rs</code> (41), <code>src/noise.rs</code> (12),
+<code>src/qem.rs</code> (8), <code>src/schema.rs</code> (4),
+<code>src/adapter.rs</code> (3) and <code>src/embed.rs</code> (3).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>engrams</code> (<code>src/schema.rs:10-28</code>,
+<code>FORMAT.md</code> § 4.1): <code>id TEXT PK</code>,
+<code>layer</code> in episodic, semantic, imagined; <code>source</code>
+in a sixteen-value <code>CHECK</code> — interaction, sensor,
+consolidation, imagined, chat, slack, discord, telegram, window, mic,
+agent, research, system, observation, ai-session, ai-tool — that has
+grown by three migrations; <code>privacy_level</code> in strict_local,
+hybrid, cloud_first, enterprise, defaulting to <code>cloud_first</code>
+in the constructors; <code>content</code>; <code>context</code> JSON;
+<code>strength REAL</code> default 1.0; <code>valence</code> in [−1, 1];
+<code>retrievals</code>; <code>imagined</code> and <code>grounded</code>
+integers; <code>created_at</code>, <code>last_retrieved</code>,
+<code>occurred_at</code>, <code>modified_at</code> (bumped on every
+local write, preserved from the remote on a sync pull, never bumped by a
+read) and <code>synced_at</code>; <code>project</code>;
+<code>tags</code> as comma-separated text normalised at capture;
+<code>content_hash</code>; <code>scope</code> defaulting to
+<code>moment</code> (the <code>MemoryScope</code> enum adds episode,
+narrative and rule); <code>content_type</code> defaulting to
+<code>text</code>.
+<code>engram_links (source_id, target_id, weight, link_type)</code> with
+four link types;
+<code>engram_embeddings (engram_id, embedding BLOB, model, dimensions, created_at)</code>;
+<code>coherence_state</code>, a singleton of baseline valence, character
+strengths, purpose vector and drift score that <code>open</code> seeds
+and <code>update_coherence</code> rewrites; <code>goals</code>;
+<code>consolidation_runs</code>; <code>app_metrics</code> counters for
+<code>noise_skips</code>, <code>dedup_saves</code> and
+<code>similar_skips</code>; <code>memory_evidence</code>;
+<code>annotations</code>; <code>saved_searches</code>; and the
+<code>engrams_fts</code> virtual table over
+<code>(id, content)</code>.</p>
+<p>Two structs describe a row: <code>Engram</code>
+(<code>src/engram.rs</code>) mirrors the table, and
+<code>MemoryEntry</code> (<code>src/entry.rs:315-355</code>) is the
+trait-level shape with typed <code>MemoryLayer</code>,
+<code>MemoryScope</code>, <code>ContentType</code>,
+<code>MemorySource</code>, an
+<code>evidence: Vec&lt;EvidenceRef&gt;</code> with
+<code>supports</code>, <code>contradicts</code> and
+<code>context_for</code> relationships, and <code>links_out</code>; the
+two convert both ways. Scope in the tenancy sense is
+<code>project</code> and <code>privacy_level</code>, stored and not
+applied on any read path in the crate. Provenance is
+<code>source</code>, <code>context</code> and the
+<code>memory_evidence</code> table nothing here fills. Time is
+<code>created_at</code> for the record, <code>occurred_at</code> for the
+event — a second axis that is written and read back and filtered on by
+nothing in the crate, so it is tracked and not used — and
+<code>modified_at</code> and <code>synced_at</code> for the sync cursor.
+Versioning is the sync blob's <code>vector_clock</code>, monotonic per
+memory; there is no local history, correction chain or TTL, and deletion
+is a hard delete locally and a tombstone blob on the wire.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical retrieval is FTS5 with a two-stage query — precise
+<code>AND</code>, then <code>OR</code> for recall — ranked by FTS
+<code>rank</code>, with the tokenizer's hyphen behaviour accounted for
+in the split and a <code>LIKE</code> fallback ordered by strength when
+the parser rejects the input. Vector retrieval is exact cosine over
+every embedding in the table, in Rust, with no index; the comment on the
+near-duplicate scan caps it at 400 rows for that reason, and
+<code>vector_search</code> has no cap. Only semantic rows longer than
+100 characters are embedded at all (<code>should_embed</code>,
+<code>src/embed.rs:406-408</code>), so episodic captures never enter the
+vector path, the paraphrase gate never sees them, and a conversation's
+raw turns are searchable only lexically. Proactive surfacing is a
+hand-weighted score over the strongest fifty rows — strength carries 0.4
+of it, so a much-retrieved row surfaces for any context that shares a
+long word with it — and it applies no quarantine. Related-memory search
+is the one retrieval path that is principled about quarantine and about
+explicit links outranking similarity. There is no reranker, no query
+rewriting, no token budgeting and no context formatting; the L3
+assembler that would do those is named and absent.</p>
+<p>Failure modes follow. Stale hits: strength decays only when the daily
+pass is run, so a vault whose daemon is stopped keeps every trace at
+full strength. Over-recall: <code>OR</code> fallback returns any row
+sharing one token. Under-recall: an episodic row is invisible to vector
+search by design. Bad merges: none, because nothing merges — the
+paraphrase gate refuses the second capture and reports the first's id,
+and the near-duplicate report leaves the decision to a person.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous library calls holding the connection mutex;
+there is no queue and no extractor. A memory is whatever the caller
+constructs — the crate has no prompt, no model call and no summariser —
+and the pipeline's job is to refuse or fold, not to derive. Dedupe is
+exact after normalisation and near-exact by embedding; consolidation is
+a counter and a threshold; conflict handling does not exist, since an
+upsert by id overwrites and two rows with different content coexist.
+Noise filtering is a deterministic function of content and source that
+exempts curated sources, whose exact rules live in the 286 lines of
+<code>src/noise.rs</code> and its twelve tests. Malicious input is not a
+category the crate models; <code>purge_by_criteria</code> interpolates
+column names it chose itself and binds the values, and the
+<code>before_date</code> guard exists because a non-date string
+<em>"sorts AFTER every real date and would match the whole
+vault."</em></p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A capture is one hash, an optional scan over every embedding, one
+transaction of a handful of statements and, when links are inferred, a
+second scan; a <code>get</code> is one read and one write. Nothing is
+retrievable later than the call that stored it. The two maintenance
+passes read the whole table — hygiene loads every row not retrieved in a
+day and updates each whose strength moved by more than 0.001, so its
+cost scales with the vault, not the day — and the near-duplicate report
+is O(n²) over at most 400 rows. What the read path costs a prompt is not
+decidable here, because the assembler is elsewhere.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None in this repository. The crate exposes a Rust API and a trait;
+the MCP servers, REST routes and CLI that give an agent
+<code>capture</code>, <code>search</code>, <code>surface</code> and
+<code>ground</code> are closed. What the code reveals about them is in
+the comments: capture paths are <em>"CLI, REST, Rust MCP, and (via the
+REST handler) the Python auto-capture observer,"</em> metadata mutations
+arrive from <em>"route handlers acting on an id the user already
+reviewed,"</em> and the <code>engramd</code> server <em>"wires the real
+provider at startup"</em> for embeddings. How much agency the model has,
+whether injection is automatic, and how a session boundary is handled
+are questions this repository cannot answer, and the report does not
+guess. An adopter integrating the crate into their own agent gets a
+store with typed write outcomes to surface to the model — a
+<code>Duplicate</code> or <code>Similar</code> result is exactly the
+kind of feedback a save tool should return — and must supply everything
+above it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Verifiable privacy is the claim, and it holds for what is
+here.</strong> The machine-key derivation, its threat model, the
+Argon2id parameters, the salt file, the legacy re-keying, the sync
+cipher construction, the HMAC input, the vault-id derivation and the
+account and team key wrapping are all in <code>FORMAT.md</code> §§ 3 and
+8–11 with the constants in <code>src/store.rs:118-135</code>; a vault
+owner can recompute their key. The relay's zero-knowledge property is a
+claim about closed code.</p>
+<p><strong>The quarantine is real and partial.</strong>
+<code>QuarantineFilter</code> exists, three paths apply it
+unconditionally, the filtered variants apply it on request, and the
+defaults do not — including everything reachable through
+<code>MemoryBackend</code>. <code>FORMAT.md</code> § 4.1 states the
+convention as <em>"excluded from the default recall surface"</em>; in
+the crate the default surface includes them. Whether the product's
+recall passes <code>LiveOnly</code> decides whether the convention is
+true for a user, and that cannot be read here.</p>
+<p><strong>Grounding has a flag and no trail.</strong>
+<code>grounded</code> flips only by a caller's mutation;
+<code>memory_evidence</code> and <code>annotations</code> have no
+producer in <code>src/</code>, so the crate stores a verdict without the
+evidence for it.</p>
+<p><strong>Deletion is final locally and tombstoned remotely.</strong>
+No archive, no history, no record of what was purged beyond the count
+returned. A sync deletion is a <code>deleted: true</code> blob with a
+higher clock, and last-write-wins on the clock means a device that edits
+a memory another device deleted can resurrect it or lose the edit
+depending on order.</p>
+<p><strong>Consistency.</strong> One mutex around one connection; the
+write pipeline holds the raw handle because the mutex is not re-entrant,
+which the comment explains. Migrations that swap the table run in one
+transaction so the swap and the version stamp commit together.</p>
+<p><strong>Uncertainty</strong> is a continuous strength and a valence,
+used for ranking and pruning; the only discrete withholding is the
+quarantine.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>71 unit tests, none of which the atlas ran, cover the store's capture
+gates one outcome each — noise skipped, curated sources bypass noise, a
+duplicate strengthens the existing row, a curated write persists despite
+a sibling duplicate, whitespace and prefixes normalise, a rewrite of the
+same id is not a duplicate, a similar embedding skips capture and a
+dissimilar one inserts, the similar gate bypasses curated writes — plus
+tag normalisation, auto-fill, temporal and associative link generation,
+semantic links with their threshold and direction, the backfill's
+idempotence, the related search's vector fallback and its dedupe against
+explicit links, dangling link targets skipped, the sync cursor on
+<code>modified_at</code>, hygiene strengthening a retrieved row, the
+retrieval counter, metrics counters, and a passphrase-open fallback.
+<code>src/schema.rs</code> tests that <code>create_tables</code>
+followed by <code>migrate</code> upgrades a pre-v4 and a pre-v5 vault;
+<code>src/adapter.rs</code> that <code>min_strength</code> and
+<code>sort_by</code> are honoured and applied before truncation, a
+regression the comment attributes to <code>QemCache::warm</code>
+variance.</p>
+<p>The two quarantine tests are the ones a <code>negative_eval</code>
+mark would rest on, and they are the emptiness shape:
+<code>test_find_near_duplicates_excludes_quarantine</code> asserts
+<code>is_empty()</code> on a two-row store where the only pair is
+quarantined, and <code>test_semantic_links_never_into_quarantine</code>
+asserts both link lists are empty. Each would pass against a scan that
+returned nothing; the positive control is the sibling test in each case,
+not the same one, and no test asserts that a quarantined row is absent
+from a populated content or list result under <code>LiveOnly</code>. The
+mark is withheld on that basis.</p>
+<p>There is no retrieval-quality evaluation, no benchmark, no fixture
+vault and no CI in the repository;
+<code>rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md</code> finds
+nothing, and the README links no paper. The tests one would want before
+trusting the format as a memory are a <code>LiveOnly</code> search over
+a populated vault with a control row, a hygiene case that checks the
+decay arithmetic against a hand-computed value rather than <em>"no
+crash,"</em> and a sync round-trip of a tombstone against a concurrent
+edit.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Typed write outcomes.</strong> Return
+<code>Duplicate { matched_id }</code>,
+<code>Similar { matched_id, similarity }</code> or
+<code>NoiseSkipped { reason }</code> from a save instead of swallowing
+the second capture; an agent's save tool can then say what
+happened.</li>
+<li><strong>A curated write path that bypasses the capture
+gates.</strong> A grounding or an edit must persist even when a sibling
+row shares the content hash; routing metadata through the dedupe gate
+silently drops it.</li>
+<li><strong>Idempotent column ensures on every open,</strong> so a crash
+mid-migration cannot leave a vault claiming a version it did not
+reach.</li>
+<li><strong>Publish the derivations.</strong> A format document that
+lists every KDF parameter and cipher construction is what makes
+<em>verifiable</em> a checkable word.</li>
+<li><strong>Keep the O(n²) report advisory and capped,</strong> and
+surface near-duplicates and stale working state to a person rather than
+acting.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A quarantine the default read path ignores.</strong> If a
+state is meant to withhold, the unfiltered call should not exist, or the
+filtered one should be the default.</li>
+<li><strong>A grounding flag with no evidence table anyone
+writes.</strong> A verdict without its trail cannot be audited or
+reversed.</li>
+<li><strong>Embedding only rows over a length threshold in one
+layer</strong> when the paraphrase gate and the vector search depend on
+the embedding; the gate then never sees the captures most likely to
+repeat.</li>
+<li><strong>Strength as the dominant surfacing weight</strong> when
+strength is a function of how often the row was already surfaced.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a vault, not a memory system, and it is a good vault: for a
+Rust builder who wants an encrypted local store with lexical and vector
+retrieval, documented on-disk and wire formats, and a capture pipeline
+that refuses repeats, adopting the crate saves real work and costs one
+SQLite dependency. Everything epistemic — what to capture, when to
+ground, how to assemble a prompt, when to run decay — is the adopter's
+to build, and the crate's own header describes a third layer it does not
+ship. Walk away if you need scope, audit, human review or a benchmark
+from the package itself, or if you need to know what the Engram product
+does with these primitives; that is a different repository and it is not
+public.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the product's recall calls the <code>LiveOnly</code>
+variants or the defaults; the specification's <em>"default recall
+surface"</em> is defined by closed code.</li>
+<li>What writes <code>memory_evidence</code>, <code>annotations</code>,
+<code>goals</code> and <code>saved_searches</code>, and whether the
+imagination engine grounds a row on evidence or by a person's
+click.</li>
+<li>What the nightly consolidation the header and the FORMAT describe
+does beyond the counter-based promotion, and whether it writes
+<code>consolidation_runs</code> through
+<code>record_consolidation_run</code>.</li>
+<li>How the relay resolves a tombstone against a concurrent edit under
+last-write-wins, and whether a revoked device's blobs already accepted
+are ever reverted.</li>
+<li>Whether a future release aligns the README's <code>0.1.4</code>, the
+FORMAT header's <em>"schema version 6"</em> and the code's
+<code>CURRENT_SCHEMA_VERSION = 7</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Specification: <code>FORMAT.md</code> (§ 2 layout, § 3 encryption
+and threat model, § 4 schema and migration history, § 5 normalisation
+and dedupe, § 6 retrieval indexes, § 7 QEM, § 8 sync wire format, §§
+9–11 vault identity, account keys and team handoff, § 12 compatibility),
+<code>README.md</code>.</li>
+<li>Storage and schema: <code>src/schema.rs</code>
+(<code>create_tables</code> <code>:7-145</code>, <code>migrate</code>
+<code>:166-570</code>, <code>CURRENT_SCHEMA_VERSION</code>
+<code>:144</code>), <code>src/store.rs:118-135</code> (key constants),
+<code>:365-552</code> (<code>open</code>,
+<code>open_with_passphrase</code>, re-keying, the coherence seed),
+<code>src/engram.rs</code>, <code>src/entry.rs</code>.</li>
+<li>Write path: <code>src/store.rs:563-760</code> (<code>write</code>,
+<code>write_with_embedding</code>, <code>write_curated</code>,
+<code>write_inner</code>), <code>:820-900</code>
+(<code>generate_links</code>, <code>generate_semantic_links</code>),
+<code>:2373-2440</code> (thresholds and
+<code>find_similar_embedding</code>), <code>src/noise.rs</code>.</li>
+<li>Retrieval: <code>src/store.rs:63-115</code>
+(<code>QuarantineFilter</code>), <code>:954-961</code>
+(<code>touch</code>), <code>:1080-1140</code> (<code>get</code>),
+<code>:1187-1368</code> (layer, content, list and their filtered
+variants), <code>:1511-1560</code> (tags, count),
+<code>:1704-1765</code> (<code>search_related</code>),
+<code>:2028-2145</code> (<code>vector_search</code>,
+<code>surface_relevant</code>), <code>:2207-2282</code>
+(<code>detect_temporal_patterns</code>).</li>
+<li>Maintenance and deletion: <code>src/store.rs:1591-1679</code>
+(<code>delete</code>, <code>purge_by_criteria</code>),
+<code>:1840-2012</code> (hygiene, near-duplicates, stale state,
+consolidation), <code>:1765-1818</code>
+(<code>backfill_semantic_links</code>), <code>:2283-2340</code>
+(consolidation history).</li>
+<li>Sync: <code>src/store.rs:1369-1435</code>
+(<code>list_modified_since</code>, <code>list_unsynced</code>,
+<code>mark_synced</code>, <code>reset_synced</code>),
+<code>src/sync.rs</code>.</li>
+<li>Trait, adapter, cache, embeddings: <code>src/trait.rs</code>,
+<code>src/adapter.rs</code>, <code>src/qem.rs</code>,
+<code>src/embed.rs</code>.</li>
+<li>Tests: the <code>#[cfg(test)]</code> modules in
+<code>src/store.rs:2590-3454</code>, <code>src/noise.rs</code>,
+<code>src/qem.rs</code>, <code>src/schema.rs:580-873</code>,
+<code>src/adapter.rs:214-280</code>,
+<code>src/embed.rs:410-481</code>.</li>
+<li>Searches behind the absence claims:
+<code>rg -n 'ContextAssembler' src</code> (the <code>lib.rs</code>
+comment only);
+<code>rg -n 'INSERT INTO (goals|memory_evidence|annotations|saved_searches)' src</code>
+(none; <code>consolidation_runs</code> has one writer at
+<code>src/store.rs:2311</code>);
+<code>rg -n 'grounded\s*[:=]\s*true' src</code> (none outside tests —
+the flag is set by callers);
+<code>rg -n 'occurred_at' src/store.rs</code> (written and read back,
+never in a <code>WHERE</code>);
+<code>rg -n 'project = \?' src/store.rs</code> (only
+<code>purge_by_criteria</code>);
+<code>rg -n 'LiveOnly' src/store.rs</code> (the enum and its SQL, no
+internal caller);
+<code>rg -n 'apply_daily_hygiene\(|apply_weekly_consolidation\(' src --glob '!store.rs'</code>
+(the adapter and tests only); <code>ls .github</code> (absent);
+<code>rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md</code>
+(none).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17"><code class="commit-id" title="5bb55f2c50e9de01852349930915e547b4dced17">5bb55f2c…</code></a>
+— first reading, at the head of <code>main</code>, three commits in, the
+day after the crate's only crates.io release. The screen found no
+auto-run surface; both manifests were inside the seven-day cooldown, and
+nothing was compiled or run. One mark, <code>trust_state</code>, for the
+imagined-and-ungrounded quarantine with a public producer and an
+unconditional filter on three read paths. <code>negative_eval</code>
+withheld on the emptiness shape of the two quarantine tests.
+<code>bitemporal</code> withheld: <code>occurred_at</code> is a second
+timestamp that nothing filters on. <code>scope_enforced</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>tombstone</code> withheld: the scope columns are stored and
+unapplied, there is no mutation log, every surface is closed, and the
+sync tombstone is a delete marker.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
