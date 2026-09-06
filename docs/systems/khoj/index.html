@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The long-term memory of a
+self-hostable personal AI: one Postgres row per fact with a pgvector
+embedding, extracted after every non-automated chat turn by a prompt
+named for Odin's raven that may create facts and delete them by id,
+recalled as the ten most recent facts of the last seven days plus the
+ten nearest by cosine, scoped per user and per custom agent, injected as
+a dated list the model is told to ignore when irrelevant, switchable per
+user and per server, and editable in a settings list; the extractor only
+ever sees the facts recall found, so a fact it did not retrieve it
+cannot retire.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Khoj — Agent Memory Atlas">
+    <meta property="og:description" content="The long-term memory of a
+self-hostable personal AI: one Postgres row per fact with a pgvector
+embedding, extracted after every non-automated chat turn by a prompt
+named for Odin's raven that may create facts and delete them by id,
+recalled as the ten most recent facts of the last seven days plus the
+ten nearest by cosine, scoped per user and per custom agent, injected as
+a dated list the model is told to ignore when irrelevant, switchable per
+user and per server, and editable in a settings list; the extractor only
+ever sees the facts recall found, so a fact it did not retrieve it
+cannot retire.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Khoj — Agent Memory Atlas">
+    <meta name="twitter:description" content="The long-term memory of a
+self-hostable personal AI: one Postgres row per fact with a pgvector
+embedding, extracted after every non-automated chat turn by a prompt
+named for Odin's raven that may create facts and delete them by id,
+recalled as the ten most recent facts of the last seven days plus the
+ten nearest by cosine, scoped per user and per custom agent, injected as
+a dated list the model is told to ignore when irrelevant, switchable per
+user and per server, and editable in a settings list; the extractor only
+ever sees the facts recall found, so a fact it did not retrieve it
+cannot retire.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Khoj — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Khoj",
+      "description": "The long-term memory of a self-hostable personal AI: one Postgres row per fact with a pgvector embedding, extracted after every non-automated chat turn by a prompt named for Odin's raven that may create facts and delete them by id, recalled as the ten most recent facts of the last seven days plus the ten nearest by cosine, scoped per user and per custom agent, injected as a dated list the model is told to ignore when irrelevant, switchable per user and per server, and editable in a settings list; the extractor only ever sees the facts recall found, so a fact it did not retrieve it cannot retire.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Muninn keeps the facts</p>
+          <h1>Khoj</h1>
+          <p class="document-deck">The long-term memory of a
+self-hostable personal AI: one Postgres row per fact with a pgvector
+embedding, extracted after every non-automated chat turn by a prompt
+named for Odin's raven that may create facts and delete them by id,
+recalled as the ten most recent facts of the last seven days plus the
+ten nearest by cosine, scoped per user and per custom agent, injected as
+a dated list the model is told to ignore when irrelevant, switchable per
+user and per server, and editable in a settings list; the extractor only
+ever sees the facts recall found, so a fact it did not retrieve it
+cannot retire.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/khoj-ai/khoj">
+              <span>Source</span>
+              <strong>khoj-ai/khoj</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/khoj-ai/khoj/commit/ae229ca894c0b80ad84664afcfdde523b5e87057" title="ae229ca894c0b80ad84664afcfdde523b5e87057">
+              <span>Analyzed revision</span>
+              <code>ae229ca8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Khoj is a self-hostable personal AI — a Django and FastAPI server
+over Postgres that indexes a person's documents, chats with local or
+hosted models, runs custom agents and scheduled automations, and answers
+from the web — and since 3 January 2026 it has a long-term memory: a
+<code>UserMemory</code> table of facts about the user, written by a
+prompt that introduces itself as <em>"Muninn, the user's memory
+manager."</em> AGPL-3.0; 5,180 commits between 4 April 2021 and 1 August
+2026 by two principal authors; 34,666 lines of Python under
+<code>src/khoj/</code>, a Next.js web client, Obsidian, Emacs, desktop
+and WhatsApp interfaces, and 223 test functions in 23 files, of which
+the memory feature has one file of 23. The screen found a devcontainer
+and a VS Code settings file that execute on open, two build-time hooks
+and five unpinned dependency surfaces; nothing was inside the seven-day
+cooldown, and nothing was installed or run.</p>
+<p>The mechanism is small and the report is about its edges. A fact is
+one first-person sentence with a pgvector embedding, a user and an
+optional agent. After every chat turn that is not an automation, a
+background task hands the last two exchanges and the facts that were
+retrieved for that turn to the extractor, which answers with a
+<code>create</code> list of new sentences and a <code>delete</code> list
+of ids; creates are embedded and inserted, deletes are hard deletes
+(<code>routers/helpers.py:994-1082</code>). On the next turn recall
+merges the ten most recent facts of the last seven days with the ten
+nearest by cosine to the query
+(<code>database/adapters/__init__.py:2292-2353</code>) and injects them
+as a dated list under <code>&lt;retrieved_memories&gt;</code> with the
+instruction <em>"Ignore them if they are not relevant"</em>
+(<code>processor/conversation/utils.py:824-830</code>). The feature is
+gated twice — a server mode of disabled, enabled-default-off or
+enabled-default-on, and a per-user switch — and every combination has a
+test.</p>
+<p>What is strong is the scoping and its evidence: user and agent are
+<code>WHERE</code> clauses on both recall arms, a custom agent sees only
+facts saved under it, and the isolation tests seed the facts that must
+stay out and assert on their text. What is weak follows from one design
+choice: the extractor's <em>"existing facts"</em> are the retrieved set,
+not the store, so a fact the query did not surface cannot be retired and
+two facts that contradict each other can coexist until a query happens
+to pull both; there is no confidence, no state, no provenance to a
+conversation, no dedupe and no consolidation; the API's update is a
+delete and an insert under a new id; and a delete id that is not numeric
+would raise past the one exception the adapter catches, in a background
+task nobody awaits.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>fact about the user, in the user's
+voice</strong>, and nothing else: the prompt's rules are that each fact
+is atomic, self-contained and first-person, that it may concern who the
+user is, their interests, circumstances, events and motivations, or
+anything they asked to have remembered, and that facts <em>"no longer
+true"</em> must be deleted. There is no other kind: no summary, no
+preference type, no episode. Everything else Khoj persists — the
+<code>Entry</code> rows of indexed documents, the JSON message log of a
+<code>Conversation</code>, an <code>Agent</code>'s persona and knowledge
+base — is a different table and a different question.</p>
+<p>A fact has one state, present, and two ways to leave it. The model
+deletes it by id in the same call that creates its replacement — the
+prompt's own example deletes <em>"I am not interested in sports"</em>
+and <em>"My mother works at the hospital"</em> while creating <em>"My
+mother works at the hospital and is a doctor"</em> — or a person deletes
+or rewrites it in settings, where a rewrite is also a delete and a
+create. Nothing supersedes, expires, decays or archives;
+<code>updated_at</code> exists and is never distinguished from
+<code>created_at</code> in practice, because no path updates a row in
+place.</p>
+<p>What the extractor believes about the store is what recall showed it.
+The call passes <code>memories=relevant_memories</code>, the merged
+recent-plus-nearest set for the current turn, as the <em>existing
+facts</em> the prompt may delete
+(<code>routers/helpers.py:1060-1082</code>). That is the epistemics in
+one line: a fact is correctable only while it is retrievable by the
+conversation that would correct it, and the seven-day recency arm is
+what keeps a fresh fact in view long enough to be contradicted.</p>
+<p>Memory is background-managed and user-visible, treated as ground
+truth when injected and hedged by an instruction. The model has no tool
+to search or write it; the person has a list.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — after a turn streams, a background task shows the extractor the last two exchanges and only the facts recall retrieved for that turn; it may create first-person facts and delete retrieved ones by id; the next turn merges the ten most recent facts of the week with the ten nearest by cosine, scoped by user and agent, and injects them as a dated list the model is told to ignore when irrelevant</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: after a turn streams, a background task shows the extractor the last two exchanges and only the facts recall retrieved for that turn; it may create first-person facts and delete retrieved ones by id; the next turn merges the ten most recent facts of the week with the ten nearest by cosine, scoped by user and agent, and injects them as a dated list the model is told to ignore when irrelevant
+flowchart TD
+    Q[&quot;chat turn q&quot;] --&gt; G{&quot;memory enabled? server mode × user switch&quot;}
+    G -- no --&gt; LLM[&quot;answer without memory&quot;]
+    G -- yes --&gt; R1[&quot;pull_memories: 10 most recent, updated within 7 days&quot;]
+    G -- yes --&gt; R2[&quot;search_memories: 10 nearest by cosine under the bi-encoder threshold&quot;]
+    R1 --&gt; M[&quot;merge by id — relevant_memories&quot;]
+    R2 --&gt; M
+    M --&gt; I[&quot;inject as a user message: &lt;retrieved_memories&gt; with created_at per line&quot;]
+    I --&gt; LLM2[&quot;answer&quot;]
+    LLM2 --&gt; S[&quot;background task: save conversation&quot;]
+    S --&gt; A{&quot;automation turn?&quot;}
+    A -- yes --&gt; N[&quot;no memory update&quot;]
+    A -- no --&gt; X[&quot;Muninn: last 2 exchanges + relevant_memories → {create[], delete[ids]}&quot;]
+    X --&gt; C[&quot;save_memory: embed and insert, agent-stamped&quot;]
+    X --&gt; D[&quot;delete_memory by id — hard DELETE&quot;]
+    U[&quot;settings list: edit = delete + create, delete&quot;] --&gt; D</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python process serves FastAPI routes over a Django ORM against
+Postgres with pgvector; the same database holds users, agents,
+conversations, the document index and the memories.
+<code>UserMemory</code>
+(<code>database/models/__init__.py:855-865</code>) and its migration
+<code>0099_usermemory.py</code> (generated 29 August 2025, merged 3
+January 2026 in <em>"Give Khoj Long Term Memories (#1168)"</em>) add one
+table; <code>UserMemoryAdapters</code>
+(<code>database/adapters/__init__.py:2292-2380</code>) is the whole
+data-access layer — pull, save, search, delete, to_dict. Embeddings come
+from the server's configured search model through
+<code>state.embeddings_model</code>, the same bi-encoder that embeds
+documents, so a memory's vector and a note's vector are comparable and a
+memory records which <code>search_model</code> produced it.</p>
+<p>The chat path in <code>routers/api_chat.py</code> computes
+<code>relevant_memories</code> once per turn and threads it into every
+downstream generator in <code>routers/helpers.py</code> — the default
+answer, research, image and diagram prompts all accept the list — and
+<code>processor/conversation/utils.py</code> renders it into the message
+list. <code>save_to_conversation_log</code> in the same module is where
+the write happens, called through <code>asyncio.create_task</code> after
+streaming ends. The web client's settings page
+(<code>src/interface/web/app/settings/page.tsx</code>) fetches
+<code>/api/memories</code>, renders each row through
+<code>userMemory.tsx</code> with an input, an update and a delete, and
+exposes the toggle at <code>/api/user/memory</code>. A Django management
+command, <code>manage_memories.py</code>, runs the same extractor over
+recent conversations for named users with a batch size, a dry run, a
+checkpoint in <code>DataStore</code> and a <code>--delete</code>
+mode.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Postgres with the pgvector extension is required; the compose file
+runs <code>pgvector/pgvector:pg15</code> beside the server. A chat model
+is required to extract anything — the extractor calls the conversation's
+agent model at <code>fast_model=False</code> — but storing, recalling
+and injecting need only the embedding model, which can be local. It runs
+fully offline with a local LLM and the bundled sentence-transformer. The
+table is plain SQL and repairable by hand; the settings list is the
+intended repair surface, and the management command's
+<code>--delete --users</code> is the bulk one.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Recall and injection.</strong>
+<code>api_chat.py:977-983</code>: if
+<code>ConversationAdapters.ais_memory_enabled(user)</code>,
+<code>pull_memories(user, agent)</code> and
+<code>search_memories(query=q, user, agent)</code> are merged into a
+dict keyed by id. <code>ais_memory_enabled</code>
+(<code>adapters/__init__.py:1623-1660</code>) reads
+<code>ServerChatSettings.memory_mode</code> and
+<code>UserConversationConfig.enable_memory</code>: disabled wins,
+default-off requires an explicit opt-in row, default-on and no server
+row default to on. <code>generate_chatml_messages_with_context</code>
+(<code>processor/conversation/utils.py:683-835</code>) appends a
+user-role message listing each fact as
+<code>- [YYYY-MM-DD HH:MM:SS]: raw</code>.</p>
+<p><strong>Write.</strong> <code>save_to_conversation_log</code>
+(<code>utils.py:545-625</code>) saves the turn, then — unless
+<code>automation_id</code> is set — calls
+<code>ai_update_memories(user, new_messages, relevant_memories, agent)</code>
+(<code>helpers.py:1044-1082</code>), which re-checks the enablement,
+calls <code>extract_facts_from_query</code> with
+<code>construct_chat_history(n=2)</code> and
+<code>to_dict(existing_facts)</code>, and applies the result:
+<code>save_memory</code> embeds with the default search model and stamps
+the agent when it is not the default;
+<code>delete_memory(user, memory_id)</code> does
+<code>UserMemory.objects.aget(user=user, id=memory_id)</code> then
+<code>adelete()</code>, catching only <code>DoesNotExist</code>. The
+prompt (<code>prompts.py:1308-1375</code>) is the whole contract, with
+one worked example.</p>
+<p><strong>Backfill.</strong> <code>manage_memories.py</code>: for each
+user, conversations updated within <code>--lookback-days</code> (default
+seven) in batches of ten, each batch run through
+<code>extract_facts_from_query</code> and saved with
+<code>--apply</code>; a checkpoint records processed users and
+conversations so <code>--resume</code> skips them.</p>
+<p><strong>API and UI.</strong> <code>api_memories.py</code>:
+<code>GET</code> lists <code>id</code>, <code>raw</code>,
+<code>created_at</code>; <code>PUT /{id}</code> deletes and recreates;
+<code>DELETE /{id}</code> deletes; each verifies the row belongs to the
+caller. <code>api.py:218-232</code> sets the user switch.</p>
+<p><strong>Tests.</strong> <code>tests/test_memory_settings.py</code> —
+sixteen cases over the mode × preference matrix and the config endpoint,
+seven over pull scoping and isolation; <code>tests/helpers.py</code>
+provides <code>acreate_test_memory</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>UserMemory</code>: <code>id</code>, <code>created_at</code>,
+<code>updated_at</code> (from <code>DbBaseModel</code>),
+<code>user</code> FK with cascade, <code>agent</code> FK nullable with
+cascade, <code>embeddings</code>
+<code>VectorField(dimensions=None)</code>, <code>raw</code> text,
+<code>search_model</code> FK set-null. No index is declared on the
+vector column in the migration; <code>CosineDistance</code> ordering is
+a full scan under the ORM. Scope is the user, and the agent as a second
+axis with an asymmetry: a fact saved under a custom agent is visible to
+that agent and to the default agent, never to another custom agent; a
+fact saved under the default agent carries <code>agent = NULL</code> and
+is visible to the default agent only. Provenance is the user, the agent
+and the embedding model — not the conversation or the turn. Time is
+<code>created_at</code>, shown to the model, and
+<code>updated_at</code>, used as the recency window's field but equal to
+<code>created_at</code> on every row because nothing updates one. There
+is no validity, version, correction chain, TTL or pinning.</p>
+<p>The two neighbours in the schema are worth naming so the boundary is
+clear. <code>Entry</code> (<code>models/__init__.py:768-800</code>) is
+the document index — raw and compiled text, an embedding, a file source,
+a hash — and is what <em>"chat with your notes"</em> retrieves;
+<code>Conversation</code> holds the message log as JSON with per-message
+context, online results and a train of thought. Neither is a memory the
+model can correct, and neither reaches the extractor except as the last
+two exchanges of the current conversation.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms, no fusion. The recency arm sorts by <code>created_at</code>
+descending over rows whose <code>updated_at</code> is within seven days
+and takes ten. The semantic arm embeds the query with the default search
+model, annotates
+<code>CosineDistance("embeddings", embedded_query)</code>, orders
+ascending, filters
+<code>distance &lt;= bi_encoder_confidence_threshold</code> when the
+model configures one, and takes ten. The union is deduplicated by id and
+injected in that order — recent first, then nearest — with no budget
+beyond twenty rows and no ranking across the two. There is no lexical
+arm, no reranker, no query rewriting and no tool: the model cannot ask
+for more, and the same twenty rows serve every generator in the
+turn.</p>
+<p>The failure modes are the ones the design invites. Over-recall is
+bounded at twenty short lines, so it costs little. Under-recall is
+structural for anything older than a week that does not embed near the
+current query, and it has a second consequence in section 7. Stale hits
+are the default state of a fact that was never contradicted in a
+retrieving conversation, softened only by the date on the line and the
+instruction to ignore.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction is model-driven, deferred and unbudgeted per turn: one
+call per non-automation turn, whatever the turn said, with the
+conversation's own chat model. The prompt asks for new facts
+<em>"related to the user"</em> and for deletion of facts <em>"no longer
+relevant or true"</em>, forbids in-place edits, and returns strict JSON
+that <code>clean_json</code> and a Pydantic model validate; a reply that
+does not parse becomes <code>MemoryUpdates(create=[], delete=[])</code>
+and an error log. Deduplication is left to the model — it is told it
+<em>"can enhance new facts with information from existing facts"</em> —
+and nothing checks a created fact against the store, so a fact restated
+across two conversations a month apart is two rows. Conflict handling is
+the delete list, which can only name what was retrieved. Agent-generated
+facts do not arise as a class: the assistant's replies are in the
+two-exchange window, so a fact the assistant asserted can be captured as
+the user's.</p>
+<p>Noisy or adversarial input is not filtered: whatever the user pasted
+is in the window the extractor reads, and a document quoted in a turn
+can become a first-person fact. Automations are excluded because
+<em>"this could get noisy."</em></p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks the response: the write runs in a task created after
+streaming ends, so the lag before a fact is retrievable is one
+extraction call plus one embedding, seconds. The read path adds two
+queries and one query embedding per turn and at most twenty lines to the
+prompt, placed after the system prompt and before the user message, so
+it changes the prefix on every turn whose retrieved set changes. No
+process re-reads the store; the management command is the only bulk pass
+and is operator-run.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model has no memory affordance. Facts arrive as a user-role
+message it is asked to weigh, and its only influence on the store is the
+extractor's reading of what it and the user said. The person has the
+settings list, the toggle, and the same API from any client. Custom
+agents get their own facts automatically by running conversations under
+them, which is the one place the design gives an operator a handle on
+scope: a "Chef" agent never learns what the "Accountant" was told.
+Automations — scheduled queries that email their result — read memory
+and never write it. There is no session boundary to manage; a
+conversation is a row, and a new one starts from the same store.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance.</strong> A fact knows its user, its agent and its
+embedding model. It does not know its conversation, its turn or whether
+the user or the assistant said the thing; the management command's
+backfill produces rows indistinguishable from live ones.</p>
+<p><strong>Verification and uncertainty.</strong> None. A fact is true
+because Muninn wrote it. The hedge is in the prompt at read time.</p>
+<p><strong>Correction reaches only what recall returned.</strong>
+<code>ai_update_memories</code> passes <code>relevant_memories</code> as
+the existing facts, so the extractor can delete a stale fact only if the
+current turn retrieved it. The recency arm covers a fact for seven days
+after creation; after that, only a query that embeds near it brings it
+back into reach. Two facts that contradict each other survive until one
+conversation pulls both.</p>
+<p><strong>Deletion is by model-supplied id.</strong>
+<code>delete_memory</code> receives the strings in the
+<code>delete</code> list and passes each to <code>aget(id=…)</code>; a
+non-numeric string raises a <code>ValueError</code> the adapter does not
+catch, in a task nobody awaits, so the remaining creates and deletes of
+that update are lost and the failure is a logged task exception. The
+prompt's example shows ids, and nothing else guarantees the model
+follows it.</p>
+<p><strong>Update is destructive.</strong>
+<code>PUT /api/memories/{id}</code> deletes and recreates, so an edit
+changes the id and the <code>created_at</code> the model is shown.</p>
+<p><strong>Isolation</strong> is enforced in the adapters and tested;
+the default agent's view over every custom agent's facts is by design
+and documented in the test name, and a user who keeps a confidential
+agent should know it.</p>
+<p><strong>Enablement</strong> is tested in all twelve
+mode-and-preference combinations, and <code>ai_update_memories</code>
+re-checks it so a turn that started with memory on cannot write after it
+was switched off.</p>
+<p><strong>Privacy.</strong> The docs' privacy page describes where
+embeddings and raw text live on the hosted service; memories are rows in
+the same database and the same shard. The AGPL-3.0 licence applies.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twenty-three tests in <code>tests/test_memory_settings.py</code>, run
+by the <code>test.yml</code> workflow the README badges. Sixteen cover
+the enablement matrix and the config endpoint; seven cover scoping: the
+default agent sees all, a custom agent sees only its own, an unspecified
+agent equals the default, save stamps a custom agent and not the
+default, users are isolated, and two custom agents cannot see each
+other. The negative cases seed the material that must stay out and
+assert on its text, with the default-agent case as the positive control
+in the same file, which is the shape the <code>negative_eval</code> mark
+asks for.</p>
+<p>Nothing tests the extractor, the prompt, the parse fallback, the
+delete path, the recency window, the semantic threshold or the injection
+format;
+<code>rg -n 'extract_facts_from_query|ai_update_memories|search_memories' tests</code>
+finds only the helper file. There is no retrieval-quality evaluation of
+memory, no benchmark and no paper —
+<code>rg -n -i 'arxiv|bibtex|citation' README.md documentation/docs</code>
+finds no citation of the memory feature — and the feature has no page
+under <code>documentation/docs/features/</code>. The tests one would
+want first are a case that a fact absent from
+<code>relevant_memories</code> cannot be deleted, which would document
+the design's central limit rather than leave it to a reader, and a case
+for a non-numeric delete id.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Scope on both arms and test it with the excluded material
+present.</strong> The isolation tests here seed four facts and assert
+three are absent by text; that is cheap and it is the test most systems
+in this atlas lack.</li>
+<li><strong>Gate the feature twice, and re-check at write time.</strong>
+A server mode with a default and a per-user switch, checked again inside
+the writer so a mid-conversation opt-out holds.</li>
+<li><strong>Keep the extractor's output structured and fail it
+empty.</strong> A strict JSON schema with an empty-lists fallback keeps
+a bad reply from becoming a bad fact, at the cost of losing the good
+ones in the same reply.</li>
+<li><strong>Run the writer after the response, not before.</strong> A
+task created after streaming ends costs the user nothing and the fact is
+live by the next turn.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Showing the extractor only what recall retrieved.</strong>
+If deletion is by id and the ids come from the retrieved set, the
+store's contradictions are exactly the facts recall did not return. Pass
+a broader candidate set to the corrector than to the prompt, or dedupe
+on write.</li>
+<li><strong>Update as delete-plus-insert.</strong> It discards the id,
+the date and any history a later feature would want.</li>
+<li><strong>Hard deletes driven by model output without a type
+check.</strong> Validate the id before the query, or the whole update
+dies on one bad string.</li>
+<li><strong>A recency window as the only path to a fact's
+correction.</strong> Seven days is a guess about how long a fact stays
+contradictable.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a memory for a personal assistant with one user per account
+and a few agents, where the facts are few, the model is trusted to write
+them, and the person is willing to read a list in settings now and then.
+It is one table and three functions, which is its virtue: an adopter can
+read the whole mechanism in an afternoon and knows exactly what it does
+not do. It does not suit anything that needs facts to carry a source, a
+state or a validity, anything with many users' facts in one store where
+a full-scan cosine query matters, or any deployment where an uncorrected
+stale fact has a cost, because correction here depends on the stale fact
+being retrieved first. Take the scoping tests and the double gate; build
+the rest.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether a production run ever sends a non-numeric delete id, and
+what the task-exception log shows when it does.</li>
+<li>What the hosted service sets <code>memory_mode</code> to, and how
+many users have opted out; the default in code is
+enabled-default-on.</li>
+<li>Whether the <code>agent</code> FK cascade means deleting a custom
+agent silently deletes the facts it accumulated, which the model and the
+tests suggest and no test asserts.</li>
+<li>Whether an index on <code>embeddings</code> exists on the hosted
+database; the migration declares none.</li>
+<li>Why the migration is dated 29 August 2025 and the feature merged on
+3 January 2026, and what changed in the design in between.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and adapters:
+<code>src/khoj/database/models/__init__.py:481-520</code>
+(<code>MemoryMode</code>), <code>:645</code>
+(<code>enable_memory</code>), <code>:855-865</code>
+(<code>UserMemory</code>),
+<code>src/khoj/database/migrations/0099_usermemory.py</code>,
+<code>src/khoj/database/adapters/__init__.py:1623-1660</code>
+(<code>ais_memory_enabled</code>), <code>:2292-2380</code>
+(<code>UserMemoryAdapters</code>).</li>
+<li>Write path: <code>src/khoj/routers/helpers.py:987-1082</code>
+(<code>MemoryUpdates</code>, <code>extract_facts_from_query</code>,
+<code>ai_update_memories</code>),
+<code>src/khoj/processor/conversation/prompts.py:1308-1375</code> (the
+Muninn prompt),
+<code>src/khoj/processor/conversation/utils.py:545-625</code>
+(<code>save_to_conversation_log</code>),
+<code>src/khoj/database/management/commands/manage_memories.py</code>.</li>
+<li>Retrieval and injection:
+<code>src/khoj/routers/api_chat.py:977-983</code>,
+<code>src/khoj/processor/conversation/utils.py:824-830</code>,
+<code>:323-340</code> (<code>construct_chat_history</code>).</li>
+<li>API and UI: <code>src/khoj/routers/api_memories.py</code>,
+<code>src/khoj/routers/api.py:218-232</code>,
+<code>src/interface/web/app/settings/page.tsx:344-372,655-720</code>,
+<code>src/interface/web/app/components/userMemory/userMemory.tsx</code>.</li>
+<li>Tests: <code>tests/test_memory_settings.py</code>,
+<code>tests/helpers.py</code>.</li>
+<li>Searches behind the absence claims:
+<code>rg -n 'UserMemory' src/khoj --glob '!*/migrations/*'</code>
+(models, adapters, <code>api_memories.py</code>,
+<code>api_chat.py</code>, <code>helpers.py</code>,
+<code>utils.py</code>, <code>manage_memories.py</code>,
+<code>tests/</code>);
+<code>rg -n 'objects\.filter\(.*UserMemory|UserMemory\.objects' src/khoj</code>
+(every read carries <code>user=</code>);
+<code>rg -n 'update\(|\.save\(' src/khoj/database/adapters/__init__.py</code>
+within the <code>UserMemoryAdapters</code> class (none — no in-place
+update);
+<code>rg -n -i 'tombstone|supersed|archived|confidence' src/khoj/database/models/__init__.py</code>
+(no hits on <code>UserMemory</code>);
+<code>rg -n 'extract_facts_from_query|ai_update_memories|search_memories' tests</code>
+(helpers only);
+<code>ls documentation/docs/features | rg -i memor</code> (none);
+<code>rg -n -i 'arxiv|bibtex|citation' README.md documentation/docs</code>
+(none).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/khoj-ai/khoj/commit/ae229ca894c0b80ad84664afcfdde523b5e87057"><code class="commit-id" title="ae229ca894c0b80ad84664afcfdde523b5e87057">ae229ca8…</code></a>
+— first reading, at the head of <code>master</code>, 5,180 commits in,
+the last dated 1 August 2026. The screen found a devcontainer and a VS
+Code settings file that execute on open and five unpinned surfaces;
+nothing was in the seven-day cooldown and nothing was installed or run.
+Two marks: <code>scope_enforced</code> for user and agent as filters on
+both recall arms, <code>negative_eval</code> for the isolation cases
+that seed the excluded facts. <code>human_review</code> withheld: the
+settings list edits and deletes live facts and adjudicates no candidate.
+<code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>audit_log</code> withheld: a fact has
+no state, deletion leaves no record, the only times are record times,
+and nothing logs a mutation.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

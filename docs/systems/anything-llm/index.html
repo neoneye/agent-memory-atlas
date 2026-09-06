@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The personalisation memory of a
+self-hosted RAG chat application: one-sentence facts about the user in a
+<code>memories</code> table scoped to a workspace or global, capped at
+twenty and five, extracted every few hours by an observer and a
+reflector that run as two tool-calling agents over the last twenty chats
+of an idle user, deduplicated and scope-classified by the reflector
+against the existing rows, appended to every system prompt as a list
+with the five workspace facts closest to the current message, promoted
+and demoted by hand in a sidebar; a chat is marked processed whether
+extraction succeeded or failed, <code>lastUsedAt</code> is written and
+read by nothing, and the public embed widget calls the prompt builder
+with a username where it expects a user.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AnythingLLM — Agent Memory Atlas">
+    <meta property="og:description" content="The personalisation memory
+of a self-hosted RAG chat application: one-sentence facts about the user
+in a <code>memories</code> table scoped to a workspace or global, capped
+at twenty and five, extracted every few hours by an observer and a
+reflector that run as two tool-calling agents over the last twenty chats
+of an idle user, deduplicated and scope-classified by the reflector
+against the existing rows, appended to every system prompt as a list
+with the five workspace facts closest to the current message, promoted
+and demoted by hand in a sidebar; a chat is marked processed whether
+extraction succeeded or failed, <code>lastUsedAt</code> is written and
+read by nothing, and the public embed widget calls the prompt builder
+with a username where it expects a user.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AnythingLLM — Agent Memory Atlas">
+    <meta name="twitter:description" content="The personalisation memory
+of a self-hosted RAG chat application: one-sentence facts about the user
+in a <code>memories</code> table scoped to a workspace or global, capped
+at twenty and five, extracted every few hours by an observer and a
+reflector that run as two tool-calling agents over the last twenty chats
+of an idle user, deduplicated and scope-classified by the reflector
+against the existing rows, appended to every system prompt as a list
+with the five workspace facts closest to the current message, promoted
+and demoted by hand in a sidebar; a chat is marked processed whether
+extraction succeeded or failed, <code>lastUsedAt</code> is written and
+read by nothing, and the public embed widget calls the prompt builder
+with a username where it expects a user.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AnythingLLM — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AnythingLLM",
+      "description": "The personalisation memory of a self-hosted RAG chat application: one-sentence facts about the user in a `memories` table scoped to a workspace or global, capped at twenty and five, extracted every few hours by an observer and a reflector that run as two tool-calling agents over the last twenty chats of an idle user, deduplicated and scope-classified by the reflector against the existing rows, appended to every system prompt as a list with the five workspace facts closest to the current message, promoted and demoted by hand in a sidebar; a chat is marked processed whether extraction succeeded or failed, `lastUsedAt` is written and read by nothing, and the public embed widget calls the prompt builder with a username where it expects a user.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Five global, twenty per workspace</p>
+          <h1>AnythingLLM</h1>
+          <p class="document-deck">The personalisation memory of a
+self-hosted RAG chat application: one-sentence facts about the user in a
+<code>memories</code> table scoped to a workspace or global, capped at
+twenty and five, extracted every few hours by an observer and a
+reflector that run as two tool-calling agents over the last twenty chats
+of an idle user, deduplicated and scope-classified by the reflector
+against the existing rows, appended to every system prompt as a list
+with the five workspace facts closest to the current message, promoted
+and demoted by hand in a sidebar; a chat is marked processed whether
+extraction succeeded or failed, <code>lastUsedAt</code> is written and
+read by nothing, and the public embed widget calls the prompt builder
+with a username where it expects a user.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Mintplex-Labs/anything-llm">
+              <span>Source</span>
+              <strong>Mintplex-Labs/anything-llm</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Mintplex-Labs/anything-llm/commit/eb7df1e81c284236e1759ec7897904dc22a6704d" title="eb7df1e81c284236e1759ec7897904dc22a6704d">
+              <span>Analyzed revision</span>
+              <code>eb7df1e8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AnythingLLM is a self-hosted chat application over documents —
+workspaces, a vector database per workspace, an agent framework called
+AIbitat with a plugin tool set, an embed widget for websites, an
+OpenAI-compatible API — and since 19 May 2026 it carries a
+personalisation memory: a <code>memories</code> table of one-sentence
+facts about the user, scoped to a workspace or global, capped at twenty
+and five. MIT; 2,352 commits between 3 June 2023 and 1 September 2026,
+most by two authors; server version 1.16.1 tagged 27 August 2026; the
+memory feature is 1,354 lines across a model, an endpoint file, a job
+and its helpers, and an injection helper, plus 697 lines of sidebar in
+the React client, with 57 unit tests in one file and 19 commits touching
+it. The screen found a devcontainer, a <code>.gitmodules</code> and two
+VS Code files that run on open and a long list of manifests inside the
+seven-day cooldown; nothing was installed or run, and the read was from
+a shallow clone with history taken from a separate blobless clone.</p>
+<p>The design is deliberately small and the constants are the design. A
+background job wakes every three hours, finds users whose workspace has
+at least five chats nobody has summarised and who have been idle twenty
+minutes, and runs two tool-calling agents in sequence: an
+<em>observer</em> that must call <code>submit-observations</code> with
+at most three candidates, each with a confidence and a reason, and a
+<em>reflector</em> that sees the candidates, every existing global fact,
+every existing workspace fact and the free global slots, and must call
+<code>save-memories</code> with each candidate's scope and an action of
+create, update or skip
+(<code>server/jobs/helpers/memory-extraction-utils.js</code>). The model
+applies the result in one transaction under the limits and marks the
+chats processed. Every chat then gets the facts appended to its system
+prompt under <em>"## Things I Remember About You"</em> — all global, and
+the five workspace facts a native ONNX reranker puts closest to the
+current message and the last three user turns
+(<code>server/utils/memories/index.js</code>).</p>
+<p>What is good is that it fits in a sidebar: a person sees every fact,
+edits, deletes, promotes and demotes, and can switch extraction or the
+whole feature off. What the report finds at the edges is what a first
+release usually has. <code>markMemoryProcessed</code> runs in a
+<code>finally</code>, so a chat whose extraction threw is processed
+forever. <code>updateLastUsed</code> stamps every injected row and no
+code reads the column. And <code>chatPrompt(workspace, user)</code> is
+called by the embed widget as
+<code>chatPrompt(embed.workspace, username)</code> with a string, so
+<code>user?.id</code> is undefined, the readers run with a null user,
+and in single-user mode — where every memory has a null
+<code>userId</code> — the instance owner's facts are appended to
+anonymous widget chats whenever memory is on.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>sentence about the user that a reflector
+accepted</strong>. The observer proposes; the reflector disposes, and
+its disposal is the only epistemics in the system: a candidate becomes
+global if <em>"knowing this would help the assistant in a completely
+different workspace"</em>, workspace otherwise; it is dropped if it
+overlaps an existing row <em>"even if worded differently"</em>; it
+becomes an <code>update</code> with an id if it refines an existing
+workspace row; and it is dropped at low confidence unless it is an
+identity fact, or at medium unless strongly supported. The observer's
+confidence and reasoning exist for that one decision and are not stored.
+The prompts are the state machine and the row has none: no confidence,
+no source chat, no status, and no record when a person deletes it or the
+reflector updates it in place.</p>
+<p>A fact enters three ways — the reflector's <code>create</code>, a
+person's form, or <code>promoteToGlobal</code> and
+<code>demoteToWorkspace</code> moving it between scopes — and leaves one
+way, a hard delete, or changes in place through <code>update</code>. The
+caps are the lifecycle: at twenty workspace facts the reflector's
+creates are sliced away and at five global the prompt tells it
+<em>"GLOBAL is full — do not return any GLOBAL memories."</em> Nothing
+ages out, and the recency the model believes in —
+<code>lastUsedAt</code>, described as <em>"for recency tracking /
+reranking"</em> — is written at every injection and consulted by
+nothing.</p>
+<p>The conversation is the evidence and it is consumed once. A chat is
+unprocessed until a job reads it, and processed after, whether the
+observer produced candidates, the reflector rejected them, the workspace
+had no model, or the run threw; a <code>/reset</code> marks chats
+excluded so they are never summarised. The consequence is that every
+fact the store will ever hold from a conversation is decided in the one
+run that sees it.</p>
+<p>Beside this sits the older memory, still shipped: the agent's
+<code>rag-memory</code> tool, whose <code>store</code> action embeds any
+text as a document titled <code>agent-memory.txt</code> by
+<code>@agent</code> into the workspace's vector database, where it is
+retrieved by the same similarity search as every uploaded file and
+listed by nothing as a memory.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every three hours a job takes an idle user's last twenty chats through an observer that proposes at most three candidates with a confidence and a reflector that sees the existing rows, classifies scope, deduplicates and may update a row by id; the result lands under caps of twenty and five, the chats are marked processed whatever happened, and every chat gets the global facts plus the five workspace facts a reranker picks appended to its system prompt</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every three hours a job takes an idle user&#39;s last twenty chats through an observer that proposes at most three candidates with a confidence and a reflector that sees the existing rows, classifies scope, deduplicates and may update a row by id; the result lands under caps of twenty and five, the chats are marked processed whatever happened, and every chat gets the global facts plus the five workspace facts a reranker picks appended to its system prompt
+flowchart TD
+    J[&quot;extract-memories job — every 3 h, memory_auto_extraction on&quot;] --&gt; G{&quot;≥ 5 unprocessed chats · idle ≥ 20 min · a model configured · slots left&quot;}
+    G -- no --&gt; K[&quot;skipped (chats stay unprocessed, or marked processed when the workspace or model is missing)&quot;]
+    G -- yes --&gt; O[&quot;Observer: last 20 chats, 1,500 chars each → submit-observations ≤ 3 {content, confidence, reasoning}&quot;]
+    O --&gt; R[&quot;Reflector: candidates + all global + all workspace rows + free global slots → save-memories {content, scope, action create|update|skip, updateId}&quot;]
+    R --&gt; A[&quot;applyExtractedMemories in one transaction: creates under the caps, updates by id&quot;]
+    A --&gt; M[(&quot;memories: userId, workspaceId, scope, content, lastUsedAt&quot;)]
+    A --&gt; P[&quot;markMemoryProcessed — in finally, on success or failure&quot;]
+    U[&quot;sidebar / API: add, edit, delete, promote, demote&quot;] --&gt; M
+    M --&gt; I[&quot;promptWithMemories: all global + 5 workspace (reranked against the message + last 3 turns when &gt; 5) → &#39;## Things I Remember About You&#39;&quot;]
+    I --&gt; C[&quot;system prompt of every chat: stream, OpenAI-compatible API, embed widget&quot;]
+    I -. &quot;updateLastUsed — written, never read&quot; .-&gt; M
+    T[&quot;agent rag-memory store&quot;] --&gt; V[(&quot;workspace vector database: agent-memory.txt&quot;)]
+    V --&gt; C</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Node server with Prisma over SQLite by default, a React client, a
+Bree background worker, a per-workspace vector database through a common
+<code>getVectorDbClass()</code>, and the AIbitat agent framework. The
+memory is one Prisma model
+(<code>server/prisma/schema.prisma:431-446</code>) with indexes on
+<code>(userId, workspaceId)</code> and <code>(userId, scope)</code>, a
+model module (<code>server/models/memory.js</code>, 461 lines) that
+validates ids and scopes and wraps every call in a try that logs and
+returns a safe value, an endpoint file
+(<code>server/endpoints/memory.js</code>) with six routes behind
+<code>validatedRequest</code> and
+<code>flexUserRoleValid([ROLES.all])</code>, the job
+(<code>server/jobs/extract-memories.js</code>) and its helpers, and the
+injector (<code>server/utils/memories/index.js</code>), which
+<code>chatPrompt</code> in
+<code>server/utils/chats/index.js:114-130</code> calls after expanding
+the workspace's system prompt variables. The reranker is
+<code>NativeEmbeddingReranker</code>, an ONNX model the server downloads
+on first use with a Mintplex-hosted fallback.
+<code>SystemSettings</code> holds <code>memory_enabled</code> and
+<code>memory_auto_extraction</code> with validators that add or remove
+the job live through <code>BackgroundWorkers.syncMemoryJob</code>.</p>
+<p>The client's <code>MemoriesSidebar</code>
+(<code>frontend/src/components/WorkspaceChat/ChatContainer/MemoriesSidebar/</code>)
+has a context that fetches the workspace's memories, tabs for the two
+scopes, cards with an edit-and-delete menu, a modal to add, and a
+<code>PersonalizationToggle</code> that only an admin or a single user
+may flip.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing beyond the application: the rows live in its database and the
+reranker model in its storage. A chat model is required to extract — the
+job resolves the workspace's chat model, then its agent model, then the
+system default, and marks the chats processed when none exists — and no
+model is required to store, inject or edit. Fully local operation is a
+local model plus the ONNX reranker. The table is plain SQL and the
+sidebar is the intended repair surface; the docs page the README links
+describes both the automatic and the managed paths.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Extraction.</strong> <code>extract-memories.js</code>:
+<code>autoMemoriesEnabled</code> gate;
+<code>WorkspaceChats.where({ memoryProcessed: null, include: true })</code>
+oldest first, grouped by user and workspace; per group,
+<code>MIN_CHATS_TO_PROCESS = 5</code>, <code>isGroupActive</code>
+against <code>MEMORY_IDLE_THRESHOLD_MS</code> (twenty minutes, zero
+disables), <code>loadLatestChats</code> re-querying the newest twenty
+with a parsed response, <code>resolveLLM</code>, the capacity check,
+<code>runObserver</code> and <code>runReflector</code> (each an AIbitat
+with <code>maxRounds: 3</code>, a <code>USER</code> agent and one worker
+agent whose only function is the submit tool, and
+<code>skipHandleExecution</code> once the handler fires), then
+<code>Memory.applyExtractedMemories</code> and, in <code>finally</code>,
+<code>WorkspaceChats.markMemoryProcessed(unprocessedIds)</code>. The
+prompts are at <code>memory-extraction-utils.js:15-60</code>.</p>
+<p><strong>Apply.</strong> <code>memory.js:345-430</code>: filter
+malformed entries, split creates and updates with a numeric
+<code>updateId</code>, compute workspace slots from the count, slice
+creates to the slots, insert and update in one
+<code>$transaction</code>.</p>
+<p><strong>Injection.</strong> <code>memories/index.js:22-55</code>
+(<code>getMemoriesForPrompt</code>), <code>:60-90</code>
+(<code>rerankMemories</code>, query = message plus the last three
+<code>prompt</code> fields, <code>topK</code> five, fallback to the
+newest five), <code>:95-105</code> (<code>formatMemories</code>),
+<code>:115-135</code> (<code>promptWithMemories</code>, appended after
+two newlines). Callers: <code>chats/stream.js:266-276</code> with the
+message and history, <code>chats/openaiCompatible.js:169,421</code>
+without, <code>chats/embed.js:182</code> with a username in the user's
+position.</p>
+<p><strong>Manual.</strong> <code>endpoints/memory.js</code>:
+<code>GET /workspaces/:slug/memories</code>,
+<code>POST /workspaces/:slug/memories</code>,
+<code>PUT /memories/:id</code>, <code>DELETE /memories/:id</code>,
+<code>POST /memories/:id/promote</code>,
+<code>POST /memories/:id/demote/:slug</code>;
+<code>frontend/src/models/memory.js</code> mirrors them.</p>
+<p><strong>Agent tool.</strong>
+<code>agents/aibitat/plugins/memory.js</code>: <code>rag-memory</code>
+with <code>search</code> (the workspace's similarity search at
+<code>topN</code>, reranked when the workspace says so) and
+<code>store</code> (<code>addDocumentToNamespace</code> with a fixed
+title and author), behind a duplicate-call tracker.</p>
+<p><strong>Tests.</strong>
+<code>server/__tests__/models/memory.test.js</code> — validations, both
+readers, create under and at the limits, update, delete, promote and
+demote under the limits, <code>updateLastUsed</code>,
+<code>countForScope</code>, <code>replaceWorkspaceMemories</code>,
+<code>applyExtractedMemories</code> (creates, updates, malformed
+entries, the workspace cap, zero slots, <code>globalSlots</code>), the
+multi-user migration and <code>get</code>, all against a mocked
+Prisma.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code>: <code>id</code>, <code>user_id</code> nullable
+with cascade, <code>workspace_id</code> nullable with cascade,
+<code>scope</code> text default <code>workspace</code>,
+<code>content</code>, <code>last_used_at</code>,
+<code>created_at</code>, <code>updated_at</code>.
+<code>workspace_chats.memory_processed</code> nullable boolean is the
+extraction cursor, and <code>include</code> is the <code>/reset</code>
+exclusion. Scope is two axes — the user always, the workspace for one
+scope and null for the other — with
+<code>VALID_SCOPES = ["workspace", "global"]</code> and the caps as
+constants on the model. There is no provenance, no confidence, no state,
+no version and no validity; <code>updatedAt</code> moves on edit and on
+the reflector's update, <code>lastUsedAt</code> on injection. In
+single-user mode every row has a null <code>userId</code>; entering
+multi-user mode runs <code>migrateToMultiUser</code> to assign them to
+the admin.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval in the search sense. The injector loads every
+global fact and every workspace fact for the user and workspace, and
+when the workspace set exceeds five, reranks it with the native ONNX
+reranker against the current message concatenated with the last three
+user turns, keeping five; without a message or history it keeps the five
+newest, and on any reranker error it does the same. The result is a
+bulleted list under one heading, appended to the system prompt, at most
+ten lines. There is no threshold, so five workspace facts are injected
+however irrelevant; there is no query the model can issue; and a fact
+the reranker never ranks in the top five is invisible to the model in
+that workspace until the set shrinks. <code>lastUsedAt</code> would be
+the recency signal and is unread.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Automatic writes are deferred, batched and bounded: at most three
+candidates per run per pair, at most one run per three hours by default,
+only over idle users with five or more new chats, only from the newest
+twenty chats with each message cut at 1,500 characters. Deduplication is
+the reflector's judgement against the rows it is shown; consolidation is
+its <code>update</code> action; conflict handling is the same — a
+candidate that contradicts an existing row can be returned as an update
+of it, or as a create beside it, at the model's choice. The observer is
+told to skip the assistant's own assessments, emotional states,
+politeness and anything only the assistant said, which is the one
+defence against the model writing its own opinions into the store, and
+it is a prompt.</p>
+<p>Manual writes are immediate. The agent tool's <code>store</code> is
+immediate too and goes to a different store entirely: a document chunk
+that the workspace's similarity search will return beside uploaded
+files, with no cap, no listing and no way to delete it except as a
+document.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Nothing blocks a chat: extraction runs in a worker on a timer, and
+the lag before a fact is injectable is up to three hours plus the idle
+window, or the run after the fifth new chat. Each run costs two agent
+conversations of up to three rounds. On the read path the injector adds
+two queries and, when a workspace holds more than five facts, one
+reranker pass per turn; the appended list sits at the end of the system
+prompt and changes whenever the reranked five change, so the prompt
+prefix is stable only for small workspaces.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The chat model has no memory tool; it receives a list. The AIbitat
+agent has <code>rag-memory</code>, which is a search over documents with
+a <code>store</code> that writes into the same index, and no access to
+the <code>memories</code> table. A person has the sidebar and the API.
+The embed widget and the OpenAI-compatible API get the same appended
+list as the chat, the API without a message to rerank against. Sessions
+are workspace threads; the extraction reads across all of a user's chats
+in a workspace regardless of thread, and a reset excludes what it
+deleted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance.</strong> None: a row does not know which chat,
+which run or which person created it, and an edited row is
+indistinguishable from a created one.</p>
+<p><strong>Verification and uncertainty.</strong> The observer's
+confidence gates the reflector and is dropped; the row has no field for
+it.</p>
+<p><strong>Processed on failure.</strong>
+<code>markMemoryProcessed</code> is in the job's <code>finally</code>
+(<code>extract-memories.js:186-188</code>), so a run that threw — a
+provider error, a malformed tool call, a transaction failure — consumes
+the chats. A workspace with no model, or a deleted workspace, also marks
+its chats processed. Nothing retries.</p>
+<p><strong>The embed widget.</strong> <code>embed.js:182</code> calls
+<code>chatPrompt(embed.workspace, username)</code>;
+<code>chatPrompt</code> (<code>chats/index.js:114-130</code>) reads
+<code>user?.id</code>, gets <code>undefined</code>, and passes
+<code>userId: null</code> to <code>promptWithMemories</code>.
+<code>globalForUser(null)</code> and
+<code>forUserWorkspace(null, workspaceId)</code> return the rows whose
+<code>userId</code> is null — in single-user mode, all of them. With
+<code>memory_enabled</code> on, an anonymous visitor's widget chat
+therefore carries the instance's facts about its owner. In multi-user
+mode the migration has moved those rows to the admin and the null lookup
+returns nothing.</p>
+<p><strong><code>lastUsedAt</code>.</strong> Written by
+<code>updateLastUsed</code> at every injection
+(<code>memory.js:255-265</code>) and read by no query in
+<code>server/</code> or the client; the reranker uses text. Declared and
+unwired.</p>
+<p><strong>Isolation.</strong> Real on the two readers and enforced by
+the model layer, not the database: every route resolves the workspace by
+slug and the user from the request before calling the model.</p>
+<p><strong>Deletion.</strong> Hard, from the sidebar or the API, with
+the chats already processed so the same conversations will not restate
+the fact; new conversations can.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>57 cases in <code>server/__tests__/models/memory.test.js</code>, all
+against a mocked Prisma client: the validators, the two readers'
+filters, creation under and at both caps, update, delete, promotion and
+demotion with their caps, <code>updateLastUsed</code>,
+<code>countForScope</code>, the transactional replace, the application
+of extracted memories including malformed entries, the workspace cap,
+zero slots and the <code>globalSlots</code> parameter, the multi-user
+migration and <code>get</code>. Nothing tests the observer, the
+reflector, the job's gates, <code>markMemoryProcessed</code> on failure,
+the injector, the reranker, or a prompt that must not contain a fact;
+<code>rg -n 'promptWithMemories|extract-memories|runObserver|runReflector' server/__tests__</code>
+finds nothing. There is no retrieval-quality evaluation, no benchmark
+and no paper; the README's feature line links a docs page.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Cap the store hard enough to read in a sidebar.</strong>
+Twenty per workspace and five global is a product decision that makes
+every other decision cheaper.</li>
+<li><strong>Two stages, and show the second one the rows.</strong> An
+observer that only proposes and a reflector that sees the existing
+facts, the free slots and a choice of create, update or skip is a cheap
+consolidation step that a single extractor cannot do.</li>
+<li><strong>Gate extraction on idleness and volume.</strong> Five unread
+chats and twenty quiet minutes is a reasonable filter on when a
+conversation is over.</li>
+<li><strong>Live-toggle the job.</strong> A settings validator that adds
+or removes the worker is better than a restart.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Marking input consumed in a <code>finally</code>.</strong> A
+failed run should leave its chats unprocessed, or record why it consumed
+them.</li>
+<li><strong>A recency column nothing reads.</strong> Either rank on it
+or drop it.</li>
+<li><strong>Passing a display name where a user object is
+expected.</strong> A helper whose scope depends on <code>user?.id</code>
+should refuse a string.</li>
+<li><strong>Two memories under one name.</strong> The agent's
+<code>store</code> and the personalisation table share a word and
+nothing else, and a user cannot list or delete what the first one
+wrote.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team or a person running AnythingLLM who wants the
+assistant to remember a name, a role, a preference and a project per
+workspace, and who will read the sidebar. It is a feature of the
+application and its constants are its shape; the extraction prompts and
+the two-stage structure are the portable part. Walk away if you need
+facts with a source or a state, more than a handful of them, a memory
+the agent can query, or a deployment with a public embed widget in
+single-user mode while memory is on.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the embed-widget injection is intended; the call passes a
+username where every other caller passes a user, and no test covers
+it.</li>
+<li>Whether the three-hour default in code or the fifteen-minute default
+in the sample environment file is the one a fresh install runs.</li>
+<li>What the reflector does with a contradiction in practice — update or
+create — since the prompt allows both and nothing measures it.</li>
+<li>Whether <code>lastUsedAt</code> will drive the reranker's fallback
+or the sidebar order, which its comment suggests and no code does.</li>
+<li>Whether chats consumed by a failed run are recoverable other than by
+hand-clearing <code>memory_processed</code>.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and model: <code>server/prisma/schema.prisma:194</code>
+(<code>memory_processed</code>), <code>:431-446</code>
+(<code>memories</code>), <code>server/models/memory.js</code> (readers
+<code>:44-83</code>, <code>create</code> <code>:85-125</code>,
+<code>update</code> <code>:127-150</code>, <code>delete</code>,
+<code>promoteToGlobal</code>, <code>demoteToWorkspace</code>
+<code>:150-255</code>, <code>updateLastUsed</code>
+<code>:255-265</code>, <code>countForScope</code>,
+<code>replaceWorkspaceMemories</code>,
+<code>applyExtractedMemories</code> <code>:345-430</code>,
+<code>migrateToMultiUser</code>),
+<code>server/models/workspaceChats.js:303-316</code>.</li>
+<li>Extraction: <code>server/jobs/extract-memories.js</code>,
+<code>server/jobs/helpers/memory-extraction-utils.js</code> (prompts
+<code>:15-60</code>, <code>runObserver</code> <code>:120-200</code>,
+<code>buildReflectorUserMessage</code>, <code>runReflector</code>
+<code>:220-360</code>),
+<code>server/utils/BackgroundWorkers/index.js:46-52,165-200</code>,
+<code>server/models/systemSettings.js:191-230,757-775</code>.</li>
+<li>Injection: <code>server/utils/memories/index.js</code>,
+<code>server/utils/chats/index.js:107-130</code>,
+<code>server/utils/chats/stream.js:266-276</code>,
+<code>server/utils/chats/openaiCompatible.js:169,421</code>,
+<code>server/utils/chats/embed.js:13-25,182</code>,
+<code>server/utils/EmbeddingRerankers/native/index.js</code>.</li>
+<li>API and client: <code>server/endpoints/memory.js</code>,
+<code>frontend/src/models/memory.js</code>,
+<code>frontend/src/components/WorkspaceChat/ChatContainer/MemoriesSidebar/</code>.</li>
+<li>Agent tool:
+<code>server/utils/agents/aibitat/plugins/memory.js</code>.</li>
+<li>Tests: <code>server/__tests__/models/memory.test.js</code>.</li>
+<li>Searches behind the absence claims:
+<code>rg -n 'lastUsedAt|last_used_at' server frontend/src --glob '!node_modules' --glob '!*.test.js'</code>
+(the schema, the migration and the one write);
+<code>rg -n 'promptWithMemories|extract-memories|runObserver|runReflector' server/__tests__</code>
+(none);
+<code>rg -n 'confidence' server/models/memory.js server/prisma/schema.prisma</code>
+(none);
+<code>rg -n -i 'supersed|tombstone|archived|deleted_at' server/models/memory.js server/prisma/schema.prisma</code>
+(none on <code>memories</code>);
+<code>rg -n 'chatPrompt\(' server/utils/chats</code> (four callers, one
+passing <code>username</code>);
+<code>rg -n 'MEMORY_EXTRACTION_INTERVAL' server docker</code>
+(<code>"3hr"</code> in the worker, <code>"15m"</code> in both sample
+environment files).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/Mintplex-Labs/anything-llm/commit/eb7df1e81c284236e1759ec7897904dc22a6704d"><code class="commit-id" title="eb7df1e81c284236e1759ec7897904dc22a6704d">eb7df1e8…</code></a>
+— first reading, at the head of <code>master</code>, five days after the
+last commit. Read from a shallow clone beside a blobless clone that
+supplied the history; screened, with a devcontainer, a
+<code>.gitmodules</code> and two VS Code files that run on open and many
+manifests inside the cooldown; nothing installed or run. One mark,
+<code>scope_enforced</code>, for user and workspace as filters on both
+readers. <code>human_review</code> withheld: the sidebar edits live rows
+and adjudicates no candidate. <code>negative_eval</code> withheld: the
+suite mocks the database and no case asserts an excluded row.
+<code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>audit_log</code> withheld: a row has
+no state, deletion leaves no record, the only times are record times,
+and nothing logs a change.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

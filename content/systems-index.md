@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **369 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **372 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -52,6 +52,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/always-on-memory-agent/"><span class="az-id">Always-On Memory Agent</span><span class="az-what">No vector DB — the model is the retriever</span><code class="az-repo">GoogleCloudPlatform/generative-ai (always-on-memory-agent)</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/sovereign/"><span class="az-id">AMITY / Archangel-8</span><span class="az-what">The capacity to refuse</span><code class="az-repo">Renkasha/Sovereign</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/animus/"><span class="az-id">Animus</span><span class="az-what">The layer is the boundary</span><code class="az-repo">railstracks/animus</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/anything-llm/"><span class="az-id">AnythingLLM</span><span class="az-what">Five global, twenty per workspace</span><code class="az-repo">Mintplex-Labs/anything-llm</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/arc-code/"><span class="az-id">arc-code</span><span class="az-what">The actuator writes the log</span><code class="az-repo">jerber/arc-code</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/arcon/"><span class="az-id">Arcon</span><span class="az-what">Five states, one wired</span><code class="az-repo">vmDeshpande/Arcon</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/arcrift/"><span class="az-id">ArcRift</span><span class="az-what">A canary secret in each of ten tenants</span><code class="az-repo">eshaan-nair/arcrift</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
@@ -153,7 +154,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## G
 
 <ul class="az">
-<li><a class="az-row" href="../systems/gbrain/"><span class="az-id">GBrain</span><span class="az-what">Claims graded, holders scored</span><code class="az-repo">garrytan/gbrain</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/gbrain/"><span class="az-id">GBrain</span><span class="az-what">Claims graded, holders scored</span><code class="az-repo">garrytan/gbrain</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/generative-agents/"><span class="az-id">Generative Agents</span><span class="az-what">Observation-reflection ancestor</span><code class="az-repo">joonspk-research/generative_agents</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/genericagent/"><span class="az-id">GenericAgent</span><span class="az-what">Memory as written policy</span><code class="az-repo">lsdefine/GenericAgent</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/genome/"><span class="az-id">GENOME</span><span class="az-what">No LLM in the write path</span><code class="az-repo">NORTHTEKDevs/genome</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
@@ -205,6 +206,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## J
 
 <ul class="az">
+<li><a class="az-row" href="../systems/joplin/"><span class="az-id">Joplin</span><span class="az-what">Notes an assistant may edit, one tool at a time</span><code class="az-repo">laurent22/joplin</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/juggler/"><span class="az-id">Juggler</span><span class="az-what">A gitignored notebook with a delete button</span><code class="az-repo">juggler-ai/juggler</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/jumbo/"><span class="az-id">Jumbo Context</span><span class="az-what">Event-sourced project memory</span><code class="az-repo">jumbocontext/jumbo.cli</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 </ul>
@@ -214,6 +216,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/kage/"><span class="az-id">Kage</span><span class="az-what">Memory verified against the code</span><code class="az-repo">kage-core/kage</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kaisen/"><span class="az-id">KAISEN</span><span class="az-what">The block outlives the reason for it</span><code class="az-repo">RAZZULLIX/KAISEN</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/khoj/"><span class="az-id">Khoj</span><span class="az-what">Muninn keeps the facts</span><code class="az-repo">khoj-ai/khoj</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kirocrew/"><span class="az-id">Kiro Crew</span><span class="az-what">Seven ways a write is refused</span><code class="az-repo">kirodotdev/KiroCrew</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/klypix-mcp/"><span class="az-id">Klypix MCP</span><span class="az-what">The state machine is a regex over the card&#x27;s own prose</span><code class="az-repo">dahshanlabs/klypix-mcp</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/knowledge-worker/"><span class="az-id">knowledge-worker</span><span class="az-what">The excerpt has to appear in the source</span><code class="az-repo">rahulmranga/knowledge-worker</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>

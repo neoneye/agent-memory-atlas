@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 369 reports.</strong></p>
+<p><strong>This page covers all 372 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -5595,29 +5595,38 @@ any kind.</li>
 <h3 id="gbrain"><a
 href="../systems/gbrain/"><code>gbrain</code></a></h3>
 <ul>
-<li>Best idea: claims typed by commitment —
-<code>fact | take | bet | hunch</code> — where only a bet resolves, and
-the resolved outcomes become a per-holder Brier score with bias tags
-like <code>over-confident-geography</code> that feed contradiction
-handling.</li>
-<li>Biggest risk: <code>since_date</code> and <code>until_date</code>
-are both written on every insert and the range query compares
-<code>since_date</code> at both ends, so a window returns claims that
-<em>began</em> in it rather than claims that were <em>true</em> during
-it.</li>
-<li>Most reusable component: <code>destructive-guard.ts</code> — impact
-preview, typed confirmation, 72-hour recoverable tombstone, under the
-principle that "the blast radius should be visible BEFORE you pull the
-trigger, and recoverable AFTER".</li>
-<li>Maturity impression: 564,000 lines of TypeScript with 1,005 test
-files, a fuzz suite, CI guards that state which way they should fail,
-and <code>grade_completion</code> recording when a calibration profile
-was computed from partial input — with the BrainBench numbers in a
-sibling repository.</li>
+<li>Best idea: <strong>a person between the extractor and the knowledge
+table, and validity read at query time.</strong> A claim the cycle
+extracts is a <code>take_proposals</code> row with a status of pending,
+accepted, rejected or superseded, and only
+<code>takes propose --accept</code>, a compare-and-set on the status,
+writes it into the takes fence; a fact carries <code>valid_from</code>
+and <code>valid_until</code> beside its record time, every active read
+adds <code>valid_until &gt; now()</code>, nothing sweeps, and history
+reads still return the lapsed row.</li>
+<li>Biggest risk: <strong>two validity models in one store.</strong>
+Facts read their window; takes store <code>since_date</code> and
+<code>until_date</code> and no query in <code>src/</code> reads the
+second, while the scorecard's <code>--since</code>/<code>--until</code>
+window compares <code>since_date</code> at both ends in both engines, so
+a window over takes returns claims that began in it rather than claims
+true during it.</li>
+<li>Most reusable component: <code>take-proposals.ts</code> with
+<code>facts/writeback-gate.ts</code> — a queue whose accept is
+concurrency-safe and whose reject stamps who and touches nothing, and a
+zero-model salience gate that must produce no work on a "Thanks"
+turn.</li>
+<li>Maturity impression: MIT, 1,062 commits in five months, 903,931
+lines of TypeScript including 2,127 test files, fifty-odd tables over
+two engine implementations, BrainBench in the tree with sealed gold and
+executable floors, a LongMemEval number that lives in prose; five of
+seven capability marks.</li>
 <li>Study when: several people write claims into one store and you
-weight them all the same.</li>
-<li>Do not copy when: you need the temporal window to mean what it
-says.</li>
+weight them all the same, or you want a worked example of a validity
+window that the read path honours without a sweeper.</li>
+<li>Do not copy when: you need one temporal convention across the whole
+store, a refusal that outlives an edit to the page it was refused from,
+or a component rather than a release train.</li>
 </ul>
 <h3 id="superlocalmemory"><a
 href="../systems/superlocalmemory/"><code>superlocalmemory</code></a></h3>
@@ -12942,6 +12951,97 @@ whose gates have names and outcome types.</li>
 assembly, decay scheduling, grounding evidence, review and audit are the
 adopter's to build, and the crate's own header describes a third layer
 it does not ship.</li>
+</ul>
+<h3 id="khoj"><a href="../systems/khoj/"><code>khoj</code></a></h3>
+<ul>
+<li>Best idea: <strong>scope on both recall arms and test it with the
+excluded facts present.</strong> <code>pull_memories</code> and
+<code>search_memories</code> filter by user always and by agent when the
+conversation runs under a custom one, and the isolation tests seed four
+facts across agents and assert three are absent by text, with the
+default agent's full view as the positive control.</li>
+<li>Biggest risk: <strong>the extractor sees only what recall
+retrieved.</strong> <code>ai_update_memories</code> passes
+<code>relevant_memories</code> — ten recent plus ten nearest — as the
+existing facts Muninn may delete, so a stale fact the query did not
+surface cannot be retired and contradictions persist until one
+conversation pulls both sides; a non-numeric delete id raises past the
+one exception the adapter catches, in a task nobody awaits.</li>
+<li>Most reusable component: <code>ais_memory_enabled</code> — a server
+mode of disabled, enabled-default-off or enabled-default-on over a
+per-user switch, re-checked inside the writer, with all twelve
+combinations tested.</li>
+<li>Maturity impression: AGPL-3.0, 5,180 commits since April 2021 by two
+principal authors, 34,666 lines of Python in the server, a memory
+feature of one table, three functions and one prompt merged 3 January
+2026 with 23 tests in one file; two of seven capability marks.</li>
+<li>Study when: you want the smallest complete design for a personal
+assistant's fact memory with per-agent isolation, readable in an
+afternoon.</li>
+<li>Do not copy when: a stale fact has a cost, because correction here
+depends on the stale fact being retrieved first; or when facts need a
+state, a source or a validity.</li>
+</ul>
+<h3 id="anything-llm"><a
+href="../systems/anything-llm/"><code>anything-llm</code></a></h3>
+<ul>
+<li>Best idea: <strong>an observer that proposes and a reflector that
+sees the rows.</strong> Two tool-calling agents in sequence — at most
+three candidates with a confidence and a reason, then a scope, a dedupe
+against every existing fact and a choice of create, update or skip —
+applied in one transaction under caps of twenty per workspace and five
+global that keep the whole store readable in a sidebar.</li>
+<li>Biggest risk: <strong>a chat is consumed whether or not extraction
+worked, and the public widget gets the owner's facts.</strong>
+<code>markMemoryProcessed</code> runs in a <code>finally</code>, so a
+failed run never retries; <code>embed.js</code> passes a username where
+<code>chatPrompt</code> expects a user, so in single-user mode every
+memory — all with a null user — is appended to anonymous widget chats
+when memory is on.</li>
+<li>Most reusable component: the extraction prompts in
+<code>memory-extraction-utils.js</code> — what to extract, what to skip,
+when to update rather than create, and the empty list as a good
+outcome.</li>
+<li>Maturity impression: MIT, 2,352 commits over three years, server
+1.16.1, a memory feature of 1,354 server lines and 697 client lines
+merged 19 May 2026 with 57 unit tests against a mocked database; one of
+seven capability marks.</li>
+<li>Study when: you want a personalisation memory small enough to show
+whole, with a second model stage doing the consolidation.</li>
+<li>Do not copy when: a fact needs a source, a state or a retry; or when
+a chat surface other than the logged-in one shares the prompt
+builder.</li>
+</ul>
+<h3 id="joplin"><a
+href="../systems/joplin/"><code>joplin</code></a></h3>
+<ul>
+<li>Best idea: <strong>every capability beyond the open note is a
+switch, and the refusal names it.</strong> Eleven global tools each
+behind an <code>ai.tool.&lt;id&gt;.enabled</code> setting that defaults
+to off, a disabled call answered with the setting the model should ask
+the user to enable, remote providers behind a second opt-in with the LAN
+counted as remote, and an MCP server that inherits the same
+switches.</li>
+<li>Biggest risk: <strong>the assistant remembers nothing and attributes
+nothing.</strong> The chat is panel state a restart empties, a note
+carries no mark of what the model wrote, and the app's
+<code>revisions</code> collapse ten minutes of edits into one and expire
+at ninety days.</li>
+<li>Most reusable component: <code>EmbeddingIndexer.ts</code> — an
+indexer on the application's own change feed with a durable cursor
+advanced after the batch, one embedding per note per tick, removal for
+trashed, locked and conflict notes, and a clear-and-rebuild when the
+model id changes.</li>
+<li>Maturity impression: AGPL-3.0, 15,728 commits since 2017 by the
+GitHub count, release 3.7.16 the day of the pin, an AI service of 4,250
+lines with 130 test cases in sixteen files added over three months, an
+MCP server with 26; one of seven capability marks.</li>
+<li>Study when: you want an assistant over a human's notes with the
+smallest default blast radius, or a worked example of a semantic index
+that rides an app's change feed.</li>
+<li>Do not copy when: you need the assistant to learn across sessions, a
+scope that confines rather than filters, or provenance on what a model
+wrote.</li>
 </ul>
         </article>
       </div>

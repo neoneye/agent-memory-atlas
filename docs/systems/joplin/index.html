@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The AI service inside a
+note-taking application that predates it by nine years: a chat scoped to
+the open note, an assistant that edits it through anchored tools and may
+read, search, create, tag, move and trash the rest of the notebook only
+when each tool is switched on, a background indexer that follows the
+app's own change feed into a sqlite-vec index over chunks and rebuilds
+itself when the embedding model changes, three relevance presets over
+cosine, a token budget that refuses rather than truncates, a plugin API
+that exposes chat, search and raw embeddings, and an MCP server that
+hands the same gated tools to any external agent; the notes are the
+memory, and the machine's only claim on them is a version history the
+app already kept.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Joplin — Agent Memory Atlas">
+    <meta property="og:description" content="The AI service inside a
+note-taking application that predates it by nine years: a chat scoped to
+the open note, an assistant that edits it through anchored tools and may
+read, search, create, tag, move and trash the rest of the notebook only
+when each tool is switched on, a background indexer that follows the
+app's own change feed into a sqlite-vec index over chunks and rebuilds
+itself when the embedding model changes, three relevance presets over
+cosine, a token budget that refuses rather than truncates, a plugin API
+that exposes chat, search and raw embeddings, and an MCP server that
+hands the same gated tools to any external agent; the notes are the
+memory, and the machine's only claim on them is a version history the
+app already kept.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Joplin — Agent Memory Atlas">
+    <meta name="twitter:description" content="The AI service inside a
+note-taking application that predates it by nine years: a chat scoped to
+the open note, an assistant that edits it through anchored tools and may
+read, search, create, tag, move and trash the rest of the notebook only
+when each tool is switched on, a background indexer that follows the
+app's own change feed into a sqlite-vec index over chunks and rebuilds
+itself when the embedding model changes, three relevance presets over
+cosine, a token budget that refuses rather than truncates, a plugin API
+that exposes chat, search and raw embeddings, and an MCP server that
+hands the same gated tools to any external agent; the notes are the
+memory, and the machine's only claim on them is a version history the
+app already kept.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Joplin — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Joplin",
+      "description": "The AI service inside a note-taking application that predates it by nine years: a chat scoped to the open note, an assistant that edits it through anchored tools and may read, search, create, tag, move and trash the rest of the notebook only when each tool is switched on, a background indexer that follows the app's own change feed into a sqlite-vec index over chunks and rebuilds itself when the embedding model changes, three relevance presets over cosine, a token budget that refuses rather than truncates, a plugin API that exposes chat, search and raw embeddings, and an MCP server that hands the same gated tools to any external agent; the notes are the memory, and the machine's only claim on them is a version history the app already kept.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Notes an assistant may edit, one tool at a
+time</p>
+          <h1>Joplin</h1>
+          <p class="document-deck">The AI service inside a note-taking
+application that predates it by nine years: a chat scoped to the open
+note, an assistant that edits it through anchored tools and may read,
+search, create, tag, move and trash the rest of the notebook only when
+each tool is switched on, a background indexer that follows the app's
+own change feed into a sqlite-vec index over chunks and rebuilds itself
+when the embedding model changes, three relevance presets over cosine, a
+token budget that refuses rather than truncates, a plugin API that
+exposes chat, search and raw embeddings, and an MCP server that hands
+the same gated tools to any external agent; the notes are the memory,
+and the machine's only claim on them is a version history the app
+already kept.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/laurent22/joplin">
+              <span>Source</span>
+              <strong>laurent22/joplin</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/laurent22/joplin/commit/7e73a2a271a1f71a7877a972677b5d588241e552" title="7e73a2a271a1f71a7877a972677b5d588241e552">
+              <span>Analyzed revision</span>
+              <code>7e73a2a2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Joplin is a note-taking application with sync, nine years old at this
+commit — 15,728 commits since 16 January 2017 by the GitHub count, a
+<code>dev</code> default branch, release 3.7.16 on 6 September 2026,
+AGPL-3.0-or-later — and since 12 June 2026 it carries an AI service
+under <code>packages/lib/services/ai/</code>: 4,250 lines of TypeScript
+with 130 test cases in sixteen files, 41 commits in, plus a 147-line MCP
+server with 26 tests. The screen found an <code>.envrc</code> and a VS
+Code settings file that run on open and a long list of manifests inside
+the seven-day cooldown; nothing was installed or run, and the clone was
+shallow, so every count of history here comes from the GitHub API rather
+than from <code>git log</code>.</p>
+<p>The notes are the memory. What the report is about is what the
+machine may do to them and how it finds them. A chat is opened on a
+note; the note's body is pre-loaded into the transcript as a synthetic
+<code>editor_readNoteBody</code> tool call so the first turn costs no
+round trip (<code>noteChat.ts:88-110</code>); the assistant edits
+through anchored <code>editor_</code> tools whose changes are applied to
+the body once, after the whole tool batch, and refused outright if the
+note changed underneath the request (<code>noteChat.ts:300-330</code>).
+Beyond the open note there are eleven global tools — read, search by
+keyword with Joplin's filter grammar, search by meaning, create, update,
+trash, tag, list notebooks and tags, create a notebook, view an image —
+and every one of them is a setting that defaults to off
+(<code>builtInMetadata.ts:872-940</code>), with a refusal that tells the
+model which setting to ask the user to flip
+(<code>ToolIndex.ts:47-60</code>). The semantic side is a background
+<code>EmbeddingIndexer</code> that follows the application's own
+<code>item_changes</code> feed with a durable cursor, chunks and embeds
+each modified note on device, stores the vectors in sqlite-vec, removes
+them when a note is trashed, locked or in conflict, and wipes and
+rebuilds the whole index when the embedding model's id changes
+(<code>EmbeddingIndexer.ts:200-330</code>).</p>
+<p>What is strong is the posture. <code>ai.enabled</code> is off; remote
+providers need a second opt-in and a LAN address counts as remote; each
+tool is a switch; a conversation that outgrows an 80,000-token budget is
+refused rather than truncated; an MCP server exposes the same gated
+tools to outside agents and is off too. What is weak, in the atlas's
+terms, is that nothing here is epistemic: a note has no state the
+assistant can set, no provenance distinguishes a sentence the model
+wrote from one the person did, the only history is the app's
+<code>revisions</code> table with its ten-minute collapse and ninety-day
+expiry, and the chat's own memory is Redux state that a restart empties.
+Logseq is the comparison — a human knowledge base agents can write to —
+and Joplin's answer to the same question is narrower and more
+switchable.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a note, and a note is what the person wrote plus what the
+assistant was allowed to change. There is no candidate state, no
+verification and no decay: a note is true because it is in the notebook.
+The assistant reaches a note three ways — the open one, pre-loaded
+whole; a keyword hit through <code>search_notes</code>, which returns
+ids, titles and a 240-character snippet anchored on the match; or a
+chunk through <code>semantic_search_notes</code>, which returns the
+chunk text and a cosine score and tells the model to
+<code>read_note</code> for the rest. It changes a note two ways — the
+open one through anchored edits collected and applied once per tool
+batch, or any note through <code>update_note</code>'s partial operations
+(<code>append</code>, <code>prepend</code>, a single-match
+<code>replace_text</code>, a full <code>body</code>), each of which is a
+normal <code>Note.save</code> that enters the change feed, the sync
+queue and the revision history exactly as a keystroke would. A note
+stops being reachable by <code>delete_note</code>, which is the trash —
+<code>deleted_time</code>, a person restores — and the indexer drops its
+vectors at the next tick.</p>
+<p>The index is a derived view with its own lifecycle. It starts when
+<code>ai.embedding.enabled</code> is on and sqlite-vec loaded, walks the
+vault in batches of a hundred until <code>initialScanDone</code>, then
+reads <code>item_changes</code> from <code>lastProcessedChangeId</code>,
+collapsing repeated edits to one note per tick, embedding the title
+twice into the first chunk so title-anchored queries hit, and advancing
+the cursor only after the batch finishes so a crash reprocesses rather
+than skips. A note that throws during the initial scan is remembered for
+the session and retried next launch. A change of <code>modelId</code>
+clears everything and starts over, because vectors from two models are
+not comparable.</p>
+<p>Trust is a set of switches a person holds. Whether the assistant may
+see anything beyond the open note, whether it may write, whether a
+remote model may see the text at all, and whether an outside agent may
+reach the tools over MCP are four separate settings, each off. The
+assistant's memory of the conversation is the panel's state, separated
+by a marker when the person switches notes and gone when the app
+closes.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a chat on the open note pre-loads its body and edits it through anchored tools applied once per batch and refused if the note moved; eleven global tools reach the rest of the notebook only when each is switched on, and an MCP server hands the same gated tools to outside agents; every save enters the app's change feed, which a background indexer follows into a sqlite-vec index it rebuilds when the model changes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a chat on the open note pre-loads its body and edits it through anchored tools applied once per batch and refused if the note moved; eleven global tools reach the rest of the notebook only when each is switched on, and an MCP server hands the same gated tools to outside agents; every save enters the app&#39;s change feed, which a background indexer follows into a sqlite-vec index it rebuilds when the model changes
+flowchart TD
+    P[&quot;person opens a note, sends a message&quot;] --&gt; S[&quot;system prompt: note title, id, Markdown extras, selection; body pre-loaded as a synthetic editor_readNoteBody&quot;]
+    S --&gt; M[&quot;model (OpenAI-compatible · Anthropic · Joplin Cloud; remote needs ai.allowRemote)&quot;]
+    M --&gt; E[&quot;editor_ tools: anchored edits on the open note&quot;]
+    M --&gt; G{&quot;global tool enabled in Settings → AI?&quot;}
+    G -- no --&gt; R[&quot;refusal naming the setting to enable&quot;]
+    G -- yes --&gt; T[&quot;read_note · search_notes · semantic_search_notes · create_note · update_note · delete_note (trash) · manage_tags · create_notebook · list_*&quot;]
+    E --&gt; A{&quot;note changed during the request?&quot;}
+    A -- yes --&gt; X[&quot;edits refused, every edit result marked failed&quot;]
+    A -- no --&gt; W[&quot;updateNoteBody once per batch&quot;]
+    T --&gt; N[(&quot;notes · folders · tags · revisions&quot;)]
+    W --&gt; N
+    N --&gt; C[&quot;item_changes feed&quot;]
+    C --&gt; I[&quot;EmbeddingIndexer: cursor, batches of 100, collapse per note, drop trashed/locked/conflict, rebuild on model change&quot;]
+    I --&gt; V[(&quot;note_embeddings_meta + sqlite-vec&quot;)]
+    V --&gt; T
+    O[&quot;external agent over MCP (mcp.enabled, off)&quot;] --&gt; G</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs inside the application process: the desktop app's
+<code>ChatPanel</code>
+(<code>packages/app-desktop/gui/ChatPanel/ChatPanel.tsx</code>) calls
+<code>runNoteChat</code> in <code>packages/lib</code>, which calls
+<code>AiService</code> for the model and <code>ToolIndex</code> for the
+tools; the tools call the same <code>Note</code>, <code>Folder</code>,
+<code>Tag</code> and <code>SearchEngineUtils</code> models the rest of
+the app uses; the indexer is a singleton with a timer.
+<code>AiService</code> (<code>AiService.ts</code>) builds one provider
+from settings — <code>OpenAiCompatibleProvider</code> with a
+classification of local or remote derived from the base URL's host,
+where only loopback hosts are local and <em>"LAN traffic still requires
+the user's ai.allowRemote opt-in"</em>
+(<code>classification.ts:3-6</code>), <code>AnthropicProvider</code>,
+<code>JoplinCloudProvider</code>, which reads a
+<code>tokens_budget</code> from the response and reports usage to the
+UI, and a <code>TestProvider</code> for the suite — and re-builds it
+when any of four settings change. <code>LocalEmbeddingProvider</code>
+runs multilingual-e5-small through <code>OnnxRuntime</code> after
+<code>EmbeddingModelDownloader</code> fetches it;
+<code>SqliteVec.ts</code> loads the extension, and
+<code>NoteEmbedding.vectorSearchAvailable()</code> is the one check
+every vector path gates on.</p>
+<p>Storage is Joplin's SQLite: migration 52 adds
+<code>note_embeddings_meta</code> (<code>note_id</code>,
+<code>chunk_index</code>, <code>chunk_text</code>,
+<code>model_id</code>, <code>created_time</code>) and the
+<code>note_embeddings_vec</code> vec0 table is created lazily, joined by
+rowid. The embeddings are local state — they are not sync items — while
+the notes they index are. <code>McpServer.ts</code> is a JSON-RPC router
+for <code>initialize</code>, <code>tools/list</code>,
+<code>tools/call</code> and <code>ping</code> over the app's HTTP
+transport, built on the same <code>ToolIndex</code> without an editor
+context, so an outside agent gets the global tools and nothing else.
+<code>JoplinAi.ts</code> gives plugins <code>chat</code>,
+<code>search</code>, <code>getEmbeddings</code> (paged by an opaque
+<code>v1:&lt;rowid&gt;</code> cursor, with a model-consistency check per
+page) and <code>getIndexStatus</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing to stand up: the user installs Joplin, turns on AI in
+settings, picks a provider, and optionally lets the embedding model
+download. Fully local operation is a local OpenAI-compatible endpoint
+plus the on-device embedder; the search and the index need no key.
+Repair is the app's own — the trash, the note history, and a settings
+toggle that clears the index by changing the model. What degrades
+without sqlite-vec is stated: the indexer refuses to start and
+<code>semantic_search_notes</code> reports the configuration problem to
+the model.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Chat loop.</strong> <code>runNoteChat</code>
+(<code>noteChat.ts:139-170</code>) builds the history with
+<code>createHistory</code> — system prompt from
+<code>systemPrompt(note)</code> (<code>:44-75</code>), prior turns minus
+any old system message, the new message, and on a new chat the synthetic
+read — then loops <code>stepNoteChat</code> while the last message is an
+undelivered tool result, disabling tools after five consecutive failed
+rounds. <code>stepNoteChat</code> (<code>:180-220</code>) asserts the
+budget (<code>assertWithinTokenBudget</code>, <code>:225-255</code>,
+80,000 tokens at four characters each, an error naming the remedy),
+builds <code>ToolIndex</code> for the current note, calls
+<code>AiService.instance().chat(messages, { tools })</code>, appends the
+reply, and runs the tools.</p>
+<p><strong>Tools.</strong> <code>runTools</code>
+(<code>:270-360</code>): each call goes through a fresh
+<code>ToolIndex</code> whose <code>updateNoteBody</code> writes into a
+local <code>body</code>; a disabled or unknown tool gets
+<code>describeToolNotFoundFailure</code>; a <code>ToolError</code> is
+returned to the model as <code>failed: &lt;reason&gt;</code>; after the
+batch, if any edit succeeded and the body differs from the initial one,
+<code>hadExternalBodyChanges</code> is checked and the whole batch of
+edits is marked failed when the note moved, otherwise
+<code>commands.updateNoteBody(body, initialBody)</code> writes once.
+<code>ToolIndex.ts:11-27</code> merges <code>globalTools</code> with
+<code>buildEditorTools</code> and reads
+<code>ai.tool.&lt;id&gt;.enabled</code> per tool,
+<code>ai.tool.edit_current.enabled</code> for the editor set.
+<code>tools/global/updateNote.ts:60-120</code> loads the note, refuses a
+conflict or trashed one, validates a target notebook, and applies title,
+notebook, to-do state and one of the body operations;
+<code>deleteNote.ts</code> calls
+<code>Note.batchDelete([id], { toTrash: true })</code>;
+<code>searchNotes.ts:15-75</code> runs
+<code>SearchEngineUtils.notesForQuery</code> and anchors a snippet on
+the keywords; <code>semanticSearchNotes.ts:15-70</code> maps a notebook
+or tag to a scope and a relevance name to
+<code>SearchService.search</code>.</p>
+<p><strong>Index.</strong> <code>EmbeddingIndexer.ts</code>:
+<code>runInBackground</code> (<code>:60-80</code>) with the sqlite-vec
+gate, <code>scheduleNextTick</code> (<code>:90-100</code>) at 30 seconds
+or 3 minutes, <code>maintenance</code> (<code>:150-175</code>) →
+<code>handleModelChange</code> (<code>:180-195</code>) →
+<code>runInitialScanBatch</code> (<code>:240-270</code>) or
+<code>processChangeBatch</code> (<code>:200-235</code>) →
+<code>indexNote</code> (<code>:272-320</code>): load, drop if locked,
+conflict, trashed or empty, <code>chunkText</code>, title doubled into
+chunk 0, <code>provider.embed</code>, and
+<code>NoteEmbedding.saveChunks</code>, which deletes the note's chunks
+first so a retry is idempotent.</p>
+<p><strong>Search.</strong> <code>SearchService.search</code>
+(<code>SearchService.ts:150-200</code>): provider required,
+<code>RELEVANCE_DEFAULTS</code> (<code>:24-28</code>), query vectors
+from text or from an indexed note's own chunks, scope resolved to note
+ids with an empty scope meaning search nothing,
+<code>NoteEmbedding.similaritySearch</code> at <code>k</code>, cosine
+from L2 distance (<code>:55-60</code>), a floor at
+<code>minScore</code>, best score per chunk, sorted and cut at
+<code>k</code>.</p>
+<p><strong>Surfaces.</strong>
+<code>packages/app-desktop/gui/ChatPanel/ChatPanel.tsx</code>
+(disclosure acknowledgement, Redux history per window, a separator on
+note switch at <code>:137-154</code>),
+<code>packages/lib/services/plugins/api/JoplinAi.ts</code>,
+<code>packages/lib/services/mcp/McpServer.ts</code>,
+<code>availability.ts</code> (nine reasons a feature is unavailable,
+mirrored before the user types).</p>
+<p><strong>Tests.</strong> <code>SearchService.test.ts</code>,
+<code>EmbeddingIndexer.test.ts</code>, <code>noteChat.test.ts</code>,
+<code>noteChat.tools.test.ts</code>, <code>AiService.test.ts</code>,
+<code>availability.test.ts</code>, <code>chunker.test.ts</code>,
+<code>LocalEmbeddingProvider.test.ts</code>,
+<code>OnnxRuntime.test.ts</code>, <code>SqliteVec.test.ts</code>,
+<code>EmbeddingModelDownloader.test.ts</code>,
+<code>aiSettingsTransition.test.ts</code>, the provider tests,
+<code>McpServer.test.ts</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The note is Joplin's: <code>id</code>, <code>title</code>,
+<code>body</code>, <code>parent_id</code>, <code>is_todo</code>,
+<code>todo_completed</code>, <code>deleted_time</code>,
+<code>is_conflict</code>, <code>is_locked</code>, timestamps, tags
+through <code>note_tags</code>, resources by id in the body, encryption
+state. <code>item_changes</code> records every create, update and delete
+with a type and a source, and is the feed both sync and the indexer read
+from. <code>revisions</code> holds diffs the
+<code>RevisionService</code> collects from the same feed, no more often
+than <code>intervalBetweenRevisions</code> (ten minutes) per note and
+expiring after <code>revisionService.ttlDays</code> (ninety), so an
+assistant's edit is versioned the way a person's is and not more finely.
+<code>note_embeddings_meta</code> and the vec0 table hold one row per
+chunk with the <code>model_id</code>; <code>Setting</code> holds the
+indexer's three cursors.</p>
+<p>Scope is the profile. A notebook and a tag are properties a search
+may filter on. Provenance is absent at the note level: nothing records
+that a sentence came from <code>update_note</code>, and the chat
+transcript that would show it is not persisted. Time is the app's
+<code>created_time</code> and <code>updated_time</code>, the revision
+timestamps and the trash timestamp; there is no validity, no TTL on
+content and no pin.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms the model chooses between, both explicit. The keyword arm is
+Joplin's search engine with its filter grammar — <code>notebook:</code>,
+<code>tag:</code>, <code>title:</code>, <code>body:</code>,
+<code>type:</code>, <code>iscompleted:</code>, <code>created:</code> and
+<code>updated:</code> with <code>day-N</code> shorthands,
+<code>due:</code>, <code>sourceurl:</code>, <code>resource:</code> —
+described to the model in the tool text with examples, returning up to a
+capped number of notes with a snippet. The semantic arm is chunk-level
+cosine over sqlite-vec with three presets: strict
+<code>k=5, minScore 0.86</code>, normal <code>10, 0.83</code>, loose
+<code>20, 0.74</code>, tuned for multilingual-e5-small whose scores
+<em>"usually"</em> land in <code>[0.7, 1]</code>; a notebook or a tag
+narrows the candidate ids first, and an empty scope returns nothing.
+Results are chunks with scores, not notes, and the model is told to read
+the note for the rest. There is no fusion, no reranker, no automatic
+injection and no budget on what the model reads back:
+<code>read_note</code> pages a long body by offset and character count
+at the model's discretion, inside the 80,000-token ceiling the whole
+transcript is held to.</p>
+<p>Failure modes: a keyword query that names a filter wrong returns
+nothing with no hint beyond the tool text; a semantic query under
+<code>strict</code> may return nothing at all, which the test suite
+treats as legitimate; a note trashed by mistake is out of both arms
+until restored; a chunk boundary can split the fact a query wanted, and
+the title-doubling is the one mitigation.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are the model's tool calls, applied synchronously in the chat
+turn, under a person's switches. Editor edits are anchored on exact
+substrings of the current body and applied together; global writes are
+ordinary model saves. Nothing extracts, summarises or consolidates: the
+assistant does not learn from the conversation, and the conversation is
+not stored. Deduplication, conflict handling and TTL are the app's — a
+sync conflict produces a conflict note the tools refuse to touch,
+<code>replace_text</code> errors when its anchor matches twice or not at
+all, and nothing expires. Malicious input is the note itself: a note
+that instructs the assistant is read into the transcript whole, and the
+only defence is the switch set.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A turn costs one model call plus one per tool round; the indexer
+costs one embedding per changed note per tick, batched at a hundred, and
+a full re-embed on a model change. A saved note is searchable by meaning
+within the next tick — three minutes in steady state — and by keyword at
+once. The chat pre-loads the whole note, so the prompt prefix changes
+with every note the person opens and the budget is spent on the note
+before the conversation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The assistant is a chat panel on a note. Its agency is exactly the
+enabled tools, and the default set is one: edit the open note. A person
+who wants it to search, read or write elsewhere turns each capability on
+in Settings → AI, and the model is told, when it tries a disabled one,
+which setting to ask for. Plugins get <code>joplin.ai.chat</code>,
+<code>search</code>, <code>getEmbeddings</code> and
+<code>getIndexStatus</code>, so a plugin can build its own memory over
+the index. An external agent gets <code>joplin-mcp</code> over HTTP
+JSON-RPC when <code>mcp.enabled</code> is on, with the same tool list
+and the same switches and, at this commit, no editor context — it can
+<code>update_note</code> but not anchor-edit. There is no session
+boundary in the atlas's sense, because nothing persists across one: the
+chat's memory is the panel.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance.</strong> None on the note; the transcript shows
+each tool call with a user-facing description while the panel is
+open.</p>
+<p><strong>Verification.</strong> None. The note is the truth.</p>
+<p><strong>Injection.</strong> A note's body enters the transcript
+verbatim and the system prompt asks the model to keep Joplin's Markdown
+conventions; there is no sanitiser. The mitigations are structural — a
+disabled tool cannot be called however the note asks — and the
+disclosure the panel requires before first use.</p>
+<p><strong>Concurrency.</strong> An edit batch is applied once against
+the body the turn started from, and refused when the note changed in the
+meantime, with every edit result rewritten as a failure so the model
+does not believe a change it did not make. The indexer never overlaps
+two maintenance runs and advances its cursor after the batch.</p>
+<p><strong>Data loss.</strong> <code>delete_note</code> is the trash. A
+trashed note's vectors are gone from the index until it is restored and
+re-indexed. A model change drops the entire index and rebuilds from the
+notes, which are the canonical store, so the index is always
+recoverable.</p>
+<p><strong>Privacy.</strong> <code>ai.enabled</code> and
+<code>ai.allowRemote</code> are two separate opt-ins, loopback is the
+only local host, Joplin Cloud is a remote provider that reports a token
+budget, and the disclosure setting gates the panel.</p>
+<p><strong>Uncertainty.</strong> Not represented; a semantic hit carries
+a score the model sees and nothing else does.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>130 cases in sixteen files under <code>services/ai/</code>, with the
+vector cases skipping where sqlite-vec is absent and saying so.
+<code>SearchService.test.ts</code> covers the missing provider, ranking,
+the empty query, folder and tag scopes, the empty tag, query-by-note-id,
+the strict-versus-loose monotonic property, the embeddings pager's
+cursor, limits, model consistency and malformed cursor, and sub-chunk
+narrowing. <code>EmbeddingIndexer.test.ts</code> covers the provider
+gate, end-to-end indexing, ranking, removal for deleted and locked
+notes, skipping trashed and conflict notes, empty notes, title-only
+notes, title weighting, cursor advance, model-change rebuild,
+non-overlapping maintenance, backfill past the cursor, per-session
+failure skipping, the sqlite-vec gate and the status mapping.
+<code>noteChat.test.ts</code> and <code>noteChat.tools.test.ts</code>
+cover the budget, tool identifiers, the settings gate and the refusal
+text. The folder-scope case is written against vacuity — it queries by
+the note's own id <em>"so the 'scope restricts results' check below is
+non-vacuous"</em> — and is the case the <code>negative_eval</code> mark
+rests on.</p>
+<p>There is no retrieval-quality evaluation of the semantic index beyond
+ranking one note above another with the test provider's bigram
+embedding, no benchmark, and no paper;
+<code>rg -n -i 'arxiv|bibtex' readme.md</code> finds no citation of the
+AI service. The tests one would want are a prompt-injection case — a
+note whose body asks for a disabled tool, asserting the refusal — and a
+case that an anchored edit is refused when the note changed, which
+<code>runTools</code> implements and no test named exercises.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Tools as settings, with a refusal that names the
+switch.</strong> Ship every capability beyond the current document off,
+and make the model's failed call return the exact setting a user can
+enable.</li>
+<li><strong>Pre-load the working document as a tool result.</strong> A
+synthetic read in the transcript saves a round trip and keeps the
+model's view of the note honest about where it came from.</li>
+<li><strong>Apply an edit batch once, and refuse it when the document
+moved.</strong> Collect edits against the body the turn began with,
+write once, and mark every edit failed when an external change
+intervened.</li>
+<li><strong>Ride the application's change feed with a durable
+cursor,</strong> collapse repeated edits per item per tick, advance the
+cursor after the batch, and rebuild the whole index when the model id
+changes.</li>
+<li><strong>Write the non-vacuous scope test</strong> and say in the
+comment why the query is by the note's own id.</li>
+<li><strong>Refuse an oversized conversation rather than truncating
+it,</strong> and tell the user the two remedies.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Treating a notebook filter as scope.</strong> An optional
+narrowing the model chooses is not a boundary; anything with a
+<code>read_note</code> and a search sees the whole profile.</li>
+<li><strong>Chunk results without note results.</strong> A semantic hit
+that returns a chunk and asks the model to read the rest spends a tool
+round on every answer.</li>
+<li><strong>Version history as the only audit.</strong> A ten-minute
+collapse and a ninety-day expiry record what changed, not who or
+why.</li>
+<li><strong>An MCP server with the app's switches and none of its
+own.</strong> The tools an outside agent gets are the tools the person
+enabled for the panel.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a person who already keeps their life in Joplin and wants
+an assistant that can touch it under explicit switches, with a local
+model and a local index, and who does not need the assistant to remember
+anything between conversations. It is an application feature, not a
+library: the tool index, the indexer and the search service are
+separable in principle and written against Joplin's models in practice.
+Walk away if you need the assistant to learn, to attribute what it
+wrote, to hold a belief in a state, or to be confined to a subset of the
+notes; the design offers switches, not scopes.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the MCP transport gains authentication or a per-client tool
+allow-list; at this commit <code>mcp.enabled</code> and the app's shared
+tool switches are the whole policy.</li>
+<li>Whether the chat history will persist per note, and if so where and
+under what deletion; today it is Redux state per window.</li>
+<li>How <code>read_note</code>'s paging interacts with the 80,000-token
+budget on a vault of long notes, which no test exercises.</li>
+<li>Whether <code>revisionService</code> will record the assistant as
+the author of a revision, which would be the cheapest provenance
+available.</li>
+<li>What the Joplin Cloud provider's <code>tokens_budget</code> is, and
+whether it gates anything client-side beyond the status toast.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Chat: <code>packages/lib/services/ai/noteChat.ts</code> (system
+prompt <code>:44-75</code>, <code>createHistory</code>
+<code>:77-115</code>, <code>runNoteChat</code> <code>:139-170</code>,
+<code>stepNoteChat</code> <code>:180-220</code>,
+<code>assertWithinTokenBudget</code> <code>:225-255</code>,
+<code>runTools</code> <code>:270-360</code>), <code>AiService.ts</code>,
+<code>classification.ts</code>, <code>availability.ts</code>,
+<code>providers/OpenAiCompatible.ts</code>,
+<code>providers/Anthropic.ts</code>,
+<code>providers/JoplinCloud.ts</code>,
+<code>aiSettingsTransition.ts</code>.</li>
+<li>Tools: <code>packages/lib/services/ai/tools/ToolIndex.ts</code>,
+<code>buildEditorTools.ts</code>, <code>types.ts</code>,
+<code>utils/settings.ts</code>, <code>utils/buildTool.ts</code>,
+<code>global/</code> (eleven tools),
+<code>packages/lib/models/settings/builtInMetadata.ts:645-940</code>
+(the <code>ai.*</code> settings and per-tool defaults).</li>
+<li>Index and search:
+<code>packages/lib/services/ai/EmbeddingIndexer.ts</code>,
+<code>SearchService.ts</code>, <code>chunker.ts</code>,
+<code>LocalEmbeddingProvider.ts</code>,
+<code>EmbeddingModelDownloader.ts</code>, <code>OnnxRuntime.ts</code>,
+<code>SqliteVec.ts</code>,
+<code>packages/lib/models/NoteEmbedding.ts</code>,
+<code>packages/lib/services/database/types.ts:711-719</code>.</li>
+<li>Surfaces:
+<code>packages/app-desktop/gui/ChatPanel/ChatPanel.tsx</code>,
+<code>packages/lib/services/plugins/api/JoplinAi.ts</code>,
+<code>packages/lib/services/mcp/McpServer.ts</code>,
+<code>packages/lib/services/RevisionService.ts</code>.</li>
+<li>Tests: the sixteen files under
+<code>packages/lib/services/ai/</code> named in section 4, and
+<code>packages/lib/services/mcp/McpServer.test.ts</code>.</li>
+<li>Searches behind the absence claims:
+<code>rg -n -i 'memor' packages/lib/services/ai --glob '!*.test.ts'</code>
+(the embedding provider and indexer only, as vocabulary);
+<code>rg -n 'persist|localStorage|Setting.setValue' packages/app-desktop/gui/ChatPanel/ChatPanel.tsx</code>
+(the disclosure flag only);
+<code>rg -n 'author|source' packages/lib/services/RevisionService.ts</code>
+(no author on a revision);
+<code>rg -n -i 'sanitize|injection' packages/lib/services/ai/noteChat.ts</code>
+(none);
+<code>rg -n 'hadExternalBodyChanges' packages/lib/services/ai/*.test.ts</code>
+(none); <code>rg -n -i 'arxiv|bibtex' readme.md</code> (none).</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/laurent22/joplin/commit/7e73a2a271a1f71a7877a972677b5d588241e552"><code class="commit-id" title="7e73a2a271a1f71a7877a972677b5d588241e552">7e73a2a2…</code></a>
+— first reading, at the head of <code>dev</code>, the day of release
+3.7.16. Read from a shallow clone with the commit counts taken from the
+GitHub API; screened, with an <code>.envrc</code> and a VS Code settings
+file that run on open and many manifests inside the cooldown; nothing
+installed or run. One mark, <code>negative_eval</code>, for the scope
+and exclusion cases on the index. <code>scope_enforced</code> withheld:
+a notebook or tag is an optional filter. <code>audit_log</code>
+withheld: <code>revisions</code> collapses ten minutes and expires at
+ninety days, with no author. <code>human_review</code>,
+<code>trust_state</code>, <code>tombstone</code> and
+<code>bitemporal</code> withheld: edits apply as the tool runs, a note
+has no state, the trash is a soft delete of the note, and the only times
+are record times.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

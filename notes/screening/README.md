@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 220 of 369 screened at the report's current pin.**
+**Progress: 224 of 372 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
-off, and 132 report(s) have no record at all.
+off, and 131 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 81 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 88 |
-| Repositories with build-time execution (`EXEC`) | 166 |
+| Repositories with an auto-run surface (`RUNS`) | 85 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 91 |
+| Repositories with build-time execution (`EXEC`) | 169 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -38,6 +38,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
+| [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
@@ -58,6 +59,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
+| [`gbrain`](../../content/systems/gbrain.md) | `.claude-plugin/` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
@@ -67,7 +69,9 @@ These execute without a command being typed. Read before opening the tree.
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
+| [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
+| [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
