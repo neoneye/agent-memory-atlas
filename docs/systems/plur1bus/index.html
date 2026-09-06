@@ -110,14 +110,14 @@ has to make on purpose.</p>
               <strong>Cyb3rb1ade/openclaw-plur1bus-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/399bfba7fc81d0becf35794f4895992bf54bc33f" title="399bfba7fc81d0becf35794f4895992bf54bc33f">
+            <a class="meta-pill revision-pill" href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/6025dbb2143770ddaf20eed891f1c7705cfe3a0e" title="6025dbb2143770ddaf20eed891f1c7705cfe3a0e">
               <span>Analyzed revision</span>
-              <code>399bfba7…</code>
+              <code>6025dbb2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-05</strong>
+              <strong>2026-09-06</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -395,7 +395,24 @@ a recall result and, per <code>AGENTS.md</code>, must never replace it.
 Both are off by default and both carry a 50 ms hard timeout.</p>
 <p><strong>Embeddings</strong> come from OpenAI or an optional local
 <code>@huggingface/transformers</code>. A key is not required to store a
-memory: the adapter falls back to text search when embedding fails.</p>
+memory: the adapter falls back to text search when embedding fails.
+Every text handed to a local Jina model is cut at
+<code>embedding.local.maxTokens</code>, default 512 and bounded to
+32–8,192
+(<code>lib/providers/embedding-local-transformers.js:17,:426-430</code>,
+pinned by
+<code>tests/jina-v5-nano-embedding.test.js:178,:210-211</code>), and the
+cap is part of the shared model pool's identity. The reason is in the
+comment above the check and in the changelog for 7.11.1: both pinned
+Jina models accept 8,192 tokens, the ONNX runtime holds the attention
+working set of a batch's longest text times the batch size and never
+returns it, and in the 7.11.0 lab run one 15,000-character card drove
+the v3 process to 41 GB and the kernel's OOM killer at card 808 of
+1,031, while a single batch of the eight longest cards took the nano
+model to +30 GB and 117 s; at 512 tokens the same batch costs +0.6 GB
+and 5 s on nano, +1.1 GB and 22 s on v3. Until 7.11.1 on 5 September
+2026 no cap existed, so an installation with long cards and a local Jina
+embedder could be killed by its own embedding cron.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>Install is <code>npm install</code> into an OpenClaw installation,
 and this is where an operator should look before anything else.
@@ -418,11 +435,14 @@ the source no longer names the dispatch patch or
 <code>tests/host-patch-skip.test.js</code> asserts the flag is gone, and
 <code>tests/release-750-compat.test.js</code> asserts
 <code>package.json</code>'s <code>files</code> excludes
-<code>patches/</code> and that the patch file does not exist. What
-remains under <code>patches/</code> is
-<code>apply-memory-patches.sh</code>, a set of gateway hotfixes applied
-from a systemd <code>ExecStartPre</code> in one deployment, shipped in
-no package and referenced by no installer.</p>
+<code>patches/</code> and that the patch file does not exist.
+<code>patches/apply-memory-patches.sh</code>, a set of gateway hotfixes
+applied from a systemd <code>ExecStartPre</code> in one deployment,
+shipped in no package and referenced by no installer, stayed in the tree
+until 5 September 2026, when <code>6025dbb2</code> deleted it with its
+directory; the wiring test asserts that neither the file nor
+<code>patches/</code> exists
+(<code>tests/cron-plugin-direct-dispatch-wiring.test.js:13-14</code>).</p>
 <p>Local inference is pinned rather than resolved.
 <code>lib/providers/local-model-artifacts.js</code> freezes each model —
 E5, Jina v3, the Jina and BGE rerankers, and from 7.11.0 Jina v5 Text
@@ -431,7 +451,17 @@ size and SHA-256, checked before Transformers.js sees a file; the two
 Jina profiles carry <code>license: "CC-BY-NC-4.0"</code> and
 <code>assertPinnedModelLicenseAccepted</code> refuses to load them
 without an explicit operator acceptance. BGE is the wizard's recommended
-reranker since 7.10.0, with the reasoning written into the README.</p>
+reranker since 7.10.0, and Jina v5 Text Nano is the embedding the wizard
+and the shell installer propose first for new installs since 7.12.0,
+each with the lab test's reasoning written into the README; a
+non-interactive or dry run that cannot confirm the CC BY-NC licence
+falls back to E5 rather than aborting or accepting it silently
+(<code>scripts/install-memory-system.sh:772-774</code>,
+<code>PLUR1BUS_ACCEPT_NONCOMMERCIAL_LICENSE=1</code> to accept), Jina v3
+stays selectable for existing installs, and the dashboard's dimension
+planner shows a migration notice to any install whose current model is
+not the recommended one
+(<code>lib/setup/control-ui-plugin-runtime.js:453-459</code>).</p>
 <p>The store is human-readable and repairable by hand: JSONL and
 Markdown for everything except the LanceDB tables, which is a real
 operational advantage when a background job has done something
@@ -1161,9 +1191,10 @@ mapping path, and is there a check that all of them agree?</li>
 <code>lib/runtime-scheduler.js</code>.</li>
 <li>Cron registration through the host's public API:
 <code>scripts/setup-feature-crons.mjs</code>,
-<code>lib/setup/feature-cron-plan.js</code>; the retained systemd hotfix
-script <code>patches/apply-memory-patches.sh</code> ships in no
-package.</li>
+<code>lib/setup/feature-cron-plan.js</code>; no <code>patches/</code>
+directory exists, and
+<code>tests/cron-plugin-direct-dispatch-wiring.test.js</code> asserts
+it.</li>
 <li>Critical review: <code>lib/critical-review.js</code>,
 <code>lib/critical-reply-intent.js</code>,
 <code>lib/jobs/critical-classifier.js</code>.</li>
@@ -1187,6 +1218,42 @@ package.</li>
 <code>tests/critical-classifier-double-push.test.js</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-06</strong> — <a
+href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/6025dbb2143770ddaf20eed891f1c7705cfe3a0e"><code class="commit-id" title="6025dbb2143770ddaf20eed891f1c7705cfe3a0e">6025dbb2…</code></a>
+— re-pinned at the head of <code>main</code>, three commits past 7.11.0,
+prompted by the maintainer's <a
+href="https://github.com/neoneye/agent-memory-atlas/issues/20#issuecomment-5554841303">comment
+on the same issue</a>. Screened again: the same
+<code>postinstall</code>, both manifests inside the seven-day cooldown,
+one unpinned surface behind the lockfile, an <code>AGENTS.md</code>
+treated as data; nothing installed or run. <strong>The rewritten
+history, accounted for.</strong> The maintainer states that on 5
+September 2026 every branch and tag was rewritten with
+<code>git filter-branch --msg-filter</code> to strip commit trailers
+carrying session links, that every hash changed, and that the trees are
+identical commit for commit. Checked from here: the previous pin
+<code class="commit-id" title="3479373f87dc8f70d460d09ddeb20ffb83355231">3479373f…</code> can be fetched
+from GitHub by its full hash, its tree is
+<code class="commit-id" title="dd8c73c8f0211977e1643c5aae8c26b879d42311">dd8c73c8…</code>, and so is the
+tree of <code class="commit-id" title="533fa93a77c7e71b69b772916de3f3811fdf2a12">533fa93a…</code>, the
+commit <code>v7.4.0</code> points at — the code this report read on 17
+and 18 August is byte-for-byte the code under the new hash, and that
+commit's own message is unchanged, its hash differing only because its
+ancestors' messages do. No commit message on <code>main</code> carries a
+session trailer. Three commits since the pin, all dated 5 September:
+7.11.1 caps every text sent to a local Jina model at 512 tokens after a
+lab run in which an uncapped 15,000-character card drove the v3 process
+to 41 GB and the OOM killer — a defect present at 7.11.0 and at every
+pin before it, described in section 3 with the numbers from the
+changelog; 7.12.0 makes Jina v5 Text Nano the installer's first proposal
+for new installs with an E5 fallback when a non-interactive run cannot
+accept the licence, and adds a migration notice to the dashboard; and
+<code>6025dbb2</code> deletes
+<code>patches/apply-memory-patches.sh</code> and its directory, turning
+the wiring test's <em>does not run a host patch</em> into <em>no patch
+script exists</em>. Marks unchanged at seven; <code>index.js</code> and
+<code>lib/</code> outside the provider and setup files are untouched, so
+every line citation in the body holds.</p>
 <p><strong>2026-09-05</strong> — <a
 href="https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/399bfba7fc81d0becf35794f4895992bf54bc33f"><code class="commit-id" title="399bfba7fc81d0becf35794f4895992bf54bc33f">399bfba7…</code></a>
 — re-pinned at release 7.11.0, prompted by the maintainer's request in
