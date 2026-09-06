@@ -27640,6 +27640,99 @@ dropped is the one place a prior loop's conclusion could be carried
 forward as settled — and whether the reopened-issue record is built from
 the ledger or reconstructed from the artifact, since the paper's
 argument for the ledger is precisely that it need not be.</li>
+<li><strong>Prove2Me, the shared theorem library behind the Fermat's
+Last Theorem formalization, was examined and has no report: the memory
+the agents used is a hosted service whose server is published nowhere,
+and what is public is its client contract, a February prototype without
+any of the mechanisms, and the output.</strong> SiliconANGLE's report of
+4 September 2026 and Anthropic's own post, <em>Formalizing Fermat's Last
+Theorem</em>, describe a <em>"Claude Code-based multi-agent
+harness"</em> of dozens of agents proving 30,300 intermediate theorems
+in eleven days for six billion output tokens, whose early attempts
+<em>"quickly lost track of the project's state and stopped collaborating
+effectively"</em> and contributed about 7 % of the final non-boilerplate
+lines, and which then ran on Prove2Me — a platform keeping <em>"a
+directed acyclic graph of theorem statements that agents used to decide
+what proofs they should attempt next,"</em> separating statements from
+proofs with the links maintained independently, and holding <em>"a
+natural-language description of each theorem statement,"</em> which the
+post credits with <em>"mitigating memory degradation."</em> The paper
+behind it, <em>Prove2Me: An Open Collaborative Platform for Scaling Math
+Formalization</em> (Chen, Marwaha, Lu, Yuen and Peng; <a
+href="https://arxiv.org/abs/2608.28433"><code>arXiv:2608.28433</code></a>,
+v1 28 August, v2 31 August 2026, cs.AI, cs.LO, cs.MA), is the memory
+design in full: every statement is <em>"atomized and immutable, carrying
+all the context needed to compile on its own,"</em> so any proved
+theorem is importable by any later proof-sketch in any mission; the
+accumulated corpus is named <em>Formalpedia</em>; a search API indexes
+the standardised natural-language description every submission must
+carry, and agents <em>"are also instructed to search before they
+submit"</em>; a proof is a term whose type must match the target's
+exactly, a disproof is a term of the negation, and the paper's own
+example of a memory turning out false is a sketch importing
+<code>gotsman_linial</code>, disproved by a second agent and replaced by
+<code>gotsman_linial_with_zero</code>; milestones are the captain's
+<em>idempotent</em> and <em>authoritative</em> lemma targets so that
+parallel agents converge on one statement instead of duplicating
+incompatible ones; and the closing questions are the atlas's — <em>"how
+agents should search a large, evolving corpus of formal statements"</em>
+and <em>"how such agents can exchange harnesses, lessons, and context to
+learn continually remains open."</em> Over 6,904 words the paper links
+no server repository and the phrase <em>source code</em> does not occur.
+Three repositories were read. <code>prove2me/prove2me_workspace</code>
+at <a
+href="https://github.com/prove2me/prove2me_workspace/commit/58332c69693c59d948b2546b78baf348ce2f0c2e"><code class="commit-id" title="58332c69693c59d948b2546b78baf348ce2f0c2e">58332c69…</code></a>
+(47 commits by one author between 4 July and 5 September 2026, no
+licence file) is the client side: a <code>SKILL.md</code> at version
+0.9.7 and 2,729 lines of API reference describing the service at
+<code>prove2.me</code> — keyword search over names and natural-language
+statements (<code>GET /api/v1/theorems?q=</code>), a per-theorem
+dependency graph, open leaves and decompositions, a description edit
+history (<code>description-versions</code>), votes, tags, a saved list,
+mission discussions whose soft-deleted comments are returned as
+tombstones on request, verdicts
+<code>PENDING → ACCEPTED | SKETCH_ACCEPTED | CE | WA | SORRY | FAILED | ERROR</code>,
+an explanation that is patchable beside a solution that is immutable,
+and three rules that gate every submission, the second of which is never
+to import one's own target because <em>"it is stored as a
+<code>sorry</code> placeholder, and citing it would prove the goal from
+itself"</em> — plus 279 lines of Lean meta-programs that extract a
+declaration graph and sketch information from an existing project for
+upload. <code>marwahaha/prove2me</code> at <a
+href="https://github.com/marwahaha/prove2me/commit/5ee5b15c4ccf4499ae4878a470f552f8720b2c0e"><code class="commit-id" title="5ee5b15c4ccf4499ae4878a470f552f8720b2c0e">5ee5b15c…</code></a>
+(36 commits by one author between 3 and 24 February 2026, no licence
+file) is a FastAPI, React and Postgres prototype from before the paper:
+a <code>statements</code> table with <code>is_solved</code>,
+<code>is_disproved</code> and <code>is_archived</code> flags, a proof
+column, tags, comments, a prize that grows over time, and a
+<em>gatekeeper</em> that sends each new statement to an external prover,
+Aristotle, during a holding period to attempt a proof or a disproof
+before people may; its list endpoint filters by tag and sorts by date or
+prize, the word <em>dag</em> occurs zero times in its backend and
+<em>search</em> only as <code>re.search</code>, and it has no
+description field, no sketch, no milestone and no mission.
+<code>anthropics/fermats-last-theorem</code> at <a
+href="https://github.com/anthropics/fermats-last-theorem/commit/aa2d8b34692b16c70f699536de0d8e75b9a3e9ef"><code class="commit-id" title="aa2d8b34692b16c70f699536de0d8e75b9a3e9ef">aa2d8b34…</code></a>
+(one commit, 3 September 2026, Apache-2.0) is the output:
+<code>Theorems/</code> with 29,511 statements, <code>P2M/Sol/</code>
+with their proofs, 1,450 definition modules, <code>PROOF-PATH.md</code>
+naming the Lean theorem behind each step, a
+<code>formalization.yaml</code> recording zero <code>sorry</code> and
+the three standard axioms, and <code>P2M/Util.lean</code>, the one piece
+of the platform's verification visible in the artifact —
+<code>#p2m_type_eq</code>, which checks a proof's type against its
+card's up to definitional equality and refuses when the statement's
+universe parameters had to be specialised to match (<em>"the proof is
+less general than the card"</em>); the README says a from-scratch build
+of 60,475 modules took 5 h 32 min at 96 jobs, comparator's kernel replay
+14 h 46 min, and an independent Rust kernel checked 1,052,234
+declarations. With the server readable, this would be screened as a
+shared memory whose entries are machine-checked and whose disproof is a
+first-class status, and the first thing to read would be the search —
+what the index holds beyond the description text, and what an agent that
+searched and found nothing is told about near-duplicates — because the
+paper's own account of failure before Prove2Me is agents that could not
+find what each other had already proved.</li>
 <li><strong>A ladder that was schema, and the producer test that would
 have caught it.</strong> The <a
 href="../systems/noosphere/">Noosphere</a> report of 9 August 2026
