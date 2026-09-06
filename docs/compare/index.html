@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 27
+<li><strong>Correction is the phase that goes unbuilt.</strong> 28
 systems of 362 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-twenty-seven tombstones, one hundred and twenty-eight negative-eval
+twenty-eight tombstones, one hundred and twenty-eight negative-eval
 suites — are counts <em>over inspectable code</em>, and a closed system
 could hold any of these mechanisms without this method ever knowing. And
 a mechanism's absence here is weaker evidence about the field than its
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Twenty-seven of three hundred and
+everything can overwrite or supersede. Twenty-eight of three hundred and
 sixty-two systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -1386,19 +1386,24 @@ coupling memory to the framework, prompt assembly, and tool loop.</p>
 family's smallest memory inside its largest runtime, and the ratio is
 the finding.</strong> A 112,000-line self-hosted workspace — vLLM behind
 LiteLLM, sandboxed agents, deep research, MCP tools, native clients —
-keeps one table of up to fifty sentences per user and prepends the
-newest fifty to every system prompt under a 2,000-token cap; a person
-types them into a settings tab, or two extractors that both default to
-off form them from the user's messages, one by regex and one by a model
-call per turn. The table's own migrations record a predecessor with keys
-and importance being dropped with six rows of user data and reintroduced
-a week later as <em>"explicit only, zero vLLM load"</em>. What is wrong
-is small and specific: the extractor writes the provenance labels the
-opposite way from the schema's definitions, the memory-learning toggle
-is read from the client's message rather than the stored preference, a
-deleted sentence is eligible for re-extraction because dedup reads
-active rows only, and no test touches the repository, the routes, the
-prompt block or the scope predicate that earns its one mark.</p>
+keeps one table of up to fifty sentences per user and injects the newest
+fifty into every system prompt under a 2,000-token cap, after the static
+blocks at a boundary the assembler reserves for per-user content; a
+person types them into a settings tab, or two extractors that both
+default to off form them from the user's messages, one by regex and one
+by a model call per turn whose output is kept only when it is phrased as
+<em>the user…</em>. A stored preference that the client can tighten but
+not loosen gates injection and formation on every path, a delete leaves
+a row the extractors and the backfill read back as a tombstone, and the
+tab's writes land in the platform's audit table. The table's own
+migrations record a predecessor with keys and importance being dropped
+with six rows of user data and reintroduced a week later as
+<em>"explicit only, zero vLLM load"</em>, and that predecessor is the
+shape the data export was written against: its query names four columns
+the table has not had since May 2026, the helper around it swallows the
+error, and a person's export has never contained a memory. The
+extractors' rows carry no audit entry, the prompt block and the backfill
+have no test, and the tombstone reaches the newest 500 rows.</p>
 <h3 id="host-runtimes-with-pluggable-memory">Host runtimes with
 pluggable memory</h3>
 <p>Hosts: <a
@@ -12962,35 +12967,42 @@ characters, a <code>source</code> of explicit, candidate or batch, an
 reads</td>
 <td>One Postgres table with a partial index on the active rows per user,
 beside the workspace's conversation, preference and audit tables</td>
-<td>None. The newest fifty active rows are prepended to every system
-prompt as a numbered list under a 2,000-token cap; nothing is searched,
-ranked or matched to the query</td>
+<td>None. The newest fifty active rows are injected into every system
+prompt as a numbered list under a 2,000-token cap, after the static
+guard blocks; nothing is searched, ranked or matched to the query</td>
 <td><code>POST /api/users/me/memories</code> from the settings tab,
-capped at fifty per user; an optional regex extractor and an optional
-one-call-per-message LLM extractor, both off by default, deduplicated by
-normalised substring against the active rows; a CLI backfill over past
-sessions with a dry run</td>
+capped at fifty per user and audited; an optional regex extractor and an
+optional one-call-per-message LLM extractor, both off by default, the
+model's lines kept only when they begin <em>the user…</em>, deduplicated
+by normalised text and by token overlap against every row the user has
+ever had, active or deleted; a CLI backfill over past sessions with a
+dry run</td>
 <td>Soft delete by id or all at once from the same tab; no edit, no
-expiry, no decay; a deleted sentence can be re-added or re-extracted
-because dedup consults active rows only</td>
+expiry, no decay; the deleted row is a tombstone the extractors and the
+backfill consult, and the person can re-add the same sentence by
+hand</td>
 <td><code>user_id</code> on every query, taken from the session; the
-whole block is skipped for guests</td>
+whole block is skipped for guests and for a user whose stored preference
+is off</td>
 <td>A Next.js workspace over an Express API, a WebSocket chat, agent
 tasks, an MCP layer, native clients and a Discord gateway; the memory
 block is assembled for the chat pipeline and for agent-task system
-prompts</td>
+prompts, both behind the same stored preference</td>
 <td>None. Extraction runs fire-and-forget inside the request; the
-backfill is a manual CLI command</td>
-<td>None. <code>source</code> records how a row arrived, and the
-extractor writes the labels the other way round from the schema's own
-definition</td>
+backfill is a manual CLI command; a shell script aggregates the table,
+the audit rows and the cap logs into the daily report</td>
+<td>None. <code>source</code> records how a row arrived — a person, the
+per-message model call, or the backfill — and nothing reads it but a
+badge in the tab</td>
 <td>A memory that costs the local model nothing unless an operator turns
-extraction on, a per-turn toggle that gates formation as well as
-injection, and a backfill with a dry run before it writes</td>
-<td>The read path is untested and unaudited, the toggle is read from the
-client's message rather than from the stored preference, the fifty-row
-cap is first-come and nothing retires a stale sentence, and the
-provenance labels are inverted</td>
+extraction on, a stored toggle the client can tighten but not loosen, a
+delete that the extractors remember, and an observability script that
+names the numbers that would justify adding search</td>
+<td>The prompt block and the backfill are untested, the data export
+queries columns the table has not had since May 2026 and ships no
+memories, the extractors and account deletion write without an audit
+entry, the tombstone reaches only the newest 500 rows, and the fifty-row
+cap is first-come with nothing retiring a stale sentence</td>
 </tr>
 <tr>
 <td><code>openmemory</code></td>
@@ -16060,7 +16072,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>27 of 362:</em> <a
+<p><em>28 of 362:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
@@ -16077,7 +16089,8 @@ href="../systems/noosphere/"><code>noosphere</code></a>, <a
 href="../systems/nova-ai/"><code>nova-ai</code></a>, <a
 href="../systems/omnimem/"><code>omnimem</code></a>, <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
-<a href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
+<a href="../systems/openmake-llm/"><code>openmake-llm</code></a>, <a
+href="../systems/perseus-vault/"><code>perseus-vault</code></a>, <a
 href="../systems/plur1bus/"><code>plur1bus</code></a>, <a
 href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
@@ -16428,7 +16441,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>112 of 362:</em> <a
+<p><em>113 of 362:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -16512,6 +16525,7 @@ href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
 <a
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/openkb/"><code>openkb</code></a>, <a
+href="../systems/openmake-llm/"><code>openmake-llm</code></a>, <a
 href="../systems/openvurp/"><code>openvurp</code></a>, <a
 href="../systems/openworker/"><code>openworker</code></a>, <a
 href="../systems/optmem/"><code>optmem</code></a>, <a
@@ -22195,7 +22209,7 @@ committed shared objects were not inspected</li>
 <li><a
 href="https://github.com/openmake/openmake_llm">openmake/openmake_llm</a>
 at <a
-href="https://github.com/openmake/openmake_llm/commit/ed74251e8d463eaf9d461bbde8023585c7ad29b3"><code class="commit-id" title="ed74251e8d463eaf9d461bbde8023585c7ad29b3">ed74251e…</code></a>
+href="https://github.com/openmake/openmake_llm/commit/bca0967b948147464284b1bb7d857e25f731295a"><code class="commit-id" title="bca0967b948147464284b1bb7d857e25f731295a">bca0967b…</code></a>
 — read only; eight files inside the seven-day cooldown, nothing
 installed</li>
 <li><a
@@ -27553,6 +27567,22 @@ stays withheld on the right one. Found while confirming a re-pin the
 maintainer submitted as <a
 href="https://github.com/neoneye/agent-memory-atlas/pull/21">#21</a>,
 whose own claims all held.</li>
+<li><strong>A position claimed from the wrong file.</strong> The <a
+href="../systems/openmake-llm/">OpenMake LLM</a> report of 6 September
+2026 said the memory block was <em>prepended</em> to the system prompt,
+"which places it where a provider's prompt-prefix cache would be
+invalidated by any change to it." At the commit it pinned, the function
+that assembles the prompt pushed the block after the static guard,
+artifact and answer-format blocks, under a comment marking the boundary
+between cacheable and per-user content and giving prefix-cache
+preservation as the reason. The claim was written from the block
+builder, which returns a string, rather than from the assembler, which
+decides where the string goes; a sentence about where memory sits in a
+prompt is a claim about the caller, and the fix is to cite the line that
+concatenates. The same reading missed that the data export queried the
+predecessor table's columns and returned nothing, because it followed
+the memory's own seven files and not every consumer of the table's name;
+the re-read of the same day corrected both.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
@@ -27605,6 +27635,28 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-06</strong> — A report's findings can be answered
+upstream within hours of publication, and the re-read is where the
+reading gets graded. OpenMake LLM shipped five commits on 6 September
+2026 that named the atlas's reading of <code>ed74251e</code> as their
+source and fixed every defect it listed — the client-read toggle, the
+missing tombstone, the inverted <code>source</code> labels, the absent
+audit rows — with 36 tests. Reading the fixes against the earlier pin
+showed what the first reading had got wrong in its own right: a claim
+about where the block sat in the prompt, made from the builder rather
+than the assembler; a toggle defect described as one handler's when two
+more paths never consulted the flag, which following
+<code>buildUserMemoryBlock</code> to each caller would have shown; and a
+data export that names a dropped table's columns, reachable by grepping
+the table's name past the memory's own files. Three rules follow. A
+claim about position cites the concatenation, not the value. An absence
+claim about a flag lists every caller of the function it gates. And the
+table name is searched across the whole tree, not the memory directory,
+because the consumer most likely to be broken is the one nobody thought
+of as memory code. The upstream commits also carry a coding-agent
+session trailer and co-author line; that is a fact about their
+repository and is recorded as one, without inference about who did
+what.</p>
 <p><strong>2026-09-05</strong> — A repository that renamed itself
 defeats the duplicate check by name. The <code>add-memory-system</code>
 precondition —

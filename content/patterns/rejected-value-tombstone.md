@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Twenty-seven systems of three hundred and sixty-two
+> **This is not an established best practice.** Twenty-eight systems of three hundred and sixty-two
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Twenty-seven systems of 362 in the atlas have this.** That is still the most
+**Twenty-eight systems of 362 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -466,6 +466,22 @@ than waiting to be re-derived — the answer to the failure the
 [MemoryOps AI](../../systems/memoryops-ai/) entry below describes, in the same
 paragraph of the same kind of system.
 
+**[OpenMake LLM](../../systems/openmake-llm/) is the smallest instance, and
+it arrived by removing a filter.** Its memory is one table of sentences with an
+`is_active` flag; a delete flips the flag and leaves the row. The duplicate
+check that the regex extractor, the per-message LLM extractor and the CLI
+backfill all run before writing reads the user's newest 500 rows through a
+query with no `is_active` clause, so a sentence the person deleted matches its
+own tombstone and the write is refused — by normalised text, by containment,
+or by a token-overlap threshold of 0.75 whose measured scores are in the config
+comments. The settings tab, where the person types a sentence by hand, does no
+check at all, which is the right boundary: the tombstone binds the machines and
+not the author. The test that pins it mocks the old active-only query to an
+empty list on purpose, with a comment that the previous code path must stay
+runnable so the case cannot pass vacuously — the same worry this page raises
+about Nova AI, written down as a test fixture. The reach is 500 rows and the
+match is the dedup's, so a paraphrase below the threshold is a new sentence.
+
 ### Sorted by what actually stops the value
 
 Counting holders of the mark conflates four different mechanisms. Sorted by the
@@ -475,12 +491,12 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 abandonment |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
 
-**Twenty-one of the twenty-seven, then, implement the strong form** — value-keyed,
+**Twenty-two of the twenty-eight, then, implement the strong form** — value-keyed,
 normalized, consulted before the write, refusing activation. The collided form
 is the rarer one, and Nova AI shows why the distinction is worth drawing:
 its refusal held by a missing filter, which its author then replaced with an

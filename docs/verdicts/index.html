@@ -12642,36 +12642,49 @@ licence, or a graph a planner actually reads.</li>
 href="../systems/openmake-llm/"><code>openmake-llm</code></a></h3>
 <ul>
 <li>Best idea: <strong>extraction behind two switches that both default
-to off, with the cost of each written next to it.</strong>
+to off, with the cost of each written next to it, and a privacy toggle
+the client can tighten but never loosen.</strong>
 <code>USER_MEMORY_AUTO_EXTRACT</code> is regex and free;
 <code>USER_MEMORY_LLM_EXTRACT</code> is one model call per user message
 on the same local model the chat uses; an installation that sets neither
-has a memory of exactly what the person typed, and the toggle that stops
-injection stops formation too, because <em>"saving while the user had it
-off would act opposite to what they chose."</em></li>
-<li>Biggest risk: <strong>the read path is untested and unaudited, and
-the toggle trusts the client.</strong> No test touches the repository,
-the routes, the prompt block or the <code>user_id</code> predicate; the
-platform's audit service records no memory event; and the
-memory-learning flag is read from the message the client sent while the
-stored preference is read by nothing on the chat path.</li>
-<li>Most reusable component: the backfill CLI — thirty past sessions
-through the extractor with <code>--dry-run</code> returning the
-candidates before a single row is written, and dedup against what is
-already there.</li>
-<li>Maturity impression: MIT, 2,110 commits by nine authors since
-February 2026 at <code>1.44.0</code>, a 112,443-line API under 340 test
-files, and a 531-line memory whose migrations record a predecessor
+has a memory of exactly what the person typed. The stored
+<code>memoryLearning</code> preference is resolved by one function that
+the WebSocket chat, the REST chat and agent tasks all call, a stored
+<code>false</code> beats anything a message carries, and the toggle that
+stops injection stops formation too, because <em>"saving while the user
+had it off would act opposite to what they chose."</em></li>
+<li>Biggest risk: <strong>the data export cannot read the table, and the
+extractors write without an audit entry.</strong> The GDPR export
+selects <code>category, key, value, importance</code> from
+<code>user_memories</code> — the columns of the table dropped in May
+2026 — inside a helper that swallows the error and returns an empty
+list, so a person's archive arrives without their memories; the tab's
+creates and deletes are audited, and the rows the regex and LLM
+extractors write are not. The prompt block's token loop and the backfill
+have no test, and the preference read fails open.</li>
+<li>Most reusable component: the two-stage duplicate check with a
+tombstone behind it — normalised text and containment, then a
+token-overlap threshold whose measured true-duplicate and opposing-pair
+scores are written in the config comments, run against the newest 500
+rows the user has had, deleted rows included, so a removed sentence is
+refused by every automatic writer.</li>
+<li>Maturity impression: MIT, 2,118 commits by nine authors since
+February 2026 at <code>1.45.2</code>, a 112,605-line API under 343 test
+files, and a 657-line memory whose migrations record a predecessor
 dropped with six rows of user data and reintroduced a week later as
-<em>"explicit only, zero vLLM load"</em>. One of seven capability marks.
-The one provenance field is written the opposite way from the schema's
-own definition of it.</li>
+<em>"explicit only, zero vLLM load"</em>. Three of seven capability
+marks. The toggle, the tombstone, the audit rows, the corrected
+<code>source</code> labels and 36 tests arrived in five commits on 6
+September 2026, the first of which names this atlas's reading of the
+previous pin as its source; the export defect predates all of them.</li>
 <li>Study when: you want the smallest defensible cross-conversation
-memory for a chat product — a capped table, a numbered list, a per-turn
-toggle — and want to see what it costs to leave extraction off.</li>
-<li>Do not copy when: you need memory that ranks, expires, records its
-deletions or remembers what a person removed; a deleted sentence here is
-eligible for re-extraction from the next message that states it.</li>
+memory for a chat product — a capped table, a numbered list behind a
+cacheable prefix, a stored toggle, a remembered delete — and want to see
+what it costs to leave extraction off, and what numbers the maintainers
+wrote down as the gate for adding search.</li>
+<li>Do not copy when: you need memory that ranks, expires, audits what
+its extractors wrote, or can be exported; the export here has never
+returned a row of it.</li>
 </ul>
         </article>
       </div>
