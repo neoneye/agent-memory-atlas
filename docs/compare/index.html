@@ -29473,6 +29473,27 @@ caught it is the table list —
 <code>rg -o 'CREATE TABLE IF NOT EXISTS [a-z_]+' src/core/migrate.ts | sort -u</code>
 — read before the README, so that a table the README does not lead with
 is a question the reading has to answer.</li>
+<li><strong><code>zahid23saim/llm-eval-harness</code> was examined and
+has no report: it is an answer-grading script, and nothing it touches
+outlives one run.</strong> At <a
+href="https://github.com/zahid23saim/llm-eval-harness/commit/2973d6db4e8419ebc5a7680120b47a9aa9c0ac96"><code class="commit-id" title="2973d6db4e8419ebc5a7680120b47a9aa9c0ac96">2973d6db…</code></a>
+(MIT, three commits between 3 and 7 September 2026, 150 lines of Python
+plus 90 of tests) it loads a gold JSON array and an
+<code>{id: answer}</code> object, judges each item by its own
+<code>exact</code>, <code>contains</code> or <code>numeric</code> rule
+after lowercasing and stripping trailing punctuation, prints an accuracy
+line with every miss, and exits 1 on any failure. The only two
+<code>open()</code> calls read the inputs; the only writes in the tree
+are test fixtures to <code>tmp_path</code>. No agent calls it, no model
+is called by it, and there is no store, so nothing can be scoped,
+corrected or forgotten — it is the scoring half of an eval, not memory.
+The one feature that would compare across runs, the regression diff, is
+sold in a paid kit the README links and is absent from the tree:
+<code>rg -n -i 'regress|diff|pass@k|json_field' llm_eval.py tests/</code>
+finds nothing, and <code>.github/</code> holds only
+<code>FUNDING.yml</code>, so the "CI-friendly" claim rests on the exit
+code alone. Screened before reading: no manifest, hook or workflow to
+scan; nothing was run.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
