@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 382 reports.**
+**This page covers all 383 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3286,6 +3286,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, nine commits in five days by one author, 423 lines on NumPy, twenty-one tests each naming its failure mode and a mutation pass the README reports, three benchmark scripts with committed JSON the README's tables recompute from exactly. No capability mark.
 - Study when: you want a worked example of decay, reinforcement and contradiction as weights, a scale-free confidence gate, or a README that retracts its own numbers in print.
 - Do not copy when: you need anything to persist, more than one user, more than a few hundred facts, or prose rather than triples.
+
+### [`humans`](../systems/humans/)
+- Best idea: **the speech model is shown the current utterance and nothing stored.** A two-message prompt, a test that the prior event's text is absent from the next call, and recall as a selected one-use `LOOK` whose result code renders and the model never reads.
+- Biggest risk: **supersession has no writer on the command line.** The store's one correction mechanism is an argument to the library's `remember` that the demo and the tests pass and `/remember` never does, so the shipped mind deduplicates facts by exact text and cannot retire a wrong one; one database is one owner with no scope key, and nothing forgets.
+- Most reusable component: the record store — sixteen SQLite tables with two triggers that abort any UPDATE or DELETE on canonical records, a `supersedes_id` the active-record queries honour, language-free projections beside the text, and a receipt with a hash on every ability run.
+- Maturity impression: Apache-2.0, three commits in one day by one author, 19,689 lines of source, 151 tests in 33 files run on CPU with nothing downloaded, several written as mutation targets; a whitepaper whose evidence manifest hashes files Git ignores and whose last table names what is not demonstrated; two of seven capability marks.
+- Study when: you want immutability in the database rather than the code, a language memory that tool output cannot enter with the negative test that proves it, or a model that cannot be prompted with its own history.
+- Do not copy when: you need to correct a fact from the product, more than one user in a store, forgetting, review, or a retriever that is more than a scan.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.

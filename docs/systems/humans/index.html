@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A persistent local agent — a
+19,689-line Python runtime around one SQLite database — whose canonical
+memory is immutable records that SQLite triggers refuse to update or
+delete, corrected only by a new record that supersedes the old; whose
+speech model sees the current utterance and nothing else, so stored text
+reaches an answer only when the mind selects an explicit LOOK and
+returns it through a receipt; whose language memory is formed only from
+what was heard, with tool returns and notifications kept out of it by a
+committed test; and whose supersession has no writer on the command
+line.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HUMANs — Agent Memory Atlas">
+    <meta property="og:description" content="A persistent local agent —
+a 19,689-line Python runtime around one SQLite database — whose
+canonical memory is immutable records that SQLite triggers refuse to
+update or delete, corrected only by a new record that supersedes the
+old; whose speech model sees the current utterance and nothing else, so
+stored text reaches an answer only when the mind selects an explicit
+LOOK and returns it through a receipt; whose language memory is formed
+only from what was heard, with tool returns and notifications kept out
+of it by a committed test; and whose supersession has no writer on the
+command line.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HUMANs — Agent Memory Atlas">
+    <meta name="twitter:description" content="A persistent local agent —
+a 19,689-line Python runtime around one SQLite database — whose
+canonical memory is immutable records that SQLite triggers refuse to
+update or delete, corrected only by a new record that supersedes the
+old; whose speech model sees the current utterance and nothing else, so
+stored text reaches an answer only when the mind selects an explicit
+LOOK and returns it through a receipt; whose language memory is formed
+only from what was heard, with tool returns and notifications kept out
+of it by a committed test; and whose supersession has no writer on the
+command line.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HUMANs — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "HUMANs",
+      "description": "A persistent local agent \u2014 a 19,689-line Python runtime around one SQLite database \u2014 whose canonical memory is immutable records that SQLite triggers refuse to update or delete, corrected only by a new record that supersedes the old; whose speech model sees the current utterance and nothing else, so stored text reaches an answer only when the mind selects an explicit LOOK and returns it through a receipt; whose language memory is formed only from what was heard, with tool returns and notifications kept out of it by a committed test; and whose supersession has no writer on the command line.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Recall is an action the mind must
+choose</p>
+          <h1>HUMANs</h1>
+          <p class="document-deck">A persistent local agent — a
+19,689-line Python runtime around one SQLite database — whose canonical
+memory is immutable records that SQLite triggers refuse to update or
+delete, corrected only by a new record that supersedes the old; whose
+speech model sees the current utterance and nothing else, so stored text
+reaches an answer only when the mind selects an explicit LOOK and
+returns it through a receipt; whose language memory is formed only from
+what was heard, with tool returns and notifications kept out of it by a
+committed test; and whose supersession has no writer on the command
+line.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/munch2u-a11y/HUMANs">
+              <span>Source</span>
+              <strong>munch2u-a11y/HUMANs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9" title="a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9">
+              <span>Analyzed revision</span>
+              <code>a1c86c29…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HUMANs — <em>Habitus Unified Memory And Nervous System</em>, the
+package is <code>habitus_ai</code> — is a persistent local agent whose
+memory, drives and action selection live in one continuing process
+rather than in a prompt rebuilt each turn. Apache-2.0; three commits on
+7 September 2026 by one author, version 0.1.0; 19,689 lines of Python
+under <code>src/</code>, 6,553 lines of tests in 33 files holding 151
+cases, 11,151 lines of experiments and 3,704 lines of documents
+including a whitepaper and an architecture contract. The same account's
+<a href="../aimaos/">AIMAOS</a> is in this atlas; this tree shares no
+code with it. The screen found no auto-run surface, one unpinned
+manifest with no lockfile, three build-time execution paths, one file
+inside the seven-day cooldown and an <code>AGENTS.md</code> treated as
+data; nothing was installed or run, and the read was made from a full
+clone. The README's <em>"No External Memory. No RAG. No Context
+Window"</em> is a claim about the shipped conversation surface, and the
+tree also ships the RAG path as <em>"a control."</em></p>
+<p>Two decisions make it memory in this atlas's sense. <strong>Canonical
+records are immutable in the database.</strong> <code>MindStore</code>
+(<code>store.py:39</code>) creates a <code>records</code> table and two
+triggers — <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code>
+raise <em>"canonical records are immutable"</em> (<code>:125-133</code>)
+— and the architecture contract states the rule: <em>"A correction
+creates a new record that supersedes the old record; it does not
+overwrite history."</em> The active-record queries exclude any row a
+newer record's <code>supersedes_id</code> names (<code>:411-421</code>,
+<code>:850-865</code>), so a superseded fact leaves retrieval and stays
+in the table. <strong>Retrieval is an action the mind must
+select.</strong> The speech motor — a local Ollama model behind a
+<code>ChatModel</code> protocol — receives a system message carrying the
+current drive, urgency and stability numbers and one user message, the
+current <code>HEAR</code> event; <em>"No earlier messages or retrieved
+records are available"</em> is in the system text
+(<code>integrated_agent.py:282-321</code>), and a test asserts the first
+event's text is absent from the second call
+(<code>tests/test_integrated_agent.py:69-108</code>). Stored text
+reaches an answer only when <code>/recall</code> is selected as an exact
+one-use <code>LOOK</code> affordance (<code>:724-738</code>);
+<code>_recall_memory</code> (<code>:582-628</code>) then scans active
+records that carry <code>membrane_words</code>, scores token overlap at
+0.58, cosine at 0.24, phrase match at 0.18 with a 0.12 boost for an
+explicit user memory, drops candidates under a floor, returns eight, and
+labels the result <code>automatic_prompt_injection: False</code>. The
+rendered text is returned through a <code>SEE</code> cycle with a
+receipt and is never placed in the model's prompt.</p>
+<p>The third decision is a boundary. Six lanes — <code>HEAR</code>,
+<code>SEE</code>, <code>NOTICE</code> in, <code>SPEAK</code>,
+<code>LOOK</code>, <code>DO</code> out — share one graph, and <em>"only
+an inbound <code>HEAR</code> event may create word-derived membrane
+evidence"</em>: a tool return or a notification is embedded as an opaque
+payload under its lane's namespace (<code>pipeline.py:349-356</code>),
+so filenames, receipts and error text cannot become vocabulary or answer
+a language query. <code>tests/test_membrane_modality.py:73-125</code> is
+the negative case: a heard record, a seen record and a noticed record on
+one concept, the last two carrying passwords; the vault holds the heard
+one alone, a query for the passwords finds neither of the others in the
+direct ids, the vault ids or the rendered context, and a query for the
+heard phrase finds it.</p>
+<p>Two marks — <code>audit_log</code> for the record store and
+<code>negative_eval</code> for that test. <code>trust_state</code> is
+withheld: a <code>verified</code> flag on receipts changes the prefix
+the renderer gives a record and filters nothing. <code>tombstone</code>
+is withheld because supersession is a pointer to a record, not a record
+of a value refused. And the finding against the design is a producer:
+the library's <code>remember</code> takes a <code>supersedes_id</code>,
+the demo and the tests pass one, and the command line's
+<code>/remember</code> never does
+(<code>functional_agent.py:318-344</code>), so the shipped mind adds
+facts, deduplicates them by exact text, and cannot correct one.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief here is a record that arrived on a lane. It enters as a
+heard message, a spoken reply, an ability's return, a notification, or a
+fact the person asked the mind to remember, and it enters once, with its
+lane, its source, its time, its embedding and its provenance, into a
+table nothing can change. Beside it, language-free projections land in
+the vaults of the graph nodes it touched — activation, preference,
+confidence, pulse — and those are what the mind's drives and action
+selection run on. The words are in the record; the graph holds where the
+record went.</p>
+<p>A belief is <em>used</em> in two different senses. It shapes the next
+pulse through the graph whether or not anyone reads it. It reaches an
+answer only if the mind selects <code>LOOK</code>, runs
+<code>/recall</code>, and returns the text through a receipt — and even
+then the text is rendered by code, not handed to the speech model, which
+sees the current utterance and a line of state numbers. A heard record
+is eligible for that recall; a seen or noticed one is not, whatever
+words it carries.</p>
+<p>A belief stops being used in one way only: a newer record names it in
+<code>supersedes_id</code>, and the active-record queries stop returning
+it while the row stays. On the library that is one argument to
+<code>remember</code>; on the shipped command line no path passes it,
+and <code>/remember</code> refuses an exact duplicate and accepts
+everything else beside what it contradicts. Nothing decays, nothing is
+deleted, and a wrong fact told once is a fact until a caller of the
+library supersedes it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every event is an immutable record on its lane; only heard records form language memory; the speech model sees the current utterance only, and stored text reaches an answer through a selected LOOK and a receipt; a correction is a superseding record the library accepts and the command line never writes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every event is an immutable record on its lane; only heard records form language memory; the speech model sees the current utterance only, and stored text reaches an answer through a selected LOOK and a receipt; a correction is a superseding record the library accepts and the command line never writes
+flowchart LR
+    H[&quot;HEAR — a heard message&quot;] --&gt;|&quot;membrane words, language embedding&quot;| R[(&quot;records — immutable by trigger&lt;br/&gt;supersedes_id links corrections&quot;)]
+    S[&quot;SEE — an ability&#39;s return&quot;] --&gt;|&quot;opaque embedding, no words&quot;| R
+    N[&quot;NOTICE — a notification&quot;] --&gt;|&quot;opaque embedding, no words&quot;| R
+    R --&gt; V[(&quot;vault projections — activation, preference, confidence, no text&quot;)]
+    V --&gt; P[&quot;SELF pulse — drives, cortex, action selection&quot;]
+    P --&gt;|&quot;selects SPEAK&quot;| M[&quot;speech model — current HEAR plus state numbers, nothing stored&quot;]
+    P --&gt;|&quot;selects LOOK — one-use affordance&quot;| Q[&quot;/recall — scan active heard records, score, top eight&quot;]
+    Q --&gt;|&quot;receipt-backed SEE, rendered by code&quot;| A[&quot;answer text&quot;]
+    L[&quot;library remember with supersedes_id&quot;] -.-&gt;|&quot;demo and tests only, not /remember&quot;| R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single Python package with an optional PyTorch extra for the
+cortex. <code>store.py</code> is the SQLite layer;
+<code>pipeline.py</code> is <code>BaseAgenticMemoryRAG</code>, the
+library with <code>remember</code>, <code>recall</code>, the output
+cycle and outcome recording; <code>graph.py</code> is the conserved dual
+graph with its invariants; <code>self_pulse.py</code>,
+<code>recurrent.py</code> and <code>developmental_cortex.py</code> are
+the pulse, the desire field and the 18-million-parameter random-born
+cortex the README leads with; <code>lanes.py</code> is the six-lane
+scheduler; <code>integrated_agent.py</code> is the shipped mind —
+abilities, affordances, receipts, the speech renderer;
+<code>functional_agent.py</code> is the earlier command surface the
+README calls a control; <code>tools.py</code> holds the workspace read
+and the bounded run; <code>embeddings.py</code> holds the
+<code>Embedder</code> protocol and a deterministic hash embedder the
+architecture contract calls <em>"an offline test adapter"</em>.
+<code>experiments/graph_native_live/</code> is 11,151 lines of
+nurseries, a LoCoMo replay and two C++ helpers for the open-weight
+experiments.</p>
+<p>Running it means Python 3.11, Ollama with a small model for speech,
+and PyTorch for the cortex; the Makefile's <code>playground</code>
+target runs the whole loop offline with a tiny cortex and a fake motor,
+and <code>doctor</code> checks the live prerequisites without creating
+state. The database defaults to <code>state/habitus.sqlite</code> under
+the Make targets and <code>habitus-mind.sqlite</code> from the CLI;
+<code>:memory:</code> is an explicit opt-in. The store binds an
+embedding <code>space_id</code> and dimension on creation and refuses to
+open under a different one (<code>store.py:316-338</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One process, one file, one model daemon. The cost is the cortex — a
+random-born network updated per pulse — and the discipline: a mind that
+cannot see its own history in a prompt has to be asked to look, and the
+person types <code>/recall</code>. Everything the mind did is
+inspectable through <code>/state</code> and <code>--json</code>: pulse
+ids, selected outputs, evidence ids, receipts, hashes and the graph's
+invariant errors.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Record.</strong> <code>remember</code>
+(<code>pipeline.py:278-297</code>) resolves the kind, the record type
+and the input trunk; a lexical <code>HEAR</code> input is embedded by
+the embedder, anything else by <code>opaque_payload_embedding</code>
+under a <code>trunk:type</code> namespace (<code>:349-356</code>); the
+<code>MemoryRecord</code> is built with its <code>supersedes_id</code>
+(<code>:361-372</code>) and inserted; concept assignments and vault
+membership follow, with non-language records kept out of crown and
+lexical vaults.</li>
+<li><strong>Immutability and supersession.</strong> The triggers at
+<code>store.py:125-133</code>; <code>list_active_records</code>
+(<code>:411-421</code>) and <code>records_for_vault</code>
+(<code>:850-865</code>) exclude a row named by a newer record's
+<code>supersedes_id</code>.</li>
+<li><strong>Library recall.</strong> <code>recall</code>
+(<code>pipeline.py:638-698</code>) routes the query as an event, calls
+the retriever for a packet — <code>direct_top_k = 3</code> with a
+similarity floor of 0.08 (<code>:82-83</code>), graph-selected vaults,
+dense and BM25 inside them — advances a working memory that retains
+prior injections, appends core records, and renders under
+<code>context_budget_chars</code> with the direct and core records
+protected from truncation (<code>:684-686</code>).
+<code>_render_record</code> (<code>context.py:8-28</code>) prefixes each
+line by type and by the <code>verified</code> flag.</li>
+<li><strong>Shipped recall.</strong> <code>_recall_memory</code>
+(<code>integrated_agent.py:582-628</code>) as described in section 1;
+the <code>/recall</code> records themselves are excluded from the
+scan.</li>
+<li><strong>Speak.</strong> <code>messages_for</code>
+(<code>:282-321</code>) builds the two-message prompt;
+<code>render</code> (<code>:320-325</code>) calls the motor;
+<code>_actualize_speech</code> (<code>:753</code>) records the reply
+with <code>transcript_records_used: 0</code>,
+<code>recalled_records_used: 0</code> and the SELF and cortex state
+hashes.</li>
+<li><strong>Authorize.</strong> <code>_affordance</code>
+(<code>:724-738</code>) finds the ability among the pulse's selected
+outputs or raises <em>"SELF did not authorize the sensed ability"</em>;
+<code>record_outcome</code> (<code>pipeline.py:821-835</code>) refuses a
+verified external outcome without a receipt id.</li>
+<li><strong>Remember and recall on the command line.</strong>
+<code>_remember_fact</code> (<code>functional_agent.py:318-344</code>)
+scans active fact records for an exact case-folded match and adds one
+otherwise with a SHA-256 of the text; <code>_recall_response</code>
+(<code>:346-377</code>) returns every explicit fact plus the library's
+hits, last twelve.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>records</code> (<code>store.py:112-123</code>):
+<code>record_id</code>, a unique <code>event_id</code>,
+<code>record_type</code> — inbound message, outbound message, fact,
+receipt, tool result, observation, thought, notification —
+<code>source_id</code>, <code>timestamp</code>, <code>text</code>,
+<code>embedding_json</code>, <code>provenance_json</code>,
+<code>metadata_json</code>, <code>supersedes_id</code>. The metadata
+carries the causal trunk, the membrane lane, whether the record has
+membrane words, and for a fact its SHA-256 and the
+<code>explicit_user_memory</code> flag.
+<code>experience_projections</code> has no natural-language column by
+contract: experience id, record id, node, layer, side, activation,
+preference, confidence, pulse. <code>experience_state</code> keeps a
+confidence-weighted mean per experience id that later observations
+update, so <em>"later verified outcomes can change how the same turn is
+remembered without rewriting its immutable language."</em> Traces,
+outcomes, experience cycles and their returns are the per-pulse history;
+concepts, edges and node dynamics are the graph, updated in place.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are two retrievers and the shipped mind uses the simpler one.
+The library's <code>recall</code> is a two-lane design the architecture
+contract draws: a <em>"global direct dense top 3"</em> it calls a
+<em>factual safety rail</em>, and semantic endpoints that lead through
+weighted graph paths to selected vaults where dense and BM25 retrieval
+run; the lanes <em>"meet only by canonical record ID"</em> and
+<em>"graph candidates cannot evict the direct safety rail"</em>, which
+<code>tests/test_retrieval_pipeline.py:35-59</code> asserts against
+eight distractors. A working memory carries prior injections into the
+next pulse (<code>:80</code>), and the renderer keeps direct and core
+records whole under the character budget.</p>
+<p>The shipped <code>/recall</code> is a scan: every active record with
+membrane words, scored by token overlap against a stop-word-stripped
+query, cosine over the hash embedder's vectors, an exact phrase match
+and the explicit-memory boost, with a floor that drops a record with no
+overlap, no phrase and similarity under 0.42. It returns eight, newest
+last among equals, and the result goes back as a <code>SEE</code> return
+that code renders into the reply. What the model says next is still a
+function of the current utterance alone.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is synchronous on the event-loop thread: the record is
+inserted, its projections deposited, the graph advanced, the pulse
+saved, before the lane yields. The six lanes queue concurrently but
+<em>"the short graph and SQLite mutations remain serialized on the
+event-loop thread"</em> (<code>EXPERIMENT.md</code>). No background pass
+consolidates, decays or rewrites anything; growth — the promotion of
+overlap clusters into child concepts — is an explicit, evidence-gated
+API, and a promoted child <em>"retains every canonical experience that
+justified it"</em> (invariant 14).</p>
+<p>Correction is the gap. The library's
+<code>remember(..., supersedes_id=)</code> is the one path that retires
+a record, and the shipped surfaces never call it with a value:
+<code>_remember_fact</code> deduplicates by exact text and otherwise
+appends, <code>handle</code> in the integrated mind records what it
+hears and says, and no command, ability or affordance produces a
+supersession. <code>demo.py:40</code> and
+<code>tests/test_store_and_topology.py:60</code> are the callers. On the
+shipped mind a fact that turns out wrong is a fact forever, and the only
+lever is another fact that outscores it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A pulse per event through the graph and the cortex, one model call
+per <code>SPEAK</code>, no model call for <code>/remember</code>,
+<code>/recall</code>, <code>/open</code>, <code>/run</code> or
+<code>/state</code>; a <code>/recall</code> costs a scan of every active
+language record in Python.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is the mind. A person types; a <code>HEAR</code> event
+becomes a record; the pulse selects among <code>SPEAK</code>,
+<code>LOOK</code> and <code>DO</code>; a <code>SPEAK</code> renders
+through the motor; a <code>LOOK</code> or <code>DO</code> needs an exact
+affordance from that pulse, runs once, and returns through
+<code>SEE</code> or <code>NOTICE</code> with a receipt —
+<code>/open</code> returns a file's content and its SHA-256 inside the
+authorized workspace, <code>/run</code> executes one Python file under
+time, memory, descriptor and output limits (<code>tools.py</code>). No
+MCP, no HTTP; another program uses the library or the
+<code>--once … --json</code> one-shot. The human's surface is the
+command line and the SQLite file; there is no page and no review
+queue.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Audit log — awarded.</strong> Immutability is a database
+trigger, not a convention; every event is a record with source, time and
+provenance; a correction is a new row that points at the old one; every
+ability run leaves a receipt with a hash and every pulse a trace and an
+outcome; a verified outcome cannot be recorded without a receipt id. The
+limit is beside it: the graph — concepts, edges, node dynamics,
+experience preference — is updated in place, and the per-pulse trace is
+the only history of those changes.</p>
+<p><strong>Negative evaluation — awarded.</strong>
+<code>test_non_hear_words_never_enter_crown_vault_or_language_recall</code>
+seeds three records, asserts two are absent from every retrieval
+surface, and asserts the third is present in the same test.
+<code>test_current_event_renderer_has_no_transcript_or_recalled_text</code>
+asserts a private token from the first event is absent from the second
+model call, with the call count and the second message's content as the
+control.
+<code>test_graph_candidates_cannot_evict_three_direct_records</code>
+asserts the rail holds against distractors.</p>
+<p><strong>Trust state — withheld.</strong> <code>verified</code> on a
+receipt, tool result or observation and the <code>THOUGHT</code> type
+are rendered as different prefixes — <em>I directly verified</em>, <em>I
+observed</em>, <em>I once considered, without treating it as
+verified</em> — and nothing excludes the unverified ones; supersession
+is a lifecycle pointer, not a verdict.</p>
+<p><strong>Tombstone — withheld.</strong> A superseded record is retired
+by id; nothing is keyed on the value, and <code>/remember</code> will
+accept the retired text again as a new fact if it is not an exact
+duplicate of an active one.</p>
+<p><strong>Bitemporal — withheld.</strong> One timestamp, the time of
+the event.</p>
+<p><strong>Scope — withheld.</strong> One database is one lineage and
+one owner; <code>source_id</code> is stored on every record and applied
+on no read path; the lane filter keeps seen and noticed text out of
+language recall, which is a boundary between senses, not between
+users.</p>
+<p><strong>Human review — withheld.</strong> <code>/remember</code> is
+explicit and <code>/state</code> is inspectable; nothing lets a person
+approve, reject or edit a record.</p>
+<p><strong>What the design refuses, in its own words.</strong> The
+architecture contract's closing rule: <em>"Future layers must not hide
+direct evidence, mutate canonical history, bypass one-use authorization
+and receipt verification, or turn graph familiarity into a fact."</em>
+The honest-boundaries list says the cortex <em>"does not yet generate
+generally coherent open-ended speech by itself"</em>, <code>/run</code>
+<em>"is not a hostile-code sandbox"</em>, and the persistent pressure
+and valence variables <em>"are engineering variables, not evidence of
+consciousness."</em></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>151 cases in 33 files, run in CI on CPU with nothing downloaded. They
+cover the store's triggers and supersession, the retrieval rail, the
+lane boundary, the one-use affordance
+(<code>tests/test_self_pulse_kernel.py:252</code>, an idle poll cannot
+repeat an output without a new pulse at <code>:399</code>), receipts
+surviving a restart, the embedding-space binding, the renderer's prompt,
+the concurrent lanes, and the developmental cortex and curriculum.
+Several are written as mutation targets and say so.</p>
+<p>The whitepaper's evaluation is a curriculum: 36 topics, 432 episodes,
+494 records, 276 nodes, invariant errors zero before and after a
+restart, topic coverage 35 of 36, label-absent paraphrases 16 of 18,
+graph-to-vocabulary recovery 16 of 18 at top one, a four-condition
+transformer matrix. Its section 9.3 is <em>"an evidence manifest, not a
+promise that the files are present in every clone"</em>: five SHA-256
+hashes of run files and native binaries that Git ignores, and none of
+them is in the tree. Its section 10 tables what is and is not
+demonstrated, and two rows matter for a memory reader: <em>"Arbitrary
+episodic facts cross the continuous seam — Not demonstrated"</em> and
+<em>"The adapter replaces text RAG — Not demonstrated"</em>, each with
+the suite that would advance it named. A LoCoMo replay exists as a
+script — turns arrive through <code>HEAR</code>, session boundaries
+through <code>NOTICE</code>, captions through <code>SEE</code>,
+questions answered from the live graph with retrieval measured <em>"only
+afterward as a separate diagnostic"</em> — with five tests on its
+scoring and receipts and no result committed. No paper;
+<code>CITATION.cff</code> cites the software.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Immutability as a trigger.</strong> Two <code>BEFORE</code>
+triggers on the records table make <em>append-only</em> a property of
+the file, not of the code that happens to write it.</li>
+<li><strong>Retrieval as a selected action with a receipt.</strong> A
+model that is never handed stored text cannot leak it, misattribute it
+or be prompted into it; the person sees exactly when the mind looked and
+what came back.</li>
+<li><strong>Lane-scoped language memory, tested negatively.</strong>
+Keeping tool output and notifications out of the vocabulary and out of
+language recall is the rare boundary that a test asserts with a positive
+control beside it.</li>
+<li><strong>A whitepaper with a not-demonstrated table.</strong> Naming
+the suite that would advance each claim is worth more than the
+claims.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A supersession the product cannot write.</strong> The one
+correction mechanism in the store is reachable from the library and the
+tests and from no command a user types.</li>
+<li><strong>Recall as a scan with a hand-tuned score.</strong> Four
+coefficients and a floor over every active record is fine at a few
+hundred and is not an index.</li>
+<li><strong>A lineage with no scope key.</strong> One database per user
+is a deployment rule; nothing in the store distinguishes sources at read
+time.</li>
+<li><strong>Evidence hashes for files the repository ignores.</strong> A
+manifest a reader cannot check is a promise; committing one run would
+make it a fact.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a researcher who wants a memory that cannot be silently
+rewritten, a model that cannot be silently fed, and a boundary between
+what was heard and what was returned by a tool, this is a serious first
+release with the discipline in the database and the tests, and the graph
+and cortex above it are the research the whitepaper is about. It is not
+a memory service: one person, one file, no correction from the command
+line, no forgetting, no review, and a recall that the person has to ask
+for by name. Read the store, the lane test and the renderer's prompt;
+treat the drives and the cortex as what the whitepaper calls them,
+engineering variables under study.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will <code>/remember</code> ever take a correction? The library's
+argument exists and the test for it passes; a
+<code>/remember … supersedes …</code> or a contradiction check against
+active facts is the missing producer.</li>
+<li>When the same fact is told twice in different words, both are active
+facts and <code>/recall</code> returns both; is the intended answer the
+newer or the higher-scored?</li>
+<li>What does a LoCoMo replay score? The script, its tests and its
+scoring rule are committed; a run is not.</li>
+<li>Does the <code>verified</code> flag ever gate anything beyond the
+renderer's prefix and the outcome's receipt requirement?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/habitus_ai/store.py</code></td>
+<td>1,334</td>
+<td><code>MindStore</code>, sixteen tables, the two immutability
+triggers (<code>:125-133</code>), active-record queries
+(<code>:411</code>, <code>:850</code>), projections, dynamics, traces,
+outcomes</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/pipeline.py</code></td>
+<td>872</td>
+<td><code>BaseAgenticMemoryRAG</code>: <code>remember</code>
+(<code>:278</code>), output cycles, <code>recall</code>
+(<code>:638</code>), <code>record_outcome</code>
+(<code>:821</code>)</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/context.py</code></td>
+<td>—</td>
+<td><code>_render_record</code> (<code>:8</code>) and
+<code>render_context</code> (<code>:30</code>)</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/integrated_agent.py</code></td>
+<td>1,124</td>
+<td><code>IntegratedMind</code>: <code>messages_for</code>
+(<code>:282</code>), <code>_recall_memory</code> (<code>:582</code>),
+<code>_affordance</code> (<code>:724</code>),
+<code>_actualize_speech</code> (<code>:753</code>), <code>handle</code>
+(<code>:891</code>), <code>state</code> (<code>:963</code>)</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/functional_agent.py</code></td>
+<td>604</td>
+<td><code>_remember_fact</code> (<code>:318</code>),
+<code>_recall_response</code> (<code>:346</code>)</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/graph.py</code>, <code>self_pulse.py</code>,
+<code>recurrent.py</code>, <code>lanes.py</code></td>
+<td>1,952, 1,745, —, —</td>
+<td>The conserved dual graph and invariants, the SELF pulse, the desire
+field, the six-lane scheduler</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/developmental_cortex.py</code>,
+<code>developmental_runtime.py</code>,
+<code>developmental_curriculum.py</code>,
+<code>open_weight.py</code></td>
+<td>2,070, 1,446, 1,380, 2,149</td>
+<td>The cortex, the born-in runtime, the curriculum, the open-weight
+interface</td>
+</tr>
+<tr>
+<td><code>src/habitus_ai/tools.py</code>, <code>embeddings.py</code>,
+<code>types.py</code>, <code>models.py</code></td>
+<td>597, —, —, —</td>
+<td>Workspace read and bounded run with receipts, the
+<code>Embedder</code> protocol and hash embedder, the record types, the
+<code>ChatModel</code> protocol</td>
+</tr>
+<tr>
+<td><code>ARCHITECTURE.md</code>, <code>WHITEPAPER.md</code>,
+<code>EXPERIMENT.md</code>, <code>docs/</code></td>
+<td>3,704 in all</td>
+<td>The contract with its fifteen invariants, the paper with its
+not-demonstrated table, the six-lane experiment</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>6,553 in 33 files</td>
+<td>151 cases</td>
+</tr>
+<tr>
+<td><code>experiments/graph_native_live/</code></td>
+<td>11,151</td>
+<td>Nurseries, the LoCoMo replay, native helpers</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;supersedes_id\s*=&#39; src/habitus_ai/*.py | rg -v &#39;store.py|types.py|pipeline.py&#39;   # demo.py:40 only — no command passes one
+rg -n &#39;DELETE FROM&#39; src/habitus_ai/store.py                           # none
+rg -n -i &#39;forget|expire|decay|ttl&#39; src/habitus_ai/store.py src/habitus_ai/pipeline.py   # none on a record
+rg -n &#39;source_id ==|source_id =&#39; src/habitus_ai/pipeline.py src/habitus_ai/integrated_agent.py   # writes only; no read path filters on it
+find . -path ./.git -prune -o \( -name &#39;*.json&#39; -o -name &#39;*.jsonl&#39; -o -name &#39;*.sqlite&#39; \) -print   # none: no committed run
+rg -n -i &#39;arxiv|doi&#39; README.md WHITEPAPER.md CITATION.cff             # none: no paper beyond the tree&#39;s own</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9"><code class="commit-id" title="a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9">a1c86c29…</code></a>
+— first reading, at the head of <code>main</code>, the third of three
+commits made on 7 September 2026. Screened first: no auto-run surface,
+one manifest with no lockfile, three build-time execution paths, one
+file inside the seven-day cooldown, <code>AGENTS.md</code> treated as
+data; nothing installed or run, the read made from a full clone. Two
+marks. The supersession producer was traced from the store's link to
+every caller of <code>remember</code> before the update column was
+written.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
