@@ -8,6 +8,16 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-07-a-reader-bounced-on-the-form.md](2026-09-07-a-reader-bounced-on-the-form.md) —
+  the author of `no_human` read their report and called it right and
+  unreadable: a wall of text that jumps in specificity and does not distill.
+  Two mechanical causes are fixed (a 113-character measure, a diagram squashed
+  by a `;` that spawned phantom states); the rest is prose, and countable — the
+  report's paragraphs run 110 words at the median against a corpus median of
+  44, and one section in fourteen opens with its finding. Proposes a pilot rewrite, six
+  rules for the format document and skill, and a paragraph ceiling in the build
+  in the shape of the superlative ceiling: 301 paragraphs over 150 words today,
+  a count that may fall and may not rise.
 - [2026-09-03-the-extraction-half-run-once.md](2026-09-03-the-extraction-half-run-once.md) —
   `robert-mcdermott/ai-knowledge-graph`, a one-shot text-to-knowledge-graph CLI,
   examined and given no report: it writes a JSON graph and an HTML page that
