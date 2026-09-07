@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local Graph RAG over a folder of
+Markdown notes — LlamaIndex's property graph on Ollama, wikilinks and
+frontmatter turned into triples without a model, four retrievers fused
+into one cited answer, a watcher that re-indexes an edited note in
+place, and one MCP tool — where a wikilink's triple has no document
+behind it, so an edit that removes the link leaves the relation in the
+graph until something forces a full rebuild.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kwipu — Agent Memory Atlas">
+    <meta property="og:description" content="A local Graph RAG over a
+folder of Markdown notes — LlamaIndex's property graph on Ollama,
+wikilinks and frontmatter turned into triples without a model, four
+retrievers fused into one cited answer, a watcher that re-indexes an
+edited note in place, and one MCP tool — where a wikilink's triple has
+no document behind it, so an edit that removes the link leaves the
+relation in the graph until something forces a full rebuild.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kwipu — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local Graph RAG over a
+folder of Markdown notes — LlamaIndex's property graph on Ollama,
+wikilinks and frontmatter turned into triples without a model, four
+retrievers fused into one cited answer, a watcher that re-indexes an
+edited note in place, and one MCP tool — where a wikilink's triple has
+no document behind it, so an edit that removes the link leaves the
+relation in the graph until something forces a full rebuild.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kwipu — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kwipu",
+      "description": "A local Graph RAG over a folder of Markdown notes \u2014 LlamaIndex's property graph on Ollama, wikilinks and frontmatter turned into triples without a model, four retrievers fused into one cited answer, a watcher that re-indexes an edited note in place, and one MCP tool \u2014 where a wikilink's triple has no document behind it, so an edit that removes the link leaves the relation in the graph until something forces a full rebuild.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Notes as a graph, answers as citations</p>
+          <h1>Kwipu</h1>
+          <p class="document-deck">A local Graph RAG over a folder of
+Markdown notes — LlamaIndex's property graph on Ollama, wikilinks and
+frontmatter turned into triples without a model, four retrievers fused
+into one cited answer, a watcher that re-indexes an edited note in
+place, and one MCP tool — where a wikilink's triple has no document
+behind it, so an edit that removes the link leaves the relation in the
+graph until something forces a full rebuild.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/benmaster82/Kwipu">
+              <span>Source</span>
+              <strong>benmaster82/Kwipu</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/benmaster82/Kwipu/commit/908f0e4e300578a22c5fadd4538f75ff7ccfc0b6" title="908f0e4e300578a22c5fadd4538f75ff7ccfc0b6">
+              <span>Analyzed revision</span>
+              <code>908f0e4e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kwipu is a local Graph RAG over a folder of Markdown notes, built for
+an Obsidian vault and indifferent to whether it is one. MIT; 22 commits
+between 21 April and 18 May 2026 by two authors, nothing since; 1,273
+lines in <code>geode_graph.py</code>, 436 in
+<code>lang_config.py</code>, 99 in <code>kwipu_mcp_server.py</code>;
+Python 3.11 on LlamaIndex with Ollama for both the generation and the
+embedding model. The screen found no auto-run surface and one unpinned
+manifest — six requirements with no version at all — and nothing was
+installed or run.</p>
+<p>The memory is a LlamaIndex <code>PropertyGraphIndex</code> persisted
+to <code>storage_graph/</code> (<code>geode_graph.py:91</code>). A note
+becomes a document keyed by its path, its frontmatter becomes
+<code>fm_*</code> metadata, and three kinds of triple land in the graph:
+from every <code>[[wikilink]]</code> a
+<code>(note, relation, target)</code> whose relation is inferred from
+the line around the link by per-language patterns
+(<code>:397-422</code>, <code>lang_config.py:170-322</code>); from
+frontmatter keys in six languages a fixed relation — <code>ruolo</code>
+and <code>role</code> and <code>rolle</code> all become <em>Has
+role</em> (<code>:426-516</code>); and from each chunk up to twenty
+triples a model extracts under a prompt that wants proper nouns
+(<code>:822-834</code>). The first two cost no model call and are
+injected after the model's pass by <code>upsert_triplet</code>
+(<code>:745-753</code>). Retrieval is four sub-retrievers under one
+query engine (<code>:857-912</code>): a synonym retriever that asks the
+model for fifteen keywords and walks the graph three hops (normal mode
+only), a vector retriever over the chunks with the same depth, a BM25
+pass written by hand over every text node in the graph
+(<code>:165-268</code>), and a scan that adds three for a date token,
+two for a temporal word, one per token on a tag line and one and a half
+for a capitalised name (<code>:271-334</code>). The synthesis prompt
+uses only the context, cites file names in brackets, and answers <em>"I
+don't have enough information in your local files"</em> when it cannot
+(<code>:115-138</code>).</p>
+<p>The finding is in the update path. A modified note is handled by
+<code>update_document</code> (<code>:701-743</code>): delete the
+document by its path with <code>delete_ref_doc</code>, read it again,
+insert it, and re-upsert its structural triples. The chunks and
+embeddings that carried the old text go with the document. The wikilink
+and frontmatter triples do not: <code>upsert_triplet</code> takes a
+subject, a relation and an object and no document id, so a link the edit
+removed stays as a relation in the graph, and the same is true of a
+frontmatter value that changed. The code says as much about deletion —
+<em>"Deletions require full rebuild (can't selectively remove all
+related triples)"</em> (<code>:1080</code>) — and the full rebuild a
+deleted file forces is the one path that drops a triple. Over MCP there
+is no watcher at all (<code>kwipu_mcp_server.py</code> constructs the
+engine and no <code>FileWatcher</code>), so an agent reads the vault as
+it stood at its first query for the life of the server process.</p>
+<p>No mark. Nothing here is a tombstone, a state, a validity time, a
+scope key, an audit record, a review surface or a negative test, and the
+design does not reach for any of them: it is a reader over notes a
+person keeps elsewhere, and its correctness rests on the notes.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief here is a note. It enters the store when the folder is built
+or when the watcher sees a file appear, and it enters in three forms at
+once: as chunks a vector search can find, as text a keyword search can
+score, and as triples a graph walk can follow. The triples are the
+interesting part, because two of the three kinds are written by code
+that reads the note's own structure — the link <code>[[Alice]]</code> on
+a line containing <em>works with</em> becomes <em>(note, Works with,
+Alice)</em> by a regular expression, and <code>role: engineer</code>
+becomes <em>(note, Has role, engineer)</em> by a table — and only the
+third kind is a model's guess.</p>
+<p>A belief is <em>used</em> when a question's retrievers reach it: by
+meaning, by word, by date or name, or by walking from an entity the
+model named. The four result sets are handed to a synthesis prompt that
+may say only what they say, and the answer names the files it drew
+on.</p>
+<p>A belief stops being used in two ways, and they are not symmetric.
+Its text stops when the note is edited: the document is deleted by path
+and re-inserted, and the old chunks are gone. Its structure does not
+stop then: the triples the old text produced were upserted with no
+document behind them, and an edit that removes a link or changes a
+frontmatter value leaves the old relation in place beside the new one.
+Only a deletion — of any file, anywhere in the folder — rebuilds the
+whole graph and drops what no note still asserts. There is no way to
+correct one fact, no record that a fact was removed, and no time on a
+fact except a frontmatter date copied as a string.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a note enters as chunks and as triples; an edit replaces the chunks under the note's path and re-upserts triples that carry no path, so a removed link's relation survives until a deletion anywhere forces the full rebuild</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a note enters as chunks and as triples; an edit replaces the chunks under the note&#39;s path and re-upserts triples that carry no path, so a removed link&#39;s relation survives until a deletion anywhere forces the full rebuild
+flowchart LR
+    N[&quot;note.md&lt;br/&gt;frontmatter · [[wikilinks]] · body&quot;] --&gt;|&quot;enrich_documents: fm_* metadata · structural triples&quot;| D[&quot;document keyed by path&lt;br/&gt;chunks + embeddings&quot;]
+    N --&gt;|&quot;SimpleLLMPathExtractor: ≤20 triples per chunk&quot;| T[(&quot;property graph&lt;br/&gt;triples with no document id&quot;)]
+    D --&gt; T
+    D --&gt; V[(&quot;vector store&quot;)]
+    E[&quot;edit&quot;] --&gt;|&quot;delete_ref_doc(path) → chunks gone&quot;| D
+    E --&gt;|&quot;upsert_triplet again → old relation stays&quot;| T
+    X[&quot;delete any file&quot;] --&gt;|&quot;full rebuild&quot;| T
+    Q[&quot;question&quot;] --&gt; R[&quot;synonym walk · vector · BM25 · date/name scan&quot;]
+    T --&gt; R
+    V --&gt; R
+    R --&gt;|&quot;prompt: only the context, cite files, or say you cannot&quot;| A[&quot;answer with [file.md] citations&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three files. <code>geode_graph.py</code> holds the engine class
+<code>WritHerGraphRAG</code> (<code>:566</code>), the two hand-written
+retrievers, the frontmatter and wikilink extractors, the watcher, the
+Ollama preflight and the Rich terminal loop. <code>lang_config.py</code>
+holds the multilingual apparatus: stop words for six languages
+(<code>:15</code>), month names and a date regex
+(<code>:81,:386-421</code>), temporal keywords (<code>:123</code>), the
+relation patterns per language (<code>:170</code>) with a fallback per
+language (<code>:312</code>), a tokenizer over Latin letters and digits
+(<code>:345</code>) and a language detector by stop-word hits
+(<code>:362</code>). <code>kwipu_mcp_server.py</code> wraps the engine
+in FastMCP with one tool.</p>
+<p>Running it means Ollama on the machine with a generation model and
+<code>nomic-embed-text</code> pulled; the preflight
+(<code>:1113-1169</code>) checks the daemon and both models and prints
+the <code>ollama pull</code> lines it wants. The generation model
+defaults to <code>gpt-oss:20b-cloud</code> (<code>:88</code>), an Ollama
+cloud-routed id, so the README's <em>"no data leaves your machine"</em>
+holds only once the default is overridden with <code>--llm-model</code>;
+the README itself suggests building with the cloud model and querying
+with a local one. Storage is whatever LlamaIndex's
+<code>StorageContext.persist</code> writes under
+<code>storage_graph/</code> — the default in-process graph, document and
+vector stores, serialised as JSON — plus the manifest and the hash
+cache. Nothing listens on a port; the MCP server speaks stdio.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install -r requirements.txt</code>, two
+<code>ollama pull</code>s, drop notes into <code>knowledge_base/</code>,
+run the script. The first build calls the model once per chunk and
+prints an estimate of one to three minutes per three documents
+(<code>:777-781</code>). Changing the embedding model afterwards is
+refused by the manifest check until <code>storage_graph/</code> is
+deleted (<code>:607-640</code>); changing the generation model is
+allowed with a note. There is no configuration file: the knowledge and
+storage directories are constants at the top of the module.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Build.</strong> <code>_build_index_unlocked</code>
+(<code>:756-855</code>) reads the folder recursively with
+<code>filename_as_id=True</code>, runs <code>enrich_documents</code>
+(<code>:518-547</code>) — <code>parse_frontmatter</code>
+(<code>:373-395</code>) copies scalar keys to <code>fm_*</code>
+metadata, <code>extract_wikilink_triples</code> and
+<code>extract_frontmatter_triples</code> produce the structural triples,
+deduplicated case-insensitively (<code>:549-563</code>) — then builds
+the <code>PropertyGraphIndex</code> with a
+<code>SimpleLLMPathExtractor</code> whose <code>parse_triplets</code>
+(<code>:798-820</code>) reads one triple per line, drops any part over
+128 bytes and capitalises each, and an
+<code>ImplicitPathExtractor</code>. The structural triples are injected
+afterwards, the store persisted, the manifest written.</li>
+<li><strong>Infer a relation.</strong> <code>infer_relation</code>
+(<code>lang_config.py:424</code>) detects the language of the line,
+tries that language's <code>RELATION_PATTERNS</code> and returns the
+first match, else the language's <code>FALLBACK_RELATION</code>.</li>
+<li><strong>Query.</strong> <code>ask</code> (<code>:914-943</code>)
+takes the read lock, rebuilds the retrievers under the write lock if
+anything marked them dirty, and calls the query engine.
+<code>_build_retrievers</code> (<code>:857-912</code>) assembles the
+four sub-retrievers; the BM25 retriever computes IDF over every text
+node on its first call and caches it for its lifetime
+(<code>:178-204</code>), so an incremental insert, which marks the
+retrievers dirty, gets a fresh instance and fresh statistics.</li>
+<li><strong>Watch.</strong> <code>FileWatcher</code>
+(<code>:988-1110</code>) debounces five seconds, hashes the file and
+ignores an event whose MD5 matches the cache (<code>:1027-1038</code>),
+then routes: deletions rebuild everything (<code>:1080-1085</code>),
+modifications call <code>update_document</code>, creations call
+<code>insert_document</code>. The hash cache persists in
+<code>storage_graph/.file_hashes.json</code>
+(<code>:949-985</code>).</li>
+<li><strong>Serve.</strong> <code>query_graph(question)</code>
+(<code>kwipu_mcp_server.py:81-92</code>) builds the engine lazily in
+fast mode (<code>:72</code>) — no synonym retriever, no model call
+before synthesis — and returns the response as a string. The server
+changes its working directory to its own location so the two constants
+resolve (<code>:41</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The document is LlamaIndex's, with the note's path as its id and its
+frontmatter flattened onto <code>metadata</code> under <code>fm_</code>
+prefixes — a list joined with commas, a scalar stringified
+(<code>:531-536</code>). Chunks are LlamaIndex text nodes carrying the
+same metadata and an embedding. A triple is
+<code>(subject, relation, object)</code> with nothing else: no source
+document, no time, no confidence. The three producers are
+distinguishable only by shape — a structural triple's subject is a file
+stem and its relation comes from a fixed vocabulary (<em>Has role</em>,
+<em>Belongs to</em>, <em>Participates in</em>, <em>Has status</em>,
+<em>Has responsible</em>, <em>Has license</em>, <em>Located at</em>,
+<em>Has tag</em>, <em>Has participant</em>, <em>Has date</em>, <em>Has
+budget</em>, <em>Has duration</em>, and the per-language relation
+patterns); a model triple is three capitalised strings. The manifest is
+<code>{embed_model, llm_model, version}</code>; the hash cache maps path
+to MD5.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The synonym retriever asks the generation model for up to fifteen
+keywords — names, titled names, abbreviations, multilingual variants,
+separated by <code>^</code> — and walks the graph from matching entities
+to depth three with text included (<code>:871-889</code>); it is the one
+retriever that costs a model call per query and the one the MCP server
+never runs. The vector retriever embeds the question, takes twenty
+nearest chunks and expands each through the graph to depth three
+(<code>:892-899</code>). The BM25 retriever tokenises every text node in
+the graph store, scores with <code>k1 = 1.5</code> and
+<code>b = 0.75</code> and returns eight (<code>:165-268</code>). The
+temporal retriever returns eight from a score that is additive over date
+tokens, temporal keywords, tag or date lines and capitalised tokens
+longer than four characters (<code>:271-334</code>); its gate is
+<code>not is_temporal_query and not query_tokens</code>
+(<code>:291</code>), which fails only for a question with no tokens at
+all, so it runs on every real question and doubles as a proper-name
+retriever. The query engine merges the four lists and synthesises under
+the prompt; nothing reranks across retrievers beyond what LlamaIndex's
+engine does with the union, and no threshold is applied to any
+score.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write blocks whichever thread holds it — the REPL blocks the
+person, the watcher runs on its own thread behind a read-write lock
+(<code>:340-367</code>) — and a note is retrievable after the debounce,
+the hash check and the insert, which for one note is the model's
+extraction over its chunks plus a persist of the whole store. A full
+rebuild rewrites everything, and it happens on the first run, on any
+load error, on any incremental error (<code>:692-698</code>,
+<code>:735-741</code>) and on any deletion. Nothing consolidates,
+summarises or ages a note.</p>
+<p>The asymmetry to hold onto: <code>update_document</code> removes the
+old document and its chunks by path and then re-upserts the structural
+triples; nothing between those two steps removes the triples the old
+text produced, because nothing recorded which document produced them. A
+link removed from a note is still a relation in the graph, reachable by
+the synonym walk and the vector retriever's graph expansion, until a
+deletion somewhere in the folder forces the rebuild.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>One model call per chunk to build, one per query in normal mode and
+none before synthesis in fast mode, one embedding per chunk and per
+question; every retrieval scans every text node twice in Python (BM25
+and the temporal scan), which is fine for a vault of hundreds of notes
+and is not indexed for one of tens of thousands.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An agent gets one tool, <code>query_graph</code>, over stdio MCP, and
+receives an answer string with bracketed file names; it never sees a
+chunk, a triple or a score, and it cannot add, edit or remove a note
+through the tool. The server is constructed with
+<code>fast_mode=True</code> and without a watcher, so what the agent can
+reach is the graph as persisted when the server first answered, plus
+whatever the REPL — if it is also running against the same
+<code>storage_graph/</code> — has written since, subject to the two
+processes not racing on the JSON files, which nothing here coordinates.
+The human's surface is the REPL and the notes themselves; Obsidian is a
+convention of the folder, not an integration.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — withheld.</strong> A removed note is not
+recorded; the rebuild that follows drops it, and a removed link is not
+dropped at all.</p>
+<p><strong>Trust state — withheld.</strong> A triple carries no state
+and no provenance; a model's guess and a frontmatter fact are the same
+shape in the same store.</p>
+<p><strong>Bitemporal — withheld.</strong> The only time is a
+frontmatter date copied into a <em>Has date</em> triple and into text
+the temporal scan matches; nothing records when a note was indexed or
+when a fact held.</p>
+<p><strong>Scope — withheld.</strong> One folder, one graph, one
+process, and the MCP tool serves the whole graph to whichever client is
+attached; there is no user, agent or namespace anywhere in the code.</p>
+<p><strong>Audit log — withheld.</strong> The hash cache and the
+manifest describe the index, not its mutations.</p>
+<p><strong>Human review — withheld.</strong> The person edits notes in
+an editor; nothing in Kwipu shows a triple or lets one be corrected.</p>
+<p><strong>Negative evaluation — withheld.</strong> There is no
+test.</p>
+<p><strong>What is guarded.</strong> The manifest check refuses to load
+an index built with a different embedding model, which prevents a mixed
+vector space silently; the MD5 cache keeps an editor's repeated saves
+from rebuilding; the prompt tells the model to omit rather than guess
+and to say when the files do not answer. The generation model's default
+is a cloud-routed id, so the local guarantee depends on a flag.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>None. No file under the repository is a test, and no README line
+cites a benchmark or a paper; the README's <em>"anti-hallucination
+prompt"</em> is a claim about the prompt's wording. Eight example notes
+under <code>knowledge_base/examples/</code> — people, a project, a
+licence, a meeting — are the whole fixture, and nothing runs against
+them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Triples from structure before triples from a model.</strong>
+A wikilink and a frontmatter key are facts the note's author asserted;
+extracting them in code, in six languages, gives the graph a floor the
+model cannot lower.</li>
+<li><strong>A manifest that refuses the wrong embedding model.</strong>
+One JSON file and one check keep an index from mixing vector spaces
+after a config change.</li>
+<li><strong>Rule seven.</strong> A synthesis prompt that names the
+sentence to say when the context does not answer is cheap and
+testable.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Triples with no document behind them.</strong> Anything
+upserted without a provenance key cannot be removed when its source
+changes; the price is paid at every edit and paid in full at every
+delete.</li>
+<li><strong>Deletion as a rebuild.</strong> A vault of a thousand notes
+rebuilds through a thousand model calls because one file was
+removed.</li>
+<li><strong>A server that stops watching.</strong> An MCP process that
+indexes once serves an agent a vault frozen at its first question.</li>
+<li><strong>A retriever named for a gate it does not have.</strong> The
+temporal scan runs on every question and rewards capitalised tokens; its
+name promises selectivity its predicate does not enforce.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a person with an Obsidian vault of a few hundred notes who wants
+to ask it questions locally and get file-cited answers, this is a small,
+readable script that does that, and the structural extraction is a
+better idea than most vault-RAG projects have. It is not memory an agent
+maintains: the agent cannot write, the store cannot be corrected below
+the note, and what the agent reads over MCP does not follow the vault.
+Anyone who edits notes often should expect stale relations until they
+delete something, and anyone with a large vault should expect every
+query to scan every chunk in Python. The project has been quiet since
+May 2026.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does LlamaIndex's <code>delete_ref_doc</code> on a property graph
+index remove the entity nodes the model extracted from the deleted
+document's chunks, or only the chunk nodes and their
+<code>MENTIONS</code> relations? The code treats the answer as <em>not
+enough</em> for deletions and <em>enough</em> for edits, and the two
+cannot both be right for the model's triples.</li>
+<li>What does the union of four retrievers look like at the prompt — is
+the synthesis seeing forty-plus nodes with duplicates across retrievers,
+and does the engine dedupe them by id when the hand-written retrievers
+mint <code>TextNode</code>s from graph node ids?</li>
+<li>Does the REPL's watcher and a concurrently running MCP server
+corrupt <code>storage_graph/</code> when both persist? Nothing locks the
+files.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>geode_graph.py</code></td>
+<td>1,273</td>
+<td>Constants and prompt (<code>:88-138</code>),
+<code>BM25ChunkRetriever</code> (<code>:165</code>),
+<code>TemporalMetadataRetriever</code> (<code>:271</code>),
+<code>ReadWriteLock</code> (<code>:340</code>), frontmatter and wikilink
+extraction (<code>:369-563</code>), <code>WritHerGraphRAG</code>
+(<code>:566-943</code>), hash cache and <code>FileWatcher</code>
+(<code>:949-1110</code>), Ollama preflight (<code>:1113</code>), REPL
+(<code>:1171</code>)</td>
+</tr>
+<tr>
+<td><code>lang_config.py</code></td>
+<td>436</td>
+<td>Stop words, month names, temporal keywords, relation patterns and
+fallbacks per language, <code>tokenize</code>,
+<code>detect_language</code>, <code>extract_date_tokens</code>,
+<code>infer_relation</code></td>
+</tr>
+<tr>
+<td><code>kwipu_mcp_server.py</code></td>
+<td>99</td>
+<td>FastMCP server, lazy engine in fast mode (<code>:72</code>),
+<code>query_graph</code> (<code>:81-92</code>)</td>
+</tr>
+<tr>
+<td><code>requirements.txt</code></td>
+<td>8</td>
+<td>Six unpinned requirements, <code>rich</code>, <code>mcp</code></td>
+</tr>
+<tr>
+<td><code>knowledge_base/examples/</code></td>
+<td>8 files</td>
+<td>The example vault</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;delete_ref_doc|delete_triplet|delete_node&#39; geode_graph.py     # one hit, :720 — nothing deletes a triple
+rg -n &#39;upsert_triplet&#39; geode_graph.py                                 # :752 — subject, relation, object; no document id
+rg -c &#39;Observer|FileWatcher&#39; kwipu_mcp_server.py                      # 0: no watcher over MCP
+rg -c -i &#39;user_id|namespace|tenant|scope&#39; geode_graph.py kwipu_mcp_server.py   # 0: no scope
+rg -c -i &#39;created_at|updated_at|timestamp&#39; geode_graph.py             # 0: no record time on anything
+find . -name &#39;test*&#39; -not -path &#39;./.git/*&#39;                            # none
+rg -c -i &#39;arxiv|doi\.org|citation&#39; README.md                          # 0: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/benmaster82/Kwipu/commit/908f0e4e300578a22c5fadd4538f75ff7ccfc0b6"><code class="commit-id" title="908f0e4e300578a22c5fadd4538f75ff7ccfc0b6">908f0e4e…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 18
+May 2026. Screened first: no auto-run surface, no build-time execution,
+one unpinned manifest with six requirements carrying no version; nothing
+installed or run, the read made from a full clone. No mark; the finding
+is the structural triple that outlives its link. LlamaIndex's own
+behaviour under <code>delete_ref_doc</code> was not read — the open
+question says which claim depends on it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

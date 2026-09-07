@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "skalesapp/skales"
 source_url: https://github.com/skalesapp/skales
-revision: 128103e732465a00a2d2ab4bf7d322e32c17ad4d
-revision_url: https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d
-analyzed_at: 2026-07-29
+revision: 522a16ea3d90c2e7688368ab320615d1a9d96563
+revision_url: https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563
+analyzed_at: 2026-09-07
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -30,8 +30,15 @@ matrix:
 ## 1. Executive Summary
 
 Skales is a private, local-first desktop assistant — Electron around a Next.js
-app, storing everything under `.skales-data/` on the user's machine. Its memory
-is three separate subsystems that do not share a model:
+app, storing everything under `.skales-data/` on the user's machine. The code in
+this repository is a frozen **v7.1.0** snapshot of that app, current in March
+2026 with one security fix in July; the product continues as closed-source
+binary releases under BSL 1.1 at 12.9.x, and the repository's README, a fixed
+strip in the web layout and a dialog on every launch from source all say so.
+What follows describes the snapshot, which is the only Skales code anyone can
+read; whether the shipped 12.9 app still has these three subsystems or the
+finding below is not checkable from this tree. Its memory is three separate
+subsystems that do not share a model:
 
 1. **Extracted memories** — regex-mined from conversations on a 90-minute scan,
    one JSON file each, retrieved by keyword score.
@@ -365,7 +372,11 @@ it is not yet made, which is the whole report.
 
 Anyone building on the code should also note the **BSL 1.1** licence: this is
 source-available, not open source, so the transferable ideas above are patterns
-rather than an invitation to copy the implementation.
+rather than an invitation to copy the implementation. And note what the code
+is: a v7 snapshot the project calls unmaintained, not built and not what runs.
+The product a user installs is five major versions on and closed; nothing in
+this repository says whether its memory still works this way, and the
+repository is where a bug in it would be filed, not where it would be fixed.
 
 ## 12. Open Questions
 
@@ -416,5 +427,7 @@ rather than an invitation to copy the implementation.
 - `LICENSE` (BSL 1.1), `COMMERCIAL-LICENSE.md`
 
 ## History
+
+**2026-09-07** — [`522a16ea3d90c2e7688368ab320615d1a9d96563`](https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563) — re-pinned 53 commits on. Every one of them is documentation and release notes except two: a fixed strip in `apps/web/src/app/layout.tsx` and a launch dialog in `electron/main.js`, both saying the checked-in source is a v7.1.0 snapshot from March 2026 that is no longer what ships. The memory subsystems this report describes are byte-identical to the previous pin, so every finding stands for the snapshot; section 1 and the fit paragraph state what the snapshot is. The product moved from 7.1.0 to 12.9.26 as closed binaries in the same period and cannot be read. Screened first: no auto-run surface, a `postinstall` that runs a nested `npm install`, lockfiles unchanged for 171 days; nothing installed or run.
 
 **2026-07-29** — [`128103e732465a00a2d2ab4bf7d322e32c17ad4d`](https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d) — first reading.

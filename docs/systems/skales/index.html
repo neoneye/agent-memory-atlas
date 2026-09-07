@@ -106,14 +106,14 @@ chat through a verb the code does not implement.</p>
               <strong>skalesapp/skales</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d" title="128103e732465a00a2d2ab4bf7d322e32c17ad4d">
+            <a class="meta-pill revision-pill" href="https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563" title="522a16ea3d90c2e7688368ab320615d1a9d96563">
               <span>Analyzed revision</span>
-              <code>128103e7…</code>
+              <code>522a16ea…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -134,8 +134,15 @@ chat through a verb the code does not implement.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Skales is a private, local-first desktop assistant — Electron around
 a Next.js app, storing everything under <code>.skales-data/</code> on
-the user's machine. Its memory is three separate subsystems that do not
-share a model:</p>
+the user's machine. The code in this repository is a frozen
+<strong>v7.1.0</strong> snapshot of that app, current in March 2026 with
+one security fix in July; the product continues as closed-source binary
+releases under BSL 1.1 at 12.9.x, and the repository's README, a fixed
+strip in the web layout and a dialog on every launch from source all say
+so. What follows describes the snapshot, which is the only Skales code
+anyone can read; whether the shipped 12.9 app still has these three
+subsystems or the finding below is not checkable from this tree. Its
+memory is three separate subsystems that do not share a model:</p>
 <ol type="1">
 <li><strong>Extracted memories</strong> — regex-mined from conversations
 on a 90-minute scan, one JSON file each, retrieved by keyword
@@ -484,7 +491,12 @@ fix and it is not yet made, which is the whole report.</p>
 <p>Anyone building on the code should also note the <strong>BSL
 1.1</strong> licence: this is source-available, not open source, so the
 transferable ideas above are patterns rather than an invitation to copy
-the implementation.</p>
+the implementation. And note what the code is: a v7 snapshot the project
+calls unmaintained, not built and not what runs. The product a user
+installs is five major versions on and closed; nothing in this
+repository says whether its memory still works this way, and the
+repository is where a bug in it would be filed, not where it would be
+fixed.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li><strong>Is <code>deleteFact</code> planned?</strong> The comments
@@ -537,6 +549,20 @@ fact-delete handler (612–626); not-supported modal (861–877)</li>
 <code>COMMERCIAL-LICENSE.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563"><code class="commit-id" title="522a16ea3d90c2e7688368ab320615d1a9d96563">522a16ea…</code></a>
+— re-pinned 53 commits on. Every one of them is documentation and
+release notes except two: a fixed strip in
+<code>apps/web/src/app/layout.tsx</code> and a launch dialog in
+<code>electron/main.js</code>, both saying the checked-in source is a
+v7.1.0 snapshot from March 2026 that is no longer what ships. The memory
+subsystems this report describes are byte-identical to the previous pin,
+so every finding stands for the snapshot; section 1 and the fit
+paragraph state what the snapshot is. The product moved from 7.1.0 to
+12.9.26 as closed binaries in the same period and cannot be read.
+Screened first: no auto-run surface, a <code>postinstall</code> that
+runs a nested <code>npm install</code>, lockfiles unchanged for 171
+days; nothing installed or run.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/skalesapp/skales/commit/128103e732465a00a2d2ab4bf7d322e32c17ad4d"><code class="commit-id" title="128103e732465a00a2d2ab4bf7d322e32c17ad4d">128103e7…</code></a>
 — first reading.</p>

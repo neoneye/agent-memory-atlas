@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 379 reports.**
+**This page covers all 381 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1089,7 +1089,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: zero-LLM capture and retrieval that are both cheap and legible — regex capture on a 90-minute watermarked scan, retrieval scored `0.70 / 0.20 / 0.10` under a stated sub-100ms budget, with provenance on every extracted row.
 - Biggest risk: the documented deletion path for a fact is a chat phrase nothing implements — and that phrase is bound to *capture* and *retrieval* instead, so asking it to forget can store a new memory.
 - Most reusable component: stating the retrieval budget in the file header, and invalidating the read cache inside the delete action rather than beside it.
-- Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings — the cheapest gap in the atlas to close.
+- Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings — the cheapest gap in the atlas to close; and the tree is a frozen v7.1.0 snapshot from March 2026 while the product ships as closed binaries at 12.9, so the gap can only be closed elsewhere.
 - Study when: you want a local assistant that quietly remembers preferences without shipping conversations to a vendor.
 - Do not copy when: you need a system of record, or you intend to reuse the implementation — the **BSL 1.1** licence makes this source-available rather than open source.
 
@@ -3262,6 +3262,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 640 commits in ten weeks by one author, 32,041 lines of TypeScript, a desktop app and harness plugin at 0.4.10 with an agent lane in preview, a CLI with 54 tests and no unit suite for the store or the lane, and a nine-endpoint context-repair pilot with 1,215 captured conditions. Three of seven capability marks. A feature-status page separates current, experimental and not promised.
 - Study when: you want a person-legible answer to *what was this model told* — a reviewable retrieval, a request hash, a stale mark — or a worked example of testing a context-editing claim with immutable traces.
 - Do not copy when: you need memory that forms on its own at scale, a refusal that outlives a delete, a validity axis, or scoping across canvases; the design declined each on purpose and says so.
+
+### [`kwipu`](../systems/kwipu/)
+- Best idea: **triples from the note's own structure before triples from a model.** Every wikilink and frontmatter key becomes a relation in code, with the relation inferred from the surrounding line in six languages, and the model's extraction is added on top rather than relied on.
+- Biggest risk: **a wikilink triple has no document behind it.** An edit replaces the note's chunks by path and re-upserts its triples, so a relation the edit removed stays in the graph until a deletion anywhere forces the full rebuild; over MCP the folder is never watched at all.
+- Most reusable component: `lang_config.py` — stop words, temporal keywords, date forms and relation patterns for six languages behind `tokenize`, `detect_language`, `extract_date_tokens` and `infer_relation`, with no model in the path.
+- Maturity impression: MIT, 22 commits from 21 April to 18 May 2026 by two authors and nothing since, 1,800 lines of Python, six unpinned requirements, no tests, no benchmark. No capability mark.
+- Study when: you want to ask a local Obsidian vault questions with file citations and no cloud, or you want a worked example of structural extraction ahead of a model.
+- Do not copy when: you edit notes often and expect the graph to follow, your vault is large enough that a Python scan of every chunk per query matters, or an agent needs to write.
+
+### [`craft`](../systems/craft/)
+- Best idea: **pending means never injected.** A learning is written with its evidence and a count and reaches no prompt until a person has seen it listed in the reflect drain and approved it, at which point it is copied into `.claude/` for Claude Code to load and marked `written`.
+- Biggest risk: **the shell is approved by default in every session the plugin is installed in.** A PreToolUse hook allows every Bash command outside a ten-pattern blocklist, beside the write gate that makes the file tools read-only; and the decision records the planner reads have no writer.
+- Most reusable component: `merge-tokens.py` — the sole writer for an existing `tokens.yaml`, line-surgical, with a report mode that prints CONFLICT, NEW and SAME per key before any question, a snapshot, a self-verify and a restore on failure.
+- Maturity impression: MIT, 288 commits from 1 May to 7 September 2026 by one author, version 2.6.1, 61 hook scripts in bash and Python with no dependency, 85 test scripts run in CI with nothing installed; one of seven capability marks.
+- Study when: you want a coding harness whose memory is files a person approves, or a reference for gating writes and drains behind a state file and a question.
+- Do not copy when: you need memory that searches, scales past one project, or revises what it promoted; or you cannot accept a hook that approves every shell command.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.

@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin — 61 shell
+and Python hook scripts, 33 commands, 27 agents and an 85-script test
+suite — that gates every source write behind a state file, and whose
+memory is a directory of files the person can read: learnings with
+evidence and a pending-or-written status that reach a prompt only after
+a person approves them, locked design decisions and tokens with a sole
+merge writer, durable notes indexed into every session, loved tweaks
+counted toward a taste pass, and a story field pointing at decision
+records nothing yet writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="craft — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin — 61
+shell and Python hook scripts, 33 commands, 27 agents and an 85-script
+test suite — that gates every source write behind a state file, and
+whose memory is a directory of files the person can read: learnings with
+evidence and a pending-or-written status that reach a prompt only after
+a person approves them, locked design decisions and tokens with a sole
+merge writer, durable notes indexed into every session, loved tweaks
+counted toward a taste pass, and a story field pointing at decision
+records nothing yet writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="craft — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin — 61
+shell and Python hook scripts, 33 commands, 27 agents and an 85-script
+test suite — that gates every source write behind a state file, and
+whose memory is a directory of files the person can read: learnings with
+evidence and a pending-or-written status that reach a prompt only after
+a person approves them, locked design decisions and tokens with a sole
+merge writer, durable notes indexed into every session, loved tweaks
+counted toward a taste pass, and a story field pointing at decision
+records nothing yet writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>craft — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "craft",
+      "description": "A Claude Code plugin \u2014 61 shell and Python hook scripts, 33 commands, 27 agents and an 85-script test suite \u2014 that gates every source write behind a state file, and whose memory is a directory of files the person can read: learnings with evidence and a pending-or-written status that reach a prompt only after a person approves them, locked design decisions and tokens with a sole merge writer, durable notes indexed into every session, loved tweaks counted toward a taste pass, and a story field pointing at decision records nothing yet writes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A harness that keeps its rulings</p>
+          <h1>craft</h1>
+          <p class="document-deck">A Claude Code plugin — 61 shell and
+Python hook scripts, 33 commands, 27 agents and an 85-script test suite
+— that gates every source write behind a state file, and whose memory is
+a directory of files the person can read: learnings with evidence and a
+pending-or-written status that reach a prompt only after a person
+approves them, locked design decisions and tokens with a sole merge
+writer, durable notes indexed into every session, loved tweaks counted
+toward a taste pass, and a story field pointing at decision records
+nothing yet writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/drobins25/craft">
+              <span>Source</span>
+              <strong>drobins25/craft</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0" title="7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0">
+              <span>Analyzed revision</span>
+              <code>7006381d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>craft is a Claude Code plugin that describes itself as a harness:
+<em>"your codebase is read-only by default, every change passes through
+a Write Gate as planned and approved work, and craft tracks your
+project's history, design tokens, and decisions locally so Claude learns
+your taste."</em> MIT; 288 commits between 1 May and 7 September 2026 by
+one author; version 2.6.1 (<code>.claude-plugin/plugin.json</code>),
+with releases tagged since July; 468 files, of which 61 are hook scripts
+in bash and Python under <code>hooks/scripts/</code>, 33 are slash
+commands, 27 are agents, 11 are skills and 85 are test scripts. The
+screen found four auto-run surfaces — the plugin manifest,
+<code>hooks/hooks.json</code> registering seven hook events, an
+<code>.mcp.json</code> that starts
+<code>npx chrome-devtools-mcp@latest</code>, and <code>CLAUDE.md</code>
+— and one manifest inside the seven-day cooldown. Every script the
+registrations name was read, and a search over all 61 for network or
+home-directory access found none: they touch <code>.craft/</code>,
+<code>.claude/</code> and <code>/tmp</code>. Nothing was installed or
+run; the read was made from a depth-one clone with history from the
+API.</p>
+<p>Two of the hooks matter before anything about memory does. The write
+gate (<code>check-write-permission.py</code>) denies a
+<code>Write</code> or <code>Edit</code> to any file in the project
+unless the path is under <code>.craft/</code> or <code>.claude/</code>,
+the project has <code>dev_mode: true</code>, <code>.global-state</code>
+carries <code>CRAFT_WRITE_ENABLED="true"</code>, or a workflow session
+is active (<code>:233-342</code>), and fails open on any error
+(<code>:349</code>). The Bash hook
+(<code>auto-approve-plugin-scripts.sh</code>) does the opposite: it
+emits <code>permissionDecision: allow</code> for <strong>every</strong>
+Bash command that does not match a blocklist of <code>rm -rf /</code>,
+force pushes, any <code>git push</code>, <code>git reset --hard</code>,
+<code>git checkout .</code>, <code>git clean -f</code>,
+<code>git branch -D</code>, <code>git rebase</code>, <code>vercel</code>
+and <code>drop table</code> (<code>:13-74</code>), with the comment
+<em>"Claude already follows its own safety rules."</em> The gate that
+makes the codebase read-only for the file tools is beside a hook that
+makes the shell approve-everything for the same session.</p>
+<p>The memory is <code>.craft/</code>, and it is files a person can
+open. The one with a lifecycle is <code>.learnings.yaml</code>: after
+each chunk of a story the orchestrator is told to record conventions,
+enforcements, behaviours, automations, skills and workflows it noticed,
+each with an evidence entry — a source kind, a verbatim quote, the story
+and the date — an occurrence count and <code>status: pending</code>
+(<code>commands/references/learnings-schema.md</code>). Pending entries
+reach no prompt: the session hook counts them into a status line
+(<code>session-start.sh:150-156</code>) and nothing injects their text.
+<code>/craft:reflect</code> lists them by category with counts, asks
+<em>Apply all / Review each / Skip for now</em>
+(<code>craft-reflect.md:108-120</code>), writes the approved ones into
+<code>.claude/CLAUDE.md</code>, <code>.claude/rules/</code>,
+<code>.claude/settings.local.json</code> and
+<code>.claude/skills/</code> where Claude Code loads them
+(<code>:123-296</code>), and marks each <code>status: written</code>
+with a date, leaving it in the file (<code>:298-310</code>). Beside it:
+<code>design/locked.md</code> and <code>design/tokens.yaml</code>,
+written by the <code>lock-decision</code> skill after a confirm step and
+read by the implementer, the style analyser and the chunk validator;
+<code>tokens.yaml</code> may be changed only through
+<code>merge-tokens.py</code>, which the gate enforces by denying a
+whole-file write to an existing file
+(<code>check-write-permission.py:233-265</code>); durable notes under
+<code>notebook/notes/</code>, indexed one line each into every session
+(<code>session-start.sh:257-265</code>); tweak records whose
+<code>taste: loved</code> is counted toward a <em>taste pass</em>
+(<code>count-loved-tweaks.sh</code>); per-story observation sidecars
+with a <code>surfaced</code> flag; tool failures classified as knowledge
+gap or noise and aggregated into patterns at two stories
+(<code>aggregate-failures.py</code>); and, from 2.6.1, a
+<code>decisions:</code> field on every story that the planner and the
+alignment check read as
+<code>.craft/decisions/approved/&lt;slug&gt;.md</code> — a path no
+command, skill, hook or script writes.</p>
+<p>One mark, <code>human_review</code>, for the drain and the lock.
+<code>trust_state</code> is the near miss: <code>pending</code> and
+<code>written</code> are two states and the first withholds, but there
+is no rejected state — <em>Skip for now</em> keeps a learning pending to
+be offered again, and a failure pattern the person declines is deleted
+with its file. <code>audit_log</code> is withheld on purpose:
+<code>.events/*.jsonl</code> is append-only and tested, and it records
+story and chunk progress, not memory. No paper; the README's claims are
+about the product.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief here is a file the agent was told to write and a person was
+shown. It starts as an observation during work: the user said <em>"we
+use Zustand here"</em>, corrected an <code>any</code>, asked for
+prettier after every edit, or a command failed the same way in two
+stories. The orchestrator records it with the quote and the date, and
+increments a count if it has seen the pattern before. In that state it
+is evidence, not a rule: it is listed at session start as a number, and
+no prompt contains it.</p>
+<p>It becomes a rule when a person runs reflect and approves it, and the
+promotion is a copy: a convention becomes a line in
+<code>CLAUDE.md</code>, an enforcement a file under
+<code>.claude/rules/</code>, an automation a hook entry, a skill a
+<code>SKILL.md</code>. From then on Claude Code, not craft, loads it,
+and craft's record of it is the entry it left behind with
+<code>status: written</code>. A design decision takes a shorter road —
+the person says <em>lock it</em>, the skill restates what will be locked
+and asks, and the pattern lands in <code>locked.md</code> where the
+implementer is told to follow it <em>"exactly"</em> and the style
+analyser to check against it.</p>
+<p>It stops being used in only one way that craft records: a learning
+that was never approved stays pending, and a todo is moved to
+<code>done/</code>. What was promoted into <code>.claude/</code> has
+left craft's lifecycle — nothing here revises or retracts a line in
+<code>CLAUDE.md</code> — and what was declined leaves no mark: a skipped
+learning is offered next time, a declined failure pattern is deleted
+with the file that held it, and a tweak the person did not love is
+simply not counted.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a learning is written pending with its evidence and reaches no prompt; reflect lists it and a person approves, skips or declines; approved ones are copied into .claude/ for Claude Code to load and marked written; skipped ones stay pending and return; a declined failure pattern is deleted without a record</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a learning is written pending with its evidence and reaches no prompt; reflect lists it and a person approves, skips or declines; approved ones are copied into .claude/ for Claude Code to load and marked written; skipped ones stay pending and return; a declined failure pattern is deleted without a record
+stateDiagram-v2
+    [*] --&gt; pending : orchestrator writes pattern + evidence + count after a chunk
+    pending --&gt; pending : session start counts it, injects nothing
+    pending --&gt; listed : the reflect command lists it
+    listed --&gt; written : approved — copied to CLAUDE.md / rules / hooks / skills, dated
+    listed --&gt; pending : skipped — offered again next drain
+    listed --&gt; [*] : failure pattern declined — file deleted, no record
+    written --&gt; written : stays in .learnings.yaml, loaded by Claude Code not craft</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A plugin, not a service. <code>hooks/hooks.json</code> registers a
+<code>SessionStart</code> script (once) and a post-compact re-injector,
+a <code>UserPromptSubmit</code> context injector,
+<code>PreToolUse</code> on <code>Write|Edit</code> (the gate and a
+vocabulary check) and on <code>Bash</code> (the auto-approver and a push
+gate), <code>PostToolUse</code> on <code>Write|Edit</code> (progress,
+async), <code>PostToolUseFailure</code> (failure capture, async),
+<code>PreCompact</code> (progress export) and <code>Stop</code> (a guard
+that blocks a stop mid-chunk once within two minutes and otherwise
+stamps a status line). The scripts are bash 3-compatible and Python 3
+with the standard library only; the CI
+(<code>.github/workflows/ci.yml</code>) installs nothing and runs the
+bash suite in five groups. <code>commands/</code> are the slash commands
+with a <code>references/</code> directory of inline-read procedures;
+<code>agents/</code> are the sub-agent prompts; <code>skills/</code> the
+skills; <code>templates/</code> the story, cycle and design-file
+templates; <code>reference/</code> two compressed indexes the hooks
+inject — an orchestration index every prompt and a cold-start index for
+a project without <code>.craft/</code>. <code>.mcp.json</code> adds a
+Chrome DevTools MCP server at <code>@latest</code> for the mockup and
+taste-pass flows.</p>
+<p>State lives in <code>.craft/</code> at the project root, resolved by
+<code>find-workshop.sh</code> walking up from the working directory and,
+in a monorepo, by <code>.craft/.pinned-project</code> written at session
+start. The layout is documented in <code>DESIGN.md:309-388</code> —
+backlog, cycles with stories and a <code>.state</code>, checkpoints,
+fixes, tweaks, analysis, inspiration, notebook, design, workflows,
+requests, docs, research, mockups, dials, <code>project.md</code>,
+<code>quality.yaml</code>, <code>settings.yaml</code>,
+<code>.global-state</code> — and the design document says what tracking
+it means: <em>"Projects that gitignore <code>.craft/</code> get
+local-only persistence for everything under it."</em></p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two commands install it from the author's marketplace;
+<code>/craft:init</code> scans the project and writes
+<code>project.md</code>, <code>tokens.yaml</code> from what it finds
+with confidence signals, and the state file. Everything after that is a
+conversation the commands script. The cost is the hooks: a Python
+process on every write and every Bash call, a bash script on every
+prompt and every stop, and a status banner at session start that scans
+the cycle, the backlog, the learnings, the requests, the workflows, the
+mockups and the tweaks.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Gate a write.</strong>
+<code>check-write-permission.py</code> reads the tool input, denies a
+whole-file <code>Write</code> to an existing <code>tokens.yaml</code>
+with the merge command in the reason (<code>:233-265</code>), allows
+<code>.craft/</code>, <code>.craft-director/</code> and
+<code>.claude/</code> paths (<code>:267-283</code>), allows a file
+outside the project (<code>:284</code>), then allows on
+<code>dev_mode</code> (<code>:295</code>),
+<code>CRAFT_WRITE_ENABLED</code> (<code>:306-311</code>) or an active
+workflow session (<code>:313</code>), and otherwise emits a deny naming
+the story flow (<code>:194-208,:342</code>). The gate is opened by
+<code>start-story.sh</code>, the adhoc skill and the approve skill
+through <code>update-global-state.sh</code>, and closed at story
+completion; session start clears a gate no story or session holds
+(<code>session-start.sh:36-49</code>).</li>
+<li><strong>Approve a command.</strong>
+<code>auto-approve-plugin-scripts.sh</code> greps the command against
+ten patterns and exits silently for a match, which falls through to
+Claude Code's own prompt; anything else is allowed with the reason
+<em>"Auto-approved by craft plugin"</em> (<code>:74</code>).
+<code>push-gate.sh</code> denies a push on a custody violation and
+abstains otherwise.</li>
+<li><strong>Record a learning.</strong> The story-implement command's
+post-chunk step tells the orchestrator to merge into
+<code>.learnings.yaml</code>: read the file, increment
+<code>occurrences</code> and add an evidence entry for a known pattern,
+add a new entry at one otherwise (<code>learnings-schema.md</code>,
+<em>Merge Logic</em>). Failures take a second road:
+<code>handle-tool-failure.py</code> classifies each
+<code>PostToolUseFailure</code> as <code>knowledge_gap</code> (a missing
+npm script, a command not found) or <code>iteration_noise</code> (a
+failing test, a type error) (<code>:30-70</code>) and appends to the
+cycle's <code>.failures</code>; <code>aggregate-failures.py</code> keeps
+knowledge gaps seen in two or more stories and writes
+<code>.failure-patterns.yaml</code>.</li>
+<li><strong>Drain.</strong> <code>/craft:reflect</code> counts pending
+learnings and ungraduated fixes (<code>craft-reflect.md:21-46</code>),
+offers a rule pass first when fixes reach
+<code>rule_pass_threshold</code> (default ten) because <em>"every record
+is a human-confirmed root cause"</em> (<code>:48-70</code>), presents
+the learnings by category with occurrence counts, asks, and writes:
+conventions and behaviours into <code>CLAUDE.md</code>, enforcements
+into <code>.claude/rules/&lt;name&gt;.md</code> with a path glob,
+automations into <code>settings.local.json</code> hooks, skills into
+<code>.claude/skills/&lt;name&gt;/SKILL.md</code>, workflows into
+<code>.claude/commands/</code> (<code>:123-296</code>); marks
+<code>written</code> with <code>written_at</code>
+(<code>:298-310</code>); deletes <code>.failure-patterns.yaml</code>
+after processing <em>"approved or skipped"</em>
+(<code>:210</code>).</li>
+<li><strong>Lock.</strong> <code>skills/lock-decision/SKILL.md</code>
+restates the decision, its context and where it applies, asks, then
+appends a dated section to <code>locked.md</code> with specification,
+implementation, allowed variations and anti-patterns, or updates keys in
+<code>tokens.yaml</code> with targeted edits (<code>:28-90</code>).
+<code>merge-tokens.py</code> is <em>"the sole writer for merges into an
+existing tokens.yaml"</em>: line-surgical, a <code>report</code> mode
+that prints CONFLICT, NEW and SAME per key for the person before any
+question, a <code>merge</code> mode with a precedence flag and per-key
+resolutions, a snapshot to <code>.tokens-premerge</code>, a self-verify
+and a restore on failure (<code>:1-30</code>).</li>
+<li><strong>Index notes.</strong> <code>notebook-notes-index.sh</code>
+emits one bullet per file under <code>notebook/notes/</code> — the
+distilled fact, the facet, <em>as of</em> the created date, the slug —
+and <code>session-start.sh:257-265</code> injects it; the body is read
+on demand when the work matches the facet
+(<code>DESIGN.md:445-456</code>).</li>
+<li><strong>Count taste.</strong> <code>count-loved-tweaks.sh</code>
+counts records in <code>tweaks/</code> with <code>taste: loved</code>,
+no <code>reapplies</code>, no <code>grew_from</code> and a
+<code>created</code> after the <code>last_asked</code> in
+<code>.taste-pass-state</code>, early-exiting at a threshold; the
+session banner and the tweak-close door offer a pass at three
+(<code>taste-pass.md</code>, <em>The offer gate</em>), and only an
+accepted or terminally declined pass advances the state.</li>
+<li><strong>Log an event.</strong>
+<code>append-event.sh &lt;dir&gt; &lt;type&gt; &lt;story&gt; k=v…</code>
+writes one JSON line with a UTC timestamp to
+<code>&lt;dir&gt;/&lt;story&gt;.jsonl</code> and always exits zero;
+<code>read-events.sh</code> filters by story, type and count.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A learning (<code>learnings-schema.md</code>) is
+<code>pattern</code>, <code>evidence[]</code> of
+<code>{source, quote, story, date}</code> — plus <code>file</code> for a
+correction — <code>occurrences</code>,
+<code>status: pending | written</code>, and per category a
+<code>section</code> for conventions, a <code>rule_name</code> and
+<code>paths</code> for enforcements, <code>trigger</code>,
+<code>action</code>, <code>hook_event</code> and
+<code>hook_matcher</code> for automations,
+<code>canonical_example</code> and <code>key_points</code> for skills,
+<code>steps</code> for workflows. Six evidence sources are named:
+<code>user_statement</code>, <code>user_correction</code>,
+<code>user_request</code>, <code>user_explanation</code>,
+<code>repeated_pattern</code>, <code>cli_error</code>. A locked pattern
+is a dated Markdown section; a token is a YAML key whose trailing
+comment is its provenance and which the merge script preserves byte for
+byte. A note is a Markdown file whose first paragraph is the fact,
+second the provenance, with a <code>facet</code> of
+<code>infrastructure | tooling | ownership | process | convention | gotcha</code>.
+A tweak record carries <code>surface</code>, <code>kind</code>,
+<code>attempts</code>, verbatim reactions and <code>taste:</code>. An
+observation entry carries <code>story</code>, <code>grade</code>,
+<code>severity</code>, <code>loc</code>, <code>desc</code>,
+<code>surfaced: false</code>, <code>created</code> and
+<code>craft_version</code>, the last two <em>"inert provenance … read by
+no current consumer"</em> (<code>observations-append.sh:12-14</code>). A
+story's frontmatter carries <code>decisions: []</code> in a canonical
+header order guarded by <code>tests/test-decisions-field.sh</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval in the search sense. Two hooks inject: session
+start puts the status line and the notes index into context once, and
+the prompt hook prepends the active cycle, story, chunk and the count of
+unsurfaced observations to every user turn. Everything else is a read by
+path that a prompt instructs: the implementer's checklist item eight is
+<em>"Check locked patterns — <code>.craft/design/locked.md</code>"</em>
+(<code>agents/implementer.md:443</code>), the style analyser checks
+against it (<code>agents/style-analyzer.md:115</code>), the chunk
+planner opens each decision record named in the story's
+<code>decisions:</code> list before the story's own notes
+(<code>agents/plan-chunks-agent.md:98</code>), and the alignment check
+hands those rulings to the exploring agent up front
+(<code>commands/references/alignment-check.md:105</code>). The learnings
+that have been promoted are retrieved by Claude Code's own loading of
+<code>CLAUDE.md</code> and <code>.claude/rules/</code>, which is outside
+craft's code. The notes design names its staleness mechanism as <em>"the
+Claude-memory way — dated filenames + the always-loaded index + 'as of
+{date}' recall framing — not a TTL."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are the agent's, by instruction, into files under
+<code>.craft/</code> that the gate always allows; the scripts own the
+structured formats and are the places a write can be refused — the token
+merge fails closed and restores its snapshot, the observation append
+writes nothing on a malformed entry, the event append never blocks its
+caller. Nothing blocks the person: hooks that write run asynchronously
+or exit zero. A learning is retrievable never until drained, then
+immediately, by Claude Code. No background pass rewrites anything; the
+one rewrite of a store is the merge script's line-surgical edit of
+<code>tokens.yaml</code>, and the one deletion is the failure patterns
+file after a drain. Session start deletes transient markers — the
+continuation breadcrumb, the active-fix marker, the commit manifest —
+and clears a write gate left open by a crashed session.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No tokens beyond what the commands and agents spend in conversation;
+the drain is one command's worth of reading and writing files. The hooks
+cost a process per event.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is Claude Code, and craft's memory reaches it in three
+ways: the two injecting hooks, the files its commands and agents are
+told to read, and — for everything that has been approved — the
+project's own <code>.claude/</code> directory, which craft writes and
+Claude Code loads without craft's involvement. Sub-agents receive a
+project root and read <code>project.md</code>, <code>tokens.yaml</code>
+and <code>locked.md</code> from it. The DevTools MCP server is a tool
+for the mockup and taste flows, not a memory surface. The person's
+surfaces are the slash commands — <code>/craft:reflect</code>,
+<code>/craft:notebook</code>, <code>/craft:dashboard</code> rendering
+<code>.craft/</code> as a graph — and the files themselves.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Human review — awarded.</strong> A learning cannot reach a
+prompt without a person approving it in the drain, a decision cannot
+become a standard without the lock's confirm step, and a token in an
+existing file cannot change without a per-key conflict report the merge
+script prints for the person. The mark rests on prompt-instructed
+procedure for the first two and on code for the third and for the fact
+that pending entries are never injected.</p>
+<p><strong>Trust state — withheld.</strong> <code>pending</code> and
+<code>written</code> are a candidate and a verified state, the first
+withheld from every prompt; there is no rejected state, a skipped
+learning returns at the next drain, and a declined failure pattern is
+deleted with its file.</p>
+<p><strong>Tombstone — withheld.</strong> Nothing records what a person
+declined; the same pattern can be recorded again with a fresh count at
+the next occurrence.</p>
+<p><strong>Audit log — withheld.</strong>
+<code>.events/&lt;story&gt;.jsonl</code> is an append-only, timestamped,
+tested event log of story and chunk progress; it does not record a
+learning, a lock or a note being written or promoted.</p>
+<p><strong>Bitemporal — withheld.</strong> A note's <em>as of</em> date
+and a learning's evidence dates are record times the reader is asked to
+weigh; nothing tracks validity.</p>
+<p><strong>Scope — withheld.</strong> One <code>.craft/</code> per
+project root, found by walking up; the store has no scope key and the
+hooks apply none.</p>
+<p><strong>Negative evaluation — withheld.</strong> No test asserts that
+a pending learning stays out of a prompt or that a locked pattern is
+followed; the tests cover the scripts' file behaviour.</p>
+<p><strong>The two hooks, stated plainly.</strong> The write gate makes
+the file tools read-only outside <code>.craft/</code> and
+<code>.claude/</code> until a flow opens the gate, and fails open on
+error. The Bash hook approves every command outside its blocklist for
+the whole session the plugin is installed in, including
+<code>curl</code>, package installs and any write a shell can make, and
+the blocklist does not catch <code>rm -rf ./project</code> or
+<code>rm -rf ~</code>. The plugin's own comment gives the reason —
+Claude Code prompts on <code>$()</code> and <code>&amp;&amp;</code> and
+the allow rule does not propagate — and the result is that the harness's
+read-only promise holds for <code>Write</code> and <code>Edit</code> and
+not for <code>Bash</code>. The MCP server is
+<code>npx chrome-devtools-mcp@latest</code>, resolved at every
+start.</p>
+<p><strong>Declared and unwired.</strong> The 2.6.1 changelog says
+<em>"a story can now carry the approved decisions it was built
+from"</em> and that <em>"filing decisions, listing them, watching them
+become real … lands over the coming releases."</em> The tree agrees: two
+readers of <code>.craft/decisions/approved/&lt;slug&gt;.md</code>, a
+test that the readers name the path, and no writer. A story with a
+non-empty <code>decisions:</code> list today points at files nothing has
+created, and the planner's guard stops on a plan <em>"that carries
+decisions but shows no sign of having read them."</em></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Eighty-five test scripts under <code>tests/</code> and four under
+<code>hooks/scripts/__tests__/</code>, all bash, run by
+<code>tests/run-all.sh</code> and in CI in five groups with nothing
+installed. They test the scripts as file behaviour:
+<code>test-append-event.sh</code> asserts one JSON line with timestamp,
+type, story and data; <code>test-check-write-permission.sh</code>
+asserts allow for <code>.craft/</code> paths and deny elsewhere with the
+gate closed, and the denial of a whole-file write to an existing
+<code>tokens.yaml</code>; <code>test-count-loved-tweaks.sh</code> covers
+the four qualifying conditions; <code>test-decisions-field.sh</code>
+guards the frontmatter order and the literal <code>decisions: []</code>
+in every template; <code>test-create-cycle.sh</code> asserts the
+learnings file is created. There is no test of a learning's lifecycle
+beyond the file existing, none of the drain — which is a prompt — and
+none of the auto-approve hook. No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Pending means never injected.</strong> A learning with
+evidence and a count that reaches no prompt until a person has read the
+list is the cheapest honest memory in a coding harness; the promotion
+into <code>CLAUDE.md</code> makes the approved rule legible in the tool
+that will apply it.</li>
+<li><strong>A sole writer with a report mode.</strong> A merge script
+that prints CONFLICT, NEW and SAME per key before any question,
+snapshots, self-verifies and restores is how a shared config file stays
+a record.</li>
+<li><strong>A facet on a note and a date in its name.</strong> The
+always-loaded one-line index with the body on demand is a MEMORY.md
+pattern done with a shell script and a filename.</li>
+<li><strong>Classify failures before counting them.</strong> Knowledge
+gap versus iteration noise, with a two-story threshold, keeps a failing
+test from becoming a rule.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A gate on one tool and an allow-all on the other.</strong>
+The read-only promise is only as strong as the weakest tool hook, and a
+shell that is approved by default is the strongest tool.</li>
+<li><strong>A reader with no writer.</strong> A decisions field shipped
+ahead of the decisions store leaves every planner run stopping on a file
+that cannot exist.</li>
+<li><strong>Skip as the only no.</strong> Without a rejected state or a
+record of a decline, the same learning returns at every drain and a
+deleted failure pattern is rediscovered from scratch.</li>
+<li><strong>Promotion as a one-way copy.</strong> Once a convention is
+in <code>CLAUDE.md</code>, craft neither knows when it stops being true
+nor offers to remove it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a solo developer on Claude Code who wants a process — stories,
+chunks, a reflect step — and wants what the agent learns to be a file
+they approve rather than a database they trust, this is a complete and
+unusually well-tested harness, and its memory is exactly as legible as a
+directory. It is also a plugin that changes what the shell may do in
+every session it is installed in, and anyone installing it should read
+one 74-line hook first and decide. It is not memory that scales past a
+project, searches anything, or revises itself; a team with several
+agents or several projects gets one <code>.craft/</code> per project and
+a taste that is one person's.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does the promotion into <code>.claude/</code> ever get reconciled —
+if a person edits or deletes a line in <code>CLAUDE.md</code>, does the
+learning's <code>written</code> status mean anything afterwards?</li>
+<li>When the decisions store lands, will a decision carry a state or a
+supersession, or be a locked pattern under another directory?</li>
+<li>Are the <code>created</code> and <code>craft_version</code> fields
+on an observation — stamped and <em>"read by no current consumer"</em> —
+the start of a lifecycle or provenance kept on principle?</li>
+<li>What does the auto-approve hook do in a session where the user's own
+settings deny a command the blocklist allows — does the plugin's allow
+win?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hooks/hooks.json</code></td>
+<td>127</td>
+<td>Nine hook events and their scripts</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/check-write-permission.py</code></td>
+<td>350</td>
+<td>The write gate: tokens merge target, <code>.craft/</code> and
+<code>.claude/</code> allow, <code>dev_mode</code>,
+<code>CRAFT_WRITE_ENABLED</code>, workflow session, deny, fail open</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/auto-approve-plugin-scripts.sh</code></td>
+<td>74</td>
+<td>Allow every Bash command outside a ten-pattern blocklist</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/session-start.sh</code></td>
+<td>266</td>
+<td>State cleanup, the gate reset, the status banner, the learnings
+count, the taste line, the notes index</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/inject-craft-context.sh</code></td>
+<td>160</td>
+<td>Per-prompt cycle, story, chunk and observation count; the cold-start
+index</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/stop-hook-guard.sh</code></td>
+<td>198</td>
+<td>Breadcrumb continuation, the mid-chunk stop block, the set-down
+line</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/merge-tokens.py</code></td>
+<td>352</td>
+<td>The sole writer for an existing <code>tokens.yaml</code></td>
+</tr>
+<tr>
+<td><code>hooks/scripts/count-loved-tweaks.sh</code>,
+<code>taste-pass-state.sh</code></td>
+<td>72, —</td>
+<td>The taste-pass counter and its durable state</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/append-event.sh</code>,
+<code>read-events.sh</code></td>
+<td>62, —</td>
+<td>The per-story JSONL event log</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/observations-append.sh</code>,
+<code>-cluster.sh</code>, <code>-count.sh</code>,
+<code>mark-observations-surfaced.sh</code></td>
+<td>110, 101, —, —</td>
+<td>Observation sidecars and the surfaced flag</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/handle-tool-failure.py</code>,
+<code>aggregate-failures.py</code></td>
+<td>176, 326</td>
+<td>Failure classification and cross-story patterns</td>
+</tr>
+<tr>
+<td><code>hooks/scripts/notebook-*.sh</code></td>
+<td>—</td>
+<td>Capture, list, done, graduate, the notes index</td>
+</tr>
+<tr>
+<td><code>commands/craft-reflect.md</code></td>
+<td>416</td>
+<td>The drain: count, rule-pass offer, list, ask, write to
+<code>.claude/</code>, mark written</td>
+</tr>
+<tr>
+<td><code>commands/references/learnings-schema.md</code></td>
+<td>—</td>
+<td>Six categories, evidence sources, merge logic</td>
+</tr>
+<tr>
+<td><code>commands/references/taste-pass.md</code></td>
+<td>—</td>
+<td>The offer gate, the scout, the pacing</td>
+</tr>
+<tr>
+<td><code>skills/lock-decision/SKILL.md</code></td>
+<td>—</td>
+<td>Confirm, then <code>locked.md</code> or
+<code>tokens.yaml</code></td>
+</tr>
+<tr>
+<td><code>agents/implementer.md</code>, <code>style-analyzer.md</code>,
+<code>plan-chunks-agent.md</code>,
+<code>commands/references/alignment-check.md</code></td>
+<td>—</td>
+<td>Readers of locked patterns, tokens and decision records</td>
+</tr>
+<tr>
+<td><code>DESIGN.md</code></td>
+<td>—</td>
+<td>The <code>.craft/</code> layout, the hooks, the notebook
+lifecycle</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>85 scripts</td>
+<td>The bash suite; <code>run-all.sh</code>; CI in five groups</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;decisions/approved|\.craft/decisions&#39; --glob &#39;!docs/**&#39; .      # two readers and a test naming the path; no writer
+rg -n &#39;curl|wget|ssh|\.aws|\.ssh|keychain|base64 -d&#39; hooks/scripts/   # none: no hook reaches the network or the home directory
+rg -n &#39;status: rejected|status: declined|rejected&#39; commands/craft-reflect.md commands/references/learnings-schema.md   # none: no rejected state
+rg -n &#39;learnings&#39; tests/*.sh                                          # the file&#39;s creation and a manifest line; no lifecycle test
+rg -n -i &#39;arxiv|doi\.org|bibtex&#39; README.md                              # none: no paper
+rg -n &#39;rm&#39; hooks/scripts/auto-approve-plugin-scripts.sh               # one pattern, :22, root paths only</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0"><code class="commit-id" title="7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0">7006381d…</code></a>
+— first reading, at the head of <code>main</code>. Screened first: four
+auto-run surfaces (the plugin manifest, the hook registrations, an
+<code>.mcp.json</code> starting
+<code>npx chrome-devtools-mcp@latest</code>, and <code>CLAUDE.md</code>
+treated as data) and one manifest inside the seven-day cooldown; every
+registered hook script was read before anything else, and a search over
+all 61 found no network or home-directory access; nothing installed or
+run. Read from a depth-one clone, with the commit count, first-commit
+date and contributor list from the GitHub API. One mark. The
+auto-approve hook is stated as a fact about the plugin, not a verdict on
+its author's reasons, which the script gives.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
