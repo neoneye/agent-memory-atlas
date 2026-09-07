@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 381 reports.**
+**This page covers all 382 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1416,11 +1416,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mnemory`](../systems/mnemory/)
 - Best idea: the consistency check screens stored memories for prompt injection with a regex *before* any LLM stage reads them, and re-screens material that already passed the write-time filter — treating the store as a live attack surface rather than something validated once at the door.
-- Biggest risk: no audit record of anything. A checker that can be scheduled with auto-fix edits a user's stored memory on an unmeasured LLM judgement, and the issue list it worked from is an in-memory cache with a TTL, so "why is this memory gone" is unanswerable in principle.
+- Biggest risk: **correction is a ranking penalty and confirmation is a score.** A superseded row under the older layer model stays eligible, discounted; `validation_state` separates confirmed from unverified and every reader spends it on TTL and decay, so an unverified fact reaches the model with the same standing as a confirmed one; a retracted fact can be re-added at the next extraction; fsck's own accuracy is unmeasured.
 - Most reusable component: the run/review/apply cycle — `start_fsck`, `get_fsck_status`, `apply_fsck` — which puts a person between a machine-proposed change and the store, and which the same codebase also offers with the person removed.
-- Maturity impression: 26,650 lines under 24,205 lines of tests across 24 files, including 1,673 lines testing the prompts, a complete LoCoMo harness whose scores the README publishes in a six-system table it places second in, Prometheus metrics and a Grafana dashboard in the tree.
-- Study when: you want a self-hosted memory service several MCP clients share, with per-user isolation enforced in the query rather than after it.
-- Do not copy when: you need memory without a model in the loop — extraction, classification, dedup and contradiction resolution are one LLM call with no fallback — or you need to answer questions about the store's past.
+- Maturity impression: 38,809 lines under 34,260 lines of tests across 35 files, including 1,759 lines testing the prompts and 145 cases for the revision journal added in September 2026, a complete LoCoMo harness whose scores the README publishes in a six-system table it places second in, Prometheus metrics and a Grafana dashboard in the tree. Three of seven capability marks.
+- Study when: you want a self-hosted memory service several MCP clients share, with per-user isolation enforced in the query rather than after it and a journal and history per memory.
+- Do not copy when: you need memory without a model in the loop — extraction, classification, dedup and contradiction resolution are one LLM call with no fallback — or a verified state that filters rather than scores, or provenance without a Cognis-signed request.
 
 ### [`engram-alpha`](../systems/engram-alpha/)
 - Best idea: two stated principles its trust module enforces — *"time doesn't validate"* and *"exposure doesn't validate"* — so stable knowledge decays only when a judged `conflicts-with` edge stamps `demoted_at`, retrieval moves nothing, and withdrawing the evidence withdraws the demotion.
@@ -3278,6 +3278,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 288 commits from 1 May to 7 September 2026 by one author, version 2.6.1, 61 hook scripts in bash and Python with no dependency, 85 test scripts run in CI with nothing installed; one of seven capability marks.
 - Study when: you want a coding harness whose memory is files a person approves, or a reference for gating writes and drains behind a state file and a question.
 - Do not copy when: you need memory that searches, scales past one project, or revises what it promoted; or you cannot accept a hook that approves every shell command.
+
+### [`holomem`](../systems/holomem/)
+- Best idea: **a confidence gate measured in units of the trace's own noise.** The winner's margin as a z-score over the losing candidates holds one threshold across every dimension and load; the README shows the absolute threshold it replaced passing 0.3 % of queries at N = 100.
+- Biggest risk: **there is no store.** The fact list is a Python list the adopter must serialise, scope and reload; a contradicted belief is damped to 0.35 and can outlast a fresh one under decay; nothing records a damping or a drop.
+- Most reusable component: the decay policy — weight halved every 45 days from the last confirmation, reinforcement of 0.25 to a ceiling of 1.5, a floor of 0.18 below which a fact leaves the trace — and the epochal second trace that answers a dated question without adding crosstalk to the first.
+- Maturity impression: MIT, nine commits in five days by one author, 423 lines on NumPy, twenty-one tests each naming its failure mode and a mutation pass the README reports, three benchmark scripts with committed JSON the README's tables recompute from exactly. No capability mark.
+- Study when: you want a worked example of decay, reinforcement and contradiction as weights, a scale-free confidence gate, or a README that retracts its own numbers in print.
+- Do not copy when: you need anything to persist, more than one user, more than a few hundred facts, or prose rather than triples.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.

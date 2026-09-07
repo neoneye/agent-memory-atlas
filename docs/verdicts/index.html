@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 381 reports.</strong></p>
+<p><strong>This page covers all 382 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -4375,28 +4375,31 @@ injection with a regex <em>before</em> any LLM stage reads them, and
 re-screens material that already passed the write-time filter — treating
 the store as a live attack surface rather than something validated once
 at the door.</li>
-<li>Biggest risk: no audit record of anything. A checker that can be
-scheduled with auto-fix edits a user's stored memory on an unmeasured
-LLM judgement, and the issue list it worked from is an in-memory cache
-with a TTL, so "why is this memory gone" is unanswerable in
-principle.</li>
+<li>Biggest risk: <strong>correction is a ranking penalty and
+confirmation is a score.</strong> A superseded row under the older layer
+model stays eligible, discounted; <code>validation_state</code>
+separates confirmed from unverified and every reader spends it on TTL
+and decay, so an unverified fact reaches the model with the same
+standing as a confirmed one; a retracted fact can be re-added at the
+next extraction; fsck's own accuracy is unmeasured.</li>
 <li>Most reusable component: the run/review/apply cycle —
 <code>start_fsck</code>, <code>get_fsck_status</code>,
 <code>apply_fsck</code> — which puts a person between a machine-proposed
 change and the store, and which the same codebase also offers with the
 person removed.</li>
-<li>Maturity impression: 26,650 lines under 24,205 lines of tests across
-24 files, including 1,673 lines testing the prompts, a complete LoCoMo
-harness whose scores the README publishes in a six-system table it
-places second in, Prometheus metrics and a Grafana dashboard in the
-tree.</li>
+<li>Maturity impression: 38,809 lines under 34,260 lines of tests across
+35 files, including 1,759 lines testing the prompts and 145 cases for
+the revision journal added in September 2026, a complete LoCoMo harness
+whose scores the README publishes in a six-system table it places second
+in, Prometheus metrics and a Grafana dashboard in the tree. Three of
+seven capability marks.</li>
 <li>Study when: you want a self-hosted memory service several MCP
 clients share, with per-user isolation enforced in the query rather than
-after it.</li>
+after it and a journal and history per memory.</li>
 <li>Do not copy when: you need memory without a model in the loop —
 extraction, classification, dedup and contradiction resolution are one
-LLM call with no fallback — or you need to answer questions about the
-store's past.</li>
+LLM call with no fallback — or a verified state that filters rather than
+scores, or provenance without a Cognis-signed request.</li>
 </ul>
 <h3 id="engram-alpha"><a
 href="../systems/engram-alpha/"><code>engram-alpha</code></a></h3>
@@ -12914,6 +12917,34 @@ file and a question.</li>
 <li>Do not copy when: you need memory that searches, scales past one
 project, or revises what it promoted; or you cannot accept a hook that
 approves every shell command.</li>
+</ul>
+<h3 id="holomem"><a
+href="../systems/holomem/"><code>holomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a confidence gate measured in units of the
+trace's own noise.</strong> The winner's margin as a z-score over the
+losing candidates holds one threshold across every dimension and load;
+the README shows the absolute threshold it replaced passing 0.3 % of
+queries at N = 100.</li>
+<li>Biggest risk: <strong>there is no store.</strong> The fact list is a
+Python list the adopter must serialise, scope and reload; a contradicted
+belief is damped to 0.35 and can outlast a fresh one under decay;
+nothing records a damping or a drop.</li>
+<li>Most reusable component: the decay policy — weight halved every 45
+days from the last confirmation, reinforcement of 0.25 to a ceiling of
+1.5, a floor of 0.18 below which a fact leaves the trace — and the
+epochal second trace that answers a dated question without adding
+crosstalk to the first.</li>
+<li>Maturity impression: MIT, nine commits in five days by one author,
+423 lines on NumPy, twenty-one tests each naming its failure mode and a
+mutation pass the README reports, three benchmark scripts with committed
+JSON the README's tables recompute from exactly. No capability
+mark.</li>
+<li>Study when: you want a worked example of decay, reinforcement and
+contradiction as weights, a scale-free confidence gate, or a README that
+retracts its own numbers in print.</li>
+<li>Do not copy when: you need anything to persist, more than one user,
+more than a few hundred facts, or prose rather than triples.</li>
 </ul>
 <h3 id="openmasq"><a
 href="../systems/openmasq/"><code>openmasq</code></a></h3>
