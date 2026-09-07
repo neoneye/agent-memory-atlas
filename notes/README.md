@@ -14,10 +14,14 @@ when the work happens.
   is about presentation and says nothing about accuracy. Two mechanical causes
   are fixed (a 113-character measure, a diagram squashed by a `;` that spawned
   phantom states); the rest is prose, and countable — the report's paragraphs
-  run 110 words at the median against a corpus median of 44, and one section
-  in fourteen opens with its finding. Frames ordering and chunking as the
-  hypothesis, proposes a pilot rewrite with a pass test, and only then rules
-  for the format and skill plus a per-report paragraph guardrail in the build.
+  run 110 words at the median against a corpus median of 44, and the sections
+  that open with a statement of behaviour stop short of its consequence.
+  Frames ordering and chunking as the hypothesis, proposes a pilot rewrite
+  tested on comprehension rather than agreement, and only then rules for the
+  format and skill plus a per-report paragraph guardrail, still unbuilt. The
+  pilot's pre-check found the report's three deletion formulations all wrong
+  against the pin: a reject deletes from three origins, and four remove paths
+  delete any row with no audit row.
 - [2026-09-03-the-extraction-half-run-once.md](2026-09-03-the-extraction-half-run-once.md) —
   `robert-mcdermott/ai-knowledge-graph`, a one-shot text-to-knowledge-graph CLI,
   examined and given no report: it writes a JSON graph and an HTML page that

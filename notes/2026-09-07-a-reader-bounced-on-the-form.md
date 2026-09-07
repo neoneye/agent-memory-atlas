@@ -82,7 +82,9 @@ section 7 (*writes are deferred and evidence-driven*) — and even those stop
 at the behaviour: none says what it costs or buys the reader, which is the
 part they are asking for. The distinction worth pursuing is not whether a
 section opens with a finding but whether the opening states the behaviour's
-consequence. The other eleven open with mechanism. The
+consequence. Section 4 opens with a function call, section 9 with a bolded
+label, and section 3 with *"everything is one Python process and one SQLite
+file"* — true, and silent on what follows from it. The
 table of contents lists fourteen section titles that name topics
 (*Retrieval Mechanics*), not conclusions, so it does not help either.
 
@@ -116,18 +118,30 @@ The reader who complained is the one who will read it again. Candidate rules
 for the rewrite — candidate because the pilot is what decides whether they
 enter the format:
 
-- **Lead every analytical section with its finding, in one sentence, before
-  any mechanism.** Section 2 opens: *A memory here is a lesson with a
-  lifecycle, never an observation.* That is a lead sentence, and it is the only
-  section that has one. Section 7 should open the same way, and the lead has
-  to carry the exception or it is wrong: *active memories are retired through
-  reversible flags with an audit row; rejecting a proposal from the outcome or
-  review path deletes it.* The first draft of this note proposed *"nothing is
-  deleted"* for that section, which the report itself contradicts at the
-  sentence about `queue.py:1246-1313` — the exact error a rewrite under a
-  brevity rule will make, and the reason a lead sentence is checked against the
-  section it heads. The file index, History and Open Questions sections are
-  reference and are exempt.
+- **Open an analytical section with its main point, and say why it matters
+  before expanding the mechanism.** One sentence, or two when a qualification
+  needs room; a verdict forced into one sentence everywhere manufactures
+  significance or drops the exception. Section 2's opening — *a lesson with a
+  lifecycle, never an observation* — is the shape, and it still needs its
+  second half: what that buys the operator. The file index, History and Open
+  Questions sections are reference and are exempt.
+- **Check every lead against its section and against the pinned code.** The
+  first draft of this note proposed *"nothing is deleted"* as section 7's lead.
+  The report contradicted it in one place and agreed with it in two others:
+  the mental model said a reject on the outcome or review path deletes, the
+  reliability section said an outcome-origin reject is the only product path
+  that removes a row, and the description said nothing is ever deleted.
+  Reconciled against the pin before the rewrite: `reject()` deletes an
+  unconfirmed proposal from any origin outside its six-member archive set,
+  which is the outcome path, review and reply; and four further paths —
+  `nh rules remove`, `nh skills remove` and the matching API routes — call
+  `delete_memory` directly on any row a prefix resolves, with no origin check
+  and no audit row. None of the three formulations was right, and the
+  appendix's own absence search shows why: it counted the one `DELETE`
+  statement and not its five callers. A lead sentence written under a brevity
+  rule is where this error is easiest to make and hardest to see, and the
+  correction is logged in the overview's known-limitations list, not narrated
+  in the report.
 - **One point per paragraph, and a ceiling of 120 words.** A paragraph that
   needs 200 words is two paragraphs with a joint the writer did not find. The
   corpus median of 44 shows the atlas can already do this.
@@ -147,20 +161,30 @@ enter the format:
   fails.** Three sentences that a reader can stop after. The 31 August
   reversal and the flood that caused it are sentence two.
 
-Then send the author the link, with a test that is more specific than "is it
-better", and without telling them the expected answers: from the opening
-alone, can they name what the system is, the design choice that most shaped
-it, and the limitation they would weigh first; and from any section's lead
-sentence, can they find the evidence for it within that section. Their
-answers are compared afterwards with what the report meant to put first. For
-the record, the rewrite's own choices are the 31 August reversal, because
-every mechanism in the store is a response to the flood that forced it, and
-the read-side term screen that fails open, because it is the one guard whose
-failure withholds nothing and is watched by nobody — a limitation the report
-has to argue for rather than assert, and the pilot is where that argument is
-tested. If the reader's answers match, and every retained conclusion still
-carries the evidence and the qualifications it had before, the rules go into
-the format. If they do not match, the hypothesis was wrong or incomplete, and
+Then send the author the link with a test of comprehension, not of agreement.
+Three questions, asked without the expected answers: from the opening alone,
+what is the report's central claim about the store and what qualification
+does it carry; for any section, where is the evidence for its lead sentence;
+and where did reading remain difficult. A fourth question is separate and
+scored separately: do they agree with what the report puts first. An accurate
+paraphrase plus a disagreement passes the readability test — a reader can
+understand the report perfectly and weigh a different limitation. The
+rewrite's own ordering, for the record: the 31 August reversal first, because
+the report connects four mechanisms to the flood that forced it — the
+success-proposal gate off by default, the 45-day archive of unconfirmed
+proposals, the two-occurrence threshold for corrections, and the ten-a-day
+cap; and among limitations, the read-side term screen that fails open,
+whose supported consequence is that a matcher error lets otherwise eligible
+memories into the prompt without that screening step, with only the
+write-time quarantine — which fails closed and is a separate guard — standing
+in front of a term the operator wanted kept out. Whether that is the
+limitation a reader weighs first is their call.
+
+If the three answers are accurate and every retained conclusion still carries
+the evidence and the qualifications it had before, the format is adopted
+provisionally: one rewrite is evidence that the shape helps, not proof that
+each rule — least of all the exact 120-word ceiling — caused the improvement.
+If the answers are not accurate, the hypothesis was wrong or incomplete, and
 this note gets a follow-up rather than the skill getting six new rules.
 
 ### 2. Put the rules that survive the pilot in the format document and the skill
@@ -171,8 +195,9 @@ say nothing about how a section opens or how long a paragraph runs. After the
 pilot, add whichever of the rules above held up to both, in the same register
 as the existing *"Write about the system, not about the writing of the
 report."* The skill already has a pre-integration checklist; *"every
-analytical section opens with its finding, checked against the section"* and
-*"no paragraph over 120 words"* are two lines on it. A rule for definitions
+analytical section opens with its main point and why it matters, checked
+against the section and the pin"* and *"no paragraph over 120 words"* are two
+lines on it. A rule for definitions
 belongs there too, and it is not *"never define"*: define a term at first use
 when its meaning in this system differs from the usual one or when the report
 turns on it, and otherwise trust the reader.
@@ -231,9 +256,11 @@ commit. When the mechanism is unchanged the body can be left untouched, so
 re-analysis does not rewrite prose by itself; a readability pass is added
 work, and the skill has to say so — one step, run on the report being
 re-pinned, applying the surviving rules to the sections it already has open.
-The cost is bounded by the report, and it means the 100 reports carrying a
-non-zero baseline get their counts lowered at the rate the corpus is already
-being re-read, with no separate campaign.
+The cost is bounded by the report. A pass limited to the sections a re-pin
+has open cannot promise to lower every report's count on every visit; what it
+promises is that reports with oversized paragraphs get shorter in the sections
+that were touched, at the rate the corpus is already being re-read, with no
+separate campaign.
 
 ## What not to do
 
@@ -245,8 +272,8 @@ being re-read, with no separate campaign.
   two paragraphs, or one with the repetition and the inert detail cut, not a
   60-word paragraph with the evidence removed. Every file:line anchor that
   supports a claim stays; it moves to the end of its sentence.
-- **Do not rewrite 378 reports in a campaign.** The ceiling stops regression
-  today; re-analysis fixes the rest as it goes. A campaign would be a hundred
+- **Do not rewrite 378 reports in a campaign.** The guardrail, once built,
+  would stop regression; re-analysis would fix the rest as it goes. A campaign would be a hundred
   reports edited by an agent under a word budget, which is how a report gets
   shorter without getting clearer.
 - **Do not narrate the change in the report.** A rewritten no_human report

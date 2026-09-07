@@ -3075,28 +3075,31 @@ supersedes the oldest active near-duplicate in the same scope with a
 August 2026 a harvest job also activates up to ten screened proposals
 per rolling day — dedupe, personal data, provenance, vendor terms — with
 a kill switch that restores the confirm queue byte for byte. Every exit
-is reversible and audited in an append-only <code>learning_events</code>
-table: pause, archive, a 45-day sweep of unconfirmed proposals, a 90-day
-retirement that can select only rows auto-activation itself wrote; the
-one delete is a human's reject of a proposal whose producer cannot
-regenerate it without new evidence, while a batch producer's rejection
-archives and keeps the dedupe key so the next harvest cannot re-propose
-it. Injection is one chokepoint — scope by a SHA-256 of the
-credential-stripped remote URL, tags matched at word boundaries against
-the task text and its planned files, a term screen, a ranking by
-importance, fourteen-day recency and normalised use under a ceiling of
-25 — installed through a property whose setter re-screens, guarded by a
-test that parses the orchestrator's source for any other assignment and
-by a second test proving the parser catches the mutants that defeated an
-earlier guard. The reviewer reads a copy from which every auto-confirmed
-review-origin lesson is removed in code, so the gate never consumes a
-rule distilled from its own verdicts. What it does not do is search —
-<code>nh recall</code> is substring matching and the tag vocabulary is
-the retrieval — or measure effect: the injection-to-outcome ledger is
-labelled <em>"CORRELATIONAL, NOT CAUSAL"</em> in the migration that
-created it and in the CLI that reads it. Six marks;
-<code>bitemporal</code> withheld because every timestamp is record
-time.</p>
+through the queue is reversible and audited in an append-only
+<code>learning_events</code> table: pause, archive, a 45-day sweep of
+unconfirmed proposals, a 90-day retirement that can select only rows
+auto-activation itself wrote; a human's reject deletes a proposal from
+the outcome, review or reply path, whose producers cannot regenerate it
+without new evidence, while a batch producer's rejection archives and
+keeps the dedupe key so the next harvest cannot re-propose it — and
+outside the queue, <code>nh rules remove</code>,
+<code>nh skills remove</code> and their API routes hard-delete any row
+an id prefix resolves, with no audit row. Injection is one chokepoint —
+scope by a SHA-256 of the credential-stripped remote URL, tags matched
+at word boundaries against the task text and its planned files, a term
+screen, a ranking by importance, fourteen-day recency and normalised use
+under a ceiling of 25 — installed through a property whose setter
+re-screens, guarded by a test that parses the orchestrator's source for
+any other assignment and by a second test proving the parser catches the
+mutants that defeated an earlier guard. The reviewer reads a copy from
+which every auto-confirmed review-origin lesson is removed in code, so
+the gate never consumes a rule distilled from its own verdicts. What it
+does not do is search — <code>nh recall</code> is substring matching and
+the tag vocabulary is the retrieval — or measure effect: the
+injection-to-outcome ledger is labelled <em>"CORRELATIONAL, NOT
+CAUSAL"</em> in the migration that created it and in the CLI that reads
+it. Six marks; <code>bitemporal</code> withheld because every timestamp
+is record time.</p>
 <p><strong><a href="../systems/joplin/">Joplin</a> is the family's other
 human knowledge base an assistant may write to, and every capability
 beyond the open note is a switch that starts off.</strong> A
@@ -12852,10 +12855,13 @@ occurrences, from mined transcripts and operator replies, and from the
 curator; every write passes one chokepoint that refuses an unqueueable
 source, dedupes on the key, drops personal data and stamps provenance
 and quarantine</td>
-<td>Nothing the product does deletes a row except a human rejecting an
-outcome-origin or review-origin proposal; archive is the verb for the
-45-day sweep of unconfirmed proposals, the 90-day retirement of
-auto-activated rows, a supersede on confirm with a
+<td>A human's reject deletes an unconfirmed proposal from the outcome,
+review or reply path together with its dedupe key, archives one from a
+batch-driven origin, and pauses a confirmed row;
+<code>nh rules remove</code>, <code>nh skills remove</code> and their
+API routes hard-delete any row an id prefix resolves, with no audit row;
+archive is the verb for the 45-day sweep of unconfirmed proposals, the
+90-day retirement of auto-activated rows, a supersede on confirm with a
 <code>superseded_by</code> pointer, a failed activation screen and the
 UI's Delete; pause withholds without archiving; restore reverses any of
 them; a human confirm overwrites an auto confirm</td>
@@ -12884,8 +12890,8 @@ that drops rather than redacts; auto-activation gated on dedupe, PII,
 provenance and terms with a daily cap and a kill switch; a ledger
 labelled correlational, not causal, in the migration and in the CLI</td>
 <td>One injection chokepoint enforced by an AST test with its own
-known-positive control; a lifecycle whose every verb is reversible and
-audited; a reviewer channel that cannot consume its own verdicts;
+known-positive control; a queue lifecycle whose every verb is reversible
+and audited; a reviewer channel that cannot consume its own verdicts;
 measured flood numbers written into the code that fixed them; a dedupe
 key that survives rejection so a batch producer cannot re-propose a
 refused lesson</td>
@@ -12895,7 +12901,8 @@ second SQL route into the prompt that each new flag has to be added to
 by hand; the vendor-term screen ships with eight names outside the
 operator's private supplement; a <code>memory_uses</code> ledger row per
 injection on every attempt; 21,785 lines of orchestrator around the
-chokepoint</td>
+chokepoint; four remove commands hard-delete any row by id prefix,
+bypassing the lifecycle and the audit trail</td>
 </tr>
 <tr>
 <td><code>nocturne-memory</code></td>
@@ -24856,6 +24863,24 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h3 id="known-limitations">Known Limitations</h3>
 <ul>
+<li><strong>A deletion claim was stated three ways in one report, and
+none matched the pin.</strong> The <a
+href="../systems/no-human/">no_human</a> report said in its mental model
+that a reject deletes a proposal from the outcome or review path, in its
+reliability section that an outcome-origin reject is the only product
+path that removes a row, and in its description that nothing is ever
+deleted. At the pinned commit <code>LearningQueue.reject</code> deletes
+an unconfirmed proposal from any origin outside its six-member archive
+set — the outcome path, review and reply — and four further paths,
+<code>nh rules remove</code>, <code>nh skills remove</code> and the
+<code>DELETE /api/rules</code> and <code>DELETE /api/skills</code>
+routes, call <code>Store.delete_memory</code> directly on any row an id
+prefix resolves, with no origin check and no
+<code>learning_events</code> row. The report's own absence search
+counted the one <code>DELETE FROM memories</code> statement and not its
+five callers, which is how a one-hit search produced a three-way claim.
+Corrected on 2026-09-07 in the report, its frontmatter and the family
+paragraph above.</li>
 <li><strong>A bi-temporal paragraph was wrong twice in one sentence, and
 the subject's own roadmap caught it.</strong> The Hippo report said the
 <code>memories</code> table carries
