@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 374 reports.</strong></p>
+<p><strong>This page covers all 377 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -12940,7 +12940,7 @@ decides is closed.</li>
 cipher construction and HMAC input written out so a vault owner can
 recompute their key and check the claim.</li>
 <li>Maturity impression: Apache-2.0, three commits by one author between
-30 August and 5 September 2026, 7,374 lines of Rust with 71 unit tests,
+30 August and 5 September 2026, 7,377 lines of Rust with 71 unit tests,
 one crates.io release at 0.1.5 while the README says 0.1.4 and the
 specification header says schema 6 against a code constant of 7; no CI,
 no fixture vault, no benchmark; one of seven capability marks.</li>
@@ -13100,6 +13100,96 @@ attribution that reaches the history without a database.</li>
 <li>Do not copy when: you need an agent's own memory — no state, no
 supersession, no scope inside a space, and an index that lives in one
 browser.</li>
+</ul>
+<h3 id="siyuan"><a
+href="../systems/siyuan/"><code>siyuan</code></a></h3>
+<ul>
+<li>Best idea: <strong>confirmation by declared effect, and a snapshot
+before the first write.</strong> Each tool action declares local write,
+data egress or external cost; any of the three waits for the person
+unless always-allowed, an external tool that is not read-only counts as
+a write, and the first local write of a chat takes a data-repository
+snapshot whose failure aborts the round and whose id is recorded in the
+session.</li>
+<li>Biggest risk: <strong><code>always allow</code> is one click, and
+after it the agent edits the workspace freely.</strong> The gates are
+per tool and action or global; a person who tires of confirming turns
+them all off, and a block the agent wrote carries no mark that it
+did.</li>
+<li>Most reusable component: <code>kernel/agent/session.go</code> and
+<code>runtime.go</code> — a session file with an expected revision, a
+committing turn id, idempotent retry and orphaned-turn finalization, so
+a crash or a double submit is a conflict rather than a corruption.</li>
+<li>Maturity impression: AGPL-3.0, 27,108 commits since August 2020,
+version 3.8.2, an agent package of 10,766 lines with 112 tests and an
+MCP package with 56, tests on confirmation scope, single-use
+confirmations, doom loops, compaction digests and reasoning context
+across commits; 0 of seven capability marks, each withheld on
+definitions.</li>
+<li>Study when: you are putting an agent into a store a person owns and
+want the write gate and the undo to be mechanical rather than
+prompted.</li>
+<li>Do not copy when: you need an agent's own memory, a vector arm that
+scales past a full scan, or a local embedding path.</li>
+</ul>
+<h3 id="trilium"><a
+href="../systems/trilium/"><code>trilium</code></a></h3>
+<ul>
+<li>Best idea: <strong>one tool registry with a <code>mutates</code>
+flag, iterated by the chat, the public MCP server and both in-app
+agents.</strong> Twenty-one tools defined once with a Zod schema and a
+synchronous execute; the MCP server wraps every mutating one in a
+transaction, and the Claude Agent provider gives the person's own Claude
+Code that server as its only tools with every built-in tool
+disabled.</li>
+<li>Biggest risk: <strong>the assistant's mark on the store covers three
+tools and is asserted by no test.</strong> A revision with
+<code>source: "llm"</code> precedes every content edit and the column
+persists, but create, rename, move, delete and attribute writes leave
+nothing, and the spec stubs <code>saveRevision</code> to a no-op.</li>
+<li>Most reusable component: <code>apps/server/src/routes/mcp.ts</code>
+with <code>services/mcp/mcp_server.ts</code> — an ETAPI-token MCP route
+whose rate limiter spends its budget only on requests it would answer
+401 to, with the reasoning written beside the code, and a server that
+registers whatever the registry holds.</li>
+<li>Maturity impression: AGPL-3.0, 37,471 commits by the GitHub count
+since May 2017, version 0.105.0, an LLM stack of 4,147 core lines with
+350 spec cases in 23 files plus the server's provider specs, the MCP
+server since 0.103.0, a privacy page that names what leaves the machine
+per provider; 0 of seven capability marks.</li>
+<li>Study when: you are adding an assistant and an MCP server to an
+application at the same time and want one definition to serve both.</li>
+<li>Do not copy when: you need semantic recall, a memory beyond the chat
+note, or a mark on every kind of write.</li>
+</ul>
+<h3 id="vista"><a href="../systems/vista/"><code>vista</code></a></h3>
+<ul>
+<li>Best idea: <strong>compaction is blocked until the model has written
+its own continuation checkpoint.</strong> A <code>PreCompact</code> hook
+answers <em>block</em> until <code>WORKING.md</code> and
+<code>GUIDE.md</code> are non-empty and marked ready; the runtime's
+summary is then discarded in favour of the files, the attempt history
+and the exact last event.</li>
+<li>Biggest risk: <strong>the checkpoint gate is syntactic.</strong>
+Non-empty is the whole check; a confident wrong guide survives
+compaction as faithfully as a right one, and the harness never reads
+what the model wrote.</li>
+<li>Most reusable component:
+<code>src/vista_arc3/claude/controller.py</code> — a frame archive with
+bounded <code>inspect</code>, <code>read_pixels</code> and
+<code>history</code> tools, a provenance stamp on every working-memory
+write, level-boundary archiving, and recovery paths for compaction, rate
+limit, restart and reset that each fail closed under test.</li>
+<li>Maturity impression: MIT, one commit dated 2026-09-05 from a group
+at MIT, 11,973 lines under <code>src/</code>, 224 tests in twelve files
+with the memory contract in the controller tests, README scorecards on
+the ARC Prize site and nothing committed that reproduces them; 0 of
+seven capability marks.</li>
+<li>Study when: you run a coding-agent runtime on a long interactive
+task and have lost state to compaction; the hook, the files and the
+recovery prompt transfer.</li>
+<li>Do not copy when: you need memory across episodes or any check on
+what the checkpoint says.</li>
 </ul>
         </article>
       </div>

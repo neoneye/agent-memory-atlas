@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A hierarchical note application
+whose AI assistant, its in-app Claude Code and Copilot agents and its
+external MCP endpoint all execute the same twenty-one tool definitions,
+each marked as mutating or not, with a revision saved under the source
+llm before every content edit and a bearer ETAPI token in front of the
+endpoint.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Trilium
+Notes — Agent Memory Atlas">
+    <meta property="og:description" content="A hierarchical note
+application whose AI assistant, its in-app Claude Code and Copilot
+agents and its external MCP endpoint all execute the same twenty-one
+tool definitions, each marked as mutating or not, with a revision saved
+under the source llm before every content edit and a bearer ETAPI token
+in front of the endpoint.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Trilium
+Notes — Agent Memory Atlas">
+    <meta name="twitter:description" content="A hierarchical note
+application whose AI assistant, its in-app Claude Code and Copilot
+agents and its external MCP endpoint all execute the same twenty-one
+tool definitions, each marked as mutating or not, with a revision saved
+under the source llm before every content edit and a bearer ETAPI token
+in front of the endpoint.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Trilium Notes — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Trilium Notes",
+      "description": "A hierarchical note application whose AI assistant, its in-app Claude Code and Copilot agents and its external MCP endpoint all execute the same twenty-one tool definitions, each marked as mutating or not, with a revision saved under the source llm before every content edit and a bearer ETAPI token in front of the endpoint.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One tool registry for the chat and the
+MCP</p>
+          <h1>Trilium Notes</h1>
+          <p class="document-deck">A hierarchical note application whose
+AI assistant, its in-app Claude Code and Copilot agents and its external
+MCP endpoint all execute the same twenty-one tool definitions, each
+marked as mutating or not, with a revision saved under the source llm
+before every content edit and a bearer ETAPI token in front of the
+endpoint.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TriliumNext/Trilium">
+              <span>Source</span>
+              <strong>TriliumNext/Trilium</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TriliumNext/Trilium/commit/2d2c2108ed464d241c8b0e9438d8e19a35cf62be" title="2d2c2108ed464d241c8b0e9438d8e19a35cf62be">
+              <span>Analyzed revision</span>
+              <code>2d2c2108…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Trilium Notes is a hierarchical note application — a tree in which
+one note may appear in several places, attributes, scripting, sync — in
+development since May 2017 under the AGPL, forked and continued as
+TriliumNext, at version 0.105.0 at this commit. Its AI integration is
+off by default, ships no model, and documents where a person's notes
+travel for each provider type before anything is sent
+(<code>docs/User Guide/User Guide/AI/Privacy.md</code>). It is in this
+atlas beside <a href="../joplin/">Joplin</a>, <a
+href="../logseq/">Logseq</a> and <a href="../siyuan/">SiYuan</a> as a
+knowledge base with an assistant in it, and it earns its own report for
+one design decision and one record.</p>
+<p><strong>The decision: one tool registry.</strong> Twenty-one tools
+are defined once in
+<code>packages/trilium-core/src/services/llm/tools/</code> — nine on
+notes, four on attributes, four on hierarchy, two on attachments, one on
+icons, one that loads a skill sheet — each with a description, a Zod
+schema, a synchronous <code>execute</code> and a <code>mutates</code>
+flag (<code>tool_registry.ts:24-45</code>). The in-app chat converts the
+registry to an AI SDK tool set; the MCP server iterates the same
+registry and wraps every <code>mutates</code> tool in a transaction
+(<code>apps/server/src/services/mcp/mcp_server.ts:24-58</code>); the
+Claude Agent provider points the user's own Claude Code at that MCP
+server with every built-in tool disabled
+(<code>providers/claude_agent.ts:2-21</code>); the Copilot provider
+exposes it on a loopback endpoint under a random 128-bit path
+(<code>copilot_mcp_endpoint.ts</code>). An external agent over
+<code>/mcp</code> needs an ETAPI bearer token, and the route's rate
+limiter spends its budget only on requests it would answer 401 to
+(<code>apps/server/src/routes/mcp.ts:51-60</code>).</p>
+<p><strong>The record: a revision before every assistant edit.</strong>
+<code>set_note_content</code>, <code>append_to_note</code> and
+<code>edit_note_content</code> call
+<code>note.saveRevision({ source: "llm" })</code> before writing
+(<code>tools/note_tools.ts:119,162,222</code>), and the revisions table
+has a <code>source</code> column that keeps it
+(<code>packages/trilium-core/src/assets/schema.sql:46-52</code>,
+<code>becca/entities/brevision.ts:34-67</code>). The store can therefore
+answer <em>what did the assistant change</em> for content edits, one
+revision at a time. No test asserts the source, and create, rename, move
+and delete leave no such mark.</p>
+<p>Everything else is a note application's memory. There is no fact
+store, no embedding, no indexer and no consolidation;
+<code>search_notes</code> is Trilium's search syntax, and a
+<code>load_skill</code> tool hands the model the syntax sheet when the
+question needs it. The chat itself is a note. Every capability mark is
+withheld: the revision is a prior-state snapshot the atlas counts as
+history, the protected flag is encryption rather than scope, and the
+tests assert what a tool refuses rather than what a search must not
+return.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <strong>note</strong>. The assistant sees it through a
+hint about the note the person is looking at and through tools it may
+call when <em>Note access</em> is on:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every consumer — the in-app chat, the in-app Claude Code and Copilot agents, and an external MCP client — executes the same registry; a mutating tool runs in a transaction and a content edit saves a revision marked llm first</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every consumer — the in-app chat, the in-app Claude Code and Copilot agents, and an external MCP client — executes the same registry; a mutating tool runs in a transaction and a content edit saves a revision marked llm first
+flowchart TB
+    P[&quot;person: chat note or sidebar chat&quot;] --&gt; CH[&quot;runChat: provider, model, system prompt, note hint&quot;]
+    CH --&gt; REG[&quot;tool registry: 21 tools, each mutates or not&quot;]
+    CA[&quot;Claude Code subprocess (built-in tools off)&quot;] --&gt;|&quot;in-process MCP&quot;| REG
+    CP[&quot;Copilot over ACP&quot;] --&gt;|&quot;loopback MCP, secret path&quot;| REG
+    EXT[&quot;external agent&quot;] --&gt;|&quot;/mcp + ETAPI token&quot;| REG
+    REG --&gt; R{&quot;mutates?&quot;}
+    R -- no --&gt; X[&quot;execute&quot;]
+    R -- yes --&gt; TX[&quot;transaction&quot;]
+    TX --&gt; RV{&quot;content edit?&quot;}
+    RV -- yes --&gt; REV[&quot;saveRevision(source: llm)&quot;]
+    REV --&gt; W[&quot;write&quot;]
+    RV -- no --&gt; W
+    X --&gt; N[(&quot;notes · attributes · branches · blobs&quot;)]
+    W --&gt; N
+    REV --&gt; H[(&quot;revisions with source&quot;)]
+    style REV fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The highlighted step is the one the store keeps. A revision is the
+note as it was before the assistant touched it, labelled with who was
+about to touch it; the person's own revisions are labelled
+<code>auto</code> or by their description. Recovery is the app's
+revision view, and the documentation says so in one line.</p>
+<p>Nothing is a belief. A note is content; a protected note is encrypted
+and refused; a deleted note is soft-deleted with the app's own recovery
+window. The assistant has no memory but the chat note it is in.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>TypeScript monorepo: <code>apps/server</code> (Node),
+<code>apps/client</code>, <code>packages/trilium-core</code> (the model
+and, since the standalone build, the LLM stack), 37,471 commits by the
+GitHub count since 2017-05-23. The parts this report reads:</p>
+<ul>
+<li><code>packages/trilium-core/src/services/llm/</code> — 4,147 lines:
+<code>chat.ts</code> (one completion, provider-agnostic),
+<code>system_prompt.ts</code>, <code>note_hint.ts</code>,
+<code>skills.ts</code>, <code>stream.ts</code>, <code>providers/</code>,
+and <code>tools/</code> with the registry; 23 spec files, 350
+cases.</li>
+<li><code>apps/server/src/services/llm/</code> — the Node-only pieces:
+the Claude Agent and Copilot providers, the ACP client, binary lookup,
+the loopback MCP endpoint, the User Guide help tools; 10 spec
+files.</li>
+<li><code>apps/server/src/services/mcp/mcp_server.ts</code> and
+<code>routes/mcp.ts</code> — the public MCP server and its guard.</li>
+<li><code>apps/client/src/widgets/type_widgets/llm_chat/</code> — the
+chat note widget: messages, tool-call cards, an edit diff view,
+save-to-note.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the LLM stack lives in core so the browser build can run it; the server adds the subprocess providers and the help tools through registration seams, and the MCP server and the chat both resolve the same registries</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the LLM stack lives in core so the browser build can run it; the server adds the subprocess providers and the help tools through registration seams, and the MCP server and the chat both resolve the same registries
+flowchart LR
+    CORE[&quot;trilium-core/services/llm: chat · system_prompt · note_hint · skills · tools registry&quot;]
+    SRV[&quot;apps/server/services/llm: claude_agent · copilot_agent · acp_client · help_tools&quot;] --&gt;|&quot;registerHostProvider, registerToolRegistryLoader&quot;| CORE
+    MCP[&quot;apps/server/services/mcp/mcp_server.ts&quot;] --&gt; CORE
+    ROUTE[&quot;/mcp: ETAPI token, rate limiter&quot;] --&gt; MCP
+    CHAT[&quot;/api/llm/chat SSE&quot;] --&gt; CORE
+    CORE --&gt; BECCA[&quot;becca cache over SQLite: notes · attributes · branches · revisions&quot;]</code></pre></details></figure>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the server or the desktop app; a
+provider — cloud with a key, Ollama or LM Studio locally, a custom
+endpoint, or Claude Code and Copilot binaries on the machine.</li>
+<li><strong>Fully local and offline:</strong> the notes, yes; the
+assistant, with a local provider, yes. No model ships with it.</li>
+<li><strong>Hand-repairable:</strong> yes. SQLite, a revisions table, an
+app with a revision viewer.</li>
+<li><strong>Install:</strong> a normal application or a Docker image;
+MCP is a toggle in Options plus an ETAPI token.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The turn.</strong> <code>runChat</code>
+(<code>chat.ts:30</code>): resolve the host-registered tool registries,
+pick the provider by config id or type, choose the model, build the
+system prompt (<code>system_prompt.ts:24</code>) — base prompt, the
+note-tools guidance when <code>enableNoteTools</code> is set, a
+web-search notice, Markdown hints — inject the current-note hint into
+the user turn (<code>note_hint.ts:18</code>), and stream chunks. Never
+throws; an error is a chunk.</p>
+<p><strong>The registry.</strong> <code>defineTools({...})</code> per
+module; <code>ToolRegistry</code> (<code>tool_registry.ts:49</code>)
+iterates <code>[name, def]</code> for MCP and converts to an AI SDK tool
+set for chat. <code>execute</code> must be synchronous because
+better-sqlite3 transactions are.</p>
+<p><strong>Note tools</strong> (<code>tools/note_tools.ts</code>):
+<code>search_notes</code> (17) with <code>fastSearch</code>,
+<code>includeArchivedNotes</code>, <code>ancestorNoteId</code> and
+<code>limit</code>; <code>get_note</code> (64);
+<code>get_note_content</code> (79) — refuses a protected note (90);
+<code>set_note_content</code> (100), <code>append_to_note</code> (130),
+<code>edit_note_content</code> (173) — each refuses protected and binary
+notes and saves a revision; <code>create_note</code> (233) — refuses a
+protected parent; <code>rename_note</code> (301);
+<code>delete_note</code> (333) — refuses system and protected notes,
+soft-deletes.</p>
+<p><strong>Edits.</strong> <code>edit_note_content</code> takes one or
+more <code>{oldText, newText}</code> pairs, each of which must match
+exactly once, applied in order (173-232); the client renders the result
+as a diff (<code>EditNoteContentDiff.tsx</code>).</p>
+<p><strong>MCP.</strong> <code>createMcpServer</code>
+(<code>mcp_server.ts:41</code>) registers every registry entry;
+<code>registerTool</code> (24) runs <code>mutates</code> tools inside
+<code>sql.transactional</code> under a CLS context tagged
+<code>mcp</code>. <code>routes/mcp.ts</code> mounts POST, GET and DELETE
+on <code>/mcp</code> behind <code>mcpGuard</code>;
+<code>resolveMcpAccess</code> (97) denies everything with 403 while the
+option is off and 401 without a valid ETAPI token; the limiter allows
+ten failures per fifteen minutes per address.</p>
+<p><strong>Claude Agent provider</strong>
+(<code>providers/claude_agent.ts</code>): drives the user's installed
+<code>claude</code> binary through the Agent SDK, maps chat notes to
+agent sessions and resumes when the transcript still matches, and hands
+the agent an in-process MCP server as its only tools.</p>
+<p><strong>Copilot provider</strong>
+(<code>providers/copilot_agent.ts</code>,
+<code>copilot_mcp_endpoint.ts</code>): ACP accepts MCP servers by URL
+only, so Trilium's MCP server is bound to 127.0.0.1 on a random port
+under a random path, separate from the public route and its option.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The application's model, unchanged: a note with a type, a title,
+content in a blob, attributes (labels and relations), branches to
+parents, <code>isProtected</code>, <code>isDeleted</code> with a delete
+id; revisions with <code>noteId</code>, <code>title</code>,
+<code>source</code>, <code>isProtected</code> and dates. The AI feature
+adds a chat note type whose content is the message list
+(<code>llm_chat_types.ts</code>, <code>useLlmChat.ts:490-510</code>) and
+a <code>source</code> value of <code>llm</code> on revisions.</p>
+<p><strong>Temporal:</strong> created and modified dates on notes and
+revisions; no validity interval. <code>bitemporal</code> withheld.</p>
+<p><strong>Trust:</strong> none on content. <code>trust_state</code>
+withheld.</p>
+<p><strong>Scoping:</strong> one database, one login.
+<code>isProtected</code> is a stored flag every tool refuses
+(<code>note_tools.spec.ts:143,350,371,396</code>), but it is encryption
+of a note the same person owns, not a key that partitions reads by
+principal; <code>ancestorNoteId</code> is a filter the caller chooses.
+<code>scope_enforced</code> withheld.</p>
+<p><strong>Attribution:</strong> the revision's <code>source</code>. It
+is the one place the store records the assistant as an actor, and it
+covers content edits only.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<ol type="1">
+<li><strong>The note hint.</strong> For the sidebar chat with note
+context on, the user turn carries a metadata block — id, title, type,
+dates, parents, up to twenty children, up to twenty attributes, a
+content preview, or a size hint above a threshold
+(<code>note_hint.ts</code>, <code>Privacy.md</code>) — so a question
+about the open note needs no tool call. The dedicated chat note never
+sends a current note.</li>
+<li><strong><code>search_notes</code>.</strong> Trilium's search syntax
+through <code>SearchContext</code>; results mapped to summaries with
+stale ids skipped and truncated to the limit
+(<code>note_tools.spec.ts:278-314</code>). No ranking beyond the app's,
+no embedding anywhere (<code>rg -n -i 'embedding'</code> over the two
+LLM directories finds only provider option names).</li>
+<li><strong>Skill sheets.</strong> <code>load_skill</code> returns one
+of four Markdown sheets — search syntax, frontend scripting, backend
+scripting, dashboards (<code>assets/llm/skills/</code>) — and the system
+prompt tells the model to load one before writing Trilium-specific
+code.</li>
+<li><strong>User Guide tools</strong> on the server, reading
+documentation pages off disk.</li>
+</ol>
+<p><strong>Failure modes:</strong> search is lexical and the model must
+know the syntax; a large note above the threshold costs a tool call; the
+chat note is the only memory of earlier conversations and it is not
+searched by the assistant unless the person points at it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Literal, transactional, revisioned.</strong> A mutating tool
+runs in one SQLite transaction; a content edit saves a revision first.
+There is no extraction and no consolidation.</p>
+<p><strong>Per-chat switches.</strong> <em>Note access</em> is on by
+default and can be turned off in the model selector for a conversation
+(<code>AI.md:93-97</code>); web search is a separate notice. Unlike
+Joplin there is no per-tool switch: access is all twenty-one tools or
+none.</p>
+<p><strong>Delete.</strong> <code>delete_note</code> is the app's soft
+delete with the app's recovery window; nothing marks the deletion as the
+assistant's.</p>
+<p><strong>Conflicts:</strong> none detected;
+<code>edit_note_content</code> refuses an edit whose anchor is not
+unique, which is the closest thing to a stale-read check.</p>
+<p><strong>Malicious input:</strong> notes are returned as content; the
+system prompt is the only defence named.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A tool call is a synchronous becca operation.</li>
+<li>A new note is searchable at once; there is no index to lag.</li>
+<li>No background work.</li>
+<li>Context: the conversation, the system prompt, the hint; the client
+shows context-window use and pricing per message.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four consumers of one registry, described in section 1. Two details
+worth naming. The Claude Agent provider disables every built-in Claude
+Code tool so the subprocess can reach the notes only through Trilium's
+own tools, and the MCP route's comment on the rate limiter explains a
+real failure — an MCP client drops its event stream on every reconnect —
+and why the budget is spent only on 401s. The documentation lists three
+third-party MCP servers and says the built-in one arrived in
+0.103.0.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong> One registry, so a tool fixed once is
+fixed everywhere; <code>mutates</code> decides the transaction;
+protected notes are refused by every tool with tests; the public route
+is token-gated and off by default; the in-app agents get the app's tools
+and nothing else; a revision precedes each content edit and records the
+source.</p>
+<p><strong>What is withheld, and why.</strong> <code>audit_log</code>:
+the revision is the note before the edit, labelled with the actor — a
+prior-state history like Joplin's and Logseq's, not an append-only
+record of the mutation itself; it covers three of the nine note tools;
+and no test reads the source. <code>human_review</code>: the diff view
+and the revision list are display of live rows. <code>tombstone</code>:
+the soft delete is the app's, keyed on the note.
+<code>negative_eval</code>: the search tests assert dropped stale ids
+and a limit, not excluded material.</p>
+<p><strong>Attribution gap.</strong> <code>create_note</code>,
+<code>rename_note</code>, <code>move_note</code>,
+<code>clone_note</code>, <code>delete_note</code>,
+<code>set_attribute</code> and <code>delete_attribute</code> leave no
+<code>llm</code> mark anywhere.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>350 cases in 23 spec files in core's LLM directory, 10 spec files in
+the server's, plus <code>mcp_server.spec.ts</code> (3) and
+<code>routes/mcp.spec.ts</code> (7). The ones that matter here:</p>
+<ul>
+<li><code>tools/note_tools.spec.ts</code> — protected and binary notes
+rejected per tool (143), search mapping and limits (278-314), delete
+soft-deletes and refuses system notes (387-396), edit failures surfaced
+(195).</li>
+<li><code>routes/mcp.spec.ts</code> — 403 while disabled, 401 without a
+token, budget never spent on an authenticated client, failures capped
+(10-58).</li>
+<li><code>providers/claude_agent.spec.ts</code> (61 cases),
+<code>copilot_agent.spec.ts</code> (46), <code>acp_client.spec.ts</code>
+(27), <code>copilot_mcp_endpoint.spec.ts</code> (13).</li>
+</ul>
+<p>No test asserts <code>source: "llm"</code> on a revision. No memory
+benchmark exists and none applies.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Define tools once with a <code>mutates</code> flag and let
+every surface iterate the registry.</strong> The transaction wrapper,
+the MCP registration and the chat tool set all derive from one map.</li>
+<li><strong>Give the in-app agent the app's tools and nothing
+else.</strong> Disabling the runtime's built-ins and pointing it at your
+own MCP server is a cleaner boundary than a permission list.</li>
+<li><strong>Record the actor on the revision.</strong> A
+<code>source</code> column costs nothing and is the difference between
+"something changed" and "the assistant changed it".</li>
+<li><strong>Explain the rate limiter in the code.</strong> The comment
+in <code>routes/mcp.ts</code> is the reason the limiter will not be
+"fixed" into a lockout.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Marking only content edits.</strong> If the assistant can
+create, move and delete, those need the mark too.</li>
+<li><strong>Treating a protected flag as a scope.</strong> It refuses
+the assistant; it does not partition anything.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Trilium fits a person who keeps notes in it and wants an assistant,
+an in-app coding agent or an external agent to work on them through one
+audited set of tools. The registry design transfers to any application
+adding an assistant and an MCP server at once. It is not an agent memory
+system; the assistant's memory is the chat note.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is the revision's <code>source</code> shown
+anywhere</strong> in the client's revision list, so a person can filter
+for assistant edits?</li>
+<li><strong>Does the Claude Agent session resume drift</strong> from the
+chat note when the person edits messages, and what does the fallback
+seeding cost?</li>
+<li><strong>Will <code>mutates</code> grow a confirmation?</strong> It
+already decides the transaction; it is the natural place for a
+gate.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Core LLM stack</strong>
+(<code>packages/trilium-core/src/services/llm/</code>)</p>
+<ul>
+<li><code>chat.ts</code> — <code>runChat</code> (30);
+<code>system_prompt.ts</code> — <code>buildSystemPrompt</code> (24);
+<code>note_hint.ts</code> — <code>buildNoteHint</code> (18);
+<code>skills.ts</code> — <code>SKILLS</code> (25);
+<code>stream.ts</code>; <code>types.ts</code></li>
+<li><code>tools/tool_registry.ts</code> — <code>ToolDefinition</code>
+(24-45), <code>ToolRegistry</code> (49);
+<code>tools/registration.ts</code>; <code>tools/index.ts</code></li>
+<li><code>tools/note_tools.ts</code> — nine tools (17-370),
+<code>saveRevision({ source: "llm" })</code> (119, 162, 222)</li>
+<li><code>tools/attribute_tools.ts</code>,
+<code>hierarchy_tools.ts</code>, <code>attachment_tools.ts</code>,
+<code>icon_tools.ts</code>, <code>skill_tools.ts</code></li>
+<li><code>assets/llm/skills/</code> — four sheets;
+<code>assets/schema.sql</code> — <code>revisions</code> with
+<code>source</code> (46-52); <code>becca/entities/brevision.ts</code>
+(34-67), <code>bnote.ts</code> — <code>saveRevision</code> (1550)</li>
+</ul>
+<p><strong>Server</strong></p>
+<ul>
+<li><code>apps/server/src/services/llm/index.ts</code> — the
+registration seams</li>
+<li><code>apps/server/src/services/llm/providers/claude_agent.ts</code>,
+<code>copilot_agent.ts</code>, <code>copilot_mcp_endpoint.ts</code>,
+<code>acp_client.ts</code></li>
+<li><code>apps/server/src/services/mcp/mcp_server.ts</code> —
+<code>registerTool</code> (24), <code>createMcpServer</code> (41)</li>
+<li><code>apps/server/src/routes/mcp.ts</code> —
+<code>createMcpRateLimiter</code> (51), <code>readMcpAccess</code> (62),
+<code>resolveMcpAccess</code> (97)</li>
+<li><code>apps/server/src/routes/api/llm_chat.ts</code> — the SSE
+endpoint</li>
+</ul>
+<p><strong>Client</strong></p>
+<ul>
+<li><code>apps/client/src/widgets/type_widgets/llm_chat/</code> —
+<code>useLlmChat.ts</code>, <code>llm_chat_types.ts</code>,
+<code>EditNoteContentDiff.tsx</code>, <code>chat_save.ts</code></li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>docs/User Guide/User Guide/AI.md</code> (note access, 93-108),
+<code>AI/MCP.md</code>, <code>AI/Privacy.md</code>,
+<code>AI/Providers.md</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tools/note_tools.spec.ts</code>,
+<code>routes/mcp.spec.ts</code>, <code>mcp_server.spec.ts</code>, the
+provider specs</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>rg -n -i 'embedding' -l packages/trilium-core/src/services/llm apps/server/src/services/llm</code>
+— provider option names in <code>openai.ts</code>,
+<code>google.ts</code> and <code>base_provider.ts</code> and their
+specs; no vector index.</li>
+<li><code>rg -n 'saveRevision' tools/note_tools.spec.ts</code> — stubbed
+to a no-op at lines 39 and 163 and never asserted; the revision source
+is untested.</li>
+<li><code>rg -n 'saveRevision' tools/*.ts</code> — three hits, all in
+<code>note_tools.ts</code>; no other tool records the actor.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/TriliumNext/Trilium/commit/2d2c2108ed464d241c8b0e9438d8e19a35cf62be"><code class="commit-id" title="2d2c2108ed464d241c8b0e9438d8e19a35cf62be">2d2c2108…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

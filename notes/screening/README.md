@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 226 of 374 screened at the report's current pin.**
+**Progress: 229 of 377 screened at the report's current pin.**
 
 17 further record(s) describe a revision the report has since moved
 off, and 131 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 86 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 94 |
-| Repositories with build-time execution (`EXEC`) | 170 |
+| Repositories with an auto-run surface (`RUNS`) | 87 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 96 |
+| Repositories with build-time execution (`EXEC`) | 171 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -112,6 +112,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
+| [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |

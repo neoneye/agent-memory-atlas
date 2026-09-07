@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 374 reports.**
+**This page covers all 377 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3283,7 +3283,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: **typed write outcomes and a curated bypass.** A capture returns `Duplicate`, `Similar` or `NoiseSkipped` with the matched id instead of silently writing a second copy, and a grounding or an edit goes through `write_curated` past the dedupe gate so metadata mutations cannot be swallowed by a sibling row.
 - Biggest risk: **a quarantine the default read path ignores.** `imagined = 1 AND grounded = 0` is excluded unconditionally from related, near-duplicate and link paths and only on request from search and list; everything reachable through the `MemoryBackend` trait applies no filter, and the product that decides is closed.
 - Most reusable component: `FORMAT.md` with `src/store.rs:118-135` — every KDF parameter, salt version, cipher construction and HMAC input written out so a vault owner can recompute their key and check the claim.
-- Maturity impression: Apache-2.0, three commits by one author between 30 August and 5 September 2026, 7,374 lines of Rust with 71 unit tests, one crates.io release at 0.1.5 while the README says 0.1.4 and the specification header says schema 6 against a code constant of 7; no CI, no fixture vault, no benchmark; one of seven capability marks.
+- Maturity impression: Apache-2.0, three commits by one author between 30 August and 5 September 2026, 7,377 lines of Rust with 71 unit tests, one crates.io release at 0.1.5 while the README says 0.1.4 and the specification header says schema 6 against a code constant of 7; no CI, no fixture vault, no benchmark; one of seven capability marks.
 - Study when: you want an encrypted local vault with lexical and vector retrieval and a documented wire format, or a capture pipeline whose gates have names and outcome types.
 - Do not copy when: you need the memory system rather than the vault — assembly, decay scheduling, grounding evidence, review and audit are the adopter's to build, and the crate's own header describes a third layer it does not ship.
 
@@ -3326,3 +3326,27 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 3,653 commits since February 2022, version 2.10.0, 755 Rust tests and 430 end-to-end cases, reconcile and precondition cases in the handler file, attribution asserted end to end; 0 of seven capability marks, every one withheld on definitions rather than on absence of engineering.
 - Study when: a person and a process edit the same store and you need the collision to fail or merge rather than clobber, or you want write attribution that reaches the history without a database.
 - Do not copy when: you need an agent's own memory — no state, no supersession, no scope inside a space, and an index that lives in one browser.
+
+### [`siyuan`](../systems/siyuan/)
+- Best idea: **confirmation by declared effect, and a snapshot before the first write.** Each tool action declares local write, data egress or external cost; any of the three waits for the person unless always-allowed, an external tool that is not read-only counts as a write, and the first local write of a chat takes a data-repository snapshot whose failure aborts the round and whose id is recorded in the session.
+- Biggest risk: **`always allow` is one click, and after it the agent edits the workspace freely.** The gates are per tool and action or global; a person who tires of confirming turns them all off, and a block the agent wrote carries no mark that it did.
+- Most reusable component: `kernel/agent/session.go` and `runtime.go` — a session file with an expected revision, a committing turn id, idempotent retry and orphaned-turn finalization, so a crash or a double submit is a conflict rather than a corruption.
+- Maturity impression: AGPL-3.0, 27,108 commits since August 2020, version 3.8.2, an agent package of 10,766 lines with 112 tests and an MCP package with 56, tests on confirmation scope, single-use confirmations, doom loops, compaction digests and reasoning context across commits; 0 of seven capability marks, each withheld on definitions.
+- Study when: you are putting an agent into a store a person owns and want the write gate and the undo to be mechanical rather than prompted.
+- Do not copy when: you need an agent's own memory, a vector arm that scales past a full scan, or a local embedding path.
+
+### [`trilium`](../systems/trilium/)
+- Best idea: **one tool registry with a `mutates` flag, iterated by the chat, the public MCP server and both in-app agents.** Twenty-one tools defined once with a Zod schema and a synchronous execute; the MCP server wraps every mutating one in a transaction, and the Claude Agent provider gives the person's own Claude Code that server as its only tools with every built-in tool disabled.
+- Biggest risk: **the assistant's mark on the store covers three tools and is asserted by no test.** A revision with `source: "llm"` precedes every content edit and the column persists, but create, rename, move, delete and attribute writes leave nothing, and the spec stubs `saveRevision` to a no-op.
+- Most reusable component: `apps/server/src/routes/mcp.ts` with `services/mcp/mcp_server.ts` — an ETAPI-token MCP route whose rate limiter spends its budget only on requests it would answer 401 to, with the reasoning written beside the code, and a server that registers whatever the registry holds.
+- Maturity impression: AGPL-3.0, 37,471 commits by the GitHub count since May 2017, version 0.105.0, an LLM stack of 4,147 core lines with 350 spec cases in 23 files plus the server's provider specs, the MCP server since 0.103.0, a privacy page that names what leaves the machine per provider; 0 of seven capability marks.
+- Study when: you are adding an assistant and an MCP server to an application at the same time and want one definition to serve both.
+- Do not copy when: you need semantic recall, a memory beyond the chat note, or a mark on every kind of write.
+
+### [`vista`](../systems/vista/)
+- Best idea: **compaction is blocked until the model has written its own continuation checkpoint.** A `PreCompact` hook answers *block* until `WORKING.md` and `GUIDE.md` are non-empty and marked ready; the runtime's summary is then discarded in favour of the files, the attempt history and the exact last event.
+- Biggest risk: **the checkpoint gate is syntactic.** Non-empty is the whole check; a confident wrong guide survives compaction as faithfully as a right one, and the harness never reads what the model wrote.
+- Most reusable component: `src/vista_arc3/claude/controller.py` — a frame archive with bounded `inspect`, `read_pixels` and `history` tools, a provenance stamp on every working-memory write, level-boundary archiving, and recovery paths for compaction, rate limit, restart and reset that each fail closed under test.
+- Maturity impression: MIT, one commit dated 2026-09-05 from a group at MIT, 11,973 lines under `src/`, 224 tests in twelve files with the memory contract in the controller tests, README scorecards on the ARC Prize site and nothing committed that reproduces them; 0 of seven capability marks.
+- Study when: you run a coding-agent runtime on a long interactive task and have lost state to compaction; the hook, the files and the recovery prompt transfer.
+- Do not copy when: you need memory across episodes or any check on what the checkpoint says.

@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A harness that plays ARC-AGI-3
+games through Claude Code or Codex, archives every environment frame so
+the model can re-inspect original evidence, keeps a per-game GUIDE.md
+and WORKING.md, blocks the runtime's compaction until the model has
+written a continuation checkpoint, and rebuilds a fresh context from
+those files plus the exact last event.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="VISTA — Agent Memory Atlas">
+    <meta property="og:description" content="A harness that plays
+ARC-AGI-3 games through Claude Code or Codex, archives every environment
+frame so the model can re-inspect original evidence, keeps a per-game
+GUIDE.md and WORKING.md, blocks the runtime's compaction until the model
+has written a continuation checkpoint, and rebuilds a fresh context from
+those files plus the exact last event.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VISTA — Agent Memory Atlas">
+    <meta name="twitter:description" content="A harness that plays
+ARC-AGI-3 games through Claude Code or Codex, archives every environment
+frame so the model can re-inspect original evidence, keeps a per-game
+GUIDE.md and WORKING.md, blocks the runtime's compaction until the model
+has written a continuation checkpoint, and rebuilds a fresh context from
+those files plus the exact last event.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>VISTA — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "VISTA",
+      "description": "A harness that plays ARC-AGI-3 games through Claude Code or Codex, archives every environment frame so the model can re-inspect original evidence, keeps a per-game GUIDE.md and WORKING.md, blocks the runtime's compaction until the model has written a continuation checkpoint, and rebuilds a fresh context from those files plus the exact last event.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Frames as memory, a checkpoint before
+compaction</p>
+          <h1>VISTA</h1>
+          <p class="document-deck">A harness that plays ARC-AGI-3 games
+through Claude Code or Codex, archives every environment frame so the
+model can re-inspect original evidence, keeps a per-game GUIDE.md and
+WORKING.md, blocks the runtime's compaction until the model has written
+a continuation checkpoint, and rebuilds a fresh context from those files
+plus the exact last event.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/joshhhhhan/VISTA">
+              <span>Source</span>
+              <strong>joshhhhhan/VISTA</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9" title="900aa3380e4f1120436d83b2ce1115a38ac29bf9">
+              <span>Analyzed revision</span>
+              <code>900aa338…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>VISTA — <em>A Visual Harness for Reasoning in an Interactive
+World</em>, MIT, one commit dated 2026-09-05 from a group at MIT — plays
+the ARC-AGI-3 interactive games through a coding-agent runtime, Claude
+Code or Codex CLI, and its README reports a 100% win rate over the 25
+public games with Claude Opus 5.0 and scorecards linked from the ARC
+Prize site. It is in this atlas because the harness's whole contribution
+is <strong>memory engineering for a long horizon</strong>: what a model
+may look at again, what it must write down, and when it is allowed to
+forget.</p>
+<p>Three mechanisms. <strong>Frames as memory.</strong> Every
+environment frame — the animation frames and the final frame of each
+turn — is rendered to disk (<code>render_observation_frames</code>,
+<code>claude/controller.py:1630</code>), and three read-only tools let
+the model go back to it: <code>inspect</code> returns chosen turns,
+frames and cropped regions as images enlarged without smoothing;
+<code>read_pixels</code> samples exact colours; <code>history</code>
+returns the attempt list or a turn range of public actions and results
+(<code>controller.py:1066-1234,1327</code>). The README's phrase is
+<em>"revisit original evidence"</em>: the model's memory of a frame is
+the frame, not its earlier description.</p>
+<p><strong>A checkpoint before compaction.</strong> The Claude Code
+runtime is started with hooks on <code>PreCompact</code>,
+<code>PostCompact</code> and <code>Stop</code>
+(<code>claude/runner.py:877-893</code>). On <code>PreCompact</code> the
+hook (<code>claude/compact_hook.py</code>) touches a request marker and
+answers <code>block</code> with the instruction to review and update
+<code>WORKING.md</code> so it holds the complete continuation state; a
+<code>Stop</code> while the request is pending is blocked the same way;
+only once the controller has marked the checkpoint ready does the hook
+let the response end for handoff. The controller refuses to play while a
+checkpoint is pending (<code>controller.py:676-683</code>) and refuses
+to mark it ready if <code>GUIDE.md</code> or <code>WORKING.md</code> is
+empty (<code>controller.py:486-520</code>).</p>
+<p><strong>Recovery from files plus the exact last event.</strong> After
+compaction, a credential rate limit, a runtime restart or a
+fresh-session <code>RESET</code>, the harness builds a new prompt from
+the current observation, the last action result, the attempt history,
+<code>GUIDE.md</code> and <code>WORKING.md</code> with its provenance
+(<code>claude/recovery.py</code>, <code>controller.py:522-588</code>),
+and the tests assert the recovery includes the exact last event
+(<code>tests/test_claude_controller.py:1666</code>) and fails closed
+when the files are missing or empty (<code>:1831,1873</code>).</p>
+<p>The memory is one game deep. <code>GUIDE.md</code> starts every game
+as <em>"No reliable model yet."</em>
+(<code>claude/harness.py:58,235</code>), nothing is carried between
+games in a batch, and the harness never reads what the model wrote into
+the guide. Every capability mark is withheld: there is no state on a
+memory, no scope beyond the directory, no adjudication, and the archive
+is a log of frames rather than a record of mutations.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A game is a directory. The model's memory has three layers with
+different owners:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the harness owns the frame archive and the event log, the model owns GUIDE.md and WORKING.md, and the compaction hook makes the model write WORKING.md before the runtime may forget; recovery rebuilds a fresh context from the files and the last event</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the harness owns the frame archive and the event log, the model owns GUIDE.md and WORKING.md, and the compaction hook makes the model write WORKING.md before the runtime may forget; recovery rebuilds a fresh context from the files and the last event
+flowchart TB
+    P[&quot;play(action)&quot;] --&gt; ENV[&quot;ARC-AGI-3 environment&quot;]
+    ENV --&gt; AR[&quot;frames archived to screenshots/ (all), final frame returned&quot;]
+    ENV --&gt; EV[&quot;event log: public action + result&quot;]
+    AR --&gt; I[&quot;inspect · read_pixels&quot;]
+    EV --&gt; H[&quot;history: attempts · events&quot;]
+    M[&quot;model&quot;] --&gt; G[&quot;GUIDE.md — durable model of the game&quot;]
+    M --&gt; W[&quot;WORKING.md — scratchpad; provenance stamp on write&quot;]
+    RT[&quot;runtime: context nearly full&quot;] --&gt;|&quot;PreCompact hook&quot;| B{&quot;checkpoint ready?&quot;}
+    B -- no --&gt; BL[&quot;block: update WORKING.md first&quot;]
+    BL --&gt; W
+    W --&gt; RD[&quot;mark ready&quot;]
+    B -- yes --&gt; HO[&quot;end response for handoff&quot;]
+    HO --&gt; RC[&quot;fresh context: observation + last event + attempts + GUIDE + WORKING&quot;]
+    LV[&quot;level completed&quot;] --&gt; AW[&quot;archive WORKING.md with provenance; clear it&quot;]
+    style BL fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The highlighted transition is the one worth taking away. The
+runtime's compaction is a summariser the harness does not trust with the
+game state, so the harness refuses to let it run until the model has
+written, in its own words and in a file the harness can hand back,
+everything a successor needs. The summary that survives compaction is
+therefore authored by the model on purpose rather than produced by the
+runtime on overflow — the opposite of <a href="../siyuan/">SiYuan</a>'s
+approach, where the summary is generated and then labelled
+untrusted.</p>
+<p>Nothing here is a belief with a state. A frame is evidence; a guide
+is whatever the model wrote; a working note has a provenance stamp
+saying which turn and state it was saved at, so a stale note can be
+recognised by turn, not by content.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Python 3.12, 11,973 lines under <code>src/vista_arc3/</code>, 224
+tests in twelve files, one commit. Two parallel runtimes share a
+controller design:</p>
+<ul>
+<li><code>claude/</code> — <code>controller.py</code> (1,722 lines: the
+game controller, tools, archive, recovery), <code>runner.py</code>
+(Claude Code invocation with hooks, permission mode, credential relay),
+<code>harness.py</code> (per-game setup and the native-context loop),
+<code>mcp_host.py</code> (an authenticated Unix-socket MCP host serving
+the game tools), <code>mcp_bridge.py</code>,
+<code>compact_hook.py</code>, <code>recovery.py</code> (the prompts),
+<code>quota.py</code> (rate-limit signals), <code>tools.py</code> (the
+tool schemas).</li>
+<li><code>codex/</code> — the same shape for Codex CLI.</li>
+<li><code>batch.py</code> — every available game on one shared
+scorecard.</li>
+<li><code>shared/</code> — rendering, palette, HTTP.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the runtime calls the four game tools over a Unix-socket MCP host into a controller that talks to the ARC-AGI-3 API, archives frames and events to disk, and hands GUIDE.md and WORKING.md back through recovery prompts when the runtime compacts, restarts or resets</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the runtime calls the four game tools over a Unix-socket MCP host into a controller that talks to the ARC-AGI-3 API, archives frames and events to disk, and hands GUIDE.md and WORKING.md back through recovery prompts when the runtime compacts, restarts or resets
+flowchart LR
+    CC[&quot;Claude Code (hooks: PreCompact · PostCompact · Stop)&quot;] --&gt;|&quot;MCP over Unix socket&quot;| HOST[&quot;mcp_host.py&quot;]
+    HOST --&gt; CTL[&quot;GameController: play · inspect · read_pixels · history · save_compact_checkpoint&quot;]
+    CTL --&gt; API[&quot;ARC-AGI-3 API&quot;]
+    CTL --&gt; FS[(&quot;screenshots/ · GUIDE.md · WORKING.md · working_archive/&quot;)]
+    CTL --&gt; PRIV[(&quot;private observations · events · recovery log&quot;)]
+    HK[&quot;compact_hook.py&quot;] --&gt; CTL
+    HAR[&quot;harness.py: run_game, native-context loop&quot;] --&gt; CC
+    HAR --&gt; CTL
+    HAR --&gt;|&quot;recovery prompts&quot;| CC</code></pre></details></figure>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Linux x86_64, Docker, Python 3.12,
+and Claude Code 2.1.220 or Codex CLI 0.145.0 per the README; an
+ARC-AGI-3 API key for online runs.</li>
+<li><strong>Fully local and offline:</strong> no; the games and the
+models are remote.</li>
+<li><strong>Hand-repairable:</strong> yes, unusually. The memory is
+three files and a folder of images a person can open.</li>
+<li><strong>Install:</strong> a Python package plus a container per
+player.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Play.</strong> <code>GameController.handle</code>
+(<code>controller.py:632</code>): refuses while a retry, compact
+recovery or checkpoint is pending; validates the action against the
+environment's available actions and the display size; sends it; stores
+the observation privately (<code>_store_observation</code>, line 1541);
+renders every frame to <code>screenshots/</code>; appends a public
+event; returns the final frame.
+<code>test_valid_action_archives_all_frames_but_returns_last</code>
+(<code>test_claude_controller.py:257</code>) is the contract.</p>
+<p><strong>Inspect.</strong> <code>_inspect</code> (line 1199) takes a
+question, up to a bounded number of views each naming a turn, an
+optional frame and an optional region in the game's own coordinates, and
+returns the crops in request order; <code>_inspection_view</code> (1234)
+enlarges without smoothing. Unavailable before the first visual
+observation (test at 486).</p>
+<p><strong>History.</strong> <code>_history</code> (1066):
+<code>attempts</code> — each attempt's start, outcome, action count and
+turn span — or <code>events</code> between two turns with a limit;
+events carry the public action and result only, with environment
+coordinates and the raw grid stripped
+(<code>test_history_exposes_only_public_actions_and_environment_results</code>,
+923).</p>
+<p><strong>Checkpoint.</strong> <code>request_compact_checkpoint</code>
+(457) touches the marker and logs the reason;
+<code>complete_compact_checkpoint_from_working</code> (486) requires the
+marker, non-empty <code>GUIDE.md</code> and <code>WORKING.md</code>, and
+the provenance file, then touches <em>ready</em>. In the Claude runtime
+the checkpoint is committed by the model's own write to
+<code>WORKING.md</code>
+(<code>test_claude_checkpoint_is_committed_by_write_working</code>,
+1538); in Codex by a <code>save_compact_checkpoint</code> tool
+(<code>_save_compact_checkpoint</code>, 816).</p>
+<p><strong>Recovery.</strong> <code>begin_compact_recovery</code> (522)
+snapshots the guide, sets a restore marker, and returns guide, working
+memory, current observation, last action result, attempt history and the
+current images; <code>compact_recovery_prompt</code>
+(<code>recovery.py</code>) renders them;
+<code>complete_compact_recovery</code> (589) clears the markers.
+<code>begin_retry_recovery</code> (380) does the same for a
+fresh-session <code>RESET</code>, with the staged retry state committed
+to <code>WORKING.md</code> (<code>_stage_retry_state</code>,
+<code>_commit_retry_state</code>, 966-997);
+<code>begin_runtime_recovery</code> (313) for a restart that did not
+change the game.</p>
+<p><strong>Level boundary.</strong> <code>_archive_level_working</code>
+(914) writes <code>WORKING.md</code> and a JSON of its provenance and
+the progress before and after into
+<code>working_archive/turn_NNNNNN.*</code>, then clears it; the test at
+1355 says this does not block play.</p>
+<p><strong>Hooks.</strong> <code>runner.py:859-893</code> writes a
+settings block with the hook command and its environment;
+<code>compact_hook.py</code> is mounted read-only into the container
+(<code>runner.py:995</code>);
+<code>test_mcp_and_hook_commands_remove_parent_credentials</code>
+(<code>test_claude_runner.py:352</code>) checks that neither the MCP
+host nor the hook inherits the parent's credentials.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Frames.</strong> Images per turn and frame under
+<code>screenshots/</code>, addressed by <code>(turn, frame)</code>; the
+archive is complete and never pruned during a game.</p>
+<p><strong>GUIDE.md.</strong> Free text the model owns. Seeded with
+<em>"No reliable model yet."</em>; the prompt
+(<code>claude/prompt.md</code>) asks for <em>"concise, durable,
+revisable game understanding"</em>. The harness reads it only to check
+it is non-empty at a checkpoint and to hand it back.</p>
+<p><strong>WORKING.md.</strong> Free text the model owns, plus a
+provenance JSON the harness writes on every change: turn, state,
+progress and the turn the level started
+(<code>_record_working_provenance</code>, 1003). A retry state written
+at <code>RESET</code> carries <code>source: reset_handoff</code> and the
+attempt number.</p>
+<p><strong>Events.</strong> Public <code>{turn, action, result}</code>
+records the <code>history</code> tool reads; private observations with
+the raw grid live beside them and are not exposed.</p>
+<p><strong>Temporal:</strong> every artefact is stamped with a turn; the
+provenance file says when a note was written; the archive says when a
+level ended. No validity interval, and <code>bitemporal</code> is
+withheld — a note is stale by turn count, not by a declared end.</p>
+<p><strong>Trust:</strong> none on content. <code>trust_state</code>
+withheld.</p>
+<p><strong>Scoping:</strong> one game, one directory;
+<code>scope_enforced</code> withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The model retrieves by asking. The three tools are read-only and
+annotated as such in their schemas (<code>tools.py:226-293</code>), and
+each is bounded: a maximum number of views per <code>inspect</code>, a
+limit of 128 events per <code>history</code>, a size cap on labels and
+questions. There is no search over the guide or the notes — they are
+files the model reads whole — and no ranking anywhere.</p>
+<p><strong>Failure modes:</strong> the model must know which turn to
+look at; a long game makes the archive large; and the
+<code>history</code> view is a projection that hides the raw grid, so a
+model that needs it must <code>inspect</code> the frame instead.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The model writes files.</strong> <code>GUIDE.md</code> and
+<code>WORKING.md</code> are ordinary files the runtime's own tools edit.
+What the harness adds:</p>
+<ul>
+<li><strong>Provenance on WORKING.md.</strong> Each write is stamped
+with the turn and state, so a recovery prompt can say when the note was
+saved (<code>retry_recovery_prompt</code> wraps it as
+<code>{saved_at, content}</code>).</li>
+<li><strong>Archiving at level boundaries,</strong> so the scratchpad of
+a finished level is kept with its progress record and the next level
+starts clean.</li>
+<li><strong>Atomic writes</strong> (<code>atomic_write_text</code>,
+1717) with mode 0600 on every harness-written file.</li>
+<li><strong>A checkpoint that cannot be marked ready empty,</strong> and
+a failure that never marks it ready
+(<code>test_compact_checkpoint_failure_never_marks_ready</code>,
+1831).</li>
+</ul>
+<p><strong>Conflicts:</strong> none; one writer per game.</p>
+<p><strong>Malicious input:</strong> the environment returns grids; the
+model writes the notes; nothing else enters.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A turn is one environment call plus frame rendering; an
+<code>inspect</code> is file reads and crops.</li>
+<li>The archive grows by every frame of every turn.</li>
+<li>Recovery costs one fresh context: the files, the last event, the
+current frame.</li>
+<li>Compaction is deferred, not avoided; when it runs, the runtime's own
+summary is discarded in favour of the files.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The runtime is the agent. For Claude Code the harness sets the
+permission mode, an <code>--allowedTools</code> list and the hooks
+(<code>runner.py:1030-1032, 890-893</code>), serves the four tools over
+an authenticated Unix-socket MCP host, relays credentials on a
+rate-limit boundary (<code>quota.py</code>,
+<code>harness.py:483-515</code>) and asserts the runtime used the
+expected permission mode (<code>runner.py:1189</code>). For Codex the
+same controller sits behind a <code>save_compact_checkpoint</code> tool
+instead of a hook. The player instructions are eight lines
+(<code>claude/prompt.md</code>): state expectations before each
+<code>play</code>, report visible changes after, keep the guide and the
+scratchpad.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong> Compaction is gated on a checkpoint the
+harness can verify is non-empty; every recovery path fails closed on
+missing files and is tested; the play path refuses while any recovery is
+pending; the archive is complete; the hook and the MCP host run without
+the parent's credentials.</p>
+<p><strong>What is withheld, and why.</strong> <code>audit_log</code>:
+the recovery log and the event JSONL are logs of the environment and the
+harness, not records of memory mutations. <code>human_review</code>:
+nothing waits for a person. <code>negative_eval</code>: the
+<code>history</code> test asserts that private coordinates and the raw
+grid are absent from a populated result, which is a projection of an
+internal record rather than a retrieval that must leave out a memory; it
+is the nearest thing here and is not the mark. <code>tombstone</code>:
+nothing is rejected.</p>
+<p><strong>What the harness cannot know.</strong> Whether
+<code>GUIDE.md</code> is right. The checkpoint check is emptiness; a
+confident wrong guide survives compaction as faithfully as a correct
+one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>224 tests in twelve files.
+<code>tests/test_claude_controller.py</code> carries the memory
+contract: frames archived and last returned (257), inspect without state
+change (374), independent views in request order (416), history exposing
+only public data (923), compact recovery into a fresh thread (1477),
+checkpoint committed by a write to <code>WORKING.md</code> (1538),
+recovery including the exact last event (1666), checkpoint atomically
+updating guide and working memory (1723), failure never marking ready
+(1831), recovery failing closed (1873), and level boundaries archiving
+and clearing the scratchpad (1355-1455). The Codex files mirror
+them.</p>
+<p>The benchmark claims are the README's: scorecards on the ARC Prize
+site for Codex with GPT-5.6 and Claude Code with Opus 5.0. Nothing in
+the repository reproduces them and no results are committed; the atlas
+does not run benchmarks.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Gate compaction on a checkpoint the model writes.</strong> A
+<code>PreCompact</code> hook that answers <em>block</em> until a
+continuation file exists turns the runtime's summariser into a fallback
+the model authors on purpose.</li>
+<li><strong>Keep original evidence retrievable as evidence.</strong> An
+archive of frames with a bounded <code>inspect</code> costs disk and
+saves the model from trusting its own earlier description.</li>
+<li><strong>Stamp working memory with when it was written.</strong> A
+provenance record of turn and state lets a recovery prompt say how old
+the note is.</li>
+<li><strong>Make every recovery path a test that fails closed.</strong>
+Compaction, rate limit, restart, reset — each has a test that the files
+must exist and be non-empty.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Assuming the checkpoint is good because it is
+non-empty.</strong> The gate is syntactic.</li>
+<li><strong>Carrying nothing between episodes</strong> when the task
+rewards it; VISTA's choice is right for a benchmark and wrong for an
+assistant.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>VISTA fits anyone running a coding-agent runtime on a long
+interactive task who has watched compaction destroy the state. The hook,
+the checkpoint files and the recovery prompt transfer to any task with a
+"current state plus notes" shape. It is not a memory system for an
+assistant and does not claim to be.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What does the model actually write in
+<code>GUIDE.md</code></strong>, and how often is it wrong at a
+checkpoint? The repository commits no transcripts.</li>
+<li><strong>How much of the result is the frame archive</strong> versus
+the checkpoint discipline? The README ablates neither.</li>
+<li><strong>Does the Codex path lose anything</strong> by using a tool
+rather than a hook for the checkpoint? The tests are parallel; the
+behaviour under a runtime-initiated compaction was not traced.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/vista_arc3/claude/controller.py</code> —
+<code>CompactRecovery</code>, <code>RetryRecovery</code>,
+<code>RuntimeRecovery</code> (58-90), <code>GameController</code> (206),
+<code>begin_runtime_recovery</code> (313),
+<code>begin_retry_recovery</code> (380),
+<code>request_compact_checkpoint</code> (457),
+<code>complete_compact_checkpoint_from_working</code> (486),
+<code>begin_compact_recovery</code> (522),
+<code>complete_compact_recovery</code> (589), <code>handle</code> (632),
+<code>_save_compact_checkpoint</code> (816),
+<code>_archive_level_working</code> (914),
+<code>_stage_retry_state</code> (966),
+<code>_record_working_provenance</code> (1003), <code>_history</code>
+(1066), <code>_inspect</code> (1199), <code>_read_pixels</code> (1327),
+<code>_store_observation</code> (1541),
+<code>render_observation_frames</code> (1630),
+<code>atomic_write_text</code> (1717)</li>
+<li><code>src/vista_arc3/claude/compact_hook.py</code> — the PreCompact
+and Stop decisions</li>
+<li><code>src/vista_arc3/claude/harness.py</code> —
+<code>EMPTY_GUIDE_MODEL</code> (58), file names (60-64),
+<code>write_guide</code> (103), <code>run_game</code> (186),
+<code>run_task_with_native_context</code> (441)</li>
+<li><code>src/vista_arc3/claude/runner.py</code> — hooks (859-893), the
+mounted hook (995), tool and permission flags (1030-1032),
+permission-mode assertion (1189)</li>
+<li><code>src/vista_arc3/claude/recovery.py</code> — the recovery
+prompts</li>
+<li><code>src/vista_arc3/claude/tools.py</code> —
+<code>build_play_tool</code> (66), <code>build_inspect_tool</code>
+(226), <code>build_read_pixels_tool</code> (294)</li>
+<li><code>src/vista_arc3/claude/mcp_host.py</code>,
+<code>mcp_bridge.py</code>, <code>quota.py</code></li>
+<li><code>src/vista_arc3/claude/prompt.md</code> — the player
+instructions</li>
+<li><code>src/vista_arc3/codex/</code> — the Codex counterparts</li>
+<li><code>tests/test_claude_controller.py</code> (121-1873),
+<code>tests/test_claude_runner.py</code> (308-352), ten more test
+files</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>rg -n 'GUIDE' src/vista_arc3/batch.py</code> — two hits (lines
+173, 360), both runtime preflight probes writing a fresh guide into a
+temporary directory; nothing carries a guide between games.</li>
+<li><code>rg -n 'read_text' src/vista_arc3/claude/controller.py</code> —
+the guide is read only in the checkpoint and recovery paths, never
+parsed.</li>
+<li><code>rg -n -i 'embedding|vector|search' src/vista_arc3</code> — one
+hit, the Codex runner disabling web search; no retrieval beyond the
+three tools.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9"><code class="commit-id" title="900aa3380e4f1120436d83b2ce1115a38ac29bf9">900aa338…</code></a>
+— first reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
