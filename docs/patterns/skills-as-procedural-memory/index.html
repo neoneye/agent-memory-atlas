@@ -337,6 +337,20 @@ question a retrieved instruction document always raises.</p>
 <p>Against all of that, Ollama has no verification gate of any kind — no
 critic, no success signal, no usage tracking — because it also has no
 write path. A skill exists because a person wrote the file.</p>
+<p><a href="../../systems/forgetful/">Forgetful</a> stores skills as
+rows beside memories — kebab-case name, description, Markdown body up to
+100 KB, licence, compatibility, allowed tools, tags and an importance —
+with <code>import_skill</code> and <code>export_skill</code> in the
+Agent Skills <code>SKILL.md</code> format and a second vector table,
+<code>vec_skills</code>, built from the description alone so a skill is
+found by what it is for rather than by its body. The feature is off by
+default (<code>SKILLS_ENABLED=false</code>), nothing executes a skill,
+and nothing records whether following one worked. The ten
+<code>SKILL.md</code> files in the repository's own <code>skills/</code>
+directory are the other half of the pattern: they are the server's
+memory policy — query before create, confirm before update or obsolete,
+announce every save — shipped as procedures the agent loads, and the
+server has no way to know whether it did.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Store a skill, then execute the retrieved copy in a fresh context

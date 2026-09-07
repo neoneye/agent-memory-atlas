@@ -221,6 +221,8 @@ and keeps the default *"rather than disabling the leg"*.
 fused implementation in this atlas has that fixture, and it is the difference
 between a retriever that degrades and one that degrades silently.
 
+[Forgetful](../../systems/forgetful/) is the counterexample to keep beside these. Its README, the four-stage docstring on `search` in both of its repositories, and the recall skill the agent loads all describe *dense → sparse → reciprocal rank fusion → cross-encoder*, and the tree implements dense → cross-encoder: no FTS table, no `tsvector`, no fusion function. The identifiers the skill says are matched *"literally"* are matched by cosine over a 384-dimension embedding. A fusion that is documented and not built is worse than one never mentioned, because the query-shaping advice — put the exact error code and config key in the query — is written for the arm that is missing.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

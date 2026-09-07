@@ -743,6 +743,8 @@ reads it; and the nightly Mirror scores the *platform's* lessons into an agent's
 probe. A test that reads the scoped store passes on all three, because the leak
 is in the paths the store's key does not govern.
 
+[Forgetful](../../systems/forgetful/) is the plain WHERE-clause instance across two hand-mirrored backends: every repository method takes `user_id`, every statement carries it, and the project filter is an `EXISTS` over an association table that reaches the one-hop walk only when the caller passes `strict_project_filter`. Its Postgres adapter also runs `set_config('app.current_user_id', …)` on every session *"with RLS context"*, and no policy in the tree reads the variable — the second layer the comment promises is the first layer restated. The key is real; the belt-and-braces is one belt.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

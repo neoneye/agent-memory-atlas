@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 378 reports.**
+**This page covers all 379 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3359,3 +3359,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 750 commits between April and August 2026, version 0.3.0, 25,856 lines under `core/` with 2,041 tests, a hash-chained audit log with a checkpoint, a capability matrix that lists what is not implemented, and a read-only MCP server; 4 of seven capability marks.
 - Study when: your memory must answer where a fact came from and whether it may be said before what is relevant, or you want a review queue whose decisions cannot be lost to a graph outage.
 - Do not copy when: you need a scope key, a validity interval, a conversational extractor, or semantic recall beyond an optional cosine leg.
+
+### [`forgetful`](../systems/forgetful/)
+- Best idea: **three meta-tools over a registry, with the discovery text built from the feature flags.** `discover_forgetful_tools`, `how_to_use_forgetful_tool` and `execute_forgetful_tool` front 152 operations, the docstrings are assembled at registration so a client with skills and planning off never reads about either, and the same registry backs the REST API and the CLI, so the tool contract is tested once.
+- Biggest risk: **the retrieval the agent is told about is not the retrieval that runs.** The README, the four-stage docstring on `search` in both repositories and the recall skill describe a sparse leg and reciprocal-rank fusion that have no implementation; the ≥0.7 auto-link threshold stated ten times is `LIMIT 3` with no distance predicate; and the cross-encoder's order is discarded by an importance re-sort before the 8,000-token cut.
+- Most reusable component: `app/routes/mcp/meta_tools.py` with `scope_resolver.py` — the three-tool surface, docstrings generated from flags, and an instance-ceiling-intersected-with-token-scope permission model that refuses a read-scoped caller the documentation of a write tool, not only its execution.
+- Maturity impression: MIT, 236 commits between 20 October 2025 and 1 September 2026, 44,883 lines of Python under `app/` and 41,806 under `tests/` with 1,454 test functions in three suites, the SQLite end-to-end suite running the real embedder and cross-encoder in-process on every push, a PyPI package and a container image, a containerised UAT harness with no scored metric and no benchmark; three of seven capability marks.
+- Study when: you want one shared knowledge base behind several coding agents with a small tool surface, per-user isolation on both SQLite and Postgres, and a soft delete whose reason is mandatory — and you are prepared to read the code rather than the search documentation.
+- Do not copy when: you need exact-identifier recall, a trust level below *true*, a server-side dedupe or conflict check, a memory that can be erased, or an audit that is on by default and cannot be lost to a swallowed exception.

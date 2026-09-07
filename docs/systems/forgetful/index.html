@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted MCP memory server
+for coding agents — one Zettelkasten-shaped row per memory with title,
+content, context, keywords, tags, an importance score and nine
+provenance columns, embedded in-process by FastEmbed, stored in SQLite
+with sqlite-vec or Postgres with pgvector, auto-linked on every create
+to its three nearest neighbours with no distance floor, retrieved by a
+dense top-20 that a local cross-encoder cuts to k and a one-hop walk
+widens, re-sorted by importance under an 8,000-token cap, isolated per
+user by a WHERE clause on both backends, obsoleted but never deleted,
+and audited by an event bus that is off by default; the sparse leg and
+the rank fusion the README, both repository docstrings and the agent's
+own recall skill describe are absent from the tree, and so is the 0.7
+similarity threshold.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Forgetful — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted MCP memory
+server for coding agents — one Zettelkasten-shaped row per memory with
+title, content, context, keywords, tags, an importance score and nine
+provenance columns, embedded in-process by FastEmbed, stored in SQLite
+with sqlite-vec or Postgres with pgvector, auto-linked on every create
+to its three nearest neighbours with no distance floor, retrieved by a
+dense top-20 that a local cross-encoder cuts to k and a one-hop walk
+widens, re-sorted by importance under an 8,000-token cap, isolated per
+user by a WHERE clause on both backends, obsoleted but never deleted,
+and audited by an event bus that is off by default; the sparse leg and
+the rank fusion the README, both repository docstrings and the agent's
+own recall skill describe are absent from the tree, and so is the 0.7
+similarity threshold.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Forgetful — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted MCP memory
+server for coding agents — one Zettelkasten-shaped row per memory with
+title, content, context, keywords, tags, an importance score and nine
+provenance columns, embedded in-process by FastEmbed, stored in SQLite
+with sqlite-vec or Postgres with pgvector, auto-linked on every create
+to its three nearest neighbours with no distance floor, retrieved by a
+dense top-20 that a local cross-encoder cuts to k and a one-hop walk
+widens, re-sorted by importance under an 8,000-token cap, isolated per
+user by a WHERE clause on both backends, obsoleted but never deleted,
+and audited by an event bus that is off by default; the sparse leg and
+the rank fusion the README, both repository docstrings and the agent's
+own recall skill describe are absent from the tree, and so is the 0.7
+similarity threshold.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Forgetful — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Forgetful",
+      "description": "A self-hosted MCP memory server for coding agents \u2014 one Zettelkasten-shaped row per memory with title, content, context, keywords, tags, an importance score and nine provenance columns, embedded in-process by FastEmbed, stored in SQLite with sqlite-vec or Postgres with pgvector, auto-linked on every create to its three nearest neighbours with no distance floor, retrieved by a dense top-20 that a local cross-encoder cuts to k and a one-hop walk widens, re-sorted by importance under an 8,000-token cap, isolated per user by a WHERE clause on both backends, obsoleted but never deleted, and audited by an event bus that is off by default; the sparse leg and the rank fusion the README, both repository docstrings and the agent's own recall skill describe are absent from the tree, and so is the 0.7 similarity threshold.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Three tools over a knowledge graph</p>
+          <h1>Forgetful</h1>
+          <p class="document-deck">A self-hosted MCP memory server for
+coding agents — one Zettelkasten-shaped row per memory with title,
+content, context, keywords, tags, an importance score and nine
+provenance columns, embedded in-process by FastEmbed, stored in SQLite
+with sqlite-vec or Postgres with pgvector, auto-linked on every create
+to its three nearest neighbours with no distance floor, retrieved by a
+dense top-20 that a local cross-encoder cuts to k and a one-hop walk
+widens, re-sorted by importance under an 8,000-token cap, isolated per
+user by a WHERE clause on both backends, obsoleted but never deleted,
+and audited by an event bus that is off by default; the sparse leg and
+the rank fusion the README, both repository docstrings and the agent's
+own recall skill describe are absent from the tree, and so is the 0.7
+similarity threshold.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/scottrbk/forgetful">
+              <span>Source</span>
+              <strong>scottrbk/forgetful</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f" title="35764a88514f2c70b53d91a85d1cd5760e001d0f">
+              <span>Analyzed revision</span>
+              <code>35764a88…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-07</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Forgetful is a self-hosted MCP memory server: a FastMCP process,
+Python 3.12, MIT, 236 commits between 20 October 2025 and the pinned
+commit of 1 September 2026, that gives Claude Code, Cursor, Codex,
+Gemini CLI, Copilot CLI and OpenCode one shared knowledge base. The
+agent is the only writer and the only extractor. It calls
+<code>create_memory</code> with a title, a body, a <code>context</code>
+sentence explaining why the fact matters, keywords, tags and an
+importance score, and the server embeds the lot with a local FastEmbed
+model, stores the row in SQLite or Postgres, links it to its three
+nearest neighbours, and returns it on <code>query_memory</code> after a
+cross-encoder rerank and a one-hop walk. Beside memories sit entities
+with typed relationships, projects, documents, code artifacts, files,
+skills in the Agent Skills format, and plans with tasks and acceptance
+criteria for multi-agent coordination.</p>
+<p>What is genuinely interesting is the surface, not the retrieval. Only
+three tools reach the model — <code>discover_forgetful_tools</code>,
+<code>how_to_use_forgetful_tool</code> and
+<code>execute_forgetful_tool</code> — and 152 named operations live
+behind them in a registry whose docstrings are assembled at registration
+from the feature flags, so a client with skills and planning off never
+reads about either. The same registry backs a REST API, an SSE stream
+and a CLI, and ten SKILL.md files in the repository tell the agent to
+query before it creates and to confirm with the user before it updates
+or obsoletes. The implementation is strongest where that contract is
+tested: 1,454 test functions, of which the SQLite end-to-end half runs
+the real embedder and the real cross-encoder in-process against an
+in-memory database, with no container to start.</p>
+<p>It is weakest where the documentation describes a retrieval the code
+does not perform. The README's <em>"dense → sparse → RRF →
+cross-encoder"</em>, the four-stage docstring at the top of
+<code>search</code> in both repositories, and the recall skill's
+instruction that exact identifiers are matched <em>"literally"</em> by
+<em>"the sparse full-text leg"</em> all describe a lexical arm and a
+rank fusion that have no implementation in the tree. Auto-linking is
+documented ten times as a 0.7 similarity threshold and is implemented as
+<em>the three nearest rows, whatever their distance</em>. The
+cross-encoder's ordering is discarded by an importance re-sort before
+the token budget is applied. The audit log is real and off by default.
+None of this is hidden; each is a sentence in a docstring or a README
+that the code beside it does not honour, which is the specific thing a
+report like this exists to find.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a claim the agent chose to keep, written in the agent's
+own words and shaped by the server's limits: a title under 200
+characters, a body under 2,000, a <em>context</em> under 500 that the
+model docstring calls <em>"WHY this matters, HOW it relates to other
+concepts, WHAT implications"</em>, up to ten keywords, ten tags, and an
+importance from 1 to 10 defaulting to 7
+(<code>app/models/memory_models.py:8-72</code>). The README calls this
+Zettelkasten and the skill files enforce it as an <em>atomicity
+test</em> — one decision, one fact, one pattern per row, with anything
+over 300 words routed to a document and three to seven entry-point
+memories.</p>
+<p>The server treats a memory as <strong>ground truth the moment it is
+written</strong>. There is no candidate state, no verification, no
+reviewer, and no extraction that could disagree with the agent: the
+<code>confidence</code> column is a float the caller may set and nothing
+on the read path consults
+(<code>rg -n 'confidence' app/repositories/*/memory_repository.py app/services/memory_service.py</code>
+returns nothing). The epistemics live in the agent's instructions
+instead. <code>skills/forgetful-remember/SKILL.md</code> requires a
+<code>query_memory</code> before every <code>create_memory</code> and
+classifies each hit — still accurate, missing detail, contradicted, or
+distinct — and it names the two operations that <em>"rewrite
+history"</em>, <code>update_memory</code> and
+<code>mark_memory_obsolete</code>, as the ones that always get user
+confirmation. The store records none of that deliberation. What it
+records is the outcome.</p>
+<p>The state machine has two states and one transition:</p>
+<pre class="text"><code>create_memory ──▶ active ──mark_memory_obsolete(reason, superseded_by?)──▶ obsolete
+                    │                                                        │
+                    ├─ update_memory (PATCH; re-embed if a search field moved) │
+                    ├─ link_memories / unlink_memories                        │
+                    └─ auto-linked to the 3 nearest on create                 │
+                                                                             │
+                 searchable, walkable, auto-link candidate         fetchable by id only;
+                                                                  excluded from search,
+                                                                  from the walk, from the
+                                                                  auto-link candidate set,
+                                                                  and from access counting</code></pre>
+<p>Obsolete is terminal. The transition writes
+<code>is_obsolete = 1</code>, the mandatory
+<code>obsolete_reason</code>, an optional <code>superseded_by</code>
+that must name a live memory of the same user, and
+<code>obsoleted_at</code>
+(<code>app/repositories/sqlite/memory_repository.py:440-484</code>). No
+code path clears the flag —
+<code>rg -n 'is_obsolete\s*=\s*False|restore_memory' app</code> finds
+only column defaults — and no code path deletes the row; the REST
+<code>DELETE</code> is the same soft delete
+(<code>app/routes/api/memories.py:243-271</code>). A superseded memory
+carries a forward pointer and the superseding one carries nothing back,
+so the chain is walkable from the past only. Links survive obsolescence
+in <code>memory_links</code> and are filtered at read time rather than
+removed.</p>
+<p>Who moves a memory: the agent, through the tools, or a person through
+the CLI or the REST API, all as the same user. Nothing in the server
+moves one on its own — there is no decay, no expiry, no consolidation,
+no background rewrite. <code>access_count</code> and
+<code>last_accessed_at</code> are the closest thing to a signal about a
+memory's life, and they are incremented by an event handler on reads
+only when <code>ACTIVITY_ENABLED</code> and
+<code>ACTIVITY_TRACK_READS</code> are both true; nothing ranks or prunes
+on them at this commit.</p>
+<p>The diagram is the read path, because that is where the documented
+design and the implemented one part company:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — The query path as implemented — one embedding of the query alone, a dense top-20 filtered by user, obsolescence, importance and project, a cross-encoder cut to k only when more than k rows came back, a one-hop walk ordered by importance, and an importance re-sort under the 8,000-token cap; the sparse leg and the rank fusion the README and both docstrings describe are drawn dashed because nothing in the tree implements them.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: The query path as implemented — one embedding of the query alone, a dense top-20 filtered by user, obsolescence, importance and project, a cross-encoder cut to k only when more than k rows came back, a one-hop walk ordered by importance, and an importance re-sort under the 8,000-token cap; the sparse leg and the rank fusion the README and both docstrings describe are drawn dashed because nothing in the tree implements them.
+flowchart TD
+    Q[&quot;query_memory(query, query_context, k=3, project_ids?, importance_threshold?)&quot;] --&gt; E[&quot;embed(query) — FastEmbed bge-small, 384-d; query_context is NOT embedded&quot;]
+    E --&gt; D[&quot;dense top-20 by cosine — WHERE user_id AND is_obsolete=0 AND importance ≥ t AND project EXISTS&quot;]
+    D --&gt;|&quot;reranking on AND more than k rows&quot;| R[&quot;cross-encoder ms-marco-MiniLM on &#39;query: q, context: c&#39; vs rendered row → keep k&quot;]
+    D --&gt;|&quot;otherwise&quot;| K[&quot;first k by cosine&quot;]
+    R --&gt; W[&quot;one hop through memory_links per primary — is_obsolete=0, importance desc, ≤5 each; project filter only if strict_project_filter&quot;]
+    K --&gt; W
+    W --&gt; B[&quot;re-sort primaries by importance desc (reranker order is the tie-break) → cap 20 rows and 8,000 tiktoken tokens → linked rows get the remainder or nothing&quot;]
+    B --&gt; O[&quot;primary_memories, linked_memories, token_count, truncated&quot;]
+    O -.-&gt;|&quot;ACTIVITY_TRACK_READS=true&quot;| A[&quot;memory.queried event → access_count += 1 (fire-and-forget)&quot;]
+    S[&quot;sparse / full-text leg + reciprocal rank fusion — README, both docstrings, forgetful-recall skill&quot;]:::absent
+    S -. &quot;no implementation in the tree&quot; .-&gt; D
+    classDef absent stroke-dasharray: 5 5</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Python process. <code>main.py</code> builds a
+<code>FastMCP</code> app whose lifespan calls
+<code>app/bootstrap.py</code>, which constructs a database adapter, an
+embedding adapter, a reranker, a repository per object type, a service
+per object type, and the optional event bus, then registers the MCP
+tools, the REST routes and the CLI verbs over the same
+<code>ToolRegistry</code>. The layering is stated in
+<code>AGENTS.md</code> — <em>routes → services → protocols →
+repositories/adapters</em> — and held: the services import only
+protocols, and each repository exists twice, once under
+<code>app/repositories/postgres/</code> and once under
+<code>app/repositories/sqlite/</code>, with the same method names and
+different SQL.</p>
+<p><strong>Persistence.</strong> SQLite by default, at
+<code>user_data_dir("forgetful")/forgetful.db</code>
+(<code>app/config/settings.py:50</code>), through SQLAlchemy async with
+the <code>sqlite-vec</code> extension loaded on every connection and two
+<code>vec0</code> virtual tables,
+<code>vec_memories(memory_id TEXT PRIMARY KEY, embedding FLOAT[384])</code>
+and <code>vec_skills</code>, created outside Alembic at startup
+(<code>app/repositories/sqlite/sqlite_adapter.py:160-181</code>).
+Postgres with pgvector when <code>DATABASE=Postgres</code>:
+<code>memories.embedding vector(384)</code> with an HNSW cosine index,
+GIN on the <code>tags</code> and <code>keywords</code> arrays
+(<code>app/repositories/postgres/postgres_tables.py:196,403-405</code>).
+Alembic runs on both at startup; ten migrations from the initial schema
+to the <code>last_encoding_point</code> column of 22 August 2026.</p>
+<p><strong>Retrieval stack.</strong> FastEmbed in-process for both
+embedding (<code>BAAI/bge-small-en-v1.5</code>, 384 dimensions) and
+reranking (<code>Xenova/ms-marco-MiniLM-L-12-v2</code> as a
+<code>TextCrossEncoder</code>), run in an executor thread
+(<code>app/repositories/embeddings/reranker_adapter.py:64-88</code>).
+Azure, Google, OpenAI and Ollama embedders and an HTTP reranker are
+selectable by environment. Vector distance is computed in the database —
+<code>vec_distance_cosine</code> or pgvector's <code>&lt;=&gt;</code> —
+not in Python.</p>
+<p><strong>Async model.</strong> Everything is request-scoped. The only
+concurrency beyond the request is the event bus, which dispatches each
+handler with <code>asyncio.create_task</code> and tracks the task set so
+the CLI can drain it before exit
+(<code>app/events/event_bus.py:112-150</code>,
+<code>app/bootstrap.py:360-368</code>). There is no queue, no scheduler,
+no worker.</p>
+<p><strong>Surfaces.</strong> MCP over stdio or streamable HTTP; REST
+under <code>/api/v1/</code> for memories, entities, projects, documents,
+artifacts, files, skills, plans, tasks, a graph endpoint for
+visualisation, an activity list and an SSE stream; a
+<code>forgetful</code> CLI with curated verbs
+(<code>memory save/search/get/recent</code>, <code>project list</code>),
+a generic <code>call &lt;tool&gt; --args JSON</code> passthrough, and a
+remote mode that speaks to a deployed server through a FastMCP client
+after a browser OAuth login.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>uvx forgetful-ai</code> is the whole install: it starts the
+stdio server against a fresh SQLite file and downloads the two FastEmbed
+models into <code>user_data_dir/models/fastembed</code> on first run;
+<code>docs/OFFLINE_SETUP.md</code> and
+<code>FASTEMBED_LOCAL_FILES_ONLY</code> cover the air-gapped case. No
+API key is needed to store or retrieve anything. Two Docker Compose
+files ship — single container with a bind-mounted SQLite file, or the
+service plus <code>pgvector/pgvector:pg16</code> — and a
+<code>ghcr.io/scottrbk/forgetful</code> image is built on tags. Auth is
+off unless <code>FASTMCP_SERVER_AUTH</code> names a provider (GitHub,
+Google, JWT, RFC 7662 introspection); without it every caller is
+<code>default-user-id</code>.</p>
+<p>The store is plain SQLite or plain Postgres and is repairable with
+ordinary tools, with one caveat: the embedding lives in a virtual table
+keyed by the memory id, so a row copied by hand has no vector until
+<code>--re-embed</code> or <code>rebuild_embeddings</code> runs.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture/write.</strong>
+<code>execute_forgetful_tool("create_memory", …)</code>
+(<code>app/routes/mcp/meta_tools.py:543-575</code>) →
+<code>ToolRegistry</code> → the adapter in
+<code>app/routes/mcp/tool_adapters.py</code> →
+<code>MemoryService.create_memory</code>
+(<code>app/services/memory_service.py:164-228</code>). The service
+applies environment provenance defaults
+(<code>app/utils/provenance.py:20-36</code>), calls
+<code>repo.create_memory</code>, which builds the embedding text from
+title, content, context, keywords and tags
+(<code>app/repositories/helpers.py:10-42</code>), embeds it, inserts the
+row and the vector in one session, and links projects, artifacts,
+documents, files and skills
+(<code>sqlite/memory_repository.py:234-291</code>). Back in the service,
+if <code>MEMORY_NUM_AUTO_LINK &gt; 0</code>,
+<code>find_similar_memories</code> runs one cosine query for the nearest
+non-obsolete rows of the same user
+(<code>sqlite/memory_repository.py:485-555</code>; Postgres
+<code>434-470</code>) and <code>create_links_batch</code> inserts the
+links, skipping duplicates and self-links. The response carries
+<code>similar_memories</code> <em>"for review"</em>. Then one
+<code>memory.created</code> event. All of it is inside the tool call;
+the memory is retrievable as soon as the call returns.</p>
+<p><strong>Extraction/consolidation.</strong> There is none. No prompt
+exists in the server
+(<code>rg -n -i 'openai|anthropic|chat.completions|generate_content' app</code>
+matches only the embedding adapters), no summariser, no merger, no
+dedupe on create. The extraction prompts live in
+<code>docs/prompts/</code> and the per-client command packs under
+<code>docs/opencode/</code>, <code>docs/gemini-cli/</code> and
+<code>docs/copilot-cli/</code>, and they are executed by the agent, not
+the server.</p>
+<p><strong>Retrieval.</strong> <code>MemoryService.query_memory</code>
+(<code>memory_service.py:59-162</code>) → <code>repo.search</code>
+(<code>sqlite/memory_repository.py:57-117</code>) →
+<code>semantic_search</code> (<code>:119-233</code>) for
+<code>DENSE_SEARCH_CANDIDATES</code> rows → cross-encoder rerank when
+enabled and more rows than <code>k</code> came back →
+<code>_fetch_linked_memories</code>
+(<code>memory_service.py:494-544</code>) calling
+<code>get_linked_memories</code> per primary
+(<code>sqlite/memory_repository.py:556-612</code>) →
+<code>_apply_token_budget</code> (<code>:547-599</code>) and
+<code>truncate_memories_by_budget</code> (<code>:624-673</code>).</p>
+<p><strong>Context assembly.</strong> The tool returns a
+<code>MemoryQueryResult</code> JSON object; no prompt text is assembled.
+The agent decides what to do with it, and the recall skill tells it to
+treat <code>truncated: true</code> as a signal to narrow rather than
+accept loss.</p>
+<p><strong>Update/obsolete.</strong> <code>update_memory</code>
+(<code>memory_service.py:230-290</code>) diffs the PATCH against the
+row, re-embeds only when one of
+<code>title, content, context, keywords, tags</code> changed, replaces
+the association lists that were supplied, and emits an
+<code>updated</code> event carrying <code>{field: {old, new}}</code>. It
+does not touch <code>memory_links</code>.
+<code>mark_memory_obsolete</code> (<code>:292-341</code>) snapshots the
+row, sets the four lifecycle columns, and emits a <code>deleted</code>
+event with the reason and the successor in the snapshot.</p>
+<p><strong>Schema.</strong>
+<code>app/repositories/sqlite/sqlite_tables.py:177-262</code>
+(<code>memories</code>), <code>:414-435</code>
+(<code>memory_links</code>, unique on
+<code>(source_id, target_id)</code>), <code>:1182-1233</code>
+(<code>activity_log</code>); the Postgres twin in
+<code>postgres_tables.py</code>; Pydantic contracts in
+<code>app/models/memory_models.py</code>.</p>
+<p><strong>Background.</strong> None.
+<code>ReEmbeddingService.re_embed_all</code>
+(<code>app/services/re_embedding_service.py:53-116</code>) is the
+<code>--re-embed</code> CLI path: backup, reset the vector storage,
+re-embed in pages, validate, restore on failure.
+<code>rebuild_targeted</code> (<code>:117-231</code>) is the
+<code>rebuild_embeddings</code> MCP tool: a user-scoped subset, upsert
+the vectors, then <code>_recompute_auto_links</code>
+(<code>:255-288</code>) adds links for each rebuilt memory and never
+removes one.</p>
+<p><strong>MCP/API/CLI.</strong>
+<code>app/routes/mcp/meta_tools.py</code> (three tools, docstrings built
+by <code>_build_discover_docstring</code> and
+<code>_build_execute_docstring</code> from <code>SKILLS_ENABLED</code>,
+<code>FILES_ENABLED</code>, <code>PLANNING_ENABLED</code>),
+<code>app/routes/mcp/tool_metadata_registry.py</code> (152 tool
+descriptors), <code>app/routes/mcp/tool_adapters.py</code> (the
+implementations), <code>app/routes/mcp/scope_resolver.py</code> (OAuth
+scopes → permitted tool names), <code>app/routes/api/*.py</code> (REST),
+<code>app/routes/cli/*.py</code> (CLI over the same registry,
+<code>local_executor</code> in-process and <code>remote_executor</code>
+over MCP).</p>
+<p><strong>Tests.</strong> <code>tests/integration/</code> (607
+functions, stubbed repositories), <code>tests/e2e_sqlite/</code> (558,
+real adapters, <code>:memory:</code> SQLite), <code>tests/e2e/</code>
+(289, Postgres in Docker).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> (<code>sqlite_tables.py:177-262</code>):
+<code>id</code>, <code>user_id</code> → <code>users</code> with cascade
+delete, <code>title</code>, <code>content</code>, <code>context</code>
+(all <code>Text NOT NULL</code>), <code>keywords</code> and
+<code>tags</code> (JSON on SQLite, <code>ARRAY</code> with GIN on
+Postgres), <code>importance INTEGER NOT NULL</code>, the nine provenance
+columns added by the migrations of 6 January and 8 April 2026,
+<code>is_obsolete BOOLEAN NOT NULL DEFAULT 0</code>,
+<code>obsolete_reason</code>, <code>superseded_by</code> →
+<code>memories.id ON DELETE SET NULL</code>, <code>obsoleted_at</code>,
+<code>access_count INTEGER NOT NULL DEFAULT 0</code> and
+<code>last_accessed_at</code> from the migration of 4 July 2026,
+<code>created_at</code>, <code>updated_at</code>. Indexes on
+<code>is_obsolete</code> and <code>superseded_by</code>. The Postgres
+table adds <code>embedding vector(384) NOT NULL</code>; SQLite keeps it
+in <code>vec_memories</code>.</p>
+<p>Associations:
+<code>memory_links(source_id, target_id, user_id, created_at)</code>
+with a unique pair index and its reverse;
+<code>memory_project_association</code>,
+<code>memory_code_artifact_association</code>,
+<code>memory_document_association</code>,
+<code>memory_file_association</code>,
+<code>memory_skill_association</code>,
+<code>memory_entity_association</code>. Entities have
+<code>entity_relationships(from, to, relationship_type, strength, metadata)</code>
+plus the eight provenance columns without <code>confidence</code>.
+Skills carry their own <code>vec_skills</code> vector, built from the
+description alone (<code>helpers.py:66-72</code>).</p>
+<p><strong>Scoping.</strong> <code>user_id</code> is the only hard
+partition. Projects are an optional many-to-many that the reader filters
+by. There is no session, agent, workspace or tenant column; two agents
+sharing one token share one user, and the provenance columns
+<code>agent_id</code>, <code>agent_version</code> and
+<code>agent_model</code> are the only place their identity can be
+recorded — as text the caller supplies, or as an operator-forced stamp
+when <code>ENFORCE_ENV_OVERWRITE=true</code> makes the environment
+override whatever the agent sent (<code>provenance.py:20-58</code>).</p>
+<p><strong>Temporal fields.</strong> <code>created_at</code>,
+<code>updated_at</code>, <code>obsoleted_at</code>,
+<code>last_accessed_at</code> — all record time.
+<code>rg -n -i 'valid_from|valid_at|invalid_at|event_time|occurred_at' app alembic</code>
+finds nothing. Projects gained <code>last_encoding_point</code> on 22
+August 2026: an opaque string, documented as <em>"e.g. a Git commit
+SHA"</em>, that <em>"the server never interprets or advances"</em>
+(<code>app/models/project_models.py:70-77</code>) — a cursor for the
+agent's incremental re-encoding of a repository, not a validity
+time.</p>
+<p><strong>Correction.</strong> Supersession by forward pointer; PATCH
+in place with the old values preserved only in the activity log, and
+only when it is on. No versioning of the row itself.</p>
+<p><strong>Kinds of memory.</strong> One table for every declarative
+memory; documents for long form; code artifacts; files as base64; skills
+as procedures; plans and tasks as intent. The README's decision table
+and <code>docs/concepts.md</code> are the router, and the agent applies
+it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>query_memory</code> requires both <code>query</code> and
+<code>query_context</code>. Only <code>query</code> is embedded
+(<code>semantic_search</code>,
+<code>sqlite/memory_repository.py:142-143</code>), against the same
+model that embedded title+content+context+keywords+tags at write time;
+<code>query_context</code> enters only through
+<code>build_contextual_query</code>, which forms the cross-encoder's
+query string <code>"query: {query}, context: {context}"</code>
+(<code>helpers.py:75-76</code>, used at <code>search:108-111</code>).
+The recall skill's statement that <em>"the two are embedded
+together"</em> is not what the code does — the context shapes the
+rerank, not the candidate set.</p>
+<p><strong>Candidates.</strong> The dense query is a single SQL
+statement: join the vector table,
+<code>WHERE m.user_id = :user_id AND m.is_obsolete = 0</code>, optional
+<code>m.importance &gt;= :t</code>, optional <code>EXISTS</code> over
+the project association, optional <code>NOT IN</code> exclusions,
+<code>ORDER BY vec_distance_cosine(...) LIMIT :k</code>
+(<code>:150-197</code>). <code>k</code> here is
+<code>DENSE_SEARCH_CANDIDATES = 20</code> when reranking is on, the
+caller's <code>k</code> otherwise (<code>search:86-90</code>). The rows
+are then re-loaded through the ORM with their relationships and
+re-ordered to the vector order.</p>
+<p><strong>Rerank.</strong> Only when <code>RERANKING_ENABLED</code>
+(default true) <em>and</em> more than <code>k</code> candidates returned
+(<code>search:100-101</code>) — a store with three memories and
+<code>k=3</code> is never reranked. Each candidate is rendered as
+<code>Title: … / Content: … / Context: … / Keywords: … / Tags: …</code>
+(<code>helpers.py:44-63</code>), the cross-encoder scores all twenty,
+and the top <code>k</code> are kept in score order.</p>
+<p><strong>Walk.</strong> For each primary,
+<code>get_linked_memories</code> selects rows joined through
+<code>memory_links</code> in either direction,
+<code>WHERE user_id AND is_obsolete = 0</code>, ordered by importance
+descending, limited to <code>max_links_per_primary</code> (default 5,
+max 10); a project filter is applied to this query only when
+<code>strict_project_filter</code> is true
+(<code>memory_service.py:95-104</code>,
+<code>sqlite/memory_repository.py:585-601</code>). Rows already primary
+or already seen are dropped.</p>
+<p><strong>Budget.</strong> <code>truncate_memories_by_budget</code>
+sorts primaries by importance descending — Python's stable sort, so the
+reranker's order survives only as a tie-break among equal importances —
+takes at most <code>MEMORY_MAX_MEMORIES = 20</code>, and adds rows until
+the next would exceed <code>MEMORY_TOKEN_BUDGET = 8000</code> tokens by
+tiktoken's <code>gpt-4</code> encoding of the rendered fields
+(<code>:624-673</code>). If the primaries were truncated the linked list
+is dropped entirely; otherwise linked rows get the remaining tokens and
+count under the same rule (<code>:547-599</code>). The request model's
+<code>token_context_threshold</code> (4,000–25,000, default 8,000) is
+declared, filled by the MCP adapter with
+<code>settings.MEMORY_TOKEN_BUDGET</code>, and never read by the service
+(<code>rg -n token_context_threshold app</code>: three lines, none a
+reader).</p>
+<p><strong>What is not here.</strong> No lexical or full-text arm on any
+backend:
+<code>rg -n -i 'fts5|bm25|tsvector|to_tsquery|reciprocal|rrf' --glob '!*.json' --glob '!*.lock' .</code>
+matches the README, the two <code>search</code> docstrings and nothing
+else. The Postgres GIN indexes on <code>tags</code> and
+<code>keywords</code> serve no memory query.
+<code>get_recent_memories</code> filters by tag, but on SQLite it does
+so in Python after loading every non-obsolete row of the user, and
+paginates the Python list
+(<code>sqlite/memory_repository.py:823-836</code>); the Postgres twin
+pages in SQL (<code>postgres/memory_repository.py:761</code>). Entity
+search is <code>LIKE</code> on name and aliases. Skill search is a
+second dense query over <code>vec_skills</code>.</p>
+<p><strong>Failure modes.</strong> A store with fewer than
+<code>k+1</code> memories is never reranked, so the quality the reranker
+adds arrives only after the store has grown. Importance re-sorting means
+a 9-rated tangential hit is listed above a 7-rated exact one, and when
+the budget bites it is the exact one that is cut. The one-hop walk is
+importance-ordered, not similarity-ordered, so the five links returned
+for a primary are its most <em>important</em> neighbours rather than its
+most relevant. The <code>importance_threshold</code> is a floor the
+agent sets per query, and the skills recommend importance 5 as <em>"the
+noise floor for bulk/automated captures"</em> — a convention with no
+default behind it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every memory is a tool call by the agent with the fields already
+extracted. The server validates shape (Pydantic: lengths, counts, the
+1–10 range, no empty keywords), applies provenance defaults, embeds,
+inserts, and links. There is no LLM in the write path and no
+deduplication: two calls with identical content produce two rows, both
+embedded, each auto-linked to the other. The skills push the dedupe up
+to the agent — <em>"Query before create"</em> is step 3 of
+<code>forgetful-remember</code> — and the <code>similar_memories</code>
+list in the create response is the only server-side hint.</p>
+<p><strong>Auto-linking</strong> is
+<code>find_similar_memories(memory_id, max_links = MEMORY_NUM_AUTO_LINK)</code>:
+the source row's own vector,
+<code>ORDER BY vec_distance_cosine LIMIT :max_links</code>, no distance
+predicate (<code>sqlite/memory_repository.py:507-515</code>; Postgres
+<code>:461-466</code>).
+<code>rg -n -i 'threshold' app --glob '*.py'</code> finds
+<code>importance_threshold</code>, <code>token_context_threshold</code>
+and one docstring; <code>rg -n '0\.7\b' app tests</code> finds nothing.
+The README (<code>:365</code>), <code>docs/search.md:18</code>, five
+prompt documents and the remember skill (<code>:104</code>) all state a
+≥0.7 threshold, and <code>docs/search.md</code> adds a cross-encoder
+step to the auto-link pipeline that <code>find_similar_memories</code>
+does not perform. The observable behaviour is that the third memory in a
+fresh store links to the first two whatever they say. Links are
+additive: an update that changes the content re-embeds the row and
+leaves its links in place, and <code>rebuild_embeddings</code> re-adds
+links and removes none
+(<code>re_embedding_service.py:255-288</code>).</p>
+<p><strong>Update</strong> is PATCH with
+<code>get_changed_fields</code>; an update that changes nothing returns
+the row without an event. <strong>Obsolete</strong> is described above.
+<strong>TTL</strong> does not exist for memories;
+<code>ACTIVITY_RETENTION_DAYS</code> applies to the audit rows only.
+<strong>Conflict</strong> is the agent's problem: nothing detects that a
+new memory contradicts an old one, and the remember skill's
+<em>"Contradicted by the new knowledge → mark obsolete (confirm first) +
+create replacement"</em> is the whole conflict story.</p>
+<p><strong>Noisy or malicious input</strong> is bounded only by the
+field limits and the per-user partition. A tool result the agent pastes
+into <code>create_memory</code> is a memory, with provenance columns the
+same agent fills in. The one operator control is
+<code>ENFORCE_ENV_OVERWRITE</code>, which pins
+<code>encoding_agent</code>, <code>agent_id</code> and
+<code>agent_model</code> to the server's environment regardless of the
+call.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The write path is synchronous and local: one FastEmbed forward pass,
+one insert, one cosine query for neighbours, up to three link inserts,
+then an event dispatched as a task. Nothing waits on a remote model
+unless the operator configured a hosted embedder. Lag to retrievability
+is zero — the row is committed before the tool returns. No background
+pass rewrites the store; the only whole-store operation is the manual
+<code>--re-embed</code>, which takes a backup first and restores it on
+failure (<code>main.py:207-278</code>).</p>
+<p>On the read path: one embedding, one vector query returning twenty
+rows, one cross-encoder pass over twenty rendered documents on the local
+CPU, up to <code>k</code> link queries, and tiktoken over every row
+considered. Injection is a tool result of at most 8,000 tokens and
+twenty rows; it lands in the conversation after the system prompt, so it
+does not invalidate a prompt-prefix cache. When
+<code>ACTIVITY_TRACK_READS</code> is on, every read also fires an
+<code>UPDATE</code> of <code>access_count</code> on each returned id, on
+a system session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three MCP tools. <code>discover_forgetful_tools(category?)</code>
+returns the catalogue the caller's scopes permit;
+<code>how_to_use_forgetful_tool(name)</code> returns the parameters,
+return shape and examples;
+<code>execute_forgetful_tool(name, arguments)</code> dispatches
+(<code>meta_tools.py:472-575</code>). Docstrings for the first and third
+are built once at registration and list only the categories whose flags
+are on, in a <code>verbose</code> or <code>compact</code> mode
+(<code>MCP_DESCRIPTOR_MODE</code>). Permission is the intersection of an
+instance ceiling (<code>FORGETFUL_SCOPES</code>, default <code>*</code>)
+and the OAuth token's <code>scope</code> claim, resolved to tool names
+by category and by the <code>mutates</code> bit on each descriptor
+(<code>scope_resolver.py:104-199</code>); a read-scoped caller who asks
+how to use <code>create_memory</code> is refused, not just blocked at
+execution
+(<code>tests/e2e_sqlite/test_scoped_permissions_sqlite.py:92-128</code>).</p>
+<p>The agent has full agency and no automation. Nothing injects memory
+into a prompt; nothing captures at session end; the compaction boundary
+is not modelled. The repository answers with prose: ten skills under
+<code>skills/</code> (<code>forgetful-remember</code>,
+<code>-recall</code>, <code>-explore</code>,
+<code>-context-gather</code>, <code>-encode-repo</code>,
+<code>-entities</code>, <code>-procedures</code>, <code>-files</code>,
+<code>-cli-setup</code>, <code>-mcp-setup</code>), command packs for
+OpenCode, Gemini CLI and Copilot CLI, and six prompt documents including
+a <em>"knowledge base bootstrap"</em> and a <em>"comprehensive project
+understanding"</em> prompt. The recall skill prescribes
+<code>get_recent_memories</code> scoped to the project as the
+<em>session-start catch-up</em> and a re-query from a second facet
+before concluding a fact is absent; the remember skill prescribes the
+announcement format after every save. These are the memory policy, and
+they ship as files the agent may or may not load.</p>
+<p>Adapting to another agent is a config block: stdio
+<code>uvx forgetful-ai</code>, or HTTP to a running server. The CLI's
+<code>call</code> passthrough makes every one of the 152 operations a
+shell command, which is how the containerised UAT harness drives them
+(<code>test_harness/README.md</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance</strong> is nine nullable columns the writer
+fills, with environment defaults for the agent identity fields and an
+operator override. It records what the agent said about itself; nothing
+checks it. <code>confidence</code> is stored and unread.</p>
+<p><strong>Trust levels</strong> do not exist. One boolean separates
+live from obsolete; the skills ask the agent to obtain user confirmation
+before either mutation, and the server cannot tell whether it did.</p>
+<p><strong>Prompt injection</strong> has no defence in the server. The
+write path accepts whatever the tool call carries, within length limits.
+The repository's own threat model is elsewhere: the UAT harness runs the
+agent <em>"inside a sandbox container"</em> so that <em>"the real
+knowledge base — [is] out of reach by construction"</em>, which is
+protection for the maintainer's store during testing, not for a user's
+store during use.</p>
+<p><strong>Multitenancy.</strong> Every repository method takes
+<code>user_id</code> and every query filters on it, on both backends. On
+Postgres the adapter's <code>session(user_id)</code> runs
+<code>SELECT set_config('app.current_user_id', :user_id, true)</code>
+<em>"with RLS context"</em> and <code>system_session()</code> is
+documented as <em>"no RLS"</em>
+(<code>postgres_adapter.py:35-62</code>);
+<code>rg -n -i 'row level|create policy| current_setting|app\.current_user' --glob '!*.json' --glob '!*.lock' .</code>
+finds that one <code>set_config</code> and nothing that reads it.
+Isolation is the WHERE clause, and the variable is a comment in SQL.
+Users are provisioned from the token's <code>sub</code> on first sight
+(<code>app/middleware/auth.py:106-155</code>), so identity is exactly as
+strong as the configured provider, and with no provider every caller is
+one user.</p>
+<p><strong>Races and consistency.</strong> Writes are single-session
+transactions. The event bus is fire-and-forget: <code>emit</code>
+schedules each handler and returns (<code>event_bus.py:112-150</code>),
+<code>_safe_dispatch</code> logs and swallows exceptions
+(<code>:152-175</code>), and <code>handle_event</code> logs and swallows
+a failed <code>save_event</code>
+(<code>activity_service.py:62-76</code>). A memory can be created with
+its audit row lost, and the CLI's <code>wait_for_pending</code> drain
+(<code>bootstrap.py:360-368</code>) exists because a one-shot process
+would otherwise exit before the row was written. The SSE stream drops
+events with a warning when a subscriber's queue of 1,000 is full.</p>
+<p><strong>Data loss.</strong> Soft delete everywhere for memories; hard
+delete for documents, entities, skills, artifacts and files, with
+cascades through the association tables. A user row's deletion cascades
+to every memory. Backups are the <code>--re-embed</code> path's file
+copy or <code>pg_dump</code> and nothing else.</p>
+<p><strong>Privacy and deletion.</strong> A memory is never removed by
+any API. The obsolete row stays readable by id
+(<code>tests/e2e_sqlite/test_memory_tools_sqlite.py:419-424</code>
+asserts exactly that) and stays in the activity snapshots. There is no
+erase.</p>
+<p><strong>Uncertainty</strong> cannot be represented except as a number
+nothing reads.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,454 test functions in three suites. <code>tests/integration/</code>
+(607) runs the services against in-memory stub repositories whose
+<em>"embedding"</em> is a hash-seeded random unit vector and whose
+<code>find_similar_memories</code> is keyword overlap
+(<code>tests/integration/conftest.py:176-189,284-311</code>) — it tests
+orchestration, events, provenance, scopes and the CLI, and cannot say
+anything about ranking. <code>tests/e2e_sqlite/</code> (558) builds the
+real FastMCP app on <code>:memory:</code> SQLite with the real FastEmbed
+embedder and cross-encoder, module-scoped so the models load once, and
+drives it through an in-process MCP client and the REST routes; this is
+the suite that establishes the read path. <code>tests/e2e/</code> (289)
+does the same against Postgres and starts the <code>forgetful-db</code>
+container itself, raising if it cannot
+(<code>tests/e2e/conftest.py:267-300</code>) — it does not skip itself
+green. CI runs integration, SQLite end-to-end and ruff on every push and
+pull request, and the Postgres suite on pushes to <code>main</code>
+(<code>.github/workflows/ci.yml</code>, <code>e2e.yml</code>).</p>
+<p><strong>Retrieval tests that can fail.</strong> The obsolete-filter
+case creates three memories on one topic, obsoletes one, queries, and
+asserts an active one is present <em>before</em> asserting the obsolete
+one is absent
+(<code>tests/e2e_sqlite/test_memory_tools_sqlite.py:355-393</code>;
+Postgres <code>:356-394</code>). The supersession case is the same shape
+with a weaker positive control
+(<code>new_memory_id in found_ids or len(found_ids) &gt; 0</code>,
+<code>:457-458</code>). The auto-link case asserts
+<code>similar_memories</code> is non-empty on the second create
+(<code>:37-60</code>). The project-and-tag case asserts an in-scope id
+is present and a same-tag out-of-project id is absent
+(<code>:840-888</code>). None of these asserts an order, a score, or
+that an unrelated memory is <em>not</em> linked — which is the test the
+missing threshold would fail.</p>
+<p><strong>What is not tested.</strong> No test asserts anything about
+rank position, about the reranker changing an order, about the token
+budget cutting the right row, or about a lexical match — consistent with
+there being no lexical arm. No test exercises
+<code>token_context_threshold</code>. No test asserts a link is
+<em>absent</em> after a create; the integration test that checks
+<em>"Should not auto-link with different keywords"</em>
+(<code>test_memory_service.py:551-553</code>) runs against the
+keyword-overlap stub, not the vector path.</p>
+<p><strong>Evals and benchmarks.</strong> None.
+<code>rg -l -i 'locomo|longmemeval|recall@|ndcg' --glob '!*.json' .</code>
+finds nothing; the word <em>benchmark</em> appears in a concepts example
+and two file-tool fixtures. The UAT harness under
+<code>test_harness/</code> walks the nine skills with a containerised
+OpenCode agent and produces a transcript for a human to read —
+<em>"acceptance is decided by a supervising review of both, never by the
+agent's self-report alone"</em> — with no scored metric. The README
+cites <a href="https://arxiv.org/abs/2502.12110">arXiv:2502.12110</a>
+(A-MEM, submitted 17 February 2025) as the source of the auto-linking
+idea; it is not this project's paper, and no paper for Forgetful
+exists.</p>
+<p><strong>Screening note.</strong> The commit-graph export
+<code>forgetful.mycelium.json</code> at the root — 1,728 symbols and
+2,522 calls of this repository at commit <code>fb3135109080</code>,
+generated 1 March 2026 — is referenced by nothing in the tree and is not
+a test artifact.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Three meta-tools over a registry with flag-built
+docstrings.</strong> Expose <code>discover</code>, <code>describe</code>
+and <code>execute</code>, keep the real catalogue server-side, and
+generate the discovery text from the feature flags at registration so
+the model never reads about an operation it cannot call. Then put the
+same registry behind REST and a CLI, so the tool contract is tested
+once.</li>
+<li><strong>Make the obsolete predicate part of the candidate set, not
+only the result set.</strong> <code>is_obsolete = 0</code> in the
+auto-link query as well as in search means a retired fact stops
+attracting links the moment it is retired.</li>
+<li><strong>A mandatory reason on soft delete.</strong>
+<code>obsolete_reason</code> cannot be null on the tool; it costs the
+agent one sentence and gives the next reader the why.</li>
+<li><strong>Environment-forced provenance for shared instances.</strong>
+<code>ENFORCE_ENV_OVERWRITE</code> lets an operator guarantee which tool
+and model wrote every row regardless of what the caller claims.</li>
+<li><strong>Run the real ranking stack in the fast suite.</strong>
+Loading a small local embedder and cross-encoder once per module and
+testing against <code>:memory:</code> SQLite is what makes an
+obsolete-filter test mean something; the stubbed suite beside it
+cannot.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A retrieval docstring that describes the design rather than
+the code.</strong> The four-stage comment at the top of
+<code>search</code> names two stages that do not exist, and it
+propagated into the README and into the skill the agent loads. A
+docstring is read as a spec by the next contributor and as a fact by the
+model.</li>
+<li><strong>Nearest-neighbour auto-linking with no floor.</strong>
+<code>LIMIT 3</code> is not a similarity threshold. Put the threshold in
+the query, make it a setting, and test that an unrelated memory is
+<em>not</em> linked.</li>
+<li><strong>Re-sorting a reranked list by a caller-supplied
+score.</strong> If importance should dominate, fold it into the rerank;
+if relevance should, cut the budget in rerank order. Sorting by one and
+cutting by the other loses the best match first.</li>
+<li><strong>A per-request budget parameter the service ignores.</strong>
+Either honour <code>token_context_threshold</code> or remove it from the
+contract.</li>
+<li><strong>Session variables for a row-level-security policy that was
+never written.</strong> Either add the policies or delete the
+<code>set_config</code>; a reader who sees the variable assumes the
+defence exists.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Forgetful suits one person, or one small team behind one OAuth
+provider, running several coding agents that should share what they
+learn, who are willing to let the agent be the curator. Its cost is one
+process and one file, its retrieval is honest dense-plus-rerank once the
+docs are read past, and its data model already has the projects,
+entities and documents a codebase knowledge base needs. It does not suit
+anyone who needs the server to make a trust decision, to forget on a
+schedule, to find an exact identifier by text, or to prove to an auditor
+that a mutation happened — the audit is off by default and best-effort
+when on. A team whose agents will write thousands of rows should expect
+the SQLite recent-list and the threshold-free linking to become the
+first two things they patch.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the sparse leg and the fusion were ever implemented and
+removed, or documented ahead of code; the shallow clone does not carry
+the history, and the commit list on GitHub shows no message naming
+either.</li>
+<li>Whether the maintainer's own store, which the UAT harness guards,
+has been used to measure link quality at any threshold — the 0.7 figure
+came from somewhere.</li>
+<li>Whether <code>ActorType.SYSTEM</code> and
+<code>ActorType.LLM_MAINTENANCE</code>, declared with no producer, and
+<code>access_count</code>, recorded with no consumer, are the front half
+of a decay or curation feature; the
+<code>org_knowledge_proposal.md</code> at the root discusses
+organisational encoding and not this.</li>
+<li>What the hosted deployment the CLI's remote mode targets looks like
+in practice — auth provider, scopes in use, whether
+<code>ACTIVITY_ENABLED</code> is on.</li>
+<li>Whether the Postgres suite's importance-ordered walk and the SQLite
+suite's produce the same neighbours on the same data; the two
+repositories are hand-mirrored and the mirror is not tested for
+agreement.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema.</strong>
+<code>app/repositories/sqlite/sqlite_tables.py</code>
+(<code>memories</code> 177–262, <code>memory_links</code> 414–435,
+<code>activity_log</code> 1182–1233),
+<code>app/repositories/postgres/postgres_tables.py</code> (vector column
+196, GIN and HNSW 403–405),
+<code>app/repositories/sqlite/sqlite_adapter.py</code> (session 108–124,
+<code>vec0</code> tables 160–181),
+<code>app/repositories/postgres/postgres_adapter.py</code>
+(<code>set_config</code> session 35–50), <code>alembic/versions/</code>
+(ten migrations), <code>app/models/memory_models.py</code>,
+<code>app/config/settings.py</code>.</p>
+<p><strong>Write path.</strong>
+<code>app/services/memory_service.py</code> (<code>create_memory</code>
+164–228, <code>update_memory</code> 230–290,
+<code>mark_memory_obsolete</code> 292–341),
+<code>app/repositories/sqlite/memory_repository.py</code>
+(<code>create_memory</code> 234–291, <code>update_memory</code> 292–392,
+<code>mark_obsolete</code> 440–484, <code>find_similar_memories</code>
+485–555, <code>create_links_batch</code> 677–706),
+<code>app/repositories/helpers.py</code>,
+<code>app/utils/provenance.py</code>.</p>
+<p><strong>Retrieval path.</strong>
+<code>app/repositories/sqlite/memory_repository.py</code>
+(<code>search</code> 57–117, <code>semantic_search</code> 119–233,
+<code>get_linked_memories</code> 556–612,
+<code>get_recent_memories</code> 753–853),
+<code>app/repositories/postgres/memory_repository.py</code>
+(<code>search</code> 50–113, <code>semantic_search</code> 114–175,
+<code>find_similar_memories</code> 434–470),
+<code>app/repositories/embeddings/embedding_adapter.py</code>,
+<code>app/repositories/embeddings/reranker_adapter.py</code>,
+<code>app/utils/token_counter.py</code>.</p>
+<p><strong>Context assembly.</strong>
+<code>app/services/memory_service.py</code> (<code>query_memory</code>
+59–162, <code>_fetch_linked_memories</code> 494–544,
+<code>_apply_token_budget</code> 547–599,
+<code>truncate_memories_by_budget</code> 624–673).</p>
+<p><strong>Events and audit.</strong>
+<code>app/events/event_bus.py</code>,
+<code>app/services/activity_service.py</code>,
+<code>app/repositories/sqlite/activity_repository.py</code>
+(<code>cleanup_expired</code> 183–221), <code>app/bootstrap.py</code>
+(242–257, 360–368), <code>app/models/activity_models.py</code>.</p>
+<p><strong>Re-embedding.</strong>
+<code>app/services/re_embedding_service.py</code>,
+<code>app/services/backup_service.py</code>, <code>main.py</code>
+(207–278).</p>
+<p><strong>MCP, API, CLI.</strong>
+<code>app/routes/mcp/meta_tools.py</code>,
+<code>app/routes/mcp/tool_metadata_registry.py</code>,
+<code>app/routes/mcp/tool_adapters.py</code>,
+<code>app/routes/mcp/scope_resolver.py</code>,
+<code>app/routes/mcp/memory_tools.py</code>,
+<code>app/routes/api/memories.py</code>,
+<code>app/routes/api/activity.py</code>, <code>app/routes/cli/</code>,
+<code>app/middleware/auth.py</code>,
+<code>app/config/auth.py</code>.</p>
+<p><strong>Agent-facing prose.</strong> <code>skills/*/SKILL.md</code>,
+<code>docs/prompts/</code>, <code>docs/opencode/</code>,
+<code>docs/gemini-cli/</code>, <code>docs/copilot-cli/</code>,
+<code>docs/search.md</code>, <code>docs/concepts.md</code>,
+<code>docs/tool_reference.md</code>.</p>
+<p><strong>Tests.</strong> <code>tests/integration/conftest.py</code>
+(stubs 176–189, 284–311), <code>tests/e2e_sqlite/conftest.py</code>,
+<code>tests/e2e_sqlite/test_memory_tools_sqlite.py</code>,
+<code>tests/e2e_sqlite/test_scoped_permissions_sqlite.py</code>,
+<code>tests/e2e_sqlite/test_api_activity_sqlite.py</code>,
+<code>tests/e2e_sqlite/test_re_embedding_sqlite.py</code>,
+<code>tests/e2e/conftest.py</code>,
+<code>tests/e2e/test_memory_tools_e2e.py</code>,
+<code>test_harness/</code>.</p>
+<p><strong>Searches this report rests on.</strong> Run from the tree
+root:
+<code>rg -n -i 'fts5|bm25|tsvector|to_tsquery|reciprocal|rrf' --glob '!*.json' --glob '!*.lock' .</code>
+(README and two docstrings only);
+<code>rg -n -i 'threshold' app --glob '*.py'</code> and
+<code>rg -n '0\.7\b' app tests</code> (no similarity threshold);
+<code>rg -n -i 'row level|create policy|current_setting|app\.current_user' --glob '!*.json' --glob '!*.lock' .</code>
+(one <code>set_config</code>, no reader);
+<code>rg -n 'token_context_threshold' app</code> (declared, filled,
+unread);
+<code>rg -n 'confidence' app/repositories/*/memory_repository.py app/services/memory_service.py</code>
+(nothing); <code>rg -n 'ActorType\.(SYSTEM|LLM_MAINTENANCE)' app</code>
+(nothing);
+<code>rg -n 'is_obsolete\s*=\s*False|restore_memory' app</code>
+(defaults only);
+<code>rg -n -i 'valid_from|valid_at|invalid_at|event_time|occurred_at' app alembic</code>
+(nothing);
+<code>rg -l -i 'locomo|longmemeval|recall@|ndcg' --glob '!*.json' .</code>
+(nothing).</p>
+<h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f"><code class="commit-id" title="35764a88514f2c70b53d91a85d1cd5760e001d0f">35764a88…</code></a>
+— first reading, at the head of <code>main</code>, 236 commits in, the
+pin dated 1 September 2026. Screened before reading: no auto-run
+surface; three <code>conftest.py</code> files execute on collection;
+<code>pyproject.toml</code> and <code>uv.lock</code> were inside the
+seven-day cooldown; <code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code> read as data. Nothing was installed or run. Three
+marks: <code>scope_enforced</code> for the <code>user_id</code> and
+project clauses on every read, <code>audit_log</code> for
+<code>activity_log</code> behind <code>ACTIVITY_ENABLED</code>,
+<code>negative_eval</code> for the obsolete-filter case with its
+positive control against the real embedder. Withheld:
+<code>tombstone</code> (obsolete is supersession, keyed on the row, and
+a re-created twin is not refused), <code>trust_state</code> (one boolean
+and a float nothing reads), <code>bitemporal</code> (record time only),
+<code>human_review</code> (a REST API for a UI not in the tree; the
+confirmations the skills require happen in the agent's conversation and
+leave no record).</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

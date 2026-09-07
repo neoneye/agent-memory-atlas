@@ -451,6 +451,8 @@ that trimming the front of the file would break the chain. A log this careful,
 with this vocabulary, that a memory system does not write to, is the shape to
 check for: the schema is not the evidence, the call sites are.
 
+[Forgetful](../../systems/forgetful/) has the schema — `activity_log` with entity type and id, action, a full JSON snapshot, a per-field `{old, new}` diff on updates, actor and metadata — and two properties that keep it near the bottom of the reliable bracket. The bus that writes it exists only when `ACTIVITY_ENABLED=true`, which defaults to false; and `emit` dispatches the writer with `asyncio.create_task` and returns, the handler's exception logged and swallowed, so the mutation commits whether or not its row does. The one-shot CLI drains the pending tasks before exit precisely because a process that did not would lose them. A retention setting deletes old rows lazily on read; nothing rewrites one. The declared `system` and `llm-maintenance` actors have no writer, so every row says `user`.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

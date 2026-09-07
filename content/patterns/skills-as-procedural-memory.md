@@ -157,6 +157,8 @@ Against all of that, Ollama has no verification gate of any kind — no critic, 
 success signal, no usage tracking — because it also has no write path. A skill
 exists because a person wrote the file.
 
+[Forgetful](../../systems/forgetful/) stores skills as rows beside memories — kebab-case name, description, Markdown body up to 100 KB, licence, compatibility, allowed tools, tags and an importance — with `import_skill` and `export_skill` in the Agent Skills `SKILL.md` format and a second vector table, `vec_skills`, built from the description alone so a skill is found by what it is for rather than by its body. The feature is off by default (`SKILLS_ENABLED=false`), nothing executes a skill, and nothing records whether following one worked. The ten `SKILL.md` files in the repository's own `skills/` directory are the other half of the pattern: they are the server's memory policy — query before create, confirm before update or obsolete, announce every save — shipped as procedures the agent loads, and the server has no way to know whether it did.
+
 ## Tests to require
 
 - Store a skill, then execute the retrieved copy in a fresh context and assert it still succeeds — generality, not just recorded success.
