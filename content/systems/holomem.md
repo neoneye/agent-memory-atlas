@@ -102,11 +102,11 @@ month.
 %% caption: a fact enters the list at weight 1.0 and the trace at its decayed weight; repetition reinforces to a ceiling, contradiction damps by 0.35 without deleting, silence decays it under the floor and out of the trace, and forget_faded drops it from the list with no record; every query rebuilds the trace and answers with a margin
 stateDiagram-v2
     [*] --> in_trace : learn — weight 1.0, created and last_seen stamped
-    in_trace --> in_trace : learn again +0.25 to a cap of 1.5, or contradict ×0.35
     in_trace --> below_floor : 45-day half-life from last_seen takes it under 0.18
     below_floor --> in_trace : learn again reinforces and re-stamps
     below_floor --> [*] : forget_faded drops it — no record
-    note right of in_trace : a contradicted value is damped, not deleted, and stays answerable by month — every write invalidates the trace and the next query rebuilds it, returning winner, score, margin
+    note right of in_trace : while in the trace, learn again adds 0.25 to a cap of 1.5 and contradict multiplies by 0.35 — damped, not deleted, still answerable by month
+    note left of below_floor : still in the list, out of the trace — every write invalidates the trace and the next query rebuilds it, returning winner, score, margin
 ```
 
 ## 3. Architecture
