@@ -75,9 +75,14 @@ founding contract — *a human confirms every learning* — was reversed on 31
 August 2026 into bounded auto-management, after a flood of 487 pending
 proposals against 53 active, most of them a templated *"a task finished"*
 with no evidence. That is the big deal. It is present, and it is correct, and
-it is the second thing said. Only section 2 opens with its own finding; the
-other thirteen open with mechanism and arrive at the finding somewhere in the
-middle. The
+it is the second thing said. Three sections open with a statement of
+behaviour rather than mechanism — section 2 (*a lesson with a lifecycle, never
+an observation*), section 6 (*there is no query at injection time*) and
+section 7 (*writes are deferred and evidence-driven*) — and even those stop
+at the behaviour: none says what it costs or buys the reader, which is the
+part they are asking for. The distinction worth pursuing is not whether a
+section opens with a finding but whether the opening states the behaviour's
+consequence. The other eleven open with mechanism. The
 table of contents lists fourteen section titles that name topics
 (*Retrieval Mechanics*), not conclusions, so it does not help either.
 
@@ -143,13 +148,20 @@ enter the format:
   reversal and the flood that caused it are sentence two.
 
 Then send the author the link, with a test that is more specific than "is it
-better": from the opening alone, can they name what the system is, its one
-consequential design choice (the 31 August reversal and what forced it), and
-its main limitation (the guard that fails open); and from any section's lead
-sentence, can they find the evidence for it within that section. If the
-answer is yes and the report lost no claim, the rules go into the format. If
-the answer is no, the hypothesis was wrong or incomplete, and this note gets
-a follow-up rather than the skill getting six new rules.
+better", and without telling them the expected answers: from the opening
+alone, can they name what the system is, the design choice that most shaped
+it, and the limitation they would weigh first; and from any section's lead
+sentence, can they find the evidence for it within that section. Their
+answers are compared afterwards with what the report meant to put first. For
+the record, the rewrite's own choices are the 31 August reversal, because
+every mechanism in the store is a response to the flood that forced it, and
+the read-side term screen that fails open, because it is the one guard whose
+failure withholds nothing and is watched by nobody — a limitation the report
+has to argue for rather than assert, and the pilot is where that argument is
+tested. If the reader's answers match, and every retained conclusion still
+carries the evidence and the qualifications it had before, the rules go into
+the format. If they do not match, the hypothesis was wrong or incomplete, and
+this note gets a follow-up rather than the skill getting six new rules.
 
 ### 2. Put the rules that survive the pilot in the format document and the skill
 
@@ -174,11 +186,15 @@ though: it would let a new 300-word paragraph in tomorrow's report pass
 because someone split two old ones elsewhere. Two checks, described for what
 they are:
 
-- **New violations fail on their own.** `check_paragraph_length.py` keeps a
-  baseline file listing, per report, the number of paragraphs over 150 words
-  at the time the check was introduced. A report may not exceed its own
-  baseline, and a report with no baseline entry — every new report — has a
-  baseline of zero. Lowering an entry is the only edit the file accepts.
+- **Each report's violation count may not rise.** `check_paragraph_length.py`
+  keeps a baseline file listing, per report, the number of paragraphs over
+  150 words at the time the check was introduced. A report with no baseline
+  entry — every new report — has a baseline of zero, so a new oversized
+  paragraph fails on its own there. Lowering an entry is the only edit the
+  file accepts. What this does not catch, said plainly: within a report that
+  has a baseline, one oversized paragraph can be replaced by another at the
+  same count. That is the limit of a count, and the reason the readability
+  pass in item 5 is separate work.
 - **The aggregate is reported, not enforced.** The total and the ten longest
   paragraphs, with report and section, print every run so a re-analysis pass
   knows where an hour goes. That number limits accumulated debt and is not a
@@ -190,10 +206,10 @@ non-blank lines in the Markdown body after the frontmatter, with fenced code
 blocks removed; headings and table rows are excluded; **list items count**,
 each item as its own paragraph, because a bullet can carry the same wall as a
 paragraph and the no_human report has items of 67 words. Words are
-whitespace-separated tokens. By that method the corpus today has 301
-paragraphs over 150 words in 100 of 378 reports, and 83 over 200; the earlier
-figure in this note was computed with list items excluded and should be
-re-run before the baseline is written.
+whitespace-separated tokens. The figures in this note — 301 paragraphs over
+150 words in 100 of 378 reports, 83 over 200 — were measured with the old
+method, list items excluded, and are a lower bound. The baseline is written
+from a run of the new method, not from these numbers.
 
 150 rather than 120 for the guardrail, because it is a floor on regression,
 not the target; the target lives in the format document.
@@ -208,13 +224,16 @@ can drop the qualification that makes the finding true, as the *"nothing is
 deleted"* example above shows. If it is ever done, it shows the full sentence
 or nothing, and only after the pilot has produced sentences worth showing.
 
-### 5. Fold the rules into re-analysis
+### 5. Add a readability pass to re-analysis
 
 `.agents/skills/reanalyze-memory-system/` re-pins a report against a newer
-commit. Every report it touches is a report being rewritten anyway; adding the
-surviving rules to that skill's checklist means the 100 reports over their
-baseline get fixed at the rate the corpus is already being re-read, with no
-separate campaign.
+commit. When the mechanism is unchanged the body can be left untouched, so
+re-analysis does not rewrite prose by itself; a readability pass is added
+work, and the skill has to say so — one step, run on the report being
+re-pinned, applying the surviving rules to the sections it already has open.
+The cost is bounded by the report, and it means the 100 reports carrying a
+non-zero baseline get their counts lowered at the rate the corpus is already
+being re-read, with no separate campaign.
 
 ## What not to do
 
