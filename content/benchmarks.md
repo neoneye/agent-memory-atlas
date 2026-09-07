@@ -2907,6 +2907,19 @@ questions. The poisoning result is the more useful negative: one lie among
 truths is returned half the time, and reinforcement of the truth needs
 three to four repetitions before it pulls ahead.
 
+**The poisoning harness holds time still, by construction.** `poisoning.py`
+builds the store with its clock fixed at one day (`now_fn=lambda: ts`,
+`poisoning.py:68-69`) and passes that same instant as `created_ts` to every
+write — the sixty background facts, each repetition of the truth and each
+repetition of the lie (`poisoning.py:91`, `:94`, `:96`) — then queries at the
+same instant. Truth and lie land on the same day on the same pair, so the
+curve isolates repetition count from recency: what it measures is mass, and
+the 45-day half-life is never engaged. That is a property of the harness
+rather than a result, and it bounds the row above. The case the contradiction
+test below asks for — the correction arriving weeks after the lie, with decay
+as the only thing arguing for it — is not run, and in this harness could not
+be, because no write ever carries a different timestamp.
+
 **The real-model column is the caveat.** The synthetic arms score near one;
 the model that reads retrieved facts and answers in words gets 51%. Some of
 that is the model, some is the prompt in `membench/real_arms.py`, and the
