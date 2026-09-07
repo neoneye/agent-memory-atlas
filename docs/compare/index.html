@@ -16494,26 +16494,37 @@ police staleness and duplication are deferred</td>
 <td>A node on a canvas — a question, answer versions with the model,
 time and context hash of each, highlights, attachments with page
 provenance, a role, an archived flag, an import source and a frozen
-source snapshot — joined by wires that are the context; beside it an
-ambient memory entry of one sentence in a category, with a kind, a
+source snapshot — joined by wires that are the context; on a node that
+ran an agent turn, footprint attachments for its tool calls and for what
+the file system saw change, excluded from context by default; beside it
+an ambient memory entry of one sentence in a category, with a kind, a
 project and a date; and, in the why layer, a fact index of observed
 events from other agents' session files</td>
 <td>IndexedDB per canvas (idb-keyval) with a one-minute debounced
 <code>.thoughtdag.json</code> folder backup; <code>localStorage</code>
 for the memory library and switches; <code>~/.thoughtdag/</code> for the
 why layer's fact index, interpretation cache and verbatim text index;
-the source agents' session files are read and never written</td>
+<code>&lt;cwd&gt;/.thoughtdag/</code> for an agent turn's guard file and
+copied materials, with per-canvas workspaces under the app's data
+directory or <code>~/.thoughtdag/workspaces/</code>; the source agents'
+session files are read and never written</td>
 <td>For a generation, a deterministic walk of the graph — materials,
 dashed reference blocks, the solid chain in order, the question last —
-with archived nodes skipped and stale answers marked; for the why layer,
-exact phrase and path lookup over the index with reads hidden by
-default; no vectors anywhere</td>
+with archived nodes skipped, stale answers marked, and an excluded
+footprint contributing one line naming the files it touched with the
+contents withheld; for an agent runtime the messages are flattened into
+one block ahead of the question, or the question alone on a continued
+session; for the why layer, exact phrase and path lookup over the index
+with reads hidden by default; no vectors anywhere</td>
 <td>A person asks, edits, wires and imports; a model's answer lands as a
 version on its node; a background judge proposes at most three ambient
 memories per canvas per session under a constitution in code; Session
 Atlas mirrors other agents' turns idempotently past a ledger; the
 DeepSeek Harness bridge can fork a session, inject context and queue a
-prompt into the harness</td>
+prompt into the harness; from the desktop, the local proxy or the plugin
+host, a turn is handed to Pi or Codex in a working directory, with a
+tool call outside that directory held for the person's answer on the
+node</td>
 <td>Answers are versioned and never overwritten; a node can be archived
 — kept, dimmed and excluded from every context walk — or deleted; a wire
 can be removed or converted; an upstream change marks dependants stale
@@ -16523,35 +16534,47 @@ entries stop flowing after 45 days</td>
 <td>One canvas per IndexedDB key and reachability by wire as the only
 filter inside it; ambient memory is global to the install, labelled with
 the canvas it came from and not filtered by it; the why index is one per
-machine over every runner's sessions</td>
+machine over every runner's sessions; an agent turn is fenced to one
+working directory per canvas with a per-canvas allow list, and the proxy
+starts a run in any absolute directory a localhost request names</td>
 <td>A React canvas in the browser, an Electron desktop app with fenced
 session roots, an Express proxy for any OpenAI-compatible, Anthropic,
 Google, DeepSeek or Zhipu endpoint plus MCP tools, a Cloudflare Pages
 demo with no server state, a <code>dsh-thoughtdag</code> plugin mounting
-the canvas inside DeepSeek Harness, and a CLI exposing
+the canvas inside DeepSeek Harness, a CLI exposing
 <code>why_check</code>, <code>why_file</code>, <code>find</code> and
-<code>recall_turn</code> over MCP</td>
+<code>recall_turn</code> over MCP, and Pi and Codex as agent runtimes
+behind the model picker — IPC in the desktop app,
+<code>/api/agents</code> on the local proxy and the plugin host</td>
 <td>A file watcher appends new turns of a subscribed session to its
 mirror; the why index refreshes when a source file's size or mtime
 moved; the memory judge runs fire-and-forget after ordinary generations;
+a snapshot of an agent turn's working directory before and after it
+records what changed, and a turn silent for ten minutes is stopped;
 nothing consolidates or rewrites the graph on its own</td>
 <td>A stale mark on any answer whose upstream fingerprint drifted,
 prepended to its text in downstream context rather than withholding it;
-a <code>basis</code> of observed, reconstructed or inferred and a
+a footprint whose contents are withheld names its files; a
+<code>basis</code> of observed, reconstructed or inferred and a
 <code>completeness</code> on every why-layer event, displayed and never
 filtered; an identity memory admitted only when the user stated it; a
-credential pattern that blocks a memory in code</td>
+credential pattern that blocks a memory in code; an outcome per agent
+question kept on the node</td>
 <td>The preview and the request share one compiler; a request hash
 written at dispatch; a benchmark whose conditions are graph operations,
 whose traces are immutable and whose scorer can re-score without an API
 call, and whose status file records its own corrections; source sessions
 that are read and never rewritten</td>
-<td>Stale is a label the model is asked to respect, not an exclusion;
-archive is exclusion without a record, so a pruned claim can be re-wired
-or re-imported; the event log rotates past 10,000 and does not see
-memory admissions; ambient memory is global across canvases with a
-project label nobody filters on; the harness bridge writes into live
-sessions; 620 commits in nine weeks by one author</td>
+<td>Stale is a label the model is asked to respect, not an exclusion,
+and no benchmark condition carries it; archive is exclusion without a
+record, so a pruned claim can be re-wired or re-imported; the event log
+rotates past 10,000 and does not see memory admissions or agent
+approvals; an agent-lane commit hashes the compiled messages rather than
+the block or bare question the runtime received; ambient memory is
+global across canvases with a project label nobody filters on; the
+harness bridge writes into live sessions and the proxy's agent endpoints
+accept any absolute directory from any localhost origin; 640 commits in
+ten weeks by one author</td>
 </tr>
 <tr>
 <td><code>tigrimosr</code></td>
@@ -23900,7 +23923,7 @@ project whose manifest repository no longer resolves</li>
 <li><a
 href="https://github.com/chenxiachan/thoughtdag">chenxiachan/thoughtdag</a>
 at <a
-href="https://github.com/chenxiachan/thoughtdag/commit/e658c280d39082ec7d6d328bd1dff9af6d49b94e"><code class="commit-id" title="e658c280d39082ec7d6d328bd1dff9af6d49b94e">e658c280…</code></a>
+href="https://github.com/chenxiachan/thoughtdag/commit/0c6d961c84024beeda8fb7236fd66e470a40a5f5"><code class="commit-id" title="0c6d961c84024beeda8fb7236fd66e470a40a5f5">0c6d961c…</code></a>
 — read only; five dependency files inside the seven-day cooldown,
 nothing installed</li>
 <li><a href="https://github.com/openmasq/openmasq">openmasq/openmasq</a>
@@ -29694,6 +29717,18 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-07</strong> — Line anchors can be wrong at the first
+pin, and the diff will not say so. The ThoughtDAG re-read ran the
+skill's re-verify loop over every cited line, not only those in files
+the twenty new commits touched, and found the first reading had cited
+<code>buildContext</code> at <code>:74-221</code> when the function
+starts at 183, three archived skips a hundred lines off, and a 240-line
+count for a file of 168 — none of it moved by the diff, all of it wrong
+when published. A diff-scoped check would have passed every one. The
+rule: re-verify every line number the report keeps, whether or not its
+file changed, and treat a mismatch in an untouched file as a
+first-reading defect to correct in the body and name in the History
+entry.</p>
 <p><strong>2026-09-06</strong> — A rewritten upstream history can be
 verified, not only recorded. The 5 September entry for PLUR1BUS could
 say only that its previous pin no longer resolved from the default
