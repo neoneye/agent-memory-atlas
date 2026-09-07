@@ -291,16 +291,16 @@ before reprojection. <code>body_fidelity</code> admits the value
 it, and nothing removes the bytes it would describe.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults
 stateDiagram-v2
-    [*] --&gt; Proposed: &quot;decision_proposed — verification, checks and globs from arguments; assumptions, evidence and review_policy hardcoded empty&quot;
-    Proposed --&gt; Accepted: &quot;decision_accepted, ordinary tier — the quorum check passes on an empty review_policy&quot;
-    Proposed --&gt; InForce: &quot;decision_accepted — architecture_contract, production_invariant or compliance_security&quot;
-    Proposed --&gt; Rejected: &quot;decision_rejected&quot;
-    Accepted --&gt; InForce: &quot;status set through decision_metadata_updated&quot;
-    Accepted --&gt; Proposed: &quot;Workbench edit — reason required, emits decision_revisited, clears accepted_utc&quot;
-    InForce --&gt; Proposed: &quot;same rule — approval belongs to the content, not the record&quot;
-    Accepted --&gt; Superseded: &quot;decision_superseded — target must be accepted or in_force, cycles refused&quot;
+    [*] --&gt; Proposed: decision_proposed — verification, checks and globs from arguments, while assumptions, evidence and review_policy are hardcoded empty
+    Proposed --&gt; Accepted: decision_accepted, ordinary tier — the quorum check passes on an empty review_policy
+    Proposed --&gt; InForce: decision_accepted — architecture_contract, production_invariant or compliance_security
+    Proposed --&gt; Rejected: decision_rejected
+    Accepted --&gt; InForce: status set through decision_metadata_updated
+    Accepted --&gt; Proposed: Workbench edit — reason required, emits decision_revisited, clears accepted_utc
+    InForce --&gt; Proposed: same rule — approval belongs to the content, not the record
+    Accepted --&gt; Superseded: decision_superseded — target must be accepted or in_force, cycles refused
     InForce --&gt; Superseded
-    Accepted --&gt; Retired: &quot;decision_retired&quot;
+    Accepted --&gt; Retired: decision_retired
     InForce --&gt; Retired
 
     note right of Rejected

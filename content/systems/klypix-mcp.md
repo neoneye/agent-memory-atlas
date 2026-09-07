@@ -163,7 +163,7 @@ stateDiagram-v2
 
     note right of Archived
         Not a field. Archived means the
-        parent container is titled "Archive";
+        parent container is titled "Archive" and
         the death date is a regex over the
         card's own text. Excluded from the
         brief and per-prompt injection,

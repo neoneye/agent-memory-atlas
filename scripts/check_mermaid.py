@@ -74,7 +74,15 @@ def main(content_dir: str) -> int:
     for path in sorted(Path(content_dir).rglob("*.md")):
         text = path.read_text(encoding="utf-8")
         for block in re.findall(r"```mermaid\n(.*?)```", text, re.S):
-            is_state = block.lstrip().startswith("stateDiagram")
+            # The diagram type is the first non-comment line. Every atlas
+            # diagram opens with a `%% caption:` comment, and testing the block's
+            # first character left this False for all of them — the colon rule
+            # below had been dormant for every captioned state diagram.
+            first = next(
+                (l for l in block.split("\n") if l.strip() and not l.strip().startswith("%%")),
+                "",
+            )
+            is_state = first.strip().startswith("stateDiagram")
             for line in block.split("\n"):
                 if is_state:
                     edge = STATE_EDGE.match(line)
@@ -82,6 +90,17 @@ def main(content_dir: str) -> int:
                         problems.append(
                             f"{path}: a second ':' inside a stateDiagram "
                             f"transition label ends the parse\n    {line.strip()}"
+                        )
+                    # A ';' is a statement separator anywhere in a state
+                    # diagram — a transition label, quoted or not, or a note
+                    # body: the rest of the line becomes one phantom state per
+                    # word, laid out in a row that widens the diagram. no_human
+                    # shipped eight of them and agent-mesh seven, and the page
+                    # showed a squashed diagram rather than an error.
+                    if ";" in line and not line.strip().startswith("%%"):
+                        problems.append(
+                            f"{path}: a ';' in a stateDiagram starts a new "
+                            f"statement\n    {line.strip()}"
                         )
                 for body in LABEL.findall(line):
                     bad = sorted({c for c in BREAKERS if c in body})
@@ -121,8 +140,8 @@ def main(content_dir: str) -> int:
             print(p, file=sys.stderr)
         print(
             'For a node label, wrap it in quotes: id["a[b]c"] not id[a[b]c].\n'
-            "For a stateDiagram transition, remove the second colon — reword, or "
-            "move the detail into a note.",
+            "For a stateDiagram transition, remove the second colon or the ';' — "
+            "reword, or move the detail into a note.",
             file=sys.stderr,
         )
         return 1

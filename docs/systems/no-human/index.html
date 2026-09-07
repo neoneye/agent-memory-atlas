@@ -290,20 +290,21 @@ rule is expressed by which channel receives it, not by any weight the
 model is told.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — a proposal is inert until a person confirms it or the harvest job's four screens pass under a daily cap; every exit is a reversible flag with an audit row, a batch producer's rejection keeps the dedupe key, and one chokepoint scopes, triggers, screens and ranks what a task is shown while a ledger joins each injection to the task's outcome</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a proposal is inert until a person confirms it or the harvest job&#39;s four screens pass under a daily cap; every exit is a reversible flag with an audit row, a batch producer&#39;s rejection keeps the dedupe key, and one chokepoint scopes, triggers, screens and ranks what a task is shown while a ledger joins each injection to the task&#39;s outcome
 stateDiagram-v2
-    [*] --&gt; Proposed: add_memory — source=proposed, dedupe key in file_path, PII dropped, provenance and quarantine stamped
-    Proposed --&gt; Active_human: nh learnings --confirm / POST confirm — confirmed_by=human, then supersede the oldest near-duplicate
-    Proposed --&gt; Active_auto: HarvestJob auto_activate — dedupe, PII, provenance, term screens pass, under 10 per rolling day
-    Proposed --&gt; Archived: screen fails, or 45 days unconfirmed, or reject on a batch origin (key kept)
-    Proposed --&gt; [*]: reject on an outcome or review origin (row and key deleted)
-    Active_auto --&gt; Archived: sweep_auto_activated — 90 days unused
-    Active_human --&gt; Archived: retire (human only) / supersede_memory (superseded_by)
-    Active_human --&gt; Paused: pause, or reject on a confirmed row
-    Active_auto --&gt; Paused: pause
-    Paused --&gt; Active_human: restore / unpause
-    Archived --&gt; Active_human: restore — clears superseded_by
-    Active_human --&gt; Injected: _load_active_memories — scope, trigger tags, term screen, rank_and_select
-    Active_auto --&gt; Injected: same chokepoint; origin=review rows never reach the reviewer&#39;s copy
-    Injected --&gt; Ledgered: memory_uses row per injection, task_outcome filled at the terminal state</code></pre></details></figure>
+    [*] --&gt; Proposed: add_memory&lt;br/&gt;source=proposed, dedupe key in file_path,&lt;br/&gt;PII dropped, provenance and quarantine stamped
+    state Active {
+        Active_human
+        Active_auto
+    }
+    Proposed --&gt; Active_human: nh learnings --confirm / POST confirm&lt;br/&gt;confirmed_by=human, then supersede&lt;br/&gt;the oldest near-duplicate
+    Proposed --&gt; Active_auto: HarvestJob auto_activate&lt;br/&gt;dedupe, PII, provenance and term screens pass,&lt;br/&gt;under 10 per rolling day
+    Proposed --&gt; Archived: screen fails, or 45 days unconfirmed,&lt;br/&gt;or reject on a batch origin (key kept)
+    Proposed --&gt; [*]: reject on an outcome or review origin&lt;br/&gt;(row and key deleted)
+    Active --&gt; Archived: retire or supersede_memory (human rows)&lt;br/&gt;sweep_auto_activated after 90 days unused (auto rows)
+    Active --&gt; Paused: pause, or reject on a human-confirmed row
+    Paused --&gt; Active: restore / unpause
+    Archived --&gt; Active: restore&lt;br/&gt;clears superseded_by
+    Active --&gt; Injected: _load_active_memories&lt;br/&gt;scope, trigger tags, term screen, rank_and_select&lt;br/&gt;origin=review rows never reach the reviewer&#39;s copy
+    Injected --&gt; Ledgered: memory_uses row per injection,&lt;br/&gt;task_outcome filled at the terminal state</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Everything is one Python process and one SQLite file.
 <code>nh serve</code> runs a FastAPI application

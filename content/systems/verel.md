@@ -91,7 +91,7 @@ stateDiagram-v2
     CANDIDATE --> REJECTED: contradict
     note right of REJECTED
         Terminal. approve() refuses a
-        REJECTED record; resurrection
+        REJECTED record. Resurrection
         means writing a NEW fact.
     end note
 ```

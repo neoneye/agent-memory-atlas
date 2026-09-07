@@ -149,20 +149,21 @@ any weight the model is told.
 ```mermaid
 %% caption: a proposal is inert until a person confirms it or the harvest job's four screens pass under a daily cap; every exit is a reversible flag with an audit row, a batch producer's rejection keeps the dedupe key, and one chokepoint scopes, triggers, screens and ranks what a task is shown while a ledger joins each injection to the task's outcome
 stateDiagram-v2
-    [*] --> Proposed: add_memory — source=proposed, dedupe key in file_path, PII dropped, provenance and quarantine stamped
-    Proposed --> Active_human: nh learnings --confirm / POST confirm — confirmed_by=human, then supersede the oldest near-duplicate
-    Proposed --> Active_auto: HarvestJob auto_activate — dedupe, PII, provenance, term screens pass, under 10 per rolling day
-    Proposed --> Archived: screen fails, or 45 days unconfirmed, or reject on a batch origin (key kept)
-    Proposed --> [*]: reject on an outcome or review origin (row and key deleted)
-    Active_auto --> Archived: sweep_auto_activated — 90 days unused
-    Active_human --> Archived: retire (human only) / supersede_memory (superseded_by)
-    Active_human --> Paused: pause, or reject on a confirmed row
-    Active_auto --> Paused: pause
-    Paused --> Active_human: restore / unpause
-    Archived --> Active_human: restore — clears superseded_by
-    Active_human --> Injected: _load_active_memories — scope, trigger tags, term screen, rank_and_select
-    Active_auto --> Injected: same chokepoint; origin=review rows never reach the reviewer's copy
-    Injected --> Ledgered: memory_uses row per injection, task_outcome filled at the terminal state
+    [*] --> Proposed: add_memory<br/>source=proposed, dedupe key in file_path,<br/>PII dropped, provenance and quarantine stamped
+    state Active {
+        Active_human
+        Active_auto
+    }
+    Proposed --> Active_human: nh learnings --confirm / POST confirm<br/>confirmed_by=human, then supersede<br/>the oldest near-duplicate
+    Proposed --> Active_auto: HarvestJob auto_activate<br/>dedupe, PII, provenance and term screens pass,<br/>under 10 per rolling day
+    Proposed --> Archived: screen fails, or 45 days unconfirmed,<br/>or reject on a batch origin (key kept)
+    Proposed --> [*]: reject on an outcome or review origin<br/>(row and key deleted)
+    Active --> Archived: retire or supersede_memory (human rows)<br/>sweep_auto_activated after 90 days unused (auto rows)
+    Active --> Paused: pause, or reject on a human-confirmed row
+    Paused --> Active: restore / unpause
+    Archived --> Active: restore<br/>clears superseded_by
+    Active --> Injected: _load_active_memories<br/>scope, trigger tags, term screen, rank_and_select<br/>origin=review rows never reach the reviewer's copy
+    Injected --> Ledgered: memory_uses row per injection,<br/>task_outcome filled at the terminal state
 ```
 
 ## 3. Architecture

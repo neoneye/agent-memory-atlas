@@ -149,7 +149,7 @@ stateDiagram-v2
     note right of Refused
         Takeaways have no such door.
         A verdict of rejected filters
-        them out of search; the same
+        them out of search. The same
         conclusion distilled again is
         a new row with no verdict.
     end note

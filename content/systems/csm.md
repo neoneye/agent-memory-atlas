@@ -222,7 +222,7 @@ stateDiagram-v2
     Retrieved --> Injected: re-entry block, 2100 characters
     note right of Injected
         Two disconnects, one picture. Corrections
-        do not reach recall; beliefs never reach
+        do not reach recall. Beliefs never reach
         the agent at all.
     end note
 ```

@@ -155,16 +155,16 @@ would describe.
 ```mermaid
 %% caption: the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults
 stateDiagram-v2
-    [*] --> Proposed: "decision_proposed — verification, checks and globs from arguments; assumptions, evidence and review_policy hardcoded empty"
-    Proposed --> Accepted: "decision_accepted, ordinary tier — the quorum check passes on an empty review_policy"
-    Proposed --> InForce: "decision_accepted — architecture_contract, production_invariant or compliance_security"
-    Proposed --> Rejected: "decision_rejected"
-    Accepted --> InForce: "status set through decision_metadata_updated"
-    Accepted --> Proposed: "Workbench edit — reason required, emits decision_revisited, clears accepted_utc"
-    InForce --> Proposed: "same rule — approval belongs to the content, not the record"
-    Accepted --> Superseded: "decision_superseded — target must be accepted or in_force, cycles refused"
+    [*] --> Proposed: decision_proposed — verification, checks and globs from arguments, while assumptions, evidence and review_policy are hardcoded empty
+    Proposed --> Accepted: decision_accepted, ordinary tier — the quorum check passes on an empty review_policy
+    Proposed --> InForce: decision_accepted — architecture_contract, production_invariant or compliance_security
+    Proposed --> Rejected: decision_rejected
+    Accepted --> InForce: status set through decision_metadata_updated
+    Accepted --> Proposed: Workbench edit — reason required, emits decision_revisited, clears accepted_utc
+    InForce --> Proposed: same rule — approval belongs to the content, not the record
+    Accepted --> Superseded: decision_superseded — target must be accepted or in_force, cycles refused
     InForce --> Superseded
-    Accepted --> Retired: "decision_retired"
+    Accepted --> Retired: decision_retired
     InForce --> Retired
 
     note right of Rejected
