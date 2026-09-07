@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "bobaba76/Argos"
 source_url: https://github.com/bobaba76/Argos
-revision: f292996d9eb8f422a282be3850667f3471835124
-revision_url: https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124
-analyzed_at: 2026-09-06
+revision: 755f652a5d1cff21b1a38c371f5790f79feb87af
+revision_url: https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af
+analyzed_at: 2026-09-07
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "both write paths, on the value and on the claim slot | argos_plugin/store_core.py:243-268, argos_plugin/store_write.py:247-266,:1108-1130,:3120-3160,:3213-3260 | `delete_memory` and the erase workflow write `deletion_tombstones` keyed on a case- and whitespace-insensitive hash of the content plus category and user scope; a review decision of `rejected` and every conflict resolution write `rejection_ledger` keyed on `(subject, predicate, user_scope)` so a paraphrase is caught; `remember` (the direct `memory_save` path) and `save_candidate` (the proposal path) both call `tombstone_check` and `rejection_check` and return `None` on a hit, so the reviewer never sees a resurrected fact; both are reversible only by an explicit `purge_*` | argos_plugin/tests/test_deletion_tombstones.py (`test_refeed_blocked_after_delete`, `test_refeed_blocked_case_whitespace_insensitive`, `test_other_content_and_category_unaffected`, `test_purge_tombstone_allows_refeed`, `test_tombstone_scoped_by_user`), argos_plugin/tests/test_rejection_scope.py (`test_specific_claim_rejection_still_blocks_same_slot`)"
@@ -45,8 +45,8 @@ Business Source License 1.1, production use licensed separately,
 converting to Apache 2.0 on 21 August 2030; 402 commits between 2 August
 and 6 September 2026, 397 by the maintainer and five by a coding agent
 that signs its pull requests; 220 issues and 123 pull requests in those
-five weeks; 46,635 lines of Python in `argos_plugin/` beside 148 test
-files carrying 2,750 test functions and 53,981 lines. The store is
+five weeks; 46,635 lines of Python in `argos_plugin/` at the previous pin beside 152 test
+files carrying 2,803 test functions and 55,102 lines. The store is
 DuckDB 1.5.5 for records and a Kùzu 0.11.3 graph for entities, with
 `bge-small-en-v1.5` embeddings computed locally and an optional
 `bge-reranker-base` cross-encoder.
@@ -449,9 +449,25 @@ no review — the agent's explicit act, by design, and the one path where
 a model's judgement lands as active memory. The access log's rotation
 means a denial older than 100,000 rows is gone.
 
+**The sweep reaches the never-finalized states.** `stale_review_sweep.py`
+re-reviews candidates left in `pending`, `reviewed_approved` and
+`pending_user_confirmation`, deduplicated across the three, so an
+auto-approved candidate nobody confirmed is re-examined rather than left
+forever; the sweep never promotes to `approved`
+(`tests/test_stale_review_sweep.py`, `test_no_auto_promotion_to_approved`).
+
+**Collections and the access audit.** `store_collections.py` (466 lines) adds
+typed collections whose every SQL carries the `user_scope IS NULL OR
+user_scope = ?` predicate and whose listing is exhaustive by design;
+`tests/test_spec10_collections.py` (30 cases) includes `test_user_scope_isolation`
+and `test_facade_scope_isolation`. `tests/test_rpc_access_audit.py` (19 cases)
+pins that a facade denial, a forged `confirmed` flag in the envelope or the
+arguments, a forged HMAC and a CAS conflict each land in the access audit and
+survive a service restart, and that reads are not gated.
+
 ## 10. Tests, Evals, and Benchmarks
 
-148 test files, 2,750 test functions, 53,981 lines — more test than
+152 test files, 2,803 test functions, 55,102 lines — more test than
 implementation — run hermetically with `HF_HUB_OFFLINE=1`. The suites
 that carry the marks: `test_deletion_tombstones.py` (nine cases, the
 re-feed blocked, case-insensitive, category-scoped, user-scoped,
@@ -556,10 +572,6 @@ says was never run.
   statement about the answerer as much as the memory.
 - When two values for one claim slot are both rejected at different
   times, which reason survives the `INSERT OR REPLACE`?
-- Is a `reviewed_approved` candidate that is never confirmed ever
-  swept? The stale-review sweep re-reviews pending proposals; the
-  audit's own history says the sweep was configured-but-unimplemented
-  until 1 September 2026.
 
 ## Appendix: File Index
 
@@ -580,7 +592,7 @@ says was never run.
 | `argos_plugin/admin_console.py`, `mcp_server.py`, `rest_server.py` | 880, 829, 550 | The three external surfaces |
 | `argos_plugin/distillation.py`, `rollup.py`, `compaction.py`, `watcher.py`, `structured_ingest.py` | 754, 365, 333, 781, 375 | The passes and the ingest tiers |
 | `argos_plugin/access_scoping.py`, `inbound_security.py`, `egress.py`, `reviewer.py` | 340, 290, 472, 454 | ACL, inbound scan, egress gate, LLM review |
-| `argos_plugin/tests/` | 148 files | 2,750 test functions |
+| `argos_plugin/tests/` | 152 files | 2,803 test functions |
 | `eval/repro/` | 7 judged files | LongMemEval_S artifacts, `verify_repro.sh`, results notes |
 | `CLAIMS-AUDIT.md`, `MEMORY_SYSTEM.md`, `feature-specs/spec-04-trust-model.md` | — | The claims map, the design document, the trust spec |
 
@@ -597,5 +609,7 @@ python3 -c "import json;print(sum(json.loads(l)['autoeval_label']['label'] for l
 ```
 
 ## History
+
+**2026-09-07** — [`755f652a5d1cff21b1a38c371f5790f79feb87af`](https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af) — re-pinned two commits on. `store_collections.py` adds scope-filtered, exhaustively listed collections behind the facade with 30 cases, `test_rpc_access_audit.py` adds 19 cases on forged confirmations and audited denials, and `stale_review_sweep.py` now re-reviews `reviewed_approved` and `pending_user_confirmation` candidates beside `pending`, which closes the open question this report carried about auto-approved candidates never confirmed. 152 test files, 2,803 test functions. Seven marks stand on the same evidence. Screened before reading: `requirements.txt` inside the seven-day cooldown, nothing installed or run.
 
 **2026-09-06** — [`f292996d9eb8f422a282be3850667f3471835124`](https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124) — first reading, at the head of `master`, the twelfth commit of that day. Screened first: no auto-run surface, one build-time execution path (a pytest `conftest.py`), `requirements.txt` inside the seven-day cooldown, an `AGENTS.md` treated as data; nothing installed or run. Seven marks, each with a producer on a reachable path and a test beside it. The headline benchmark figures were recomputed from the committed judged files and match; the project's own claims audit records that those runs formed no version chain, and the report carries that as its main caveat. The repository cites this atlas as the reference design for its trust model and implements the atlas's contradiction test; the marks are read from the code.

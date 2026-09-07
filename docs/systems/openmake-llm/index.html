@@ -133,14 +133,14 @@ names the predecessor's columns.</p>
               <strong>openmake/openmake_llm</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/openmake/openmake_llm/commit/bca0967b948147464284b1bb7d857e25f731295a" title="bca0967b948147464284b1bb7d857e25f731295a">
+            <a class="meta-pill revision-pill" href="https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52" title="9ffeca8c4c2bbad08864257ebb40b9998270ec52">
               <span>Analyzed revision</span>
-              <code>bca0967b…</code>
+              <code>9ffeca8c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-06</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -165,7 +165,7 @@ and LiteLLM, with autonomous agents in Docker sandboxes, deep research,
 an artifact pipeline, twenty-two built-in MCP tools, custom agents, a
 skill library, native macOS and CLI clients and a Discord gateway. MIT,
 2,118 commits by nine authors since 12 February 2026,
-<code>1.45.2</code> at this commit, 112,605 lines of TypeScript in the
+<code>1.49.0</code> at this commit, 112,605 lines of TypeScript in the
 API beside 343 test files. The README is in four languages and the code
 comments are in Korean.</p>
 <p>Its memory is 657 lines of that. <code>user_memories</code> is one
@@ -225,20 +225,28 @@ the answer-leak filter on the LLM extractor, the token-overlap dedup and
 <code>1.45.0</code> to <code>1.45.2</code>); the first of them names
 this atlas's reading of <code>ed74251e</code> as its source, and each
 carries a Claude Code session trailer beside the maintainer's name.</p>
-<p><strong>What is wrong with it is smaller than it was in August, and
-one of the remaining defects is older than the table.</strong> The GDPR
-data export (<code>export.controller.ts:110-112</code>) selects
-<code>category, key, value, importance</code> from
-<code>user_memories</code> — the predecessor's columns, dropped in May —
-inside a <code>safeQuery</code> that logs a warning and returns an empty
-list on error, so a person's export contains no memories and nothing
-tells them so. The extractors and the backfill create rows with no audit
-entry, and account deletion hard-deletes them with none
-(<code>user-manager.ts:469</code>). The prompt block's token loop,
-<code>touchAccessed</code> and the backfill have no test. The tombstone
-reaches the newest 500 rows of a user, and its match is normalised text,
-containment, or token overlap at or above 0.75, so a paraphrase can
-return. And the preference lookup is fail-open: if the
+<p><strong>What is wrong with it is smaller again.</strong> The GDPR
+data export reads the live columns —
+<code>content, source, is_active, accessed_at</code> — tombstoned rows
+included, and a category whose query fails is named in
+<code>_meta.failedCategories</code> with <code>partial: true</code>
+rather than returned as an empty list
+(<code>export.controller.ts</code>, three cases in
+<code>__tests__/export.controller.test.ts</code>); the comment above the
+query records that the old column list had failed on every export for
+four months. <code>autoFormMemories</code> and the backfill write
+<code>memory.auto_created</code> and <code>memory.backfilled</code>
+audit rows through <code>auditMemoryWrite</code>, fail-open, the
+backfill awaiting the write because the CLI exits on return
+(<code>memory-extraction.ts</code>, four cases in
+<code>memory-extraction.audit.test.ts</code>); account deletion still
+hard-deletes with none (<code>user-manager.ts:469</code>). The prompt
+block has nine cases against a mocked repository
+(<code>user-context-blocks.test.ts</code>) — the user id passed through,
+only the injected rows touched, the token cap, the toggle and the guest
+path. The tombstone reaches the newest 500 rows of a user, and its match
+is normalised text, containment, or token overlap at or above 0.75, so a
+paraphrase can return. And the preference lookup is fail-open: if the
 <code>users</code> read throws, the client's flag decides.</p>
 <p>Three marks — <code>scope_enforced</code>, <code>tombstone</code>,
 <code>audit_log</code>. No paper.</p>
@@ -333,7 +341,8 @@ unrelated to <code>user_memories</code>. And
 predecessor's <code>user_memories</code> — <code>category</code>,
 <code>key</code>, <code>value</code>, <code>importance</code> — kept as
 an inline fallback for installations without the schema file; the export
-controller was written against that shape and never moved.</p>
+controller was written against that shape and moved to the live columns
+in <code>0e62e475</code> on 7 September 2026.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>Nothing beyond what the workspace already runs: Postgres holds the
 table, the REST routes need the workspace's JWT session, and the block
@@ -441,12 +450,13 @@ agent, and logs a warning on failure. <code>logAudit</code>
 <code>audit_logs</code> and consults the alert whitelist, which contains
 no <code>memory.*</code> action.</li>
 <li><strong>Export and erasure.</strong>
-<code>export.controller.ts:110-112</code> queries the table for the
-predecessor's columns inside <code>safeQuery</code>
-(<code>:77-85</code>), which returns <code>[]</code> on error;
-<code>user-manager.ts:469</code> runs
-<code>DELETE FROM user_memories WHERE user_id = $1</code> on account
-deletion.</li>
+<code>export.controller.ts</code> selects
+<code>id, user_id, content, source, is_active, accessed_at, created_at, updated_at</code>
+inside <code>safeQuery</code>, which on error substitutes
+<code>[]</code>, logs at error level and adds the category to
+<code>_meta.failedCategories</code>; <code>user-manager.ts:469</code>
+runs <code>DELETE FROM user_memories WHERE user_id = $1</code> on
+account deletion.</li>
 <li><strong>Schema.</strong> <code>034_user_memories.sql</code>;
 <code>020_drop_memory_documents.sql</code> and
 <code>046_drop_dead_tables.sql</code> for what came before.</li>
@@ -887,16 +897,34 @@ prompt</td>
 </table></div>
 <p>Searches behind the absence claims above, run from the repository
 root:</p>
-<pre class="sh"><code>rg -l &#39;buildUserMemoryBlock|backfillUserMemories|touchAccessed&#39; -g &#39;*.test.ts&#39;  # none: the read path and the backfill are untested
-rg -n -i &#39;audit&#39; apps/api/src/services/chat-service/memory-extraction.ts apps/api/src/services/chat-service/memory-backfill.ts  # none: extractor writes are unaudited
+<pre class="sh"><code>rg -l &#39;buildUserMemoryBlock|backfillUserMemories|touchAccessed&#39; -g &#39;*.test.ts&#39;  # user-context-blocks.test.ts and memory-backfill.test.ts, against a mocked repository
+rg -n -i &#39;audit&#39; apps/api/src/services/chat-service/memory-extraction.ts apps/api/src/services/chat-service/memory-backfill.ts  # auditMemoryWrite: memory.auto_created and memory.backfilled
 rg -n &quot;&#39;memory\.&quot; apps/api/src/services/AuditService.ts                          # none: no memory action in the alert whitelist
 rg -n &#39;accessed_at&#39; apps/api/src                                                  # written by touchAccessed, read by nothing
 rg -n &#39;memory-candidate|/remember&#39; apps/api/src apps/web db/migrations/034_user_memories.sql  # comments saying it is unimplemented
 rg -n &#39;memoryBlock&#39; apps/api/src --glob &#39;!*.test.ts&#39;                              # one consumer: external-system-prompt.ts, after the dynamic boundary
-rg -n &#39;category, key, value, importance&#39; apps/api/src/controllers/export.controller.ts  # the export&#39;s column list
+rg -n &#39;content, source, is_active&#39; apps/api/src/controllers/export.controller.ts  # the export&#39;s column list since 0e62e475
 rg -n &#39;column|category|importance&#39; db/migrations/034_user_memories.sql            # the live table has neither column
 rg -n -i &#39;arxiv|bibtex|citation|doi&#39; README.md docs                               # no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52"><code class="commit-id" title="9ffeca8c4c2bbad08864257ebb40b9998270ec52">9ffeca8c…</code></a>
+— re-pinned sixteen commits on, releases 1.46.0 to 1.49.0. Commit
+<code>0e62e475</code> of 7 September 2026, whose message and code
+comments name this atlas's 6 September reading as the source, moves the
+GDPR export to the live <code>user_memories</code> columns with
+tombstoned rows included and a <code>_meta.failedCategories</code> list,
+audits automatic extraction and the backfill as
+<code>memory.auto_created</code> and <code>memory.backfilled</code>, and
+adds tests for the prompt block, the export and the audit;
+<code>9ffeca8c</code> fixes two more old column lists the same export
+had for skills and custom agents. The <code>audit_log</code> evidence
+widens to the extractors; <code>negative_eval</code> stays withheld
+because the prompt-block isolation case runs against a mocked
+repository, so the exclusion it asserts is the mock's. The tombstone,
+the scope predicate and the policy did not move; three marks stand.
+Screened before reading: nine manifests inside the seven-day cooldown,
+nothing installed or run.</p>
 <p><strong>2026-09-06</strong> — <a
 href="https://github.com/openmake/openmake_llm/commit/bca0967b948147464284b1bb7d857e25f731295a"><code class="commit-id" title="bca0967b948147464284b1bb7d857e25f731295a">bca0967b…</code></a>
 — re-read at the head of <code>main</code>, eight commits past

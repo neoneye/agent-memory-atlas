@@ -113,14 +113,14 @@ and a recall hook the harness runs instead of the model.</p>
               <strong>kovartravis/neuron</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">
+            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf" title="79ab049d019994cea114f533fcd0f5c3700e4abf">
               <span>Analyzed revision</span>
-              <code>9f6eaf90…</code>
+              <code>79ab049d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -439,6 +439,17 @@ not be blocked; the tripwire only makes an unusually large deletion
 <p>Embedding is local ONNX, computed on write into the mirror. Because
 the mirror is rebuildable, a lost or corrupt database is re-embedded
 from the files rather than lost.</p>
+<p><strong>Two write-time signals sit beside the gate.</strong> The
+near-duplicate check widens to at most <code>NEAR_DUP_WIDEN_N</code>
+candidates by raw cosine, strips template boilerplate from both sides
+and reranks them against <code>NEAR_DUP_RERANK_BAR</code>
+(<code>src/index.ts</code>, <code>findSupersessionCandidate</code>); and
+<code>classifyPolarity</code> (<code>src/index.ts:1003-1023</code>) runs
+an NLI contradiction score on the one candidate that cleared it. The
+comment above it records the measurement that keeps it a soft flag: no
+bar reaches low false-silence and low false-accept at once against
+compatible-related pairs, so <em>"callers must not use this to refuse a
+write."</em> A contradiction is reported, never blocked.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The integration is the sharpest-thought-through part, and the
 fidelity ladder is why. Neuron distinguishes three levels of recall
@@ -470,6 +481,17 @@ recall side is deliberately taken away from the agent's judgement on
 supported harnesses — the harness injects, so recall does not depend on
 the model remembering to look, which is the failure the README names as
 the reason the hooks exist.</p>
+<p><strong>Injection is ledgered per session.</strong>
+<code>src/harnesses/ledger.ts</code> records which entries were injected
+in a session's current epoch and the characters spent against a
+per-epoch budget, so a pre-prompt turn does not repeat what a
+<code>SessionStart</code> already handed the model; a ledger older than
+the staleness window is read as empty, degrading toward repetition
+rather than silence, and a context reset rolls the epoch and archives
+its cost (<code>ledger.test.ts</code>, 39 cases).
+<code>neuron init</code> writes each detected client's
+<code>mcpServers</code> stanza with the same ask-on-conflict posture as
+the hook adapters (<code>src/harnesses/mcpClientConfig.ts</code>).</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>The trust model is supersession, not status.</strong> There
@@ -711,6 +733,21 @@ validation.</li>
 degradation posture.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf"><code class="commit-id" title="79ab049d019994cea114f533fcd0f5c3700e4abf">79ab049d…</code></a>
+— re-pinned 88 commits on, package version 2.4.5; most of the range is
+the documentation site. On the memory path: the write-time
+near-duplicate gate widens by cosine and reranks with template
+boilerplate stripped, an NLI contradiction score is computed for the
+single candidate as a soft flag the code says must not refuse a write,
+an injection ledger dedupes per session epoch under a character budget,
+<code>neuron init</code> writes MCP client configuration, store-health
+signals replace a hand count, and <code>deleteHistory</code> left the
+store class while <code>neuron memory delete</code> remains a CLI verb.
+The schema gate, the supersession exclusion and its tests did not move;
+two marks stand. Screened before reading: one auto-run surface
+(<code>.claude/settings.json</code>), two build-time execution points,
+nothing installed or run.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4"><code class="commit-id" title="9f6eaf9023eb62788d8ce143f314751336cdebd4">9f6eaf90…</code></a>
 — re-pinned at release v2.4.1 (<a

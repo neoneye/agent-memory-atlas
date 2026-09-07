@@ -6,15 +6,16 @@ root: ../..
 page_kind: system
 source_name: "camgitt/memoir"
 source_url: https://github.com/camgitt/memoir
-revision: 2c1fe382b9c24289624f9f0329f378ab2d2aa653
-revision_url: https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653
-analyzed_at: 2026-08-19
-capabilities: "tombstone, audit_log, human_review, negative_eval"
+revision: fb24c9b2e4a39bfd058d27d5757bfa781de58b51
+revision_url: https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51
+analyzed_at: 2026-09-07
+capabilities: "tombstone, audit_log, human_review, negative_eval, scope_enforced"
 capability_evidence:
   tombstone: "the decision list — an absolute tombstone keyed on the decision text and sticky across replicas | src/commands/forget.js | `memoir forget \"substring\" [--purge]` resolves the decision and calls `hideDecision`, setting `hidden` and `hidden_at`; hiding is monotonic by spec, `--purge` redacts the text while keeping a sha256 identity, and `capDecisions` gives tombstones a budget separate from visible entries so a tombstone is not pruned away with ordinary rows | tests/ — the merge and validator cases; the forget verb was read rather than run"
   audit_log: "the session state — every mutation carried in the committed state file | src/session/state.js | the union merge records what each replica held, and the validator refuses a `hidden: true` without a `hidden_at` (src/commands/validate.js:182) | tests/"
   human_review: "the CLI — a person types the retraction and confirms it | src/commands/forget.js | the confirm step prints the decision and states that hiding cannot be undone before `hideDecision` runs | tests/"
   negative_eval: "merge, validation and retrieval ranking, as committed cases | test-decisions-hidden.mjs, test-recall.mjs | committed cases assert a tombstoned decision does not come back through the union merge, that a malformed tombstone is refused, and that a six-document fixture corpus ranks the expected file first for seven queries with a no-match query returning nothing | test-recall.mjs — read, not run; the suite needs an install this reading declined"
+  scope_enforced: "the project identity on every recall and session view | src/memory/scope.js, src/memory/search.js:506-527, src/session/state.js:239, src/commands/recall.js:18 | `projectIdentity` hashes the git remote or the home-relative path into `git:`/`local:` id, `addGoal` and the other writers stamp it on each item, and `memoryVisibility` — the predicate `searchMemories` and every `sessionView` apply — drops an item whose project is neither the active one nor `shared` unless `allProjects` is passed, beside hidden, deleted, superseded and validity-window checks | test-retrieval-index.mjs:69-74 (a memory saved under a second project is absent from the first project's recall and present under its own, each result set of one)"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -24,7 +25,7 @@ matrix:
   retrieval: "Field-weighted lexical scoring over parsed docs — aliases, name, description, headings, body — with saturating term frequency, a coverage-squared multiplier and prefix/plural folding, returning matched passages rather than files. A depth-3 `$HOME` crawl backs it, behind a 60-second index cache that a fresh CLI process never hits. No scope filter"
   write: "Synchronous. Explicit writes through 14 MCP tools; auto-capture parses Claude Code's own JSONL transcripts with regex extractors behind a quality gate, redacting secrets against 27 patterns first"
   update_delete: "Union-merge with newest-wins per identity, and two tombstone classes — `hidden` monotonic for decisions, `done_at` temporal for next actions. Both are honored on merge; only the temporal one has a shipped writer"
-  scoping: "None enforced. The format defines a `project` field and the CLI writes project-level files, but the read path searches every adapter and every crawled directory with no filter; profiles select a sync destination, not a memory scope"
+  scoping: "A project identity — a hash of the git remote or the home-relative path — stamped on each item and applied by `memoryVisibility` on every recall and session view, with `shared` visible everywhere and `allProjects` as the opt-out; profiles select a sync destination, not a memory scope"
   integration: "An MCP server with 14 tools, an installer that configures 11 host tools, and a marker-delimited block injected into `~/.claude/CLAUDE.md` and three other always-loaded files"
   background: "None. A debounced autopush and a Stop hook run in the turn; nothing rewrites the store on a schedule"
   trust: "No epistemic state. A decision is live or suppressed, and provenance for an auto-captured one is the string `auto-captured:` prefixed onto its prose rationale field"
@@ -304,10 +305,17 @@ Temporal fields are per-type and single-axis: `created`/`updated` on entries,
 `asked` on questions, `hidden_at` on tombstones. `done_at` versus `added` is a
 comparison of two record times rather than validity against transaction time.
 
-Scoping exists in the format and not in the read path. `project` is defined
-("absent means global"), `preference` carries `scope: global | project`, and
-`memoir_remember` writes project-level files — but `searchMemories` applies no
-project filter to anything. Profiles are sync destinations: a profile config is
+Scoping is in the read path. `src/memory/scope.js` derives a project identity
+— `git:` plus a hash of the normalized remote URL, or `local:` plus a hash of the
+home-relative path, credentials never persisted — and `memoryVisibility` returns
+a predicate that drops an item whose `project` is neither the active identity nor
+`shared`, beside `hidden`, `deleted`, `superseded` and a `valid_from`/`valid_until`
+window; `searchMemories` applies it to every document (`search.js:524-527`) and
+`sessionView` to goals, next actions, decisions and history, with `allProjects`
+as the opt-out. `addGoal` and the other session writers stamp `project:
+projectIdentity()` on each item (`state.js:239`). `valid_from` and `valid_until`
+are read by the predicate and written by nothing in `src/`, so the validity window
+is declared and unwired. Profiles are sync destinations: a profile config is
 `{ provider, localPath }`, not a memory partition. There is no user, tenant or
 auth boundary; the store is one person's files.
 
@@ -714,6 +722,8 @@ adopting any of the rest.
 `test-capture-quality.mjs`, `test-schema-migration.mjs`, `test-session-lock.mjs`.
 
 ## History
+
+**2026-09-07** — [`fb24c9b2e4a39bfd058d27d5757bfa781de58b51`](https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51) — re-pinned twenty commits on, releases 3.13.0 to 3.15.0. `src/memory/scope.js` adds a project identity and a visibility predicate that `searchMemories` and every session view apply, with a two-project recall case in `test-retrieval-index.mjs`, so `scope_enforced` is awarded; the same predicate reads `valid_from` and `valid_until`, which nothing writes. Beside it: a lexical index and a memory store with revalidation of changing sources, encrypted backups preserved across pushes, private project handoffs, a pinned block that parks a todo instead of evicting it (`parked_actions`, spec v0.1.2), `mergeSessions` passing unknown fields through, an events summary, and a work store with adversarial tests on symlinks, shell metacharacters, scope changes and repository hooks. The hidden tombstone, the union merge and the confirm step did not move; five marks. Screened before reading: one auto-run surface (`server.json`), two manifests inside the seven-day cooldown, nothing installed or run.
 
 **2026-08-19** — [`2c1fe382b9c24289624f9f0329f378ab2d2aa653`](https://github.com/camgitt/memoir/commit/2c1fe382b9c24289624f9f0329f378ab2d2aa653) — re-read seven commits on, and this report's central criticism is closed. It said the absolute tombstone the spec makes normative had no writer any user could reach — the only assignment outside the merge lived in `scripts/cleanup-junk-decisions-2026-07.mjs`, whose own header said it was not wired into any command. Release 3.12.0 ships `memoir forget "substring" [--purge] [--yes]` (`src/commands/forget.js`), which resolves the decision, prints it, states that hiding cannot be undone, and calls `hideDecision` to set `hidden` and `hidden_at`. `--purge` redacts the text while keeping a sha256 identity, and the activate template tells the model to reach for `memoir_forget` when a recorded decision is wrong.
 

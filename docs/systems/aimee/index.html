@@ -110,14 +110,14 @@ append-only store.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c" title="cccb1490560810a3da92691f381f9ab59040bb7c">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181" title="6083b85e4664f06abd5275ee5e893388734a6181">
               <span>Analyzed revision</span>
-              <code>cccb1490…</code>
+              <code>6083b85e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-01</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -262,10 +262,12 @@ opens a transaction, backfills identity, and calls
 before it reads or writes anything else; a live refusal aborts the
 transaction and returns <code>FACT_MUTATION_TOMBSTONED</code>. The same
 call guards the approve arm of <code>db2_fact_mutation_review</code>. On
-the episodic side <code>db2_memory_rejection_blocks(key, content)</code>
-scopes the same test by the thread's current scope context and is called
-from both <code>db2_memory_row_insert_epistemic_ex</code> and
-<code>memory_core_crud.c</code>.</p>
+the episodic side the Go store's write path
+(<code>server-go/modules/memory/mutations.go:26-77</code>) selects an
+active tombstone for the same key, content and scope before it inserts
+and returns <code>write blocked by rejection tombstone</code> when one
+exists; <code>Reject</code> (<code>domain.go:135-150</code>) is the one
+writer of that table.</p>
 <p><strong>Recall exclusion.</strong> Every query in
 <code>fact_recall.c</code> that assembles the fact block carries the
 same predicate. <code>db2_fact_current_count</code> shows the full
@@ -398,7 +400,7 @@ the same expression as a <code>WHERE</code> predicate, `AND (?101 = 0 OR
 <blockquote>
 <p>0)<code>, and it is the one doing the excluding. </code>DB2_MEMORY_RECALL_FILTER_SQL<code>wraps *that* in an</code>EXISTS<code>requiring</code>lifecycle_state='active'
 AND
-activation_suppressed=0<code>, under a header comment that fixes the policy in place: *"Normal recall is deliberately stricter than scope-only history/review queries. Lifecycle visibility is not feature-gated: rejected, archived, pending, fulfilled, and superseded rows never enter an answer candidate set."* The recall filter is what the candidate-producing readers use — </code>memory_briefing.c<code>, </code>memory_relations.c<code>, </code>memory_query.c<code>, </code>memory_score_fields.c<code>and the dense path through</code>pgvec_scope_query.h`
+activation_suppressed=0<code>, under a header comment that fixes the policy in place: *"Normal recall is deliberately stricter than scope-only history/review queries. Lifecycle visibility is not feature-gated: rejected, archived, pending, fulfilled, and superseded rows never enter an answer candidate set."* The recall filter is what the candidate-producing readers use — the Go store's queries in </code>server-go/modules/memory/queries.go<code>and</code>data.go<code>and the dense path through</code>pgvec_scope_query.h`
 — while the bare scope filter is left to the history, review and by-id
 surfaces that are supposed to see more. A row outside the caller's scope
 is dropped rather than merely sorted last, and a row outside the active
@@ -650,10 +652,10 @@ boundary, and it is wired at eight reachable call sites across five
 named boundaries: <code>document</code> for KB ingest and PDF chunks,
 <code>retrieval</code> on pre-injection, <code>learning</code> on the
 learning router, <code>recall</code> in the KB client, and
-<code>memory</code> three times — twice in
-<code>memory_core_crud.c</code> and once in
-<code>memory_advanced.c</code>. The memory sites carry the argument for
-why memory is treated as hostile by default:</p>
+<code>memory</code> through the Go module's content gate
+(<code>server-go/modules/memory/content_gate.go</code>). The memory
+sites carry the argument for why memory is treated as hostile by
+default:</p>
 <blockquote>
 <p>Durable memory becomes future prompt context, so treat it as
 agent-message authority unless a future typed ingress carries an
@@ -894,24 +896,26 @@ the commit seal</td>
 filter built on that</td>
 </tr>
 <tr>
-<td><code>src/modules/db2/c/memory_score_fields.c</code></td>
-<td><code>db2_memory_rejection_blocks</code> and the epistemic row
-insert that consults it</td>
+<td><code>server-go/modules/memory/mutations.go</code></td>
+<td>The write path that consults active rejection tombstones and fails
+closed</td>
 </tr>
 <tr>
-<td><code>src/modules/db2/c/memory_query.c</code></td>
-<td><code>db2_memory_reject</code>, <code>db2_memory_restore</code>,
-<code>db2_memory_review_list</code>,
-<code>db2_memory_filter_archived_ids</code></td>
+<td><code>server-go/modules/memory/domain.go</code>,
+<code>queries.go</code></td>
+<td><code>Reject</code>, <code>Restore</code>, <code>ReviewList</code>,
+the lifecycle filter and the valid-at predicate</td>
 </tr>
 <tr>
-<td><code>src/modules/memory/memory_core_search_b.c</code></td>
-<td><code>memory_filter_scope</code> and
-<code>memory_scope_matches</code></td>
+<td><code>server-go/modules/memory/scope.go</code></td>
+<td><code>normalizeScope</code> and the placements that own their
+scopes</td>
 </tr>
 <tr>
-<td><code>src/modules/memory/memory_core_search_c.c</code></td>
-<td>The recall pipeline: scope filter, withheld-state drop, rerank</td>
+<td><code>server-go/modules/memory/data.go</code>,
+<code>fact_recall.go</code></td>
+<td>The recall pipeline in Go: scope, lifecycle filter,
+<code>ValidAt</code>, typed-fact block</td>
 </tr>
 <tr>
 <td><code>src/modules/audit/audit_worm.c</code></td>
@@ -939,8 +943,9 @@ holds the appender</td>
 resolution</td>
 </tr>
 <tr>
-<td><code>src/tests/test_fact_recall.c</code></td>
-<td>The paired positive/negative exclusion cases</td>
+<td><code>server-go/modules/memory/fact_recall_test.go</code></td>
+<td>The populated recall with the excluded facts named, and the
+open-bounds validity case</td>
 </tr>
 <tr>
 <td><code>src/tests/test_fact_lifecycle.c</code></td>
@@ -969,6 +974,29 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181"><code class="commit-id" title="6083b85e4664f06abd5275ee5e893388734a6181">6083b85e…</code></a>
+— re-pinned 79 commits on, still on <code>testing</code>, and the memory
+module moved languages: <code>server-go/modules/memory/</code> (9,989
+lines, 80 tests, 178 across the Go tree) holds the store, the recall
+pipeline, the lifecycle filter, the tombstone check, review and restore,
+<code>ValidAt</code>, scope normalization and placements, while 68 C
+files under <code>src/modules/memory/</code> and
+<code>src/modules/db2/c/</code> were deleted, among them
+<code>memory_query.c</code>, <code>memory_score_fields.c</code>,
+<code>memory_core_search_*.c</code> and <code>memory_core_crud.c</code>;
+<code>fact_recall.c</code> remains as the ABI to a registered provider
+and <code>test_fact_recall.c</code> is reduced to that ABI, so the
+paired exclusion cases this report cited are gone and
+<code>negative_eval</code> rests on
+<code>fact_recall_test.go:69-100</code>. Every evidence record is
+re-pointed and the body's three passages that named deleted files are
+rewritten; the schema, its row-level security, the rejection-tombstone
+trigger, the WORM audit store and its triggers,
+<code>fact_mutation.c</code> and <code>fact_lifecycle.c</code> are
+unchanged. Seven marks stand. Screened before reading: one auto-run
+surface (<code>.claude/hooks/</code>), one manifest inside the seven-day
+cooldown, nothing installed or run.</p>
 <p><strong>2026-09-01</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/cccb1490560810a3da92691f381f9ab59040bb7c"><code class="commit-id" title="cccb1490560810a3da92691f381f9ab59040bb7c">cccb1490…</code></a>
 — re-pinned 15 commits on, and the memory mechanism did not move: the

@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "yaminbkk/NexusMem"
 source_url: https://github.com/yaminbkk/NexusMem
-revision: 8c196e84199dec64761870a16949b8089a0c0bf6
-revision_url: https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6
-analyzed_at: 2026-08-29
+revision: f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
+revision_url: https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
+analyzed_at: 2026-09-07
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
@@ -16,7 +16,7 @@ capability_evidence:
   scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
   negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
   bitemporal: "the node store — a record-time read beside the event time already on the row | src/store/schema.ts:26-36, src/store/search.ts:79 | a node carries `ts`/`ts_epoch`, *\"kept verbatim from the source event\"*, and a separate `created_at` for when the row was written; `--as-of` adds `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm and its equivalent to the vector arm, so a query can ask what the store held at a past moment while the event's own time stays untouched. The commit that added it names it: *bi-temporal read over created_at* | tests/"
-  human_review: "one node at a time, from the CLI | src/cli/commands/review.ts, src/cli/index.ts:283-297, src/cli/commands/stale.ts:48-56 | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
+  human_review: "one node at a time, from the CLI and over MCP | src/cli/commands/review.ts, src/cli/index.ts:283-297, src/cli/commands/stale.ts:48-56, src/mcp/tools.ts (listStaleSuggestions, resolveStaleSuggestion) | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -56,8 +56,9 @@ holds.** An opt-in shell hook appends a JSONL line per command carrying the
 command text, the working directory and the exit status; without it, scrape
 fallbacks tail `~/.bash_history`, `~/.zsh_history` and PSReadLine, which have
 none of those three. The distinction is made explicitly in `src/shell/detect.ts`
-— once the hook is installed its PowerShell coverage is authoritative and the raw
-PSReadLine file is skipped, because it *"duplicates the same commands with worse
+— once a hook is installed its coverage is authoritative and the raw history file
+is skipped, for PowerShell and, with `src/hooks/bash.ts` and `zsh.ts`, for bash and
+zsh, because it *"duplicates the same commands with worse
 data (no cwd, no exit code)."*
 
 **Nothing is summarized on the way out.** Retrieval fuses BM25 over an
@@ -967,6 +968,8 @@ leaves no record that it happened.
   suggestion path and its memo
 
 ## History
+
+**2026-09-07** — [`f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7`](https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7) — re-pinned forty commits on, release v0.10.3. Live bash and zsh hooks join the PowerShell one (`src/hooks/bash.ts`, `zsh.ts`; `reconcile.ts` recomputes natural keys per hook source); a git post-commit hook triggers `sync --auto` under a lock that skips when a sync is running (`src/hooks/git-post-commit.ts`, `src/cli/sync-lock.ts`); shell commands pass through `redact()` before their title and body reach the index (`src/collectors/shell-history.ts:76`); schema V12 adds `retrieved_count` and `last_retrieved_at`, bumped for packed nodes by both query pipelines and read by nothing in `rank.ts`; the MCP server gains `listStaleSuggestions` and `resolveStaleSuggestion`, the latter reusing `runMarkStale` for *accept* and the memo's dismiss for *dismiss* (`src/mcp/tools.ts`), which extends the `human_review` evidence to MCP; the benchmark grew a grep baseline. The deny list, the audit row, the project predicate and the as-of read did not move; six marks stand. Screened before reading: one auto-run surface (`server.json`), two manifests inside the seven-day cooldown, nothing installed or run.
 
 **2026-08-31** — [`8c196e84199dec64761870a16949b8089a0c0bf6`](https://github.com/yaminbkk/NexusMem/commit/8c196e84199dec64761870a16949b8089a0c0bf6) — two marks resolved in favour of the frontmatter, at the same pin, and in both cases the section arguing the other way was reasoning from the wrong surface.
 

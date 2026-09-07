@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "AIOSAI/AIPass"
 source_url: https://github.com/AIOSAI/AIPass
-revision: f9bf2d6a60710c51b85da093fd104785d88b2a3b
-revision_url: https://github.com/AIOSAI/AIPass/commit/f9bf2d6a60710c51b85da093fd104785d88b2a3b
-analyzed_at: 2026-08-20
+revision: 088957d702a277d34e931b581469b2ca9fbc4619
+revision_url: https://github.com/AIOSAI/AIPass/commit/088957d702a277d34e931b581469b2ca9fbc4619
+analyzed_at: 2026-09-07
 capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "branch as the scope key, structural on the hot tier and optional on the archive | src/aipass/memory/apps/handlers/json/memory_files.py, src/aipass/memory/apps/handlers/search/query_executor.py, src/aipass/memory/apps/handlers/json/config_loader.py | memory files live under the branch directory and are read by path, with `_check_entry_counts` recovering the branch from `file_path.parent.parent.name` to select that branch's entry limits, so the JSON tier cannot be read across branches without naming the path; lint, template push and per-branch limit overrides use the same key. The archive tier is the weaker half: `search_vectors_subprocess(query_embedding, branch=None, memory_type=None, ...)` treats the branch as an optional filter and the CLI default passes `None`, so an unqualified `drone @memory search` is cross-branch by default | src/aipass/memory/tests/test_search.py:246 asserts `--branch` is forwarded, and :144 asserts the default call passes `branch=None` — a positive control for the filter and, read the other way, the proof that it is opt-in"
@@ -172,6 +172,17 @@ Semantic search over the ChromaDB archive with a `--branch` filter, plus
 symbolic fragment search, plus a `verify` command that checks whether a specific
 plan is vectorised — a small operational nicety that answers "is this actually
 indexed" without a query.
+
+**Which branches the lanes cover is defined once.**
+`handlers/monitor/registry_scope.py` answers it for three tiers — `core`
+branches listed active in `AIPASS_REGISTRY.json`, `resident` projects whose own
+passport declares `citizenship.residency: "resident"`, and `external` branches
+found in a registry at the top level of a root declared in `AIPASS_ROOTS.json` —
+with a passport able to add nothing and remove no core citizen, and
+`modules/fleet.py` as the only door other branches import from. The README counts
+28 citizens on the maintainer's machine: 18 core, 4 resident, 6 external across
+four declared roots. The trinity push, which writes, drops the external tier on
+purpose; every reader keeps it.
 
 **Scope is the branch, and the two tiers apply it differently.** The hot tier is
 scoped by construction: memory files live under the branch directory, are read by
@@ -408,6 +419,8 @@ applied), `apps/modules/watch.py`, `handlers/monitor/watch_runner.py`
 architecture tree)
 
 ## History
+
+**2026-09-07** — [`088957d702a277d34e931b581469b2ca9fbc4619`](https://github.com/AIOSAI/AIPass/commit/088957d702a277d34e931b581469b2ca9fbc4619) — re-pinned 151 commits on, release v2.8.1. The memory package grew by 16,760 lines, 13,000 of them tests: `handlers/monitor/registry_scope.py` (696 lines) defines the fleet once as core, passport-declared residents and declared-root externals, `roots_file.py` writes the `AIPASS_ROOTS.json` anchor, `handlers/templates/trinity_push.py` (1,059 lines) replaces the retired templates lane with a gated push that carries a receipt per branch, a rollover normalizer lands beside the extractor, and `modules/fleet.py`, `push.py` and `roots.py` are the new public doors. The scope key is unchanged — a branch, structural on the hot tier — and the surfacing governance, entry limits, rollover and symbolic paths this report describes read the same; what changed is which branches the lanes reach. One mark stands on the same evidence. Screened before reading: three auto-run surfaces under `.claude/`, thirty build-time execution points, one manifest inside the seven-day cooldown, nothing installed or run.
 
 **2026-08-20** — [`f9bf2d6a60710c51b85da093fd104785d88b2a3b`](https://github.com/AIOSAI/AIPass/commit/f9bf2d6a60710c51b85da093fd104785d88b2a3b) — second reading, 117 commits on. Screened again before reading: three auto-run surfaces under `.claude/` and multiple `conftest.py` build-time execution points; nothing was installed and no test was run. `governance/engine.py` is byte-identical in its decision logic and `DEFAULT_CONFIG` still reads `{0.3, 5, 10, 300}`, so the report's central claim needed no change. The claim that needed changing is section 10's: a 28-day sample of the engine's own surfacing log is committed as an artifact, and reading it against the defaults produced the cooldown finding in that section. The refusal-logging asymmetry in section 9 was established by reading every return path in `should_surface`. Scope mark re-checked at this pin and unchanged; `stack_source` promoted from `seeded` to `reviewed`.
 

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 377 reports.**
+**This page covers all 378 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1230,7 +1230,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: the directory contract — `raw/` immutable and read-only to the model, `wiki/` entirely derived, `L1/` private, git as the whole history. Every derived page can be rebuilt and no model error can destroy the inputs, stated in one line of `SCHEMA.md`.
 - Biggest risk: `L1/credentials.md` is tracked in git despite `L1/` being in `.gitignore` and the file itself warning *"This file is git-ignored. NEVER commit credentials."* `.gitignore` does not untrack what is already tracked, so a user who fills it in and pushes their fork commits their API keys.
 - Most reusable component: `SCHEMA.md`, which is a better specification than several machine-readable ones here — if the model does the structuring, the document telling it how is the real schema.
-- Maturity impression: no tests and no CI for 3,300 lines; an MIT badge, no `LICENSE` file, and `All rights reserved` on all eight source files; and `KNOWLEDGE-DECAY.md` reads as the trust model while being a draft whose fields appear nowhere in code.
+- Maturity impression: forty-three tests in six files, all on the flag, revalidate, read-by-slug and write tools and none on search; an MIT badge, no `LICENSE` file, and `All rights reserved` on the source files; a history rewritten to remove private wiki content; and `KNOWLEDGE-DECAY.md` reads as the trust model while being a draft whose fields appear nowhere in code.
 - Study when: you want the Karpathy wiki pattern packaged, or a clean case study in what it costs to express every invariant as an instruction rather than a check.
 - Do not copy when: a rule has to hold on the turn the model is confidently wrong. The citation "enforcement" is a manual substring report with an unimplemented fix mode, the *"It STOPS and asks you to decide"* contradiction gate is touched by none of the nine tools, and search is an unranked substring scan that gets worse as the wiki gets richer.
 
@@ -1458,7 +1458,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: typed memories, doc chunks and code symbols are rows in one `node` table with a `kind`, so a note about a function and the function itself are ranked against each other in one query instead of merged by a caller afterwards.
 - Biggest risk: the normalized content hash that would refuse a returning value is consulted under `AND deleted_at IS NULL`, so a deleted memory does not match its own hash and is re-created on the next restatement.
 - Most reusable component: eval fixtures carrying `forbidden_ids` beside `expected_ids`, resolved against a built store — the negative half of a retrieval eval, committed.
-- Maturity impression: 32,104 lines of Rust across five crates, published to crates.io, MIT or Apache-2.0, with systemd service and watchdog units in `contrib/` — and the cleanest screen in this atlas: zero auto-run surfaces, zero build-time execution, zero unpinned dependencies, `Cargo.lock` fourteen days cold.
+- Maturity impression: version 0.16.0, 185 commits, Rust across five crates published to crates.io, MIT or Apache-2.0, a mutation ledger, a review queue, two time axes and a deletion-durability eval added in nineteen commits with unit tests beside each, systemd units in `contrib/` — and the cleanest screen in this atlas: zero auto-run surfaces, zero build-time execution, zero unpinned dependencies, `Cargo.lock` fourteen days cold.
 - Study when: you want one local store for everything a coding agent knows, or the cheapest useful answer to a context window about to be cleared — a structured handoff memory written before the clear and restored after it.
 - Do not copy when: a correction has to be defensible — supersession and soft delete are both durable and neither records a reason, an actor, or a status.
 
@@ -3350,3 +3350,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, one commit dated 2026-09-05 from a group at MIT, 11,973 lines under `src/`, 224 tests in twelve files with the memory contract in the controller tests, README scorecards on the ARC Prize site and nothing committed that reproduces them; 0 of seven capability marks.
 - Study when: you run a coding-agent runtime on a long interactive task and have lost state to compaction; the hook, the files and the recovery prompt transfer.
 - Do not copy when: you need memory across episodes or any check on what the checkpoint says.
+
+### [`velantrim-exocortex-crystal`](../systems/velantrim-exocortex-crystal/)
+- Best idea: **the model's output can never become a world fact, and the rule is an invariant rather than a setting.** The truth gate refuses a `WORLD_FACT` whose source status is `LLM_OUTPUT` in one branch no environment variable, runtime mode or caller option reaches, and a test sets the environment to prove it.
+- Second idea: **grounding is a pure predicate that fails closed.** `is_strict_canonical` needs `truth_status` exactly `VERIFIED`, an epistemic state of `Validated` or `ImmutableCore`, and `restricted` exactly false, infers none of them from the others, and rejects any missing field; thirty-nine tests say so.
+- Biggest risk: **the erasure tombstone carries a content hash nothing consults.** Erasure is physical, cascading and idempotent, and an erased claim ingested again from its source is a new fact.
+- Most reusable component: `core/review_decision_store.py` — a decision staged with its audit event and its canon-projection intent in one SQLite transaction under a compare-and-swap on the fact's revision, with a durable projection status when the graph fails and a drain that retries.
+- Maturity impression: AGPL-3.0, 750 commits between April and August 2026, version 0.3.0, 25,856 lines under `core/` with 2,041 tests, a hash-chained audit log with a checkpoint, a capability matrix that lists what is not implemented, and a read-only MCP server; 4 of seven capability marks.
+- Study when: your memory must answer where a fact came from and whether it may be said before what is relevant, or you want a review queue whose decisions cannot be lost to a graph outage.
+- Do not copy when: you need a scope key, a validity interval, a conversational extractor, or semantic recall beyond an optional cosine leg.

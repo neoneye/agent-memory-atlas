@@ -112,14 +112,14 @@ supposed to compound is an unranked substring scan.</p>
               <strong>JPeetz/MeMex-Zero-RAG</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4" title="9728631e7f4b9129fa858f8542a89477231dfcf4">
+            <a class="meta-pill revision-pill" href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34" title="f955d993d06cdf621d8ca7e004a27850eb9b6d34">
               <span>Analyzed revision</span>
-              <code>9728631e…</code>
+              <code>f955d993…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-19</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -152,20 +152,16 @@ new source makes the whole wiki richer."</em></p>
 this report is about is the distance between the four features the
 README advertises and what the code does.</p>
 <p><strong>Start with the credentials file, because it is the one
-finding that can cost a reader something.</strong>
-<code>.gitignore</code> contains <code>L1/</code>.
-<code>L1/credentials.md</code> opens with <em>"🔒 CRITICAL: This file is
-git-ignored. NEVER commit credentials."</em> And
-<code>git ls-files L1/</code> returns all three files in that directory.
-<code>.gitignore</code> does not untrack what is already tracked, so the
-protection the file describes does not apply to the file describing it.
-Editing it demonstrates the consequence immediately:</p>
-<pre class="console"><code>$ printf &#39;OPENAI_API_KEY=sk-DEMO\n&#39; &gt;&gt; L1/credentials.md
-$ git status --short L1/
- M L1/credentials.md</code></pre>
-<p>Nothing is leaked in the upstream repository — the template ships
-with the values blank. The exposure is downstream: a user who clones
-this, fills in the file the instructions tell them to fill in, and
+finding that could have cost a reader something.</strong>
+<code>.gitignore</code> contains <code>L1/</code>, and
+<code>git ls-files L1/</code> returns three <code>*.example</code>
+templates — <code>credentials.md.example</code>,
+<code>identity.md.example</code>, <code>rules.md.example</code> — and
+nothing else, so the file a person fills in is untracked from the moment
+they copy the template. At the previous pin the three live files were
+themselves tracked despite the ignore rule and the warning at the top of
+<code>credentials.md</code>; the exposure was downstream, for a user who
+cloned, filled in the file the instructions tell them to fill in, and
 pushes their fork has committed their API keys, having been told twice
 that they could not.</p>
 <p><strong>The licence says three different things.</strong> The README
@@ -189,12 +185,25 @@ tell whether a citation supports the sentence beside it.</li>
 <li><em>"Human-in-the-loop conflict resolution."</em>
 <code>wiki/contradictions.md</code> describes the flow: the LLM detects
 a conflict, <em>"It STOPS and asks you to decide."</em> The server
-exposes nine tools — <code>wiki_search</code>, <code>wiki_read</code>,
+exposes thirteen tools — <code>wiki_search</code>,
+<code>wiki_read</code>, <code>wiki_read_by_slug</code>,
 <code>wiki_list</code>, <code>wiki_query</code>,
 <code>wiki_ingest</code>, <code>wiki_lint</code>,
 <code>wiki_graph</code>, <code>wiki_stats</code>,
-<code>wiki_write</code> — and none of them reads or writes that file.
-Nothing can stop.</li>
+<code>wiki_confidence</code>, <code>wiki_write</code>,
+<code>wiki_flag</code>, <code>wiki_revalidate</code> — and none of them
+reads or writes that file. What exists in code is a page lifecycle:
+<code>wiki_flag</code> sets <code>status: quarantine</code> with a
+required reason and a timestamp and refuses an <code>is_immutable</code>
+page, and <code>wiki_revalidate</code> takes a flagged page to
+<code>active</code> (confirm or update, appending new sources) or to
+<code>stale</code> (retire), refusing any other starting state
+(<code>mcp/server.py:1011-1160</code>,
+<code>tests/test_wiki_flag.py</code>,
+<code>tests/test_wiki_revalidate.py</code>). The model can call both; no
+step requires a person, and no read path consults the status, so
+<code>human_review</code> and <code>trust_state</code> stay
+withheld.</li>
 <li><em>The operation log.</em> <code>wiki/log.md</code> exists and is
 65 lines. The only occurrence of <code>log.md</code> in the Python is
 inside a returned string: step 6 of the instructions
@@ -257,12 +266,16 @@ schema defines as <code>[confidence: high|medium|low|uncertain]</code>,
 written by the model about its own claims.
 <code>mcp/confidence.py</code> reads them back — weighting
 <code>high</code> at 1.0 down to <code>uncertain</code> at 0.2, flagging
-anything unverified for 90 days as stale — and produces a report.
-Nothing on the read path consults a confidence level, so a claim tagged
-<code>uncertain</code> is returned by <code>wiki_search</code> exactly
-as a claim tagged <code>high</code> is. That is why
-<code>trust_state</code> is withheld: the levels are a discretised
-self-assessment with no state that withholds anything from use.</p>
+anything unverified for 90 days as stale — and produces the
+<code>wiki_confidence</code> report. <code>wiki_search</code> applies a
+<code>min_confidence</code> floor, default <code>low</code>, so a page
+tagged <code>uncertain</code> is skipped unless the caller lowers the
+floor to <code>none</code> (<code>mcp/server.py:421-460</code>); a page
+with no tag counts as <code>medium</code>. That is a graded threshold on
+a label the writer chose, untested, rather than a state the store sets,
+which is why <code>trust_state</code> is withheld: the levels are a
+discretised self-assessment with no state that withholds anything from
+use.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the ingest tool returns a numbered list of instructions and the model may or may not follow them, search is unranked substring matching, and the contradiction file no tool touches</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the ingest tool returns a numbered list of instructions and the model may or may not follow them, search is unranked substring matching, and the contradiction file no tool touches
 flowchart TD
     RAW[&quot;raw/ — immutable sources&quot;] --&gt; ING[&quot;wiki_ingest&quot;]
@@ -273,7 +286,7 @@ flowchart TD
     W --&gt; GIT[&quot;git add + git commit&quot;]
     PAGE --&gt; S[&quot;wiki_search:&lt;br/&gt;substring, unranked,&lt;br/&gt;break at limit&quot;]
     LINT[&quot;wiki_lint&quot;] -.-&gt;|&quot;advisory, manual,&lt;br/&gt;fix unimplemented&quot;| PAGE
-    CONF[&quot;confidence.py&quot;] -.-&gt;|&quot;separate script,&lt;br/&gt;never imported&quot;| PAGE
+    CONF[&quot;wiki_confidence&lt;br/&gt;(confidence.py)&quot;] -.-&gt;|&quot;report only&quot;| PAGE
     CONTRA[&quot;wiki/contradictions.md&lt;br/&gt;&#39;It STOPS and asks you&#39;&quot;] -.-&gt;|&quot;no tool touches this&quot;| NONE[&quot;&amp;nbsp;&quot;]
     style INSTR fill:#7c5c1e,color:#fff
     style NONE fill:#7f1d1d,color:#fff
@@ -354,12 +367,13 @@ Paths</h2>
 <td><code>mcp/confidence.py:69</code>, <code>:77</code></td>
 </tr>
 <tr>
-<td>Hybrid BM25 + dense searcher, never imported</td>
-<td><code>mcp/search.py</code></td>
+<td>Hybrid BM25 + dense searcher, imported lazily by
+<code>wiki_search</code></td>
+<td><code>mcp/search.py</code>, <code>mcp/server.py:430</code></td>
 </tr>
 <tr>
-<td><code>L1/</code> ignored in <code>.gitignore</code>, tracked in
-git</td>
+<td><code>L1/</code> ignored in <code>.gitignore</code>, templates
+tracked as <code>*.example</code></td>
 <td><code>.gitignore:8</code>, <code>git ls-files L1/</code></td>
 </tr>
 <tr>
@@ -513,11 +527,13 @@ explicit flag, which is a real guard, in code, and the only one in the
 tool surface.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>There is no test directory, no test file, and no CI configuration.
-For 3,300 lines including a substring searcher with an off-by-nothing
-early break, a linter whose fix mode is a stub, and a hybrid searcher
-nobody imports, the absence is the finding: nothing would have caught
-any of the gaps in this report, because nothing runs.</p>
+<p>Forty-three tests in six files under <code>tests/</code>, all on the
+write side of the tool surface: the flag and revalidate lifecycle (23),
+<code>wiki_read_by_slug</code> (10), frontmatter injection through a
+title or an agent name (3), the write tool's status and integrity fields
+(3), and a reviewer payload (4). No test touches
+<code>wiki_search</code>, the linter or the ingest instructions, so
+nothing would catch a regression in the gaps this report names.</p>
 <p>No benchmark, no eval fixture, no committed retrieval results. The
 README's central comparative claim — that compiling beats retrieving
 because <em>"nothing compounds"</em> in RAG — is an architectural
@@ -528,7 +544,8 @@ is falsifiable and the repository ships both arms:
 hybrid ranker over the same corpus would produce exactly the comparison
 the README asserts the answer to.</p>
 <p><code>negative_eval</code> is withheld; no case asserts that
-particular material must not be retrieved.</p>
+particular material must not be retrieved — the lifecycle tests assert
+what a page's frontmatter holds, not what a search returns.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Make the source corpus immutable and the knowledge
@@ -710,6 +727,30 @@ stats, write</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34"><code class="commit-id" title="f955d993d06cdf621d8ca7e004a27850eb9b6d34">f955d993…</code></a>
+— the history was rewritten: the previous pin is no longer reachable
+from <code>main</code> and was fetched by its sha, and the two trees
+differ by 174 files, 275 insertions and 22,629 deletions — the private
+wiki content replaced with a neutral example,
+<code>wiki/contradictions.md</code> and <code>wiki/log.md</code>
+removed, <code>SCHEMA.md</code> given an optional
+<code>memory_type</code> taxonomy with a rule that untagged pages are
+never down-ranked, and <code>L1/</code> reduced to three tracked
+<code>*.example</code> templates, which closes the credentials finding.
+<code>mcp/</code> is byte-identical between the two trees, and that
+exposes four errors in the first reading, corrected above: the server
+had thirteen tools, not nine (<code>wiki_confidence</code>,
+<code>wiki_flag</code>, <code>wiki_revalidate</code>,
+<code>wiki_read_by_slug</code> were present); <code>tests/</code> held
+forty-three tests in three files, not none; <code>confidence.py</code>
+backs a tool and <code>search.py</code> is imported by
+<code>wiki_search</code>; and <code>wiki_search</code> applies a
+<code>min_confidence</code> floor. The status lifecycle those tools
+implement is agent-callable and unread by search, so every mark stays
+withheld. Screened before reading: one auto-run surface
+(<code>.mcp.json</code>), one build-time execution point, nothing
+installed or run.</p>
 <p><strong>2026-08-19</strong> — <a
 href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4"><code class="commit-id" title="9728631e7f4b9129fa858f8542a89477231dfcf4">9728631e…</code></a>
 — re-read, and the previous pin no longer exists.

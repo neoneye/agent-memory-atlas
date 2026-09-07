@@ -1,30 +1,37 @@
 ---
 title: "Mimir"
 eyebrow: "One graph, three node kinds"
-description: "A local-first Rust memory server where typed memories, indexed docs and code symbols are nodes in one SQLite graph — with consolidation that supersedes and never deletes, and a context guard that writes a handoff memory before the window is cleared."
+description: "A local-first Rust memory server where typed memories, indexed docs and code symbols are nodes in one SQLite graph — with a deliberate tombstone that refuses a forgotten fact and its rewordings, a hash-only mutation ledger, a review queue a person decides, two time axes on recall, consolidation that supersedes and never deletes, and a context guard that writes a handoff memory before the window is cleared."
 root: ../..
 page_kind: system
 source_name: "MakerViking/mimir"
 source_url: https://github.com/MakerViking/mimir
-revision: e005dede938832fd63d5097bbf5145228f693ce3
-revision_url: https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3
-analyzed_at: 2026-08-07
-capabilities: "scope_enforced, negative_eval"
+revision: ff5b3688da694be0edb38232a1d90843d00a5fa7
+revision_url: https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7
+analyzed_at: 2026-09-07
+capabilities: "scope_enforced, negative_eval, tombstone, audit_log, human_review, bitemporal"
+capability_evidence:
+  tombstone: "the deliberate tombstone, consulted before every remember | crates/mimir-core/src/memory.rs:20-120,185-235 | `remember` checks a live exact duplicate, then `find_forgotten` — a node soft-deleted on purpose (`deleted_at` set and not decay-archived), matched by content hash and then by the `is_reword` pass over the newest 500 deliberate tombstones — and refuses with `RememberOutcome::Forgotten` while enqueueing a `Resurfacing` finding; `--force` creates the row and writes a `Restore` mutation naming the override | crates/mimir-core/src/memory.rs:559-660 (`forgotten_memory_is_not_silently_re_added`, `a_fact_that_keeps_coming_back_becomes_a_finding`), crates/mimir-core/src/eval/forget.rs:505-580 (`forgotten_facts_survive_every_attack_shape`, the soft and hard delete durability scorecards)"
+  audit_log: "the mutation ledger, hashes only | crates/mimir-core/src/db/migrations.rs (the `mutation` table), crates/mimir-core/src/audit.rs:30-160 | `audit::record` and `record_for_kind` append `{at, node_id, op, actor, reason, before_hash, after_hash}` from `forget`, `supersede`, `edit`, `restore`, consolidation, replication and review decisions, memories only, never the value; `superseded_at` is read back by `recall --as-of` | crates/mimir-core/src/audit.rs:184-300 (`forget_records_who_and_when`, `supersede_time_survives_a_later_edit`, `the_ledger_never_stores_the_value`, `before_hash_identifies_the_removed_value`)"
+  human_review: "the review queue — findings the store will not decide | crates/mimir-core/src/review.rs:20-260, crates/mimir-cli/src/review_cmd.rs, crates/mimir-cli/src/main.rs:401 | `enqueue` records a `contradiction`, `stale-grounding`, `unresolved` or `resurfacing` finding once per (kind, node, other); `decide` takes a person's `keep`, `supersede` or `dismiss` with a reason, supersedes the older of the pair as `Actor::Human` or records the decision in the ledger, and refuses a second decision; `scan` queues expired memories with an unmet `resolves_when` | crates/mimir-core/src/review.rs:306-480 (`a_finding_waits_for_a_person_and_records_who_decided`, `re_detecting_neither_duplicates_nor_reopens`, `deciding_twice_is_refused`, `scan_leaves_an_unexpired_condition_alone`)"
+  bitemporal: "valid time on the node, transaction time on the ledger, read separately | crates/mimir-core/src/model.rs:242-265, crates/mimir-core/src/store.rs:509-540, crates/mimir-core/src/search/mod.rs:40-110, crates/mimir-cli/src/main.rs:159-207 | `remember --valid-from/--valid-to` stores `meta.valid_from`/`valid_to`, which recall applies as the interval a memory was true; `recall --as-of` answers as the store stood then from `created_at`, `deleted_at` and the ledger's `superseded_at`, and the code names the two questions as different | crates/mimir-core/src/search/mod.rs:390-500 (`as_of_brings_back_what_was_live_then`, `as_of_judges_supersession_by_when_it_happened`, `a_closed_validity_interval_does_not_hide_the_memory`)"
+  scope_enforced: "project_id on the node, composed into every query | crates/mimir-core/src/search/mod.rs:93-100, crates/mimir-core/src/db/migrations.rs:14,35 | `scope_sql` renders `Scope::Project(id)` as `n.project_id = id OR n.project_id IS NULL` and `Scope::Global` as `IS NULL`, and the read-path index is carved on `(kind, project_id) WHERE deleted_at IS NULL` | crates/mimir-core/src/search/mod.rs:626 (`scope_filtering`)"
+  negative_eval: "forbidden ids in the brief fixtures and the hidden-row cases | crates/mimir-core/src/eval/brief.rs:95-130, crates/mimir-core/src/search/mod.rs:504-560 | each fixture scenario names `expected_ids` and `forbidden_ids` resolved against the built store; `superseded_is_hidden_unless_requested`, `expired_is_hidden_but_resolves_when_alone_is_not` and `kind_filtering_and_deleted_exclusion` assert populated results with the excluded node absent | crates/mimir-core/src/eval/brief.rs, crates/mimir-core/src/search/mod.rs:504,536,653"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `node` row with a kind — `memory`, doc chunk or code `symbol` — carrying uid, content, a normalized content hash, project id, JSON meta, `deleted_at` and `superseded_by`, joined by a typed `edge` table"
   storage: "One SQLite database with FTS5 over node text, an `embedding` table keyed by model and content hash, and migrations; no server process required"
   retrieval: "BM25 over FTS5 fused with local ONNX embeddings, scoped in SQL, with symbol and doc nodes searched in the same pass as memories"
   write: "Explicit `remember` through CLI or MCP, plus indexing passes for docs and code; a normalized content hash dedupes an exact restatement before it lands"
-  update_delete: "Soft delete via `deleted_at`, and a consolidation pass that sets `superseded_by` rather than removing a row — the module states it as an invariant"
+  update_delete: "`forget` soft-deletes with a deliberate tombstone that refuses the same text or a rewording of it on every later `remember` unless `--force`; `edit` snapshots the prior wording into `node_revision`; consolidation sets `superseded_by` rather than removing a row; a hard delete purges the revisions too"
   scoping: "`project_id` on every node, composed into the query by `scope_sql`, with the read-path index carved on `(kind, project_id) WHERE deleted_at IS NULL`"
   integration: "A globally registered MCP server, a CLI with brief/context/graph/rules subcommands, systemd units for a daemon and a watchdog, and session hooks"
-  background: "Consolidation, document and symbol indexing, embedding backfill; `recall_event`, `injection_log` and `savings_event` record what was retrieved and injected"
-  trust: "None as a state. Provenance is the node kind and its source path; nothing records an epistemic status or a rejection"
+  background: "Consolidation, document and symbol indexing, embedding backfill, a review scan for expired memories with unmet conditions; `recall_event`, `injection_log` and `savings_event` record what was retrieved and injected"
+  trust: "No state on content; an author confidence separate from usage, a grounding link that can be falsified, and a mutation ledger of who changed a memory, when and why, by hash"
   strengths: "Committed eval fixtures carrying `forbidden_ids` alongside expected hits, supersession as a stated invariant of the consolidator, and a context guard that turns an impending window clear into one structured handoff memory"
-  risks: "The dedup lookup filters `deleted_at IS NULL`, so a deleted memory is re-created rather than refused by the hash that would have caught it"
+  risks: "The review queue is a person's to open; the tombstone matcher scans the newest 500 deliberate deletions by reword and misses an older one; as-of recall ranks more lexically than present-tense recall because the vector cache holds live nodes only"
 ---
 
 ## 1. Executive Summary
@@ -44,11 +51,22 @@ stores — so a query about a function can return the note somebody wrote about 
 and the symbol itself, ranked against each other rather than merged afterwards
 by a caller.
 
-Two mechanisms are worth taking away regardless of the rest. **Consolidation
-supersedes and never deletes**, stated as an invariant in the module's own header
-comment and implemented as `UPDATE node SET superseded_by = ?2`, so the merge
-that collapses two memories leaves both rows and a pointer. And the **context
-guard** turns the moment a coding session runs out of window into a memory event:
+Four mechanisms are worth taking away regardless of the rest. **A deliberate
+deletion refuses its own return**: `forget` leaves a tombstone, and `remember`
+checks the text and its rewordings against the newest deliberate tombstones
+before it writes, refusing with `--force` as the only way back and a
+`Resurfacing` finding in the review queue each time it happens
+(`crates/mimir-core/src/memory.rs`). **A mutation ledger** records who changed a
+memory, when and why, as hashes and never the value (`audit.rs`); its
+`superseded_at` is what lets `recall --as-of` judge supersession by when it
+happened, separately from the `valid_from`/`valid_to` interval a person declares
+(`search/mod.rs`). **A review queue** holds what the store noticed and will not
+decide — contradictions, stale groundings, expired conditions, resurfacing facts
+— until a person keeps, supersedes or dismisses with a reason (`review.rs`).
+**Consolidation supersedes and never deletes**, stated as an invariant in the
+module's own header comment and implemented as `UPDATE node SET superseded_by =
+?2`, so the merge that collapses two memories leaves both rows and a pointer.
+And the **context guard** turns the moment a coding session runs out of window into a memory event:
 in `handoff` mode it instructs the agent to write one structured
 `session-handoff` memory *before* the user clears, then restores it on the next
 `SessionStart`. That is the conversation-window boundary this atlas puts outside
@@ -141,9 +159,13 @@ and two partial indexes over `json_extract(meta, '$.stable_id')` and
 
 `superseded_by` and `deleted_at` are separate columns doing separate jobs, which
 is more than most stores here distinguish: one records that a better version
-exists, the other that a person asked for removal. What no column records is
-*why*, or by whom, or on what evidence — there is no actor, no status and no
-rejection record anywhere in the schema.
+exists, the other that a person asked for removal. The *why* and the *who* live
+beside them: the `mutation` table holds one row per `forget`, `supersede`,
+`edit`, `restore` and review decision with an actor, a reason and the
+before/after content hashes, `node_revision` keeps the wording an `edit`
+replaced, and `review` holds each finding with its disposition. A deliberate
+deletion is distinguished from a decay archival by `meta.archived`, which is
+what lets the tombstone guard refuse the former and ignore the latter.
 
 ## 6. Retrieval Mechanics
 
@@ -192,19 +214,35 @@ in its strongest ordinary form: not a post-filter, not a tag.
 distinct and durable, and neither carries a reason, an actor, or a status. A
 reader asking "was this wrong, or just old?" cannot be answered by this schema.
 
-**The near-miss is exact.** A normalized content hash is computed on every write,
-indexed, and consulted — and the consulting query excludes deleted rows. Removing
-`AND deleted_at IS NULL` from that lookup, or adding a second lookup that ignores
-it, would turn a dedupe key into a [rejected-value tombstone](../../patterns/rejected-value-tombstone/).
-The work this atlas usually finds missing — the normalization — is the part
-already done.
+**The tombstone is exact and then loose, in that order.** `remember` looks for
+a live exact duplicate first, then for a deliberately forgotten node by the same
+content hash, then for a reworded one among the newest 500 deliberate
+tombstones, then for a live near-duplicate — an order chosen so a fact someone
+brought back with `--force` is a duplicate rather than forever forgotten, and a
+loose live match cannot mask an exact tombstone. The reword pass is
+deliberately more sensitive than the live near-duplicate pass, because a false
+refusal costs one `--force` and a missed tombstone silently undoes a deletion.
+Decay archival is excluded from the scan on purpose: nobody decided that.
 
-**Telemetry is not audit.** `recall_event`, `injection_log` and `savings_event`
-are append-only records of *reads*, which is the half of the pattern this atlas
-does not credit; no table records that a node was superseded or deleted, when, or
-by whom.
+**The ledger stores hashes, not values.** A `mutation` row carries
+`before_hash` and `after_hash` over the normalized text, enough to prove which
+value was removed to someone who still holds it and useless for recovering it;
+the refusal ledger made the same call first. `forget` also purges the node's
+`node_revision` rows, so the deleted wording does not survive in a table recall
+never reads but `export` and every backup do. Memories only: chunk and symbol
+rows are not audited. `recall_event`, `injection_log` and `savings_event` remain
+read-side telemetry beside it.
 
 ## 10. Tests, Evals, and Benchmarks
+
+**Deletion is evaluated, not asserted.** `eval/forget.rs` runs a durability
+scorecard over a scratch store: capture a fact, forget it, then attack from
+every shape — exact re-add, reword, import, consolidation, and a leak search
+across every table including revisions and the vector cache — and score each
+obligation; an empty store fails every obligation so the scorecard cannot pass
+vacuously (`forgotten_facts_survive_every_attack_shape`,
+`soft_delete_is_durable_across_the_thirteen_steps`,
+`hard_delete_leaves_nothing_anywhere`, `an_empty_store_fails_every_obligation`).
 
 The eval module is the standout. `eval/brief.rs` defines fixture cases carrying
 `expected_ids` **and `forbidden_ids`** — the assertion that particular material
@@ -239,12 +277,12 @@ answer to a problem this atlas otherwise declares out of scope.
 
 ### Avoid
 
-**Do not filter deleted rows out of the lookup that could refuse a re-write.**
-The hash is already normalized and already indexed; excluding `deleted_at` rows
-from it is what makes deletion recoverable by restatement.
+**Do not let a background archival count as a deletion.** The tombstone guard
+excludes decay-archived rows on purpose; a guard that refused those would
+teach people to pass `--force` by reflex.
 
-**Do not let read telemetry stand in for a mutation record.** Three tables log
-what was retrieved and injected, and none logs what changed.
+**Do not quote the value in the ledger that records its removal.** Hashes
+prove which value went; text keeps it alive in a table recall never reads.
 
 ### Fit
 
@@ -260,10 +298,8 @@ them (actors, statuses, reasons) is absent rather than partial.
 
 ## 12. Antipatterns / Risks
 
-- **A value-keyed lookup that excludes the deleted rows**, one predicate from
-  being a tombstone.
-- **No mutation record** beside three read-side event tables.
-- **No trust or status field**, so wrong and stale look identical.
+- **No trust state on content**; confidence is the author's number, and wrong
+  and stale look identical until a finding reaches the queue.
 - **Byte-count context estimation** is a deliberate approximation, and a model
   whose tokenizer diverges from the tuned ratio will trip the guard early or
   late.
@@ -300,5 +336,7 @@ survives a delete.
 | `contrib/` | systemd service, watchdog and timer |
 
 ## History
+
+**2026-09-07** — [`ff5b3688da694be0edb38232a1d90843d00a5fa7`](https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7) — re-pinned nineteen commits on, version 0.16.0, 7,588 lines added. Four mechanisms this report withheld at the previous pin exist and are tested: a deliberate tombstone that refuses a forgotten fact and its rewordings on every `remember` (`memory.rs`), a hash-only `mutation` ledger of who changed a memory, when and why (`audit.rs`), a `review` queue a person decides with a reason (`review.rs`, `review_cmd.rs`), and two time axes — `--valid-from/--valid-to` on the node and `--as-of` transaction-time recall judged from the ledger (`search/mod.rs`). Beside them: `node_revision` keeps the wording an edit replaced and is purged by `forget`, an author confidence is stored apart from usage, a falsifiable grounding link and a refusal ledger, a secrets scrubber, receiver-typed call edges in the code graph, and `eval/forget.rs` scores deletion durability against every re-entry shape. `tombstone`, `audit_log`, `human_review` and `bitemporal` are awarded; six of seven marks. Screened before reading: no auto-run surface, no manifest inside the cooldown, nothing installed or run.
 
 **2026-08-07** — [`e005dede938832fd63d5097bbf5145228f693ce3`](https://github.com/MakerViking/mimir/commit/e005dede938832fd63d5097bbf5145228f693ce3) — first reading. Screened before reading: **zero** auto-run surfaces, zero build-time execution paths and zero unpinned dependency surfaces, with `Cargo.lock` present and unchanged for fourteen days, so every version it resolves is at least that old — the cleanest screen recorded in this atlas. Nothing was built or run; the analysis is static. The name is worth flagging for anyone reconciling systems by name rather than by URL: [Perseus Vault](../perseus-vault/) exposes its MCP tools under a `mimir_*` prefix and is an unrelated project.

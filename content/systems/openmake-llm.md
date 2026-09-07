@@ -6,14 +6,14 @@ root: ../..
 page_kind: system
 source_name: "openmake/openmake_llm"
 source_url: https://github.com/openmake/openmake_llm
-revision: bca0967b948147464284b1bb7d857e25f731295a
-revision_url: https://github.com/openmake/openmake_llm/commit/bca0967b948147464284b1bb7d857e25f731295a
-analyzed_at: 2026-09-06
+revision: 9ffeca8c4c2bbad08864257ebb40b9998270ec52
+revision_url: https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52
+analyzed_at: 2026-09-07
 capabilities: "scope_enforced, tombstone, audit_log"
 capability_evidence:
   scope_enforced: "every read of the memory table | apps/api/src/data/repositories/user-memory-repository.ts:46-55,:61-70,:72-96, apps/api/src/services/chat-service/user-context-blocks.ts:19-46, apps/api/src/controllers/user-memories.controller.ts:67-78 | `user_id` is `NOT NULL` with a cascade to `users`, and every query the repository exposes — list active, list known, count, soft delete, delete-all — carries `WHERE user_id = $1`; the prompt block is built only for an authenticated non-guest id and the REST routes take the id from the session, never from the body | apps/api/src/data/repositories/user-memory-repository.test.ts:14-26 asserts the predicate and the parameter on five queries through a fake pool; apps/api/src/controllers/__tests__/user-memories.controller.test.ts:37-41,:62-68 asserts the list and delete routes use the session id and that another user's row answers 404"
   tombstone: "soft-deleted rows consulted by both extractors | apps/api/src/data/repositories/user-memory-repository.ts:61-70,:80-96, apps/api/src/services/chat-service/memory-extraction.ts:117-126, apps/api/src/services/chat-service/memory-backfill.ts:61-64 | a delete flips `is_active` and leaves the row; `listKnownContentsByUser` selects the newest 500 rows of a user without an `is_active` filter, and `autoFormMemories` and the backfill run `isDuplicateMemory` against that list, so a sentence the person removed cannot be written again by regex, by the per-message model call or by the backfill; the count cap reads active rows only | apps/api/src/services/chat-service/memory-extraction.test.ts:101-106 (a tombstoned sentence yields no `create`), :108-117 (tombstones do not consume the cap); user-memory-repository.test.ts:37-42 (the known-contents query has no `is_active` clause)"
-  audit_log: "memory events in the platform's audit table | apps/api/src/controllers/user-memories.controller.ts:37-47,:93,:108,:123, apps/api/src/services/AuditService.ts:123-141 | `memory.created`, `memory.deleted` and `memory.deleted_all` are written to `audit_logs` through `AuditService.logAudit` with the user, the resource id, the source and length or count, the IP and the user agent; the write is fire-and-forget and fail-open, none of the three actions is in the alert whitelist, and the extractors, the backfill and account deletion write rows without an audit entry | user-memories.controller.test.ts:53-60,:62-76 asserts the three actions are logged and that a 404 delete logs nothing"
+  audit_log: "memory events in the platform's audit table, from the controller and both extractors | apps/api/src/controllers/user-memories.controller.ts:37-47,:93,:108,:123, apps/api/src/services/chat-service/memory-extraction.ts (auditMemoryWrite), apps/api/src/services/chat-service/memory-backfill.ts, apps/api/src/services/AuditService.ts:123-141 | `memory.created`, `memory.deleted` and `memory.deleted_all` are written to `audit_logs` through `AuditService.logAudit` with the user, the resource id, the source and length or count, the IP and the user agent; the write is fire-and-forget and fail-open, none of the three actions is in the alert whitelist, and the extractors, the backfill and account deletion write rows without an audit entry | user-memories.controller.test.ts:53-60,:62-76 asserts the three actions are logged and that a 404 delete logs nothing"
 stack_storage: "postgres"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -28,7 +28,7 @@ matrix:
   background: "None. Extraction runs fire-and-forget inside the request; the backfill is a manual CLI command; a shell script aggregates the table, the audit rows and the cap logs into the daily report"
   trust: "None. `source` records how a row arrived — a person, the per-message model call, or the backfill — and nothing reads it but a badge in the tab"
   strengths: "A memory that costs the local model nothing unless an operator turns extraction on, a stored toggle the client can tighten but not loosen, a delete that the extractors remember, and an observability script that names the numbers that would justify adding search"
-  risks: "The prompt block and the backfill are untested, the data export queries columns the table has not had since May 2026 and ships no memories, the extractors and account deletion write without an audit entry, the tombstone reaches only the newest 500 rows, and the fifty-row cap is first-come with nothing retiring a stale sentence"
+  risks: "Account deletion writes no audit entry, the prompt block is tested only against a mocked repository, the tombstone reaches only the newest 500 rows, and the fifty-row cap is first-come with nothing retiring a stale sentence"
 ---
 
 ## 1. Executive Summary
@@ -38,7 +38,7 @@ Express API serving a local model through vLLM and LiteLLM, with autonomous
 agents in Docker sandboxes, deep research, an artifact pipeline, twenty-two
 built-in MCP tools, custom agents, a skill library, native macOS and CLI
 clients and a Discord gateway. MIT, 2,118 commits by nine authors since
-12 February 2026, `1.45.2` at this commit, 112,605 lines of TypeScript in the
+12 February 2026, `1.49.0` at this commit, 112,605 lines of TypeScript in the
 API beside 343 test files. The README is in four languages and the code
 comments are in Korean.
 
@@ -92,15 +92,21 @@ token-overlap dedup and 36 test cases arrived in five commits on 6 September
 first of them names this atlas's reading of `ed74251e` as its source, and
 each carries a Claude Code session trailer beside the maintainer's name.
 
-**What is wrong with it is smaller than it was in August, and one of the
-remaining defects is older than the table.** The GDPR data export
-(`export.controller.ts:110-112`) selects `category, key, value, importance`
-from `user_memories` — the predecessor's columns, dropped in May — inside a
-`safeQuery` that logs a warning and returns an empty list on error, so a
-person's export contains no memories and nothing tells them so. The
-extractors and the backfill create rows with no audit entry, and account
-deletion hard-deletes them with none (`user-manager.ts:469`). The prompt
-block's token loop, `touchAccessed` and the backfill have no test. The
+**What is wrong with it is smaller again.** The GDPR data export reads the
+live columns — `content, source, is_active, accessed_at` — tombstoned rows
+included, and a category whose query fails is named in
+`_meta.failedCategories` with `partial: true` rather than returned as an
+empty list (`export.controller.ts`, three cases in
+`__tests__/export.controller.test.ts`); the comment above the query records
+that the old column list had failed on every export for four months.
+`autoFormMemories` and the backfill write `memory.auto_created` and
+`memory.backfilled` audit rows through `auditMemoryWrite`, fail-open, the
+backfill awaiting the write because the CLI exits on return
+(`memory-extraction.ts`, four cases in `memory-extraction.audit.test.ts`);
+account deletion still hard-deletes with none (`user-manager.ts:469`). The
+prompt block has nine cases against a mocked repository
+(`user-context-blocks.test.ts`) — the user id passed through, only the
+injected rows touched, the token cap, the toggle and the guest path. The
 tombstone reaches the newest 500 rows of a user, and its match is
 normalised text, containment, or token overlap at or above 0.75, so a
 paraphrase can return. And the preference lookup is fail-open: if the
@@ -197,7 +203,8 @@ backend for rate limits and caches, unrelated to `user_memories`. And
 `apps/api/src/data/models/legacy-schema.ts:245` is the predecessor's
 `user_memories` — `category`, `key`, `value`, `importance` — kept as an
 inline fallback for installations without the schema file; the export
-controller was written against that shape and never moved.
+controller was written against that shape and moved to the live columns in
+`0e62e475` on 7 September 2026.
 
 ### Deployment and ergonomics
 
@@ -276,10 +283,11 @@ the same host.
   and user agent, and logs a warning on failure. `logAudit`
   (`AuditService.ts:123-150`) inserts into `audit_logs` and consults the
   alert whitelist, which contains no `memory.*` action.
-- **Export and erasure.** `export.controller.ts:110-112` queries the
-  table for the predecessor's columns inside `safeQuery` (`:77-85`), which
-  returns `[]` on error; `user-manager.ts:469` runs `DELETE FROM
-  user_memories WHERE user_id = $1` on account deletion.
+- **Export and erasure.** `export.controller.ts` selects `id, user_id,
+  content, source, is_active, accessed_at, created_at, updated_at` inside
+  `safeQuery`, which on error substitutes `[]`, logs at error level and
+  adds the category to `_meta.failedCategories`; `user-manager.ts:469` runs
+  `DELETE FROM user_memories WHERE user_id = $1` on account deletion.
 - **Schema.** `034_user_memories.sql`; `020_drop_memory_documents.sql` and
   `046_drop_dead_tables.sql` for what came before.
 - **Tests.** Four files, 36 cases: `memory-extraction.test.ts` (19),
@@ -617,18 +625,20 @@ will build all of it.
 Searches behind the absence claims above, run from the repository root:
 
 ```sh
-rg -l 'buildUserMemoryBlock|backfillUserMemories|touchAccessed' -g '*.test.ts'  # none: the read path and the backfill are untested
-rg -n -i 'audit' apps/api/src/services/chat-service/memory-extraction.ts apps/api/src/services/chat-service/memory-backfill.ts  # none: extractor writes are unaudited
+rg -l 'buildUserMemoryBlock|backfillUserMemories|touchAccessed' -g '*.test.ts'  # user-context-blocks.test.ts and memory-backfill.test.ts, against a mocked repository
+rg -n -i 'audit' apps/api/src/services/chat-service/memory-extraction.ts apps/api/src/services/chat-service/memory-backfill.ts  # auditMemoryWrite: memory.auto_created and memory.backfilled
 rg -n "'memory\." apps/api/src/services/AuditService.ts                          # none: no memory action in the alert whitelist
 rg -n 'accessed_at' apps/api/src                                                  # written by touchAccessed, read by nothing
 rg -n 'memory-candidate|/remember' apps/api/src apps/web db/migrations/034_user_memories.sql  # comments saying it is unimplemented
 rg -n 'memoryBlock' apps/api/src --glob '!*.test.ts'                              # one consumer: external-system-prompt.ts, after the dynamic boundary
-rg -n 'category, key, value, importance' apps/api/src/controllers/export.controller.ts  # the export's column list
+rg -n 'content, source, is_active' apps/api/src/controllers/export.controller.ts  # the export's column list since 0e62e475
 rg -n 'column|category|importance' db/migrations/034_user_memories.sql            # the live table has neither column
 rg -n -i 'arxiv|bibtex|citation|doi' README.md docs                               # no paper
 ```
 
 ## History
+
+**2026-09-07** — [`9ffeca8c4c2bbad08864257ebb40b9998270ec52`](https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52) — re-pinned sixteen commits on, releases 1.46.0 to 1.49.0. Commit `0e62e475` of 7 September 2026, whose message and code comments name this atlas's 6 September reading as the source, moves the GDPR export to the live `user_memories` columns with tombstoned rows included and a `_meta.failedCategories` list, audits automatic extraction and the backfill as `memory.auto_created` and `memory.backfilled`, and adds tests for the prompt block, the export and the audit; `9ffeca8c` fixes two more old column lists the same export had for skills and custom agents. The `audit_log` evidence widens to the extractors; `negative_eval` stays withheld because the prompt-block isolation case runs against a mocked repository, so the exclusion it asserts is the mock's. The tombstone, the scope predicate and the policy did not move; three marks stand. Screened before reading: nine manifests inside the seven-day cooldown, nothing installed or run.
 
 **2026-09-06** — [`bca0967b948147464284b1bb7d857e25f731295a`](https://github.com/openmake/openmake_llm/commit/bca0967b948147464284b1bb7d857e25f731295a) — re-read at the head of `main`, eight commits past `ed74251e`, all dated 6 September 2026 in the maintainer's timezone: five substantive commits and three release commits, `1.45.0` to `1.45.2`. Screened first: the same shape as the previous reading — no auto-run surface, one build-time execution path, eight unpinned surfaces, eight files inside the seven-day cooldown — so nothing was installed and no test was run. The first commit, `2536b077`, names *"Agent Memory Atlas external review (2026-09-06, against ed74251e)"* as its source and addresses every finding the previous entry lists: the toggle is resolved from the stored preference by a new `memory-policy.ts`, deleted rows are read back as tombstones by the extractors and the backfill, `source` is written as the schema defines it, and the tab's creates and deletes are audited; the commits after it add a boundary tag and a line filter to the LLM extractor, token-overlap dedup with measured thresholds, a source badge in the tab, a cap-drop log, a report script and 36 tests. Two marks added, `tombstone` and `audit_log`, each with its reach stated in section 9. Three things the previous reading had wrong or missed, all present at the earlier pin: it said the block was *prepended* to the system prompt where a prefix cache would be invalidated, and the assembler had placed it after the static blocks at a boundary reserved for exactly that purpose — a claim about position was made from the block builder rather than from the file that assembles the prompt; it described the toggle defect as the WebSocket handler trusting the client, and the REST chat path never read the flag at all while agent tasks built the block for every non-guest — the upstream commit found both, and following `buildUserMemoryBlock` to each of its callers would have found them first; and it did not read the data export, whose query names the columns of the table dropped in May 2026 and returns nothing — following the table name past the memory's own files would have found it. The verdict is unchanged in kind and narrower in its risks.
 

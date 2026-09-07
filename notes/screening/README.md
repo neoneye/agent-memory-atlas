@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 229 of 377 screened at the report's current pin.**
+**Progress: 238 of 378 screened at the report's current pin.**
 
-17 further record(s) describe a revision the report has since moved
-off, and 131 report(s) have no record at all.
+14 further record(s) describe a revision the report has since moved
+off, and 126 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 87 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 96 |
-| Repositories with build-time execution (`EXEC`) | 171 |
+| Repositories with an auto-run surface (`RUNS`) | 91 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 98 |
+| Repositories with build-time execution (`EXEC`) | 177 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -30,6 +30,7 @@ These execute without a command being typed. Read before opening the tree.
 | System | Surfaces |
 | --- | --- |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
+| [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |
@@ -79,6 +80,8 @@ These execute without a command being typed. Read before opening the tree.
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
 | [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
+| [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
+| [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
@@ -88,6 +91,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
 | [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
+| [`neuron`](../../content/systems/neuron.md) | `.claude/settings.json` |
 | [`nexusmem`](../../content/systems/nexusmem.md) | `server.json` |
 | [`no-human`](../../content/systems/no-human.md) | `.claude-plugin/`, `server.json` |
 | [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |

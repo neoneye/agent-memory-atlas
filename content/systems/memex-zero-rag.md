@@ -6,25 +6,25 @@ root: ../..
 page_kind: system
 source_name: "JPeetz/MeMex-Zero-RAG"
 source_url: https://github.com/JPeetz/MeMex-Zero-RAG
-revision: 9728631e7f4b9129fa858f8542a89477231dfcf4
-revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4
-analyzed_at: 2026-08-19
+revision: f955d993d06cdf621d8ca7e004a27850eb9b6d34
+revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34
+analyzed_at: 2026-09-07
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown wiki page — source, entity, concept or synthesis — with YAML frontmatter and inline `[confidence:]`, `[sources:]`, `[verified:]` tags"
-  storage: "Files in a git repository. `raw/` is immutable input, `wiki/` is the LLM's output, `L1/` is per-install context"
+  storage: "Files in a git repository. `raw/` is immutable input, `wiki/` is the LLM's output, `L1/` is per-install context tracked only as `*.example` templates"
   retrieval: "A case-insensitive substring scan over every page, unranked, stopping at the first `limit` hits in directory order"
   write: "One MCP tool writes a page and commits it; everything else the design describes is returned to the model as numbered instructions"
   update_delete: "Overwrite behind an `overwrite` flag, with git history as the only prior version; no deletion path and no forgetting"
-  scoping: "None. One wiki per checkout; `L1/` is private by intent and tracked by git in practice"
-  integration: "An MCP server with nine tools, plus ingest scripts for Markdown, PDF, web clips and voice"
-  background: "None. A separate `confidence.py` and a separate hybrid searcher exist as standalone scripts the server never imports"
+  scoping: "None. One wiki per checkout; `L1/` is private by intent and ignored by git, with its templates tracked as `*.example`"
+  integration: "An MCP server with thirteen tools — search, read, read-by-slug, list, query, ingest, lint, graph, stats, confidence, write, flag and revalidate — plus ingest scripts for Markdown, PDF, web clips and voice"
+  background: "None. `confidence.py` backs the `wiki_confidence` tool and the hybrid searcher is imported lazily by `wiki_search` when its dependencies are present"
   trust: "Four-level confidence tags the LLM writes about its own claims — `high | medium | low | uncertain` — mapped to 4/3/2/1 and applied as a `min_confidence` floor on search, which is a graded threshold rather than a state that withholds"
   strengths: "An honest architectural bet — sources immutable, wiki derived, git as the whole audit — and a clean separation between what the human owns and what the model owns"
-  risks: "`L1/credentials.md` is committed despite `.gitignore` and its own warning; the citation rule, the contradiction stop and the log are all convention with no code behind them"
+  risks: "The citation rule and the contradiction stop are convention with no code behind them; a `quarantine` or `stale` status is a label no read path consults; `wiki_revalidate` needs no person"
 ---
 
 ## 1. Executive Summary
@@ -42,22 +42,14 @@ That bet is real and the file layout is a good expression of it. What this repor
 is about is the distance between the four features the README advertises and what
 the code does.
 
-**Start with the credentials file, because it is the one finding that can cost a
-reader something.** `.gitignore` contains `L1/`. `L1/credentials.md` opens with
-*"🔒 CRITICAL: This file is git-ignored. NEVER commit credentials."* And
-`git ls-files L1/` returns all three files in that directory. `.gitignore` does
-not untrack what is already tracked, so the protection the file describes does
-not apply to the file describing it. Editing it demonstrates the consequence
-immediately:
-
-```console
-$ printf 'OPENAI_API_KEY=sk-DEMO\n' >> L1/credentials.md
-$ git status --short L1/
- M L1/credentials.md
-```
-
-Nothing is leaked in the upstream repository — the template ships with the values
-blank. The exposure is downstream: a user who clones this, fills in the file the
+**Start with the credentials file, because it is the one finding that could
+have cost a reader something.** `.gitignore` contains `L1/`, and `git ls-files
+L1/` returns three `*.example` templates — `credentials.md.example`,
+`identity.md.example`, `rules.md.example` — and nothing else, so the file a
+person fills in is untracked from the moment they copy the template. At the
+previous pin the three live files were themselves tracked despite the ignore
+rule and the warning at the top of `credentials.md`; the exposure was
+downstream, for a user who cloned, filled in the file the
 instructions tell them to fill in, and pushes their fork has committed their API
 keys, having been told twice that they could not.
 
@@ -78,9 +70,17 @@ contradicted in every file you would be forking.
   cannot tell whether a citation supports the sentence beside it.
 - *"Human-in-the-loop conflict resolution."* `wiki/contradictions.md` describes
   the flow: the LLM detects a conflict, *"It STOPS and asks you to decide."* The
-  server exposes nine tools — `wiki_search`, `wiki_read`, `wiki_list`,
-  `wiki_query`, `wiki_ingest`, `wiki_lint`, `wiki_graph`, `wiki_stats`,
-  `wiki_write` — and none of them reads or writes that file. Nothing can stop.
+  server exposes thirteen tools — `wiki_search`, `wiki_read`,
+  `wiki_read_by_slug`, `wiki_list`, `wiki_query`, `wiki_ingest`, `wiki_lint`,
+  `wiki_graph`, `wiki_stats`, `wiki_confidence`, `wiki_write`, `wiki_flag`,
+  `wiki_revalidate` — and none of them reads or writes that file. What exists in
+  code is a page lifecycle: `wiki_flag` sets `status: quarantine` with a required
+  reason and a timestamp and refuses an `is_immutable` page, and `wiki_revalidate`
+  takes a flagged page to `active` (confirm or update, appending new sources) or
+  to `stale` (retire), refusing any other starting state
+  (`mcp/server.py:1011-1160`, `tests/test_wiki_flag.py`, `tests/test_wiki_revalidate.py`).
+  The model can call both; no step requires a person, and no read path consults
+  the status, so `human_review` and `trust_state` stay withheld.
 - *The operation log.* `wiki/log.md` exists and is 65 lines. The only occurrence
   of `log.md` in the Python is inside a returned string: step 6 of the
   instructions `wiki_ingest` hands back to the model, *"Update log: Append
@@ -117,9 +117,12 @@ and `[contradicts: page-name]`. Pages live under `sources/`, `entities/`,
 The design's epistemics are entirely in those tags, and the tags are written by
 the model about its own claims. `mcp/confidence.py` reads them back — weighting
 `high` at 1.0 down to `uncertain` at 0.2, flagging anything unverified for 90
-days as stale — and produces a report. Nothing on the read path consults a
-confidence level, so a claim tagged `uncertain` is returned by `wiki_search`
-exactly as a claim tagged `high` is. That is why `trust_state` is withheld:
+days as stale — and produces the `wiki_confidence` report. `wiki_search` applies
+a `min_confidence` floor, default `low`, so a page tagged `uncertain` is skipped
+unless the caller lowers the floor to `none` (`mcp/server.py:421-460`); a page
+with no tag counts as `medium`. That is a graded threshold on a label the writer
+chose, untested, rather than a state the store sets, which is why `trust_state`
+is withheld:
 the levels are a discretised self-assessment with no state that withholds
 anything from use.
 
@@ -134,7 +137,7 @@ flowchart TD
     W --> GIT["git add + git commit"]
     PAGE --> S["wiki_search:<br/>substring, unranked,<br/>break at limit"]
     LINT["wiki_lint"] -.->|"advisory, manual,<br/>fix unimplemented"| PAGE
-    CONF["confidence.py"] -.->|"separate script,<br/>never imported"| PAGE
+    CONF["wiki_confidence<br/>(confidence.py)"] -.->|"report only"| PAGE
     CONTRA["wiki/contradictions.md<br/>'It STOPS and asks you'"] -.->|"no tool touches this"| NONE["&nbsp;"]
     style INSTR fill:#7c5c1e,color:#fff
     style NONE fill:#7f1d1d,color:#fff
@@ -193,8 +196,8 @@ matters here.
 | `fix` mode that is not implemented | `mcp/server.py:459` |
 | Ingest returns instructions, not actions | `mcp/server.py:377`–`:382` |
 | Confidence weights and the 90-day stale rule | `mcp/confidence.py:69`, `:77` |
-| Hybrid BM25 + dense searcher, never imported | `mcp/search.py` |
-| `L1/` ignored in `.gitignore`, tracked in git | `.gitignore:8`, `git ls-files L1/` |
+| Hybrid BM25 + dense searcher, imported lazily by `wiki_search` | `mcp/search.py`, `mcp/server.py:430` |
+| `L1/` ignored in `.gitignore`, templates tracked as `*.example` | `.gitignore:8`, `git ls-files L1/` |
 | All-rights-reserved header on every source file | `mcp/confidence.py:2` and seven others |
 
 ## 5. Memory Data Model
@@ -343,11 +346,12 @@ guard, in code, and the only one in the tool surface.
 
 ## 10. Tests, Evals, and Benchmarks
 
-There is no test directory, no test file, and no CI configuration. For 3,300
-lines including a substring searcher with an off-by-nothing early break, a linter
-whose fix mode is a stub, and a hybrid searcher nobody imports, the absence is
-the finding: nothing would have caught any of the gaps in this report, because
-nothing runs.
+Forty-three tests in six files under `tests/`, all on the write side of the
+tool surface: the flag and revalidate lifecycle (23), `wiki_read_by_slug` (10),
+frontmatter injection through a title or an agent name (3), the write tool's
+status and integrity fields (3), and a reviewer payload (4). No test touches
+`wiki_search`, the linter or the ingest instructions, so nothing would catch a
+regression in the gaps this report names.
 
 No benchmark, no eval fixture, no committed retrieval results. The README's
 central comparative claim — that compiling beats retrieving because *"nothing
@@ -358,7 +362,8 @@ arms: `server.py`'s substring scan and `search.py`'s hybrid ranker over the same
 corpus would produce exactly the comparison the README asserts the answer to.
 
 `negative_eval` is withheld; no case asserts that particular material must not be
-retrieved.
+retrieved — the lifecycle tests assert what a page's frontmatter holds, not what
+a search returns.
 
 ## 11. For Your Own Build
 
@@ -495,6 +500,8 @@ would assume are enforced, and those are the ones worth moving first.
 | `L1/` | Private context — and tracked in git |
 
 ## History
+
+**2026-09-07** — [`f955d993d06cdf621d8ca7e004a27850eb9b6d34`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34) — the history was rewritten: the previous pin is no longer reachable from `main` and was fetched by its sha, and the two trees differ by 174 files, 275 insertions and 22,629 deletions — the private wiki content replaced with a neutral example, `wiki/contradictions.md` and `wiki/log.md` removed, `SCHEMA.md` given an optional `memory_type` taxonomy with a rule that untagged pages are never down-ranked, and `L1/` reduced to three tracked `*.example` templates, which closes the credentials finding. `mcp/` is byte-identical between the two trees, and that exposes four errors in the first reading, corrected above: the server had thirteen tools, not nine (`wiki_confidence`, `wiki_flag`, `wiki_revalidate`, `wiki_read_by_slug` were present); `tests/` held forty-three tests in three files, not none; `confidence.py` backs a tool and `search.py` is imported by `wiki_search`; and `wiki_search` applies a `min_confidence` floor. The status lifecycle those tools implement is agent-callable and unread by search, so every mark stays withheld. Screened before reading: one auto-run surface (`.mcp.json`), one build-time execution point, nothing installed or run.
 
 **2026-08-19** — [`9728631e7f4b9129fa858f8542a89477231dfcf4`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/9728631e7f4b9129fa858f8542a89477231dfcf4) — re-read, and the previous pin no longer exists. `c4337081a7df` is unreachable in a fresh clone even after fetching every branch and tag, so the history was rewritten upstream and the claims in the previous reading can no longer be checked at the commit they were made against. That is a limitation of this entry rather than a finding about the project, and it is why this reading re-verified from scratch rather than diffing.
 

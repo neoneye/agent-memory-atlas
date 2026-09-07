@@ -6,16 +6,16 @@ root: ../..
 page_kind: system
 source_name: "MythologIQ-Labs-LLC/agent-memory"
 source_url: https://github.com/MythologIQ-Labs-LLC/agent-memory
-revision: 5a110df1f552e417208e17357c3c590b50b519bf
-revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/5a110df1f552e417208e17357c3c590b50b519bf
-analyzed_at: 2026-08-19
+revision: 4b0ed7546fd8220a89eb9de8b800317f77bac823
+revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220a89eb9de8b800317f77bac823
+analyzed_at: 2026-09-07
 capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval, tombstone"
 capability_evidence:
-  tombstone: "the reference adapter — a rejected-value registry consulted before admission | reference/agentmem_ref/adapter.py | `RejectedValueRegistry` held on the adapter (:129), a `readmit` path for a deliberate reversal (:193), and a refusal returned as `rejected_value_requires_reconciliation` (:246) rather than a silent drop | reference/tests/"
+  tombstone: "the reference adapter — a rejected-value registry consulted before admission | reference/agentmem_ref/runtime/adapter.py | `RejectedValueRegistry` in `core/readmission.py:149` with its `readmit` path for a deliberate reversal (:209), consulted by the adapter, which returns the refusal as `rejected_value_requires_reconciliation` (`runtime/adapter.py:324`) rather than a silent drop | reference/tests/"
   bitemporal: "the reference substrate — validity time separate from record time | reference/agentmem_ref/ | `valid_from` carried on the fact and exercised by the deletion-completeness and comparator runners | reference/tests/run_deletion_completeness.py, run_trace_cmcp_comparator.py"
-  scope_enforced: "the governing adapter — domain, project and task refs checked on the read path | reference/agentmem_ref/adapter.py | `isolation_domain` applied as a filter, returning named refusals the substrate itself cannot produce | reference/tests/run_structural_mutation_governance.py"
-  audit_log: "the evidence layer — every mutation a proposal with a receipt | reference/agentmem_ref/receipts.py | receipts written per mutation beside `portable_evidence.py`, so an evidence artifact travels with the claim it backs | reference/tests/"
-  human_review: "admission — PAMA evaluates every mutation into one of five authority outcomes before the substrate is touched | reference/agentmem_ref/policy.py | the PAMA authority outcomes, with estimator confidence barred from reaching a verdict | reference/tests/run_capability_behavior_contract.py"
+  scope_enforced: "the governing adapter — domain, project and task refs checked on the read path | reference/agentmem_ref/runtime/adapter.py | `isolation_domain` applied as a filter, returning named refusals the substrate itself cannot produce | reference/tests/run_structural_mutation_governance.py"
+  audit_log: "the evidence layer — every mutation a proposal with a receipt | reference/agentmem_ref/core/receipts.py | receipts written per mutation beside `portable_evidence.py`, so an evidence artifact travels with the claim it backs | reference/tests/"
+  human_review: "admission — PAMA evaluates every mutation into one of five authority outcomes before the substrate is touched, and a refused proposal parks | reference/agentmem_ref/core/policy.py, reference/agentmem_ref/memory/decision_overwrite.py:103-147 | the PAMA authority outcomes with estimator confidence barred from reaching a verdict; under ADR-037 `require_review` fails closed, a proposal that cannot discharge parks as `PENDING` in `DurableDecisionRegistry` with its unmet criteria and remediation route, a bound human confirmation discharges it, self-verification and unbound attestations are refused, and resumption re-evaluates against current policy | reference/tests/run_capability_behavior_contract.py, reference/tests/test_verified_discharge.py (12 cases), reference/tests/test_dashclaw_correction_parks.py"
   negative_eval: "deletion and residue, as committed runners | reference/tests/ | committed conformance runners assert that deleted material does not come back and that undeclared residue is a hard gate — the sweep re-derives residue rather than trusting the purge traversal | reference/tests/run_deletion_completeness.py, run_structural_mutation_governance.py"
 stack_storage: "files, delegated"
 stack_retrieval: "lexical"
@@ -76,7 +76,7 @@ Whether a memory may *change* is a separate axis entirely. Every mutation is a `
 flowchart TD
   P["proposal to mutate"] --> PAMA{"PAMA evaluates:<br/>target class, risk,<br/>downstream authority"}
   PAMA -->|allow / allow_with_ledger| W["substrate write"]
-  PAMA -->|require_review| H["withheld pending a person"]
+  PAMA -->|require_review| H["parked pending a person (ADR-037)"]
   PAMA -->|require_external_verification| V["withheld pending evidence"]
   PAMA -->|block| X["refused"]
   W --> R["receipt + audit event<br/>the substrate does not persist"]
@@ -265,15 +265,17 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 
 ## Appendix: File Index
 
-- Deletion and derived state: `reference/agentmem_ref/residue.py`, `projections.py`, `deletion_completeness.py`, `portable_evidence.py`.
-- Governance: `reference/agentmem_ref/policy.py`, `adapter.py`, `scope_governance.py`, `shared_revocation.py`, `receipts.py`.
-- Substrate and comparators: `reference/agentmem_ref/substrate.py`, `graphiti_driver.py`, `mem0_comparator.py`, `systems_characterization.py`.
+- Deletion and derived state: `reference/agentmem_ref/state/residue.py`, `projections.py`, `deletion_completeness.py`, `portable_evidence.py`.
+- Governance: `reference/agentmem_ref/core/policy.py`, `adapter.py`, `scope_governance.py`, `shared_revocation.py`, `receipts.py`.
+- Substrate and comparators: `reference/agentmem_ref/state/substrate.py`, `graphiti_driver.py`, `mem0_comparator.py`, `systems_characterization.py`.
 - Runners: `reference/run_conformance.py`, `run_deletion_completeness.py`, `run_mem0_comparator.py`, `run_concurrency_evidence.py`.
 - Doctrine: `docs/28-retention-deletion-and-tombstones.md`, `docs/29-actor-scope-consent-and-tenancy.md`, `docs/04-governance-and-pama.md`, `docs/24-determinism-probability-and-governed-uncertainty.md`, `docs/adr/` (ADR-015, ADR-016, ADR-017, ADR-023, ADR-024, ADR-025).
 - Schemas and fixtures: `schemas/pama-decision.schema.json`, `decision-receipt.schema.json`, `memory-audit-event.schema.json`; `fixtures/` (36 files).
 - Validators: `scripts/validate_fixtures.py`, `validate_schemas.py`, `validate_doctrine_boundaries.py`.
 
 ## History
+
+**2026-09-07** — [`4b0ed7546fd8220a89eb9de8b800317f77bac823`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220a89eb9de8b800317f77bac823) — re-pinned 53 commits on, version 0.2.0. `agentmem_ref` is restructured into seven subpackages — `contracts`, `core`, `crg`, `harness`, `memory`, `runtime`, `state` — with the old module paths kept as import shims, so every citation in this report moves: the adapter to `runtime/adapter.py`, PAMA to `core/policy.py`, receipts and portable evidence to `core/`, residue, substrate and projections to `state/`, deletion completeness to `memory/`, the rejected-value registry to `core/readmission.py`. ADR-037 (PRs #377 to #384) makes `require_review` fail closed once a remediation path exists: a refused proposal parks in `DurableDecisionRegistry` with its unmet criteria, evidence carries a class it cannot claim and a lineage it cannot escape, a bound human confirmation discharges, self-verification and unbound attestations are refused, and a parked proposal carries no standing authority; `test_verified_discharge.py` holds the twelve cases. Ledger session seals are anchored under `refs/seals/`. 1,124 tests, 98 doctrine documents. Six marks stand, `human_review` on wider evidence. Screened before reading: one auto-run surface (`.github/copilot-instructions.md`), three manifests inside the seven-day cooldown, nothing installed or run.
 
 **2026-08-19** — [`5a110df1f552e417208e17357c3c590b50b519bf`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/5a110df1f552e417208e17357c3c590b50b519bf) — re-read 30 commits on. Every appendix path still resolves and every mark re-verified against the reference implementation, which is where this doctrine's claims are testable; all six now carry evidence records, which this report did not have.
 

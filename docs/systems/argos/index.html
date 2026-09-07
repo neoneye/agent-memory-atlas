@@ -130,14 +130,14 @@ those runs never exercised the version chains.</p>
               <strong>bobaba76/Argos</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124" title="f292996d9eb8f422a282be3850667f3471835124">
+            <a class="meta-pill revision-pill" href="https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af" title="755f652a5d1cff21b1a38c371f5790f79feb87af">
               <span>Analyzed revision</span>
-              <code>f292996d…</code>
+              <code>755f652a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-06</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -165,11 +165,11 @@ separately, converting to Apache 2.0 on 21 August 2030; 402 commits
 between 2 August and 6 September 2026, 397 by the maintainer and five by
 a coding agent that signs its pull requests; 220 issues and 123 pull
 requests in those five weeks; 46,635 lines of Python in
-<code>argos_plugin/</code> beside 148 test files carrying 2,750 test
-functions and 53,981 lines. The store is DuckDB 1.5.5 for records and a
-Kùzu 0.11.3 graph for entities, with <code>bge-small-en-v1.5</code>
-embeddings computed locally and an optional
-<code>bge-reranker-base</code> cross-encoder.</p>
+<code>argos_plugin/</code> at the previous pin beside 152 test files
+carrying 2,803 test functions and 55,102 lines. The store is DuckDB
+1.5.5 for records and a Kùzu 0.11.3 graph for entities, with
+<code>bge-small-en-v1.5</code> embeddings computed locally and an
+optional <code>bge-reranker-base</code> cross-encoder.</p>
 <p>The unit is a <code>memory_records</code> row with forty-odd columns
 (<code>store_core.py:96-133</code>): a category from eight, content, an
 embedding, a <code>status</code>, a <code>source</code>, a
@@ -592,9 +592,29 @@ on an invalid ACL while the code warned and opened.</p>
 explicit act, by design, and the one path where a model's judgement
 lands as active memory. The access log's rotation means a denial older
 than 100,000 rows is gone.</p>
+<p><strong>The sweep reaches the never-finalized states.</strong>
+<code>stale_review_sweep.py</code> re-reviews candidates left in
+<code>pending</code>, <code>reviewed_approved</code> and
+<code>pending_user_confirmation</code>, deduplicated across the three,
+so an auto-approved candidate nobody confirmed is re-examined rather
+than left forever; the sweep never promotes to <code>approved</code>
+(<code>tests/test_stale_review_sweep.py</code>,
+<code>test_no_auto_promotion_to_approved</code>).</p>
+<p><strong>Collections and the access audit.</strong>
+<code>store_collections.py</code> (466 lines) adds typed collections
+whose every SQL carries the
+<code>user_scope IS NULL OR user_scope = ?</code> predicate and whose
+listing is exhaustive by design;
+<code>tests/test_spec10_collections.py</code> (30 cases) includes
+<code>test_user_scope_isolation</code> and
+<code>test_facade_scope_isolation</code>.
+<code>tests/test_rpc_access_audit.py</code> (19 cases) pins that a
+facade denial, a forged <code>confirmed</code> flag in the envelope or
+the arguments, a forged HMAC and a CAS conflict each land in the access
+audit and survive a service restart, and that reads are not gated.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>148 test files, 2,750 test functions, 53,981 lines — more test than
+<p>152 test files, 2,803 test functions, 55,102 lines — more test than
 implementation — run hermetically with <code>HF_HUB_OFFLINE=1</code>.
 The suites that carry the marks:
 <code>test_deletion_tombstones.py</code> (nine cases, the re-feed
@@ -703,10 +723,6 @@ same store moving gpt-4o down and flash up with distillation, which is a
 statement about the answerer as much as the memory.</li>
 <li>When two values for one claim slot are both rejected at different
 times, which reason survives the <code>INSERT OR REPLACE</code>?</li>
-<li>Is a <code>reviewed_approved</code> candidate that is never
-confirmed ever swept? The stale-review sweep re-reviews pending
-proposals; the audit's own history says the sweep was
-configured-but-unimplemented until 1 September 2026.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <div class="table-wrap"><table>
@@ -806,8 +822,8 @@ CAS</td>
 </tr>
 <tr>
 <td><code>argos_plugin/tests/</code></td>
-<td>148 files</td>
-<td>2,750 test functions</td>
+<td>152 files</td>
+<td>2,803 test functions</td>
 </tr>
 <tr>
 <td><code>eval/repro/</code></td>
@@ -833,6 +849,20 @@ rg -n -i &#39;arxiv|bibtex|citation|doi\.org&#39; README.md docs MEMORY_SYSTEM.m
 rg -n -i &#39;agent-memory-atlas|neoneye|perseus&#39; --glob &#39;!*.jsonl&#39; .                         # spec-04, the contradiction matrix, the claims audit
 python3 -c &quot;import json;print(sum(json.loads(l)[&#39;autoeval_label&#39;][&#39;label&#39;] for l in open(&#39;eval/repro/judged_glm500_final.jsonl&#39;)))&quot;   # 449</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af"><code class="commit-id" title="755f652a5d1cff21b1a38c371f5790f79feb87af">755f652a…</code></a>
+— re-pinned two commits on. <code>store_collections.py</code> adds
+scope-filtered, exhaustively listed collections behind the facade with
+30 cases, <code>test_rpc_access_audit.py</code> adds 19 cases on forged
+confirmations and audited denials, and
+<code>stale_review_sweep.py</code> now re-reviews
+<code>reviewed_approved</code> and
+<code>pending_user_confirmation</code> candidates beside
+<code>pending</code>, which closes the open question this report carried
+about auto-approved candidates never confirmed. 152 test files, 2,803
+test functions. Seven marks stand on the same evidence. Screened before
+reading: <code>requirements.txt</code> inside the seven-day cooldown,
+nothing installed or run.</p>
 <p><strong>2026-09-06</strong> — <a
 href="https://github.com/bobaba76/Argos/commit/f292996d9eb8f422a282be3850667f3471835124"><code class="commit-id" title="f292996d9eb8f422a282be3850667f3471835124">f292996d…</code></a>
 — first reading, at the head of <code>master</code>, the twelfth commit

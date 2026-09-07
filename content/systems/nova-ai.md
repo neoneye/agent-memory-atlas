@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
-revision: 924f91acb98e9f5d46121c09d3429f981cc99f7f
-revision_url: https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f
-analyzed_at: 2026-08-15
+revision: 5d9892522d1a275f70db5c2f7d6ec4c59487029d
+revision_url: https://github.com/Whooptie/NOVA_AI/commit/5d9892522d1a275f70db5c2f7d6ec4c59487029d
+analyzed_at: 2026-09-07
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "concept graph, write path | core/semantic.py | add_sense tests status == rejected before the confidence/status branch and returns a blocked signal without touching the stored sense | tests/test_tombstone.py, test_add_sense_dedup_BLOKKEERT_rejected_status_BUG_32_FIX"
@@ -297,7 +297,10 @@ Two stores, different shapes.
 
 **Events.** SQLite `interactions` with `timestamp`, `month`, `year`,
 `event_type`, `data` (the JSON payload) and `created_at`, plus an
-`interactions_old` archive table with the same columns, plus a JSONL mirror. An
+`interactions_old` archive table with the same columns, plus a JSONL mirror;
+`search` and `query` read both tables through a `UNION ALL` unless the caller
+passes `include_archief=False`, so an event older than ninety days is still
+found (`core/memory.py`, `tests/test_memory_archief_search.py`). An
 `ignore_types` set keeps loop-inducing types out, including
 `memory:interaction_added` — memory listens to everything, including itself.
 
@@ -609,6 +612,8 @@ has yet written the delete.
 - Licence: `LICENSE.txt` ("Viewable, Not Reusable").
 
 ## History
+
+**2026-09-07** — [`5d9892522d1a275f70db5c2f7d6ec4c59487029d`](https://github.com/Whooptie/NOVA_AI/commit/5d9892522d1a275f70db5c2f7d6ec4c59487029d) — re-pinned eight commits on. On the memory path, `MemoryModule.search` and `query` read the `interactions_old` archive by default with an `include_archief` opt-out, and `get_stats` counts it (`core/memory.py`, ten cases in `tests/test_memory_archief_search.py`); a `core/last_context.py` module tracks the last concept a conversation resolved, the intent router grew by 476 lines, and a response-variant learner with a feedback log was added under `modules/response_learning/`. The committed state moved with use — `interactions.db`, the word-association map, the intent classifier. The concept graph, its statuses, tombstones and audit fields did not change; five marks stand on the same evidence. Screened before reading: no auto-run surface, two build-time execution points, nothing installed or run.
 
 **2026-08-15** — [`924f91acb98e9f5d46121c09d3429f981cc99f7f`](https://github.com/Whooptie/NOVA_AI/commit/924f91acb98e9f5d46121c09d3429f981cc99f7f) — 11 commits on. Two published criticisms closed and the tombstone's provenance reversed: what this report described as a property held by an omission is a designed, tested, human-gated refusal.
 

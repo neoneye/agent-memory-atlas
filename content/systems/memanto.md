@@ -6,10 +6,13 @@ root: ../..
 page_kind: system
 source_name: moorcheh-ai/memanto
 source_url: https://github.com/moorcheh-ai/memanto
-revision: d1902419321352f0108c499bd8ed4ebd129fe138
-revision_url: https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138
-analyzed_at: 2026-07-28
+revision: 06615f09c536336e629e34589dc125495cba3109
+revision_url: https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109
+analyzed_at: 2026-09-07
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "agent_id on every route and on the session it binds | memanto/app/routes/memory.py:74-79,:377-382,:410-423, memanto/app/services/memory_read_service.py, memanto/app/services/namespace_service.py | every memory route takes `agent_id` as a path segment validated by `validate_safe_id`, `enforce_session_scope` refuses a session whose `agent_id` is not the route's, and reads and conflict reports are issued per agent through the backend namespace | none"
+  human_review: "the conflict report a person resolves | memanto/app/routes/memory.py:1211-1240, memanto/app/models/__init__.py:169-200, memanto/cli/commands/memory.py (detect-conflicts, conflicts) | `/conflicts/resolve` takes an index into a dated report and one of the five actions, `validate_manual_resolution` requires the manual action to carry its text, and the CLI walks the report interactively | tests/test_cli.py:1284-1392 (resolve_conflict through the client: keep_new, expire_old, a rejected action, an invalid index)"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -208,13 +211,19 @@ store migration, which the conflicts themselves may not.
 
 ## 5. Memory Data Model
 
-A memory carries title, content, `confidence` (0–1, default 0.8), tags, type, and
-session linkage, all under an `agent_id`. Reads accept an `as_of_date`.
+A memory carries title, content, `confidence` (0–1, default 0.8), tags, type,
+a `source` that is an open per-writer label, provenance preserved across
+updates, and session linkage, all under an `agent_id`; a lifecycle `status` of
+`active` or `expired` with `expired_at` and `expired_by` stamped by the policy
+that fired (`memanto/app/core.py`, `services/memory_write_service.py`). Reads
+accept an `as_of_date`.
 
 What is absent:
 
 - **No trust state.** Confidence is a float set at write time; nothing marks a
-  memory candidate, verified, or rejected.
+  memory candidate, verified, or rejected. `expired` is a lifecycle stamp, and
+  a read returns expired rows with their status unless the caller narrows to
+  one (`memory_read_service.py:82,120,280-284`), so it withholds nothing.
 - **No tombstone.** `remove_both` deletes; nothing records that the value was
   judged wrong, so re-extraction from a later session can reintroduce it. In a
   system whose whole point is a nightly extraction pass, that is the gap that
@@ -227,9 +236,15 @@ What is absent:
 
 ## 6. Retrieval Mechanics
 
-Vector search through Moorcheh with filters, a confidence-aware read path, and
-an `as_of_date` parameter for temporal recall. Tests exist for filter
-sanitization, temporal recall, and confidence reads.
+Vector search through Moorcheh with filters, a confidence-aware read path, a
+status filter, and an `as_of_date` parameter for temporal recall.
+`search_as_of` returns what was created before the instant and not yet expired
+at it, so a memory expired since is still recalled as of an earlier date, and a
+recreated one does not displace the historical version
+(`memory_read_service.py:312-361`, `tests/test_as_of_expired_recall.py`). The
+one axis is record time — `created_at` against `expired_at` — with no declared
+validity interval. Tests exist for filter sanitization, temporal recall,
+multi-type union, and confidence reads.
 
 Because the vector service is the vendor's own, ranking behaviour is not
 inspectable here in the way a Postgres or SQLite system's would be. The on-prem
@@ -242,6 +257,15 @@ Three paths: direct store, batch write, and LLM extraction from conversation.
 Batch writes return per-item results, so a partial failure is visible rather than
 silent. The scheduled daily job then produces the summary and the conflict
 report over what accumulated.
+
+**Forgetting is a policy.** `services/memory_policy_service.py` holds a
+per-type retention table and ordered rules — a `pinned` tag never expires, a
+rule wins over the table, the first matching rule short-circuits — with three
+presets in `policy_presets.py` under which preferences, instructions and
+relationships never expire on a timer and `context` rots fastest; a sweep stamps
+`expired`, and `purge_expired` deletes after a separate window
+(`tests/test_memory_policy.py`). `remove_both` in a conflict resolution is still
+a hard delete.
 
 No write gate, actor model, or verification tier appears — as with
 [Memora](../memora/), the sophistication is in what happens to memories after
@@ -368,5 +392,7 @@ This lifecycle is generalized as [resolve, don't just detect](../../patterns/res
   `MOORCHEH_ONPREM_URL`).
 
 ## History
+
+**2026-09-07** — [`06615f09c536336e629e34589dc125495cba3109`](https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109) — re-pinned 192 commits on, past v0.2.20. The `ttl_seconds` field is gone; a memory carries `status: active | expired` with `expired_at` and `expired_by`, expiry is a policy of per-type retention, rules and presets with a sweep and a separate purge window, `search_as_of` keeps since-expired memories and prefers the historical version over a later recreation, `source` became an open per-writer label, provenance survives an update, the export conforms to Open Knowledge Format v0.2, a Langfuse migration path and Claude Code, Cursor and Codex hooks were added, and session lifecycle locks are per agent. `scope_enforced` and `human_review` stand on the same evidence; `trust_state` stays withheld because a read returns expired rows by default, and `bitemporal` because the as-of read travels one axis. Screened before reading: one auto-run surface (`.gitattributes`), six build-time execution points, nothing installed or run.
 
 **2026-07-28** — [`d1902419321352f0108c499bd8ed4ebd129fe138`](https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138) — first reading.

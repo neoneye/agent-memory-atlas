@@ -6,10 +6,13 @@ root: ../..
 page_kind: system
 source_name: "kovartravis/neuron"
 source_url: https://github.com/kovartravis/neuron
-revision: 9f6eaf9023eb62788d8ce143f314751336cdebd4
-revision_url: https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4
-analyzed_at: 2026-08-15
+revision: 79ab049d019994cea114f533fcd0f5c3700e4abf
+revision_url: https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf
+analyzed_at: 2026-09-07
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "project_id on every SQLite read | src/index.ts:101-141,:254-255,:770 | the store hashes the project root into `projectId` at construction and every query carries `m.project_id = ?` beside `superseded_by IS NULL` | src/index.supersession.test.ts:199-225, src/storage/dualStorageRouter.test.ts"
+  negative_eval: "superseded rows and antagonistic queries, as committed cases | src/index.supersession.test.ts:199-225, test/e2e/adversarial-recall.test.ts:230-260 | `query`/`queryVector` hard-exclude superseded rows by default and include them only with `includeSuperseded`; the adversarial pillar scores the false-accept rate over an antagonistic corpus and reports it | src/index.supersession.test.ts:199, test/e2e/adversarial-recall.test.ts"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -297,6 +300,16 @@ Embedding is local ONNX, computed on write into the mirror. Because the mirror
 is rebuildable, a lost or corrupt database is re-embedded from the files rather
 than lost.
 
+**Two write-time signals sit beside the gate.** The near-duplicate check widens
+to at most `NEAR_DUP_WIDEN_N` candidates by raw cosine, strips template
+boilerplate from both sides and reranks them against `NEAR_DUP_RERANK_BAR`
+(`src/index.ts`, `findSupersessionCandidate`); and `classifyPolarity`
+(`src/index.ts:1003-1023`) runs an NLI contradiction score on the one candidate
+that cleared it. The comment above it records the measurement that keeps it a
+soft flag: no bar reaches low false-silence and low false-accept at once against
+compatible-related pairs, so *"callers must not use this to refuse a write."* A
+contradiction is reported, never blocked.
+
 ## 8. Agent Integration
 
 The integration is the sharpest-thought-through part, and the fidelity ladder is
@@ -325,6 +338,15 @@ through the CLI, and it cannot write outside the schema. The recall side is
 deliberately taken away from the agent's judgement on supported harnesses — the
 harness injects, so recall does not depend on the model remembering to look,
 which is the failure the README names as the reason the hooks exist.
+
+**Injection is ledgered per session.** `src/harnesses/ledger.ts` records which
+entries were injected in a session's current epoch and the characters spent
+against a per-epoch budget, so a pre-prompt turn does not repeat what a
+`SessionStart` already handed the model; a ledger older than the staleness
+window is read as empty, degrading toward repetition rather than silence, and a
+context reset rolls the epoch and archives its cost (`ledger.test.ts`, 39
+cases). `neuron init` writes each detected client's `mcpServers` stanza with the
+same ask-on-conflict posture as the hook adapters (`src/harnesses/mcpClientConfig.ts`).
 
 ## 9. Reliability, Safety, and Trust
 
@@ -542,6 +564,8 @@ loudness and git rather than prevented.
 - `src/commands/hook.test.ts` — payload building and degradation posture.
 
 ## History
+
+**2026-09-07** — [`79ab049d019994cea114f533fcd0f5c3700e4abf`](https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf) — re-pinned 88 commits on, package version 2.4.5; most of the range is the documentation site. On the memory path: the write-time near-duplicate gate widens by cosine and reranks with template boilerplate stripped, an NLI contradiction score is computed for the single candidate as a soft flag the code says must not refuse a write, an injection ledger dedupes per session epoch under a character budget, `neuron init` writes MCP client configuration, store-health signals replace a hand count, and `deleteHistory` left the store class while `neuron memory delete` remains a CLI verb. The schema gate, the supersession exclusion and its tests did not move; two marks stand. Screened before reading: one auto-run surface (`.claude/settings.json`), two build-time execution points, nothing installed or run.
 
 **2026-08-15** — [`9f6eaf9023eb62788d8ce143f314751336cdebd4`](https://github.com/kovartravis/neuron/commit/9f6eaf9023eb62788d8ce143f314751336cdebd4) — re-pinned at release v2.4.1 ([`f52e303c6463444de17ef1b08b4bba20ffe51e50`](https://github.com/kovartravis/neuron/commit/f52e303c6463444de17ef1b08b4bba20ffe51e50) was v2.4.0). Screened again; the `.claude/settings.json` auto-run surface is still present, nothing installed or run. No mark changed — `scope_enforced` (`project_id = ?` on every read) and `negative_eval` both hold, and `negative_eval` is strengthened by the antagonistic-recall/antagonistic-write pillars now cited in §10. New context folded in: a fourth lifecycle point, `pre-command`, fires a gated lookup on every Bash tool call; a **resident git-log recall** source indexes the repo's own commit history into a parallel FTS+embedding table (`refreshGitLogIndex`/`searchGitLog`), so retrieval now spans the `.neuron/*.md` store and git history; a `RECALL_PROVENANCE_PREFIX` labels every injection as internal after agents mistook the hook's own output for injection; and a cross-process mkdir-mutex guards the SQLite migration chain. The v2.4.1 antagonistic-write pillar is an honest diagnostic confirming the write path catches shape violations but not near-duplicates, contradictions or missing provenance — so no value-keyed tombstone exists and none is claimed. Size restated as 745 tests across 68 files; the prior "~28,900 lines / ~700 tests" figures had drifted. No paper.
 

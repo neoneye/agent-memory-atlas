@@ -110,14 +110,14 @@ decision rather than a flag.</p>
               <strong>moorcheh-ai/memanto</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138" title="d1902419321352f0108c499bd8ed4ebd129fe138">
+            <a class="meta-pill revision-pill" href="https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109" title="06615f09c536336e629e34589dc125495cba3109">
               <span>Analyzed revision</span>
-              <code>d1902419…</code>
+              <code>06615f09…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-07</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -320,12 +320,22 @@ means a conflict report survives a store migration, which the conflicts
 themselves may not.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>A memory carries title, content, <code>confidence</code> (0–1,
-default 0.8), tags, type, and session linkage, all under an
-<code>agent_id</code>. Reads accept an <code>as_of_date</code>.</p>
+default 0.8), tags, type, a <code>source</code> that is an open
+per-writer label, provenance preserved across updates, and session
+linkage, all under an <code>agent_id</code>; a lifecycle
+<code>status</code> of <code>active</code> or <code>expired</code> with
+<code>expired_at</code> and <code>expired_by</code> stamped by the
+policy that fired (<code>memanto/app/core.py</code>,
+<code>services/memory_write_service.py</code>). Reads accept an
+<code>as_of_date</code>.</p>
 <p>What is absent:</p>
 <ul>
 <li><strong>No trust state.</strong> Confidence is a float set at write
-time; nothing marks a memory candidate, verified, or rejected.</li>
+time; nothing marks a memory candidate, verified, or rejected.
+<code>expired</code> is a lifecycle stamp, and a read returns expired
+rows with their status unless the caller narrows to one
+(<code>memory_read_service.py:82,120,280-284</code>), so it withholds
+nothing.</li>
 <li><strong>No tombstone.</strong> <code>remove_both</code> deletes;
 nothing records that the value was judged wrong, so re-extraction from a
 later session can reintroduce it. In a system whose whole point is a
@@ -339,9 +349,16 @@ deliberately.</li>
 </ul>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Vector search through Moorcheh with filters, a confidence-aware read
-path, and an <code>as_of_date</code> parameter for temporal recall.
-Tests exist for filter sanitization, temporal recall, and confidence
-reads.</p>
+path, a status filter, and an <code>as_of_date</code> parameter for
+temporal recall. <code>search_as_of</code> returns what was created
+before the instant and not yet expired at it, so a memory expired since
+is still recalled as of an earlier date, and a recreated one does not
+displace the historical version
+(<code>memory_read_service.py:312-361</code>,
+<code>tests/test_as_of_expired_recall.py</code>). The one axis is record
+time — <code>created_at</code> against <code>expired_at</code> — with no
+declared validity interval. Tests exist for filter sanitization,
+temporal recall, multi-type union, and confidence reads.</p>
 <p>Because the vector service is the vendor's own, ranking behaviour is
 not inspectable here in the way a Postgres or SQLite system's would be.
 The on-prem option (<code>MOORCHEH_ONPREM_URL</code>, with a
@@ -352,6 +369,17 @@ without making the ranking readable.</p>
 conversation. Batch writes return per-item results, so a partial failure
 is visible rather than silent. The scheduled daily job then produces the
 summary and the conflict report over what accumulated.</p>
+<p><strong>Forgetting is a policy.</strong>
+<code>services/memory_policy_service.py</code> holds a per-type
+retention table and ordered rules — a <code>pinned</code> tag never
+expires, a rule wins over the table, the first matching rule
+short-circuits — with three presets in <code>policy_presets.py</code>
+under which preferences, instructions and relationships never expire on
+a timer and <code>context</code> rots fastest; a sweep stamps
+<code>expired</code>, and <code>purge_expired</code> deletes after a
+separate window (<code>tests/test_memory_policy.py</code>).
+<code>remove_both</code> in a conflict resolution is still a hard
+delete.</p>
 <p>No write gate, actor model, or verification tier appears — as with <a
 href="../memora/">Memora</a>, the sophistication is in what happens to
 memories after they land.</p>
@@ -500,6 +528,24 @@ detect</a>.</p>
 (<code>MOORCHEH_API_KEY</code>, <code>MOORCHEH_ONPREM_URL</code>).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-07</strong> — <a
+href="https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109"><code class="commit-id" title="06615f09c536336e629e34589dc125495cba3109">06615f09…</code></a>
+— re-pinned 192 commits on, past v0.2.20. The <code>ttl_seconds</code>
+field is gone; a memory carries <code>status: active | expired</code>
+with <code>expired_at</code> and <code>expired_by</code>, expiry is a
+policy of per-type retention, rules and presets with a sweep and a
+separate purge window, <code>search_as_of</code> keeps since-expired
+memories and prefers the historical version over a later recreation,
+<code>source</code> became an open per-writer label, provenance survives
+an update, the export conforms to Open Knowledge Format v0.2, a Langfuse
+migration path and Claude Code, Cursor and Codex hooks were added, and
+session lifecycle locks are per agent. <code>scope_enforced</code> and
+<code>human_review</code> stand on the same evidence;
+<code>trust_state</code> stays withheld because a read returns expired
+rows by default, and <code>bitemporal</code> because the as-of read
+travels one axis. Screened before reading: one auto-run surface
+(<code>.gitattributes</code>), six build-time execution points, nothing
+installed or run.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/moorcheh-ai/memanto/commit/d1902419321352f0108c499bd8ed4ebd129fe138"><code class="commit-id" title="d1902419321352f0108c499bd8ed4ebd129fe138">d1902419…</code></a>
 — first reading.</p>
