@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 242 of 387 screened at the report's current pin.**
+**Progress: 246 of 391 screened at the report's current pin.**
 
 13 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 92 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 101 |
-| Repositories with build-time execution (`EXEC`) | 179 |
+| Repositories with an auto-run surface (`RUNS`) | 94 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 104 |
+| Repositories with build-time execution (`EXEC`) | 183 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -104,6 +104,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
+| [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
@@ -112,6 +113,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
+| [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |

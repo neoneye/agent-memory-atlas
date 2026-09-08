@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A FastAPI memory backend where one
+LLM call turns a message into fact triples carrying a validity window,
+every retrieval filters on that window through a single shared predicate
+with an as-of parameter threaded end to end, row-level security backs
+the tenant key the search SQL itself leaves to the auth layer, and a
+retracted fact is invisible to the conflict scan that would have caught
+it coming back.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenZync
+Core — Agent Memory Atlas">
+    <meta property="og:description" content="A FastAPI memory backend
+where one LLM call turns a message into fact triples carrying a validity
+window, every retrieval filters on that window through a single shared
+predicate with an as-of parameter threaded end to end, row-level
+security backs the tenant key the search SQL itself leaves to the auth
+layer, and a retracted fact is invisible to the conflict scan that would
+have caught it coming back.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenZync
+Core — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FastAPI memory backend
+where one LLM call turns a message into fact triples carrying a validity
+window, every retrieval filters on that window through a single shared
+predicate with an as-of parameter threaded end to end, row-level
+security backs the tenant key the search SQL itself leaves to the auth
+layer, and a retracted fact is invisible to the conflict scan that would
+have caught it coming back.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenZync Core — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenZync Core",
+      "description": "A FastAPI memory backend where one LLM call turns a message into fact triples carrying a validity window, every retrieval filters on that window through a single shared predicate with an as-of parameter threaded end to end, row-level security backs the tenant key the search SQL itself leaves to the auth layer, and a retracted fact is invisible to the conflict scan that would have caught it coming back.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Facts with a validity window</p>
+          <h1>OpenZync Core</h1>
+          <p class="document-deck">A FastAPI memory backend where one
+LLM call turns a message into fact triples carrying a validity window,
+every retrieval filters on that window through a single shared predicate
+with an as-of parameter threaded end to end, row-level security backs
+the tenant key the search SQL itself leaves to the auth layer, and a
+retracted fact is invisible to the conflict scan that would have caught
+it coming back.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openzync/openzync-core">
+              <span>Source</span>
+              <strong>openzync/openzync-core</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2" title="cf05de752d903d84c2a56802418bda1e311bb7f2">
+              <span>Analyzed revision</span>
+              <code>cf05de75…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenZync Core is the backend of a hosted agent-memory platform —
+AGPL-3.0 with a commercial-licence file beside it, 562 commits between 5
+June and 4 September 2026 by two authors, 72,199 lines of Python outside
+tests beside 89,713 lines of tests holding 3,542 test functions. The
+screen found no auto-run surface, seven build-time execution points in
+<code>conftest.py</code> files and a Makefile, two unpinned surfaces and
+nothing inside the seven-day cooldown; nothing was installed or run, and
+the read was made from a full clone. Storage is PostgreSQL with
+pgvector, Redis for the job queues, and a pluggable graph backend that
+defaults to FalkorDB with one graph per organisation and project.</p>
+<p><strong>The memory has two units and the second one is where the
+design lives.</strong> An episode is the raw turn. A fact is what one
+LLM call extracted from it — a subject, predicate and object, a
+confidence, and optionally a window saying when it was true. That single
+call (<code>workers/tasks/enrich_episode.py:316-328</code>,
+<code>temperature=0.0</code>) produces the classification, the entities,
+the fact triples and the schema-driven structured extractions together,
+and applies each section in its own savepoint so one bad section does
+not lose the others. Facts below a confidence of 0.3 are dropped, as are
+incomplete triples and windows born dead with
+<code>valid_from &gt;= valid_to</code>
+(<code>workers/tasks/extract_facts.py:33-92</code>).</p>
+<p><strong>Validity time is real here, and it is applied through one
+predicate rather than re-derived per query.</strong>
+<code>_effective_at_clause(t)</code>
+(<code>repositories/fact_repository.py:34-58</code>) builds the boolean
+expression that says a fact is effective at <code>t</code>: not
+hard-retracted at <code>t</code>, and <code>t</code> inside
+<code>[valid_from, valid_to)</code>. Both search legs apply it
+(<code>services/hybrid_retriever.py:491-493</code>,
+<code>:597-599</code>), so does the point-in-time reader and so does the
+project-wide reader, and an <code>as_of</code> parameter is threaded
+from the route through the retriever into the graph backends. A GiST
+exclusion constraint over <code>tstzrange(valid_from, valid_to)</code>
+enforces the non-overlap in the database rather than trusting the
+application
+(<code>migrations/versions/0024_add_temporal_exclusion_facts.py:66-80</code>).
+That earns <code>bitemporal</code>, with one limit stated plainly:
+<code>valid_from</code> defaults to insert time, so unless the extractor
+emits an explicit window the two axes collapse onto each other.</p>
+<p>Three more marks. <code>scope_enforced</code> on a project key in all
+four search legs with Postgres row-level security beneath it.
+<code>audit_log</code> on a middleware that enqueues a durable row for
+every non-exempt request. <code>negative_eval</code> on a test that
+gives a superseded fact the <em>same embedding</em> as its successor, so
+the superseded row must rank if the temporal filter fails, then asserts
+the successor present and the predecessor absent in both the vector and
+the BM25 leg
+(<code>tests/integration/test_fact_supersession.py:681-757</code>).</p>
+<p>Four findings sit against the design. <strong>A retracted fact cannot
+stop its own return.</strong> The conflict scan that runs before a write
+applies the same effective-at clause
+(<code>repositories/fact_repository.py:571</code>), and the
+database-level guard is scoped to live rows too (<code>0024:78</code>,
+<code>WHERE (invalid_at IS NULL)</code>), so a triple someone retracted
+is invisible to the check that would have caught it coming back, and it
+is simply inserted again. The <code>fact_invalidation_events</code>
+table records why each fact died and is read by exactly one function,
+which serves a history endpoint. <strong>The organisation key is missing
+from the search SQL.</strong> All four legs filter on
+<code>project_id</code>; the retriever is constructed with
+<code>org_id</code> and spends it on a Prometheus label. Isolation is
+real — a route guard above and RLS below — but not in the query.
+<strong>The cross-tenant tests do not run.</strong> Every test in
+<code>tests/security/test_cross_tenant.py</code> sits under a
+class-level skip, and CI runs only the unit and integration directories.
+<strong>Two documented things are not there:</strong>
+<code>episodes.token_count</code> is described in the model, returned to
+every client and written by no code, and the community summaries the
+README places in the assembled context are a hardcoded empty list in the
+retriever (<code>services/hybrid_retriever.py:281</code>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a triple with a life</strong>. The turn that
+produced it is kept, but the thing retrieval ranks and filters is the
+extracted fact: subject, predicate, object, and a window saying when
+that was so.</p>
+<p>A fact stops being true in one of two ways, and the schema keeps them
+apart. It can be <strong>superseded</strong> — a newer fact about the
+same subject and predicate closes the old one's window with
+<code>valid_to = now</code> and names its successor — or it can be
+<strong>retracted</strong>, which stamps <code>invalid_at</code> and is
+a claim about the record rather than about the world. Both leave the row
+in place with its text intact, and both are recorded as an event with a
+kind.</p>
+<p>Retrieval is a question asked at a moment. The default moment is now,
+and a caller can name another; every leg then asks which facts were
+effective then. Nothing is scored on trust — the confidence the
+extractor assigned is used once, at write time, to drop the weakest
+facts, and never consulted again.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a turn is stored inline and enqueues one LLM call that extracts entities, fact triples and structured data in a single response; a fact carries a validity window, and every read path filters on the same effective-at predicate at a chosen moment; supersession closes the old window and retraction stamps invalid_at, both recorded as events that no later write consults</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a turn is stored inline and enqueues one LLM call that extracts entities, fact triples and structured data in a single response; a fact carries a validity window, and every read path filters on the same effective-at predicate at a chosen moment; supersession closes the old window and retraction stamps invalid_at, both recorded as events that no later write consults
+flowchart TB
+    TURN[&quot;POST /memory&lt;br/&gt;a message turn&quot;]
+    INLINE[&quot;inline: idempotency, session,&lt;br/&gt;content-hash dedup,&lt;br/&gt;PII redaction, insert, commit&quot;]
+    EP[(&quot;episodes&lt;br/&gt;role, content, metadata,&lt;br/&gt;sequence, embedding&quot;)]
+    JOB[&quot;three background jobs:&lt;br/&gt;enrich, embed, link entities&quot;]
+    LLM[&quot;one LLM call returns&lt;br/&gt;classification, entities,&lt;br/&gt;fact triples, structured data&quot;]
+    FILT{&quot;confidence &amp;gt;= 0.3,&lt;br/&gt;triple complete,&lt;br/&gt;window not born dead?&quot;}
+    DROP[&quot;dropped&quot;]
+    FACT[(&quot;facts&lt;br/&gt;subject, predicate, object&lt;br/&gt;valid_from, valid_to, invalid_at&lt;br/&gt;superseded_by_fact_id&quot;)]
+    Q[&quot;search at a moment&lt;br/&gt;as_of, default now&quot;]
+    EFF[&quot;_effective_at_clause:&lt;br/&gt;not retracted at t, and t inside&lt;br/&gt;[valid_from, valid_to)&quot;]
+    LEGS[&quot;five legs, in sequence:&lt;br/&gt;vector and BM25 over episodes&lt;br/&gt;and facts, plus a graph walk&quot;]
+    RRF[&quot;reciprocal rank fusion, k=60&lt;br/&gt;then optional cross-encoder&quot;]
+    SUP[&quot;supersede: close the old window,&lt;br/&gt;name the successor&quot;]
+    RET[&quot;retract: stamp invalid_at&quot;]
+    EV[(&quot;fact_invalidation_events&lt;br/&gt;read only by the history endpoint&quot;)]
+
+    TURN --&gt; INLINE
+    INLINE --&gt; EP
+    INLINE --&gt; JOB
+    JOB --&gt; LLM
+    LLM --&gt; FILT
+    FILT -- no --&gt; DROP
+    FILT -- yes --&gt; FACT
+    EP --&gt; LEGS
+    FACT --&gt; LEGS
+    Q --&gt; EFF
+    EFF --&gt; LEGS
+    LEGS --&gt; RRF
+    FACT --&gt; SUP
+    FACT --&gt; RET
+    SUP --&gt; EV
+    RET --&gt; EV</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A FastAPI monolith in layers that are kept honest:
+<code>routers/</code> (thirty modules) hold the endpoints,
+<code>services/</code> the business logic, <code>repositories/</code>
+every piece of database access, <code>models/</code> the SQLAlchemy
+tables. <code>packages/</code> holds the swappable parts — the graph
+backends, the reranker, the community algorithms.
+<code>workers/tasks/</code> and <code>services/worker/</code> are two
+task trees registered into one ARQ worker.</p>
+<p>Sizes: <code>services</code> 18,265 lines, <code>packages</code>
+9,354, <code>repositories</code> 7,088, <code>core</code> 7,062,
+<code>routers</code> 6,844, <code>workers</code> 6,319,
+<code>migrations</code> 4,702 across 54 revisions, <code>schemas</code>
+4,648, <code>middleware</code> 2,570, <code>models</code> 2,304.</p>
+<p>The graph backend isolates tenants physically rather than by
+predicate: one graph per organisation and project, keyed
+<code>f"openzync_{org_id}_{project_id}"</code>
+(<code>packages/graph_backend/falkordb.py:171-172</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> PostgreSQL with three extensions,
+Redis, an ARQ worker, and a model endpoint for enrichment. FalkorDB for
+the graph, or SurrealDB. Compose and Helm charts ship, with OpenBao for
+secrets and a Grafana stack.</li>
+<li><strong>Fully local and offline:</strong> no. The enrichment path
+needs a model, and without it a stored episode never becomes a
+fact.</li>
+<li><strong>Hand-repairable:</strong> the store is Postgres with 54
+migrations and JSON columns; the graph is rebuildable from it.</li>
+<li><strong>Install:</strong> Compose for development, Helm for a
+cluster, with a bootstrap script that creates a migrator role owning the
+tables and an application role with CRUD only.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store a turn.</strong>
+<code>services/memory_service.py:127</code> <code>ingest()</code> runs
+inline and numbered: idempotency key (<code>:184-186</code>), session
+resolve (<code>:207-208</code>), content-hash dedup
+(<code>:224-232</code>) with a race-safe claim into
+<code>ingest_dedup</code> (<code>:251-258</code>), sequence number
+(<code>:285</code>), PII detection and redaction
+(<code>:299-313</code>), batch insert (<code>:319-320</code>), blob
+upload (<code>:337-341</code>), commit (<code>:352</code>), enqueue
+(<code>:364</code>).</li>
+<li><strong>Extract.</strong>
+<code>workers/tasks/enrich_episode.py:99-110</code> runs one LLM call
+(<code>:316-328</code>) returning every section at once and applies them
+in independent savepoints (<code>:121-127</code>), each flipping a bit
+in an enrichment bitmask (<code>workers/tasks/base.py:44-52</code>).
+<code>workers/tasks/extract_facts.py:39-117</code> drops facts under the
+0.3 confidence floor (<code>:33</code>, <code>:58</code>), incomplete
+triples (<code>:66</code>) and windows where
+<code>valid_from &gt;= valid_to</code> (<code>:81-92</code>), then
+resolves subject and object against known graph entities
+(<code>:120-172</code>).</li>
+<li><strong>Filter by time.</strong>
+<code>repositories/fact_repository.py:34-58</code> is the one predicate.
+Its docstring names the trap it exists for: supersession closes a window
+rather than setting <code>invalid_at</code>, <em>"so filtering only on
+<code>invalid_at IS NULL</code> would let superseded facts leak into
+queries."</em></li>
+<li><strong>Search.</strong>
+<code>services/hybrid_retriever.py:86</code> runs five legs sequentially
+(<code>:149-228</code>), aborting the whole search if any fails
+(<code>:103-105</code>); the query is embedded once and shared
+(<code>:147</code>). Fusion is <code>_rrf_merge</code>
+(<code>:682-736</code>) with <code>RRF_K = 60</code>, applied to
+episodes and facts separately (<code>:234-242</code>) while entities
+bypass it (<code>:244-245</code>). An optional cross-encoder reranks
+afterwards (<code>:248-256</code>).</li>
+<li><strong>Supersede or retract.</strong>
+<code>repositories/fact_repository.py:593</code> writes
+<code>valid_to = now</code> on the predecessor, called from
+<code>services/fact_invalidation_service.py:430</code>,
+<code>:471</code>, <code>:694</code>; the retract route is
+<code>routers/facts.py:191-241</code>. Both append to
+<code>fact_invalidation_events</code>
+(<code>repositories/fact_repository.py:676</code>), whose only reader is
+<code>get_fact_history</code> (<code>:719-744</code>).</li>
+<li><strong>Audit.</strong> <code>middleware/audit.py:333-344</code>
+enqueues one job per non-exempt request;
+<code>services/worker/tasks/audit_log.py:72</code> and
+<code>services/audit_log_service.py:70</code> write the row.</li>
+<li><strong>Scope.</strong> <code>dependencies/project_auth.py:34</code>
+gates the routes; <code>dependencies/db.py:73-83</code> sets
+<code>app.org_id</code> per request and each worker sets it per job; the
+RLS policies were created in the initial migration
+(<code>0001_initial_schema.py:266-316</code>) and extended to the graph
+tables in <code>0020</code> and <code>0025</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An <strong>episode</strong> (<code>models/episode.py:25-123</code>):
+id, organisation, project, session, user, role, content, metadata,
+embedding, <code>token_count</code>, sequence number, an enrichment
+status bitmask, a soft-delete flag, and record timestamps.</p>
+<p>A <strong>fact</strong> (<code>models/fact.py:26-153</code>): id,
+project, user, organisation — the last carrying a comment that its
+integrity is <em>"application-enforced, not DB-enforced"</em>
+(<code>:79-82</code>) — content, subject, predicate, object with their
+types and optional entity ids, confidence, source episode,
+<code>valid_from</code>, <code>valid_to</code>, <code>invalid_at</code>,
+<code>superseded_by_fact_id</code>, embedding and
+<code>embedded_at</code>.</p>
+<p>A <strong>fact invalidation event</strong>
+(<code>models/fact_invalidation_event.py:25-99</code>) with a CHECK
+restricting its kind to superseded, retracted, llm_invalidated or
+time_expired (<code>0048:126-130</code>).</p>
+<p><strong>Temporal:</strong> two axes, kept apart and both read.
+<code>bitemporal</code> earned.</p>
+<p><strong>Trust:</strong> a confidence float, used once at extraction
+and never on a read. <code>trust_state</code> withheld.</p>
+<p><strong>Scoping:</strong> organisation and project columns, RLS
+policies, route guards. <code>scope_enforced</code> earned.</p>
+<p><strong>Tombstone:</strong> withheld — see section 9.</p>
+<p><strong>A column with no writer.</strong>
+<code>episodes.token_count</code> is documented in the model as the
+message's approximate token count (<code>:38</code>), declared with a
+server default of 0 in the migration (<code>0001:114</code>), and
+returned to every API consumer (<code>schemas/mappers.py:93</code>). The
+insert names ten columns and that is not one of them
+(<code>repositories/episode_repository.py:102-107</code>); it appears in
+the statement only inside the <code>RETURNING</code> list
+(<code>:111</code>), read straight back out at <code>:133</code>.
+<code>rg -n "UPDATE episodes"</code> finds nine statements and none
+touches it. Every episode reports zero.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Five legs, run one after another rather than concurrently, and a
+failure in any one raises rather than degrading — the code is explicit
+that a partial result is not offered. Vector legs use pgvector's cosine
+distance operator scored as <code>1 - distance</code>; BM25 legs use
+<code>plainto_tsquery</code> with <code>ts_rank</code>; the graph leg
+fans out over every configured backend, dedups by entity id, sorts by
+distance and truncates at fifty.</p>
+<p>Fusion is reciprocal rank at <code>k = 60</code>, and the interesting
+choice is that episodes and facts are fused in separate pools while
+entities skip fusion entirely — so the raw turn and the extracted claim
+compete within their own kind rather than against each other.</p>
+<p><strong>There is no relevance threshold anywhere on the read
+path.</strong> The only cutoffs are a result limit, the graph walk's
+fifty, and the reranker's top-k and top-n. The single numeric threshold
+in the fact pipeline is the 0.3 confidence floor at extraction time, and
+while <code>confidence</code> is selected into every result row it is
+never used to rank or filter.</p>
+<p><strong>Failure modes.</strong> A stalled enrichment leaves an
+episode with no facts, which a cron job reconciles. An embedding that
+never lands leaves a row invisible to the vector legs, which filter on a
+non-empty embedding. And a fact whose window the extractor did not set
+is effective from the moment it was written, which is the right default
+and erases the distinction the schema exists to draw.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The turn is stored before anything is understood.</strong>
+Persistence, dedup and PII redaction are inline and synchronous;
+extraction, embedding and entity linking are jobs. That ordering is the
+right one — a model outage costs facts, not turns.</p>
+<p><strong>One call, four sections, four savepoints.</strong>
+Classification, entities, facts and structured extractions come back
+together and are applied independently, so a malformed entity list does
+not cost the facts beside it. Each success flips a bit in the episode's
+enrichment mask, which is what the reconciliation cron reads.</p>
+<p><strong>Correction is a new row.</strong> Nothing edits a fact's
+text. Supersession closes the predecessor's window and names the
+successor; retraction stamps <code>invalid_at</code>. Both write an
+event naming the kind.</p>
+<p><strong>What the write path does not do</strong> is consult the dead.
+The conflict scan that looks for facts to supersede applies the
+effective-at clause
+(<code>repositories/fact_repository.py:569-571</code>), so it sees only
+live rows.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A write is one transaction plus three enqueues; no model call.</li>
+<li>Enrichment is one LLM call per episode at up to 8,192 output
+tokens.</li>
+<li>A search is five sequential database round trips plus one embedding,
+and an optional cross-encoder pass.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The surface is HTTP: thirty routers covering memory, search, context,
+facts, sessions, graph, schemas, webhooks and audit. Context assembly
+(<code>services/context_service.py:124</code>) caches on the
+organisation, project, query and as-of instant, then calls hybrid
+search.</p>
+<p>The README's feature list names an MCP server twice. It is not in
+this repository — every <code>mcp</code> token in the Python is a
+<code>must-change-password</code> JWT claim — and the commercial-licence
+file places it in a separate repository alongside the SDK, the frontend
+and the docs. The one interface here is a Streamlit chat client.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Bitemporal — awarded.</strong> Validity and record time are
+separate columns, one predicate applies validity on every read path, an
+as-of parameter reaches the graph backends, and a GiST exclusion
+constraint enforces non-overlap in the database. The predicate's own
+docstring explains why filtering on <code>invalid_at</code> alone would
+be wrong, which is the kind of comment that survives a refactor.</p>
+<p><strong>Scope — awarded, with the gap named.</strong> A project
+column on every search leg, a membership dependency on every route, and
+RLS policies on eleven tables driven by a per-request session setting
+that workers set too. What the search SQL does not carry is the
+organisation key: the retriever holds it and uses it for a metrics
+label. Two repository methods make the asymmetry visible — the BM25
+searches filter on the organisation while their vector siblings take no
+organisation parameter at all
+(<code>repositories/fact_repository.py:1180-1181</code> against
+<code>:1114</code>; <code>repositories/episode_repository.py:485</code>
+against <code>:434</code>) — though both vector methods are dead code
+with no production caller.</p>
+<p><strong>Audit log — awarded.</strong> Every non-exempt request
+produces a durable row with actor, action, resource and trace id,
+written by a worker so the request does not pay for it, into a model
+documented as append-only and deliberately without an
+<code>updated_at</code>. The entity-merge worker writes a second kind
+with before and after.</p>
+<p><strong>Negative evaluation — awarded, and the test is better than
+most here.</strong> Giving the superseded fact the same embedding as its
+successor removes the possibility that the assertion passes because the
+row ranked badly. It must rank; the filter is what keeps it out. Both
+legs are asserted, with the successor's presence in the same block.</p>
+<p><strong>Tombstone — withheld, and the near-miss is precise.</strong>
+Everything needed is present: a retraction that keeps the row, a
+<code>superseded_by_fact_id</code> naming the successor, and a
+<code>fact_invalidation_events</code> table recording why each fact died
+with a constrained kind. What is missing is a consultation. The conflict
+scan that runs before a write filters to live facts, the database's
+exclusion constraint carries <code>WHERE (invalid_at IS NULL)</code>,
+and the invalidation events are read by one function serving a history
+endpoint. Retract a fact and re-assert the identical triple and nothing
+objects.</p>
+<p><strong>Trust state — withheld.</strong> A confidence float,
+thresholded once at extraction and never read on a retrieval path. There
+is no status on a fact or an episode; the only constrained status
+vocabulary in the schema belongs to organisation lifecycle. The
+<code>is_merged</code> flag on graph entities <em>is</em> applied as a
+read filter, but it is a deduplication marker rather than a
+candidate-verified-rejected ladder.</p>
+<p><strong>Human review — withheld.</strong> The only adjudication over
+memory content is the retract endpoint, reachable by any credential with
+project write including an API key. The one interface in the tree is a
+chat client; the admin dashboard the README advertises is a separate
+repository.</p>
+<p><strong>What is not covered.</strong>
+<code>tests/security/test_cross_tenant.py</code> holds seven cases under
+a class-level <code>@pytest.mark.skip</code>, and CI runs only the unit
+and integration directories, so that file is never collected. The live
+cross-tenant assertion that does run covers extraction schemas rather
+than memory. Given that the search SQL leaves the organisation key to
+RLS, this is the gap worth closing first.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>3,542 test functions in 271 files and 89,713 lines, against 72,199
+lines of source: 3,150 unit, 364 integration, 14 in
+<code>tests/evals/</code>, 7 in <code>tests/security/</code>, 5
+end-to-end, one benchmark. The integration suite runs against a real
+Postgres through testcontainers and is the one that carries the temporal
+work.</p>
+<p><code>tests/evals/</code> measures <strong>extraction quality
+only</strong> — classification accuracy at or above 0.85, entity type
+accuracy and recall at 0.80, structured extraction at 0.85, PII
+detection at 1.0 with regex rules — against committed golden files.
+Three of the five need a live model, all are gated behind a
+<code>--run-eval</code> flag, and no results are committed. Nothing in
+it measures retrieval.</p>
+<p>A LongMemEval harness exists
+(<code>tests/benchmarks/test_longmemeval.py</code>) and cannot run from
+this tree: it wants a live instance, a model judge, and a dataset
+directory that is not in the repository.
+<code>benchmarks/results/</code> contains a <code>.gitkeep</code>.</p>
+<p>Two suites are dead. The end-to-end tests call routes that no longer
+exist — they use a user-prefixed path for memory, sessions and search,
+and all three moved under a project prefix — and they request a fixture
+their own conftest declines to export. And the coverage configuration
+names a package that is not in the tree, so coverage as configured
+measures nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write the temporal predicate once and make every read path
+import it.</strong> The failure this prevents is subtle and common:
+supersession that closes a window is invisible to a filter that only
+checks a retraction flag, and a per-query hand-rolled predicate will get
+that wrong somewhere.</li>
+<li><strong>Put the exclusion constraint in the database.</strong> A
+GiST constraint over the validity range means an overlapping window is a
+write error rather than a ranking anomaly nobody notices.</li>
+<li><strong>Thread the as-of parameter all the way down</strong>,
+including into the graph backend. A point-in-time query that is honest
+in SQL and approximate in the graph is worse than not having one.</li>
+<li><strong>Store the turn before you understand it.</strong> Inline
+persistence with background extraction means a model outage costs facts,
+not conversations.</li>
+<li><strong>Apply each section of a multi-part extraction in its own
+savepoint</strong>, so a malformed entity list does not cost the facts
+that parsed.</li>
+<li><strong>Give the excluded row the same embedding as the included one
+in your exclusion test.</strong> Otherwise the test passes when ranking
+happens to bury it, and you learn nothing about the filter.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A retraction the write path cannot see.</strong> Recording
+why a fact died and then scanning only live facts before the next write
+means the retraction informs a history endpoint and nothing else.</li>
+<li><strong>A scope key that lives in the route guard and the database
+but not the query.</strong> Two of the three layers here are real; the
+missing one is the layer a reader inspecting the SQL would check.</li>
+<li><strong>Skipping the isolation suite.</strong> Seven cross-tenant
+tests under a class-level skip, in a directory CI does not run, is the
+same as not having them.</li>
+<li><strong>Returning a column nothing writes.</strong> Every episode
+reports a token count of zero to every client.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right for a team building a hosted memory where <em>when was this
+true</em> is a real question and the answer has to survive being asked
+about the past. The temporal work is the strongest part and it is done
+properly, from the shared predicate down to the database constraint.
+Wrong if you need correction that prevents re-assertion, any notion of a
+claim's standing beyond a float, a review surface, or a system that runs
+without a model.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will the conflict scan ever see the dead? Dropping the effective-at
+clause from that one query, or checking the invalidation events beside
+it, is what separates a history endpoint from a tombstone.</li>
+<li>Will the organisation key reach the search SQL? RLS covers it today,
+and the two vector repository methods that omit the key while their BM25
+siblings carry it suggest the asymmetry is an oversight rather than a
+decision.</li>
+<li>What unskips the cross-tenant suite? It needs a real database and
+three seeded organisations, which the integration suite already
+provisions.</li>
+<li>Is the confidence float worth keeping? It is computed by the model,
+thresholded once, carried on every row and returned in every result, and
+no read path consults it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>models/fact.py</code></td>
+<td>The fact table: the triple,
+<code>valid_from</code>/<code>valid_to</code> (122-127),
+<code>invalid_at</code> (128), <code>superseded_by_fact_id</code>
+(131)</td>
+</tr>
+<tr>
+<td><code>models/episode.py</code></td>
+<td>The turn: content, embedding, enrichment mask,
+<code>token_count</code> (87)</td>
+</tr>
+<tr>
+<td><code>models/fact_invalidation_event.py</code></td>
+<td>The death record and its constrained kind</td>
+</tr>
+<tr>
+<td><code>repositories/fact_repository.py</code></td>
+<td><code>_effective_at_clause</code> (34-58), the conflict scan
+(569-571), supersession (593), the event write (676),
+<code>get_fact_history</code> (719-744)</td>
+</tr>
+<tr>
+<td><code>services/hybrid_retriever.py</code></td>
+<td>Five legs (149-228), the temporal filters (491-493, 597-599),
+<code>_rrf_merge</code> (682-736), the community placeholder (281)</td>
+</tr>
+<tr>
+<td><code>services/memory_service.py</code></td>
+<td>Inline ingest (127-364) and the three enqueues (659-672)</td>
+</tr>
+<tr>
+<td><code>workers/tasks/enrich_episode.py</code></td>
+<td>The single LLM call (316-328) and the savepoint sections
+(121-127)</td>
+</tr>
+<tr>
+<td><code>workers/tasks/extract_facts.py</code></td>
+<td>The 0.3 floor (33), the filters (39-117), entity resolution
+(120-172)</td>
+</tr>
+<tr>
+<td><code>middleware/audit.py</code></td>
+<td>The per-request audit enqueue (333-344)</td>
+</tr>
+<tr>
+<td><code>dependencies/db.py</code>,
+<code>dependencies/project_auth.py</code></td>
+<td>The RLS session setting (73-83) and the membership guard (34)</td>
+</tr>
+<tr>
+<td><code>migrations/versions/0001_initial_schema.py</code></td>
+<td>The tables and the RLS policies (266-316)</td>
+</tr>
+<tr>
+<td><code>migrations/versions/0024_add_temporal_exclusion_facts.py</code></td>
+<td>The GiST exclusion constraint (66-80)</td>
+</tr>
+<tr>
+<td><code>packages/graph_backend/falkordb.py</code></td>
+<td>One graph per organisation and project (171-172)</td>
+</tr>
+<tr>
+<td><code>tests/integration/test_fact_supersession.py</code></td>
+<td>The negative eval (681-757)</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>3,542 test functions in 271 files, 89,713 lines</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -i &#39;tombstone&#39; .                                        # none
+rg -i &#39;trust_state|verification_status|is_verified|needs_review&#39; .   # none: no status on a memory
+rg -i &#39;human_review|approve_fact|adjudicate&#39; .             # none
+rg -n &#39;token_count\s*=&#39; --glob &#39;*.py&#39; .                    # 2: a RETURNING read-back and a test stub; no writer
+rg -n &#39;UPDATE episodes&#39; --glob &#39;*.py&#39; .                    # 9 statements, none touching token_count
+rg -n &#39;search_by_vector&#39; --glob &#39;*.py&#39; .                   # 2 definitions and their own tests; no production caller
+rg -l -i &#39;mcp&#39; --glob &#39;*.py&#39; .                             # every hit is the must-change-password JWT claim
+rg -i &#39;FORCE ROW LEVEL SECURITY&#39; .                         # none: the app role&#39;s RLS depends on table ownership</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2"><code class="commit-id" title="cf05de752d903d84c2a56802418bda1e311bb7f2">cf05de75…</code></a>
+— first reading, at the head of <code>main</code>, four days after the
+last commit. Screened before anything was read: no auto-run surface,
+seven build-time execution points in <code>conftest.py</code> files and
+a Makefile, two unpinned surfaces, nothing inside the seven-day
+cooldown; nothing was installed or run, and the read was made from a
+full clone. Four marks. <code>bitemporal</code> rests on one shared
+predicate rather than on the columns: <code>_effective_at_clause</code>
+is applied by both search legs, the point-in-time reader and the project
+reader, with a database-level exclusion constraint under it.
+<code>scope_enforced</code> rests on a project key in all four search
+legs plus row-level security, with the organisation key's absence from
+that SQL stated in section 9. <code>audit_log</code> rests on a
+per-request enqueue into an append-only table.
+<code>negative_eval</code> rests on a case that gives the superseded row
+the same embedding as its successor so ranking cannot do the filter's
+work. <code>tombstone</code>, <code>trust_state</code> and
+<code>human_review</code> were each examined and withheld, the first
+with its near-miss in section 9. The reading covers the fact model, the
+temporal machinery, the ingest and enrichment pipeline, the hybrid
+retriever and the tenancy layers; the graph backends, the community
+algorithms, the webhook and blob subsystems and the thirty routers
+beyond memory, search, facts and audit were treated as context.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

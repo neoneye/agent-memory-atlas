@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 387 reports.</strong></p>
+<p><strong>This page covers all 391 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -13120,6 +13120,135 @@ to be something a commit can fail.</li>
 about people rather than about code, retrieval by content rather than by
 the file being edited, or any guarantee that a decision was actually
 read — every hook fails open by design.</li>
+</ul>
+<h3 id="sage-memory"><a
+href="../systems/sage-memory/"><code>sage-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a memory is unreadable until something votes it
+in.</strong> A submit writes <code>proposed</code>, every recall path
+hard-codes a committed status filter, and the store turns it into
+<code>AND status IN ('committed','challenged')</code>, so a memory
+nothing has voted on is absent rather than ranked low.</li>
+<li>Second idea: <strong>the decayed-confidence floor is applied across
+the whole candidate set before the top-K trim</strong>, which is the
+ordering that turns a correctness floor into more than pagination.</li>
+<li>Biggest risk: <strong>on the default install the vote is one
+validator key running three string heuristics.</strong> The README's
+opening line says BFT consensus validation; the genesis has one
+validator, the decision is a duplicate check, a twenty-character length
+check with eight hardcoded phrases and a confidence check, and the
+project's own qualification sits 130 lines below the claim.</li>
+<li>Most reusable component: the read path in <code>QuerySimilar</code>
+— an embedding-provider pin so vectors from two models are never
+compared, a decay floor over all candidates, a per-record authorization
+pass whose denied rows consume no page slots, and an explicit budget
+error instead of a silently truncated answer.</li>
+<li>Maturity impression: Apache-2.0, 1,559 commits since 2 March 2026 by
+nine authors, 213,143 lines of Go beside 209,255 lines of tests holding
+4,752 functions, a vendored CometBFT engine, four papers with Zenodo
+identifiers and committed benchmark files; five of seven capability
+marks.</li>
+<li>Study when: you want admission to memory to be an explicit signed
+event with an audit trail, and you are deploying more than one
+validator.</li>
+<li>Do not copy when: you are running the single node and expect the
+consensus claim to mean what the headline says, or you need a rejected
+memory to stay rejected — the dedup lookup is committed-only.</li>
+</ul>
+<h3 id="plur"><a href="../systems/plur/"><code>plur</code></a></h3>
+<ul>
+<li>Best idea: <strong>a state that keeps a memory retrievable and stops
+it being injected.</strong> <code>commitment: draft</code> is skipped in
+both the selection and the spreading-activation pass of the injector, so
+a draft can be searched, cited and argued about without ever being
+presented to the model as known.</li>
+<li>Second idea: <strong>an append-only monthly JSONL of twenty-one
+mutation event types</strong>, fsynced, in the store's own directory —
+and deliberately excluded from the sync path, so a shared store carries
+engrams without their history.</li>
+<li>Biggest risk: <strong>a retired engram is excluded from the
+content-hash dedup by design.</strong> Re-learning forgotten text
+creates a new engram, which a committed test asserts; and nothing in
+this repository can approve a draft, since the schema points at a
+separate enterprise repository for the review-queue write sites.</li>
+<li>Most reusable component: the scope predicates in
+<code>scope-util.ts</code> — segment-aware containment so a sibling
+sharing a name prefix is excluded, beside exact membership whose empty
+permitted list matches nothing, with the reason written in the source as
+a rule.</li>
+<li>Maturity impression: Apache-2.0, 927 commits since 19 March 2026 by
+thirteen authors, 66,632 lines of TypeScript beside 82,289 lines of
+tests holding 4,893 cases and 337 exclusion assertions; six of seven
+capability marks, and a benchmark harness that lives in a separate
+repository so no published number is reproducible from this tree.</li>
+<li>Study when: you want an agent's memory to be plain text a person can
+read, diff and edit, shared across several MCP clients with no service
+to run.</li>
+<li>Do not copy when: you need a rejected statement to stay rejected, an
+in-repo way to approve a draft, or a correction path that records what
+it replaced — the direct update overwrites without a history event.</li>
+</ul>
+<h3 id="openzync-core"><a
+href="../systems/openzync-core/"><code>openzync-core</code></a></h3>
+<ul>
+<li>Best idea: <strong>one temporal predicate every read path
+imports.</strong> <code>_effective_at_clause</code> says a fact is
+effective at an instant when it is not retracted and the instant falls
+inside its validity window, and its docstring explains the trap it
+exists for: supersession closes a window rather than setting a
+retraction flag, so a filter on the flag alone would leak.</li>
+<li>Second idea: <strong>a GiST exclusion constraint over the validity
+range</strong>, so an overlapping window is a write error rather than a
+ranking anomaly nobody notices.</li>
+<li>Biggest risk: <strong>the conflict scan that runs before a write
+applies that same effective-at clause</strong>, so a retracted or
+superseded triple is invisible to the check that would have caught it
+coming back, and the invalidation events that record why each fact died
+are read only by a history endpoint.</li>
+<li>Most reusable component: the negative test that gives the superseded
+fact the same embedding as its successor, so it must rank if the filter
+fails — the shape every exclusion test should take.</li>
+<li>Maturity impression: AGPL-3.0 with a commercial-licence file, 562
+commits since 5 June 2026 by two authors, 72,199 lines of Python beside
+89,713 lines of tests holding 3,542 functions, 54 migrations, Postgres
+with pgvector and a pluggable graph backend; four of seven capability
+marks.</li>
+<li>Study when: <em>when was this true</em> is a real question for you
+and the answer has to survive being asked about the past.</li>
+<li>Do not copy when: you need correction that prevents re-assertion, a
+review surface, any notion of a claim's standing beyond a float, or a
+system that runs without a model — an episode never becomes a fact
+without one.</li>
+</ul>
+<h3 id="sibyl-memory"><a
+href="../systems/sibyl-memory/"><code>sibyl-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a zero result that names its cause.</strong> Five
+typed causes — abstained on a term, abstained on a negation, gated by a
+threshold, empty store, no match — reach the MCP wire and the LangGraph
+store, with a contract test in all five packages asserting no empty
+result ships an OK verdict.</li>
+<li>Second idea: <strong>a negation policy that abstains rather than
+answering</strong>, inside a retrieve-then-verify layer with a coverage
+threshold and an anchor band.</li>
+<li>Biggest risk: <strong>tenant isolation is a trailing post-filter on
+an unindexed column</strong>, which the authors say themselves in a lock
+comment that names the deferred migration, forbids the edits that would
+break it, and names the regression test guarding it — better disclosure
+than most projects manage about a weakness that is still real.</li>
+<li>Most reusable component: the verdict channel and its five-package
+contract test; second, refusing to open a symlinked database file or
+sidecar.</li>
+<li>Maturity impression: MIT, 68 commits since 20 May 2026 by four
+authors, 16,000 lines of Python across five published packages beside
+18,948 lines of tests holding 1,055 functions, no CI executing any of
+them; three of seven capability marks.</li>
+<li>Study when: you want a local agent memory in one inspectable file,
+working airgapped with no embeddings, where knowing why a search
+returned nothing matters more than the last point of recall.</li>
+<li>Do not copy when: you need decay, consolidation, a stored state that
+withholds a record, a validity axis, a mutation audit, or index-enforced
+tenant isolation.</li>
 </ul>
 <h3 id="openmasq"><a
 href="../systems/openmasq/"><code>openmasq</code></a></h3>

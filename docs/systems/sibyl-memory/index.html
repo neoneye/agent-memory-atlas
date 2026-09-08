@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local memory engine of five
+tier-specific tables in one SQLite file, retrieved through FTS5 with a
+folded-trigram fallback and no embeddings anywhere, where every query
+carries a tenant key its own authors flag in a lock comment as a
+post-filter on an unindexed column, a zero result names which of five
+causes produced it rather than looking like an empty store, and a
+paid-tier review queue exists in the library with no command that
+reaches it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Sibyl
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local memory engine of
+five tier-specific tables in one SQLite file, retrieved through FTS5
+with a folded-trigram fallback and no embeddings anywhere, where every
+query carries a tenant key its own authors flag in a lock comment as a
+post-filter on an unindexed column, a zero result names which of five
+causes produced it rather than looking like an empty store, and a
+paid-tier review queue exists in the library with no command that
+reaches it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sibyl
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local memory engine of
+five tier-specific tables in one SQLite file, retrieved through FTS5
+with a folded-trigram fallback and no embeddings anywhere, where every
+query carries a tenant key its own authors flag in a lock comment as a
+post-filter on an unindexed column, a zero result names which of five
+causes produced it rather than looking like an empty store, and a
+paid-tier review queue exists in the library with no command that
+reaches it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Sibyl Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Sibyl Memory",
+      "description": "A local memory engine of five tier-specific tables in one SQLite file, retrieved through FTS5 with a folded-trigram fallback and no embeddings anywhere, where every query carries a tenant key its own authors flag in a lock comment as a post-filter on an unindexed column, a zero result names which of five causes produced it rather than looking like an empty store, and a paid-tier review queue exists in the library with no command that reaches it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Five tiers, one SQLite file, no vectors</p>
+          <h1>Sibyl Memory</h1>
+          <p class="document-deck">A local memory engine of five
+tier-specific tables in one SQLite file, retrieved through FTS5 with a
+folded-trigram fallback and no embeddings anywhere, where every query
+carries a tenant key its own authors flag in a lock comment as a
+post-filter on an unindexed column, a zero result names which of five
+causes produced it rather than looking like an empty store, and a
+paid-tier review queue exists in the library with no command that
+reaches it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Sibyl-Labs/Sibyl-Memory">
+              <span>Source</span>
+              <strong>Sibyl-Labs/Sibyl-Memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806" title="761bfc64799f637dd1ff70fbd07bdb997c2fd806">
+              <span>Analyzed revision</span>
+              <code>761bfc64…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Sibyl Memory is a local memory engine for agents — MIT, 68 commits
+between 20 May and 7 September 2026 by four authors, 16,000 lines of
+Python across five published packages beside 18,948 lines of tests
+holding 1,055 test functions. The screen found no auto-run surface,
+three build-time execution points and four manifests inside the
+seven-day cooldown; nothing was installed or run, and the read was made
+from a full clone. The tagline is <em>"file-based · zero
+embeddings"</em>, and both halves are true: the store is one SQLite
+file, and a search for any embedding, vector or ANN library across the
+source returns three hits, all of them prose.</p>
+<p><strong>The engine is here, not behind a service.</strong> The
+schema, the writers, the FTS5 index, the trigram shadow, the ranking and
+the migrations are all in the client package; there is no web framework
+anywhere in the tree, and the Docker entrypoint is the stdio MCP server
+rather than a daemon. What is remote is billing: a capacity check at the
+storage boundary and a usage heartbeat, neither of which carries memory
+content.</p>
+<p><strong>Three marks.</strong> <code>scope_enforced</code> on a tenant
+key that is <code>NOT NULL</code> on every base table, an unindexed
+column on every FTS5 table, and present in the WHERE clause of every
+read — exact lookups, all four cross-tier searches and both shadow
+queries. <code>human_review</code> on a skill-proposal queue where
+accepting materialises the content into a reference document and
+rejecting materialises nothing. <code>negative_eval</code> on four kinds
+of exclusion case, the best of which seeds a prompt-injection payload as
+a real row and asserts three different search surfaces do not return
+it.</p>
+<p><strong>The most unusual thing here is what a zero result
+says.</strong> Most stores return an empty list and let the caller
+guess. This one attaches one of five causes — abstained on a term,
+abstained on a negation, gated by a coverage or anchor threshold, an
+empty store, or a genuine no-match — surfaced on the MCP wire and as an
+attribute on the LangGraph store. A retrieve-then-verify layer sits over
+the search with a coverage threshold of 0.45, an anchor band, a
+document-frequency abstention and a negation policy that abstains rather
+than answering. Distinguishing <em>I have nothing</em> from <em>I
+decline to answer this</em> is what the verdict channel exists for, and
+it is the reason to read this repository.</p>
+<p>Four findings sit against the design. <strong>Tenant isolation is a
+post-filter, and the authors say so.</strong> The lock comment above the
+search query states that the tenant clause is the only thing keeping the
+query inside the caller's tenant, that the column is unindexed so this
+is a trailing filter rather than index-enforced isolation, that
+index-level enforcement needs a migration that would break existing
+databases, and that the situation is flagged for review and guarded
+meanwhile by the comment and a named regression test. That is a better
+disclosure than most projects manage, and the weakness is real.
+<strong>Four of twelve declared tables have no writer</strong> — entity
+relations, revenue events, error events and flagged actors — and the
+last is read by a lint check using a column name the table does not
+have, inside a bare except that has kept the mismatch invisible.
+<strong>The review queue has no interface.</strong> No MCP tool, CLI
+subcommand or adapter reaches it, while a changelog entry and the schema
+comment both name a <code>sibyl learn review</code> command that does
+not exist. <strong>The README understates the outbound calls.</strong>
+It says tier verification is the only one; a usage heartbeat fires every
+fifteen operations or ten minutes. The project's own LangGraph README
+discloses both channels correctly, and the capacity module's docstring
+says in as many words that an earlier, narrower description of its
+payload understated it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory has <strong>a tier, and the tier decides its shape</strong>.
+Warm entities are the named things — a category, a name and a JSON body,
+unique per tenant. Hot state is a keyed document that is replaced rather
+than versioned. Cold journal events are append-only with a timestamp and
+four optional payloads. Reference documents are text. Archived entities
+are bodies kept with a reason.</p>
+<p>Retrieval is <strong>lexical and laddered</strong>. A strict FTS5
+match per tier, unioned and ordered by a proximity bucket before rank;
+if that comes back empty, relaxed query variants; if those are empty
+too, a folded-trigram shadow that catches misspellings and script
+differences. Over all of it sits a verification layer that would rather
+abstain than answer badly.</p>
+<p>Nothing decays, nothing consolidates and nothing summarises. A memory
+changes because someone upserted it, and stops being current because
+someone archived it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four of eight MCP tools write into five tier-specific tables in one SQLite file, guarded by a JSON check and a capacity gate that is the only network-capable step; retrieval runs a strict FTS5 match per tier, then relaxed variants, then a folded-trigram shadow, with a tenant clause on every query and a verification layer that abstains rather than answering, so a zero result carries one of five named causes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four of eight MCP tools write into five tier-specific tables in one SQLite file, guarded by a JSON check and a capacity gate that is the only network-capable step; retrieval runs a strict FTS5 match per tier, then relaxed variants, then a folded-trigram shadow, with a tenant clause on every query and a verification layer that abstains rather than answering, so a zero result carries one of five named causes
+flowchart TB
+    T[&quot;MCP tools: remember, forget,&lt;br/&gt;set state, record event&quot;]
+    V{&quot;identifier valid,&lt;br/&gt;body is JSON,&lt;br/&gt;under the capacity cap?&quot;}
+    NO[&quot;refused&quot;]
+    DB[(&quot;one SQLite file, WAL:&lt;br/&gt;entities, state_documents,&lt;br/&gt;journal_events, reference_documents,&lt;br/&gt;archived_entities&quot;)]
+    FTS[(&quot;FTS5 per tier, porter unicode,&lt;br/&gt;plus a folded-trigram shadow&quot;)]
+    Q[&quot;a query arrives&quot;]
+    S1{&quot;strict FTS5 match&lt;br/&gt;per tier, unioned&quot;}
+    S2{&quot;relaxed query&lt;br/&gt;variants&quot;}
+    S3{&quot;folded-trigram&lt;br/&gt;shadow fallback&quot;}
+    TEN[&quot;every query carries&lt;br/&gt;AND tenant_id = ?&lt;br/&gt;a post-filter on an&lt;br/&gt;unindexed column&quot;]
+    VER{&quot;coverage 0.45,&lt;br/&gt;anchor band,&lt;br/&gt;negation policy&quot;}
+    HIT[&quot;results&quot;]
+    ZERO[&quot;zero, with a named cause:&lt;br/&gt;abstained, negation, gated,&lt;br/&gt;empty store, or no match&quot;]
+
+    T --&gt; V
+    V -- no --&gt; NO
+    V -- yes --&gt; DB
+    DB --&gt; FTS
+    Q --&gt; S1
+    TEN --&gt; S1
+    S1 -- empty --&gt; S2
+    S2 -- empty --&gt; S3
+    S1 --&gt; VER
+    S2 --&gt; VER
+    S3 --&gt; VER
+    VER -- passes --&gt; HIT
+    VER -- abstains --&gt; ZERO</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Five packages, and the ratio between them is the story.
+<code>sibyl-memory-client</code> (8,233 lines) is the whole engine —
+storage, schema, FTS, the shadow, ranking, the multi-record verification
+layer, the learner, the linter and the capacity gate.
+<code>sibyl-memory-cli</code> (3,788) does activation, tier, setup and
+migration plus three read-only memory commands.
+<code>sibyl-memory-hermes</code> (2,482) is a provider and a plugin
+adapter. <code>sibyl-memory-mcp</code> (871) is eight stdio tools.
+<code>sibyl-memory-langgraph</code> (626 lines of source against 5,102
+lines of tests and 331 test functions) is a <code>BaseStore</code>
+adapter.</p>
+<p>The schema is 369 lines: twelve base tables, five FTS5 virtual
+tables, and a trigram shadow whose DDL is generated at runtime. Its
+header calls it a port of a canonical Postgres schema, and the Docker
+ignore file excludes a private schema directory that is not in this tree
+— so a fuller schema exists elsewhere, while the SQLite port that ships
+is self-contained.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Python. The client's only
+third-party runtime dependency is a certificate bundle.</li>
+<li><strong>Fully local and offline:</strong> the memory is. Two
+endpoints exist for tier checking and usage heartbeats, and neither
+carries content.</li>
+<li><strong>Hand-repairable:</strong> one SQLite file with a readable
+schema.</li>
+<li><strong>Install:</strong> five PyPI packages, or the Docker image
+whose entrypoint is the stdio server.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Open the store.</strong> <code>storage.py:181-246</code>
+creates the directory 0700, refuses a symlinked or hardlinked database
+or sidecar (<code>:191-212</code>), applies the schema, and tightens the
+file to 0600 (<code>:246</code>).</li>
+<li><strong>Write an entity.</strong> <code>client.py:886</code>
+validates the identifiers and the body, runs the capacity gate
+(<code>:914</code>) — the only network-capable step on the path — takes
+a <code>BEGIN IMMEDIATE</code> transaction (<code>:915</code>), selects
+by tenant, category and name, then inserts (<code>:922-926</code>) or
+updates (<code>:929-934</code>), lets the FTS and shadow triggers
+maintain the indexes, re-reads the committed footprint under the write
+lock (<code>:936</code>) and commits.</li>
+<li><strong>Search a tier.</strong> <code>client.py:1290-1369</code>
+matches the entities FTS table joined by rowid with the tenant clause,
+orders by rank, then re-ranks by a proximity bucket that reorders
+without dropping.</li>
+<li><strong>Search across tiers.</strong>
+<code>client.py:1399-1542</code> runs one match per tier with the
+journal capped to a quarter of the limit, unions and sorts, then falls
+to relaxed variants and finally to the trigram shadow.</li>
+<li><strong>Verify before answering.</strong>
+<code>multi_record.py:444</code> applies the coverage threshold
+(<code>:333</code>, <code>:747</code>), the anchor band and its
+high-water mark (<code>:334</code>, <code>:757</code>), a
+document-frequency abstention and the negation policy
+(<code>:297</code>, <code>:701</code>).</li>
+<li><strong>Name the zero.</strong> <code>verdicts.py:80-108</code>
+defines the five causes; the MCP server puts one on the wire
+(<code>server.py:679-681</code>) and the LangGraph store exposes the
+last one as an attribute (<code>store.py:535-540</code>).</li>
+<li><strong>Propose and review a skill.</strong>
+<code>learning.py:420-421</code> filters candidates against the pending
+slugs (<code>:683-690</code>); accepting stamps the row and writes the
+content into a reference document (<code>:552-558</code>,
+<code>:495</code>, <code>:522-534</code>); rejecting stamps the row
+(<code>:581-587</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Five row shapes, described in the matrix, of which the warm entity is
+the one a <code>UNIQUE (tenant_id, category, name)</code> constraint
+makes addressable. The <code>skill_proposals</code> table is the sixth
+shape and the only one with a constrained status vocabulary.</p>
+<p><strong>Temporal:</strong> <code>created_at</code> and
+<code>updated_at</code> on an entity, both record time. The journal is
+the opposite case: a caller may supply the event timestamp and the table
+has no second column for insertion time, so a supplied timestamp
+replaces record time rather than sitting beside it.
+<code>bitemporal</code> withheld; a search for any validity-time column
+name across the Python returns one hit and it is a false positive on a
+test about valid TOML.</p>
+<p><strong>Trust:</strong> the entity status is a free-form nullable
+string written from caller input and read back verbatim, filtered only
+when the caller passes one. No value withholds. <code>trust_state</code>
+withheld — the proposal status does withhold and does filter, but it
+governs proposals rather than stored memory, and an accepted proposal
+becomes an ordinary reference document with no status at all.</p>
+<p><strong>Scoping:</strong> a tenant on every table and every query.
+<code>scope_enforced</code> earned.</p>
+<p><strong>Tombstone:</strong> withheld — see section 9.</p>
+<p><strong>Four tables with no writer.</strong> Entity relations,
+revenue events and error events have no insert anywhere. Flagged actors
+is the fourth and the most interesting: it has no writer either, and the
+linter's freshness check queries it for a column named
+<code>identifier</code> when the table declares an actor handle and an
+actor address, inside a bare <code>except Exception: pass</code>. The
+check is documented in the linter's own rule table, has never run, and
+could not have passed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 with a porter unicode tokeniser over four external-content
+tables, plus a folded-trigram shadow generated at runtime for the cases
+a stemmer misses. The strict pass runs one match per tier and unions
+them, ordering by a proximity bucket first so that a document where the
+query terms sit close together outranks one where they are scattered,
+then by FTS rank, then by tier.</p>
+<p>What sits above it is the part worth studying. The multi-record layer
+is a retrieve-then-verify design: it will refuse to answer when coverage
+of the query terms falls below a threshold, when no anchor term clears
+its band, when a term's document frequency is zero, or when the query
+contains a negation it is not willing to reason about. Every refusal is
+typed, and the type reaches the caller.</p>
+<p><strong>Failure modes.</strong> The tenant clause is a post-filter,
+so an FTS match scans across tenants and discards afterwards — correct,
+and dependent on one clause the authors have locked with a comment. The
+proximity re-rank reorders within the limit rather than reaching past
+it, so a better match beyond the cut is not recovered. And the shadow
+fallback only fires on an empty head, so a poor non-empty result is not
+improved.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Nothing extracts.</strong> The model supplies the body; a
+JSON-validity check and an identifier check are the only content gates.
+The one place a model could enter — the learner's summariser — takes an
+inference function the caller must supply, and nothing in this
+repository supplies one; both summariser classes are labelled stubs in
+their own section headers.</p>
+<p><strong>Upsert, archive, delete.</strong> An entity is replaced in
+place by its unique key. Archiving copies the body into the archive
+table with a reason and removes the original. Deleting is a hard
+<code>DELETE</code> that leaves nothing.</p>
+<p><strong>The same verb means two things.</strong> The MCP
+<code>memory_forget</code> archives and is documented as not destroying;
+the Hermes provider's <code>forget</code> hard-deletes, and the Hermes
+memory tool's remove action routes to the destructive one. A reader
+moving between the two surfaces will not expect that.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A write is one immediate transaction plus trigger maintenance, and
+at the capacity boundary one four-second HTTP call.</li>
+<li>A read is one to four FTS queries plus the verification layer, all
+in process.</li>
+<li>A heartbeat fires every fifteen operations or ten minutes.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Eight stdio MCP tools, four of them writing. The Hermes provider
+hooks turn context and remember, and the LangGraph adapter maps a
+namespace tuple onto the entity category so a <code>BaseStore</code>
+consumer gets tenant and namespace scoping.</p>
+<p>The human surfaces are the CLI's three read-only memory commands and
+the SQLite file. The review queue is not among them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded, with the authors' own caveat carried
+forward.</strong> The key is on every table and in every query,
+including both shadow queries and the LangGraph prefix filter. The lock
+comment is the right way to ship a known weakness: it names the
+mechanism, explains why the fix is deferred, forbids the edits that
+would break it, and names the regression test that guards it.</p>
+<p><strong>Human review — awarded, narrowly, and the qualifications
+matter.</strong> A proposal carries required evidence, a confidence and
+a constrained status; accepting writes the content into a reference
+document and rejecting writes nothing. But the four methods are
+paid-tier gated, and nothing in any of the four adapter packages calls
+them — a reviewer must import the library. The changelog and the schema
+both name a <code>sibyl learn review</code> command; the CLI's
+subcommand list does not contain it.</p>
+<p><strong>Negative evaluation — awarded.</strong> Four kinds of case,
+and the injection one is the strongest: a real row carrying a
+prompt-injection payload sits in the store and three different search
+surfaces are each asserted not to return it, with the legitimate entity
+asserted present.</p>
+<p><strong>Tombstone — withheld, and the near-miss is one query
+away.</strong> A rejected skill proposal is a durable, value-keyed
+record of something a person refused, with the reason in a review note.
+The detector's de-duplication filter selects only pending proposals, so
+a slug that was rejected is not in the exclusion set and the next run
+proposes it again. The mechanism, the row and the reason all exist; the
+filter looks at the wrong status.</p>
+<p><strong>Trust state — withheld.</strong> The entity status is
+free-form and filtered only on request. The proposal status has the
+right shape and governs the wrong thing, and its <code>superseded</code>
+value has no writer at all.</p>
+<p><strong>Bitemporal — withheld.</strong> Record time only, and on the
+journal a caller-supplied timestamp replaces it rather than joining
+it.</p>
+<p><strong>Audit log — withheld.</strong> The journal is append-only and
+is agent content rather than a mutation record: its only two producers
+are an agent-invoked tool and a Hermes turn hook, and no entity write,
+state write, archive or delete records itself. A hard delete leaves
+nothing behind. The learning-runs table is an append-only log of
+detector runs rather than of memory mutations.</p>
+<p><strong>What the README says and what the code says.</strong> Three
+disclosure gaps, all checkable and all contradicted somewhere inside the
+project itself. The README says tier verification is the only outbound
+call; a heartbeat fires on ordinary use, and the LangGraph README
+discloses both. The README enumerates the capacity payload as four
+fields; the capacity module enumerates six and closes with a sentence
+saying the earlier, narrower description understated it. And the tier
+diagram draws five directory paths that do not exist — they are table
+names in one file.</p>
+<p><strong>No CI runs the tests.</strong> Two workflows exist: a
+manually dispatched macOS framework smoke test and a mirror job. A
+search for pytest across the workflow directory returns nothing. There
+are 1,055 test functions and nothing executes them automatically.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,055 test functions in 90 files and 18,948 lines against 16,000
+lines of source. The distribution is unusual: the LangGraph adapter has
+626 lines of source and 331 test functions, covering
+<code>BaseStore</code> conformance, namespace semantics, adversarial
+fuzzing, scale and isolation. The client's 403 tests are dominated by
+search behaviour — proximity re-ranking, script-aware tokenising, the
+trigram shadow, coverage gates, phrasing invariance — plus two dated
+audit sweeps and a capacity suite that mocks the endpoint as a fake
+server rather than touching a socket.</p>
+<p>A verdict-contract test exists in all five packages, each asserting
+that no zero-row response ships an OK verdict and that cause strings are
+not re-declared outside the module that owns them. That is a contract
+test for the feature this report considers the system's best idea,
+replicated across every surface.</p>
+<p><strong>No benchmark artifact exists.</strong> A release-notes
+document states that every number in it comes from a run recorded in
+this repository and that nothing is projected or inferred; no run
+record, harness, dataset or result file is in the tree. The README
+carries a LongMemEval badge and a comparison claim against six named
+systems, with an off-repository blog link as the only pointer. The
+linter's expected schema version is two while the shipped schema is
+four.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Name the cause of a zero result.</strong> Five typed causes
+on the wire turn <em>I found nothing</em> into <em>I abstained on a
+negation</em>, and the difference decides whether the agent should ask
+again, rephrase, or accept the absence.</li>
+<li><strong>Abstain rather than answer a negation.</strong> A store that
+will not reason about <em>not</em> is more useful than one that quietly
+ignores the word.</li>
+<li><strong>Put a contract test on the verdict in every surface
+package.</strong> Five copies asserting no empty result carries an OK is
+how a contract survives four adapters.</li>
+<li><strong>Refuse to open a symlinked database file or
+sidecar.</strong> Two checks at open time close a class of local attack
+most local-first tools never consider.</li>
+<li><strong>Document a known isolation weakness in a lock
+comment.</strong> Naming the mechanism, the deferred fix, the forbidden
+edits and the guarding test is better engineering practice than a silent
+TODO, and better than shipping the claim without the caveat.</li>
+<li><strong>Ladder the fallback: strict, relaxed, then fuzzy.</strong>
+Only firing the fuzzy arm on an empty head keeps the common case
+exact.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review queue with no way to reach it.</strong> The table,
+the methods and the status vocabulary are all built; no tool, command or
+adapter calls them, and the command the documentation names does not
+exist.</li>
+<li><strong>A de-duplication filter that ignores what was
+rejected.</strong> Filtering candidates against pending proposals only
+means a rejected slug returns on the next run, which is the one thing a
+rejection should prevent.</li>
+<li><strong>Tables nobody writes</strong>, especially one that a shipped
+check reads with a column name it does not have, inside a bare
+except.</li>
+<li><strong>A privacy claim narrower than the code.</strong> The
+heartbeat is disclosed in one README and not the other, and the capacity
+module's own docstring says the earlier payload description understated
+it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right for a local agent memory where the data must stay in one
+inspectable file, retrieval must work airgapped, and knowing
+<em>why</em> a search returned nothing matters more than squeezing the
+last point of recall. Wrong if you need a memory that decays or
+consolidates, a stored state that withholds a record from being treated
+as true, a validity axis, a mutation audit, or index-enforced tenant
+isolation rather than a post-filter.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will the proposal de-duplication filter learn to see rejections? One
+status value in one query is the difference between a rejection that
+holds and one that is re-proposed next run.</li>
+<li>What reaches the review queue? The methods exist and no surface
+calls them.</li>
+<li>Will the flagged-actors check ever run? It reads a column the table
+does not have, behind an except that hides the mismatch.</li>
+<li>Which forget is the real one? Archive and hard delete share a verb
+across two surfaces, and only one of them is recoverable.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sibyl-memory-client/src/sibyl_memory_client/schema.sql</code></td>
+<td>369</td>
+<td>Twelve base tables, five FTS5 tables; entities (27-37), skill
+proposals (298-321), the shadow rationale (352-367)</td>
+</tr>
+<tr>
+<td><code>.../client.py</code></td>
+<td>1,879</td>
+<td>Writers (886-1187), readers (940-1086), search (1290-1542), the
+strict ladder (1606-1789), the tenant lock comment (1332-1339)</td>
+</tr>
+<tr>
+<td><code>.../storage.py</code></td>
+<td>763</td>
+<td>Open, schema, the symlink refusals (191-212), permissions (213,
+246)</td>
+</tr>
+<tr>
+<td><code>.../shadow.py</code></td>
+<td>1,268</td>
+<td>The runtime trigram shadow and its triggers</td>
+</tr>
+<tr>
+<td><code>.../multi_record.py</code></td>
+<td>779</td>
+<td>The retrieve-then-verify layer, the coverage and anchor gates, the
+negation policy</td>
+</tr>
+<tr>
+<td><code>.../verdicts.py</code></td>
+<td>—</td>
+<td>The five zero-result causes (80-108)</td>
+</tr>
+<tr>
+<td><code>.../learning.py</code></td>
+<td>1,201</td>
+<td>Proposal detection, the pending-only filter (683-690), accept
+(552-558) and reject (581-587)</td>
+</tr>
+<tr>
+<td><code>.../lint.py</code></td>
+<td>—</td>
+<td>The rule table, the flagged-actors check (359-381), the stale schema
+version (57)</td>
+</tr>
+<tr>
+<td><code>.../_capcheck.py</code>, <code>_heartbeat.py</code></td>
+<td>855, —</td>
+<td>The capacity gate and its endpoint (74), the usage heartbeat
+(36)</td>
+</tr>
+<tr>
+<td><code>sibyl-memory-mcp/src/sibyl_memory_mcp/server.py</code></td>
+<td>824</td>
+<td>Eight tools (486-815) and the verdict on the wire (679-681)</td>
+</tr>
+<tr>
+<td><code>sibyl-memory-langgraph/src/.../store.py</code></td>
+<td>—</td>
+<td>The <code>BaseStore</code> adapter, namespace as category (158-159),
+the verdict attribute (535-540)</td>
+</tr>
+<tr>
+<td>tests</td>
+<td>18,948 in 90 files</td>
+<td>1,055 test functions; the injection case, the isolation cases, the
+verdict contracts</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -ni &#39;embedding|faiss|hnsw|chromadb|qdrant|pgvector|sentence_transformers&#39; -g &#39;*.py&#39; --glob &#39;!*/tests/*&#39; .   # 3, all prose
+rg -ni &#39;valid_from|valid_to|observed_at|effective_at|as_of|bitemporal&#39; -g &#39;*.py&#39; .   # 1, a false positive on valid TOML
+rg -n &#39;audit_log|audit_trail|mutation_log|op_log&#39; -g &#39;*.py&#39; --glob &#39;!*/tests/*&#39; .    # 0
+rg -n &#39;tombstone|rejected_value|denylist|blocklist&#39; -g &#39;*.py&#39; --glob &#39;!*/tests/*&#39; .  # 0
+rg -n &#39;INSERT INTO flagged_actors|INSERT INTO entity_relations&#39; .                    # 0: four tables have no writer
+rg -n &#39;superseded&#39; -g &#39;*.py&#39; --glob &#39;!*/tests/*&#39; .                                   # 0: the status value has no writer
+rg -n &#39;skill_proposal|accept_skill|reject_skill&#39; -g &#39;*.py&#39; sibyl-memory-mcp sibyl-memory-cli sibyl-memory-hermes sibyl-memory-langgraph  # 0: no surface reaches the queue
+rg -ni &#39;fastapi|flask|uvicorn|starlette|http.server&#39; -g &#39;*.py&#39; .                     # 0: the engine is local, not a service
+rg -n &#39;pytest&#39; .github/                                                              # 0: no CI runs the suite</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806"><code class="commit-id" title="761bfc64799f637dd1ff70fbd07bdb997c2fd806">761bfc64…</code></a>
+— first reading, at the head of <code>main</code>, one day after the
+last commit. Screened before anything was read: no auto-run surface,
+three build-time execution points, four manifests inside the seven-day
+cooldown; nothing was installed or run, and the read was made from a
+full clone. The first question settled was whether the memory
+implementation is here or behind a hosted service: it is here, with no
+web framework in the tree and the Docker entrypoint a stdio server, and
+what is remote is a capacity gate and a usage heartbeat carrying no
+content. Three marks. <code>scope_enforced</code> rests on a tenant key
+in every read query, and the report carries the authors' own lock
+comment saying it is a post-filter on an unindexed column rather than
+index-enforced isolation. <code>human_review</code> rests on the
+skill-proposal accept and reject paths, with both qualifications stated
+— paid-tier gated, and reachable from no shipped interface.
+<code>negative_eval</code> rests on four kinds of exclusion case
+including a prompt-injection payload asserted absent from three search
+surfaces. <code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code> and <code>audit_log</code> were each examined
+and withheld, the first with its near-miss in section 9. The reading
+covers the schema, the write and search paths, the verification layer,
+the verdict channel and the learning queue; the CLI's activation and
+tier machinery, the Hermes plugin adapter and the capacity protocol were
+treated as context.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
