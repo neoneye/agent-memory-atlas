@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 385 reports.**
+**This page covers all 386 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3310,6 +3310,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 655 commits from 3 March to 8 September 2026 by thirty-five authors, version 0.22.0 in the manifest against a changelog backfilled through 0.23.0, 62,160 lines of TypeScript and 2,829 test cases in 224 files; three of seven capability marks.
 - Study when: you run a team on several coding agents and want one repository, a merge request in front of every lesson, scope isolation with tests, and votes that cannot be gamed by citation.
 - Do not copy when: you need a learning to retire another, a prune that reaches every copy of a learning the way a deleted skill reaches every machine, a vector arm, or a recall the model must run rather than one it should.
+
+### [`evox-genesis`](../systems/evox-genesis/)
+- Best idea: **the memory's scope key is the directory it sits in, so it cannot drift from what it describes.** Every directory carries a `CONTEXT.md`, and an agent's prompt is the chain of them from the repository root down to its assigned node — a sibling subtree is not filtered out of a result, it is never opened.
+- Second idea: **knowledge and code change in one commit.** A behaviour change and the description of that behaviour are reviewed in the same diff, which is what keeps the memory from drifting away from the artifact.
+- Biggest risk: **the function that assembles the memory has no test, and its caller hides the failure.** `build_context/2` appears three times in the tree — spec, definition, one call site — and none of the 4,655 committed cases exercises it; on any error the caller substitutes the bare string `Current Path: '<node>'`, so an agent runs with no context tree and is told nothing.
+- Most reusable component: the hierarchical enablement in `skills/context_integration.ex` — a skill defined once is callable only where an ancestor's `CONTEXT.md` frontmatter names it, so the tool surface and the context inherit down the same walk.
+- Maturity impression: AGPL-3.0, 6,529 commits since 17 April 2024 by four authors, version 0.12.5, 90,871 lines of Elixir beside 82,581 lines of tests in 174 files holding 4,655 cases, a Tauri desktop shell, a Nix flake and a paper at [arXiv:2608.10450](https://arxiv.org/abs/2608.10450); two of seven capability marks.
+- Study when: you want knowledge to live beside the code it describes and to be scoped by position rather than by a key you maintain, or you are building a system where agents are episodes and the repository is the only state.
+- Do not copy when: you need to query memory by content rather than by position, a status on what is stored, a record of what was rejected, or any notion of who said something.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.

@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Elixir system for long-horizon
+autonomous software evolution whose memory is a tree of per-directory
+CONTEXT.md files — written by agents, versioned in git, and read by each
+agent as the chain from the repository root down to its own node, with
+the skills it may call named in those same files' frontmatter; agents
+are finite-lived, the tree is not, and a rejected proposal is a deleted
+branch that leaves no record keyed on what it proposed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="EvoX
+Genesis — Agent Memory Atlas">
+    <meta property="og:description" content="An Elixir system for
+long-horizon autonomous software evolution whose memory is a tree of
+per-directory CONTEXT.md files — written by agents, versioned in git,
+and read by each agent as the chain from the repository root down to its
+own node, with the skills it may call named in those same files'
+frontmatter; agents are finite-lived, the tree is not, and a rejected
+proposal is a deleted branch that leaves no record keyed on what it
+proposed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EvoX
+Genesis — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Elixir system for
+long-horizon autonomous software evolution whose memory is a tree of
+per-directory CONTEXT.md files — written by agents, versioned in git,
+and read by each agent as the chain from the repository root down to its
+own node, with the skills it may call named in those same files'
+frontmatter; agents are finite-lived, the tree is not, and a rejected
+proposal is a deleted branch that leaves no record keyed on what it
+proposed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>EvoX Genesis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "EvoX Genesis",
+      "description": "An Elixir system for long-horizon autonomous software evolution whose memory is a tree of per-directory CONTEXT.md files \u2014 written by agents, versioned in git, and read by each agent as the chain from the repository root down to its own node, with the skills it may call named in those same files' frontmatter; agents are finite-lived, the tree is not, and a rejected proposal is a deleted branch that leaves no record keyed on what it proposed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The directory is the memory unit</p>
+          <h1>EvoX Genesis</h1>
+          <p class="document-deck">An Elixir system for long-horizon
+autonomous software evolution whose memory is a tree of per-directory
+CONTEXT.md files — written by agents, versioned in git, and read by each
+agent as the chain from the repository root down to its own node, with
+the skills it may call named in those same files' frontmatter; agents
+are finite-lived, the tree is not, and a rejected proposal is a deleted
+branch that leaves no record keyed on what it proposed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/EMI-Group/genesis">
+              <span>Source</span>
+              <strong>EMI-Group/genesis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/EMI-Group/genesis/commit/3b84f87a5455340dd7f09d405a42f19dc992600c" title="3b84f87a5455340dd7f09d405a42f19dc992600c">
+              <span>Analyzed revision</span>
+              <code>3b84f87a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>EvoX Genesis is an Elixir system for <strong>long-horizon autonomous
+software evolution</strong> — AGPL-3.0, 6,529 commits since 17 April
+2024 by four authors, version 0.12.5, 90,871 lines of Elixir under
+<code>apps/</code> beside 82,581 lines of tests in 174 files holding
+4,655 cases, with a Tauri desktop shell and a Nix flake. The screen
+found no auto-run surface, one build-time execution point in the desktop
+crate and two Rust manifests inside the seven-day cooldown; nothing was
+installed or run, and the read was made from a full clone. Its paper is
+<a href="https://arxiv.org/abs/2608.10450">arXiv:2608.10450</a>,
+<em>Persistent Recursive Worlds Enable Autonomous Software
+Evolution</em> (Huang, Liang, Zheng and Cheng, 11 August 2026, revised
+16 August), whose abstract states the premise this report is about: most
+agentic systems <em>"preserve continuity through persistent sessions,
+memories, managers or shared context"</em>, and Genesis instead
+<em>"makes the software project persistent while allowing local agents
+to remain finite-lived."</em></p>
+<p><strong>The memory is the directory tree, and the system says so in
+its own prompt.</strong> Every directory carries a
+<code>CONTEXT.md</code>, and the architect agent is told that <em>"the
+CONTEXT.md files you create are the permanent architectural memory of
+the codebase"</em> and that <em>"there is no other place to encode
+architectural intent — if you don't write it in CONTEXT.md, future
+agents won't know it"</em>
+(<code>apps/evo_git/lib/evo_git/agents/architect.ex:67-68</code>). The
+extractor agent enumerates what belongs in one: intent, API surface,
+constraints, design decisions, known issues, notes that <em>"prevent
+wasted investigation"</em>, dependencies, test strategy,
+cross-references and status
+(<code>agents/context_extractor.ex:44-60</code>). Those are claims about
+a codebase that can be wrong, written by one agent for agents that do
+not yet exist, and the repository holds 59 of them about itself.</p>
+<p><strong>Retrieval is the path.</strong>
+<code>ContextNode.hierarchy_nodes/3</code>
+(<code>core/context_node.ex:110-146</code>) computes the chain of
+directories from the repository root down to the agent's assigned node,
+and <code>build_context/2</code> (<code>:161-230</code>) opens
+<code>CONTEXT.md</code> in each of those directories only, strips its
+YAML frontmatter, truncates each to a configured byte cap and
+concatenates them under a <code># Context Tree</code> heading. A sibling
+subtree's file is never opened. The same ancestor walk decides the tool
+surface: a skill defined once in <code>.agents/skills/</code> is
+callable only where an ancestor's frontmatter names it in a
+<code>skill:</code> list, inherited downward
+(<code>skills/context_integration.ex:1-9</code>). That is one stored
+scope key — the file's own location — applied twice on the read path,
+and it earns <code>scope_enforced</code>. The second mark is
+<code>human_review</code>: a finished task leaves an agent branch, and
+the dashboard's review page shows its commits and per-file diffs so a
+person can merge it or reject it, with the outcome persisted on the task
+row. A <code>CONTEXT.md</code> edit is an ordinary file change, so the
+memory is adjudicated in the same diff as the code.</p>
+<p>Three findings sit against the design. <strong>The retrieval function
+is untested.</strong> <code>build_context</code> occurs three times in
+the repository — its spec, its definition, and one call site — and no
+test references it
+(<code>rg -n 'build_context' apps --glob '*.ex' --glob '*.exs'</code>),
+in a tree with 4,655 committed cases; its caller answers an error by
+substituting the bare string
+<code>"Current Path: '&lt;node&gt;'."</code>
+(<code>agent/context_builder.ex:22-24</code>), so an agent whose context
+tree failed to assemble runs without one and is told nothing.
+<strong>Rejection records nothing.</strong>
+<code>Review.reject_branch/2</code> (<code>review.ex:476-481</code>)
+deletes the branch; the task row keeps
+<code>review_status: :rejected</code>, which is keyed on the run rather
+than on what was refused, and no path consults it before an agent
+proposes the same change again. <strong>The episode archive is
+opt-in.</strong> <code>complete_task</code> writes the git note whenever
+a base commit exists, but <code>archive</code> defaults to
+<code>false</code> (<code>agent/tools/complete_task.ex:133</code>), so
+the archive refs that protect an episode's commits from garbage
+collection — and the record that reaches the task row — exist only for
+runs started with <code>--archive</code> or the dashboard's
+checkbox.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a file that inherits downward</strong>. Its
+subject is the directory it sits in; its audience is whichever agent is
+later assigned to that directory or one beneath it; its scope is its own
+position, because assembly walks ancestors and nothing else.</p>
+<p>An agent is an episode. It spawns with an objective and a node,
+receives the ancestor chain as text, works in its own git worktree,
+commits, and disappears; its subagents each get a child node, a fresh
+context and their own worktree, and their commits are merged back into
+the parent automatically. The paper's claim and the README's are the
+same one: continuity lives in the tree and the commit graph rather than
+in a session.</p>
+<p>Knowledge stops being current the way code does — someone rewrites
+the file and commits. There is no status to set, no supersession to
+record and no expiry; a stale <code>CONTEXT.md</code> is simply wrong
+until an agent or a person corrects it, and the only trace of the
+correction is the diff.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an objective enters at a node, the architect writes that directory's CONTEXT.md, and every later agent assembles its prompt from the CONTEXT.md of each ancestor from the root down to its own node while the skills named in those files' frontmatter become its tools; work commits, a git note records the episode, subagent commits merge automatically, and a person merges or rejects the branch at the end — rejection deleting the branch and keying its record on the run rather than on what was proposed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an objective enters at a node, the architect writes that directory&#39;s CONTEXT.md, and every later agent assembles its prompt from the CONTEXT.md of each ancestor from the root down to its own node while the skills named in those files&#39; frontmatter become its tools; work commits, a git note records the episode, subagent commits merge automatically, and a person merges or rejects the branch at the end — rejection deleting the branch and keying its record on the run rather than on what was proposed
+flowchart TB
+    OBJ[&quot;one objective, one node&quot;]
+    ARCH[&quot;architect agent&lt;br/&gt;designs the directory&quot;]
+    CTX[(&quot;CONTEXT.md in that directory&lt;br/&gt;intent, constraints,&lt;br/&gt;design decisions, known issues,&lt;br/&gt;notes to future agents,&lt;br/&gt;routing table to the children&quot;)]
+    SUB[&quot;a later agent is assigned&lt;br/&gt;a node in the tree&quot;]
+    BUILD[&quot;build_context: open CONTEXT.md&lt;br/&gt;in every ancestor from the root&lt;br/&gt;down to my node, and nowhere else&quot;]
+    TOOLS[&quot;skills named in an ancestor&#39;s&lt;br/&gt;frontmatter become its tools&quot;]
+    WORK[&quot;work in an isolated worktree,&lt;br/&gt;commit, complete_task&quot;]
+    NOTE[(&quot;refs/notes/evogit, per commit&lt;br/&gt;objective, result, agent type,&lt;br/&gt;depth, parent, context node&quot;)]
+    ARCHV[(&quot;refs/genesis/archive/...&lt;br/&gt;pins the commits, but only&lt;br/&gt;when --archive is passed&quot;)]
+    MERGE[&quot;subagent commits octopus-merged&lt;br/&gt;into the parent, no person involved&quot;]
+    HUM{&quot;a person opens&lt;br/&gt;the review page&quot;}
+    OK[&quot;merge_branch&lt;br/&gt;review_status = merged&quot;]
+    NO[&quot;reject_branch deletes the branch&lt;br/&gt;review_status = rejected on the task&lt;br/&gt;nothing keyed on what was proposed&quot;]
+
+    OBJ --&gt; ARCH
+    ARCH --&gt;|&quot;writes and commits&quot;| CTX
+    CTX --&gt; SUB
+    SUB --&gt; BUILD
+    BUILD --&gt; TOOLS
+    TOOLS --&gt; WORK
+    WORK --&gt; NOTE
+    NOTE -.-&gt; ARCHV
+    NOTE --&gt; MERGE
+    MERGE --&gt; HUM
+    HUM -- accept --&gt; OK
+    HUM -- reject --&gt; NO
+    OK -.-&gt;|&quot;the next episode inherits&quot;| CTX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>An Elixir umbrella with two applications. <code>:evo_git</code>
+(50,935 lines) is the runtime: agents, the scheduler, the git adapter,
+the sandbox, the CLI. <code>:evo_dash</code> (40,106 lines) is a Phoenix
+LiveView dashboard: projects, tasks, the review page and a chat entry
+point to a repo-less self-reflective agent. Three Mix releases ship —
+the pair, a desktop build bundled into a Tauri shell, and a headless
+<code>evo_git</code>-only daemon for SSH remote development.</p>
+<p>The parts this report reads:</p>
+<ul>
+<li><code>core/context_node.ex</code> — the spatial dimension: path
+normalisation, the ancestor walk, and the assembly of the context tree
+into prompt text.</li>
+<li><code>core/phylo_graph_node.ex</code> — the temporal dimension: a
+struct over a base and current commit, with merge-base, commit and merge
+helpers.</li>
+<li><code>skills/</code> and <code>skills.ex</code> — markdown tool
+definitions, their hierarchical enablement through
+<code>CONTEXT.md</code> frontmatter, and sandboxed execution.</li>
+<li><code>agents/</code> — architect, manager, executor, investigator,
+context extractor, skill extractor, genesis planner, task scheduler,
+self-reflective, custom; each a system prompt plus a tool list.</li>
+<li><code>agent/tools/complete_task.ex</code> — the git note, the
+archive refs and the episode record;
+<code>agent/tools/search_history.ex</code> — regex over messages and
+notes; <code>agent/context_builder.ex</code> — the one caller of
+<code>build_context/2</code>.</li>
+<li><code>review.ex</code> and the dashboard's
+<code>review_live.ex</code> — diffs, merge, reject.</li>
+<li><code>store.ex</code> and <code>store/</code> — the SQLite
+<code>tasks</code> and <code>projects</code> tables.</li>
+<li><code>agent_scheduler/</code> — dispatch, leases, agent state and
+the ETS tables.</li>
+<li><code>sandbox/</code> — bubblewrap on Linux, a macOS profile, and a
+no-op.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the CLI and the dashboard start a task, the scheduler dispatches agents into isolated worktrees, each agent assembles its prompt from the ancestor CONTEXT.md chain and the skills those files enable, and writes back commits, a git note and optionally archive refs, while SQLite holds task rows and the review page adjudicates the branch</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the CLI and the dashboard start a task, the scheduler dispatches agents into isolated worktrees, each agent assembles its prompt from the ancestor CONTEXT.md chain and the skills those files enable, and writes back commits, a git note and optionally archive refs, while SQLite holds task rows and the review page adjudicates the branch
+flowchart TB
+    UI[&quot;CLI genesis · evolve · reflect&lt;br/&gt;and the LiveView dashboard&quot;]
+    SCHED[&quot;agent scheduler&lt;br/&gt;dispatch, leases, ETS agent state&quot;]
+    WT[&quot;one git worktree per agent&quot;]
+    CB[&quot;context_builder&lt;br/&gt;build_context over the ancestor chain&quot;]
+    REPO[(&quot;the git repository&lt;br/&gt;CONTEXT.md tree, code,&lt;br/&gt;refs/notes/evogit, archive refs&quot;)]
+    SK[(&quot;.agents/skills/*.md&lt;br/&gt;enabled per node by frontmatter&quot;)]
+    LLM[&quot;ReqLLM to the configured model&quot;]
+    DB[(&quot;SQLite: tasks, projects&lt;br/&gt;status, review_status,&lt;br/&gt;archive_metadata&quot;)]
+    REV[&quot;review page: commits,&lt;br/&gt;per-file diffs, merge or reject&quot;]
+
+    UI --&gt; SCHED
+    SCHED --&gt; WT
+    WT --&gt; CB
+    REPO --&gt; CB
+    SK --&gt; CB
+    CB --&gt; LLM
+    LLM --&gt;|&quot;tool calls&quot;| WT
+    WT --&gt;|&quot;commits, notes, refs&quot;| REPO
+    SCHED --&gt; DB
+    DB --&gt; REV
+    REPO --&gt; REV
+    REV --&gt; REPO</code></pre></details></figure>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Erlang/OTP and Elixir, git, and an
+API key for a model provider; ripgrep and git are vendored in the Nix
+build. SQLite is embedded through <code>xqlite</code>. The dashboard and
+the desktop shell are optional.</li>
+<li><strong>Fully local and offline:</strong> the store is, the model is
+not — every agent turn is a provider call.</li>
+<li><strong>Hand-repairable:</strong> entirely. The memory is Markdown
+in the repository, the episode metadata is
+<code>git notes --ref=evogit</code>, and the task database is one SQLite
+file with JSON columns rather than Erlang term blobs.</li>
+<li><strong>Install:</strong> a Mix release, a Nix flake
+(<code>nix run</code>), or the desktop bundle.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Assemble the memory.</strong>
+<code>ContextNode.hierarchy_nodes/3</code>
+(<code>core/context_node.ex:110-146</code>) rejects an absolute path and
+any path starting with <code>..</code>, then builds
+<code>["./", "./a", "./a/b"]</code> for the target node.
+<code>build_context/2</code> (<code>:161-230</code>) keeps only entries
+that are directories on disk, reads <code>CONTEXT.md</code> in each,
+calls <code>Skills.strip_front_matter/1</code>, truncates anything over
+<code>truncation.context_max_bytes</code> with
+<code>String.byte_slice/3</code> and a <code>Logger.warning</code>, and
+joins the results under <code># Context Tree</code> followed by a
+location block naming the worktree and the assigned node.</li>
+<li><strong>Reach it from an agent.</strong>
+<code>ContextBuilder.build_dynamic_context/1</code>
+(<code>agent/context_builder.ex:21-25</code>) is the only caller, and on
+<code>{:error, _}</code> it returns
+<code>"Current Path: '#{state.node_path}'."</code> in place of the
+tree.</li>
+<li><strong>Scope the tools.</strong>
+<code>Skills.ContextIntegration</code>
+(<code>skills/context_integration.ex</code>) reads the
+<code>skill:</code> list from each ancestor's frontmatter
+(<code>:26-34</code>, <code>:57-63</code>), unions them from root to
+leaf with <code>hierarchical_skill_names/2</code>
+(<code>:91-104</code>), and only those skills are converted into LLM
+tool schemas; <code>enable_skill</code> creates a
+<code>CONTEXT.md</code> with just frontmatter when none exists
+(<code>:303-320</code>), and <code>remove_skill_from_all_contexts</code>
+strips a name from every file.</li>
+<li><strong>Write the memory.</strong> No dedicated function: an agent
+edits <code>CONTEXT.md</code> with the ordinary file tools and commits.
+The architect and context extractor prompts are what direct it
+(<code>agents/architect.ex:51-99</code>,
+<code>agents/context_extractor.ex:44-72</code>).</li>
+<li><strong>Record the episode.</strong>
+<code>CompleteTask.complete/4</code>
+(<code>agent/tools/complete_task.ex:128-190</code>) derives the branch
+name, and when a base commit is present calls
+<code>add_metadata_note/3</code> (<code>:200-217</code>) to attach a
+JSON note on <code>--ref=evogit</code> with the agent id, base and final
+commit, parent, depth, objective, result, usage, timestamp, agent type
+and context node path; a conflict falls back to a forced overwrite
+(<code>:220-233</code>).</li>
+<li><strong>Archive an episode.</strong> Only when <code>archive</code>
+is true — it defaults to false (<code>:133</code>) and is set by the
+<code>--archive</code> CLI flag or the dashboard's checkbox.
+<code>write_archive_refs/8</code> (<code>:284-341</code>) writes
+<code>refs/genesis/archive/T&lt;task&gt;-A&lt;agent&gt;-start</code> and
+<code>-final</code> to protect both commits from gc, then puts a full
+episode record into the <code>:evogit_archive_records</code> ETS
+table.</li>
+<li><strong>Persist the run.</strong> At successful root completion the
+scheduler collects that task's records
+(<code>agent_scheduler/lifecycle.ex:247-257</code>), injects them into
+the result and clears them; the task registry writes them to the task
+row's <code>archive_metadata</code> column
+(<code>task_registry.ex:891</code>).</li>
+<li><strong>Search the past.</strong> <code>search_history</code>
+(<code>agent/tools/search_history.ex</code>) runs a regex over commit
+messages and, by default, the <code>evogit</code> notes ref, capped at
+100 commits and a byte budget; a subagent can be spawned at a historical
+commit to read the tree as it stood.</li>
+<li><strong>Adjudicate.</strong>
+<code>Review.load_review_metadata/2</code>,
+<code>list_commits_from_shas/3</code> and <code>load_file_diff/5</code>
+feed the page; <code>merge_branch/2,3</code> merges and restores the
+original branch on conflict; <code>reject_branch/2</code>
+(<code>review.ex:476-481</code>) deletes the branch; the LiveView then
+calls <code>set_review_status/3</code>
+(<code>review_live.ex:767-781</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>A <code>CONTEXT.md</code>.</strong> Optional YAML frontmatter
+— in practice a <code>skill:</code> list — and a Markdown body with no
+required shape. The extractor's prompt proposes Intent, API Surface,
+Constraints, Design Decisions, Known Issues, Notes for Agents,
+Dependencies, Test Strategy, See Also and Status, and says explicitly
+that not all apply and the goal is <em>"to capture knowledge that future
+agents will need"</em>. There is no schema, no validator and no status
+field:
+<code>rg -n -i 'status|state' apps/evo_git/lib/evo_git/core/context_node.ex</code>
+returns nothing.</p>
+<p><strong>A <code>ContextNode</code></strong>
+(<code>core/context_node.ex:17-18</code>) is <code>path</code>,
+<code>repo</code> and a <code>repo_id</code> defaulting to
+<code>"primary"</code> for multi-repository runs. It is a coordinate,
+not a record — the type is resolved at read time because the path may
+not exist yet.</p>
+<p><strong>A git note</strong> on <code>refs/notes/evogit</code>, one
+per commit: <code>agent_id</code>, <code>base_commit</code>,
+<code>final_commit</code>, <code>parent_id</code>, <code>depth</code>,
+<code>objective</code>, <code>result</code>, <code>usage</code>,
+<code>completed_at</code>, <code>agent_type</code>,
+<code>context_node_path</code>.</p>
+<p><strong>An archive record</strong> adds the branch name, compression
+count, repository identity, start time, the full LLM settings, the agent
+settings and the foreign repositories, and reaches
+<code>tasks.archive_metadata</code> as JSON.</p>
+<p><strong>A task row</strong> (<code>store/schema.ex:36-57</code>):
+<code>id</code>, <code>type</code>, <code>status</code>,
+<code>opts</code>, <code>started_at</code>, <code>finished_at</code>,
+<code>logs</code>, <code>result</code>, <code>review_status</code>,
+<code>usage</code>, <code>agent_count</code>, <code>base_sha</code>,
+<code>commit_sha</code>, <code>archive_metadata</code>,
+<code>lease_expires_at</code>, <code>model_id</code>,
+<code>project_path</code>, <code>branch_name</code>.</p>
+<p><strong>Temporal:</strong> commit time and the note's
+<code>completed_at</code>, both record times. No validity interval —
+<code>rg -n 'valid_from|valid_until|valid_at|as_of'</code> over
+<code>apps/evo_git/lib</code> returns only an unrelated
+<code>valid_atoms</code> helper. <code>bitemporal</code> withheld.</p>
+<p><strong>Trust:</strong> none on a memory. <code>trust_state</code>
+withheld.</p>
+<p><strong>Scoping:</strong> the file's directory.
+<code>scope_enforced</code> earned.</p>
+<p><strong>Tombstone:</strong> none. <code>reject_branch</code> deletes;
+<code>review_status</code> keys on the task. Withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is <strong>structural and unranked</strong>, and that is
+the design rather than a gap. The query is the agent's node path; the
+result is every ancestor's <code>CONTEXT.md</code> in root-to-leaf
+order. There is no scoring, no recency, no index and no embedding —
+<code>rg -n -i 'embedding|vector|cosine|faiss' apps/evo_git/lib --glob '*.ex'</code>
+returns nothing but an unrelated comment about embedding a string in
+TOML. What makes it work is the routing table each file carries: a
+parent's <code>CONTEXT.md</code> names its children and what each holds,
+so an agent can delegate to the right subtree without opening it, which
+is the property that lets a fixed-size prompt address an arbitrarily
+deep repository.</p>
+<p>The second surface is <code>search_history</code>, a regex over
+commit subjects, bodies and the <code>evogit</code> notes ref from a
+given ref, bounded to 100 commits and a byte budget by default. Because
+the notes carry each episode's objective and result, this is how an
+agent asks <em>why was this done</em> rather than <em>what does this
+directory contain</em>. A third is temporal: a subagent can be spawned
+at a historical commit and will assemble that commit's context tree.</p>
+<p><strong>Failure modes.</strong> Each ancestor is truncated
+independently to <code>context_max_bytes</code>, with a log line and a
+<code>... [Content Truncated] ...</code> marker in the text, so a long
+root file can crowd out nothing but itself, and a deep node pays for
+every ancestor above it. A path that fails validation yields no tree at
+all rather than a partial one. And the assembled text is whatever the
+last author wrote: a <code>CONTEXT.md</code> that is confidently wrong
+is indistinguishable, at read time, from one that is right.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Nothing extracts.</strong> There is no consolidation pass, no
+summariser and no scheduled rewrite; a memory changes because an agent
+was told to change it and committed. The two prompts that drive it are
+the architect's, which frames <code>CONTEXT.md</code> as the only place
+architectural intent can live, and the context extractor's, which is a
+read-type agent whose whole job is establishing or refreshing those
+files over an existing codebase.</p>
+<p><strong>Concurrency</strong> is solved by isolation rather than by
+locking: each agent gets its own worktree, and children's commits return
+to the parent through an octopus merge
+(<code>agent/subagent_processing.ex:486-497</code>). A conflict on the
+parent merge surfaces as <code>{:conflict, node, files}</code> from
+<code>PhyloGraphNode.merge/2</code>; on the review path
+<code>merge_branch/3</code> restores the original branch and reports the
+conflicted files without mutating HEAD, which
+<code>review_test.exs</code> asserts directly.</p>
+<p><strong>Correction</strong> is a rewrite. Because the file and the
+code it describes travel in one commit, a diff that changes behaviour
+and a diff that changes the description of that behaviour are reviewed
+together — the strongest property in this design, and the reason the
+memory does not drift from the artifact the way an external store
+does.</p>
+<p><strong>What is not recorded.</strong> A rejected branch's content is
+unreachable after <code>reject_branch</code> unless an archive ref
+happens to pin it, and no record keyed on what it proposed exists
+anywhere, so nothing prevents the next agent proposing it again.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>A read is a handful of <code>File.read</code> calls, one per
+ancestor directory.</li>
+<li>A write is a file write and a commit; a completion adds one
+<code>git notes</code> call and, when archiving, two
+<code>update-ref</code> calls.</li>
+<li>No background pass touches the memory; the scheduler's lease and
+heartbeat work on tasks.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model reaches memory through the prompt rather than through a
+tool: the context tree is assembled into the system message every turn,
+so there is no recall call to skip. What the model does call are the
+file and shell tools, <code>search_history</code>, the skills its node
+enables, and <code>subagent_*</code> tools that spawn children at named
+nodes. Shell commands pass through a sandbox — bubblewrap on Linux with
+a deny list over credential directories, a profile on macOS — and
+through an approval gate that, in <code>:chat</code> mode, holds a
+command until a person approves it in the <code>/help</code> chat and
+fails closed on a denial, a timeout or an unavailable approval service
+(<code>command_shell.ex:34-54</code>).</p>
+<p>The human surfaces are the dashboard's project and task pages, the
+review page with its diffs, and the chat. The CLI covers the same ground
+headlessly, and a <code>genesis_remote</code> release runs the runtime
+over SSH with the dashboard local.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> The scope key is the file's own
+position, which cannot drift from the thing it scopes, and it is applied
+twice: <code>build_context/2</code> opens only ancestor directories, and
+the skill union is taken over the same chain. A sibling's knowledge is
+not filtered out of a result — it is never read, so there is no ranking
+stage where it could leak.</p>
+<p><strong>Human review — awarded.</strong> A person reads the branch's
+commits and per-file diffs and merges or rejects, and the outcome is
+persisted on the task row. <code>CONTEXT.md</code> edits are ordinary
+file changes, so this adjudicates memory content and not only code.
+Within a run, subagent merges are automatic and no person is
+consulted.</p>
+<p><strong>Tombstone — withheld, and the near-miss is
+instructive.</strong> Genesis has the vocabulary of a rejection: a
+<code>review_status</code> of <code>:rejected</code>, an explicit reject
+action, and a durable task row that survives it with the base and final
+shas. What it does not have is a record keyed on what was proposed.
+<code>reject_branch/2</code> deletes the branch and returns
+<code>:ok</code>; the reason a person rejected is not captured at all;
+and no path consults the rejected set before an agent proposes again.
+The archive refs would have preserved the commits — they exist precisely
+to defeat garbage collection — but they are written at completion, not
+at rejection, and only when archiving is on.</p>
+<p><strong>Audit log — withheld, on the same line this atlas drew for
+craft.</strong> The <code>evogit</code> notes ref is a real, durable,
+system-owned record: one JSON note per commit carrying the objective,
+the result, the agent type, the depth, the parent and the context node,
+searchable through <code>search_history</code>, plus an episode record
+on the task row when archiving is on. It records <strong>agent
+episodes</strong>, not mutations of the memory — nothing marks a
+<code>CONTEXT.md</code> as having been written, promoted or corrected,
+and the note is attached to the commit whether that commit touched a
+memory or a source file. Two mechanical caveats sit beside the
+definitional one: a note conflict falls back to a forced overwrite
+rather than an append, and the archive half is off by default.</p>
+<p><strong>Trust state — withheld.</strong> A <code>CONTEXT.md</code>
+has no status field and no reader that would filter on one. The discrete
+vocabulary in the system — <code>:open</code>, <code>:merged</code>,
+<code>:rejected</code>, <code>:continued</code>, <code>:ignored</code>,
+<code>:no_changes</code> — lives on the task row and describes the
+run.</p>
+<p><strong>Bitemporal — withheld.</strong> Commit time and
+<code>completed_at</code> are record times. Spawning an agent at a
+historical commit reads the tree as it was recorded then, which is one
+time axis navigated, not two tracked.</p>
+<p><strong>Negative evaluation — withheld.</strong> The suite's
+<code>refute</code> assertions are about prompt assembly — that a
+section is absent from a built instruction, that frontmatter does not
+survive stripping — and about CRUD round-trips, that a disabled skill is
+gone from the list. None asserts that a stored memory must stay out of a
+populated retrieval, which is the case this mark asks for, and the
+natural one — that a sibling's <code>CONTEXT.md</code> is absent from an
+assembled tree while the ancestors' are present — is not written because
+<code>build_context/2</code> has no test at all.</p>
+<p><strong>The gap worth naming.</strong> In a repository with 4,655
+committed cases, the function that turns the memory into what the model
+sees is exercised by none of them, and its caller swallows the failure
+into a one-line string. A <code>CONTEXT.md</code> in a directory that
+git reports as ignored, a node path that arrives with a leading
+<code>..</code>, or a repository root that moved all produce an agent
+that works with no architectural memory and no indication that it is
+missing.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>4,655 cases in 174 test files, 82,581 lines. On the paths this report
+reads: <code>core/context_node_test.exs</code> covers
+<code>hierarchy_nodes/2</code> shape, the absolute and <code>..</code>
+rejections and the whole of <code>normalize_relpath</code> — and stops
+before <code>build_context/2</code>.
+<code>skills_hierarchical_test.exs</code> is the fullest memory-side
+suite: frontmatter extraction, stripping,
+<code>skill_names_at_dir</code>, which nodes enable a skill and which do
+not, enable and disable including <code>already_enabled_above</code>,
+removal across every file, and collection from root to a nested node.
+<code>review_test.exs</code> (26) covers diff loading, commit listing,
+merge into the default and a named target, conflict detection that never
+mutates HEAD, and metadata recovery after the branch is deleted.
+<code>command_approval_test.exs</code> (14) covers the approval gate.
+<code>application_test.exs</code> asserts the ETS tables exist at
+boot.</p>
+<p>No benchmark is committed. The paper reports the headline runs — a
+roughly 250,000-line Rust implementation of a C compiler over about 120
+hours across more than a thousand archived agent episodes for about
+US$44, passing the c-testsuite and most LLVM and Csmith tests, and
+thirteen MESA modules reimplemented from Fortran to Rust with median
+speedups from 1.55 to 6.87 — and the README repeats them with a per-run
+cost. None of it is reproducible from this tree: there is no harness, no
+fixture and no recorded result under version control, and the claims are
+about software the system built rather than about the memory this report
+describes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let position be the scope key.</strong> A file in a
+directory needs no <code>scope</code> column, cannot disagree with the
+thing it scopes, and is re-scoped by <code>git mv</code>. Assembly walks
+ancestors; there is nothing to keep in sync.</li>
+<li><strong>Put the routing table in the parent.</strong> Naming each
+child and what it holds is what lets an agent delegate without reading
+the subtree, and it is the reason a fixed prompt can address an
+arbitrarily deep repository.</li>
+<li><strong>Keep the knowledge in the same commit as the code.</strong>
+One diff carries the behaviour change and the description of it, and one
+review covers both.</li>
+<li><strong>Enable tools where the knowledge lives.</strong> Reusing the
+memory file's frontmatter to decide which skills exist at a node means
+the tool surface and the context inherit together.</li>
+<li><strong>Say in the prompt that the file is the only
+channel.</strong> <em>"If you don't write it in CONTEXT.md, future
+agents won't know it"</em> is a better instruction than a schema,
+because it names the consequence.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Leaving the assembly function untested.</strong> The path
+from the store to the prompt is the one place a memory system silently
+becomes no memory system, and a caller that degrades to a bare string
+makes the failure invisible.</li>
+<li><strong>Rejecting by deleting.</strong> A rejected proposal that
+leaves no record keyed on its content is one an agent may make again on
+the next run, and the reviewer's reason is lost with the branch.</li>
+<li><strong>Making the durable half of the record opt-in.</strong> A
+default of <code>false</code> on the flag that protects an episode's
+commits means the ordinary run keeps a note pointing at commits nothing
+pins.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Genesis fits a team that wants a codebase to keep developing across
+many model episodes, and that is willing to treat the repository as the
+only state. Its memory model is this atlas's clearest case for
+co-locating knowledge with the artifact it describes, and it is not a
+conversational memory: it holds architecture rather than facts about a
+user, has no notion of who said something, and forgets only when someone
+rewrites a file. A team that needs a memory to be queried by content
+rather than by position will find no index here, which is
+deliberate.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Will <code>build_context/2</code> get a test?</strong> One
+case with a root, a child and a sibling would pin the property the whole
+design rests on, and would be the <code>negative_eval</code> this report
+could not award.</li>
+<li><strong>Should a rejection write a note?</strong> The
+<code>evogit</code> notes ref, the archive refs and the reviewer's
+presence are all in place; a note on the rejected head with the reason
+would make refusals searchable through the tool that searches
+notes.</li>
+<li><strong>What happens to a <code>CONTEXT.md</code> when a directory
+is deleted or moved?</strong> Nothing in the tree reconciles a stale
+routing-table entry in the parent against a child that has gone.</li>
+<li><strong>Does anything bound total assembled context?</strong> Each
+ancestor is truncated independently, so the cost of a deep node is the
+sum of the caps rather than a budget over the whole tree.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/core/context_node.ex</code></td>
+<td>236</td>
+<td><code>normalize_relpath</code>, <code>hierarchy_nodes/2,3</code>
+(110-146), <code>build_context/2</code> (161-230),
+<code>is_ignored?</code></td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/core/phylo_graph_node.ex</code></td>
+<td>143</td>
+<td>The commit-graph struct: <code>new</code>,
+<code>find_merge_base</code>, <code>add_and_commit</code>,
+<code>merge</code></td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agent/context_builder.ex</code></td>
+<td>—</td>
+<td><code>build_dynamic_context/1</code> (21-25), the only caller of
+<code>build_context/2</code></td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/skills/context_integration.ex</code></td>
+<td>431</td>
+<td>Frontmatter parsing, the ancestor union, enable, disable,
+remove-from-all</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/skills/{executor,crud,skill}.ex</code></td>
+<td>234, 246, 27</td>
+<td>Injection-safe positional substitution, sandboxed run, file
+management</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agents/architect.ex</code></td>
+<td>258</td>
+<td>The prompt that names <code>CONTEXT.md</code> the permanent
+architectural memory (67-68)</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agents/context_extractor.ex</code></td>
+<td>201</td>
+<td>The read-type agent that establishes or refreshes the tree</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agent/tools/complete_task.ex</code></td>
+<td>370</td>
+<td><code>complete/4</code> (128), <code>add_metadata_note/3</code>
+(200), <code>write_archive_refs/8</code> (284)</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agent/tools/search_history.ex</code></td>
+<td>189</td>
+<td>Regex over commit messages and the <code>evogit</code> notes
+ref</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/review.ex</code></td>
+<td>801</td>
+<td>Diffs, <code>merge_branch/2,3</code> (234, 289),
+<code>reject_branch/2</code> (476)</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/store.ex</code>,
+<code>store/</code></td>
+<td>1,310 + 1,074</td>
+<td>The SQLite GenServer, codec, schema (36-57), queries, disk-full
+classifier</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/agent_scheduler/</code>,
+<code>task_registry.ex</code></td>
+<td>—</td>
+<td>Dispatch, leases, ETS agent state, archive collection (891)</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/lib/evo_git/sandbox/</code></td>
+<td>—</td>
+<td>bubblewrap, the macOS profile, the no-op</td>
+</tr>
+<tr>
+<td><code>apps/evo_dash/lib/evo_dash_web/live/review_live.ex</code></td>
+<td>—</td>
+<td>The review page; <code>set_review_status</code> after merge or
+reject (767-781)</td>
+</tr>
+<tr>
+<td><code>apps/evo_git/test/</code>,
+<code>apps/evo_dash/test/</code></td>
+<td>82,581 in 174 files</td>
+<td>4,655 cases</td>
+</tr>
+<tr>
+<td><code>CONTEXT.md</code> × 59</td>
+<td>—</td>
+<td>The system's own context tree</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &#39;build_context&#39; apps --glob &#39;*.ex&#39; --glob &#39;*.exs&#39;   # 3 hits: spec, definition, one caller; no test
+rg -n -i &#39;embedding|vector|cosine|faiss&#39; apps/evo_git/lib --glob &#39;*.ex&#39;  # none: retrieval is structural
+rg -n &#39;valid_from|valid_until|valid_at|as_of&#39; apps/evo_git/lib --glob &#39;*.ex&#39;  # none: no validity time
+rg -n -i &#39;status|state&#39; apps/evo_git/lib/evo_git/core/context_node.ex  # none: a memory has no status
+rg -n -i &#39;tombstone|rejected_value&#39; apps/evo_git/lib --glob &#39;*.ex&#39;  # none; the deny list found is the sandbox&#39;s
+rg -n &#39;reject&#39; apps/evo_git/lib/evo_git/review.ex  # reject_branch deletes the branch and records nothing
+rg -n &#39;archive:&#39; apps/evo_git/lib --glob &#39;*.ex&#39;   # the default is false at every layer</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/EMI-Group/genesis/commit/3b84f87a5455340dd7f09d405a42f19dc992600c"><code class="commit-id" title="3b84f87a5455340dd7f09d405a42f19dc992600c">3b84f87a…</code></a>
+— first reading, at the head of <code>main</code>, on a commit from the
+same day. Screened before anything was read: no auto-run surface, one
+build-time execution point in the Tauri crate, two Rust manifests inside
+the seven-day cooldown; nothing was installed or run, and the read was
+made from a full clone. Two marks, <code>scope_enforced</code> and
+<code>human_review</code>. The scope key is the memory file's own
+directory position, applied by the ancestor walk that assembles the
+prompt and again by the skill union over the same chain.
+<code>tombstone</code> and <code>audit_log</code> were each examined and
+withheld with the near-miss stated in section 9 — a rejection deletes
+the branch and keys its record on the run, and the <code>evogit</code>
+notes ref records agent episodes rather than memory mutations. The
+reading covers the context tree, the skills layer, the episode record,
+the review path and the task store; the scheduler's distribution and
+remote-node machinery, the sandbox implementations and the dashboard
+beyond the review page were treated as context. The paper's headline
+runs are reported as the authors' claims: no harness, fixture or result
+for them is committed to this tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
