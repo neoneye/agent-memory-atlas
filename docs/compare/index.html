@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 31
+<li><strong>Correction is the phase that goes unbuilt.</strong> 32
 systems of 385 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Thirty-one of three hundred and
+everything can overwrite or supersede. Thirty-two of three hundred and
 eighty-five systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -4054,13 +4054,20 @@ rejects to <code>Collapsed</code> or resolves a conflict under a
 compare-and-swap on the fact's revision with the audit event and the
 canon projection in one transaction, and the <code>audit_log</code> is a
 hash chain with a checkpoint against a deleted tail and an optional
-HMAC. Erasure is physical, cascades over <code>DERIVED_FROM</code>
-edges, refuses Ring Zero and writes a content-free tombstone whose hash
-nothing consults on ingest, so <code>tombstone</code> is withheld beside
-<code>bitemporal</code> and <code>scope_enforced</code>;
-<code>trust_state</code>, <code>audit_log</code>,
-<code>human_review</code> and <code>negative_eval</code> are earned. A
-read-only stdio MCP server exposes six tools that never write.</p>
+HMAC. An immune memory (<code>core/immune.py</code>) keeps rejected
+claim patterns keyed on their normalized text, recorded by a curator
+from the CLI or by the ingest path itself in strict mode, and
+<code>ingest</code>, the importer and the review diagnosis screen every
+claim against it before the gate, so a recorded value is refused on
+sight and only a force approval with a named actor and a reason gets
+past; that earns <code>tombstone</code> beside <code>trust_state</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>negative_eval</code>. Erasure is physical, cascades over
+<code>DERIVED_FROM</code> edges, refuses Ring Zero and writes a
+content-free receipt whose hash nothing consults, and it does not write
+to the immune memory; <code>bitemporal</code> and
+<code>scope_enforced</code> are withheld. A read-only stdio MCP server
+exposes six tools that never write.</p>
 <h3 id="research-lineage">Research lineage</h3>
 <p><a
 href="../systems/generative-agents/"><code>generative-agents</code></a>,
@@ -17467,17 +17474,20 @@ through them, and a read-only <code>search</code>/<code>ask</code> path
 that answers only from VERIFIED, unrestricted canon or returns a named
 refusal</td>
 <td><code>ingest</code> classifies a claim, stores it as
-<code>Observed</code>, and admits it through the truth gate — a source
-is required, model output can never be a world fact, and a confidence
-floor applies to world facts and interpretations — into
+<code>Observed</code>, refuses it before the gate when it contains a
+recorded rejected pattern, and admits it through the truth gate — a
+source is required, model output can never be a world fact, and a
+confidence floor applies to world facts and interpretations — into
 <code>Validated</code> and the canon; a blocked fact stays
 <code>Observed</code> for the curator</td>
 <td><code>transition_esm</code> moves a fact along a declared state
 matrix with a revision compare-and-swap; <code>erase_fact</code>
 physically removes a fact from L1, the graph, evidence and sessions,
 cascades over <code>DERIVED_FROM</code> edges when asked, refuses Ring
-Zero, and writes a content-free tombstone with a content hash that
-nothing consults on a later write</td>
+Zero, and writes a content-free erasure receipt with a content hash that
+nothing consults on a later write; the rejected-value record is the
+separate <code>immune_memory</code> table, written by a curator or by
+the strict ingest path and read before the gate</td>
 <td>One store per install; a <code>restricted</code> bit and a
 whole-session restriction implement a processing restriction per fact,
 not a partition by principal</td>
@@ -17492,17 +17502,21 @@ explicit, the L3 outbox drains on the next access, and reindexing is a
 command</td>
 <td>Eight epistemic states and six truth statuses on the fact, a source
 status that names model output as such, a Ring Zero of immutable facts,
-and a restricted bit that wins over every read</td>
+a restricted bit that wins over every read, and an immune memory of
+rejected claim patterns that blocks a matching claim before the
+gate</td>
 <td>A truth gate whose one hard invariant cannot be configured away;
 canonical grounding as a pure predicate that fails closed on any missing
 field; a review that refuses to approve into a conflict; an audit chain
 with a checkpoint against suffix deletion; erasure that cascades over
 derived facts and is idempotent</td>
-<td>No scope key inside a store; the erasure tombstone carries a content
-hash that no write path consults, so an erased claim re-ingested from
-the same source is a new fact; the semantic reader, ANN index and NLI
-filter are declared not implemented, so retrieval is the bounded lexical
-and cosine path; the audit detail is content-free by convention</td>
+<td>No scope key inside a store; erasure and rejection are separate
+records, so an erased claim re-ingested from the same source is a new
+fact unless a curator has recorded its pattern in the immune memory; the
+immune match is whole-token containment, so a paraphrase of a recorded
+pattern passes; the semantic reader, ANN index and NLI filter are
+declared not implemented, so retrieval is the bounded lexical and cosine
+path; the audit detail is content-free by convention</td>
 </tr>
 <tr>
 <td><code>veracium</code></td>
@@ -18200,7 +18214,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>31 of 385:</em> <a
+<p><em>32 of 385:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -18229,6 +18243,8 @@ href="../systems/rck/"><code>rck</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
+<a
+href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
 <a href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a></p>
@@ -24009,7 +24025,7 @@ or run</li>
 <li><a
 href="https://github.com/velantrian/velantrim-exocortex-crystal">velantrian/velantrim-exocortex-crystal</a>
 at <a
-href="https://github.com/velantrian/velantrim-exocortex-crystal/commit/7509be14c274cdc83e8e00287f46a78f8ee33696"><code class="commit-id" title="7509be14c274cdc83e8e00287f46a78f8ee33696">7509be14…</code></a>
+href="https://github.com/velantrian/velantrim-exocortex-crystal/commit/df4a651a2b4dd06df486e65cdbdcfe1090743135"><code class="commit-id" title="df4a651a2b4dd06df486e65cdbdcfe1090743135">df4a651a…</code></a>
 — read only; no auto-run surface, one build-time execution point, two
 unpinned surfaces, nothing installed or run</li>
 <li><a href="https://github.com/KimGLee/Cambium">KimGLee/Cambium</a> at

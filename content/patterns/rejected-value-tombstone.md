@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-one systems of three hundred and eighty-five
+> **This is not an established best practice.** Thirty-two systems of three hundred and eighty-five
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-one systems of 385 in the atlas have this.** That is still the most
+**Thirty-two systems of 385 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -901,6 +901,19 @@ What it does not have is a lift. `user_rejected_reason` arms the suppressor
 permanently and nothing found removes it short of hand-editing the retired file,
 which is the expiry problem this page's tradeoff list names and which most
 implementations here also leave open.
+
+[Velantrim Crystal](../../systems/velantrim-exocortex-crystal/) shows where the
+boundary of the pattern runs, because it has two records that look alike. Its
+erasure writes a content-free receipt with a hash of the erased claim, and no
+write path reads that hash: a deletion receipt, which proves removal and cannot
+say what may not return. Its immune memory (`core/immune.py`) is the tombstone:
+a table of rejected claim patterns keyed on the normalized text, recorded by a
+curator or by the strict ingest path, and consulted before the truth gate by
+ingest, import and the review diagnosis, so a claim containing a recorded
+pattern is refused with the reason `Immune:` and only a force approval with a
+named actor and a reason gets past. The two tables have no edge between them,
+which is the first tradeoff on this list in its plainest form: erasing a claim
+for being wrong does not record it, and recording it does not erase it.
 
 ## Tests to require
 
