@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 241 of 386 screened at the report's current pin.**
+**Progress: 242 of 387 screened at the report's current pin.**
 
 13 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 91 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 100 |
+| Repositories with an auto-run surface (`RUNS`) | 92 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 101 |
 | Repositories with build-time execution (`EXEC`) | 179 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -80,6 +80,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
 | [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
+| [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
 | [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |

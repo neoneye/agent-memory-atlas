@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 386 reports.</strong></p>
+<p><strong>This page covers all 387 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -13079,6 +13079,47 @@ the only state.</li>
 <li>Do not copy when: you need to query memory by content rather than by
 position, a status on what is stored, a record of what was rejected, or
 any notion of who said something.</li>
+</ul>
+<h3 id="memcontinuum"><a
+href="../systems/memcontinuum/"><code>memcontinuum</code></a></h3>
+<ul>
+<li>Best idea: <strong>append-only enforced by a diff against a git ref,
+not by convention.</strong> <code>memlint.py --against-ref</code>
+compares each ruling against itself at the last commit and errors on any
+changed field outside
+<code>{link, status, superseded_by, promoted_by}</code> — a subtraction,
+so a field added later is frozen by default — and the store's own
+<code>pre-commit</code> hook exits 1 on failure, with CI running the
+same check where <code>--no-verify</code> cannot reach.</li>
+<li>Second idea: <strong>a retrieval timeout that says so.</strong> When
+the two-second lookup misses its deadline the hook tells the model the
+absence of a decision was not established and this edit is unverified,
+rather than returning the empty result that reads as "nothing governs
+this file".</li>
+<li>Biggest risk: <strong>the scope column can never exclude anything,
+and the declined ruling is never consulted.</strong> One database holds
+one project — <code>records</code> is keyed by path alone and a second
+<code>--project</code> is refused — so the predicate on 64 read queries
+is a stamping guard; and a <code>declined</code> ruling with its
+rejected alternatives is handed to the model before an edit and checked
+by nothing.</li>
+<li>Most reusable component: the authority-to-tier mapping — five values
+on a ruling, of which only the owner's own or ratified words can fail a
+run, evidence-backed findings are reported unless
+<code>--strict-holds</code> is passed, and a provisional ruling is
+routed to revalidation and never checked.</li>
+<li>Maturity impression: MIT, 232 commits over nine days from 30 August
+2026 by two authors, 13,029 lines of Python beside 35,736 lines of tests
+holding 1,605 test functions, 10,673 lines of shell, three design
+documents and pinned tree-sitter grammars with a stated reason; four of
+seven capability marks, and no benchmark or paper.</li>
+<li>Study when: you want the reasons behind a codebase to survive the
+session and to be citable afterwards, and you want the append-only claim
+to be something a commit can fail.</li>
+<li>Do not copy when: you need one store across several projects, memory
+about people rather than about code, retrieval by content rather than by
+the file being edited, or any guarantee that a decision was actually
+read — every hook fails open by design.</li>
 </ul>
 <h3 id="openmasq"><a
 href="../systems/openmasq/"><code>openmasq</code></a></h3>

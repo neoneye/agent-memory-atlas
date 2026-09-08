@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 386 reports.**
+**This page covers all 387 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3319,6 +3319,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 6,529 commits since 17 April 2024 by four authors, version 0.12.5, 90,871 lines of Elixir beside 82,581 lines of tests in 174 files holding 4,655 cases, a Tauri desktop shell, a Nix flake and a paper at [arXiv:2608.10450](https://arxiv.org/abs/2608.10450); two of seven capability marks.
 - Study when: you want knowledge to live beside the code it describes and to be scoped by position rather than by a key you maintain, or you are building a system where agents are episodes and the repository is the only state.
 - Do not copy when: you need to query memory by content rather than by position, a status on what is stored, a record of what was rejected, or any notion of who said something.
+
+### [`memcontinuum`](../systems/memcontinuum/)
+- Best idea: **append-only enforced by a diff against a git ref, not by convention.** `memlint.py --against-ref` compares each ruling against itself at the last commit and errors on any changed field outside `{link, status, superseded_by, promoted_by}` — a subtraction, so a field added later is frozen by default — and the store's own `pre-commit` hook exits 1 on failure, with CI running the same check where `--no-verify` cannot reach.
+- Second idea: **a retrieval timeout that says so.** When the two-second lookup misses its deadline the hook tells the model the absence of a decision was not established and this edit is unverified, rather than returning the empty result that reads as "nothing governs this file".
+- Biggest risk: **the scope column can never exclude anything, and the declined ruling is never consulted.** One database holds one project — `records` is keyed by path alone and a second `--project` is refused — so the predicate on 64 read queries is a stamping guard; and a `declined` ruling with its rejected alternatives is handed to the model before an edit and checked by nothing.
+- Most reusable component: the authority-to-tier mapping — five values on a ruling, of which only the owner's own or ratified words can fail a run, evidence-backed findings are reported unless `--strict-holds` is passed, and a provisional ruling is routed to revalidation and never checked.
+- Maturity impression: MIT, 232 commits over nine days from 30 August 2026 by two authors, 13,029 lines of Python beside 35,736 lines of tests holding 1,605 test functions, 10,673 lines of shell, three design documents and pinned tree-sitter grammars with a stated reason; four of seven capability marks, and no benchmark or paper.
+- Study when: you want the reasons behind a codebase to survive the session and to be citable afterwards, and you want the append-only claim to be something a commit can fail.
+- Do not copy when: you need one store across several projects, memory about people rather than about code, retrieval by content rather than by the file being edited, or any guarantee that a decision was actually read — every hook fails open by design.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.
