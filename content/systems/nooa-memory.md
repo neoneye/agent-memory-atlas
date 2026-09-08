@@ -6,16 +6,19 @@ root: ../..
 page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
-revision: bfb347bca53c1eaa0449d7acfebdefb29075fc23
-revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23
-analyzed_at: 2026-08-06
+revision: fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
+revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
+analyzed_at: 2026-09-08
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the owner key applied inside the graph traversal, not to the rows it returns | packages/nooa-memory/src/nooa_memory/retrieval.py:246-296, packages/nooa-memory/src/nooa_memory/schema.py:102-113, packages/nooa-memory/src/nooa_memory/store.py:72, :160-163 | `owner` is a `TEXT NOT NULL DEFAULT ''` column with its own index, and `_spread` closes over a `_visible` predicate it calls on every edge target at every hop; the `continue` fires before both the `spread` and the `nxt` accumulators, so an invisible memory neither receives activation nor enters the next hop's frontier and cannot relay activation between two visible memories connected only through it — `owner_matches` admits an unowned row against every scope and the `is not None` clause drops an edge pointing at a row that no longer exists | packages/nooa-memory/tests/memory/test_memory_owner.py:126-142 (`test_spread_does_not_leak_foreign_memories`), :159-190 (`test_spread_does_not_relay_through_foreign_memories`), packages/nooa-memory/tests/memory/test_memory_owner_roles.py:128 (`test_spread_confined_to_role`)"
+  negative_eval: "the relay test, which asserts the same path is live before asserting it is not | packages/nooa-memory/tests/memory/test_memory_owner.py:159-190 | the three-node graph `alice_a -> bob -> alice_c`, whose only path between alice's two memories runs through bob's, is spread twice: unscoped first, asserting both `bid` and `cid` are reachable, then under alice's scope, asserting neither is — so the exclusion cannot pass on an empty frontier; two further cases each build one edge across an owner boundary and assert the far node is absent from `recall` | the same files"
 stack_storage: "sqlite, delegated"
 stack_retrieval: "graph"
 stack_source: "seeded"
 matrix:
   memory_unit: "`Memory` typed info, skill, episode, intent, todo, reflection or scratch, with typed edges"
-  storage: "SQLite with owner/status columns and pluggable vector backends"
+  storage: "SQLite with owner/status columns and pluggable vector backends, opened with `check_same_thread=False` behind a re-entrant lock the store takes on every connection and index access"
   retrieval: "ACT-R activation — relevance, base-level recency, importance, plus graph spreading over k hops"
   write: "Authoring via a memory skill; reflection distils episodes into gists"
   update_delete: "Retention decay archives below threshold; `archived` flag, record-keyed"
@@ -24,7 +27,7 @@ matrix:
   background: "Reflection: dedup/merge, edge formation, re-scoring, prune — deterministic steps need no LLM"
   trust: "Separate importance, salience and confidence; per-access score components retained"
   strengths: "Every retrieval leaves behind why it ranked where it did, on the record itself"
-  risks: "Archival is record-keyed, the access log is capped, and the two bi-temporal columns in the schema are written by nothing"
+  risks: "Archival is record-keyed, the access log is capped, the two bi-temporal columns the schema declares and the package README documents are written by nothing, and the harness behind the README's six-row results table is not published in this repository"
 ---
 
 ## 1. Executive Summary
@@ -165,7 +168,7 @@ flowchart TB
 
 ## 3. Architecture
 
-`packages/nooa-memory/src/nooa_memory/` — `manager.py` (933), `store.py` (487),
+`packages/nooa-memory/src/nooa_memory/` — `manager.py` (933), `store.py` (526),
 `schema.py` (372), `retrieval.py` (369), `reflection.py` (348),
 `vector_backends.py` (225), `generative.py` (205), `config.py` (202),
 `observability.py` (174), `references.py` (163), `embeddings.py` (145),
@@ -174,7 +177,11 @@ flowchart TB
 
 Storage is SQLite with `owner` and `status` columns added by migration
 (`ALTER TABLE` guarded by a column check), indexes on both plus `archived`, and
-pluggable vector backends.
+pluggable vector backends. The connection is opened with
+`check_same_thread=False` and every use of it — and of the vector index beside
+it — is taken under a `threading.RLock` held by the store
+(`store.py:113-119`), because *"foreground memory calls"* and the background
+reflection pass touch the same connection from different threads.
 
 ### Deployment and ergonomics
 
@@ -283,7 +290,11 @@ What is absent:
 - **No trust state.** `confidence` is a float; `status` exists but is reserved
   for todo lifecycle by an explicit validator.
 - **No bi-temporal validity.** `created_at` and `last_accessed_at` are record
-  times; nothing tracks when a fact was true.
+  times; nothing tracks when a fact was true. `valid_from` and `valid_to` are
+  declared on the model and listed in the package README's metadata section,
+  and `rg -n --glob '*.py' --glob '*.md' '\bvalid_from\b|\bvalid_to\b'` over
+  the whole repository returns exactly those three lines — the declaration, its
+  comment, and the documentation of a field nothing writes.
 - **The access log is capped**, so the observability is a recent window rather
   than a history.
 
@@ -325,17 +336,18 @@ does that alone is still reading the foreign node to decide it should be dropped
 
 Unowned memories stay visible under it, which is the intended behaviour and is
 easy to misread from the code. `_visible` requires `owner_of(mid) is not None`,
-but the column is `owner TEXT NOT NULL DEFAULT ''` (`store.py:71`), so an
+but the column is `owner TEXT NOT NULL DEFAULT ''` (`store.py:72`), so an
 unowned row returns `""` and `owner_matches` accepts `""` against every scope
 (`schema.py:109`). The `is not None` clause is therefore about a *dangling edge
 target* — an edge pointing at a row that no longer exists — which it drops, and
 which is the right answer for that case too.
 
 Three committed tests cover it. `test_spread_does_not_leak_foreign_memories`
-and `test_spread_confined_to_role` each build one edge across an owner boundary
+(`test_memory_owner.py:126`) and `test_spread_confined_to_role`
+(`test_memory_owner_roles.py:128`) each build one edge across an owner boundary
 and assert the far node is absent from `recall` — the leak half.
 `test_spread_does_not_relay_through_foreign_memories`
-(`tests/memory/test_memory_owner.py`) builds the three-node graph that asserts the
+(`tests/memory/test_memory_owner.py:159`) builds the three-node graph that asserts the
 amplify half: `alice_a → bob → alice_c`, where the only path between alice's two
 memories runs through bob's. It calls `_spread` twice — unscoped first, asserting
 both `bid` and `cid` *are* reachable, then scoped, asserting neither is — so the
@@ -423,6 +435,12 @@ Strengths:
 - **`status` restricted to one memory type** by a validator.
 - **Deterministic reflection by default**, LLM steps opt-in.
 - **A test file per module**, including owner roles, contract, and hygiene.
+- **The store serialises its own concurrency.** The connection is opened
+  `check_same_thread=False` and every use of it and of the vector index runs
+  under a re-entrant lock, so the background reflection pass and a foreground
+  recall cannot interleave on one SQLite handle; two committed cases cover it,
+  one wrapping the connection and the index in guards that assert the lock is
+  held on every call, the other running reflection against foreground writes.
 - **A committed negative case with a positive control.**
   `test_spread_does_not_relay_through_foreign_memories` asserts a foreign memory
   is neither activated nor used as a relay, and asserts first that the same path
@@ -432,28 +450,53 @@ Gaps:
 
 - **No value-level tombstone**; archival is a record flag.
 - **No trust state.**
-- **Bi-temporal columns that nothing writes.** `schema.py:223` declares
-  `valid_from` and `valid_to`, the second carrying the comment
-  *"bi-temporal: invalidate-don't-delete"*. Across `src/` and `tests/` those two
-  names appear at that declaration and nowhere else — no writer, no reader, no
+- **Bi-temporal columns that nothing writes, documented as if they were
+  features.** `schema.py:223-224` declares `valid_from` and `valid_to`, the
+  second carrying the comment *"bi-temporal: invalidate-don't-delete"*, and the
+  package README lists `valid_from/valid_to` in the metadata a memory carries
+  (`README.md:113`). Those three lines are every occurrence of either name in
+  any Python or Markdown file in the repository — no writer, no reader, no
   test. The mark is withheld not because the design lacks the idea but because
-  the idea is a schema comment; the intent is recorded and the mechanism is
-  absent, which is a more specific criticism than an absence would be.
+  the idea is a schema comment with a documentation entry; the intent is
+  recorded twice and the mechanism is absent, which is a more specific
+  criticism than an absence would be.
 - **A capped access log**, so the distinctive observability is bounded and the
   earliest accesses — the ones explaining how a memory became established — are
   the first to go.
-- **Many tunable constants** (`lambda`, `d`, the three `a_*` weights,
-  `spread_gamma`, hop count, thresholds); no ablation was found.
+- **Many tunable constants** (`lambda_embed`, `d`, the three `a_*` weights,
+  `spread_gamma = 0.5`, `per_hop_decay = 0.6`, `activation_floor = 0.05`, the
+  hop count); no ablation of them is committed here.
+- **The harness behind the README's own numbers is not in the repository.**
+  Its results table names five scripts and reports six figures, and the text
+  above it says the bench harness *"is not published in this repository"* —
+  see section 10.
 - **A labs repository**, so the stability commitment is whatever the surrounding
   framework offers.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Twenty-three test modules covering retrieval, forgetting, reflection and its
-interrupt path, owner roles, contract, embeddings and their integration,
-observability, monitoring, references, todo, schema, store and a v2 store,
-routes, skill, authoring, generative, vector backends, and background reflect
-plus hygiene. Nothing was run for this review.
+Twenty-four test modules holding 260 cases, covering retrieval, forgetting,
+reflection and its interrupt path, owner roles, contract, embeddings and their
+integration, observability, monitoring, references, todo, schema, store and a
+v2 store, routes, skill, authoring, generative, vector backends, background
+reflect plus hygiene, and the packaged README. Nothing was run for this review.
+
+**The README's numbers have no harness in this repository, and the project
+says so.** Its *"When does memory help?"* table reports six results — memory
++75% on unguessable cross-session facts, +44–60% on LoCoMo, reflection +50%
+under a tight retrieval budget, +70% on LongMemEval with reflection neutral,
+reflection −20% on pinpoint lookup, and a demo showing memory backfiring when
+stale — naming the five scripts that produced them. The line above the table
+reads *"Measured internally with gpt-5.4 + text-embedding-3-large (the bench
+harness is not published in this repository)"*. Until issue #104 of 6 August
+2026 that text instead pointed five times at `examples/memory_bench/`, a
+directory absent from the repository at every depth, and named two factory
+functions inside it *"for working implementations"*; the fix replaced each
+reference with the published quickstart, marked the results as internally
+measured, and added `test_memory_readme.py`, which asserts that the string
+`memory_bench` does not appear and that every relative link in the file
+resolves on disk. That test guards the README's *links*, not its *claims* —
+which is why `valid_from/valid_to` remain documented and unwritten.
 
 The end-to-end ablation is in §1. What makes the accompanying paper worth reading
 against the code is that its Appendix D reports operational statistics from the
@@ -559,6 +602,9 @@ nothing about whether it was ever right.
   question is now what would have to exist for it to be used.
 - If reflection output is 22% of rows and ~1% of reads, what is consolidation
   buying, and would the store be better without it in this workload?
+- Will `examples/memory_bench/` be published? The README's six figures name
+  the scripts that produced them, and a reader who wants to check the +70% has
+  nothing to open.
 
 ## Appendix: Sources Beyond the Code
 
@@ -584,9 +630,20 @@ operational statistics are reported, not reproduced here.
 - Store: `store.py` (owner/status migration, indexes).
 - Observability: `observability.py`, `monitoring.py`, `tracing_bridge.py`.
 - Skill surface: `memory_skill/`.
-- Tests: `packages/nooa-memory/tests/memory/` (23 modules).
+- Tests: `packages/nooa-memory/tests/memory/` (24 modules, 260 cases).
+- Package documentation: `packages/nooa-memory/src/nooa_memory/README.md`.
 
 ## History
+
+**2026-09-08** — [`fbbbfb16d68d66dc1ff029a9c06844d3b900e29d`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d) — 187 commits on, three of them touching the memory package, and every module in it except `store.py` is byte-identical to the previous pin. `manager.py`, `retrieval.py`, `schema.py`, `reflection.py`, `forgetting.py`, `config.py` and the rest were compared by object hash rather than by reading the diff. Both marks re-checked against the code: the `continue` in `_spread` still fires before both accumulators, and all three owner tests are present, so `scope_enforced` and `negative_eval` are unchanged. `capability_evidence` records were added for both.
+
+`7d03281` gives the store a `threading.RLock` and opens its connection `check_same_thread=False`, with the whole body of every method moved under the lock; two cases in `test_memory_store.py` cover it, one asserting the lock is held on every connection and index call, the other overlapping reflection with foreground writes. `store.py` grows from 487 lines to 526, almost all of it re-indentation.
+
+`5ea7b5d` closes the provenance gap in the package README, reported as issue #104 on 6 August 2026: the file had cited `examples/memory_bench/` five times as the source of its measured results, including a six-row table and two named factory functions, and that directory is in no revision of the public repository. The references were replaced with the published quickstart, the table's preamble was changed to say the bench harness is not published, and `test_memory_readme.py` was added to keep the citation from returning. The figures stay and remain unreproducible from this tree, which section 10 states.
+
+The bi-temporal gap is unchanged and one line larger: `valid_from` and `valid_to` are declared at `schema.py:223-224` and listed in the README's metadata section at `README.md:113`, and a search over every Python and Markdown file in the repository returns those three lines and nothing else. The paper is unchanged at v1 of 22 July 2026.
+
+Screened again before reading: 0 auto-run surfaces, 5 build-time execution points, 6 unpinned surfaces, nothing inside the seven-day cooldown, `AGENTS.md` treated as data; nothing was installed or run, and the read was made from a full clone.
 
 **2026-08-06** — [`bfb347bca53c1eaa0449d7acfebdefb29075fc23`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23) — 83 commits on, four of them touching the memory package. The mechanism is unchanged; the coverage is not.
 

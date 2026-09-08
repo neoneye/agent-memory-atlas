@@ -112,14 +112,14 @@ retrieved.</p>
               <strong>NVIDIA-NeMo/labs-OO-Agents</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23" title="bfb347bca53c1eaa0449d7acfebdefb29075fc23">
+            <a class="meta-pill revision-pill" href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d" title="fbbbfb16d68d66dc1ff029a9c06844d3b900e29d">
               <span>Analyzed revision</span>
-              <code>bfb347bc…</code>
+              <code>fbbbfb16…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-06</strong>
+              <strong>2026-09-08</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -316,7 +316,7 @@ flowchart TB
     M -.-&gt;|&quot;intent = when X occurs, do Y&lt;br/&gt;todo = open/done lifecycle&quot;| Pros[&quot;prospective memory:&lt;br/&gt;a category almost nothing else models&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>packages/nooa-memory/src/nooa_memory/</code> —
-<code>manager.py</code> (933), <code>store.py</code> (487),
+<code>manager.py</code> (933), <code>store.py</code> (526),
 <code>schema.py</code> (372), <code>retrieval.py</code> (369),
 <code>reflection.py</code> (348), <code>vector_backends.py</code> (225),
 <code>generative.py</code> (205), <code>config.py</code> (202),
@@ -327,7 +327,12 @@ flowchart TB
 <p>Storage is SQLite with <code>owner</code> and <code>status</code>
 columns added by migration (<code>ALTER TABLE</code> guarded by a column
 check), indexes on both plus <code>archived</code>, and pluggable vector
-backends.</p>
+backends. The connection is opened with
+<code>check_same_thread=False</code> and every use of it — and of the
+vector index beside it — is taken under a <code>threading.RLock</code>
+held by the store (<code>store.py:113-119</code>), because
+<em>"foreground memory calls"</em> and the background reflection pass
+touch the same connection from different threads.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>A Python package with SQLite; the vector backend is pluggable and the
 deterministic half of reflection needs no model at all. Nothing to stand
@@ -439,7 +444,13 @@ and nothing consults its absence.</li>
 explicit validator.</li>
 <li><strong>No bi-temporal validity.</strong> <code>created_at</code>
 and <code>last_accessed_at</code> are record times; nothing tracks when
-a fact was true.</li>
+a fact was true. <code>valid_from</code> and <code>valid_to</code> are
+declared on the model and listed in the package README's metadata
+section, and
+<code>rg -n --glob '*.py' --glob '*.md' '\bvalid_from\b|\bvalid_to\b'</code>
+over the whole repository returns exactly those three lines — the
+declaration, its comment, and the documentation of a field nothing
+writes.</li>
 <li><strong>The access log is capped</strong>, so the observability is a
 recent window rather than a history.</li>
 </ul>
@@ -479,7 +490,7 @@ the foreign node to decide it should be dropped.</p>
 <p>Unowned memories stay visible under it, which is the intended
 behaviour and is easy to misread from the code. <code>_visible</code>
 requires <code>owner_of(mid) is not None</code>, but the column is
-<code>owner TEXT NOT NULL DEFAULT ''</code> (<code>store.py:71</code>),
+<code>owner TEXT NOT NULL DEFAULT ''</code> (<code>store.py:72</code>),
 so an unowned row returns <code>""</code> and <code>owner_matches</code>
 accepts <code>""</code> against every scope
 (<code>schema.py:109</code>). The <code>is not None</code> clause is
@@ -487,13 +498,15 @@ therefore about a <em>dangling edge target</em> — an edge pointing at a
 row that no longer exists — which it drops, and which is the right
 answer for that case too.</p>
 <p>Three committed tests cover it.
-<code>test_spread_does_not_leak_foreign_memories</code> and
-<code>test_spread_confined_to_role</code> each build one edge across an
-owner boundary and assert the far node is absent from
+<code>test_spread_does_not_leak_foreign_memories</code>
+(<code>test_memory_owner.py:126</code>) and
+<code>test_spread_confined_to_role</code>
+(<code>test_memory_owner_roles.py:128</code>) each build one edge across
+an owner boundary and assert the far node is absent from
 <code>recall</code> — the leak half.
 <code>test_spread_does_not_relay_through_foreign_memories</code>
-(<code>tests/memory/test_memory_owner.py</code>) builds the three-node
-graph that asserts the amplify half:
+(<code>tests/memory/test_memory_owner.py:159</code>) builds the
+three-node graph that asserts the amplify half:
 <code>alice_a → bob → alice_c</code>, where the only path between
 alice's two memories runs through bob's. It calls <code>_spread</code>
 twice — unscoped first, asserting both <code>bid</code> and
@@ -591,6 +604,13 @@ by a validator.</li>
 opt-in.</li>
 <li><strong>A test file per module</strong>, including owner roles,
 contract, and hygiene.</li>
+<li><strong>The store serialises its own concurrency.</strong> The
+connection is opened <code>check_same_thread=False</code> and every use
+of it and of the vector index runs under a re-entrant lock, so the
+background reflection pass and a foreground recall cannot interleave on
+one SQLite handle; two committed cases cover it, one wrapping the
+connection and the index in guards that assert the lock is held on every
+call, the other running reflection against foreground writes.</li>
 <li><strong>A committed negative case with a positive control.</strong>
 <code>test_spread_does_not_relay_through_foreign_memories</code> asserts
 a foreign memory is neither activated nor used as a relay, and asserts
@@ -602,33 +622,60 @@ cannot pass vacuously.</li>
 <li><strong>No value-level tombstone</strong>; archival is a record
 flag.</li>
 <li><strong>No trust state.</strong></li>
-<li><strong>Bi-temporal columns that nothing writes.</strong>
-<code>schema.py:223</code> declares <code>valid_from</code> and
-<code>valid_to</code>, the second carrying the comment <em>"bi-temporal:
-invalidate-don't-delete"</em>. Across <code>src/</code> and
-<code>tests/</code> those two names appear at that declaration and
-nowhere else — no writer, no reader, no test. The mark is withheld not
+<li><strong>Bi-temporal columns that nothing writes, documented as if
+they were features.</strong> <code>schema.py:223-224</code> declares
+<code>valid_from</code> and <code>valid_to</code>, the second carrying
+the comment <em>"bi-temporal: invalidate-don't-delete"</em>, and the
+package README lists <code>valid_from/valid_to</code> in the metadata a
+memory carries (<code>README.md:113</code>). Those three lines are every
+occurrence of either name in any Python or Markdown file in the
+repository — no writer, no reader, no test. The mark is withheld not
 because the design lacks the idea but because the idea is a schema
-comment; the intent is recorded and the mechanism is absent, which is a
-more specific criticism than an absence would be.</li>
+comment with a documentation entry; the intent is recorded twice and the
+mechanism is absent, which is a more specific criticism than an absence
+would be.</li>
 <li><strong>A capped access log</strong>, so the distinctive
 observability is bounded and the earliest accesses — the ones explaining
 how a memory became established — are the first to go.</li>
-<li><strong>Many tunable constants</strong> (<code>lambda</code>,
+<li><strong>Many tunable constants</strong> (<code>lambda_embed</code>,
 <code>d</code>, the three <code>a_*</code> weights,
-<code>spread_gamma</code>, hop count, thresholds); no ablation was
-found.</li>
+<code>spread_gamma = 0.5</code>, <code>per_hop_decay = 0.6</code>,
+<code>activation_floor = 0.05</code>, the hop count); no ablation of
+them is committed here.</li>
+<li><strong>The harness behind the README's own numbers is not in the
+repository.</strong> Its results table names five scripts and reports
+six figures, and the text above it says the bench harness <em>"is not
+published in this repository"</em> — see section 10.</li>
 <li><strong>A labs repository</strong>, so the stability commitment is
 whatever the surrounding framework offers.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Twenty-three test modules covering retrieval, forgetting, reflection
-and its interrupt path, owner roles, contract, embeddings and their
-integration, observability, monitoring, references, todo, schema, store
-and a v2 store, routes, skill, authoring, generative, vector backends,
-and background reflect plus hygiene. Nothing was run for this
-review.</p>
+<p>Twenty-four test modules holding 260 cases, covering retrieval,
+forgetting, reflection and its interrupt path, owner roles, contract,
+embeddings and their integration, observability, monitoring, references,
+todo, schema, store and a v2 store, routes, skill, authoring,
+generative, vector backends, background reflect plus hygiene, and the
+packaged README. Nothing was run for this review.</p>
+<p><strong>The README's numbers have no harness in this repository, and
+the project says so.</strong> Its <em>"When does memory help?"</em>
+table reports six results — memory +75% on unguessable cross-session
+facts, +44–60% on LoCoMo, reflection +50% under a tight retrieval
+budget, +70% on LongMemEval with reflection neutral, reflection −20% on
+pinpoint lookup, and a demo showing memory backfiring when stale —
+naming the five scripts that produced them. The line above the table
+reads <em>"Measured internally with gpt-5.4 + text-embedding-3-large
+(the bench harness is not published in this repository)"</em>. Until
+issue #104 of 6 August 2026 that text instead pointed five times at
+<code>examples/memory_bench/</code>, a directory absent from the
+repository at every depth, and named two factory functions inside it
+<em>"for working implementations"</em>; the fix replaced each reference
+with the published quickstart, marked the results as internally
+measured, and added <code>test_memory_readme.py</code>, which asserts
+that the string <code>memory_bench</code> does not appear and that every
+relative link in the file resolves on disk. That test guards the
+README's <em>links</em>, not its <em>claims</em> — which is why
+<code>valid_from/valid_to</code> remain documented and unwritten.</p>
 <p>The end-to-end ablation is in §1. What makes the accompanying paper
 worth reading against the code is that its Appendix D reports
 operational statistics from the evaluation fleet — and <strong>two of
@@ -743,6 +790,9 @@ for it to be used.</li>
 <li>If reflection output is 22% of rows and ~1% of reads, what is
 consolidation buying, and would the store be better without it in this
 workload?</li>
+<li>Will <code>examples/memory_bench/</code> be published? The README's
+six figures name the scripts that produced them, and a reader who wants
+to check the +70% has nothing to open.</li>
 </ul>
 <h2 id="appendix-sources-beyond-the-code">Appendix: Sources Beyond the
 Code</h2>
@@ -778,10 +828,52 @@ and the operational statistics are reported, not reproduced here.</p>
 <li>Observability: <code>observability.py</code>,
 <code>monitoring.py</code>, <code>tracing_bridge.py</code>.</li>
 <li>Skill surface: <code>memory_skill/</code>.</li>
-<li>Tests: <code>packages/nooa-memory/tests/memory/</code> (23
-modules).</li>
+<li>Tests: <code>packages/nooa-memory/tests/memory/</code> (24 modules,
+260 cases).</li>
+<li>Package documentation:
+<code>packages/nooa-memory/src/nooa_memory/README.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d"><code class="commit-id" title="fbbbfb16d68d66dc1ff029a9c06844d3b900e29d">fbbbfb16…</code></a>
+— 187 commits on, three of them touching the memory package, and every
+module in it except <code>store.py</code> is byte-identical to the
+previous pin. <code>manager.py</code>, <code>retrieval.py</code>,
+<code>schema.py</code>, <code>reflection.py</code>,
+<code>forgetting.py</code>, <code>config.py</code> and the rest were
+compared by object hash rather than by reading the diff. Both marks
+re-checked against the code: the <code>continue</code> in
+<code>_spread</code> still fires before both accumulators, and all three
+owner tests are present, so <code>scope_enforced</code> and
+<code>negative_eval</code> are unchanged.
+<code>capability_evidence</code> records were added for both.</p>
+<p><code>7d03281</code> gives the store a <code>threading.RLock</code>
+and opens its connection <code>check_same_thread=False</code>, with the
+whole body of every method moved under the lock; two cases in
+<code>test_memory_store.py</code> cover it, one asserting the lock is
+held on every connection and index call, the other overlapping
+reflection with foreground writes. <code>store.py</code> grows from 487
+lines to 526, almost all of it re-indentation.</p>
+<p><code>5ea7b5d</code> closes the provenance gap in the package README,
+reported as issue #104 on 6 August 2026: the file had cited
+<code>examples/memory_bench/</code> five times as the source of its
+measured results, including a six-row table and two named factory
+functions, and that directory is in no revision of the public
+repository. The references were replaced with the published quickstart,
+the table's preamble was changed to say the bench harness is not
+published, and <code>test_memory_readme.py</code> was added to keep the
+citation from returning. The figures stay and remain unreproducible from
+this tree, which section 10 states.</p>
+<p>The bi-temporal gap is unchanged and one line larger:
+<code>valid_from</code> and <code>valid_to</code> are declared at
+<code>schema.py:223-224</code> and listed in the README's metadata
+section at <code>README.md:113</code>, and a search over every Python
+and Markdown file in the repository returns those three lines and
+nothing else. The paper is unchanged at v1 of 22 July 2026.</p>
+<p>Screened again before reading: 0 auto-run surfaces, 5 build-time
+execution points, 6 unpinned surfaces, nothing inside the seven-day
+cooldown, <code>AGENTS.md</code> treated as data; nothing was installed
+or run, and the read was made from a full clone.</p>
 <p><strong>2026-08-06</strong> — <a
 href="https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/bfb347bca53c1eaa0449d7acfebdefb29075fc23"><code class="commit-id" title="bfb347bca53c1eaa0449d7acfebdefb29075fc23">bfb347bc…</code></a>
 — 83 commits on, four of them touching the memory package. The mechanism
