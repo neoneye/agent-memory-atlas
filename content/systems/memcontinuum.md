@@ -24,12 +24,12 @@ matrix:
   retrieval: "`for-path` maps a file to every topic whose `code_refs` prefix, glob or `path#symbol` covers it and returns the whole chain, every link regardless of status; `search` is FTS5, vector or hybrid with a default status filter of active and inbox records excluded; `why` walks path to concept to governing topics; `chain` prints one line per link"
   write: "A person or an agent appends a link to a topic file and commits. Nothing extracts: there is no summariser and no consolidation pass. `current` is hand-set to the newest active link and the linter errors when it disagrees"
   update_delete: "There is no update. A change of mind is a new link with `reverses` and a `reason_for_change`; the predecessor keeps its text and gains `status: superseded` with `superseded_by`. Three lifecycle fields may each move forward once and only alone; every other field is frozen against the last commit, and a removed link or a deleted topic file is an error"
-  scoping: "A `project` column on every record and 64 read queries that filter on it, but one decision database belongs to one project — `records` is keyed by `path` alone, so opening the same file under a second `--project` is refused outright. The code index is the multi-project one, keyed `(path, project, code_root)`"
+  scoping: "One decision database per project, and the separation is enforced rather than assumed: `records` is keyed by `path` alone, so opening the same file under a second `--project` is refused outright with the reason in the error. A `project` column sits on every record and 64 read queries carry it as defence in depth. The code index is the multi-project store, keyed `(path, project, code_root)`"
   integration: "Claude Code hooks — a pre-edit lookup on Edit and Write, a post-edit ledger, session-start and user-prompt nudges, a precompact persist, a session-end stamp — plus two skills, a store-side git `pre-commit` and `post-commit`, an installer, and a per-machine registry of which repositories have a store"
   background: "None on the memory. A post-commit hook reindexes, a watchdog bounds the pre-edit lookup at two seconds, and the nudges are triggered by the edit ledger rather than by a timer"
   trust: "Five authorities — owner-verbatim, owner-ratified, reviewer-finding, code-derived, agent-inference — carried per field, and five statuses. Together they select one of three citation tiers, and the tier decides whether a violated invariant fails the run, is reported, or is skipped"
   strengths: "An append-only guarantee enforced by a linter and a git hook rather than asserted; a frozen-body check that freezes new fields by default; an authority vocabulary where only the owner's own or ratified words may block work; a retrieval timeout that says the absence of a decision was not established rather than staying silent; 1,605 committed test functions"
-  risks: "The decision store holds one project and its scope predicate can never exclude anything; a declined ruling is handed to the model and nothing prevents its re-adoption; every hook fails open by design, so a missing index or a shell edit means no decision is consulted at all; nine days of history and two authors; the drift gate blocks only on an invariant somebody wrote"
+  risks: "A declined ruling is handed to the model and nothing prevents its re-adoption; every hook fails open by design, so a missing index or a shell edit means no decision is consulted at all; nine days of history and two authors; the drift gate blocks only on an invariant somebody wrote"
 ---
 
 ## 1. Executive Summary
@@ -393,12 +393,23 @@ code enforces is the gate around it.
 populated result set with the flag as the only variable, and re-asserted in the
 other direction.
 
-**Scope — withheld, and the reason is in the project's own error message.**
-Every record carries `project`, the column is indexed, and 64 read queries
-filter on it. But `records` is keyed by `path` alone, so a second project in
-one database would evict the first, and `open_db` refuses it outright rather
-than allowing the mix (`memidx.py:1019-1024`). One database, one project: the
-predicate is real and has nothing to exclude. The code index is the
+**Scope — withheld, and the withholding is not a finding about isolation.**
+Project isolation here is real and is enforced by construction: one decision
+database belongs to one project, `records` is keyed by `path` alone, and
+`open_db` refuses to open a store under a second `--project` rather than
+letting the two mix — *"opening the SAME physical file for a different
+`--project` would silently evict/overwrite that project's rows"*
+(`memidx.py:1019-1024`). A `project` column sits on every record and 64 read
+queries carry it as defence in depth. Nothing here leaks between projects, and
+a reader should not infer from the withheld mark that it does.
+
+What the mark asks for is narrower than isolation: a stored scope key that
+partitions co-resident memory on the read path. A store that holds exactly one
+scope cannot demonstrate that, because the predicate has nothing to exclude —
+the same line this atlas drew for
+[Agentic Context Engine](../agentic-context-engine/), where one skillbook
+belongs to one agent. Separation and partitioning are different mechanisms with
+different failure modes, and this system chose the first. The code index is the
 multi-project store — keyed `(path, project, code_root)`, explicitly safe for
 several projects in one file — and what it holds is chunks derived from source
 rather than anything that could turn out to be false.
@@ -534,5 +545,7 @@ rg -n 'this db keys rows by path alone' memidx.py                       # the re
 ```
 
 ## History
+
+**2026-09-08** — [`161f555d74d81532362a38e8f10657eac0c29e23`](https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23) — correction. The `scope_enforced` reasoning was accurate and its presentation was not: one decision database per project, with a second `--project` refused outright, was listed among the report's risks and named as the verdict's biggest risk. That is a property which prevents cross-project contamination, not one that causes it, and framing it as a cost invited exactly the misreading it received — that the withheld mark was a finding about leakage. The mark stays withheld, on the same line this atlas applied to Agentic Context Engine: a store holding exactly one scope cannot demonstrate partitioning on a read path. Sections 5 and 9, the frontmatter and the verdict now say that separation is enforced here and that the withholding is not a claim about isolation. Reported by the project's author; the facts were re-verified at this pin before the wording changed.
 
 **2026-09-08** — [`161f555d74d81532362a38e8f10657eac0c29e23`](https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23) — first reading, at the head of `main`, on a commit from the same day. Screened before anything was read: one auto-run surface — fourteen hook scripts a plugin manifest can register — two dependency manifests inside the seven-day cooldown, two unpinned ranges, no build-time execution; nothing was installed or run, and the read was made from a full clone. Four marks. `trust_state` and `audit_log` rest on enforcement rather than on schema: the three citation tiers decide whether a violated invariant fails a run, and the frozen-body check runs from the store's own `pre-commit` hook. `human_review` rests on the inbox exclusion and on the linter's refusal to move a status toward `active`; the promotion procedure itself is documentation. `negative_eval` rests on the inbox test's populated positive control. `scope_enforced` and `tombstone` were each examined and withheld with the near-miss stated in section 9. The reading covers the decision store, its linter, the enforcement classes, the retrieval hooks and the ledger; the Anatomy code index, the chunkers, the installer's registry and the nudge heuristics were read as context rather than as subject.

@@ -543,18 +543,29 @@ enforces is the gate around it.</p>
 <p><strong>Negative evaluation — awarded.</strong> The inbox exclusion
 is asserted against a populated result set with the flag as the only
 variable, and re-asserted in the other direction.</p>
-<p><strong>Scope — withheld, and the reason is in the project's own
-error message.</strong> Every record carries <code>project</code>, the
-column is indexed, and 64 read queries filter on it. But
-<code>records</code> is keyed by <code>path</code> alone, so a second
-project in one database would evict the first, and <code>open_db</code>
-refuses it outright rather than allowing the mix
-(<code>memidx.py:1019-1024</code>). One database, one project: the
-predicate is real and has nothing to exclude. The code index is the
-multi-project store — keyed <code>(path, project, code_root)</code>,
-explicitly safe for several projects in one file — and what it holds is
-chunks derived from source rather than anything that could turn out to
-be false.</p>
+<p><strong>Scope — withheld, and the withholding is not a finding about
+isolation.</strong> Project isolation here is real and is enforced by
+construction: one decision database belongs to one project,
+<code>records</code> is keyed by <code>path</code> alone, and
+<code>open_db</code> refuses to open a store under a second
+<code>--project</code> rather than letting the two mix — <em>"opening
+the SAME physical file for a different <code>--project</code> would
+silently evict/overwrite that project's rows"</em>
+(<code>memidx.py:1019-1024</code>). A <code>project</code> column sits
+on every record and 64 read queries carry it as defence in depth.
+Nothing here leaks between projects, and a reader should not infer from
+the withheld mark that it does.</p>
+<p>What the mark asks for is narrower than isolation: a stored scope key
+that partitions co-resident memory on the read path. A store that holds
+exactly one scope cannot demonstrate that, because the predicate has
+nothing to exclude — the same line this atlas drew for <a
+href="../agentic-context-engine/">Agentic Context Engine</a>, where one
+skillbook belongs to one agent. Separation and partitioning are
+different mechanisms with different failure modes, and this system chose
+the first. The code index is the multi-project store — keyed
+<code>(path, project, code_root)</code>, explicitly safe for several
+projects in one file — and what it holds is chunks derived from source
+rather than anything that could turn out to be false.</p>
 <p><strong>Tombstone — withheld, and it is the closest miss
 here.</strong> The schema is unusually well equipped for one: a
 <code>declined</code> status meaning considered and not adopted, a
@@ -753,6 +764,21 @@ rg -n &#39;alternatives&#39; memidx.py memlint.py hooks/*.sh                    
 rg -n &#39;CREATE TABLE IF NOT EXISTS records&#39; -A2 memidx.py                # path TEXT PRIMARY KEY — one project per db
 rg -n &#39;this db keys rows by path alone&#39; memidx.py                       # the refusal, in the project&#39;s own words</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23"><code class="commit-id" title="161f555d74d81532362a38e8f10657eac0c29e23">161f555d…</code></a>
+— correction. The <code>scope_enforced</code> reasoning was accurate and
+its presentation was not: one decision database per project, with a
+second <code>--project</code> refused outright, was listed among the
+report's risks and named as the verdict's biggest risk. That is a
+property which prevents cross-project contamination, not one that causes
+it, and framing it as a cost invited exactly the misreading it received
+— that the withheld mark was a finding about leakage. The mark stays
+withheld, on the same line this atlas applied to Agentic Context Engine:
+a store holding exactly one scope cannot demonstrate partitioning on a
+read path. Sections 5 and 9, the frontmatter and the verdict now say
+that separation is enforced here and that the withholding is not a claim
+about isolation. Reported by the project's author; the facts were
+re-verified at this pin before the wording changed.</p>
 <p><strong>2026-09-08</strong> — <a
 href="https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23"><code class="commit-id" title="161f555d74d81532362a38e8f10657eac0c29e23">161f555d…</code></a>
 — first reading, at the head of <code>main</code>, on a commit from the

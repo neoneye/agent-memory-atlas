@@ -13096,13 +13096,16 @@ the two-second lookup misses its deadline the hook tells the model the
 absence of a decision was not established and this edit is unverified,
 rather than returning the empty result that reads as "nothing governs
 this file".</li>
-<li>Biggest risk: <strong>the scope column can never exclude anything,
-and the declined ruling is never consulted.</strong> One database holds
-one project — <code>records</code> is keyed by path alone and a second
-<code>--project</code> is refused — so the predicate on 64 read queries
-is a stamping guard; and a <code>declined</code> ruling with its
-rejected alternatives is handed to the model before an edit and checked
-by nothing.</li>
+<li>Biggest risk: <strong>the declined ruling is delivered and never
+consulted.</strong> A <code>declined</code> ruling carries the option,
+the reason it was rejected and its own authority, frozen once written,
+and the pre-edit hook hands it to the model — but nothing checks a
+proposal against it, so re-adopting what was refused meets no
+resistance. (Project isolation is not a weakness here: one database
+holds one project, <code>records</code> is keyed by path alone, and a
+second <code>--project</code> is refused outright;
+<code>scope_enforced</code> is withheld because a single-scope store
+cannot demonstrate partitioning, not because anything leaks.)</li>
 <li>Most reusable component: the authority-to-tier mapping — five values
 on a ruling, of which only the owner's own or ratified words can fail a
 run, evidence-backed findings are reported unless
