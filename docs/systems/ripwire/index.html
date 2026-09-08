@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A C++ code-context engine whose
+memory is two committed sidecars — a ledger of deliberately accepted
+quality findings, each keyed to a symbol and pinned at the magnitude it
+was accepted at so it resurfaces the moment the finding worsens, with a
+content hash that re-files it across a rename and refuses to across a
+rewrite; and a field-notes file surfaced beside the symbol it names.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ripwire — Agent Memory Atlas">
+    <meta property="og:description" content="A C++ code-context engine
+whose memory is two committed sidecars — a ledger of deliberately
+accepted quality findings, each keyed to a symbol and pinned at the
+magnitude it was accepted at so it resurfaces the moment the finding
+worsens, with a content hash that re-files it across a rename and
+refuses to across a rewrite; and a field-notes file surfaced beside the
+symbol it names.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ripwire — Agent Memory Atlas">
+    <meta name="twitter:description" content="A C++ code-context engine
+whose memory is two committed sidecars — a ledger of deliberately
+accepted quality findings, each keyed to a symbol and pinned at the
+magnitude it was accepted at so it resurfaces the moment the finding
+worsens, with a content hash that re-files it across a rename and
+refuses to across a rewrite; and a field-notes file surfaced beside the
+symbol it names.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ripwire — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ripwire",
+      "description": "A C++ code-context engine whose memory is two committed sidecars \u2014 a ledger of deliberately accepted quality findings, each keyed to a symbol and pinned at the magnitude it was accepted at so it resurfaces the moment the finding worsens, with a content hash that re-files it across a rename and refuses to across a rewrite; and a field-notes file surfaced beside the symbol it names.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An accepted finding, ratcheted</p>
+          <h1>ripwire</h1>
+          <p class="document-deck">A C++ code-context engine whose
+memory is two committed sidecars — a ledger of deliberately accepted
+quality findings, each keyed to a symbol and pinned at the magnitude it
+was accepted at so it resurfaces the moment the finding worsens, with a
+content hash that re-files it across a rename and refuses to across a
+rewrite; and a field-notes file surfaced beside the symbol it names.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/redhat-et/ripwire">
+              <span>Source</span>
+              <strong>redhat-et/ripwire</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3" title="8c20e10856d347206ccbd52fd1b83d90c5cbb5e3">
+              <span>Analyzed revision</span>
+              <code>8c20e108…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ripwire is a code-context engine for coding agents — Apache-2.0,
+1,917 commits between 31 July and 8 September 2026, 156,391 lines of
+C++23 across 156 files under <code>src/</code>, with 559 gate scripts
+named by its own regression runner and all 559 resolving to a file. Ten
+commit identities appear, of which one accounts for 1,895 of them. The
+screen found two auto-run surfaces — an MCP manifest and a hooks
+directory — and four unpinned surfaces; nothing was installed or run,
+and the read was made from a full clone.</p>
+<p><strong>Most of the tool is out of this atlas's scope, and two files
+in it are squarely in.</strong> The call graph, the ranking and the
+lenses are a code index, and a code index is a projection of source that
+cannot turn out to be false. What this report is about is the pair of
+committed sidecars beside them: <code>.ripwire_quality_acks</code>, 955
+rows recording findings a person or an agent deliberately accepted, and
+<code>.ripwire_notes</code>, a field-notes file whose entries are
+surfaced beside the symbol they name. Both hold judgements that can be
+wrong, both survive every session, and both can be corrected.</p>
+<p><strong>The ack ledger is a ratchet, and that is the idea worth
+carrying.</strong> A row is
+<code>ack &lt;kind&gt; &lt;16-hex key&gt; &lt;magnitude&gt; [cid=…] [by=…] &lt;reason&gt;</code>,
+and the whole mechanism is one comparison
+(<code>src/quality.h:4899-4903</code>):</p>
+<pre class="cpp"><code>const auto it = acks.find( ackMapKey( ackKindToken( r ), r.key ) );
+return ( it != acks.end() &amp;&amp; r.now &lt;= it-&gt;second.ackNow ) ? &amp;it-&gt;second : nullptr;</code></pre>
+<p>An ack accepts a finding <strong>at the size it was accepted
+at</strong>. The moment the finding worsens past that magnitude it
+reappears, which the source states as the contract — <em>"an ack accepts
+a finding AT its acked size, never a blank check"</em>
+(<code>src/quality.h:3940</code>). Suppression is disclosed rather than
+silent: the report header carries an <code>acked</code> count. And the
+contract has been defended against its own degenerate case: a finding
+whose magnitude is zero would make the test <code>0 &lt;= 0</code> and
+suppress forever, <em>"a permanent blank check, which the ack contract
+explicitly promises never to be"</em>
+(<code>src/quality.h:3694-3696</code>), so the kind token is qualified
+by origin to keep that from happening.</p>
+<p><strong>Two marks.</strong> <code>human_review</code> on a ledger the
+project keeps committed precisely so that a change in what is suppressed
+shows up in a diff, beside a <code>--notes</code> listing that flags a
+note whose target no longer resolves so a person can prune it.
+<code>negative_eval</code> on a case that writes a note against a target
+that does not exist and asserts its text appears in neither the
+task-scoped retrieval nor the default map, with the positive control in
+the same script.</p>
+<p><strong>Why <code>tombstone</code> is withheld, and it is the most
+interesting call in this report.</strong> Everything about the ack
+ledger looks like the mark: durable, committed, consulted before the
+tool speaks again, with a magnitude floor that stops it being a blanket.
+Three things decide against it. The key is a location —
+<code>fnv1a64(relative path \0 scope \0 symbol name)</code>
+(<code>src/quality.h:565-573</code>) — so it identifies <em>where</em> a
+finding was, not <em>what</em> was rejected. What the row records is an
+<strong>accepted</strong> finding rather than a rejected value; it
+suppresses a warning about code that stays. And it is consulted when a
+report is rendered rather than when anything is written, so nothing
+prevents the same code being written again. The near-miss is written up
+in section 9 because the one part of the mechanism that <em>is</em>
+value-keyed — the <code>cid</code> content hash — is used with an
+unusual precision the mark's own definition is about.</p>
+<p><strong>Four findings sit against the design.</strong> The location
+key does not survive a move, and the project measured that against its
+own history rather than asserting it. The comment reports that
+<code>git mv</code> destroys them, and that across fifty-nine canonical
+ids, the same number of path-qualified keys and four clone groups, not
+one survived (<code>src/quality.h:4694-4700</code>). A stale ack is
+classified into three reasons and never acted on. The notes store has
+none of the ack side's protections — no rescue route, no write lock —
+and its single committed row is out of date, with nothing in the format
+able to say so. And the MCP verb advertised as <em>"most relevant memory
+notes / docs for a task"</em> (<code>src/mcp.h:62</code>) does not read
+the notes store at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a judgement about a place in the
+code</strong>, and there are two kinds.</p>
+<p>An <strong>ack</strong> says <em>this finding is acceptable, at this
+size, for this reason</em>. It is written when a person or an agent has
+looked at a warning and decided to keep the code. It is not an
+exemption: it is a floor, and crossing the floor brings the warning
+back.</p>
+<p>A <strong>note</strong> says <em>here is what someone learned about
+this thing</em>. It attaches to a canonical id or a path, and it rides
+along whenever the tool next describes that symbol or file to an agent,
+so the knowledge arrives at the moment it is relevant rather than when
+someone thinks to look for it.</p>
+<p>Neither has a status, a confidence or a validity window. Both are
+corrected by being rewritten, and both are forgotten by being deleted
+from a file a person edits.</p>
+<p>The identity question is the whole design problem, and the project
+treats it as one. A judgement about a symbol has to survive the symbol
+being renamed or moved, and must <em>not</em> survive the symbol being
+rewritten — because the thing that was judged is gone. The ack side has
+two rescue routes and a published measurement of how well they work. The
+notes side has neither.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the quality delta reports findings, and an ack accepts one at its current magnitude into a committed ledger keyed on the symbol's path, scope and name; a later run suppresses that finding only while it stays at or below the acked magnitude, re-reports it the moment it worsens, and before any of that re-files a row whose location key no longer resolves through a git rename or a unique content hash — never through a rewritten body</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the quality delta reports findings, and an ack accepts one at its current magnitude into a committed ledger keyed on the symbol&#39;s path, scope and name; a later run suppresses that finding only while it stays at or below the acked magnitude, re-reports it the moment it worsens, and before any of that re-files a row whose location key no longer resolves through a git rename or a unique content hash — never through a rewritten body
+flowchart TB
+    RUN[&quot;ripwire &lt;dir&gt; --quality-delta&quot;]
+    FIND[&quot;findings: complexity,&lt;br/&gt;verbosity, api-surface,&lt;br/&gt;duplication, churn, clones&quot;]
+    HEAL{&quot;does this ack&#39;s location key&lt;br/&gt;still name a symbol?&quot;}
+    RESC{&quot;a git rename, or a&lt;br/&gt;unique content hash?&quot;}
+    REKEY[&quot;re-file the row onto&lt;br/&gt;the new location key&quot;]
+    STALE[&quot;classified stale:&lt;br/&gt;target gone, finding gone,&lt;br/&gt;or foreign scope;&lt;br/&gt;disclosed, never acted on&quot;]
+    TEST{&quot;is this finding acked,&lt;br/&gt;and is now &amp;lt;= the&lt;br/&gt;acked magnitude?&quot;}
+    SUP[&quot;suppressed, and counted&lt;br/&gt;in the report header&quot;]
+    REP[&quot;reported: it worsened&lt;br/&gt;past what was accepted&quot;]
+    ACK[&quot;ripwire &lt;dir&gt; --quality-ack=REASON&quot;]
+    LEDGER[(&quot;committed ledger:&lt;br/&gt;kind, 16-hex key, magnitude,&lt;br/&gt;cid, scope, reason&quot;)]
+    DIFF[&quot;a change in what is&lt;br/&gt;suppressed shows up&lt;br/&gt;in git diff&quot;]
+
+    RUN --&gt; FIND
+    LEDGER --&gt; HEAL
+    HEAL -- no --&gt; RESC
+    RESC -- yes --&gt; REKEY
+    RESC -- &quot;no, or the body was rewritten&quot; --&gt; STALE
+    HEAL -- yes --&gt; TEST
+    REKEY --&gt; TEST
+    FIND --&gt; TEST
+    TEST -- yes --&gt; SUP
+    TEST -- no --&gt; REP
+    REP --&gt; ACK
+    ACK --&gt; LEDGER
+    LEDGER --&gt; DIFF</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single compiled binary, header-heavy: 148 headers and six
+translation units. The largest are <code>src/serialize.h</code> (7,479
+lines), <code>src/quality.h</code> (6,078), <code>src/graph.h</code>
+(5,787), <code>src/mcpverbs.h</code> (4,824), <code>src/cli.h</code>
+(4,548) and <code>src/main.cpp</code> (4,062). Everything this report is
+about lives in <code>src/quality.h</code> and <code>src/notes.h</code>,
+with the verbs in <code>src/verbs_quality.h</code> and the surfacing in
+<code>src/serialize.h</code>.</p>
+<p>Around them: <code>test/</code> holds 1,347 files including 610 shell
+gates and per-language fixture corpora; <code>bench/</code> holds
+harnesses, locked datasets and committed results;
+<code>third_party/</code> vendors the container and parser libraries;
+<code>docs/</code> holds a 12,678-line evaluation document and a lineage
+table; <code>skills/</code> holds the agent skills that tell a model
+when to ack.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the binary. Runtime dependencies
+are none by design.</li>
+<li><strong>Fully local and offline:</strong> yes, entirely.</li>
+<li><strong>Hand-repairable:</strong> both stores are sorted text a
+person can edit, and both are committed, so a bad row is a revert
+away.</li>
+<li><strong>Install:</strong> a script, a release binary, or a source
+build.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Key a finding.</strong> <code>pathQualifiedKey</code>
+(<code>src/quality.h:565-573</code>) hashes the root-relative path, the
+scope and the name with a null byte between each;
+<code>qualityKey</code> (<code>:654-658</code>) is the symbol-level
+caller. The two clone kinds key on a member-set hash instead.</li>
+<li><strong>Compute the content id.</strong> <code>scrubbedBody</code>
+and <code>scrubbedBodyHash</code> (<code>src/quality.h:828-898</code>)
+hashes the body after collapsing whitespace, replacing the symbol's own
+name with a sentinel and dropping ack comment lines. Built corpus-wide
+with a count per id, so a body shared by two symbols refuses to
+resolve.</li>
+<li><strong>Heal an identity.</strong> <code>remapAckIdentity</code>
+(<code>src/quality.h:4677-4755</code>) runs before the ratchet and
+re-files a row only when its own key resolves to nothing, it carries a
+content id, and that id is unique — preferring a git-recorded rename
+over a content match. The comment states the boundary: <em>"Identity
+that follows a rename must not become identity that follows a rewrite;
+that is the blank check the ack contract forbids"</em>
+(<code>:4673-4675</code>).</li>
+<li><strong>Apply the ratchet.</strong> <code>findSuppressingAck</code>
+(<code>:4899-4903</code>) and <code>applyAckRatchet</code>
+(<code>:4907-4918</code>).</li>
+<li><strong>Write an ack.</strong> <code>--quality-ack[=REASON]</code>
+(<code>src/cli.h:2667</code>, <code>:4506</code>) implies the delta,
+refuses reason-less spellings unless the delta is also requested, and is
+gated by <code>refuseForeignAckSelection</code>
+(<code>src/verbs_quality.h:401-441</code>) against an
+<code>--ack-only</code> that names rows outside the scope under review.
+The row is built at <code>:1141-1144</code> and published at
+<code>:1157</code> through an atomic write under a cross-process
+lock.</li>
+<li><strong>Add a note.</strong> <code>resolveNoteAddTarget</code>
+(<code>src/main.cpp:606-670</code>) resolves the selector through the
+same resolver the read verbs use: unique stores the canonical id,
+ambiguous refuses and names every candidate, and a path that resolves to
+nothing stores with a loud dangling warning.</li>
+<li><strong>Surface a note.</strong> <code>fileNoteTarget</code> and
+<code>symbolNoteTarget</code> (<code>src/serialize.h:503-511</code>)
+spell the two lookup keys once; <code>renderNoteChildren</code>
+(<code>:471-489</code>) attaches them, reached from the task map, the
+default map, the expansion, the edit check and three MCP verbs.</li>
+<li><strong>List notes for pruning.</strong> <code>--notes</code>
+(<code>src/main.cpp:798-860</code>) recomputes the live target set and
+emits per-target rows with a dangling flag.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An <strong>ack row</strong>: a kind token, the 16-hex key, the
+accepted magnitude, an optional <code>cid</code>, an optional
+<code>by</code> scope and a reason to end of line. Of the 955 committed
+rows, 629 carry a content id and 180 carry a scope, all of the latter
+with the same value. The kind distribution is led by short-horizon churn
+(297), new-symbol api-surface (141) and api-surface (124). Magnitudes
+run from 0 — 142 rows — to 1,731.</p>
+<p>A <strong>note</strong>: a target, a date taken from git's committer
+clock, the text, and optionally the HEAD sha and branch. One row is
+committed.</p>
+<p><strong>Temporal:</strong> one time on a note, none on an ack, and
+the absence is deliberate: <em>"Deliberately NOT pinned to a HEAD sha:
+an acked finding … stays accepted across commits"</em>
+(<code>src/quality.h:3941-3943</code>). <code>bitemporal</code>
+withheld.</p>
+<p><strong>Trust:</strong> none applied. <code>StaleAckWhy</code>
+(<code>src/quality.h:4936-4941</code>) is a real three-value
+classification — the target is gone, the finding is gone, or the row was
+filed from a foreign scope — and it is emitted as disclosure rows and
+never read by the suppression test. <code>trust_state</code>
+withheld.</p>
+<p><strong>Scoping:</strong> the <code>by</code> field is written and
+read only to build a disclosure row. <code>scope_enforced</code>
+withheld.</p>
+<p><strong>Tombstone:</strong> withheld — see section 9.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Notes are retrieved by <strong>exact string match</strong> on a
+root-relative path or a canonical <code>path::scope::name</code>,
+through a map built once per run. There is no ranking, no fuzzy match
+and no fallback, which is the right choice for a store whose whole value
+is arriving beside the right symbol — and it is also the reason a rename
+silences a note without any error.</p>
+<p>Acks are not retrieved at all in the ordinary sense. They are a
+filter applied when the quality delta is rendered, and the number
+suppressed is disclosed.</p>
+<p><strong>Failure modes.</strong> A note whose target moves becomes
+inert: the lookup misses, nothing surfaces, and only the
+<code>--notes</code> listing reveals it. An ack whose symbol moves is
+rescued if a rename is recorded in git or its body is unchanged and
+unique, and is otherwise classified stale and left in place. And because
+the rescue routes were added after most of the ledger was written, the
+source is explicit that they <em>"can never rescue the 443 rows already
+committed here, and the report says so"</em>
+(<code>src/quality.h:4668-4669</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Both stores are written by command-line verbs only — no MCP verb
+writes either — and both are sorted on every write so that two branches
+merge cleanly.</p>
+<p>The ack writer is careful in ways worth naming. It publishes
+atomically under a cross-process lock, added after a measured torn-write
+incident. It root-qualifies the file name rather than trusting the
+working directory, after an observed case where acking one root rewrote
+another root's committed ledger. And it refuses an
+<code>--ack-only</code> selection that names rows outside the scope
+under review, which is the rubber-stamp guard.</p>
+<p>Two things it does not do. A reason is not required — a bare
+<code>--quality-ack</code> alongside the delta is accepted and renders
+the literal string <code>(no reason given)</code>, though no committed
+row carries it. And the reason chain is capped at one hop, so a row
+acked three times keeps the newest reason and the one before it,
+<em>"without turning the ledger into an append-only reason log"</em>
+(<code>src/quality.h:3988</code>).</p>
+<p>The note writer has none of this: a plain truncating stream with no
+lock, in a file whose header cites the ack precedent for its sorted
+format.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Reading both sidecars is two file reads per run.</li>
+<li>The identity heal is a pre-pass over the ledger against the live
+symbol table.</li>
+<li>Nothing runs in the background and nothing calls a model.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Thirty-one MCP verbs, all read-only with respect to these two stores.
+Notes ride along with the symbol descriptions the agent already asked
+for, which is the integration decision that matters: the agent does not
+have to know the memory exists to receive it.</p>
+<p>The agent skills close the loop on the ack side, telling a model to
+<em>"record a trade-off instead of re-reading it forever"</em> with a
+worked command. That is the mechanism working as designed, and it is
+also why the review qualification in section 9 matters: the same verb a
+person uses deliberately is one an agent is instructed to use
+unattended.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Human review — awarded, with both halves qualified.</strong>
+The adjudication is <code>--quality-ack</code>: a finding is looked at
+and accepted at a magnitude with a reason, and the verdict is committed
+to a file the project keeps in version control for exactly this reason —
+<em>"the ack file is committed precisely so a change in what is
+suppressed is reviewable"</em> (<code>src/quality.h:4033</code>). The
+inspection is <code>--notes</code>, which recomputes the live target set
+so a person can see what has gone dangling, described in the source as
+<em>"listed here so the human can prune it"</em>
+(<code>src/main.cpp:686</code>). What is missing on both sides is an
+action: pruning a note and retiring a stale ack are manual file edits,
+and the source records what that costs — <em>"A past round hand-retired
+109 such dead rows out of this repo's own committed acks file — a whole
+session of manual audit for a question the tool could answer in one
+pass"</em> (<code>src/quality.h:4925-4927</code>). No CI job reads
+either sidecar.</p>
+<p><strong>Negative evaluation — awarded.</strong> The notes case is the
+strongest shape this mark takes: a note is written against a target that
+does not exist, the listing is asserted to show it as dangling and to
+show a live target as not dangling, and then its text is asserted absent
+from both a task-scoped retrieval and the default map. Two populated
+emissions, one must-not, and the positive control in the same script.
+The identity case adds the anti-blank-check assertion: a body that was
+moved <em>and rewritten</em> must not be content-matched onto its old
+ack.</p>
+<p><strong>Tombstone — withheld, and the near-miss is precise enough to
+be worth more than the mark.</strong> The ledger is durable, committed,
+consulted before the tool reports again, and ratcheted so it cannot
+become a blanket exemption. Three things decide against it. The lookup
+key is a location rather than the rejected content. The row records a
+finding that was <em>accepted</em> — the code stays, the warning goes —
+rather than a value that was refused. And the consultation happens when
+a report is rendered, not when anything is written, so nothing stops the
+same code being written again. What the mechanism does have is the
+distinction the mark's definition is really about: <code>cid</code> is a
+hash of the symbol's body with whitespace collapsed and its own name
+replaced, and it is used to re-file an ack across a rename and
+deliberately refuses to match a rewritten body. The project states the
+rule in one sentence — <em>"Identity that follows a rename must not
+become identity that follows a rewrite"</em> — and defends it with a
+committed test. That is a considered answer to a question about identity
+that this design had to face and most stores do not.</p>
+<p><strong>Trust state — withheld.</strong> The three stale reasons are
+computed and disclosed and never consulted; a stale ack keeps
+suppressing. Notes carry no status field at all, and the dangling flag
+is derived at listing time rather than stored, filtering nothing — a
+dangling note is invisible because its key misses, not because a state
+excludes it.</p>
+<p><strong>Scope — withheld.</strong> The <code>by</code> field is
+recorded and read in three places, all of them building disclosure rows.
+The suppression test never consults it, so an ack filed from one scope
+suppresses findings anywhere.</p>
+<p><strong>Audit log — withheld.</strong> Both stores are
+read-modify-rewrite rather than append-only, and the reason chain is
+capped at one hop by an explicit decision against a reason log. The
+record of what changed is git's, which the rubric excludes by name.</p>
+<p><strong>The measurement the project made against itself.</strong>
+Rather than asserting that its identity keys are durable, ripwire
+measured them across its own history and published the result: across
+fifty-nine canonical ids, the same number of path-qualified keys and
+four clone groups, not one survived a <code>git mv</code>. That number
+is the argument for the content-hash rescue route, and it is in a
+comment above the code that implements it. Reporting the survival rate
+of your own identity scheme, in the negative, is the thing to copy
+here.</p>
+<p><strong>One live memory that is wrong.</strong> The single committed
+field note, dated 23 August, says a claim in the README is not enforced
+and names what would close it. The gate was widened on 6 September and
+the README now passes; the note's target still resolves, so it is not
+dangling, and nothing marks it superseded. The one row in the notes
+store is out of date, which is precisely the class of failure the ack
+side built its stale classification to catch.</p>
+<p><strong>And the verb named for memory does not read it.</strong>
+<code>src/mcp.h:62</code> advertises <code>memory_recall</code> as
+returning <em>"most relevant memory notes / docs for a task, full
+text"</em>. <code>src/recall.h</code> is a lexical search over markdown
+documents and contains zero references to the notes store, its index or
+its namespace, against 179 occurrences of <code>doc</code>. An agent
+taking the tool list at face value would never reach the field notes;
+they arrive only as riders on other verbs.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>559 gate scripts are named by the regression runner and all 559
+resolve to a file, alongside 169 C++ harnesses and per-language fixture
+corpora, in a test tree of 1,347 files.</p>
+<p><code>docs/EVALS.md</code> is 12,678 lines and opens with a
+provenance rule: every number names the instrument that produced it, the
+corpus it ran on and the file that pins it. The localization and
+retrieval benchmarks ship with locked datasets, an instance file, label
+files and committed results, so those numbers are re-derivable given a
+build; the head-to-head arms depend on external tools that are not
+vendored, so those are attested by committed reports rather than
+re-runnable here. Nothing was run for this review.</p>
+<p>The section worth naming is the one listing what the project does
+<em>not</em> claim: a benchmark evaluator that has never executed with
+every pilot record left null, a design whose minimum detectable effect
+is stated so that <em>"a null result from this design would not be
+evidence of no effect"</em>, a token-cost figure removed for having no
+in-tree citation, and an improvement figure disavowed as belonging to a
+rejected candidate's baseline. Publishing the claims you have withdrawn,
+with the reasons, is the counterweight to a README this long.</p>
+<p><strong>One README count is off by one against the project's own
+data.</strong> The README says seventeen of the folded papers are from
+2026, and the gate that checks it counts arXiv identifier stems
+beginning with 26. The repository's own dates file warns against exactly
+that — the identifier stem does not track publication date, and it
+records one paper whose stem is 2602 and whose date is December 2025. By
+published date the figure is sixteen. The same gate uses dates,
+correctly, for the two-month and thirty-day counts beside it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Ratchet an acceptance instead of suppressing it.</strong>
+Recording the magnitude a finding was accepted at, and re-reporting it
+the moment it worsens, is the difference between a decision and an
+exemption — and it is one comparison.</li>
+<li><strong>Guard the degenerate case.</strong> A finding with no
+magnitude makes the ratchet test trivially true and turns the whole
+record into a blank check; noticing that before shipping is the kind of
+thing that separates a mechanism from an intention.</li>
+<li><strong>Separate identity that follows a rename from identity that
+follows a rewrite.</strong> A content hash that re-files a judgement
+when the code moved, and refuses when the code changed, is the exact
+distinction a durable judgement about code needs.</li>
+<li><strong>Measure your identity scheme's survival and publish the
+number.</strong> A measured survival rate of none is a better argument
+for building a rescue route than any amount of reasoning about it.</li>
+<li><strong>Disclose what you suppressed.</strong> A count in the report
+header means a reader can tell a clean run from a quiet one.</li>
+<li><strong>Root-qualify a sidecar's path.</strong> A bare relative
+filename reads and writes the working directory's copy, and the observed
+failure was acking one repository and rewriting another's committed
+ledger.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Classifying staleness and never acting on it.</strong> Three
+reasons are computed, emitted and ignored; the retirement they imply was
+done by hand, once, for 109 rows.</li>
+<li><strong>Giving one store the protections and not the other.</strong>
+The acks publish atomically under a lock and have two rescue routes; the
+notes truncate without a lock and have none, in a file whose header
+cites the ack precedent.</li>
+<li><strong>A memory that cannot be told it is wrong.</strong> The
+single field note is stale and there is no status, no expiry and no
+supersession to record that.</li>
+<li><strong>Advertising a verb as memory recall when it reads a
+different store.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right if you want a code-quality gate whose accepted debt is a
+reviewable artifact rather than a suppression comment, and if the
+ratchet's discipline — accept a number, not a warning — is what you want
+from it. The ack mechanism is worth reading whatever you are building.
+Wrong as a general memory: retrieval is exact-match on a path, there is
+no status, no validity and no scope, and the notes half is one row with
+none of the ack half's care.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will a stale ack ever be retired automatically? The classification
+exists, the reasons are named, and the source records what doing it by
+hand cost.</li>
+<li>Will the notes store get the ack side's identity healing? The same
+rename problem applies and the notes have no rescue at all.</li>
+<li>Should the ledger key on content rather than location? The content
+hash is computed already, and the argument against is that a rewritten
+body is a different finding — which is the same argument that makes the
+current key fragile under a move.</li>
+<li>Will <code>memory_recall</code> read <code>.ripwire_notes</code>?
+The name says it does.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/quality.h</code></td>
+<td>6,078</td>
+<td><code>pathQualifiedKey</code> (565), the content hash (828-898), the
+ack record and map key (3945-3969), the ratchet contract (3934-3941),
+the zero-magnitude guard (3694-3696), the reader (4193-4251), the write
+lock (4255-4345), the writer (4351-4391), <code>remapAckIdentity</code>
+(4677-4755), the survival measurement (4694-4700),
+<code>findSuppressingAck</code> (4899-4903), <code>StaleAckWhy</code>
+(4936-4941)</td>
+</tr>
+<tr>
+<td><code>src/verbs_quality.h</code></td>
+<td>—</td>
+<td>The delta basis and both ack reads (191, 251), the rubber-stamp
+guard (401-441), the row build and write (1141-1157)</td>
+</tr>
+<tr>
+<td><code>src/notes.h</code></td>
+<td>—</td>
+<td>The note record (67-74), the path (107-116), the reader (305-354),
+the writer (374-388, the truncating stream at 379), <code>addNote</code>
+(394-416), the index (424-458)</td>
+</tr>
+<tr>
+<td><code>src/serialize.h</code></td>
+<td>7,479</td>
+<td><code>renderNoteChildren</code> (471-489) and the two lookup keys
+(503-511)</td>
+</tr>
+<tr>
+<td><code>src/main.cpp</code></td>
+<td>4,062</td>
+<td><code>resolveNoteAddTarget</code> (606-670), the note write (786),
+the <code>--notes</code> listing (798-860)</td>
+</tr>
+<tr>
+<td><code>src/mcp.h</code>, <code>src/mcpverbs.h</code></td>
+<td>—, 4,824</td>
+<td>Thirty-one verbs; the <code>memory_recall</code> description
+(mcp.h:62) and the read-only ack access (mcpverbs.h:3138)</td>
+</tr>
+<tr>
+<td><code>src/recall.h</code></td>
+<td>—</td>
+<td>Lexical search over markdown documents; no reference to the notes
+store</td>
+</tr>
+<tr>
+<td><code>.ripwire_quality_acks</code></td>
+<td>955 rows</td>
+<td>The committed ledger; 629 rows carry a content id, 180 a scope</td>
+</tr>
+<tr>
+<td><code>.ripwire_notes</code></td>
+<td>1 row</td>
+<td>The committed field notes</td>
+</tr>
+<tr>
+<td><code>test/notescheck.sh</code>,
+<code>test/identitycheck.sh</code></td>
+<td>—</td>
+<td>The dangling-note exclusion (149-159) and the rename and rewrite
+arms (111-125, 195-199)</td>
+</tr>
+<tr>
+<td><code>docs/EVALS.md</code>, <code>docs/LINEAGE.md</code></td>
+<td>12,678, 348</td>
+<td>The evaluation record with its withdrawn-claims section, and the
+lineage table</td>
+</tr>
+<tr>
+<td><code>test/</code></td>
+<td>1,347 files</td>
+<td>559 named gates, 169 C++ harnesses, fixture corpora</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -niE &#39;valid_from|valid_to|validity time|transaction_time|as_of|bitemporal&#39; src/   # 0; control: 17 hits for &#39;date&#39; in notes.h
+rg -niE &#39;append-only|audit_log|event log&#39; src/                                       # 2, both prose declining the pattern
+rg -nE &#39;confidence|trust|verified|status|revoked|retracted&#39; src/notes.h              # 0; control: the five field declarations at 69-73
+rg -n &#39;\.by\b|-&gt;by\b|second\.by&#39; src/                                                # 10, none in a suppression decision; control: 25 reads of ackNow
+rg -c &#39;NoteIndex|ripwire_notes|notes::&#39; src/recall.h                                 # 0; control: 179 hits for &#39;doc&#39;
+rg -niE &#39;cid|remap|alias|rename|heal&#39; src/notes.h                                    # 7, none identity healing; the ack side has remapAckIdentity
+rg -n &#39;acks.erase&#39; src/quality.h                                                     # 2, both inside the re-key move, never a retirement
+rg -n &#39;writeAckRecords|addNote\(&#39; src/                                               # writes only from CLI paths; no MCP verb writes either store</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3"><code class="commit-id" title="8c20e10856d347206ccbd52fd1b83d90c5cbb5e3">8c20e108…</code></a>
+— first reading, at the head of <code>main</code>, on a commit from the
+same day. Screened before anything was read: two auto-run surfaces (an
+MCP manifest and a hooks directory), four unpinned surfaces, no
+build-time execution; nothing was installed or run, and the read was
+made from a full clone. The scope decision is recorded here because it
+shapes the report: the call graph and the lenses are a code index, which
+is a projection of source and cannot turn out to be false, so the
+subject is the two committed sidecars beside them — the ack ledger and
+the field notes — and the engine is context. Two marks.
+<code>human_review</code> rests on a ledger kept committed so that a
+change in what is suppressed appears in a diff, plus a listing built for
+pruning, with both qualifications stated: no action exists in the tool
+and no CI job reads either file. <code>negative_eval</code> rests on a
+dangling note asserted absent from two populated emissions with a
+control in the same script. <code>tombstone</code> was examined at
+length and withheld — the key is a location, the row records an accepted
+finding rather than a rejected value, and the consultation is on a read
+— with the near-miss written up because the content-hash rescue draws
+the rename-versus-rewrite distinction the mark's definition is about.
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>bitemporal</code> and <code>audit_log</code> were each examined
+and withheld on the read path rather than on the schema. Four claims
+were verified against the tree rather than repeated: the survival
+measurement, the off-by-one in the README's 2026 paper count against the
+project's own dates file, the staleness of the single committed note,
+and the MCP recall verb's failure to read the notes store.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

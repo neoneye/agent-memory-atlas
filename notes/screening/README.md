@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 246 of 391 screened at the report's current pin.**
+**Progress: 248 of 393 screened at the report's current pin.**
 
 13 further record(s) describe a revision the report has since moved
 off, and 132 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 94 |
+| Repositories with an auto-run surface (`RUNS`) | 96 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 104 |
-| Repositories with build-time execution (`EXEC`) | 183 |
+| Repositories with build-time execution (`EXEC`) | 184 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -41,6 +41,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
+| [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
@@ -113,6 +114,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
+| [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |

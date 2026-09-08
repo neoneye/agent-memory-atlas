@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Fourteen agent personas driven by
+a shell loop whose entire cross-session memory is one markdown consensus
+file — backed up before each cycle, validated afterwards for three
+required headings, kept when a timed-out cycle still updated it, and
+restored from the backup whenever the cycle failed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Auto
+Company — Agent Memory Atlas">
+    <meta property="og:description" content="Fourteen agent personas
+driven by a shell loop whose entire cross-session memory is one markdown
+consensus file — backed up before each cycle, validated afterwards for
+three required headings, kept when a timed-out cycle still updated it,
+and restored from the backup whenever the cycle failed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Auto
+Company — Agent Memory Atlas">
+    <meta name="twitter:description" content="Fourteen agent personas
+driven by a shell loop whose entire cross-session memory is one markdown
+consensus file — backed up before each cycle, validated afterwards for
+three required headings, kept when a timed-out cycle still updated it,
+and restored from the backup whenever the cycle failed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Auto Company — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Auto Company",
+      "description": "Fourteen agent personas driven by a shell loop whose entire cross-session memory is one markdown consensus file \u2014 backed up before each cycle, validated afterwards for three required headings, kept when a timed-out cycle still updated it, and restored from the backup whenever the cycle failed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One markdown baton, rolled back on
+failure</p>
+          <h1>Auto Company</h1>
+          <p class="document-deck">Fourteen agent personas driven by a
+shell loop whose entire cross-session memory is one markdown consensus
+file — backed up before each cycle, validated afterwards for three
+required headings, kept when a timed-out cycle still updated it, and
+restored from the backup whenever the cycle failed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MaxMiksa/Auto-Company">
+              <span>Source</span>
+              <strong>MaxMiksa/Auto-Company</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MaxMiksa/Auto-Company/commit/ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd" title="ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd">
+              <span>Analyzed revision</span>
+              <code>ebfab9b4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Auto Company is a shell loop that runs fourteen agent personas as an
+autonomous software company — 502 commits between 1 July 2025 and 20 May
+2026 by three authors, 1,410 lines of shell across eight scripts, 396
+lines of dashboard, a 191-line charter and a 68-line prompt, with the
+personas and thirty-six skills as markdown under <code>.claude/</code>.
+The screen found one auto-run surface and one build-time execution
+point; nothing was installed or run, and the read was made from a full
+clone. <strong>The README carries an MIT badge and the repository
+contains no licence file</strong>, which is stated here so a reader
+knows what they may do with what they read.</p>
+<p><strong>The whole memory is one markdown file.</strong>
+<code>memories/consensus.md</code> is what the project calls the relay
+baton: each cycle spawns a fresh session, the loop pre-loads the file
+into the prompt, the model decides what to do from it, and the prompt
+requires the model to rewrite it before the cycle ends in a stated
+layout — a timestamp, the current phase, what this cycle did, the key
+decisions and their reasons, the active projects, the company state and
+the next action. Humans are told they steer only by editing that file's
+next-action section (<code>CLAUDE.md:17</code>). The directory it lives
+in is excluded from the repository by <code>.gitignore</code>, so the
+mechanism ships and the content does not, which is the right way
+round.</p>
+<p><strong>The one thing worth taking is the guard around it.</strong>
+Before each cycle the loop copies the file to <code>.bak</code>
+(<code>scripts/core/auto-loop.sh:245-249</code>, called at
+<code>:647</code>). Afterwards it classifies the outcome, and the
+classification is more careful than the size of the script suggests. A
+cycle that timed out but left a consensus that both validates and
+differs from the backup is recorded as a success and its progress kept
+(<code>:691-693</code>, <code>:702-707</code>). A cycle that timed out
+without that is a failure. A non-zero exit is a failure. And a cycle
+that exited cleanly whose consensus does not validate is <em>also</em> a
+failure, with the reason recorded as
+<code>consensus.md validation failed after cycle</code>
+(<code>:698-700</code>). On any hard failure the backup is restored
+(<code>:719</code>), so a crashed or truncated cycle cannot leave a
+half-written memory in place. Validation itself is three
+<code>grep</code>s for required headings plus a non-empty check
+(<code>:258-272</code>).</p>
+<p>That is a transaction around a markdown file, and it is the finding:
+most single-file memory systems in this corpus write and hope.</p>
+<p><strong>No capability marks.</strong> There is no record of a
+rejected value, no status on anything stored, no validity time, no scope
+key, no append-only record of what changed, no surface where a person
+reviews a candidate rather than editing the live file, and no test that
+asserts anything must not be retrieved — the sole test file covers the
+dashboard server. Each is recorded as an absence in section 9 with the
+search that grounds it.</p>
+<p><strong>Three limits belong beside the strength.</strong> The file is
+rewritten wholesale each cycle and nothing keeps what it said before, so
+the only prior state in existence is one backup the next cycle
+overwrites — a decision reversed on Tuesday leaves no trace by Thursday.
+The validator checks that three headings exist and nothing about what is
+under them, so a cycle that replaces every decision with one empty
+bullet passes. And no test exercises the loop at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>the whole document</strong>, and the
+document is a handoff. The system is deliberately built out of fresh
+sessions: nothing carries between cycles except the file, which is why
+the prompt makes rewriting it mandatory rather than advisory and the
+loop treats a cycle that did not update it as a failed one.</p>
+<p>There is no notion of a fact, a claim or a record. There are
+headings, and under them prose the next model reads as its entire past.
+Correction is rewriting, and forgetting is not writing something down
+again.</p>
+<p>The human's role is stated in one line of the charter: direction is
+given by editing the next-action section, and confirmation is never
+requested.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a daemon wakes the loop, which backs up the consensus file, pre-loads it into a fresh session's prompt, and lets the model decide and execute; afterwards the loop validates the rewritten file for three required headings and classifies the cycle, keeping a timed-out cycle that still updated it and restoring the backup on any hard failure</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a daemon wakes the loop, which backs up the consensus file, pre-loads it into a fresh session&#39;s prompt, and lets the model decide and execute; afterwards the loop validates the rewritten file for three required headings and classifies the cycle, keeping a timed-out cycle that still updated it and restoring the backup on any hard failure
+flowchart TB
+    D[&quot;daemon: launchd or systemd --user,&lt;br/&gt;restarts on crash&quot;]
+    BK[&quot;copy consensus.md to .bak&quot;]
+    PRE[&quot;pre-load the consensus&lt;br/&gt;into a fresh session&#39;s prompt&quot;]
+    LLM[&quot;the model decides, forms a&lt;br/&gt;3-5 persona squad, executes&quot;]
+    REW[&quot;the prompt requires a rewrite&lt;br/&gt;of consensus.md before the end&quot;]
+    CL{&quot;how did the cycle end?&quot;}
+    TO{&quot;timed out — does the file&lt;br/&gt;validate and differ&lt;br/&gt;from the backup?&quot;}
+    VAL{&quot;exited cleanly — does&lt;br/&gt;the file validate?&quot;}
+    OK[&quot;success: progress kept,&lt;br/&gt;error count reset&quot;]
+    FAIL[&quot;failure: reason logged,&lt;br/&gt;error count incremented&quot;]
+    RES[&quot;restore consensus.md&lt;br/&gt;from the backup&quot;]
+    SLEEP[&quot;sleep, then wake again&quot;]
+
+    D --&gt; BK
+    BK --&gt; PRE
+    PRE --&gt; LLM
+    LLM --&gt; REW
+    REW --&gt; CL
+    CL -- &quot;timed out&quot; --&gt; TO
+    CL -- &quot;non-zero exit&quot; --&gt; FAIL
+    CL -- &quot;exited 0&quot; --&gt; VAL
+    TO -- yes --&gt; OK
+    TO -- no --&gt; FAIL
+    VAL -- yes --&gt; OK
+    VAL -- no --&gt; FAIL
+    FAIL --&gt; RES
+    OK --&gt; SLEEP
+    RES --&gt; SLEEP
+    SLEEP --&gt; BK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Eight shell scripts totalling 1,410 lines, of which
+<code>scripts/core/auto-loop.sh</code> (743 lines) is the system: it
+resolves the engine, builds the prompt, runs the cycle under a timeout,
+extracts cost and result metadata, classifies the outcome, manages the
+consensus backup, trips a circuit breaker on consecutive errors, and
+waits when it detects a usage limit. Beside it are a monitor and a stop
+script, and per-platform installers for macOS launchd and Windows or
+WSL.</p>
+<p>The agent layer is markdown: fourteen personas under
+<code>.claude/agents/</code>, each around seventy lines and named for a
+practitioner, plus thirty-six skills. The loop does not read them — it
+tells the model to read a team skill and assemble a squad, so the
+composition of each cycle's team is the model's choice.</p>
+<p>The dashboard is a small Python server and 396 lines of browser code
+that render a preview of the consensus and the recent cycle log.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> a coding-agent CLI, a shell, and a
+daemon supervisor. Claude Code by default, Codex CLI as an
+alternative.</li>
+<li><strong>Fully local and offline:</strong> the store is a local file;
+every cycle is a model call.</li>
+<li><strong>Hand-repairable:</strong> entirely — the memory is one
+markdown file a person can open and edit, which is also the documented
+way to steer the system.</li>
+<li><strong>Install:</strong> a make target and a per-platform daemon
+installer.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Back up.</strong> <code>backup_consensus</code>
+(<code>scripts/core/auto-loop.sh:245-249</code>) copies the file to
+<code>.bak</code>; called once per cycle at <code>:647</code>.</li>
+<li><strong>Validate.</strong> <code>validate_consensus</code>
+(<code>:258-272</code>) fails on an empty file or a missing
+<code># Auto Company Consensus</code>, <code>## Next Action</code> or
+<code>## Company State</code> heading.</li>
+<li><strong>Detect a real update.</strong>
+<code>consensus_changed_since_backup</code> (<code>:274</code>) is what
+separates a timed-out cycle that still made progress from one that did
+not.</li>
+<li><strong>Classify.</strong> <code>:687-700</code> sets a failure
+reason from the timeout, the exit code or a failed validation, and
+<code>:702-716</code> records a soft timeout or a success and resets the
+error count.</li>
+<li><strong>Roll back.</strong> <code>restore_consensus</code>
+(<code>:251-257</code>) is called at <code>:719</code> on a hard
+failure, and logs that it did.</li>
+<li><strong>Prompt.</strong> <code>PROMPT.md</code> gives the cycle its
+four steps and the exact section layout the rewritten consensus must
+carry; <code>CLAUDE.md:183</code> names the file as the cross-cycle
+baton that must be updated before the cycle ends.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema. The document must carry three headings for the
+loop to accept it, and the prompt asks for several more — last updated,
+current phase, what we did this cycle, key decisions made, active
+projects. Nothing parses any of them, so the layout is a convention
+between the prompt and the next model rather than a structure the system
+understands.</p>
+<p><strong>Temporal:</strong> a timestamp the model writes into the
+document. No record time, no validity time, nothing queryable.
+<code>bitemporal</code> withheld.</p>
+<p><strong>Trust:</strong> none. <code>trust_state</code> withheld.</p>
+<p><strong>Scoping:</strong> one file. <code>scope_enforced</code>
+withheld.</p>
+<p><strong>Tombstone:</strong> withheld. A decision reversed in a later
+cycle simply is not written down again, and nothing records that it was
+tried.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval. The file is pre-loaded into the prompt in
+full, with the prompt instructing the model to read it from disk if that
+did not happen. Every cycle sees all of the memory or none of it.</p>
+<p>That is a defensible choice at this scale — one document a person can
+read is worth more than an index over it — and it sets the ceiling on
+how much the system can remember: whatever fits in a prompt, minus
+everything else the cycle needs.</p>
+<p><strong>Failure modes.</strong> The file grows until it crowds the
+cycle, and nothing prunes it or summarises it. A model that rewrites it
+badly passes validation as long as three headings survive. And because
+each rewrite replaces the whole document, the failure is silent: there
+is no diff, no history and no signal that a decision recorded last week
+is gone.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The model writes the whole file. Nothing extracts, summarises or
+merges, and nothing checks a claim against what the document said before
+— the previous version exists only as the backup, which is there to
+survive a crash rather than to be compared against.</p>
+<p>The one guard is structural and it is applied after the fact: if the
+rewrite does not carry the three headings, the cycle is a failure and
+the backup comes back. That catches a truncated or empty write, which is
+the failure a crash-prone loop actually has.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>One model call per cycle, with cost and subtype extracted into the
+log.</li>
+<li>Two file copies per cycle.</li>
+<li>A circuit breaker stops the loop after a configured number of
+consecutive errors.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The engine is a coding-agent CLI invoked per cycle with the prompt on
+standard input, so the fourteen personas are prompt material rather than
+processes. The model is told to pick three to five per cycle through a
+team skill, and to read a front-end design skill before producing any
+user-facing interface.</p>
+<p>The human surfaces are the consensus file, the dashboard's read-only
+preview, and the stop script.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks, and each absence was checked rather than
+assumed.</strong></p>
+<ul>
+<li><strong>Tombstone.</strong> No record of a rejected value: a search
+for tombstone, rejected, denylist, blocklist or a do-not-retry
+instruction across the whole tree returns nothing.</li>
+<li><strong>Trust state.</strong> No status, confidence, verified or
+provisional vocabulary in the prompt or the charter, and nothing on the
+document to filter.</li>
+<li><strong>Bitemporal.</strong> One timestamp, written by the model
+into prose.</li>
+<li><strong>Scope.</strong> One file per installation; the only
+occurrence of the word is an instruction to persist partial decisions
+when the work is large.</li>
+<li><strong>Audit log.</strong> <code>log_cycle</code> writes cycle
+outcomes — start, guard, ok, fail, summary, limit — to a log directory
+that <code>.gitignore</code> excludes. It is a record of runs, not of
+memory mutations: no consensus write, restore or validation failure
+produces a record keyed to what changed in the document.</li>
+<li><strong>Human review.</strong> A person edits the live file. The
+charter is explicit that confirmation is never requested, and the
+dashboard renders a preview and writes nothing.</li>
+<li><strong>Negative evaluation.</strong> The only test file covers the
+dashboard server, and its assertions are that a module spec and loader
+are not <code>None</code>.</li>
+</ul>
+<p><strong>What the guard does and does not protect.</strong> It
+protects against a cycle that died mid-write or produced nothing usable.
+It does not protect against a cycle that wrote confidently and wrongly,
+because the validator reads headings rather than content, and it cannot
+protect against loss, because the only prior version is a backup that
+the next cycle's first action overwrites.</p>
+<p><strong>Two things a reader should weigh.</strong> The repository
+shows an MIT badge and carries no licence file, so the terms are
+unstated in the tree. And the last commit is 20 May 2026, so this report
+describes a system that has not moved in three and a half months.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>One test file, 195 lines, covering the dashboard server. Nothing
+tests the loop, the consensus validator, the backup or the restore —
+which is to say the one mechanism this report credits is the one with no
+coverage. No benchmark, no evaluation and no measured claim.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Wrap a markdown memory in a transaction.</strong> Copy it,
+run, validate the structure, and restore on failure. Three shell
+functions and about twenty lines, and they turn a crash from data loss
+into a lost cycle.</li>
+<li><strong>Treat a timeout that still updated memory as a
+success.</strong> Distinguishing <em>the run was cut short</em> from
+<em>the run achieved nothing</em> is what stops a slow cycle discarding
+real work, and it costs one comparison against the backup.</li>
+<li><strong>Fail a cycle whose memory does not validate, even when the
+process exited cleanly.</strong> A zero exit code says the model
+stopped, not that it handed anything on.</li>
+<li><strong>Say in one line how a human steers.</strong> Naming the
+section a person edits, and saying that confirmation is never requested,
+is a clearer contract than a configuration surface.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Validating headings and calling it validation.</strong>
+Three greps accept a document whose every decision was replaced with an
+empty bullet.</li>
+<li><strong>Rewriting the whole memory each cycle with no
+history.</strong> One backup that the next cycle overwrites means a
+decision can vanish between two runs with no diff and no signal.</li>
+<li><strong>Leaving the one mechanism you rely on untested.</strong> The
+dashboard has a test file; the consensus transaction does not.</li>
+<li><strong>Shipping a licence badge without a licence
+file.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Right as a worked example of how little machinery an autonomous loop
+needs: fourteen personas, a prompt, and one file that must be rewritten
+before the cycle ends. The transactional guard is worth copying whatever
+you are building. Wrong as a memory system — there is no retrieval, no
+history, no status and no scope, and the document is bounded by what
+fits in a prompt.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What would a content-level validator check? Section presence is
+cheap and weak; a decision count that never falls, or a next action that
+changed, are both one <code>grep</code> away.</li>
+<li>Should the backup chain be longer than one? A single
+<code>.bak</code> protects against a crash and not against a bad cycle,
+and a dated copy per cycle is one <code>cp</code>.</li>
+<li>Does the file get pruned? Nothing summarises it, and it is read in
+full each cycle.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/core/auto-loop.sh</code></td>
+<td>743</td>
+<td>The loop; backup (245-249), restore (251-257), validate (258-272),
+change detection (274), classification (687-716), the restore call
+(719)</td>
+</tr>
+<tr>
+<td><code>PROMPT.md</code></td>
+<td>68</td>
+<td>The four cycle steps and the required consensus layout</td>
+</tr>
+<tr>
+<td><code>CLAUDE.md</code></td>
+<td>191</td>
+<td>The charter; the human-steering rule (17) and the baton rule
+(183)</td>
+</tr>
+<tr>
+<td><code>.claude/agents/</code></td>
+<td>14 files</td>
+<td>The personas, about seventy lines each</td>
+</tr>
+<tr>
+<td><code>.claude/skills/</code></td>
+<td>36</td>
+<td>The skills a cycle may read, including the team assembly one</td>
+</tr>
+<tr>
+<td><code>dashboard/</code></td>
+<td>396 plus a Python server</td>
+<td>A read-only preview of the consensus and the cycle log</td>
+</tr>
+<tr>
+<td><code>tests/test_dashboard_server.py</code></td>
+<td>195</td>
+<td>The only test file</td>
+</tr>
+<tr>
+<td><code>.gitignore</code></td>
+<td>—</td>
+<td>Excludes <code>memories/*</code>, so the store ships as a mechanism
+and not as content</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -i &#39;tombstone|rejected|denylist|blocklist|do not retry&#39; .    # none: no record of a rejected value
+rg -i &#39;status:|confidence|verified|provisional&#39; PROMPT.md CLAUDE.md   # none: no status on anything stored
+rg -i &#39;scope|tenant|namespace&#39; scripts/core/auto-loop.sh        # one hit, an instruction about large work
+rg -n &#39;assert.*not |not in &#39; tests/test_dashboard_server.py     # two, both about a module loader
+ls memories/                                                     # absent: gitignored, mechanism ships and content does not
+ls LICENSE*                                                      # absent, against an MIT badge in the README</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/MaxMiksa/Auto-Company/commit/ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd"><code class="commit-id" title="ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd">ebfab9b4…</code></a>
+— first reading, at the head of <code>main</code>, on a commit from 20
+May 2026. Screened before anything was read: one auto-run surface, one
+build-time execution point, nothing inside the seven-day cooldown;
+nothing was installed or run, and the read was made from a full clone.
+No capability marks, and each of the seven was checked with a search
+recorded in the appendix rather than assumed from the system's size. The
+finding is the transactional guard around the consensus file — back up,
+validate three headings, keep a timed-out cycle that still updated it,
+restore on any hard failure — which is more than most single-file memory
+systems in this corpus do, and which is itself untested. The repository
+shows an MIT badge and carries no licence file; that is recorded in
+section 1 rather than treated as an exclusion. The reading covers the
+loop, the consensus mechanism, the prompt and charter that define the
+document's shape, and the dashboard; the per-platform installers, the
+thirty-six skills and the single sample project were treated as
+context.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 391 reports.**
+**This page covers all 393 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3364,6 +3364,24 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 68 commits since 20 May 2026 by four authors, 16,000 lines of Python across five published packages beside 18,948 lines of tests holding 1,055 functions, no CI executing any of them; three of seven capability marks.
 - Study when: you want a local agent memory in one inspectable file, working airgapped with no embeddings, where knowing why a search returned nothing matters more than the last point of recall.
 - Do not copy when: you need decay, consolidation, a stored state that withholds a record, a validity axis, a mutation audit, or index-enforced tenant isolation.
+
+### [`auto-company`](../systems/auto-company/)
+- Best idea: **a transaction around a markdown memory.** Back the file up before the cycle, validate its structure afterwards, and restore the backup on any hard failure — so a crashed or truncated cycle loses the cycle rather than the memory.
+- Second idea: **a timed-out cycle whose memory both validates and changed is a success, not a discard.** Distinguishing *cut short* from *achieved nothing* costs one comparison against the backup.
+- Biggest risk: **the validator reads headings, not content, and there is no history.** Three greps accept a document whose every decision was replaced with an empty bullet, and because the file is rewritten wholesale with one backup the next cycle overwrites, a decision can vanish between two runs with no diff and no signal.
+- Most reusable component: the four shell functions that make the guard — backup, validate, change-detection and restore — about twenty lines between them.
+- Maturity impression: 502 commits between 1 July 2025 and 20 May 2026 by three authors, 1,410 lines of shell, fourteen personas and thirty-six skills as markdown, one test file covering the dashboard and none covering the loop; no capability marks, and no licence file in the tree against an MIT badge in the README.
+- Study when: you want the smallest thing that could be called cross-session memory, and a worked example of guarding it against a crash.
+- Do not copy when: you need retrieval, history, a status on what is stored, or a memory larger than what fits in a prompt.
+
+### [`ripwire`](../systems/ripwire/)
+- Best idea: **an acceptance that is a floor, not an exemption.** An ack records the magnitude a quality finding was accepted at, and one comparison — the finding stays suppressed while it is at or below that magnitude — brings it back the moment it worsens, with the count of what was suppressed disclosed in the report header.
+- Second idea: **a content hash that follows a rename and refuses to follow a rewrite.** The scrubbed body hash re-files an ack when the symbol moved and deliberately does not match when the body changed, on the stated rule that identity following a rename must not become identity following a rewrite.
+- Biggest risk: **the key is a location, and the project measured what that costs.** An ack is keyed on the path, scope and symbol name, and `git mv` destroys it — across fifty-nine identities on their own history, not one survived, a number they published in a comment above the rescue route they built because of it. A stale ack is classified into three reasons and never acted on.
+- Most reusable component: the ratchet plus its zero-magnitude guard — a finding with no magnitude would make the comparison trivially true, which the source names as the permanent blank check the contract forbids.
+- Maturity impression: Apache-2.0 from Red Hat's emerging-technologies organisation, 1,917 commits over 39 days with one author at 98.9%, 156,391 lines of C++23, 559 gate scripts that all resolve to a file, and a 12,678-line evaluation document with a section listing the claims the project has withdrawn and why; two of seven capability marks.
+- Study when: you want accepted technical debt to be a reviewable committed artifact rather than a suppression comment, or you are solving the problem of keeping a judgement attached to code that moves.
+- Do not copy when: you need retrieval by content, a status on what is stored, validity time, or a notes half with the care the ack half has — it has no rescue route, no write lock, and one committed row that is already out of date.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.
