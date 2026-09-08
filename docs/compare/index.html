@@ -3342,8 +3342,8 @@ test file, on the skill optimizer.</p>
 <p><strong><a href="../systems/teamai-cli/">teamai-cli</a> is the
 family's team-scale knowledge base, and its lessons are documents a
 reviewer merges and votes only credit when the transcript shows they
-were read.</strong> Tencent's CLI — MIT, 608 commits from 3 March to 6
-September 2026 by thirty authors, 60,131 lines under 2,724 tests —
+were read.</strong> Tencent's CLI — MIT, 655 commits from 3 March to 8
+September 2026 by thirty-five authors, 62,160 lines under 2,829 tests —
 distributes a team's skills, rules and knowledge from a git repository
 into ten coding agents. A learning is a Markdown document with
 frontmatter that <code>contribute</code> pushes as a merge request after
@@ -3351,16 +3351,22 @@ a Stop hook scores the session's friction; <code>pull</code> rebuilds a
 hand-built index that weights title tokens at three times IDF and tags
 at two, adds a vote score, and is searched project-first with the user
 scope admitted only on opt-in, which ten tests pin with the other
-scope's title absent beside the active one present. An upvote counts
-only for a document the session's transcript shows was recalled, a
-confidence over counts and recency drives a prune that removes or
-archives and a promotion that rewrites, and a review command adjudicates
-machine-written wiki sections queued with a risk. Three marks. The
-merge-request importer computes which session learnings a draft
-supersedes and nothing consumes the list, and a user-scope pull copies
-the repository's learnings over the local copy and never removes a file
-the repository dropped, so a maintainer's prune stops at the
-repository.</p>
+scope's title absent beside the active one present. A second scope key
+sits inside the first: a project manifest names the
+<code>learnings/</code> subdirectories a member's active projects own,
+and the copy filter, the index collector and the contribution's landing
+directory all resolve it the same way, so another project's learnings
+are absent from the file being searched rather than filtered out of it.
+An upvote counts only for a document the session's transcript shows was
+recalled, a confidence over counts and recency drives a prune that
+removes or archives and a promotion that rewrites, and a review command
+adjudicates machine-written wiki sections queued with a risk. Three
+marks. The merge-request importer computes which session learnings a
+draft supersedes and nothing consumes the list; and deleting a rule, a
+skill or an agent appends its name to a committed <code>.removed</code>
+file that the next pull uses to delete every member's copy and the push
+scan reads so a stale copy cannot re-upload it, while a learning has
+neither, so a maintainer's prune stops at the repository.</p>
 <h3 id="graph-temporal-and-symbolic-memory">Graph, temporal, and
 symbolic memory</h3>
 <p><a href="../systems/holomem/"><code>holomem</code></a>, <a
@@ -16829,21 +16835,26 @@ backends; benchmark invalid and its harness broken</td>
 <td><code>teamai-cli</code></td>
 <td>A learning — a Markdown document with <code>title</code>,
 <code>author</code>, <code>date</code> and <code>tags</code>
-frontmatter, named from its title with a date and a hash — in the team
-repository's <code>learnings/</code> directory; an index entry over it
-with title and tag tokens and a vote score; a per-user votes file with a
-recalled and an upvoted count per document; beside them docs, rules,
-skills and a codebase wiki indexed the same way</td>
+frontmatter, named from its title with a date and a hash — at the root
+of the team repository's <code>learnings/</code> directory, where it is
+shared with everyone, or under a <code>learnings/&lt;project&gt;/</code>
+subdirectory, where only that project's members index it; an index entry
+over it with title and tag tokens and a vote score; a per-user votes
+file with a recalled and an upvoted count per document; beside them
+docs, rules, skills and a codebase wiki indexed the same way</td>
 <td>A git repository per team, cloned under
 <code>.teamai/team-repo/</code> in a project or under the home
-directory; <code>search-index.json</code> per scope;
+directory; <code>manifest/roles.yaml</code> and
+<code>manifest/projects.yaml</code> declaring the namespaces;
+<code>search-index.json</code> per scope;
 <code>~/.teamai/learnings/</code> as a copy in user scope;
 <code>~/.teamai/votes/&lt;user&gt;.yaml</code> synced to
 <code>votes/</code> in the repository or its reports branch;
 <code>usage.jsonl</code>, sessions and contribute state under
 <code>~/.teamai/</code>; <code>.teamai/pending-review.jsonl</code> per
 project</td>
-<td>A hand-built index — frontmatter parsed, tokens from title, tags and
+<td>A hand-built index over the learnings root plus the member's active
+project namespaces — frontmatter parsed, tokens from title, tags and
 body, IDF with smoothing, title matches at three times IDF, tag at two,
 body at one, a length normalisation, a domain weight, a title-or-tag
 match required, a vote score added — searched project-first with a
@@ -16853,23 +16864,34 @@ derived from the index's IDF baseline; the model reaches it through a
 search</td>
 <td>A session ends, the Stop hook scores its friction — interruptions,
 retries, denied tools — and prints a reminder to run the share-learnings
-skill; the model writes a Markdown document with the required
-frontmatter and <code>teamai contribute</code> commits it on a branch
-and pushes a merge request; a merge-request importer drafts a learning
-from a merged change and computes which session learnings it supersedes;
-the codebase wiki is written by a local AI CLI the tool spawns</td>
+skill, which a team or a member can switch off; the model writes a
+Markdown document with the required frontmatter and
+<code>teamai contribute</code> commits it on a branch and pushes a merge
+request, filing it under the one active learnings namespace or, when
+there are none or several, at the shared root; a merge-request importer
+drafts a learning from a merged change and computes which session
+learnings it supersedes; the codebase wiki is written by a local AI CLI
+the tool spawns</td>
 <td><code>teamai recall maintenance --prune</code> removes learnings
 whose confidence falls under a threshold, or moves them to
-<code>learnings/_archive/</code>, which the flat collector never
-indexes; <code>promote</code> rewrites a mature learning into a skill,
-rule or doc through the AI CLI; the importer's <code>supersedes</code>
-list is logged and consumed by nothing; a user-scope pull copies the
-repository's learnings over the local copy and never removes a file the
-repository dropped</td>
+<code>learnings/_archive/</code>, which the collector never indexes;
+<code>promote</code> rewrites a mature learning into a skill, rule or
+doc through the AI CLI; the importer's <code>supersedes</code> list is
+logged and consumed by nothing; <code>teamai remove</code> appends a
+rule, skill, agent or MCP name to a committed
+<code>&lt;type&gt;/.removed</code> file that the next pull uses to
+delete every member's local copy and that the push scan consults so a
+stale copy is never re-uploaded — a mechanism learnings and docs are not
+part of; a user-scope pull drops a project subdirectory that stops being
+active and copies the root learnings over the local copy with overwrite
+and no removal</td>
 <td>Project scope from the working directory's configuration, user scope
 from the home directory, chosen at read time with user results admitted
-only on opt-in; roles map a member to skill namespaces and tags
-subscribe a member to resources, both applied on pull</td>
+only on opt-in; inside a scope, a project manifest maps an active
+project to learnings namespaces the index and the user-scope copy admit
+and every other subdirectory is skipped; roles map a member to knowledge
+and skill namespaces and tags subscribe a member to resources, both
+applied on pull</td>
 <td>A CLI with <code>init</code>, <code>pull</code>, <code>push</code>,
 <code>recall</code>, <code>contribute</code>, <code>review</code>,
 <code>digest</code>, <code>dashboard</code> and more; hooks installed
@@ -16891,15 +16913,17 @@ learning</td>
 <td>Votes that require the document to have been recalled before it can
 be credited; a relevance verdict that reports its threshold and the
 matched and missing terms; a review queue with a risk level for
-machine-written knowledge; scope isolation proved by tests; 2,724 test
-cases</td>
-<td>Supersession is computed and written to nothing; a pruned or
-archived learning survives in every user-scope member's local copy and
-index; retrieval is title and tag matching with a body fallback, no
-vector arm; the recall block tells the model it <em>should</em> invoke
-the subagent with four skip conditions, so recall is advisory; the
-changelog's last dated release is 0.14.2 of April against a 0.22.0
-package; documents are required to be in Chinese by the share skill</td>
+machine-written knowledge; a namespace key applied at the copy, the
+index and the contribution, with a path-segment guard at three
+boundaries; scope isolation proved by tests; 2,829 test cases</td>
+<td>Supersession is computed and written to nothing; a deletion
+propagates to every machine for a rule, a skill or an agent and for a
+learning does not, so a pruned or archived learning survives in every
+user-scope member's root copy and index; retrieval is title and tag
+matching with a body fallback, no vector arm; the recall block tells the
+model it <em>should</em> invoke the subagent with four skip conditions,
+so recall is advisory; documents are required to be in Chinese by the
+share skill</td>
 </tr>
 <tr>
 <td><code>telemem</code></td>
@@ -24527,7 +24551,7 @@ a 96-day-old lockfile, MIT asserted with no licence file</li>
 <li><a
 href="https://github.com/Tencent/teamai-cli">Tencent/teamai-cli</a> at
 <a
-href="https://github.com/Tencent/teamai-cli/commit/a991038b3104d45248767a218e9e003f8d38d55f"><code class="commit-id" title="a991038b3104d45248767a218e9e003f8d38d55f">a991038b…</code></a>
+href="https://github.com/Tencent/teamai-cli/commit/24260bd5f7039a0dbd8b82577667b78b744a5529"><code class="commit-id" title="24260bd5f7039a0dbd8b82577667b78b744a5529">24260bd5…</code></a>
 — read only; two manifests inside the seven-day cooldown,
 <code>AGENTS.md</code> and <code>CLAUDE.md</code> treated as data</li>
 <li><a href="https://github.com/openmasq/openmasq">openmasq/openmasq</a>
@@ -30333,6 +30357,25 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-08</strong> — <strong>A <code>flowchart LR</code>
+with long edge labels renders unreadably, and the build cannot see
+it.</strong> The teamai-cli diagram measured 3,091 by 347 pixels — an
+aspect ratio of 8.9 — so at the report column's width the renderer
+scaled it to about eighty pixels tall and every label with it.
+<code>scripts/check_mermaid.py</code> passed it, correctly: it checks
+for label syntax that breaks the renderer, not for a diagram that
+renders and cannot be read. The measurement is three lines in a browser
+against the pinned mermaid version — read the rendered
+<code>svg</code>'s <code>viewBox</code> and divide — and the fix is
+direction plus label placement: <code>flowchart TB</code>, edge labels
+of a few words, and the detail moved into node labels broken with
+<code>&lt;br/&gt;</code> so the widest rank stays near the column width.
+Redrawn, the same content measured 783 by 2,080. The rule: a diagram
+with more than about eight edge labels is drawn top-to-bottom, and any
+diagram whose rendered ratio exceeds about two to one is measured before
+it ships. A scratch page under <code>docs/_*</code> is gitignored for
+exactly this, and rendering two candidates side by side costs one page
+load.</p>
 <p><strong>2026-09-07</strong> — Line anchors can be wrong at the first
 pin, and the diff will not say so. The ThoughtDAG re-read ran the
 skill's re-verify loop over every cited line, not only those in files
