@@ -464,17 +464,26 @@ Apache-2.0, read at
 capability, and it is worth an entry here for two opposite reasons: what it does
 not measure, and how well it reports what it does.
 
-**What it is.** Sixty-six live task directories, with ninety more retired to an
-archive — a continuous benchmark whose dataset is versioned and published
-separately rather than frozen at a paper. Each task is an `instruction.md`, a
+**What it is.** Sixty-six live task directories and ninety archived directories
+at the inspected pin. The [pinned README](https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/README.md)
+describes tagged releases published on Harbor Hub. The archive includes an
+[import from Terminal-Bench 2.1](https://github.com/harbor-framework/terminal-bench/commit/f38349fc9c32aeaf77e30b5bd0464f3a2af8b791);
+its size does not establish how many tasks were retired for saturation or why
+other tasks were removed. Each live task is an `instruction.md`, a
 container environment, an oracle solution, tests, and a `task.toml` naming the
 artifacts a verifier will look for. The categories are Software (18), Science
 (14), ML (11), Operations (9), Security (5), Hardware (5) and Media (4), and the
 tasks are hard on their own terms: the expert time estimates average 6.5 hours
 and reach 60, and every task gives the agent an eight-hour timeout. The verifier
 runs in a separate environment from the agent, so grading cannot be reached from
-the box the agent worked in. Every `task.toml` opens with a canary GUID, which is
-a contamination guard of the kind no memory benchmark on this page ships.
+the box the agent worked in. All sixty-six `task.toml` files carry the same
+canary GUID. The [static canary check](https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/scripts/checks/check-canary.sh)
+requires that marker in task metadata and other task text, making marked files
+recognisable to a training-corpus filter. It checks marker presence and comment
+placement, not model exposure. Seeing the marker in an evaluated model's output
+does not by itself prove training contamination: it may have been supplied by
+the prompt, retrieved material or tools, and a shared GUID cannot identify which
+task was seen. A missing marker in output does not establish a clean model.
 
 **Why it is not a memory benchmark, and the reason is structural rather than an
 oversight.** A run is one task, one fresh container, one session, graded on

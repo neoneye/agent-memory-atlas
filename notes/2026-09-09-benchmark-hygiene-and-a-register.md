@@ -1,181 +1,185 @@
-# Two hygiene mechanisms from a benchmark that is not about memory, and what they imply for the shape of the page
+# Benchmark hygiene and a register that separates evidence from inference
 
 **Written 2026-09-09.** Prompted by reading
-[harbor-framework/terminal-bench](https://github.com/harbor-framework/terminal-bench)
-at `83c7a6172d629c6575b785ab12c8db787bb2e323`. It is not a memory system — one
-task, one fresh container, one session, graded at the end — so it earned a
-known-limitations bullet and an entry on the benchmarks page rather than a
-report. While reading it I found two practices that are cheap, checkable, and
-absent from every benchmark this page describes. Both answer a problem the page
-already states and leaves without a remedy.
+[harbor-framework/terminal-bench][pin] at
+`83c7a6172d629c6575b785ab12c8db787bb2e323`. It measures terminal tasks within a
+session, so the atlas discusses it on the benchmarks page rather than giving it
+a memory-system report. Two practices are worth recording systematically:
+contamination markers and versioned task maintenance. Neither, by itself, proves
+that a benchmark is uncontaminated or remains discriminating.
 
----
+## 1. A canary is a marker, not proof of training exposure
 
-## 1. The canary, and the half of contamination nobody here measures
+All sixty-six live `task.toml` files carry **the same GUID**, not a distinct
+identifier for each task. The [canary check][canary] requires that literal marker
+in task instructions, task metadata, environment Dockerfiles, and supported text
+files under solutions and tests. It checks presence and comment placement; it
+does not test a model for memorisation. The [review documentation][review] states
+the check's intended anti-contamination role.
 
-Every one of Terminal-Bench's sixty-six `task.toml` files opens with a line of
-the form `# harbor-canary GUID <uuid>`. Sixty-six of sixty-six carry one. It is
-one line, written once, and it does something no probe design can do: if that
-GUID ever appears in a model's output, the task is in the training data, and you
-know it as a fact rather than as a suspicion.
+This gives corpus builders a string to search for when excluding benchmark
+material. Finding it in a candidate training corpus establishes that marked text
+is present there; it does not establish that a model was trained on it. Finding
+it in model output is also insufficient on its own: the string might have come
+from the evaluation prompt, retrieved files, tools, or another public document
+using the same marker. Its shared use prevents attribution to one task.
 
-The page's section **"The model may already know the answer"** states the trap
-correctly and prescribes only the preventive half — fictional, high-entropy,
-multi-hop probes so that pre-training cannot supply the answer and a plausibility
-prior cannot hit it. That is good advice and it is not the same thing. Prevention
-tries to make leakage *not matter*. A canary tells you leakage *happened*. A
-benchmark can do everything the three properties ask and still be sitting in a
-crawl, and nothing in the current advice would reveal it.
+The benchmarks page's [probe advice][probe-advice] asks for fictional,
+high-entropy facts **and a no-memory baseline**. That baseline is an empirical
+control, not merely prevention. A contamination marker complements it by making
+source material recognisable; it does not replace the comparison or explain why
+a baseline answered correctly.
 
-The distinction matters most for exactly the benchmarks this page depends on.
-LoCoMo and LongMemEval have been public, downloadable and widely mirrored for a
-long time. The page's whole argument about whether a bad score matters rests on
-scores from those datasets, and it has no instrument that would tell it if the
-questions had been memorised. A canary would not fix that retroactively — you
-cannot add one to a dataset already released — but it is the reason a *new*
-memory benchmark should carry one from its first commit.
+**For a memory benchmark, keep two uses separate.** A marker in conversation
+records the system is asked to ingest can help audit copying or retrieval. Its
+appearance afterwards is compatible with successful memory. Testing for prior
+exposure needs a separate condition that withholds those records and the target
+marker, disables retrieval and external tools, and clears prior session state.
+Record the elicitation prompt, model and decoding settings, and compare against
+unexposed control markers. Even then, a hit supports prior exposure rather than
+identifying its training source, and a miss does not establish a clean model.
+That is a proposed experiment, not something Terminal-Bench's static check runs.
 
-**What the mechanism would look like for a memory benchmark.** Terminal-Bench's
-unit is a task directory, so the canary lives in the task file. A memory
-benchmark's unit is a conversation and a set of probes, so the canary belongs in
-the source records — one high-entropy token planted in the haystack, never in a
-question, never in an answer key, and checked against model outputs during
-scoring. That is close to the shape the page's own probe advice already
-describes, which is why it costs almost nothing to add: a benchmark generating
-fictional high-entropy facts is one line away from generating a canary too.
+**The limits matter.** A marker can be stripped while the questions survive;
+it cannot measure how much contamination helped a score. A later release can
+add markers, but they say nothing retroactively about previously distributed
+unmarked copies. Adding markers early helps preserve coverage; publishing once
+without them does not make all future marking useless.
 
-**Honest limits.** A canary only fires if someone inspects outputs for it, which
-means the harness has to look. It detects a leak and does not measure how much
-the leak helped. And a benchmark published without one can never acquire one,
-because the artifact a canary would have marked is already out.
+## 2. An archive establishes retention of old tasks, not why they left
 
-## 2. Retirement, and the saturation the page names without a remedy
+At the pin, Terminal-Bench has sixty-six live task directories and ninety
+directories in [the archive][archive]. Its [README][readme] describes a continuous
+benchmark with tagged releases published on Harbor Hub. Those are checkable
+observations about its structure and stated release process.
 
-Terminal-Bench holds sixty-six live task directories and ninety retired ones in
-an `archive/`. More tasks have been taken out than are currently in. It is a
-*continuous* benchmark: the dataset is versioned and published on a hub with
-tagged releases rather than frozen at a paper.
+The archive count is not a count of tasks retired for being too easy. The
+history includes an [import of Terminal-Bench 2.1 archive tasks][archive-import],
+as well as individual moves such as [archiving gpt2-codegolf][archive-move]. An
+archive can contain earlier editions, broken tasks, or tasks removed for other
+reasons. These entries do not establish a saturation threshold or a policy for
+retiring tasks when models solve them reliably.
 
-The page's section **"The benchmark may not be hard enough to separate systems"**
-describes the failure this addresses: when a benchmark stops separating good
-memory from a big context window, a score on it says little. The page has also
-observed the memory benchmarks in use here saturating at the top. What it does
-not name is that saturation is a maintenance problem with a known answer, and
-that no memory benchmark it describes performs that maintenance — because a
-dataset frozen at a publication cannot. Nobody removes a LoCoMo conversation
-that every system now answers.
+The benchmarks page's [saturation argument][saturation] gives a reason to
+consider refreshing a task set. Versioned replacement is one possible response;
+so are harder extensions and keeping a fixed set for longitudinal comparisons.
+A dataset released with a paper can acquire later versions. Whether any given
+memory benchmark does so needs its own source check, not an inference from its
+publication format.
 
-**The cost is real and Terminal-Bench pays it deliberately.** Retiring tasks
-breaks comparability across versions: a 57.9% this month and a 44.6% three
-months ago may be measuring different task sets. The mechanism that makes this
-survivable is versioned releases with a resolvable dataset identifier, so a score
-can name the version it was measured against. A memory benchmark that wanted
-retirement would have to adopt the versioning first; retirement without it just
-makes the numbers incomparable and nobody notices.
+**Comparability needs more than a version label.** Report the immutable dataset
+revision or digest, task set, grader and harness version, alongside the model
+configuration. A moving `latest` reference is insufficient. Different releases
+produce scores on different tasks; versioning makes that difference visible but
+does not make the scores comparable. To measure progress, rerun configurations
+on the same release or report a shared-task comparison separately. Record why
+tasks were added or removed so a harder successor does not silently change the
+capability being measured.
 
-## 3. What both have in common, and what the page currently records instead
+## 3. What the page can and cannot establish
 
-Neither is a scoring decision. Both are properties of a benchmark *as an
-artifact*: does it carry a contamination guard, and does anything ever leave it.
-Both are checkable in one command against a checkout. And neither appears in any
-benchmark description on this page — not for the ones read directly at a pinned
-commit, and not for the ones described from their papers.
+The page discusses contamination controls, including withheld material and
+no-memory baselines, and records Terminal-Bench's marker and archive. It does
+not tabulate those properties consistently across benchmarks. That is a gap in
+the atlas's records, not evidence that every other benchmark lacks them.
 
-What the page does record about a benchmark is: what it scores, how many items,
-what licence, whether an artifact exists, and whether the numbers recompute. That
-is the right set for answering *is this measurement trustworthy*. It is missing
-the set that answers *will this measurement still be trustworthy next year*.
+A file search can establish marker presence. Establishing a detection procedure
+requires reading the harness; establishing a retirement policy requires release
+records and reasons. A directory count answers neither. The register should
+preserve those distinctions instead of compressing them into yes/no columns
+labelled *contamination guard* and *maintained*.
 
-## 4. A restructuring proposal
+## 4. Separate the register from the argument
 
-### The problem, in numbers
+### The navigation problem
 
-`content/benchmarks.md` is 3,342 lines, nine top-level sections and about
-forty-five subsections. Two of those sections have ended up doing the same job
-in different registers:
+At atlas commit `aae48f51f962cd80e543f0a07d44ac83046ee3ae`,
+`content/benchmarks.md` has 3,342 lines and nine numbered sections. Section 2
+contains five third-level headings, including its boundary discussion. Section 6
+contains twenty-two third-level headings, but those are **not twenty-two
+benchmarks**: they also include the proposed procedure, substrate discussion,
+harness and gaps in measurement.
 
-- **Section 2, "What Benchmarks Exist"** (lines 72–596, four subsections) is
-  where a benchmark's identity goes — found in a reviewed repository, read at a
-  pin, or named from outside.
-- **Section 6, "Does Anything Benchmark Forgetting?"** (lines 1370–2994, twenty-two
-  subsections, 1,624 lines — half the page) has become the de-facto catalogue.
-  Most of its subsections are individual benchmarks under argumentative titles:
-  *"A benchmark whose baseline wins, and the category that cannot fail"*,
-  *"A self-reported leaderboard whose artifacts are checkable anyway"*,
-  *"The follow-up that argues the cheap baseline was the answer all along"*.
+Many benchmark discussions have argumentative headings that omit their names.
+The names remain searchable in the body, but the table of contents is a poor
+name index. Identity and evidence are spread between sections 2 and 6, making
+comparison harder than it needs to be.
 
-Those titles are the best writing on the page and they are useless for finding a
-benchmark by name. The consequence is structural rather than stylistic: a new
-benchmark has no single home, its identity gets split between section 2 and
-section 6, and there is no place where the same facts are stated about every
-benchmark in the same order. Adding the twelfth or twentieth benchmark makes this
-worse in proportion.
+### The proposal
 
-### The proposal: separate the register from the argument
+Put a compact register in section 2, with stable name anchors and links to the
+existing analyses. Keep the essays and their titles. A row should identify a
+**benchmark and evaluated release**; different releases must not silently
+overwrite one another. The visible index can stay narrow, with linked evidence
+notes carrying the details below rather than forcing every field into one wide
+table.
 
-**A register.** One table, one row per benchmark, the same fields in the same
-order, each cell short enough to scan:
-
-| Field | Why it is in the register rather than the prose |
+| Field | Evidence and boundary |
 | --- | --- |
-| Name, artifact URL, licence | Identity, and whether it can be obtained |
-| Read at a pin? | The atlas's own standard of evidence |
-| Unit | Conversation, task, document set — decides what "one item" means |
-| Size | Items, and the split |
-| Scores what | Recall, deletion, forgetting, capability |
-| Contamination guard | The canary column, new |
-| Maintained | Frozen at a paper, or versioned with retirement — new |
-| Reports an interval | Whether a score comes with a confidence bound |
-| Reports cost | Dollars or tokens per run |
-| Reproducible from the artifact | The page's existing bar, stated per benchmark |
+| Name, artifact, licence | Link the released artifact and its licence; distinguish code from dataset terms. |
+| Evidence basis | Paper, artifact read at a full pin or digest, or locally reproduced result; link the source. |
+| Unit, size and split | State what an item is and which release the count describes. |
+| Measures | Recall, deletion, forgetting or capability; link the scoring definition. |
+| Contamination marker | Location and granularity: shared marker, per-item marker, or not assessed. |
+| Exposure check or control | Corpus filtering, model probing, withheld data or no-memory baseline; distinguish a proposal from an implemented check. |
+| Release and retirement evidence | Version identifier, archive or release history, and documented removal reasons; do not infer ongoing maintenance from an archive. |
+| Uncertainty and cost reporting | Name the evaluated run, interval method and cost boundary; these belong to a result, not every use of a dataset. |
+| Reproduction status | Separate available artifacts, inspected scoring code, recomputed published aggregates and a locally executed benchmark. |
 
-The last four are the columns this page's own critique sections keep asking for
-and never tabulate. Two of them come from a benchmark that has nothing to do with
-memory, which is the point of writing this down.
+**Unknown is not absent.** Use *not assessed* when this reading did not check a
+field; *not found at the pin* only after recording search scope; and
+*not applicable* with a reason. A source that reports a result supports
+*reported*, not *reproduced*. Each factual cell needs a pinned path, paper
+section or result artifact. A validator can check missing sources and broken
+references; it cannot establish the truth of a judgement.
 
-**The argument keeps its titles.** Sections 3 through 7 stay narrative and stay
-argumentative. What changes is that each essay stops restating identity and
-instead links to the register row. The register is where a reader goes to
-compare; the essays are where they go to understand.
+### A bounded first step
 
-**Where the register lives.** Inside section 2, replacing the current four
-subsections' role as the identity store, with those subsections becoming
-provenance notes on the register rather than parallel catalogues.
+Start with Terminal-Bench, LoCoMo and LongMemEval, which the page already
+discusses. Reuse those readings for identity and scoring, and leave hygiene
+fields *not assessed* until their artifacts have been checked for that question.
+Do not fill an absence from silence in an existing report. The Terminal-Bench
+row's hygiene evidence can already be stated:
 
-### What not to do
+| Property | Finding at the Terminal-Bench pin |
+| --- | --- |
+| Marker | One shared GUID in all 66 live task metadata files; the static check also covers other task text. [Source][canary] |
+| Model exposure detection | Not established by the static marker check; the external Harbor harness was not inspected for this. |
+| Releases | Tagged releases on Harbor Hub, as described by the pinned README. [Source][readme] |
+| Archive | 90 directories; history includes a prior-edition import and individual task moves. [Import][archive-import], [example move][archive-move]. |
+| Saturation-driven retirement | Not established by the directory count or the cited archive history. |
 
-- **Do not split into per-benchmark pages.** The systems corpus works that way
-  because each system needs a full mechanism reading. A benchmark needs a row and
-  a paragraph; 393 report pages plus forty benchmark pages would bury the
-  argument that makes this page worth reading.
-- **Do not let the register become an uncited list.** Every cell should be
-  traceable to something read. The atlas already binds counts to frontmatter and
-  fails the build when they drift; a register with no such binding will rot, and
-  a rotted register is worse than prose because it looks authoritative.
-- **Do not add another specification this page does not run.** Section 9 already
-  admits the page holds others to a standard it does not meet, having specified a
-  thirteen-step deletion sequence and a contradiction test and shipped neither.
-  Every field above is readable from an artifact already in hand. None of them
-  needs a harness. That constraint is deliberate.
+Before expanding the pilot, check that a reader can find all three names, follow
+each row to its analysis and evidence, and distinguish an unknown from a
+negative finding. Preserve existing essay anchors and run the site checks after
+moving content. No new model runs are required to build this index; claims of
+successful contamination detection or reproduced scores would require their own
+experiments. This note proposes the register; it does not implement it.
 
-### The smallest useful first step
+## Provenance and correction
 
-Add the two new columns — contamination guard, and maintained — to the
-benchmarks already described, filling them only where the artifact was read at a
-pin and writing *unknown* everywhere else. That is a few hours of checking, it
-produces an honest table with visible gaps, and the gaps are themselves the
-finding: if the column is empty for every memory benchmark and full for the one
-capability benchmark that wandered into scope, that is worth saying plainly.
+I checked Terminal-Bench at `83c7a6172d629c6575b785ab12c8db787bb2e323` after
+running `scripts/screen_repo.py`: zero auto-run surfaces, thirteen build-time
+execution surfaces and eight unpinned dependency surfaces. I installed no
+dependencies and ran no upstream code or benchmark. My read-only count found
+66 live `task.toml` files, all marked, one distinct GUID and 90 archive
+directories. I read the marker check, its documentation, the README and archive
+history. The harness is external and was not part of this check.
 
----
+The initial note treated canary output as proof of training exposure, described
+the archive as retirement without checking its origins, and inferred missing
+mechanisms from missing descriptions. Those claims are replaced above. The
+same marker and retirement overclaims on the benchmarks page are corrected
+alongside this note. I also checked the page's headings: its probe advice
+includes a no-memory baseline, and section 6's twenty-two headings are not a
+count of benchmarks.
 
-## Provenance
-
-Terminal-Bench facts are from a full clone read at
-`83c7a6172d629c6575b785ab12c8db787bb2e323`: sixty-six task directories each with
-a `task.toml`, sixty-six carrying a canary GUID, ninety directories under
-`archive/`, thirteen leaderboard submissions each recording an accuracy with a
-95% confidence half-width, an average trial duration, token counts and a cost.
-Nothing was installed or run. The claim that no benchmark described on this page
-carries a contamination guard is a claim about the atlas's own records and about
-the artifacts read at a pin, not about every dataset in the world.
+[pin]: https://github.com/harbor-framework/terminal-bench/tree/83c7a6172d629c6575b785ab12c8db787bb2e323
+[canary]: https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/scripts/checks/check-canary.sh
+[review]: https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/docs/TASK_REVIEW_AUTOMATION.md#check-canary
+[archive]: https://github.com/harbor-framework/terminal-bench/tree/83c7a6172d629c6575b785ab12c8db787bb2e323/archive
+[readme]: https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/README.md
+[archive-import]: https://github.com/harbor-framework/terminal-bench/commit/f38349fc9c32aeaf77e30b5bd0464f3a2af8b791
+[archive-move]: https://github.com/harbor-framework/terminal-bench/commit/5ad8c0bcf2c2741cf8fc45df52685b95c4462347
+[probe-advice]: ../content/benchmarks.md#the-model-may-already-know-the-answer
+[saturation]: ../content/benchmarks.md#the-benchmark-may-not-be-hard-enough-to-separate-systems
