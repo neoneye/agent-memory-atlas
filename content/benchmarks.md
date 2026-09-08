@@ -455,6 +455,55 @@ survives a session or that a later reading could contradict, and **no code,
 dataset or harness is released**, so none of the figures above can be recomputed
 from an artifact the way the rest of this page insists on.
 
+**The benchmark the frontier labs actually track has no memory axis at all.**
+[Terminal-Bench](https://www.tbench.ai/)
+([harbor-framework/terminal-bench](https://github.com/harbor-framework/terminal-bench),
+Apache-2.0, read at
+[`83c7a6172d629c6575b785ab12c8db787bb2e323`](https://github.com/harbor-framework/terminal-bench/commit/83c7a6172d629c6575b785ab12c8db787bb2e323),
+567 commits since 22 January 2026 by 61 authors) is where agent builders compare
+capability, and it is worth an entry here for two opposite reasons: what it does
+not measure, and how well it reports what it does.
+
+**What it is.** Sixty-six live task directories, with ninety more retired to an
+archive — a continuous benchmark whose dataset is versioned and published
+separately rather than frozen at a paper. Each task is an `instruction.md`, a
+container environment, an oracle solution, tests, and a `task.toml` naming the
+artifacts a verifier will look for. The categories are Software (18), Science
+(14), ML (11), Operations (9), Security (5), Hardware (5) and Media (4), and the
+tasks are hard on their own terms: the expert time estimates average 6.5 hours
+and reach 60, and every task gives the agent an eight-hour timeout. The verifier
+runs in a separate environment from the agent, so grading cannot be reached from
+the box the agent worked in. Every `task.toml` opens with a canary GUID, which is
+a contamination guard of the kind no memory benchmark on this page ships.
+
+**Why it is not a memory benchmark, and the reason is structural rather than an
+oversight.** A run is one task, one fresh container, one session, graded on
+artifacts and tests at the end. Nothing an agent works out in one task is
+available to it in the next, no task asks whether anything was retained, and
+searching the instructions for a second session, a resumption or a prior run
+returns nothing. That is the correct design for measuring capability and it makes
+the benchmark silent on the question this atlas asks. The eight-hour budget is
+the interesting part: these are long-horizon tasks *within* a session, so what
+they stress is context management rather than storage — the boundary drawn above,
+with everything on the long-context side of it.
+
+**What it does that the memory benchmarks do not.** Its thirteen leaderboard
+submissions each record an accuracy with a 95% confidence half-width, the average
+wall-clock per trial, the token counts and the dollar cost. The current spread
+runs from 57.9% ± 3.8 (Claude Code on Fable 5.1, about $6.2k and 65 minutes a
+trial) down to 11.2% ± 2.5, with the best-scoring configuration still failing
+two tasks in five. Compare that to the memory benchmarks catalogued above, where
+a single accuracy figure with no interval, no cost and no per-trial duration is
+the norm — the reporting standard here is the one this page keeps asking for, and
+it comes from a benchmark that is not about memory.
+
+**Reproducibility.** The dataset and the leaderboard are in the repository; the
+harness is not. Running it needs Harbor, a sandbox environment, model
+credentials, and — at the top of the board — roughly six thousand dollars of
+inference. The oracle solutions ship, so the tasks themselves can be verified to
+work without an agent, which is a check most benchmarks on this page do not
+offer.
+
 **One 2026 benchmark builds the grading this page keeps asking for, and it is
 not a memory benchmark.** *Long-Horizon-Terminal-Bench: Testing the Limits of
 Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading*, Li et al.,
