@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
-revision: dce182cd95ce759a381ce58a58e811ac5a730217
-revision_url: https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217
-analyzed_at: 2026-09-02
+revision: 8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
+revision_url: https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
+analyzed_at: 2026-09-08
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "checkpoint store, forget path | plugin/daimon_briefing/cli/lifecycle.py | _cmd_forget appends a tombstone event carrying a content hash rather than the text, before the rewrite, so the rewrite's _drop_forgotten reads it; the supersede-candidate emitter skips values already in the ledger | plugin/tests/test_forget_refutations.py, plugin/tests/test_log_text_privacy.py"
@@ -28,7 +28,7 @@ matrix:
   update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache and the second negative store"
   scoping: "Per-project bucket on every read, each latest-read naming a route and an admit rule; cross-project reads only by explicit slug or a host-declared allowlist, and a tenant-scoped flag refuses the caller's slug outright"
   integration: "Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of cross-project asks into a running session at its next turn boundary, a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP, and a local read-only viewer with search-as-recall"
-  background: "Detached serialize child, retry ledger with self-heal, index rebuild"
+  background: "A pre-action hook runs a human-armed ruling check before a matching shell action, fail-open under a five-second budget, and logs every firing; detached serialize child, retry ledger with self-heal, index rebuild"
   trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; a candidate/active/overturned ledger carrying both polarities, whose authority is read off the observed write channel and whose polarity is derived from the founding event name rather than any writable field; a candidate/confirmed/rejected relation ledger in shadow mode with no mechanical channel at all; and a contradiction slot on the recall index that only derived world evidence may write, whose cure is recorded rather than erased"
   strengths: "Authority derived from the observed write channel rather than a caller-set flag, with the strongest channels unreachable from the CLI; a surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; a placebo arm that has refuted the project's own features"
   risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age; the contradiction slot on the index has one writer, the receipt probe, so a stale file, branch or PR claim is flagged in a briefing but never demoted in search"
@@ -305,6 +305,23 @@ not a ruling"*, and `_guard_ruling_cap` is a single chokepoint every activation
 path routes through, naming the active rulings in its refusal so the operator
 knows what to retire.
 
+Since 0.41.0 a ruling can carry a **check**: a script body of at most 8,192
+bytes and a command pattern of at most 200, stored in the row so the check
+travels with the ruling, with an intent of `enforce`, `warn` or `record-only`
+(`refutations.py:137-175`). Its hash is computed by the writer over the stored
+bytes and *"never accepted from a caller"*, the way `verdict_key` pins the rule
+text; a body naming a host-local path — `~/`, `$HOME/`, `/Users/`, `/home/` —
+is refused at propose time, line by line, because such a script *"travels to
+another machine as a script whose real content is a file that is not there."*
+The check's lifecycle follows the ruling's: `active` folds to `armed`,
+`overturned` to `disarmed` (`:913-914`), so only a human ratification arms
+anything, and `ruling check try` runs a check against a command *"arming
+nothing"* (`cli/ruling.py:424`). `checks.sync`, called by every ledger writer
+that can change what is armed and by `daimon check sync`, is the only writer of
+`~/.daimon/checks/` — a six-key manifest and one executable body per armed
+check at mode `0o500`, written atomically and skipped when the bytes already
+match (`checks.py:1-60`).
+
 **The bug this shipped with is the more instructive half, and the project wrote
 it down.** Scar 0053 records that the CLI was scoped (`refute list` passes
 `polarity="refutation"`) while the viewer lane called
@@ -495,8 +512,9 @@ because zero runtime dependencies is a product claim — exposing five read-only
 tools (`daimon_recall`, `daimon_brief`, `daimon_projects`, `daimon_status`,
 `requests_inbox`) through thin shims in `mcp_tools.py`.
 
-**Tests.** 4,388 test functions across ~70,800 lines under `plugin/tests/`,
-against ~34,600 lines of source in `plugin/daimon_briefing/`.
+**Tests.** 5,247 test functions across ~84,300 lines under `plugin/tests/`,
+against ~38,600 lines of source in `plugin/daimon_briefing/`, not counting
+the two check modules mirrored under `_hooks/`.
 
 ## 5. Memory Data Model
 
@@ -542,7 +560,7 @@ live serializer constants and to the real on-disk corpus.
 allowed to touch.** It records whose statement an item is, distinct from
 `author`, the machine identity that wrote the checkpoint, and it is derived by
 code from the host's per-message speaker joined through the item's validated
-`source_message_ids` (`derive_stated_by`, `serializer.py:773`). The rule is
+`source_message_ids` (`derive_stated_by`, `serializer.py:793`). The rule is
 unanimity: bindings naming two speakers, or one speaker and one unattributed
 message, yield nothing, because *"picking a winner would manufacture exactly
 the misattribution the field exists to prevent."* A host that owns a whole
@@ -597,7 +615,7 @@ briefed with another project's checkpoint on its first session, on the one
 path with no human reader (#784). The injection route falls back to the global
 pointer only when the project is unknown or the operator opted in with
 `DAIMON_BRIEF_GLOBAL_FALLBACK` (`briefing.injection_read_route`,
-`briefing.py:347`), and a refused foreign payload leaves behind a `Marker` of
+`briefing.py:349`), and a refused foreign payload leaves behind a `Marker` of
 exactly two header fields, slug and created, *"and NOTHING more"* — because
 stdout inside an agent session is checkpoint input, a wider marker would copy
 foreign content into this project's checkpoint (scar 0055). The contract is a
@@ -631,7 +649,7 @@ makes the git merges conflict-free by construction. Teammates' items are
 attributed and never merged into yours.
 
 **Staleness** has a dedicated read-time signal. `briefing.stale_carried`
-(`briefing.py:622`) flags carried items whose effective last-verified age
+(`briefing.py:624`) flags carried items whose effective last-verified age
 exceeds seven days, and the docstring states the reasoning precisely: a fresh
 checkpoint restating a carried item **is not corroboration**, because both
 sources trace back to the same original extraction.
@@ -667,11 +685,17 @@ evidence can never brand a teammate's mirrored copy. Only derived world
 evidence may write it: capture-time rejection rows describe the capture rather
 than later disproof, and a model-flagged contradiction has no path to the slot
 at all — *"derived world evidence writes the slot, or nothing does."* `search`
-sorts a contradicted row below a merely superseded one; `suggest` multiplies
-the weight by 0.4 for contradiction and 0.7 for supersession, stacking because
-the axes are independent — a replaced decision was still right at the time,
-whereas contradiction says a check disagreed with the claim itself
-(`_suggest_weight`, `recall.py:1389`). Neither filters, on the ground that the
+sorts a contradicted row below a merely superseded one, and among superseded
+rows a person's recorded resolution below a model-authored link; `suggest`
+multiplies the weight by 0.4 for contradiction, 0.7 for a supersession the
+model's typed link wrote and 0.5 for one a human resolution wrote, stacking
+because the axes are independent — a replaced decision was still right at the
+time, whereas contradiction says a check disagreed with the claim itself
+(`_suggest_weight`, `recall.py:1412`, `_RESOLVED_WEIGHT`). The read side
+demotes in the order the write side already keeps, the resolution fold
+overwriting the link fold, and an unattributed row — legacy, or a writer the
+fold could not name — takes the model-link rate, *"the weaker claim, never the
+person."* Neither filters, on the ground that the
 evidence is machine-local and *"burial must remain visible and reversible
 rather than silent."*
 
@@ -679,7 +703,7 @@ The cure is the better half. A passing probe on an item that currently stands
 contradicted appends a `receipt-ok` row, and the fold clears `invalidated_by`
 while writing `cured_by`, because clearing alone had made *"challenged and
 survived"* indistinguishable from *"never questioned"*. The cure row is written
-only when it changes something (`append_receipt_cure`, `store.py:2034`), so the
+only when it changes something (`append_receipt_cure`, `store.py:2088`), so the
 rejection ledger stays a ledger of problems found rather than work done, and
 `verification_counts` excludes it — *"a cure is not a catch."* One resolution of
 "where does this item currently stand", `latest_receipt_verdicts`
@@ -1067,6 +1091,40 @@ attention is one function shared by the panel and the live path
 two filters disagree, one of them is nudging about an ask the other already
 decided was not worth attention."*
 
+**A ruling can stop an action, and the hook that does it is the first in
+the tree that can.** `hook/daimon-pre-action.py` is registered on `PreToolUse`
+for `Bash` with a ten-second timeout, and its docstring opens: *"THIS IS THE
+FIRST DAIMON HOOK THAT CAN FAIL A HOST ACTION. Every other hook in this
+directory observes a session and cannot change it."* The logic lives in
+`checks_host.py` and `checks_runtime.py`, both stdlib-only by scar 0049 and
+mirrored byte-for-byte into `hook/` and `_hooks/` by a sync script, because a
+host hook runs in whatever interpreter the host launched with no package on its
+path. A host is a profile row — its event name, its shell tool names, where
+the command sits in the payload, how it wants a decision encoded, and which
+modes it can deliver: Claude Code caps `enforce`, `warn` and `record-only`
+each at itself, and Codex, which documents a deny channel and no warn channel,
+degrades `warn` to `record-only`, *"a warn with nowhere to go is not a warn"*
+(`checks_host.py:72-147`). The runner resolves the command — pipes, heredocs,
+attached flags, files the command reads — under a five-second budget that is
+fail-open, and every firing appends a row to `checks.jsonl`, capped in place
+at 256 KiB keeping the last 64 KiB, with every reader naming the window it
+covers (`checks_runtime.py:39-47`, `:642`, `:832-883`). The script's output
+contract is one JSON object or nothing, stderr empty, exit always zero,
+because the host documents a non-zero exit as an unconditional block and *"an
+escaping exception that happened to exit non-zero would block an action no
+check ever judged. The deny is the deliberate path."* Nothing here widens the
+model's reach: the check is a human's script on a human's ruling, and
+`ruling checks` shows what is armed, in what mode on each host, and whether it
+ever fired (`cli/ruling.py:410`).
+
+**A foreign tombstone apply says what it could not reach.**
+`store.apply_foreign_tombstones` walks the checkpoint shapes through
+`scrub_content_key` and nothing else, and until 0.41.1 it printed an
+unqualified success line while, in the project's own count, fifteen other
+plaintext surface classes kept the value; the interim fix names those
+surfaces from the registry in the output and leaves the issue open for the
+structural fix (#945, `test_foreign_apply_coverage.py`).
+
 **Ten item fields are code-owned and stripped from anything a model authors.**
 `_CODE_OWNED_ITEM_KEYS` is `origin_session`, `origin_author`, `quote_verified`,
 `last_verified`, `quote_provenance`, `pinned`, `id`, `carried_from`,
@@ -1089,7 +1147,7 @@ docstring says which.
 
 ## 10. Tests, Evals, and Benchmarks
 
-4,388 tests across 140 files, better than twice the source in lines. Coverage tracks the
+5,247 tests across 158 files, better than twice the source in lines. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
 `test_id_bearing_item_never_fuzzy_withheld`), `test_store.py`,
@@ -1144,8 +1202,24 @@ mirrored the caller's unfiltered call.
 
 Both were exposed by mutation testing rather than by review reading, which is
 the same lesson one level up from the suite: a test that cannot be shown to fail
-is a claim nobody has checked, and 4,388 of them do not change that for any
+is a claim nobody has checked, and 5,247 of them do not change that for any
 individual one.
+
+**The lesson became a rule with discovery.** `test_gate_controls.py` scans the
+package source for every constant matching `_*GATE*` and requires a named
+control for each that produces *a different outcome on each side of it* — a
+control that only ever shows the firing case *"passes against a gate wired to
+fire always; one that only ever shows silence passes against a gate wired to
+fire never. Only the pair separates a live gate from either dead one."* The
+docstring records that the first shape, a registry of gate metrics, was killed
+by its own inventory: daimon had two such metrics, both already controlled, so
+the registry *"would have refused nothing and reported a clean sweep, which is
+the defect it existed to prevent."* The population that had failed was the
+tests — one asserted no residue using the same enumeration the code walks, so it
+could not fail for a missing case — and the rule is aimed there, with the
+constants found by scanning so an unproven gate fails the suite rather than
+shipping. A gate that fires reports its margin, and an all-exempt quote
+check says it proved nothing (#960).
 
 **The benchmark is the notable part.** `benchmark/` runs LongMemEval-S through
 the *real* serializer and answers only from what `daimon recall` surfaces, with
@@ -1510,6 +1584,11 @@ they stop working.
   briefed items, on its own append-only stream
 - `plugin/daimon_briefing/requests.py` — the cross-project request ledger, its
   read-time joins, live delivery and the owed lane
+- `plugin/daimon_briefing/checks.py`, `checks_runtime.py`, `checks_host.py` — the
+  armed-check manifest writer, the stdlib runner and the host profile table;
+  the last two mirrored into `hook/` and `_hooks/`
+- `plugin/daimon_briefing/buckets.py` — the one-shot bucket migration across the
+  0.42.0 path-resolution change, with a receipt alias-aware readers join on
 - `plugin/daimon_briefing/pending.py` — the `decide` queue composer, a pure reader
 - `plugin/daimon_briefing/receipts.py` — vitni Ed25519 provenance receipts
 - `plugin/daimon_briefing/ledger.py` — serialize log, health classification, heal plan
@@ -1518,8 +1597,11 @@ they stop working.
 - `hook/` and `plugin/daimon_briefing/_hooks/` — per-host adapters and the shared stdlib helper
 - `plugin/daimon_briefing/mcp_server.py`, `mcp_tools.py` — read-only stdio MCP
 - `plugin/daimon_briefing/cli/` — a package of subcommand family modules:
-  `lifecycle.py` (`resolve`, `forget`, `reverify`, `decide`), `refute.py`, `ruling.py`,
-  `amend.py`, `audit.py`, `team.py`, `skill.py`, `_ledger.py`
+  `lifecycle.py` (`resolve`, `forget`, `reverify`, `decide`), `refute.py`, `ruling.py`
+  (with `checks` and `check try`), `check.py`, `amend.py`, `audit.py`, `team.py`,
+  `skill.py`, `_ledger.py`
+- `hook/daimon-pre-action.py` — the `PreToolUse` hook on `Bash`, the one hook
+  that can deny an action
 - `plugin/daimon_briefing/render.py` — the single output seam every lifecycle,
   report and ledger verb routes through
 
@@ -1528,7 +1610,7 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 4,388 tests across 140 files
+- `plugin/tests/` — 5,247 tests across 158 files
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
   arm and its self-verification
@@ -1538,6 +1620,14 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-09-08** — [`8d66b441bbb98db53f6d586f025af7fcaeb0a7fd`](https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd) — re-pinned 41 commits on, through releases 0.38.1 to 0.42.0. Screened before reading: three auto-run surfaces, three build-time execution paths, one unpinned website manifest, two files inside the seven-day cooldown; nothing was installed, built or run, and the read was made from a full clone. No mark moved — six of seven, `bitemporal` still absent, and the grep for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` over the package still returns nothing.
+
+The new mechanism is the check on a ruling (#943 and its slices): a human-ratified ruling may carry a script that a `PreToolUse` hook on `Bash` runs before a matching shell action, with an intent of enforce, warn or record-only, a hash pinned at ratify, host-local paths refused in the body, a manifest and bodies under `~/.daimon/checks/` that every ledger writer re-syncs idempotently, a stdlib-only runtime and host profile table mirrored into the hook directories, a five-second fail-open budget, and a firing log capped in place. It is the first daimon hook that can fail a host action, and its script says so in its first line. Sections 2, 8 and 9 carry it; no mark moves, because the ruling's authority table is unchanged and only ratification arms.
+
+One published claim was stale: `suggest`'s demotion had one supersession weight, and since #908 a human resolution demotes at 0.5 against a model link's 0.7 with `search` ordering the same way; section 6 now says so. Also in range: a receipt evidence kind on refutations (#930), the foreign tombstone apply naming the surfaces it cannot reach (#945), a gate-control test that discovers every `_*GATE*` constant and demands a control on each side (#947), gate margins in the render (#960), a one-shot bucket migration across the 0.42.0 path-resolution change (#963), and a README section that cites this atlas's reading of the project, strong half and weak half together (#910).
+
+Counts: 5,247 `def test` across 158 files, ~84,300 test lines against ~38,600 source lines excluding the mirrored check modules; 74 numbered scars. Five explicit line citations had drifted and were re-resolved — `derive_stated_by` 793, `injection_read_route` 349, `stale_carried` 624, `_suggest_weight` 1412, `append_receipt_cure` 2088; a mechanical pass over the relative citations found none pointing at a blank line.
 
 **2026-09-02** — [`dce182cd95ce759a381ce58a58e811ac5a730217`](https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217) — re-pinned 98 commits on, through releases 0.34.0 to 0.38.0. Screened before reading: three auto-run surfaces (the plugin manifests and `hooks/hooks.json`, unchanged since the previous pin apart from version numbers), three build-time execution paths, one unpinned website manifest, and three files inside the seven-day cooldown — `plugin/pyproject.toml` and `plugin/uv.lock` changed the same day, `website/package-lock.json` three days before; nothing was built or run. No mark moved — six of seven. `bitemporal` stays absent: the grep for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` still returns nothing, and the one slot that came alive, `invalidated_by`, holds contradiction evidence with a timestamp rather than an interval.
 

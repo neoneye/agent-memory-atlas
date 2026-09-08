@@ -110,14 +110,14 @@ stored.</p>
               <strong>Daily-Nerd/daimon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217" title="dce182cd95ce759a381ce58a58e811ac5a730217">
+            <a class="meta-pill revision-pill" href="https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd" title="8d66b441bbb98db53f6d586f025af7fcaeb0a7fd">
               <span>Analyzed revision</span>
-              <code>dce182cd…</code>
+              <code>8d66b441…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-02</strong>
+              <strong>2026-09-08</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -483,6 +483,28 @@ because <em>"a standing rule that long is a document, not a
 ruling"</em>, and <code>_guard_ruling_cap</code> is a single chokepoint
 every activation path routes through, naming the active rulings in its
 refusal so the operator knows what to retire.</p>
+<p>Since 0.41.0 a ruling can carry a <strong>check</strong>: a script
+body of at most 8,192 bytes and a command pattern of at most 200, stored
+in the row so the check travels with the ruling, with an intent of
+<code>enforce</code>, <code>warn</code> or <code>record-only</code>
+(<code>refutations.py:137-175</code>). Its hash is computed by the
+writer over the stored bytes and <em>"never accepted from a
+caller"</em>, the way <code>verdict_key</code> pins the rule text; a
+body naming a host-local path — <code>~/</code>, <code>$HOME/</code>,
+<code>/Users/</code>, <code>/home/</code> — is refused at propose time,
+line by line, because such a script <em>"travels to another machine as a
+script whose real content is a file that is not there."</em> The check's
+lifecycle follows the ruling's: <code>active</code> folds to
+<code>armed</code>, <code>overturned</code> to <code>disarmed</code>
+(<code>:913-914</code>), so only a human ratification arms anything, and
+<code>ruling check try</code> runs a check against a command <em>"arming
+nothing"</em> (<code>cli/ruling.py:424</code>).
+<code>checks.sync</code>, called by every ledger writer that can change
+what is armed and by <code>daimon check sync</code>, is the only writer
+of <code>~/.daimon/checks/</code> — a six-key manifest and one
+executable body per armed check at mode <code>0o500</code>, written
+atomically and skipped when the bytes already match
+(<code>checks.py:1-60</code>).</p>
 <p><strong>The bug this shipped with is the more instructive half, and
 the project wrote it down.</strong> Scar 0053 records that the CLI was
 scoped (<code>refute list</code> passes
@@ -694,9 +716,10 @@ product claim — exposing five read-only tools
 <code>daimon_projects</code>, <code>daimon_status</code>,
 <code>requests_inbox</code>) through thin shims in
 <code>mcp_tools.py</code>.</p>
-<p><strong>Tests.</strong> 4,388 test functions across ~70,800 lines
-under <code>plugin/tests/</code>, against ~34,600 lines of source in
-<code>plugin/daimon_briefing/</code>.</p>
+<p><strong>Tests.</strong> 5,247 test functions across ~84,300 lines
+under <code>plugin/tests/</code>, against ~38,600 lines of source in
+<code>plugin/daimon_briefing/</code>, not counting the two check modules
+mirrored under <code>_hooks/</code>.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The checkpoint is a single JSON document:</p>
 <pre class="json"><code>{
@@ -745,7 +768,7 @@ statement an item is, distinct from <code>author</code>, the machine
 identity that wrote the checkpoint, and it is derived by code from the
 host's per-message speaker joined through the item's validated
 <code>source_message_ids</code> (<code>derive_stated_by</code>,
-<code>serializer.py:773</code>). The rule is unanimity: bindings naming
+<code>serializer.py:793</code>). The rule is unanimity: bindings naming
 two speakers, or one speaker and one unattributed message, yield
 nothing, because <em>"picking a winner would manufacture exactly the
 misattribution the field exists to prevent."</em> A host that owns a
@@ -808,7 +831,7 @@ on the one path with no human reader (#784). The injection route falls
 back to the global pointer only when the project is unknown or the
 operator opted in with <code>DAIMON_BRIEF_GLOBAL_FALLBACK</code>
 (<code>briefing.injection_read_route</code>,
-<code>briefing.py:347</code>), and a refused foreign payload leaves
+<code>briefing.py:349</code>), and a refused foreign payload leaves
 behind a <code>Marker</code> of exactly two header fields, slug and
 created, <em>"and NOTHING more"</em> — because stdout inside an agent
 session is checkpoint input, a wider marker would copy foreign content
@@ -846,7 +869,7 @@ Only immutable per-author files sync — no mutable pointer ever lands in
 the sidecar — which makes the git merges conflict-free by construction.
 Teammates' items are attributed and never merged into yours.</p>
 <p><strong>Staleness</strong> has a dedicated read-time signal.
-<code>briefing.stale_carried</code> (<code>briefing.py:622</code>) flags
+<code>briefing.stale_carried</code> (<code>briefing.py:624</code>) flags
 carried items whose effective last-verified age exceeds seven days, and
 the docstring states the reasoning precisely: a fresh checkpoint
 restating a carried item <strong>is not corroboration</strong>, because
@@ -887,21 +910,27 @@ capture-time rejection rows describe the capture rather than later
 disproof, and a model-flagged contradiction has no path to the slot at
 all — <em>"derived world evidence writes the slot, or nothing
 does."</em> <code>search</code> sorts a contradicted row below a merely
-superseded one; <code>suggest</code> multiplies the weight by 0.4 for
-contradiction and 0.7 for supersession, stacking because the axes are
-independent — a replaced decision was still right at the time, whereas
-contradiction says a check disagreed with the claim itself
-(<code>_suggest_weight</code>, <code>recall.py:1389</code>). Neither
-filters, on the ground that the evidence is machine-local and
-<em>"burial must remain visible and reversible rather than
-silent."</em></p>
+superseded one, and among superseded rows a person's recorded resolution
+below a model-authored link; <code>suggest</code> multiplies the weight
+by 0.4 for contradiction, 0.7 for a supersession the model's typed link
+wrote and 0.5 for one a human resolution wrote, stacking because the
+axes are independent — a replaced decision was still right at the time,
+whereas contradiction says a check disagreed with the claim itself
+(<code>_suggest_weight</code>, <code>recall.py:1412</code>,
+<code>_RESOLVED_WEIGHT</code>). The read side demotes in the order the
+write side already keeps, the resolution fold overwriting the link fold,
+and an unattributed row — legacy, or a writer the fold could not name —
+takes the model-link rate, <em>"the weaker claim, never the
+person."</em> Neither filters, on the ground that the evidence is
+machine-local and <em>"burial must remain visible and reversible rather
+than silent."</em></p>
 <p>The cure is the better half. A passing probe on an item that
 currently stands contradicted appends a <code>receipt-ok</code> row, and
 the fold clears <code>invalidated_by</code> while writing
 <code>cured_by</code>, because clearing alone had made <em>"challenged
 and survived"</em> indistinguishable from <em>"never questioned"</em>.
 The cure row is written only when it changes something
-(<code>append_receipt_cure</code>, <code>store.py:2034</code>), so the
+(<code>append_receipt_cure</code>, <code>store.py:2088</code>), so the
 rejection ledger stays a ledger of problems found rather than work done,
 and <code>verification_counts</code> excludes it — <em>"a cure is not a
 catch."</em> One resolution of "where does this item currently stand",
@@ -1356,6 +1385,46 @@ one function shared by the panel and the live path
 once because <em>"the day the two filters disagree, one of them is
 nudging about an ask the other already decided was not worth
 attention."</em></p>
+<p><strong>A ruling can stop an action, and the hook that does it is the
+first in the tree that can.</strong>
+<code>hook/daimon-pre-action.py</code> is registered on
+<code>PreToolUse</code> for <code>Bash</code> with a ten-second timeout,
+and its docstring opens: <em>"THIS IS THE FIRST DAIMON HOOK THAT CAN
+FAIL A HOST ACTION. Every other hook in this directory observes a
+session and cannot change it."</em> The logic lives in
+<code>checks_host.py</code> and <code>checks_runtime.py</code>, both
+stdlib-only by scar 0049 and mirrored byte-for-byte into
+<code>hook/</code> and <code>_hooks/</code> by a sync script, because a
+host hook runs in whatever interpreter the host launched with no package
+on its path. A host is a profile row — its event name, its shell tool
+names, where the command sits in the payload, how it wants a decision
+encoded, and which modes it can deliver: Claude Code caps
+<code>enforce</code>, <code>warn</code> and <code>record-only</code>
+each at itself, and Codex, which documents a deny channel and no warn
+channel, degrades <code>warn</code> to <code>record-only</code>, <em>"a
+warn with nowhere to go is not a warn"</em>
+(<code>checks_host.py:72-147</code>). The runner resolves the command —
+pipes, heredocs, attached flags, files the command reads — under a
+five-second budget that is fail-open, and every firing appends a row to
+<code>checks.jsonl</code>, capped in place at 256 KiB keeping the last
+64 KiB, with every reader naming the window it covers
+(<code>checks_runtime.py:39-47</code>, <code>:642</code>,
+<code>:832-883</code>). The script's output contract is one JSON object
+or nothing, stderr empty, exit always zero, because the host documents a
+non-zero exit as an unconditional block and <em>"an escaping exception
+that happened to exit non-zero would block an action no check ever
+judged. The deny is the deliberate path."</em> Nothing here widens the
+model's reach: the check is a human's script on a human's ruling, and
+<code>ruling checks</code> shows what is armed, in what mode on each
+host, and whether it ever fired (<code>cli/ruling.py:410</code>).</p>
+<p><strong>A foreign tombstone apply says what it could not
+reach.</strong> <code>store.apply_foreign_tombstones</code> walks the
+checkpoint shapes through <code>scrub_content_key</code> and nothing
+else, and until 0.41.1 it printed an unqualified success line while, in
+the project's own count, fifteen other plaintext surface classes kept
+the value; the interim fix names those surfaces from the registry in the
+output and leaves the issue open for the structural fix (#945,
+<code>test_foreign_apply_coverage.py</code>).</p>
 <p><strong>Ten item fields are code-owned and stripped from anything a
 model authors.</strong> <code>_CODE_OWNED_ITEM_KEYS</code> is
 <code>origin_session</code>, <code>origin_author</code>,
@@ -1382,7 +1451,7 @@ disk, because that would erase the code's real stamps and let a later
 of input and destructive on another, and the docstring says which.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>4,388 tests across 140 files, better than twice the source in lines.
+<p>5,247 tests across 158 files, better than twice the source in lines.
 Coverage tracks the design claims closely:
 <code>test_quote_verification.py</code>, <code>test_carry.py</code>,
 <code>test_briefing.py</code> (withhold semantics, including
@@ -1447,8 +1516,25 @@ code removed and the comment left in place. Scar 0053 is the polarity
 inversion above, whose test mirrored the caller's unfiltered call.</p>
 <p>Both were exposed by mutation testing rather than by review reading,
 which is the same lesson one level up from the suite: a test that cannot
-be shown to fail is a claim nobody has checked, and 4,388 of them do not
+be shown to fail is a claim nobody has checked, and 5,247 of them do not
 change that for any individual one.</p>
+<p><strong>The lesson became a rule with discovery.</strong>
+<code>test_gate_controls.py</code> scans the package source for every
+constant matching <code>_*GATE*</code> and requires a named control for
+each that produces <em>a different outcome on each side of it</em> — a
+control that only ever shows the firing case <em>"passes against a gate
+wired to fire always; one that only ever shows silence passes against a
+gate wired to fire never. Only the pair separates a live gate from
+either dead one."</em> The docstring records that the first shape, a
+registry of gate metrics, was killed by its own inventory: daimon had
+two such metrics, both already controlled, so the registry <em>"would
+have refused nothing and reported a clean sweep, which is the defect it
+existed to prevent."</em> The population that had failed was the tests —
+one asserted no residue using the same enumeration the code walks, so it
+could not fail for a missing case — and the rule is aimed there, with
+the constants found by scanning so an unproven gate fails the suite
+rather than shipping. A gate that fires reports its margin, and an
+all-exempt quote check says it proved nothing (#960).</p>
 <p><strong>The benchmark is the notable part.</strong>
 <code>benchmark/</code> runs LongMemEval-S through the <em>real</em>
 serializer and answers only from what <code>daimon recall</code>
@@ -1912,6 +1998,14 @@ append-only stream</li>
 <li><code>plugin/daimon_briefing/requests.py</code> — the cross-project
 request ledger, its read-time joins, live delivery and the owed
 lane</li>
+<li><code>plugin/daimon_briefing/checks.py</code>,
+<code>checks_runtime.py</code>, <code>checks_host.py</code> — the
+armed-check manifest writer, the stdlib runner and the host profile
+table; the last two mirrored into <code>hook/</code> and
+<code>_hooks/</code></li>
+<li><code>plugin/daimon_briefing/buckets.py</code> — the one-shot bucket
+migration across the 0.42.0 path-resolution change, with a receipt
+alias-aware readers join on</li>
 <li><code>plugin/daimon_briefing/pending.py</code> — the
 <code>decide</code> queue composer, a pure reader</li>
 <li><code>plugin/daimon_briefing/receipts.py</code> — vitni Ed25519
@@ -1928,9 +2022,12 @@ per-host adapters and the shared stdlib helper</li>
 <li><code>plugin/daimon_briefing/cli/</code> — a package of subcommand
 family modules: <code>lifecycle.py</code> (<code>resolve</code>,
 <code>forget</code>, <code>reverify</code>, <code>decide</code>),
-<code>refute.py</code>, <code>ruling.py</code>, <code>amend.py</code>,
-<code>audit.py</code>, <code>team.py</code>, <code>skill.py</code>,
-<code>_ledger.py</code></li>
+<code>refute.py</code>, <code>ruling.py</code> (with <code>checks</code>
+and <code>check try</code>), <code>check.py</code>,
+<code>amend.py</code>, <code>audit.py</code>, <code>team.py</code>,
+<code>skill.py</code>, <code>_ledger.py</code></li>
+<li><code>hook/daimon-pre-action.py</code> — the <code>PreToolUse</code>
+hook on <code>Bash</code>, the one hook that can deny an action</li>
 <li><code>plugin/daimon_briefing/render.py</code> — the single output
 seam every lifecycle, report and ledger verb routes through</li>
 </ul>
@@ -1943,7 +2040,7 @@ scar-candidate drafting</li>
 </ul>
 <p><strong>Tests and evals</strong></p>
 <ul>
-<li><code>plugin/tests/</code> — 4,388 tests across 140 files</li>
+<li><code>plugin/tests/</code> — 5,247 tests across 158 files</li>
 <li><code>benchmark/</code> — LongMemEval-S harness, reporting policy,
 committed results</li>
 <li><code>research/experiments/recall-replay-ab/</code> — the replay A/B
@@ -1957,6 +2054,48 @@ decision and negative-knowledge trail, including
 shipped feature</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd"><code class="commit-id" title="8d66b441bbb98db53f6d586f025af7fcaeb0a7fd">8d66b441…</code></a>
+— re-pinned 41 commits on, through releases 0.38.1 to 0.42.0. Screened
+before reading: three auto-run surfaces, three build-time execution
+paths, one unpinned website manifest, two files inside the seven-day
+cooldown; nothing was installed, built or run, and the read was made
+from a full clone. No mark moved — six of seven, <code>bitemporal</code>
+still absent, and the grep for <code>valid_from</code>,
+<code>valid_to</code>, <code>valid_until</code>,
+<code>event_time</code>, <code>occurred_at</code> and <code>as_of</code>
+over the package still returns nothing.</p>
+<p>The new mechanism is the check on a ruling (#943 and its slices): a
+human-ratified ruling may carry a script that a <code>PreToolUse</code>
+hook on <code>Bash</code> runs before a matching shell action, with an
+intent of enforce, warn or record-only, a hash pinned at ratify,
+host-local paths refused in the body, a manifest and bodies under
+<code>~/.daimon/checks/</code> that every ledger writer re-syncs
+idempotently, a stdlib-only runtime and host profile table mirrored into
+the hook directories, a five-second fail-open budget, and a firing log
+capped in place. It is the first daimon hook that can fail a host
+action, and its script says so in its first line. Sections 2, 8 and 9
+carry it; no mark moves, because the ruling's authority table is
+unchanged and only ratification arms.</p>
+<p>One published claim was stale: <code>suggest</code>'s demotion had
+one supersession weight, and since #908 a human resolution demotes at
+0.5 against a model link's 0.7 with <code>search</code> ordering the
+same way; section 6 now says so. Also in range: a receipt evidence kind
+on refutations (#930), the foreign tombstone apply naming the surfaces
+it cannot reach (#945), a gate-control test that discovers every
+<code>_*GATE*</code> constant and demands a control on each side (#947),
+gate margins in the render (#960), a one-shot bucket migration across
+the 0.42.0 path-resolution change (#963), and a README section that
+cites this atlas's reading of the project, strong half and weak half
+together (#910).</p>
+<p>Counts: 5,247 <code>def test</code> across 158 files, ~84,300 test
+lines against ~38,600 source lines excluding the mirrored check modules;
+74 numbered scars. Five explicit line citations had drifted and were
+re-resolved — <code>derive_stated_by</code> 793,
+<code>injection_read_route</code> 349, <code>stale_carried</code> 624,
+<code>_suggest_weight</code> 1412, <code>append_receipt_cure</code>
+2088; a mechanical pass over the relative citations found none pointing
+at a blank line.</p>
 <p><strong>2026-09-02</strong> — <a
 href="https://github.com/Daily-Nerd/daimon/commit/dce182cd95ce759a381ce58a58e811ac5a730217"><code class="commit-id" title="dce182cd95ce759a381ce58a58e811ac5a730217">dce182cd…</code></a>
 — re-pinned 98 commits on, through releases 0.34.0 to 0.38.0. Screened
