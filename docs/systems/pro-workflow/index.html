@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code plugin — 38 hook
+scripts across 24 events, 41 skills, 23 commands — whose self-correcting
+memory is a SQLite table of rules with an FTS5 index under the home
+directory, written by a Stop hook that parses [LEARN] blocks out of the
+assistant's own reply, filtered by project on every read; whose
+session-start hook prints the loaded learnings to stderr, which the
+harness shows the person and never the model; and whose replay skill
+greps two Markdown files nothing in the plugin writes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Pro
+Workflow — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code plugin — 38
+hook scripts across 24 events, 41 skills, 23 commands — whose
+self-correcting memory is a SQLite table of rules with an FTS5 index
+under the home directory, written by a Stop hook that parses [LEARN]
+blocks out of the assistant's own reply, filtered by project on every
+read; whose session-start hook prints the loaded learnings to stderr,
+which the harness shows the person and never the model; and whose replay
+skill greps two Markdown files nothing in the plugin writes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pro
+Workflow — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code plugin — 38
+hook scripts across 24 events, 41 skills, 23 commands — whose
+self-correcting memory is a SQLite table of rules with an FTS5 index
+under the home directory, written by a Stop hook that parses [LEARN]
+blocks out of the assistant's own reply, filtered by project on every
+read; whose session-start hook prints the loaded learnings to stderr,
+which the harness shows the person and never the model; and whose replay
+skill greps two Markdown files nothing in the plugin writes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Pro Workflow — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Pro Workflow",
+      "description": "A Claude Code plugin \u2014 38 hook scripts across 24 events, 41 skills, 23 commands \u2014 whose self-correcting memory is a SQLite table of rules with an FTS5 index under the home directory, written by a Stop hook that parses [LEARN] blocks out of the assistant's own reply, filtered by project on every read; whose session-start hook prints the loaded learnings to stderr, which the harness shows the person and never the model; and whose replay skill greps two Markdown files nothing in the plugin writes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Learnings the model writes and the person
+never sees loaded</p>
+          <h1>Pro Workflow</h1>
+          <p class="document-deck">A Claude Code plugin — 38 hook
+scripts across 24 events, 41 skills, 23 commands — whose self-correcting
+memory is a SQLite table of rules with an FTS5 index under the home
+directory, written by a Stop hook that parses [LEARN] blocks out of the
+assistant's own reply, filtered by project on every read; whose
+session-start hook prints the loaded learnings to stderr, which the
+harness shows the person and never the model; and whose replay skill
+greps two Markdown files nothing in the plugin writes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rohitg00/pro-workflow">
+              <span>Source</span>
+              <strong>rohitg00/pro-workflow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6" title="7f7209d7215bced7d651209ef050c77953c298d6">
+              <span>Analyzed revision</span>
+              <code>7f7209d7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-08</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (47%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Pro Workflow is a Claude Code plugin whose README opens with
+<em>"Your Claude Code gets smarter every session"</em> and a loop: a
+correction becomes a rule, the rule is saved to SQLite, the next session
+loads it, and <em>"after 50 sessions you barely correct anything."</em>
+MIT is asserted in the README badge and <code>package.json</code> and
+there is no licence file in the tree; 86 commits between 1 February and
+18 July 2026 by four authors; version 3.4.0 in <code>package.json</code>
+beside 3.3.0 in the plugin manifest; 2,544 lines of TypeScript under
+<code>src/</code>, 2,459 lines of JavaScript across 38 hook scripts, 41
+skills, 23 commands, eight agents, and one test file. The screen found
+three auto-run surfaces — the plugin manifest,
+<code>hooks/hooks.json</code> registering 24 events, and a plugin
+settings file that allowlists test and worktree commands — and one
+unpinned manifest with a lockfile untouched for 96 days. Every
+registered script was read: they write under
+<code>~/.pro-workflow/</code> and the temp directory, and the one
+network reach is the research loop and the optimizer calling model
+providers with keys the person supplies. Nothing was installed or
+run.</p>
+<p>The memory is a table. <code>learnings</code>
+(<code>src/db/schema.sql:5-13</code>) holds a category, a rule, a
+mistake, a correction, a project, a creation time and a
+<code>times_applied</code> counter, with an FTS5 shadow table kept in
+step by three triggers (<code>:17-42</code>). It is written by
+<code>scripts/learn-capture.js</code>, a Stop hook that runs a regular
+expression over the assistant's reply for
+<code>[LEARN] Category: rule</code> blocks with optional
+<code>Mistake:</code>, <code>Correction:</code> and <code>Wiki:</code>
+lines and inserts each one with the project set to the basename of
+<code>CLAUDE_PROJECT_DIR</code>. It is read by
+<code>searchLearnings</code>, <code>searchByCategory</code> and
+<code>getRecentLearnings</code> (<code>src/search/fts.ts:15-133</code>),
+each of which adds <code>project = ? OR project IS NULL</code> to its
+SQL when a project is given, and by <code>/search</code> and
+<code>/replay</code>, which tell the model to run <code>sqlite3</code>
+against the file. That filter earns the one mark.</p>
+<p>Two findings sit between the README's loop and the code. <strong>The
+session-start hook does not load learnings into the model.</strong>
+<code>scripts/session-start.js</code> reads the five most recent
+learnings for the project (<code>:48-50</code>) and prints them through
+a <code>log</code> function that is <code>console.error</code>
+(<code>:6-7</code>); the file contains no <code>console.log</code>, no
+<code>additionalContext</code> and no write to stdout. Claude Code's
+hook contract adds a SessionStart hook's stdout to the model's context
+and shows its stderr to the person, so what the README calls
+<em>"SessionStart loads all learnings"</em> is a message on the person's
+terminal. The prompt hook's wiki hits go the same way
+(<code>scripts/prompt-submit.js:16-17</code>). The learnings reach the
+model only when it runs <code>/search</code>, <code>/replay</code> or
+the optimizer reads them, or when the person types them back.
+<strong>The Stop hook saves without approval.</strong> The
+self-correction rule says <em>"Wait for approval before persisting the
+learning"</em> (<code>rules/self-correction.mdc</code>) and the learn
+command's save step begins <em>"After the user confirms"</em>
+(<code>commands/learn.md:177-210</code>), but
+<code>learn-capture.js</code> parses every <code>[LEARN]</code> block in
+the reply and inserts it; a rule the model proposed and the person had
+not yet answered is in the table when the turn ends.</p>
+<p>Beside the learnings is a knowledge plane added in 3.3 — wikis as
+Markdown folders with an FTS5 shadow index, claims with a confidence, a
+budget-capped research loop, an optional embedding arm and a
+multi-provider council — and a skill optimizer that patches a skill file
+in epochs against frozen validation prompts, recording every candidate,
+patch and rejection. Those are the better engineered half of the
+repository and they are not the memory the README leads with.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A belief here is a rule with a project. It is meant to be born from a
+correction: the person says <em>no, that's wrong</em>, the prompt hook
+notices the phrase and prints a reminder to use <code>/learn</code>, the
+model proposes <code>[LEARN] Category: rule</code>, the person approves,
+and the row lands. What the code does is shorter: when the model's reply
+contains the block, the Stop hook saves it, and the approval is whatever
+the model chose to wait for.</p>
+<p>A belief is <em>used</em> in three ways the code supports and one it
+does not. The model can run <code>/search &lt;query&gt;</code> and
+<code>/replay &lt;task&gt;</code>, both of which are instructions to
+query the SQLite file with FTS5 and rank by BM25; the skill optimizer
+reads learnings as trajectories to build validation prompts; and the
+<code>replay-learnings</code> skill greps
+<code>.claude/LEARNED.md</code> and
+<code>.claude/learning-log.md</code>, two files that a skill's prose
+tells the model to append to and no hook writes. What it does not do is
+arrive on its own: the session-start hook's five recent learnings are
+printed to the person, and the prompt hook's wiki hits likewise.</p>
+<p>A belief stops being used only by <code>deleteLearning</code>, a hard
+DELETE the FTS trigger mirrors. There is no status, no supersession and
+no archive; a rule corrected by a later rule is two rows, and
+<code>times_applied</code>, the column the replay briefing sorts by in
+its example, is incremented by nothing in the tree.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a correction phrase makes the prompt hook print a reminder to the person; the model emits a [LEARN] block and the Stop hook inserts it, approved or not; every read filters by project; the session-start hook prints the five newest to stderr, which the person sees and the model does not; the model reaches the table only by running sqlite3 itself</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a correction phrase makes the prompt hook print a reminder to the person; the model emits a [LEARN] block and the Stop hook inserts it, approved or not; every read filters by project; the session-start hook prints the five newest to stderr, which the person sees and the model does not; the model reaches the table only by running sqlite3 itself
+flowchart LR
+    U[&quot;person corrects — &#39;no, that&#39;s wrong&#39;&quot;] --&gt;|&quot;prompt hook — regex, stderr reminder&quot;| P[&quot;person&#39;s terminal&quot;]
+    M[&quot;model emits [LEARN] Category: rule&lt;br/&gt;Mistake / Correction / Wiki&quot;] --&gt;|&quot;Stop hook — regex, INSERT&quot;| D[(&quot;learnings — SQLite + FTS5&lt;br/&gt;project, category, rule, mistake, correction, times_applied&quot;)]
+    D --&gt;|&quot;five newest, project = ? OR NULL — console.error&quot;| P
+    D --&gt;|&quot;/search, /replay — the model runs sqlite3, BM25&quot;| M
+    S[&quot;replay-learnings skill&quot;] -.-&gt;|&quot;greps LEARNED.md and learning-log.md — no hook writes them&quot;| F[&quot;files&quot;]
+    D --&gt;|&quot;deleteLearning — hard DELETE&quot;| X[&quot;gone&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A plugin, not a service: <code>hooks/hooks.json</code> registers 38
+scripts across 24 Claude Code events, from <code>PreToolUse</code> gates
+on edits, reads and shell commands through <code>Stop</code>,
+<code>SessionStart</code>, <code>SessionEnd</code>,
+<code>UserPromptSubmit</code>, the compaction pair, and the
+<code>TaskCreated</code>, <code>PermissionRequest</code>,
+<code>WorktreeCreate</code> and <code>CwdChanged</code> events. The
+scripts are plain Node with no dependency; the TypeScript under
+<code>src/</code> builds to <code>dist/</code>, and the hooks
+<code>require</code> <code>dist/db/store.js</code> when it exists and
+fall back to file-based state when it does not. The store
+(<code>src/db/store.ts:110</code>) opens
+<code>~/.pro-workflow/data.db</code> through <code>better-sqlite3</code>
+and executes the schema; <code>src/search/fts.ts</code> is the learnings
+query layer; <code>src/search/embeddings.ts</code> the optional vector
+arm; <code>src/optimizer/</code> the skill optimizer with its own
+tables. Commands are Markdown that instruct the model, several of which
+end in a literal <code>sqlite3</code> invocation against the same
+file.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Two commands from the marketplace, then <code>npm run build</code> if
+the compiled store is wanted; without <code>dist/</code> the hooks skip
+the database and the commands still tell the model to run
+<code>sqlite3</code>. The knowledge plane needs a provider key for
+embeddings, the council and the survey; the research tick needs a cron
+entry and stops on a <code>STOP</code> file. The cost is 38 processes
+across a session's events; the memory itself costs one regex per
+reply.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>scripts/learn-capture.js</code>
+reads the Stop payload, takes <code>assistant_response</code>, runs the
+<code>[LEARN]</code> regex in a loop, loads the store from
+<code>dist/</code>, and calls <code>addLearning</code> with the project
+basename, category, rule, mistake, correction and an optional wiki slug;
+it prints a count to stderr and echoes the input.</li>
+<li><strong>Read.</strong>
+<code>getRecentLearnings(db, limit, project)</code>
+(<code>fts.ts:120-133</code>) and
+<code>searchLearnings(db, query, {limit, project, category})</code>
+(<code>:15-50</code>) build SQL with the project clause at
+<code>:40-42</code> and <code>:128-130</code>;
+<code>sanitizeFtsQuery</code> (<code>store.ts:431</code>) escapes the
+query.</li>
+<li><strong>Session start.</strong>
+<code>scripts/session-start.js</code> counts <code>LEARNED.md</code>
+patterns (<code>:34</code>), loads five learnings (<code>:48-50</code>),
+lists wikis (<code>:70-77</code>), and prints everything through
+<code>console.error</code> (<code>:6-7</code>); it exits zero
+(<code>:141</code>).</li>
+<li><strong>Prompt.</strong> <code>scripts/prompt-submit.js</code>
+matches nine correction patterns and five learn-trigger patterns,
+updates session counters, searches wikis when the prompt has three or
+more words, and prints the hits to stderr; it echoes the input on stdout
+(<code>:121-123</code>).</li>
+<li><strong>Instruct.</strong> <code>commands/learn.md:177-210</code> —
+identify, confirm, then an <code>INSERT INTO learnings</code> or the
+store API; <code>commands/replay.md:25-45</code> — an FTS5 query ordered
+by <code>bm25()</code> and a session-history query;
+<code>commands/search.md</code> — BM25 with prefix and phrase
+matching.</li>
+<li><strong>Delete.</strong> <code>deleteLearning</code>
+(<code>store.ts:139-140</code>, <code>:301</code>) runs a hard
+DELETE.</li>
+<li><strong>Optimize.</strong> <code>src/optimizer/trainer.ts</code>
+reflects on trajectories, aggregates patches, clips by a learning rate,
+applies, validates against <code>optimization_validation</code> rows,
+and records candidates, patches and rejections
+(<code>schema.sql:176-253</code>); <code>reflect.ts:58</code> is the one
+reader of <code>times_applied</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>learnings(id, created_at, project, category, rule NOT NULL, mistake, correction, times_applied DEFAULT 0)</code>
+with <code>learnings_fts</code> over rule, mistake and correction and
+three triggers;
+<code>sessions(id, project, started_at, ended_at, edit_count, corrections_count, prompts_count)</code>.
+The wiki tables:
+<code>wikis(slug, title, flavor, root_path, scope, auto_research, private)</code>,
+<code>wiki_pages</code> with a content hash and FTS5,
+<code>wiki_sources</code> with a fetcher and a fetched time,
+<code>wiki_claims(page_id, source_id, text, confidence DEFAULT 0.8, last_verified_at)</code>,
+<code>wiki_seeds</code> with a status of pending, active, done or
+failed, <code>wiki_embeddings(page_id, model, dim, vector)</code>, and
+<code>learnings_wiki</code> linking a learning to a wiki. The optimizer
+tables carry a run's budget and spend, candidates with a score and
+status, patches with an op, anchor, payload, status and rejection
+reason, frozen validation prompts, and rejections with a delta
+score.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Learnings are retrieved by FTS5 with BM25 ranking over the three text
+columns, prefix and phrase matching, OR between terms, a category
+filter, and the project clause; or by recency; or, in the optimizer, by
+<code>times_applied</code> descending, which orders by a column that is
+always zero. Wikis are retrieved by BM25 over page title, summary and
+content with snippets, by an embedding arm when a key is present, and by
+reciprocal-rank fusion of the two under <code>/wiki hybrid</code>. None
+of it is injected: the prompt hook's three wiki hits and the session
+hook's five learnings are written to stderr, and the model sees the
+table when a command tells it to run a query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A learning is written at Stop by regex, synchronously, before the
+hook echoes the payload; it is searchable at the next query. The learn
+command's save is an INSERT the model runs after the person confirms;
+the Stop hook's save is unconditional on the block being present. No
+background pass touches a learning; the research tick grows wikis a page
+per tick and the optimizer rewrites a skill file, both under budgets and
+both recorded. <code>session-end.js</code> writes a handoff file and
+prints a reminder to run <code>/wrap-up</code>;
+<code>pre-compact.js</code> snapshots counters and the summary to a JSON
+file under the temp directory, and <code>post-compact.js</code> prints
+them back to stderr.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>A regex per reply and a query per <code>/search</code>; a provider
+call per council round, embedding batch, survey or optimizer epoch,
+under a budget the tables record.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The agent is Claude Code, and the memory reaches it through three
+commands that end in <code>sqlite3</code> and one skill that greps
+files. The hooks are the person's surface: gates on edits and commands,
+secret scanning, a tool-call budget, a git blast-radius check, and
+reminders — a correction detected, a learning trigger detected, wiki
+pages relevant — all on stderr. Other agents get the skills through a
+cross-agent installer and none of the hooks. There is no page, no queue
+and no review command over learnings; <code>/insights</code> and
+<code>/sprint-status</code> report counts.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> <code>project</code> is a stored
+column and every read that takes a project adds
+<code>project = ? OR project IS NULL</code> to the query; a learning
+saved with no project is global by construction.</p>
+<p><strong>Human review — withheld.</strong> The rule and the command
+say wait for approval; the Stop hook does not. Nothing distinguishes an
+approved row from one the model emitted and the person never answered,
+and there is no surface to approve, reject or edit a learning short of
+running SQL.</p>
+<p><strong>Trust state, tombstone, bitemporal, audit log —
+withheld.</strong> A learning has no status, no supersession and no
+record of deletion; its one time is creation. A wiki claim's confidence
+is a number.</p>
+<p><strong>Negative evaluation — withheld.</strong> The one test file
+covers the optimizer's patch application.</p>
+<p><strong>What reaches the model, stated plainly.</strong> Claude Code
+adds a hook's stdout to the model's context for
+<code>SessionStart</code> and <code>UserPromptSubmit</code> and shows
+stderr to the person. <code>session-start.js</code> and
+<code>prompt-submit.js</code> write their learnings and wiki hits to
+stderr and nothing to stdout except, in the prompt hook, the input
+payload echoed back. The README's <em>"auto-loaded on session
+start"</em> and <em>"auto-injects top wiki hits"</em> describe messages
+the person reads.</p>
+<p><strong>Unwired.</strong> <code>times_applied</code> is read by the
+optimizer and the replay briefing's example and incremented by nothing.
+<code>.claude/LEARNED.md</code> and <code>.claude/learning-log.md</code>
+are grepped by the replay skill and counted by the session hook, and the
+only writer is a skill's instruction to the model to append.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>One test file, <code>src/optimizer/__tests__/apply.test.ts</code>,
+fourteen cases on patch application. Nothing tests the learnings store,
+the FTS queries, the project filter, the Stop-hook regex or any hook
+script. No benchmark, no paper; the README's comparison table against
+four other plugins is a feature checklist.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A schema a person can read.</strong> 253 lines, FTS5 with
+triggers, and a project column in the query.</li>
+<li><strong>Record what the optimizer refused.</strong> Candidates,
+patches, rejections with a reason and a delta, and frozen validation
+prompts are the right tables for a loop that edits a prompt.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Loading memory on stderr.</strong> A hook that prints to the
+person and calls it context injection is the whole product claim resting
+on the wrong stream; one <code>console.log</code> of the same lines, or
+a <code>hookSpecificOutput</code> with <code>additionalContext</code>,
+is the fix.</li>
+<li><strong>A regex that saves what the rule says to wait for.</strong>
+An approval that lives in the model's discipline and not in the capture
+path is not an approval.</li>
+<li><strong>A counter nothing counts.</strong> Sorting by
+<code>times_applied</code> orders by zero.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a Claude Code user who wants the gates — secret scan,
+read-before-write, a tool budget, commit checks — and a wiki with a
+research loop, this is a broad plugin with a readable store underneath.
+As memory it does less than it says: the rules are captured, filtered by
+project and searchable, and they reach the model only when the model
+goes and looks. Anyone adopting it should fix the two streams first and
+then decide whether the rest of the loop is worth the 38 processes.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was the stderr path ever stdout? The hook contract has been stable
+and the script has no trace of an <code>additionalContext</code> output;
+a one-line change would make the README's loop true.</li>
+<li>Does anything approve a learning before Stop, or is the wait in the
+rule the only gate?</li>
+<li>What increments <code>times_applied</code>? The replay briefing's
+<em>applied 8x</em> example needs a producer.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/db/schema.sql</code></td>
+<td>253</td>
+<td><code>learnings</code>, <code>sessions</code>, the wiki tables, the
+optimizer tables</td>
+</tr>
+<tr>
+<td><code>src/db/store.ts</code></td>
+<td>445</td>
+<td><code>createStore</code>, learning CRUD, wiki and seed methods,
+<code>sanitizeFtsQuery</code></td>
+</tr>
+<tr>
+<td><code>src/search/fts.ts</code>, <code>embeddings.ts</code></td>
+<td>181, 139</td>
+<td>BM25 queries with the project clause; the embedding arm</td>
+</tr>
+<tr>
+<td><code>src/optimizer/</code></td>
+<td>1,331</td>
+<td>Trainer, reflect, aggregate, clip, apply, validate, slow update,
+store</td>
+</tr>
+<tr>
+<td><code>scripts/learn-capture.js</code></td>
+<td>—</td>
+<td>The Stop-hook <code>[LEARN]</code> parser</td>
+</tr>
+<tr>
+<td><code>scripts/session-start.js</code>,
+<code>prompt-submit.js</code>, <code>session-end.js</code>,
+<code>pre-compact.js</code>, <code>post-compact.js</code></td>
+<td>147, 131, 133, 98, —</td>
+<td>The stderr loaders, the correction detector, the handoff and
+snapshot</td>
+</tr>
+<tr>
+<td><code>hooks/hooks.json</code></td>
+<td>—</td>
+<td>24 events, 38 scripts</td>
+</tr>
+<tr>
+<td><code>commands/learn.md</code>, <code>learn-rule.md</code>,
+<code>search.md</code>, <code>replay.md</code>,
+<code>wiki.md</code></td>
+<td>—</td>
+<td>The save flow, the rule format, the two <code>sqlite3</code>
+queries, the wiki subcommands</td>
+</tr>
+<tr>
+<td><code>rules/self-correction.mdc</code>,
+<code>skills/replay-learnings/SKILL.md</code></td>
+<td>—</td>
+<td>The wait-for-approval rule; the grep over two unwritten files</td>
+</tr>
+<tr>
+<td><code>src/optimizer/__tests__/apply.test.ts</code></td>
+<td>130</td>
+<td>Fourteen cases</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -c &#39;console\.log|process\.stdout|additionalContext&#39; scripts/session-start.js   # 0: nothing reaches stdout
+rg -n &#39;times_applied|incrementTimesApplied&#39; scripts src skills --glob &#39;!*.sql&#39; | rg -v &#39;store.ts|fts.ts&#39;   # reflect.ts:58, a read; no writer
+rg -n &#39;LEARNED\.md|learning-log&#39; scripts src hooks | rg -v &#39;grep &#39;        # a hook description and a read in session-start.js; no writer
+rg -n -i &#39;status|supersed|archiv&#39; src/db/schema.sql | rg -i learning     # none on learnings
+find . -path ./node_modules -prune -o -name &#39;*.test.*&#39; -print             # one file
+ls LICENSE                                                                # absent</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-08</strong> — <a
+href="https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6"><code class="commit-id" title="7f7209d7215bced7d651209ef050c77953c298d6">7f7209d7…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 18
+July 2026. Screened first: three auto-run surfaces (the plugin manifest,
+24 hook registrations, a plugin settings allowlist), one unpinned
+manifest behind a 96-day-old lockfile; every registered script read;
+nothing installed or run, the read made from a full clone. One mark. The
+stderr finding rests on the harness's documented hook contract and on
+the script's lack of any stdout write, both stated in section 9.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

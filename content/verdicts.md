@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 383 reports.**
+**This page covers all 385 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3294,6 +3294,22 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, three commits in one day by one author, 19,689 lines of source, 151 tests in 33 files run on CPU with nothing downloaded, several written as mutation targets; a whitepaper whose evidence manifest hashes files Git ignores and whose last table names what is not demonstrated; two of seven capability marks.
 - Study when: you want immutability in the database rather than the code, a language memory that tool output cannot enter with the negative test that proves it, or a model that cannot be prompted with its own history.
 - Do not copy when: you need to correct a fact from the product, more than one user in a store, forgetting, review, or a retriever that is more than a scan.
+
+### [`pro-workflow`](../systems/pro-workflow/)
+- Best idea: **a project filter in the query.** Every learning read that takes a project adds `project = ? OR project IS NULL` to its SQL, so another project's rules never leave the database.
+- Biggest risk: **the loading step reaches the person, not the model.** The session-start hook prints the five newest learnings through `console.error` and writes nothing to stdout, which is the stream the harness adds to context; the Stop hook saves any `[LEARN]` block the model emits, approved or not.
+- Most reusable component: the 253-line schema — `learnings` with FTS5 and three triggers, wikis with claims carrying a confidence, and the skill optimizer's candidate, patch, validation and rejection tables that record what was tried and why it was refused.
+- Maturity impression: MIT asserted with no licence file, 86 commits from 1 February to 18 July 2026 by four authors, a plugin manifest at 3.3.0 beside a package at 3.4.0, 2,544 lines of TypeScript and 38 hook scripts, one test file with fourteen cases on the optimizer. One of seven capability marks.
+- Study when: you want a readable SQLite-and-FTS5 store for a coding harness, or a worked example of the stream mistake to avoid in a hook.
+- Do not copy when: you expect learnings to reach the model on their own, or need approval, status, supersession or a producer for the applied-count the replay briefing sorts by.
+
+### [`teamai-cli`](../systems/teamai-cli/)
+- Best idea: **an upvote only for a document the transcript shows was recalled.** The Stop hook intersects the model's declared document ids with the session's recalled set before crediting anything, and a `--check` verdict reports its threshold and the matched and missing terms.
+- Biggest risk: **supersession is computed and written to nothing, and a prune stops at the repository.** The merge-request importer's `supersedes` list has no consumer, and a user-scope pull copies learnings over the local directory without removing what the repository dropped, so an archived learning survives in every user-scope member's index.
+- Most reusable component: the vote and confidence pair — recalled and upvoted counts per document merged by delta into the repository, `base·0.4 + recency·0.3 + ratio·0.3`, driving a prune with an archive option and a promotion with four criteria — beside a review queue that carries a risk on every machine-written section.
+- Maturity impression: MIT, 608 commits from 3 March to 6 September 2026 by thirty authors, version 0.22.0 under a changelog whose last dated release is April's 0.14.2, 60,131 lines of TypeScript and 2,724 test cases in 215 files; three of seven capability marks.
+- Study when: you run a team on several coding agents and want one repository, a merge request in front of every lesson, scope isolation with tests, and votes that cannot be gamed by citation.
+- Do not copy when: you need a learning to retire another, forgetting that propagates to every copy, a vector arm, or a recall the model must run rather than one it should.
 
 ### [`openmasq`](../systems/openmasq/)
 - Best idea: **extract from the wire the model already saw, and let the vault be the hallucination filter.** The extractor reads the redacted replay, answers in fakes, and every entity is un-redacted locally and must appear verbatim in the real text or is dropped; a value present only on the wire is refused as an unresolved pseudonym. No new byte leaves the machine, and the model's own knowledge is inadmissible by construction.
