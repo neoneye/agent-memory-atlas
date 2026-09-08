@@ -192,7 +192,7 @@ component is what gets reviewed and the report says so: Zep is here as
 That is genuinely less than reviewing the service, and the difference should be
 read as a gap in the atlas rather than a finding about the products.
 
-Two consequences worth stating plainly. The atlas's headline counts — thirty-one tombstones, one hundred and forty-one negative-eval suites — are counts *over inspectable code*, and a
+Two consequences worth stating plainly. The atlas's headline counts — thirty-two tombstones, one hundred and forty-one negative-eval suites — are counts *over inspectable code*, and a
 closed system could hold any of these mechanisms without this method ever
 knowing. And a mechanism's absence here is weaker evidence about the field than
 its presence: finding a tombstone proves someone built one, while not finding one
