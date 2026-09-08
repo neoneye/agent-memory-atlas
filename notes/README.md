@@ -8,6 +8,20 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-09-benchmark-hygiene-and-a-register.md](2026-09-09-benchmark-hygiene-and-a-register.md) —
+  Terminal-Bench is not a memory system and ships two mechanisms no benchmark on
+  the benchmarks page carries: a canary GUID in all sixty-six task files, and
+  ninety retired tasks against sixty-six live. Each answers a problem that page
+  states without a remedy — contamination, which its probe advice only tries to
+  prevent rather than detect, and saturation, which a dataset frozen at a paper
+  cannot maintain its way out of. Proposes separating the register from the
+  argument: the page is 3,342 lines and its forgetting section has become a
+  catalogue of twenty-two benchmarks under argumentative titles you cannot search
+  by name. One table, fixed fields, four columns the page's own critique keeps
+  asking for and never tabulates; the essays keep their titles and stop restating
+  identity. Constrained to fields readable from an artifact already in hand,
+  because section 9 already admits the page ships specifications it does not run.
+
 - [2026-09-07-a-reader-bounced-on-the-form.md](2026-09-07-a-reader-bounced-on-the-form.md) —
   the author of `no_human` read their report and found it hard to read: a
   wall of text that jumps in specificity and does not distill. The complaint
