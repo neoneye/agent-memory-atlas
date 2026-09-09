@@ -111,14 +111,14 @@ skills as procedural memory, and a pluggable provider interface.</p>
               <strong>NousResearch/hermes-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35" title="1bbb6e5bce56e721ab685af4cd87df21bbff4d35">
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75" title="9e6c4100cbf5222fb473ecc2b51fd17874f6ee75">
               <span>Analyzed revision</span>
-              <code>1bbb6e5b…</code>
+              <code>9e6c4100…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-25</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -140,9 +140,9 @@ skills as procedural memory, and a pluggable provider interface.</p>
 <p>This report covers Hermes Agent's <strong>own built-in
 memory</strong>, not the third-party providers it can mount. The <a
 href="../holographic/">Holographic</a> report covers the first-party HRR
-plugin shipped in the same repository, read at an earlier pin than this
-one; this one covers the memory the agent has when no provider is
-configured at all.</p>
+plugin shipped in the same repository, at the same commit as this one;
+this one covers the memory the agent has when no provider is configured
+at all.</p>
 <p>Hermes takes a position almost nothing else in this atlas takes:
 <strong>memory is hard-bounded and frozen, because the prompt cache
 matters more than completeness.</strong></p>
@@ -266,16 +266,20 @@ session, because the prompt holds a frozen snapshot — so within a
 session the agent's memory and its context disagree, by design.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <ul>
-<li><code>tools/memory_tool.py</code> (1,258 lines):
-<code>MemoryStore</code>, the <code>memory</code> tool, budgets, drift
-detection, locking, and the write gate.</li>
-<li><code>agent/memory_manager.py</code> (1,241 lines): provider
+<li><code>tools/memory_tool.py</code> (397 lines): the
+<code>memory</code> tool surface, dispatch, and the write gate
+wrapper.</li>
+<li><code>tools/memory_tool_store.py</code> (417 lines):
+<code>MemoryStore</code> — the frozen snapshot, budgets, drift
+detection, locking, substring editing and batches.</li>
+<li><code>agent/memory_manager.py</code> (826 lines): provider
 registration and lifecycle orchestration.</li>
-<li><code>agent/memory_provider.py</code> (315 lines): the pluggable
+<li><code>agent/memory_provider.py</code> (165 lines): the pluggable
 provider ABC.</li>
-<li><code>hermes_state.py</code> (10,850 lines): SQLite session
-persistence, FTS5 schema, CJK tokenizer extension, corruption probes and
-repair.</li>
+<li><code>hermes_state.py</code> (1,386 lines) plus twenty-two
+<code>hermes_state_*.py</code> modules: SQLite session persistence, FTS5
+schema, CJK tokenizer extension, corruption probes and repair, each in
+its own file.</li>
 <li><code>tools/write_approval.py</code>: the shared allow/block/stage
 gate used by memory writes.</li>
 <li><code>tools/threat_patterns.py</code>: injection/exfiltration
@@ -300,10 +304,11 @@ flowchart TD
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <h3 id="the-frozen-snapshot">The frozen snapshot</h3>
-<p>Documented at the top of <code>tools/memory_tool.py</code>: memory
-files are rendered into the system prompt once, at session start.
-Mid-session mutations are durable on disk but invisible to the running
-session's prompt.</p>
+<p>Documented at the top of <code>tools/memory_tool.py</code> and
+implemented in <code>MemoryStore.load_from_disk</code>: memory files are
+rendered into the system prompt once, at session start. Mid-session
+mutations are durable on disk but invisible to the running session's
+prompt.</p>
 <p>The motivation is economic rather than epistemic — a stable prompt
 prefix keeps the provider's cache warm for the entire session — but it
 has a real safety consequence the code calls out: because the snapshot
@@ -320,12 +325,13 @@ per turn and cache-friendly; read-time fencing is more robust, because
 it does not depend on a pattern list being complete.</p>
 <h3 id="hard-budgets-and-in-turn-consolidation">Hard budgets and in-turn
 consolidation</h3>
-<p><code>MemoryStore.__init__(memory_char_limit=2200, user_char_limit=1375)</code>.
-In <code>add</code>, the prospective serialized total is computed before
-writing; on overflow the tool returns <code>success: False</code>
-together with <code>current_entries</code> and <code>usage</code>, and
-instructs the model to merge or remove entries and retry in the same
-turn.</p>
+<p><code>MemoryStore.__init__(memory_char_limit=2200, user_char_limit=1375)</code>,
+both overridable from config under <code>memory.memory_char_limit</code>
+/ <code>memory.user_char_limit</code>. In <code>add</code>, the
+prospective serialized total is computed before writing; on overflow the
+tool returns <code>success: False</code> together with
+<code>current_entries</code> and <code>usage</code>, and instructs the
+model to merge or remove entries and retry in the same turn.</p>
 <p><code>_MAX_CONSOLIDATION_FAILURES_PER_TURN = 3</code> bounds the
 resulting loop, so a model that cannot get under budget degrades instead
 of spinning.</p>
@@ -361,23 +367,28 @@ lock, permission blip, I/O error) would be rewritten down to just the
 new entry, wiping everything. The code refuses on read failure
 instead.</p>
 <h3 id="the-write-gate">The write gate</h3>
-<p><code>_apply_write_gate</code> routes every mutating memory action
-through <code>tools/write_approval.py</code>, which returns allow,
-block, or stage. Staged writes are persisted with an inline summary and
-a <code>pending_id</code> for later human approval — the same
-confirm-tier write-intent shape <a href="../rainbox/">RainBox</a> uses
-for high-impact assistant memory mutations, arrived at
-independently.</p>
+<p><code>_apply_write_gate</code> routes every mutating memory action —
+including a whole <code>apply_batch</code> as one unit — through
+<code>_gate_or_stage</code>, which calls
+<code>tools/write_approval.py</code> and gets back allow, block, or
+stage. Staged writes are persisted with an inline summary and a
+<code>pending_id</code> for later human approval, and
+<code>list_pending</code> / <code>get_pending</code> /
+<code>discard_pending</code> are the surface a person resolves them
+through — the same confirm-tier write-intent shape <a
+href="../rainbox/">RainBox</a> uses for high-impact assistant memory
+mutations, arrived at independently.</p>
 <p>One caveat is explicit in the code: if the gate module fails to
-import, the function returns <code>None</code> and the write proceeds.
-It <strong>fails open</strong> by design, with a comment saying so.</p>
+import, <code>_gate_or_stage</code> returns <code>None</code> and the
+write proceeds. It <strong>fails open</strong> by design, with a
+docstring saying so.</p>
 <h3 id="session-history">Session history</h3>
-<p><code>hermes_state.py</code> maintains session messages in SQLite
-with an FTS5 virtual table, and is unusually defensive about it: it
-detects legacy inline FTS schemas, probes for FTS5 availability and
-partial corruption with representative <code>MATCH</code> queries, caps
-user-controlled query input at 2,048 chars, can load a CJK tokenizer
-extension, and can drop and rebuild triggers.</p>
+<p>The session store maintains messages in SQLite with an FTS5 virtual
+table, and is unusually defensive about it: it detects legacy inline FTS
+schemas, probes for FTS5 availability and partial corruption with
+representative <code>MATCH</code> queries, caps user-controlled query
+input at 2,048 chars, can load a CJK tokenizer extension, and can drop
+and rebuild triggers.</p>
 <p>Retrieval here is lexical only. There is no vector index over session
 history and no fusion with the curated memory files — session search is
 a separate tool surface the model must choose to call.</p>
@@ -450,10 +461,11 @@ atomically, which is what makes the in-turn consolidate-then-retry flow
 practical.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The <code>MemoryProvider</code> ABC is the most explicit
-pluggable-memory contract in the atlas — roughly seventeen lifecycle
-members covering initialization, prompt blocks, prefetch, per-turn sync,
-tool schemas and dispatch, session end and switch, pre-compression
-extraction, delegation observation, config, backup paths, and shutdown.
+pluggable-memory contract in the atlas — twenty-one members covering
+identity and availability, initialization, prompt blocks, prefetch and
+its queued form, recall status, per-turn sync, tool schemas and
+dispatch, session end and switch, pre-compression extraction, delegation
+observation, config, backup paths, and shutdown.
 <code>MemoryManager</code> enforces a one-external-provider limit to
 prevent tool-schema bloat and conflicting backends.</p>
 <p>Hermes also exposes sessions to MCP clients via
@@ -478,7 +490,7 @@ prefix.</li>
 frozen snapshots make poisoning persistent.</li>
 <li><strong>The same scan runs again on every entry at load
 time</strong>, and this is the strongest thing in the file layer.
-<code>_sanitize_entries_for_snapshot</code> re-scans each entry at the
+<code>load_from_disk</code> re-scans each entry at the
 <code>strict</code> scope while building the frozen snapshot; a match is
 replaced <em>in the snapshot</em> by
 <code>[BLOCKED: &lt;file&gt; entry contained threat pattern(s): &lt;ids&gt;. Removed from system prompt; use memory(action=remove) to delete the original.]</code>
@@ -503,7 +515,10 @@ transient lock, a permission blip or an I/O error <em>"would be
 rewritten down to just the new entry — wiping every prior memory."</em>
 The reload returns a distinct <code>_READ_FAILED</code> sentinel and the
 add refuses.</li>
-<li>Atomic writes, cross-platform locking, cross-session re-read.</li>
+<li>Atomic writes, cross-platform locking, cross-session re-read, and
+order-preserving deduplication of entries at load, so a file that
+acquired a duplicate through an external append does not spend the
+budget twice.</li>
 <li>Extensive FTS5 corruption detection and repair in the session
 store.</li>
 <li>Profile isolation for multi-persona use.</li>
@@ -536,7 +551,10 @@ provider that durably checkpoints every successful
 host-normalized evidence list, with <code>require_checkpoint</code>
 propagating a failure instead of swallowing it. The host half is
 complete and tested. None of the eight shipped adapters declares version
-2 — the only declaration in the tree is a fake provider inside
+2 —
+<code>rg -n 'checkpoint_api_version|supports_checkpoint' plugins/memory/</code>
+returns nothing, the only declaration in the tree is a fake provider
+inside
 <code>tests/agent/test_pre_compress_checkpoint_contract.py</code>, and a
 sibling assertion pins the base class at 1. So every provider a user can
 actually mount is on best-effort semantics, and a pre-compression
@@ -554,7 +572,7 @@ curated memory, provider memory, and session history.</li>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>Memory-relevant suites include
-<code>tests/tools/test_memory_tool.py</code> (708 lines),
+<code>tests/tools/test_memory_tool.py</code> (851 lines),
 <code>tests/tools/test_memory_tool_import_fallback.py</code>,
 <code>tests/tools/test_write_approval.py</code>,
 <code>tests/tools/test_threat_patterns.py</code>,
@@ -677,6 +695,7 @@ ergonomic substring interface?</li>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
 <li>Curated memory store, budgets, drift, locking:
+<code>tools/memory_tool_store.py</code>; tool surface and gate wrapper:
 <code>tools/memory_tool.py</code>.</li>
 <li>Write gating and staging: <code>tools/write_approval.py</code>.</li>
 <li>Injection/exfiltration patterns:
@@ -684,16 +703,17 @@ ergonomic substring interface?</li>
 <li>Provider contract: <code>agent/memory_provider.py</code>;
 orchestration: <code>agent/memory_manager.py</code>.</li>
 <li>Load-time snapshot sanitization:
-<code>MemoryStore.load_from_disk</code> and
-<code>_sanitize_entries_for_snapshot</code> in
-<code>tools/memory_tool.py</code>.</li>
+<code>MemoryStore.load_from_disk</code> in
+<code>tools/memory_tool_store.py</code>.</li>
 <li>Checkpoint API versioning:
 <code>PRE_COMPRESS_CHECKPOINT_API_VERSION</code> in
 <code>agent/memory_provider.py</code>, consumed in
-<code>MemoryManager.on_pre_compress</code>.</li>
+<code>agent/conversation_compression.py</code> and
+<code>MemoryManager.supports_pre_compress_checkpoint</code>.</li>
 <li>Provider-agnostic retrieval query rewriting:
 <code>plugins/memory/query_rewrite.py</code>.</li>
-<li>Session persistence and FTS5: <code>hermes_state.py</code>.</li>
+<li>Session persistence and FTS5: <code>hermes_state.py</code> and the
+<code>hermes_state_*.py</code> modules beside it.</li>
 <li>Skills as procedural memory:
 <code>tools/skill_manager_tool.py</code>,
 <code>tools/skill_provenance.py</code>,
@@ -706,7 +726,44 @@ orchestration: <code>agent/memory_manager.py</code>.</li>
 <code>tests/agent/test_pre_compress_checkpoint_contract.py</code>,
 <code>tests/agent/test_memory_boundary_commit.py</code>.</li>
 </ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &#39;checkpoint_api_version|supports_checkpoint&#39; plugins/memory/    # 0: no shipped adapter opts into v2
+rg -n &#39;audit&#39; tools/memory_tool_store.py tools/memory_tool.py        # 0: no log covers memory mutations
+rg -n &#39;tombstone|rejected|superseded&#39; tools/memory_tool_store.py     # 0: a remove writes no record</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75"><code class="commit-id" title="9e6c4100cbf5222fb473ecc2b51fd17874f6ee75">9e6c4100…</code></a>
+— third reading, 7,841 commits past the previous pin, at the same commit
+as the <a href="../holographic/">Holographic</a> report so the two
+describe one repository in one state. Screened again before reading: one
+auto-run surface, twenty-one build-time execution surfaces, five
+unpinned surfaces and twenty manifests inside the seven-day cooldown;
+nothing was installed and no suite was run. The memory layer was split
+into more files without changing what it does —
+<code>tools/memory_tool.py</code> is now a 397-line tool surface over a
+417-line <code>tools/memory_tool_store.py</code>, and
+<code>hermes_state.py</code> is 1,386 lines beside twenty-two
+<code>hermes_state_*.py</code> siblings — so section 3 and the appendix
+are re-anchored and the load-time sanitization now lives in
+<code>load_from_disk</code> rather than a separately named helper.</p>
+<p>No published claim was wrong at this commit. Both marks were
+re-checked against the code rather than carried forward: the gate still
+returns allow, blocked or stage with <code>stage_write</code> recording
+an origin, still fails open when its module cannot import, and
+<code>TestLoadTimeSnapshotSanitization</code> still stands at
+<code>tests/tools/test_memory_tool.py:609-673</code> with its three
+paired cases. The fail-closed checkpoint contract still has no in-tree
+taker, re-established by search rather than by memory of the previous
+reading, and the search is now recorded in the appendix.</p>
+<p>New since the previous pin: entries are deduplicated at load,
+order-preserving and first-occurrence-wins, so an external append cannot
+spend the character budget twice; the ABC gained
+<code>unavailable_reason</code> and <code>recall_status</code> and now
+carries twenty-one members; the character budgets are configurable
+rather than fixed. <code>tombstone</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>bitemporal</code> remain absent for the reasons the previous
+reading gave, all of which still hold.</p>
 <p><strong>2026-08-25</strong> — <a
 href="https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35"><code class="commit-id" title="1bbb6e5bce56e721ab685af4cd87df21bbff4d35">1bbb6e5b…</code></a>
 — second reading, 7,068 commits past the previous pin in under a month,

@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: NousResearch/hermes-agent
 source_url: https://github.com/NousResearch/hermes-agent
-revision: 0fa5e41c86f022bba147797849f0b44865721476
-revision_url: https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476
-analyzed_at: 2026-07-27
+revision: 9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
+revision_url: https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
+analyzed_at: 2026-09-09
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -31,7 +31,7 @@ matrix:
 
 Holographic is the first-party memory provider shipped inside [Hermes Agent](../hermes-agent/) at `plugins/memory/holographic/`, whose own built-in memory — what the agent has when no provider is mounted — is reported separately. It is the only system in this atlas built on a **vector-symbolic architecture**: facts are encoded as Holographic Reduced Representation (HRR) phase vectors, and retrieval uses algebraic `bind`/`unbind`/`bundle` operations rather than a learned embedding model.
 
-The whole plugin is roughly 2,000 lines across four files. That compactness is a feature: unlike most systems here, the entire memory model can be read in an afternoon.
+The whole plugin is 912 lines across four files. That compactness is a feature: unlike most systems here, the entire memory model can be read in an afternoon.
 
 Two things make it worth studying:
 
@@ -41,7 +41,7 @@ Two things make it worth studying:
 Two things make it a cautionary example, and they are more instructive than the strengths:
 
 - **Trust is one float doing two jobs.** `trust_score` is simultaneously epistemic confidence and retrieval strength; the ranker multiplies it straight into relevance (`score = relevance * trust_score`). This is precisely the split that [Verel](../verel/) and [RainBox](../rainbox/) treat as foundational.
-- **User feedback silently deletes memory.** `fact_feedback` moves trust by +0.05 (helpful) or −0.10 (unhelpful), and both search paths default to `min_trust=0.3`. A fact created at the default 0.5 trust falls below the retrieval floor after **three** unhelpful ratings and becomes permanently invisible — with no tombstone, no review queue, and no record that it was ever suppressed. The atlas's "telemetry mistaken for truth" antipattern is not merely present here; it is the trust model.
+- **User feedback silently deletes memory.** `fact_feedback` moves trust by +0.05 (helpful) or −0.10 (unhelpful), and both search paths default to `min_trust=0.3`. A fact created at the default 0.5 trust falls below the retrieval floor after **three** unhelpful ratings. The row survives and `list` still returns it, because `list_facts` alone defaults `min_trust` to 0.0 — but no recall path a model reaches for does, and nothing records that a suppression occurred: no tombstone, no review queue, no counter. The atlas's "telemetry mistaken for truth" antipattern is not merely present here; it is the trust model.
 
 The plugin also demonstrates a failure mode specific to plugin-shaped memory: it mirrors the host's built-in memory writes into its own store (`on_memory_write`), creating two copies of the same content with independent lifecycles and no reconciliation or deletion propagation.
 
@@ -132,10 +132,10 @@ before the model sees it.
 
 Core files, all under `plugins/memory/holographic/`:
 
-- `holographic.py` (203 lines): the HRR algebra — `encode_atom`, `bind`, `unbind`, `bundle`, `similarity`, `encode_text`, `encode_fact`, `snr_estimate`. Pure NumPy, no persistence.
-- `store.py` (644 lines): SQLite schema, `MemoryStore` CRUD, entity extraction/resolution, trust feedback, HRR vector computation, bank rebuilds, and a process-wide shared-connection registry.
-- `retrieval.py` (654 lines): `FactRetriever` with `search`, `probe`, `related`, `reason`, and `contradict`, plus FTS5 query sanitization and Jaccard reranking.
-- `__init__.py` (465 lines): the `HolographicMemoryProvider` implementation of Hermes's `MemoryProvider` ABC, tool schemas, and end-of-session regex extraction.
+- `holographic.py` (125 lines): the HRR algebra — `encode_atom`, `bind`, `unbind`, `bundle`, `similarity`, `encode_text`, `encode_fact`, `snr_estimate`, and the `phases_to_bytes`/`bytes_to_phases` blob codec. NumPy is imported behind a `try`, and every algebra entry point calls `_require_numpy()`.
+- `store.py` (308 lines): SQLite schema, `MemoryStore` CRUD, entity extraction/resolution, trust feedback, HRR vector computation, bank rebuilds, and a process-wide shared-connection registry.
+- `retrieval.py` (215 lines): `FactRetriever` with `search`, `probe`, `related`, `reason`, and `contradict`, plus FTS5 query sanitization and Jaccard reranking.
+- `__init__.py` (264 lines): the `HolographicMemoryProvider` implementation of Hermes's `MemoryProvider` ABC, tool schemas, and end-of-session regex extraction.
 
 ```mermaid
 %% caption: the SQLite tables, the derived vectors and per-category banks, and the retriever that assembles the prefetch block
@@ -169,7 +169,7 @@ The algebra is phase arithmetic: `bind` is `(a + b) % 2π`, `unbind` is `(a - b)
 
 Deduplication is a `UNIQUE` constraint on exact `content`. On collision the existing `fact_id` is returned unchanged. There is no semantic dedupe, no subject/predicate key, and no conflict detection: two facts that contradict each other are simply two rows, both at trust 0.5.
 
-Entity extraction is regex-only (`_extract_entities`): capitalized multi-word phrases, double-quoted terms, single-quoted terms, and `X aka Y` patterns. Note that `_RE_CAPITALIZED` requires **two or more** capitalized words, so single-token entities like `Python` or `Copenhagen` are never extracted unless the user quotes them. Since `probe`, `related`, `reason`, and `contradict` all depend on entity links, this quietly caps the reach of every algebraic action.
+Entity extraction is regex-only (`_extract_entities`): capitalized multi-word phrases, double-quoted terms, single-quoted terms, and `X aka Y` patterns. Note that the first pattern in `_RE_SINGLE_ENTITY` requires **two or more** capitalized words, so single-token entities like `Python` or `Copenhagen` are never extracted unless the user quotes them. Since `probe`, `related`, `reason`, and `contradict` all depend on entity links, this quietly caps the reach of every algebraic action.
 
 `_resolve_entity` matches with `SELECT entity_id FROM entities WHERE name LIKE ?`. `LIKE` treats `%` and `_` as wildcards and the parameter is not escaped, so an entity containing an underscore can silently resolve to a different entity — distinct entities merge without warning.
 
@@ -192,7 +192,7 @@ _HELPFUL_DELTA   =  0.05
 _UNHELPFUL_DELTA = -0.10
 ```
 
-The asymmetry is deliberate and sensible in isolation. The problem is what it interacts with: `min_trust` defaults to 0.3 in `search_facts`, `FactRetriever.search`, and the exposed tool schema. Starting from `default_trust=0.5`, three unhelpful ratings put a fact at 0.2 — below every default retrieval floor. The row still exists and `list` with `min_trust=0` still shows it, but no ordinary recall path will ever return it again, and nothing records that a suppression occurred.
+The asymmetry is deliberate and sensible in isolation. The problem is what it interacts with: `min_trust` defaults to 0.3 in `FactRetriever.search`, in the `fact_store` tool schema, and in the provider's own `min_trust_threshold`, which is what `prefetch` passes. Starting from `default_trust=0.5`, three unhelpful ratings put a fact at 0.2 — below every one of those floors. `list_facts` is the single exception, defaulting `min_trust` to 0.0, so the row is still enumerable by a caller that asks for it explicitly. No path the model takes to *recall* something will return it again, and nothing records that a suppression occurred.
 
 ### Auto-extraction (`__init__.py:_auto_extract_facts`)
 
@@ -200,7 +200,7 @@ Disabled by default (`auto_extract: false`). When enabled, `on_session_end` scan
 
 This is zero-LLM capture, which the atlas generally endorses — but the stored artifact is conversational prose rather than a normalized claim, which then degrades the content-vector comparisons that `contradict` depends on.
 
-The code carries two revealing guards. Comments cite issues #57682 and #57690: the context compactor's own handoff summaries are injected as `role="user"` messages, their prose reliably matched the decision patterns, and the compactor's generated output was consequently stored as durable "facts" on every context rollover. The fix distinguishes a merged summary's genuine pre-delimiter user content from its generated suffix. This is a clean, concrete instance of derived text laundering itself back into an evidence store — a feedback loop any system with automatic capture should test for explicitly.
+The code carries two revealing guards, and the incident behind them is written down in `tests/plugins/memory/test_holographic_auto_extract.py`, whose header names #57682: the context compactor's own handoff summaries are injected as `role="user"` messages, their prose reliably matched the decision patterns, and the compactor's generated output was consequently stored as durable "facts" on every context rollover. The extractor calls `is_compaction_summary_message` and splits a merged row on `_MERGED_SUMMARY_DELIMITER`, harvesting only the genuine user text that precedes it. Six committed cases cover it, including one asserting that a real user message sitting beside a summary is extracted anyway — the positive control that stops the guard from passing by suppressing everything. This is a clean, concrete instance of derived text laundering itself back into an evidence store — a feedback loop any system with automatic capture should test for explicitly.
 
 ## 5. Memory Data Model
 
@@ -208,9 +208,11 @@ Storage is a single SQLite database (`$HERMES_HOME/memory_store.db`) in WAL mode
 
 The concurrency engineering is the most mature part of the codebase. A process-wide `_shared` registry keyed on the resolved database path gives every `MemoryStore` instance one connection and one re-entrant lock, refcounted so closing one instance cannot pull the connection out from under a sibling. The connection uses `isolation_level=None` (autocommit) specifically so a write that raises mid-method cannot strand a write transaction. The accompanying comment explains the production failure it fixes: multiple providers in one process — the main agent plus every `delegate_task` subagent — raced as independent WAL writers until one pinned the write lock and starved the rest.
 
+Refcounting has one deliberate escape hatch. `release_all_under(directory)` force-closes every shared connection whose database sits under a directory, because refcounted closing is precisely wrong when the directory is being deleted: on Windows the desktop's `serve` process holds `memory_store.db` open for every known profile, and `rmtree` of a profile fails with `WinError 32` while any handle survives. The docstring names the issue (#88347) and states the trade — later use by a stale holder is expected to fail, since the directory is going away — and `close()` carries the matching guard, popping the registry entry only when it is still the entry this instance registered, so a late close cannot evict a fresh store that reopened the same path.
+
 What the data model does **not** have is equally important:
 
-- **No scope of any kind.** `store.py` describes itself as a "Single-user Hermes memory store plugin". There is no user, agent, project, session, or tenant column. `category` is a four-value enum used for partitioning banks, not for access control.
+- **No scope of any kind.** `store.py` describes itself as a "single-user Hermes memory plugin". There is no user, agent, project, session, or tenant column. `category` is a four-value enum used for partitioning banks, not for access control.
 - **No status or lifecycle state.** Nothing distinguishes candidate from verified from rejected from stale.
 - **No provenance.** A fact records no source message, actor, or session. Once written, a model-inferred fact, a mirrored built-in memory write, and an explicit user statement are indistinguishable.
 - **No supersession or correction chain.** `update_fact` mutates the row in place.
@@ -223,7 +225,9 @@ Three caveats matter for anyone borrowing it.
 
 **Trust is baked into relevance.** `score = relevance * trust_score` means a well-matched but lightly-downvoted fact loses to a poorly-matched trusted one, and there is no way to ask "what is the most relevant memory regardless of how it has been rated?"
 
-**HRR contributes a neutral 0.5 when unavailable.** If NumPy is missing, `FactRetriever` silently redistributes weights to `fts=0.6, jaccard=0.4` and `is_available()` still returns `True`. The provider continues to advertise itself as "holographic" while running as an ordinary lexical store. Individual facts lacking a vector also score a neutral 0.5 rather than being excluded.
+**HRR contributes a neutral 0.5 when unavailable.** If NumPy is missing, `FactRetriever` silently redistributes weights to `fts=0.6, jaccard=0.4`, and `is_available()` returns `True` with the comment *"SQLite is always available, numpy is optional"*. The provider continues to advertise itself as "holographic" while running as an ordinary lexical store: `_compute_hrr_vector` and `_rebuild_bank` return early, `probe`, `related` and `reason` fall back to `search`, and `contradict` — the action with no lexical equivalent — returns an empty list, which is indistinguishable from finding no contradictions. Individual facts lacking a vector also score a neutral 0.5 rather than being excluded.
+
+Vectors are stored as float32 behind an `HRR1` prefix, half the size of the float64 blobs the schema originally held, and `bytes_to_phases` still reads the unprefixed legacy layout. The one ambiguous case is handled rather than ignored: at `dim=1`, a prefixed float32 blob and a raw float64 blob are both eight bytes, so `phases_to_bytes` writes legacy float64 there to keep the decoder unambiguous.
 
 **Bank capacity is computed and discarded.** `snr_estimate(dim, n_items)` returns `sqrt(dim/n_items)` and logs a warning below SNR 2.0 — i.e. above `dim/4` = 256 facts per category at the default dimension. But `_rebuild_bank` calls it purely for the side effect and ignores the return value, so saturation produces a log line rather than a guard, a fallback, or a field in the response. The module's own `bundle` docstring gives a stricter bound still — "O(sqrt(dim)) items", about 32 at dim=1024 — so the two capacity estimates in the same file disagree by roughly 8×. Neither is enforced.
 
@@ -235,11 +239,11 @@ Three write paths converge on `add_fact` with no shared policy layer:
 2. **Mirrored host writes** — `on_memory_write` copies every built-in Hermes memory `add` into the fact store, mapping `target == "user"` to category `user_pref`.
 3. **End-of-session regex extraction** — when `auto_extract` is enabled.
 
-None of these is distinguished in the stored row. Path 2 is the most consequential: the same content now exists in Hermes's `MEMORY.md`/`USER.md` **and** in `memory_store.db`, with independent lifecycles. Editing or deleting the Markdown does not remove the mirrored fact, because `on_memory_write` only handles `action == "add"` — the `remove` action documented in the ABC is ignored by this provider. Host-level forgetting therefore does not propagate.
+None of these is distinguished in the stored row. Path 2 is the most consequential: it leaves the same content in Hermes's `MEMORY.md`/`USER.md` **and** in `memory_store.db`, with independent lifecycles. Editing or deleting the Markdown does not remove the mirrored fact, because `on_memory_write` only handles `action == "add"` — the `remove` action documented in the ABC is ignored by this provider. Host-level forgetting therefore does not propagate.
 
 ## 8. Agent Integration
 
-Holographic implements Hermes's `MemoryProvider` ABC (`agent/memory_provider.py`, 315 lines), which is the most explicit pluggable-memory-provider contract in the atlas. It defines roughly seventeen lifecycle members: `initialize`, `system_prompt_block`, `prefetch`, `queue_prefetch`, `sync_turn`, `get_tool_schemas`, `handle_tool_call`, `shutdown`, `on_turn_start`, `on_session_end`, `on_session_switch`, `on_pre_compress`, `on_delegation`, `on_memory_write`, `get_config_schema`, `save_config`, and `backup_paths`.
+Holographic implements Hermes's `MemoryProvider` ABC (`agent/memory_provider.py`, 165 lines), which is the most explicit pluggable-memory-provider contract in the atlas. It defines twenty-one members: `name`, `is_available`, `unavailable_reason`, `initialize`, `system_prompt_block`, `prefetch`, `queue_prefetch`, `recall_status`, `sync_turn`, `get_tool_schemas`, `handle_tool_call`, `shutdown`, `on_turn_start`, `on_session_end`, `on_session_switch`, `on_pre_compress`, `on_delegation`, `on_memory_write`, `get_config_schema`, `save_config`, and `backup_paths`. Holographic implements eleven of them.
 
 The same directory ships first-party adapters for every other provider Hermes supports — `byterover`, `hindsight`, `honcho`, `mem0`, `openviking`, `retaindb`, `supermemory` — so the *adapters* are reviewable even when the backing service is not. `MemoryManager` enforces a one-external-provider limit to avoid tool-schema bloat.
 
@@ -256,13 +260,13 @@ Strengths:
 
 - Deterministic, reproducible vectors with no embedder version to track.
 - Serious, well-documented SQLite concurrency handling with refcounted shared connections and autocommit.
-- Deterministic recovery path: `rebuild_all_vectors()` recomputes every vector and bank from stored text, so the vector layer is a true rebuildable projection.
+- Text is canonical and vectors are derived: `update_fact` recomputes a fact's vector from its new content, and `_rebuild_bank` rebuilds a category bank from the fact vectors it holds, so a corrupt bank repairs itself on the next write to that category. There is no wholesale recomputation — nothing in the tree recomputes the vectors of facts that have none, and `FactRetriever.search` carries a comment about "stores whose `hrr_vector` was never backfilled", so a database written without NumPy present stays vectorless until each row is updated by hand.
 - Graceful degradation when NumPy is absent.
 - `contradict` gives operators a way to *discover* inconsistency, which most systems lack entirely.
 
 Gaps, roughly in order of severity:
 
-- **Feedback is deletion.** Three downvotes suppress a fact permanently with no tombstone, review surface, or audit record. "Unhelpful" and "false" are conflated.
+- **Feedback is suppression.** Three downvotes put a fact under every retrieval floor with no tombstone, review surface, or audit record. It is recoverable in principle — `list` still enumerates it and a helpful rating adds 0.05 — but nothing surfaces a suppressed fact for that rating to be given, so recovery depends on an operator already knowing the row is there. "Unhelpful" and "false" are conflated.
 - **One score for truth and usefulness.** No separation of epistemic confidence from retrieval strength.
 - **No scope.** Single-user by construction; nothing prevents facts from one project or persona surfacing in another.
 - **No provenance.** Source, actor, and session are not recorded, so a wrong fact cannot be traced or explained.
@@ -275,15 +279,17 @@ The `contradict` docstring asserts "no other memory system does this". Within th
 
 ## 10. Tests, Evals, and Benchmarks
 
-Holographic-specific coverage is 599 lines across four files, plus 1,662 lines exercising the provider ABC:
+Holographic-specific coverage is 736 lines across four files, plus 1,498 lines exercising the provider ABC:
 
-- `tests/plugins/memory/test_holographic_store.py` (243 lines)
-- `tests/plugins/memory/test_holographic_auto_extract.py` (170 lines)
-- `tests/plugins/memory/test_holographic_retrieval.py` (129 lines)
-- `tests/plugins/memory/test_holographic_shutdown_closes_db.py` (57 lines)
-- `tests/agent/test_memory_provider.py` (1,662 lines)
+- `tests/plugins/memory/test_holographic_retrieval.py` (240 lines)
+- `tests/plugins/memory/test_holographic_store.py` (227 lines)
+- `tests/plugins/memory/test_holographic_auto_extract.py` (139 lines)
+- `tests/plugins/memory/test_holographic_shutdown_closes_db.py` (130 lines)
+- `tests/agent/test_memory_provider.py` (1,498 lines)
 
-The suites were not run for this review. Coverage is oriented toward CRUD, retrieval mechanics, the auto-extract contamination guards, and connection shutdown — the areas where production bugs were actually found. There is **no committed retrieval-quality benchmark**, and no evaluation of whether HRR similarity outperforms the FTS5 and Jaccard signals it is fused with. Given that HRR carries only 0.3 of the relevance weight and falls back to a neutral constant when unavailable, its measured contribution to recall is currently unknown.
+The suites were not run for this review. Coverage is oriented toward the shared-connection registry, encoding determinism, FTS5 query sanitization, the auto-extract contamination guards, and connection shutdown — the areas where production bugs were actually found. Two of them are worth naming because of what they assert. `test_search_results_bit_identical_to_unhoisted` pins an optimization against its own naive form, so hoisting the query vector out of the scoring loop cannot silently change a ranking; `test_search_without_vectors_never_encodes` asserts the lazy path is actually lazy on a store with no vectors at all.
+
+What is not covered is the trust model. No test in the plugin's suites calls `record_feedback` or exercises the `min_trust` floor, so the behaviour this report treats as the system's central hazard — three ratings removing a fact from every recall path — has no committed case in either direction. `contradict`, the plugin's headline action, has none either. There is **no committed retrieval-quality benchmark**, and no evaluation of whether HRR similarity outperforms the FTS5 and Jaccard signals it is fused with. Given that HRR carries only 0.3 of the relevance weight and falls back to a neutral constant when unavailable, its measured contribution to recall is currently unknown.
 
 The README documents configuration and the nine `fact_store` actions but no decay, forgetting, or capacity guidance. Two open issues in the tracker ([#4781](https://github.com/NousResearch/hermes-agent/issues/4781), [#31263](https://github.com/NousResearch/hermes-agent/issues/31263)) report that the plugin registers but its tools or context injection do not fire; those threads were not read for this review, and the titles alone do not establish a reproducible defect in the code inspected here.
 
@@ -296,7 +302,7 @@ The README documents configuration and the nine `fact_store` actions but no deca
 - **Contradiction as a queryable action.** Entity-overlap × content-divergence is a cheap, model-free heuristic for surfacing inconsistency, and belongs in more systems as a review aid.
 - **FTS5 query sanitization.** Dropping stopwords and OR-joining phrase-quoted tokens is a small fix for a real and widespread recall bug in FTS5-backed memory.
 - **Refcounted shared SQLite connections.** The registry in `store.py` is a reusable answer to multi-writer WAL contention when subagents share a process.
-- **Rebuildable vector projections.** `rebuild_all_vectors()` treats text as canonical and vectors as derived.
+- **Vectors as a derived projection.** Content is canonical and every vector is recomputed from it, so the vector layer can be thrown away and rebuilt — worth keeping even though this tree ships no wholesale rebuild to invoke.
 
 ### Avoid
 
@@ -345,6 +351,27 @@ Do not copy:
 - Sibling provider adapters: `plugins/memory/{byterover,hindsight,honcho,mem0,openviking,retaindb,supermemory}/`.
 - Tests: `tests/plugins/memory/test_holographic_*.py`, `tests/agent/test_memory_provider.py`.
 
+**Searches recorded for the negative claims**
+
+```sh
+rg -n 'tombstone|deleted_at|is_deleted|suppress' plugins/memory/holographic/          # 0: removal writes no record
+rg -n 'user_id|project_id|session_id|scope' plugins/memory/holographic/store.py       # 0: category is the only partition
+rg -n 'audit' plugins/memory/holographic/                                             # 0: no mutation log
+rg -n 'record_feedback|min_trust|unhelpful' tests/plugins/memory/test_holographic_*.py  # 1, a re-implementation of the
+                                                                                      #    scoring formula inside a
+                                                                                      #    determinism test; no case
+                                                                                      #    exercises the trust floor
+rg -n 'contradict' tests/                                                             # 0 under tests/plugins/memory/
+rg -n 'rebuild_all_vectors' .                                                         # 0: no wholesale vector rebuild
+rg -n 'search_facts' .                                                                # 0: the store exposes list_facts
+```
+
 ## History
+
+**2026-09-09** — [`9e6c4100cbf5222fb473ecc2b51fd17874f6ee75`](https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75) — second reading, 14,909 commits past the previous pin, at the same commit as the [Hermes Agent](../hermes-agent/) report so the two describe one repository in one state. Screened again before reading: one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty manifests inside the seven-day cooldown; nothing was installed and no suite was run. The plugin was compacted from roughly 2,000 lines to 912 with the mechanism intact — schema, trust deltas, fusion weights, the three write paths and the per-write bank rebuild are unchanged, and every file line count in section 3 is corrected.
+
+One published strength was wrong at this commit and is removed. `rebuild_all_vectors()` no longer exists anywhere in the tree, so the report's claim of a deterministic wholesale recovery path — cited in section 9 and again under Steal — no longer holds. What survives is the weaker and still useful property: content is canonical, `update_fact` recomputes a fact's vector, and `_rebuild_bank` rebuilds a category from its members, but a store whose rows never got vectors has nothing to backfill them. A second claim is narrowed rather than corrected: section 1 called a downvoted fact permanently invisible, which section 4 of the same report already contradicted, since `list_facts` alone defaults `min_trust` to 0.0. The accurate version is that no recall path returns it and nothing surfaces it for the rating that would bring it back.
+
+New since the previous pin, and none of it moves a mark: NumPy is now optional, with the algebra behind `_require_numpy()` and `contradict` returning an empty list rather than degrading — indistinguishable from finding no contradictions; vectors are stored as prefixed float32 with the `dim=1` size collision handled explicitly; `release_all_under` force-closes shared connections under a directory so a Windows profile delete cannot fail on an open handle (#88347); the FTS5 sanitizer gained a stopword list; `contradict` gained a 500-row comparison guard. The compaction-summary contamination the previous reading described from code comments is now pinned by six committed cases whose file header names the issue, including a positive control asserting that genuine user messages beside a summary are still harvested. `tombstone`, `trust_state`, `scope_enforced`, `audit_log`, `bitemporal`, `human_review` and `negative_eval` remain absent: removal deletes a row and writes nothing, trust is a float and not a state, `category` partitions banks rather than filtering reads, no log covers fact mutations, and no committed case asserts that anything must not be retrieved.
 
 **2026-07-27** — [`0fa5e41c86f022bba147797849f0b44865721476`](https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476) — first reading.

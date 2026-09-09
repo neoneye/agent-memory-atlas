@@ -5017,7 +5017,7 @@ the same shape, and nothing in this corpus has one.
 - `voyager`: `skills[name] = {code, description}` in `voyager/agents/skill.py`.
 - `generative-agents`: `ConceptNode` in `persona/memory_structures/associative_memory.py`; weights in `scratch.py`.
 - `holographic`: `_SCHEMA` in `plugins/memory/holographic/store.py`; HRR encoding in `holographic.py`.
-- `hermes-agent`: `MemoryStore` in `tools/memory_tool.py`; provider contract in `agent/memory_provider.py`.
+- `hermes-agent`: `MemoryStore` in `tools/memory_tool_store.py`; provider contract in `agent/memory_provider.py`.
 - `openviking`: `MemoryData` / `MemoryTypeSchema` in `openviking/session/memory/dataclass.py`; level field in `openviking/storage/collection_schemas.py`.
 - `redis-agent-memory-server`: `V0/agent_memory_server/models.py`.
 - `byterover`: `src/agent/core/domain/memory/types.ts`; `ContextData` in `src/server/core/domain/knowledge/markdown-writer.ts`.
@@ -5062,7 +5062,7 @@ the same shape, and nothing in this corpus has one.
 - `voyager`: `SkillManager.add_new_skill()` in `voyager/agents/skill.py`, gated by `if info["success"]` in `voyager/voyager.py`.
 - `generative-agents`: `add_event()`, `add_thought()`, `add_chat()` in `associative_memory.py`.
 - `holographic`: `add_fact()` and `_rebuild_bank()` in `plugins/memory/holographic/store.py`; `_auto_extract_facts()` in `__init__.py`.
-- `hermes-agent`: `MemoryStore.add/replace/remove` and `_apply_write_gate()` in `tools/memory_tool.py`.
+- `hermes-agent`: `MemoryStore.add/replace/remove` in `tools/memory_tool_store.py`, gated by `_apply_write_gate()` in `tools/memory_tool.py`.
 - `openviking`: `openviking/session/memory/extract_loop.py`, `memory_updater.py`, and `memory_isolation_handler.py`.
 - `redis-agent-memory-server`: `promote_working_memory_to_long_term()` and the dedupe chain in `V0/agent_memory_server/long_term_memory.py`.
 - `byterover`: `MemoryDeduplicator.deduplicate()` in `src/agent/infra/memory/memory-deduplicator.ts`; `resolveStructuralLoss()` in `knowledge/conflict-resolver.ts`.
@@ -5107,7 +5107,7 @@ the same shape, and nothing in this corpus has one.
 - `voyager`: `retrieve_skills()` in `voyager/agents/skill.py`.
 - `generative-agents`: `new_retrieve()` and the extractors in `persona/cognitive_modules/retrieve.py`.
 - `holographic`: `FactRetriever.search/probe/related/reason/contradict` in `plugins/memory/holographic/retrieval.py`.
-- `hermes-agent`: FTS5 session search in `hermes_state.py`; curated memory needs no retrieval.
+- `hermes-agent`: FTS5 session search in `hermes_state_search.py`; curated memory needs no retrieval.
 - `openviking`: `openviking/retrieve/hierarchical_retriever.py`, `type_quota_recall.py`, `memory_lifecycle.py`.
 - `redis-agent-memory-server`: `search_long_term_memories()` and `rerank_with_recency` in `V0/agent_memory_server/long_term_memory.py`.
 - `byterover`: `ListMemoriesOptions` filtering in `src/agent/infra/memory/memory-manager.ts`.
@@ -5152,7 +5152,7 @@ the same shape, and nothing in this corpus has one.
 - `voyager`: retrieved code plus the unbounded `programs` property injected into the action prompt.
 - `generative-agents`: top-30 node descriptions, no token budget.
 - `holographic`: `prefetch()` in `plugins/memory/holographic/__init__.py` — top-5, unfenced.
-- `hermes-agent`: `format_for_system_prompt()` / `_render_block()` in `tools/memory_tool.py`, rendered once per session.
+- `hermes-agent`: `format_for_system_prompt()` / `_render_block()` in `tools/memory_tool_store.py`, rendered once per session.
 - `openviking`: `QueryResult` from the hierarchical retriever; final placement is integration-owned.
 - `redis-agent-memory-server`: `V0/agent_memory_server/summary_views.py` and API response shaping.
 - `byterover`: caller-owned after listing.
@@ -6732,8 +6732,7 @@ Privacy/deletion:
 - [topoteretes/cognee](https://github.com/topoteretes/cognee) at [`325acf356a81545b9892f19ab1ea7b61c51a776b`](https://github.com/topoteretes/cognee/commit/325acf356a81545b9892f19ab1ea7b61c51a776b)
 - [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) at [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe)
 - [agiresearch/A-mem](https://github.com/agiresearch/A-mem) at [`ceffb860f0712bbae97b184d440df62bc910ca8d`](https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d)
-- [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) at [`1bbb6e5bce56e721ab685af4cd87df21bbff4d35`](https://github.com/NousResearch/hermes-agent/commit/1bbb6e5bce56e721ab685af4cd87df21bbff4d35) — Hermes's own built-in memory. Read only; one auto-run surface, twenty build-time execution surfaces, five unpinned surfaces and seven files inside the seven-day cooldown, a far wider surface than the same repository presented a month earlier. Nothing was installed and no suite was run
-- [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) at [`0fa5e41c86f022bba147797849f0b44865721476`](https://github.com/NousResearch/hermes-agent/commit/0fa5e41c86f022bba147797849f0b44865721476) — the `holographic` HRR plugin shipped in the same tree, listed separately because it is a second report on one repository and the two are pinned apart
+- [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) at [`9e6c4100cbf5222fb473ecc2b51fd17874f6ee75`](https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75) — one commit carrying two reports: Hermes's own built-in memory, and the `holographic` HRR plugin shipped in the same tree. Read only; one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty files inside the seven-day cooldown. Nothing was installed and no suite was run
 - [volcengine/OpenViking](https://github.com/volcengine/OpenViking) at [`c67222c3d46de4874eed65af8918fc55513812ef`](https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef)
 - [redis/agent-memory-server](https://github.com/redis/agent-memory-server) at [`886437963dc02289e828872f0ae21fdaa734c337`](https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337)
 - [campfirein/cipher](https://github.com/campfirein/cipher) at [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c)
