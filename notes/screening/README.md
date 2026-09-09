@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 252 of 393 screened at the report's current pin.**
+**Progress: 253 of 393 screened at the report's current pin.**
 
 13 further record(s) describe a revision the report has since moved
-off, and 128 report(s) have no record at all.
+off, and 127 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 98 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 109 |
-| Repositories with build-time execution (`EXEC`) | 186 |
+| Repositories with an auto-run surface (`RUNS`) | 99 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 110 |
+| Repositories with build-time execution (`EXEC`) | 187 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -126,5 +126,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
+| [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 

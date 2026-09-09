@@ -6,10 +6,12 @@ root: ../..
 page_kind: system
 source_name: "haagndaazer/vibe-cognition"
 source_url: https://github.com/haagndaazer/vibe-cognition
-revision: 7cee90c57ad934a76ed852132b4a8ef055f64f5b
-revision_url: https://github.com/haagndaazer/vibe-cognition/commit/7cee90c57ad934a76ed852132b4a8ef055f64f5b
-analyzed_at: 2026-08-09
+revision: 09126b69a91f1a3f5691159a4785b35691b70658
+revision_url: https://github.com/haagndaazer/vibe-cognition/commit/09126b69a91f1a3f5691159a4785b35691b70658
+analyzed_at: 2026-09-09
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "two append-only journals, one per store | src/vibe_cognition/cognition/storage.py:309,347,376,404,443,456,942, src/vibe_cognition/cognition/people_facts.py | every graph mutation calls `_append_journal(action, data)` — add_node, add_edge, update_node, remove_node and both remove_edge paths — so the record is written by the mutating method rather than by a caller who might forget, and a `remove_node` appends a tombstone rather than deleting the history. Env facts are a second store with a second delta journal, and the module states why it is separate: the main journal's `update_node` convention writes the entire metadata dict per call, so accumulating per-fact history there would be O(n squared), and the delta shape makes that structurally impossible rather than merely avoided. The mark covers both stores, by two mechanisms | no committed case asserts that a mutation without a journal line fails"
 stack_storage: "chroma, files"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -305,9 +307,10 @@ memory in this atlas.
 ## Appendix: File Index
 
 **Storage and journal** — `src/vibe_cognition/cognition/storage.py`
-(`_append_journal` `:883`, `add_node` `:251`, `update_node` `:317`,
-`remove_node` `:322-350`, the bookkeeping-set comments `:100-124`, the unsynced
-`graph` property `:136`), `cognition/journal_io.py`
+(`_append_journal` `:942`, its six call sites `:309,347,376,404,443,456`,
+`add_node` `:274`, `update_node` `:360`, `remove_node` `:381`, the env-fact
+delegates `:179,188`), `cognition/journal_io.py`,
+`cognition/people_facts.py` (the second journal)
 
 **Model** — `src/vibe_cognition/cognition/models.py` (`CognitionNodeType`
 `:14-42`, `SENIORITY_LEVELS` `:45`, `CognitionEdgeType` and the retired
@@ -325,5 +328,11 @@ memory in this atlas.
 **Dashboard** — `src/vibe_cognition/dashboard/`
 
 ## History
+
+**2026-09-09** — [`09126b69a91f1a3f5691159a4785b35691b70658`](https://github.com/haagndaazer/vibe-cognition/commit/09126b69a91f1a3f5691159a4785b35691b70658) — second reading, 51 commits on: 106 files, 9,653 insertions, of which the appendix paths take 61 lines. Screened before reading; nothing was installed and no suite was run.
+
+The journal is unchanged and its anchors are re-derived: `_append_journal` moved from `:883` to `:942`, and its six call sites are now listed rather than left implicit, so a reader can check that every mutating method writes its own record instead of trusting a caller to.
+
+A second durable store arrived, and it is why the mark's evidence record names two mechanisms. `set_env_fact`, `delete_env_fact` and `clear_env_facts` delegate to a `PeopleFactsRegistry` and do **not** call `_append_journal` — which looks like a gap until the module explains itself. It keeps its own append-only delta journal, deliberately: the main journal's `update_node` convention writes the entire metadata dict on every call, so accumulating per-fact history there would be quadratic, and the delta shape makes that structurally impossible rather than merely avoided. Two stores, two journals, one stated reason.
 
 **2026-08-09** — [`7cee90c57ad934a76ed852132b4a8ef055f64f5b`](https://github.com/haagndaazer/vibe-cognition/commit/7cee90c57ad934a76ed852132b4a8ef055f64f5b) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
