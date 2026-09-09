@@ -9,15 +9,15 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 250 of 393 screened at the report's current pin.**
+**Progress: 251 of 393 screened at the report's current pin.**
 
 13 further record(s) describe a revision the report has since moved
-off, and 130 report(s) have no record at all.
+off, and 129 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 96 |
+| Repositories with an auto-run surface (`RUNS`) | 97 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 108 |
 | Repositories with build-time execution (`EXEC`) | 185 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
@@ -73,6 +73,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
+| [`kage`](../../content/systems/kage.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |

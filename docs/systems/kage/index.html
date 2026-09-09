@@ -110,14 +110,14 @@ deletes the files and checks it disappears.</p>
               <strong>kage-core/kage</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kage-core/kage/commit/d22cad56b28a26bb514ecede4ee0dbd509a46c3f" title="d22cad56b28a26bb514ecede4ee0dbd509a46c3f">
+            <a class="meta-pill revision-pill" href="https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904" title="e7cc087666fd3d01a5727f8a67e7b9e745fca904">
               <span>Analyzed revision</span>
-              <code>d22cad56…</code>
+              <code>e7cc0876…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -560,16 +560,20 @@ and <code>MemoryVisibility</code> <code>:48-49</code>,
 <code>MemorySymbolFingerprint</code> <code>:97</code>,
 <code>EngineeringMemoryContext</code> <code>:110</code>)</p>
 <p><strong>Verification and staleness</strong> —
-<code>mcp/kernel.ts:10117</code> (<code>staleSuggestedAction</code>),
-<code>:10413</code> (<code>packetVerificationLabel</code>),
-<code>:13982</code> (the <code>verified | drifted | gone</code> path
-status), <code>mcp/check.ts</code>,
-<code>mcp/structural-worker.ts</code></p>
+<code>mcp/kernel.ts:9566,9582</code>
+(<code>staleSuggestedAction</code>), <code>:13182</code>
+(<code>ClaudeMemAuditStatus</code>, the
+<code>verified | drifted | gone</code> path status with
+<code>uncited</code> beside it), <code>mcp/check.ts</code>,
+<code>mcp/structural-worker.ts</code>.
+<code>packetVerificationLabel</code> is not in this tree —
+<code>rg -n "packetVerificationLabel" .</code> returns nothing, and no
+renamed equivalent was found.</p>
 <p><strong>The write gate and the negative benchmark</strong> —
-<code>mcp/kernel.ts:16745</code> (<code>benchmarkTrust</code>, Gate 1
-hallucinated citations, Gate 2 stale exclusion with its positive
-control, Gate 3 live grounding),
-<code>benchmarks/staleness-kage.mjs</code></p>
+<code>mcp/kernel.ts:15892</code> (<code>benchmarkTrust</code>, Gate 1
+hallucinated citations <code>:15900</code>, Gate 2 stale exclusion with
+its positive control <code>:15915</code>, Gate 3 live grounding
+<code>:15947</code>), <code>benchmarks/staleness-kage.mjs</code></p>
 <p><strong>Recall and receipts</strong> —
 <code>mcp/kernel.ts:255-262</code> (the personal/team split and
 <code>value_receipt</code>), <code>:3237-3350</code> (the event ledger),
@@ -604,6 +608,46 @@ harnesses including <code>locomo-kage-retrieval.mjs</code>,
 (the repository dogfoods the format; one packet is currently
 <code>"stale": true</code> against <code>mcp/kernel.ts</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904"><code class="commit-id" title="e7cc087666fd3d01a5727f8a67e7b9e745fca904">e7cc0876…</code></a>
+— second reading, on <code>master</code>. The previous pin is not on
+<code>master</code> and never will be: <code>d22cad56</code> is the head
+of a branch the project named
+<strong><code>archive/remote-final</code></strong>, and the two lineages
+diverged after <code>edadf4f3</code> (v3.1.0, 29 June 2026), leaving
+<code>master</code> 398 commits ahead and 370 behind it. The atlas was
+pinned to an archive. Screened before reading; nothing was installed and
+no suite was run.</p>
+<p>Two documents at the repository root announce a direction away from
+this report's subject. <code>PIVOT.md</code> proposes renaming the
+product and states the intent plainly — <em>"The headline noun moves
+from memory to blast radius / verified impact. Memory becomes an
+invisible internal evidence cache, never spoken to the user"</em> — and
+<code>NO_STORE_MEMORY.md</code> argues for re-derivation over a curated
+store, on the thesis that what bites a coding agent is <em>"a pure
+function of the code graph and git history"</em>. Both carry their own
+status lines: PROPOSAL and RESEARCH (exploratory). Neither is shipped
+state, and the report describes the code.</p>
+<p>The code still carries the memory system. <code>mcp/kernel.ts</code>
+is 21,912 lines and all three marks hold on the same mechanisms,
+re-anchored here: <code>MemoryStatus</code> is still
+<code>pending | approved | deprecated | superseded</code> with recall
+selecting <code>approved</code>, the interactive review loop in
+<code>mcp/cli.ts</code> still prompts a person per packet with approve,
+reject, skip or quit, and <code>benchmarkTrust</code> still runs its
+three gates, Gate 2 asserting that memory grounded in real files "must
+be withheld from recall once those files are deleted". A
+<code>blast-radius.test.ts</code> sits beside them, which is the
+proposal arriving in code.</p>
+<p>The report carried no <code>capability_evidence</code> block and has
+one now, one record per mark. One published anchor was wrong at this
+commit: <code>packetVerificationLabel</code> is not in the tree —
+<code>rg -n "packetVerificationLabel" .</code> returns nothing and no
+renamed equivalent was found — and the appendix says so rather than
+pointing at a symbol a reader cannot find. The
+<code>verified | drifted | gone</code> status survives as
+<code>ClaudeMemAuditStatus</code> with a fourth value,
+<code>uncited</code>.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/kage-core/kage/commit/d22cad56b28a26bb514ecede4ee0dbd509a46c3f"><code class="commit-id" title="d22cad56b28a26bb514ecede4ee0dbd509a46c3f">d22cad56…</code></a>
 — first reading. Screened before reading: two auto-run surfaces

@@ -6,13 +6,17 @@ root: ../..
 page_kind: system
 source_name: "kage-core/kage"
 source_url: https://github.com/kage-core/kage
-revision: d22cad56b28a26bb514ecede4ee0dbd509a46c3f
-revision_url: https://github.com/kage-core/kage/commit/d22cad56b28a26bb514ecede4ee0dbd509a46c3f
-analyzed_at: 2026-08-09
+revision: e7cc087666fd3d01a5727f8a67e7b9e745fca904
+revision_url: https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904
+analyzed_at: 2026-09-09
 capabilities: "trust_state, human_review, negative_eval"
+capability_evidence:
+  trust_state: "MemoryStatus on the packet, withholding at recall | mcp/kernel.ts:95,3104,3799,4615 | the status is one of `pending, approved, deprecated, superseded`, validated on write at :4615, and the read paths select `packet.status === \"approved\"` — access entries at :3104 and supersession candidates at :3799 — so a pending or deprecated packet is withheld rather than ranked down. Capture routes to pending on either an explicit request or an ungrounded utterance, and the comment at :17115 records that an ungrounded capture is withheld regardless of status | mcp/kernel.test.ts"
+  human_review: "approvePending, driven from an interactive review loop | mcp/cli.ts:25,450-455, mcp/kernel.ts:17115-17121 | the CLI walks pending packets and prompts a person per packet — `(a) approve (r) reject (s) skip (q) quit` — calling `approvePending(projectDir, packet.id)` on approval. A packet reaches that queue either because the capture asked for review or because it was ungrounded, so the queue is fed by the system rather than only by a human remembering to fill it | mcp/kernel.test.ts"
+  negative_eval: "benchmarkTrust, three gates over a sandboxed project | mcp/kernel.ts:15892-15960, benchmarks/staleness-kage.mjs | Gate 1 asserts a strict capture whose every cited path is missing is rejected. Gate 2 is the one that matters for this mark: memory grounded in real files at capture time \"must be withheld from recall once those files are deleted\", asserted against a populated store with a positive control beside it. Gate 3 measures how much of the real repository's approved memory is still grounded | this is the benchmark"
 stack_storage: "files"
 stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A packet — a typed engineering claim with cited paths, per-symbol content hashes and a chain of re-verification records"
   storage: "Markdown and JSON files in git under .agent_memory, conformant to Google's Open Knowledge Format"
@@ -377,14 +381,17 @@ noting for anyone considering embedding rather than adopting it.
 and `MemoryVisibility` `:48-49`, `MemorySymbolFingerprint` `:97`,
 `EngineeringMemoryContext` `:110`)
 
-**Verification and staleness** — `mcp/kernel.ts:10117`
-(`staleSuggestedAction`), `:10413` (`packetVerificationLabel`), `:13982` (the
-`verified | drifted | gone` path status), `mcp/check.ts`,
-`mcp/structural-worker.ts`
+**Verification and staleness** — `mcp/kernel.ts:9566,9582`
+(`staleSuggestedAction`), `:13182` (`ClaudeMemAuditStatus`, the
+`verified | drifted | gone` path status with `uncited` beside it),
+`mcp/check.ts`, `mcp/structural-worker.ts`. `packetVerificationLabel` is not in
+this tree — `rg -n "packetVerificationLabel" .` returns nothing, and no renamed
+equivalent was found.
 
-**The write gate and the negative benchmark** — `mcp/kernel.ts:16745`
-(`benchmarkTrust`, Gate 1 hallucinated citations, Gate 2 stale exclusion with
-its positive control, Gate 3 live grounding), `benchmarks/staleness-kage.mjs`
+**The write gate and the negative benchmark** — `mcp/kernel.ts:15892`
+(`benchmarkTrust`, Gate 1 hallucinated citations `:15900`, Gate 2 stale exclusion
+with its positive control `:15915`, Gate 3 live grounding `:15947`),
+`benchmarks/staleness-kage.mjs`
 
 **Recall and receipts** — `mcp/kernel.ts:255-262` (the personal/team split and
 `value_receipt`), `:3237-3350` (the event ledger), `:21778`
@@ -415,5 +422,13 @@ baseline, `memoryarena-kage-answer.mjs`, `swebench-kage-context.mjs`,
 format; one packet is currently `"stale": true` against `mcp/kernel.ts`)
 
 ## History
+
+**2026-09-09** — [`e7cc087666fd3d01a5727f8a67e7b9e745fca904`](https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904) — second reading, on `master`. The previous pin is not on `master` and never will be: `d22cad56` is the head of a branch the project named **`archive/remote-final`**, and the two lineages diverged after `edadf4f3` (v3.1.0, 29 June 2026), leaving `master` 398 commits ahead and 370 behind it. The atlas was pinned to an archive. Screened before reading; nothing was installed and no suite was run.
+
+Two documents at the repository root announce a direction away from this report's subject. `PIVOT.md` proposes renaming the product and states the intent plainly — *"The headline noun moves from memory to blast radius / verified impact. Memory becomes an invisible internal evidence cache, never spoken to the user"* — and `NO_STORE_MEMORY.md` argues for re-derivation over a curated store, on the thesis that what bites a coding agent is *"a pure function of the code graph and git history"*. Both carry their own status lines: PROPOSAL and RESEARCH (exploratory). Neither is shipped state, and the report describes the code.
+
+The code still carries the memory system. `mcp/kernel.ts` is 21,912 lines and all three marks hold on the same mechanisms, re-anchored here: `MemoryStatus` is still `pending | approved | deprecated | superseded` with recall selecting `approved`, the interactive review loop in `mcp/cli.ts` still prompts a person per packet with approve, reject, skip or quit, and `benchmarkTrust` still runs its three gates, Gate 2 asserting that memory grounded in real files "must be withheld from recall once those files are deleted". A `blast-radius.test.ts` sits beside them, which is the proposal arriving in code.
+
+The report carried no `capability_evidence` block and has one now, one record per mark. One published anchor was wrong at this commit: `packetVerificationLabel` is not in the tree — `rg -n "packetVerificationLabel" .` returns nothing and no renamed equivalent was found — and the appendix says so rather than pointing at a symbol a reader cannot find. The `verified | drifted | gone` status survives as `ClaudeMemAuditStatus` with a fourth value, `uncited`.
 
 **2026-08-09** — [`d22cad56b28a26bb514ecede4ee0dbd509a46c3f`](https://github.com/kage-core/kage/commit/d22cad56b28a26bb514ecede4ee0dbd509a46c3f) — first reading. Screened before reading: two auto-run surfaces (`server.json`, `smithery.yaml`), build-time execution in `benchmark/Makefile` and `mcp/package.json`, three unpinned dependency surfaces. The tree was read, never installed, and no test or benchmark was run.
