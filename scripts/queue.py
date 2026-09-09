@@ -101,6 +101,13 @@ BROKEN = {"pin-not-in-branch", "pin-unresolvable"}
 LEGACY = {"unreachable": "pin-not-in-branch", "orphaned": "pin-not-in-branch", "gone": "repo-gone"}
 
 URL_RE = re.compile(r"^(https?://\S+)")
+# A published report page, which is the link a person actually has in front of
+# them when they decide something needs re-reading. Queueing it verbatim would
+# put a URL in the file that `work-the-queue` cannot clone, so `add` resolves it
+# to the repository the report is about.
+ATLAS_PAGE_RE = re.compile(r"/agent-memory-atlas/systems/([a-z0-9][a-z0-9-]*)/?$")
+SYSTEMS = ROOT / "content" / "systems"
+SOURCE_URL_RE = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 
 
 def normalize(url: str) -> str:
@@ -208,11 +215,38 @@ def cmd_fill(args) -> int:
     return 0
 
 
+def resolve(url: str) -> tuple[str, str]:
+    """Return the repository URL to queue, and a note about how it was reached."""
+    url = url.strip()
+    page = ATLAS_PAGE_RE.search(url)
+    if not page:
+        return url, ""
+    report = SYSTEMS / f"{page.group(1)}.md"
+    if not report.is_file():
+        sys.exit(f"{url} names `{page.group(1)}`, which is not a report in content/systems/")
+    found = SOURCE_URL_RE.search(report.read_text(encoding="utf-8"))
+    if not found:
+        sys.exit(f"{report.name} has no source_url to queue")
+    return found.group(1).strip('"'), f" (from the {page.group(1)} report page)"
+
+
 def cmd_add(args) -> int:
     if not URL_RE.match(args.url.strip()):
         sys.exit(f"not a URL: {args.url}")
-    lines = [ln for ln in read_queue() if url_of(ln) != normalize(args.url)]
-    lines.insert(0, f"{args.url.strip()}  # inserted by hand")
+    url, via = resolve(args.url)
+    # If the register already knows this repository, carry its reason rather than
+    # "inserted by hand": a queue line is supposed to justify itself, and a hand
+    # pick is exactly the one a reader will want the numbers for later.
+    why = f"inserted by hand{via}"
+    if args.register.is_file():
+        match = next(
+            (r for r in load_register(args.register) if normalize(r.get("source_url") or "") == normalize(url)),
+            None,
+        )
+        if match:
+            why = f"inserted by hand{via} — {match['slug']} — {score(match)[1]}"
+    lines = [ln for ln in read_queue() if url_of(ln) != normalize(url)]
+    lines.insert(0, f"{url}  # {why}")
     dropped = lines[args.max:]
     write_queue(lines[: args.max])
     print(f"queued at the front; {len(lines[:args.max])} of {args.max}", file=sys.stderr)
