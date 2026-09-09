@@ -110,14 +110,14 @@ clone.</p>
               <strong>BernhardJackiewicz/provem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5" title="9cc7401b97f258beca56b3caab92a16362fc00f5">
+            <a class="meta-pill revision-pill" href="https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f" title="f6ce1b69c27a8c7eee78a0d15d6cb018d836922f">
               <span>Analyzed revision</span>
-              <code>9cc7401b…</code>
+              <code>f6ce1b69…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-04</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -190,11 +190,20 @@ compliance numbers is self-authored, which the repository says plainly.
 And the erasure guard is <strong>read-side suppression rather than
 write-side refusal</strong>, which matters in the way described below
 and is the sharpest thing to press on an Article 17 claim.</p>
-<p>It is MIT licensed, with <code>license = "MIT"</code> and
-<code>license-files = ["LICENSE"]</code> declared in
+<p>It is Apache 2.0 licensed, with <code>license = "Apache-2.0"</code>
+and <code>license-files = ["LICENSE"]</code> declared in
 <code>pyproject.toml</code> rather than left to a stray file — so the
 metadata and the file agree, which is more than several systems here
 manage.</p>
+<p><code>LICENSING.md</code> states the boundary in the project's own
+words: an <strong>"open engine, closed operations"</strong> model, under
+which "everything the published benchmarks and compliance claims rest on
+stays open, so anyone can reproduce and audit them" — the governed
+memory engine, policy evaluation, tombstones, erasure, revocation and
+requester authority, and the purpose stack. That is the right half to
+keep open for a system whose product is governance, and it is worth
+reading beside section 10: the claims are only checkable while the code
+behind them is.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A fact is admitted or quarantined, ranked or excluded with a reason,
 and erasure leaves behind a durable token set that outlives the records
@@ -441,8 +450,11 @@ projected.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>7,658 lines of tests, run as part of
-<code>verify_repro.sh --full</code>, which passed here.</p>
+<p>12,111 lines of tests across 48 files, run as part of
+<code>verify_repro.sh --full</code>. The suite was <strong>not</strong>
+run for this reading — the dependency surface was inside the cooldown —
+so what follows reports the published figures and what asserts them, not
+a fresh verification.</p>
 <p>The compliance headline — <em>"Compliance violations 240 → 0,
 memory-poisoning success 100% → 0%, silent compounding errors 72.6% →
 0.0% (paired: governance flips 497 trajectories out of 960, loses 0;
@@ -557,11 +569,47 @@ fallback distort recency?</li>
 <code>docs/reliability_results.md</code>,
 <code>docs/trust_model.md</code>,
 <code>docs/locomo_benchmark.md</code>.</li>
-<li>Licensing: <code>LICENSE</code> (MIT), declared in
-<code>pyproject.toml</code> as <code>license = "MIT"</code> with
-<code>license-files</code>.</li>
+<li>Licensing: <code>LICENSE</code> (Apache 2.0), declared in
+<code>pyproject.toml</code> as <code>license = "Apache-2.0"</code> with
+<code>license-files</code>, and the open/closed boundary in
+<code>LICENSING.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f"><code class="commit-id" title="f6ce1b69c27a8c7eee78a0d15d6cb018d836922f">f6ce1b69…</code></a>
+— third reading, 54 commits on: 73 files, 10,764 insertions. Screened
+before reading. <strong>The suite was not run this time</strong> — the
+dependency surface sat inside the seven-day cooldown — so unlike the
+previous reading this report does not carry a fresh
+<code>VERIFY OK</code>, and section 10 says so rather than letting the
+earlier run stand in for one.</p>
+<p>One published claim was wrong at this commit and is corrected in both
+places it appeared. The core was relicensed from MIT to Apache 2.0:
+<code>LICENSE</code> is the Apache text and <code>pyproject.toml</code>
+declares <code>license = "Apache-2.0"</code>. A new
+<code>LICENSING.md</code> states an "open engine, closed operations"
+boundary, keeping open "everything the published benchmarks and
+compliance claims rest on" — the governed engine, policy evaluation,
+tombstones, erasure, revocation, requester authority and the purpose
+stack.</p>
+<p>All seven marks hold on the same mechanisms; <code>forget</code>,
+<code>erased_terms</code>, <code>_exclusion_reason</code>,
+<code>ReviewStatus</code>, <code>TemporalFact</code> and the erasure
+certificate are all where the appendix says. The headline figures are
+unchanged at this commit — 240 compliance violations to 0, poisoning
+100% to 0%, silent compounding errors 72.6% to 0.0%, governance flipping
+497 trajectories out of 960 and losing 0.</p>
+<p>What is new is mostly reach rather than mechanism.
+<code>reliability.py</code> gained roughly 890 lines carrying a
+trajectory harness — an <code>Agent</code> protocol with deterministic
+and noisy implementations, <code>classify_step</code>,
+<code>Scenario</code> and <code>run_trajectory</code> — which is the
+machinery behind the paired figures rather than a new memory behaviour.
+Two modules arrived beside it, <code>dsar.py</code> and
+<code>signing.py</code>, and a ServiceNow ITSM integration with an
+end-to-end validation harness under <code>qa/servicenow_e2e/</code> and
+a recorded real-instance run. Tests went from 7,658 lines to 12,111
+across 48 files.</p>
 <p><strong>2026-08-04</strong> — <a
 href="https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5"><code class="commit-id" title="9cc7401b97f258beca56b3caab92a16362fc00f5">9cc7401b…</code></a>
 — second reading, one commit on. <code>9cc7401</code> adds an MIT

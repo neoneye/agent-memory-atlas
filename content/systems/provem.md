@@ -6,10 +6,18 @@ root: ../..
 page_kind: system
 source_name: "BernhardJackiewicz/provem"
 source_url: https://github.com/BernhardJackiewicz/provem
-revision: 9cc7401b97f258beca56b3caab92a16362fc00f5
-revision_url: https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5
-analyzed_at: 2026-08-04
+revision: f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
+revision_url: https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
+analyzed_at: 2026-09-09
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "the erased-term registry, consulted on the recall path | src/cognitive_memory/reliability.py:443,674-690,1057, src/cognitive_memory/scope.py:137-188 | `forget(term, scope, requester=…)` tokenizes the term and adds it to a per-tenant `erased_terms` registry keyed on the value, and recall consults it through `_exclusion_reason` before returning a record, so an erased value cannot be re-asserted into an answer. The registry is the durable record: it survives restart and rehydrates from SQLite. The limit the report states stands — exclusion happens at recall rather than refusal at write, so the store still retains a re-ingested erased value | tests/test_tombstone_persistence.py (five cases including survive-restart and duplicate-recorded-once), tests/test_semantic_erasure.py"
+  trust_state: "ReviewStatus and the source-trust fields, withholding at recall | src/cognitive_memory/models.py:290-296,151-175, src/cognitive_memory/reliability.py:836,871 | `ReviewStatus` is a six-value enum — pending, approved, rejected, needs_more_evidence, deferred, expired — and a rejected or pending item does not reach memory: `test_rejected_items_do_not_mutate_memory` pins that. Separately every `TemporalFact` carries `source_trust` and a `source_conflict_policy` defaulting to `abstain_on_conflict`, so conflicting sources withhold an answer rather than picking one | tests/test_review_queue.py, tests/test_compliance.py"
+  bitemporal: "TemporalFact, validity time separate from record time | src/cognitive_memory/models.py:151-175 | `valid_at` and `invalid_at` carry when the fact was true; `created_at` carries when the row was written; `supersedes` and `superseded_by` chain corrections without overwriting. The two axes are distinct fields, which is what the mark requires — a fact can be recorded today about a period that ended last year, and a correction closes an interval rather than replacing a value | tests/test_temporal.py, tests/test_claim_lineage.py"
+  scope_enforced: "MemoryScope as a read-path exclusion, not a tag | src/cognitive_memory/scope.py:11-24,137-202 | `scope_exclusion_reason(query_scope, fact)`, `reflection_scope_exclusion_reason` and `memory_scope_exclusion_reason` each return a *reason* when a record falls outside the querying scope, and recall drops the record on that reason rather than ranking it down. The scope is inferred for both the fact and the query, so the key is resolved on both sides of the comparison | tests/test_scoped_reflections.py"
+  audit_log: "AuditLog, a hash-chained append-only record in the system's own store | src/cognitive_memory/audit.py:27-61,199 | each entry is hashed over `(seq, action, details, timestamp, prev_hash)`, so the chain detects a removed or edited entry rather than merely recording events in order, and `verify_export(data, expected_count, expected_head)` checks a published export against a count and a head hash. This is the mechanism erasure certificates rest on | tests/test_audit.py, tests/test_signing.py"
+  human_review: "the review queue, where a person adjudicates what enters memory | src/cognitive_memory/review.py, src/cognitive_memory/models.py:290-296 | the sleep cycle creates review items for its decisions, a review-required mode queues only the decisions that need it, and high-risk items are not auto-approved. The case that makes it a gate rather than a display is `test_rejected_items_do_not_mutate_memory`: a rejected item leaves the store unchanged | tests/test_review_queue.py"
+  negative_eval: "semantic erasure, as paired committed cases | tests/test_semantic_erasure.py:95-118 | `test_paraphrase_refused_with_reason_erased_semantic` asserts a paraphrase of an erased term is refused from a populated store, and it is paired both ways — `test_off_by_default_paraphrase_leaks` asserts the same paraphrase *does* come back when the semantic matcher is off, and `test_below_threshold_not_blocked` asserts an unrelated near-miss is not blocked. So an empty or uniformly-refusing result fails the suite rather than passing it, which is the control most negative suites in this corpus omit | this is the test"
 stack_storage: "delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -83,9 +91,18 @@ guard is **read-side suppression rather than write-side refusal**, which matters
 in the way described below and is the sharpest thing to press on an Article 17
 claim.
 
-It is MIT licensed, with `license = "MIT"` and `license-files = ["LICENSE"]`
-declared in `pyproject.toml` rather than left to a stray file — so the metadata
-and the file agree, which is more than several systems here manage.
+It is Apache 2.0 licensed, with `license = "Apache-2.0"` and
+`license-files = ["LICENSE"]` declared in `pyproject.toml` rather than left to a
+stray file — so the metadata and the file agree, which is more than several
+systems here manage.
+
+`LICENSING.md` states the boundary in the project's own words: an **"open engine,
+closed operations"** model, under which "everything the published benchmarks and
+compliance claims rest on stays open, so anyone can reproduce and audit them" —
+the governed memory engine, policy evaluation, tombstones, erasure, revocation
+and requester authority, and the purpose stack. That is the right half to keep
+open for a system whose product is governance, and it is worth reading beside
+section 10: the claims are only checkable while the code behind them is.
 
 ## 2. Mental Model
 
@@ -329,7 +346,10 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-7,658 lines of tests, run as part of `verify_repro.sh --full`, which passed here.
+12,111 lines of tests across 48 files, run as part of `verify_repro.sh --full`.
+The suite was **not** run for this reading — the dependency surface was inside
+the cooldown — so what follows reports the published figures and what asserts
+them, not a fresh verification.
 
 The compliance headline — *"Compliance violations 240 → 0, memory-poisoning
 success 100% → 0%, silent compounding errors 72.6% → 0.0% (paired: governance
@@ -429,9 +449,17 @@ rather than no longer serves it.
   `docs/lager_optimization_log.md`, `docs/ship_report.md`,
   `docs/reliability_results.md`, `docs/trust_model.md`,
   `docs/locomo_benchmark.md`.
-- Licensing: `LICENSE` (MIT), declared in `pyproject.toml` as `license = "MIT"` with `license-files`.
+- Licensing: `LICENSE` (Apache 2.0), declared in `pyproject.toml` as `license = "Apache-2.0"` with `license-files`, and the open/closed boundary in `LICENSING.md`.
 
 ## History
+
+**2026-09-09** — [`f6ce1b69c27a8c7eee78a0d15d6cb018d836922f`](https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f) — third reading, 54 commits on: 73 files, 10,764 insertions. Screened before reading. **The suite was not run this time** — the dependency surface sat inside the seven-day cooldown — so unlike the previous reading this report does not carry a fresh `VERIFY OK`, and section 10 says so rather than letting the earlier run stand in for one.
+
+One published claim was wrong at this commit and is corrected in both places it appeared. The core was relicensed from MIT to Apache 2.0: `LICENSE` is the Apache text and `pyproject.toml` declares `license = "Apache-2.0"`. A new `LICENSING.md` states an "open engine, closed operations" boundary, keeping open "everything the published benchmarks and compliance claims rest on" — the governed engine, policy evaluation, tombstones, erasure, revocation, requester authority and the purpose stack.
+
+All seven marks hold on the same mechanisms; `forget`, `erased_terms`, `_exclusion_reason`, `ReviewStatus`, `TemporalFact` and the erasure certificate are all where the appendix says. The headline figures are unchanged at this commit — 240 compliance violations to 0, poisoning 100% to 0%, silent compounding errors 72.6% to 0.0%, governance flipping 497 trajectories out of 960 and losing 0.
+
+What is new is mostly reach rather than mechanism. `reliability.py` gained roughly 890 lines carrying a trajectory harness — an `Agent` protocol with deterministic and noisy implementations, `classify_step`, `Scenario` and `run_trajectory` — which is the machinery behind the paired figures rather than a new memory behaviour. Two modules arrived beside it, `dsar.py` and `signing.py`, and a ServiceNow ITSM integration with an end-to-end validation harness under `qa/servicenow_e2e/` and a recorded real-instance run. Tests went from 7,658 lines to 12,111 across 48 files.
 
 **2026-08-04** — [`9cc7401b97f258beca56b3caab92a16362fc00f5`](https://github.com/BernhardJackiewicz/provem/commit/9cc7401b97f258beca56b3caab92a16362fc00f5) — second reading, one commit on. `9cc7401` adds an MIT `LICENSE` and makes the package publishable, declaring `license = "MIT"` and `license-files = ["LICENSE"]` in `pyproject.toml`, so the file and the metadata agree. The previous reading recorded that no licence existed anywhere in the tree and that all rights were therefore reserved; that is no longer the case and the report no longer says it. `scripts/verify_repro.sh --full` was re-run from the new pin after fetching the hash-pinned dataset: **VERIFY OK, 25 assertions**, so the published figures still hold at this commit. Nothing about the erasure path changed — `forget` still registers the term's tokens and excludes at recall rather than refusing at write, and the store still retains a re-ingested erased value.
 
