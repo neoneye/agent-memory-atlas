@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A mem0 fork that replaces the
+per-write LLM routing call with a von Mises-Fisher KDE novelty score
+against an adaptive per-scope threshold, sending only ambiguous
+candidates to a merge prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SAGE Novelty
+Gate — Agent Memory Atlas">
+    <meta property="og:description" content="A mem0 fork that replaces
+the per-write LLM routing call with a von Mises-Fisher KDE novelty score
+against an adaptive per-scope threshold, sending only ambiguous
+candidates to a merge prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SAGE Novelty
+Gate — Agent Memory Atlas">
+    <meta name="twitter:description" content="A mem0 fork that replaces
+the per-write LLM routing call with a von Mises-Fisher KDE novelty score
+against an adaptive per-scope threshold, sending only ambiguous
+candidates to a merge prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SAGE Novelty Gate — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SAGE Novelty Gate",
+      "description": "A mem0 fork that replaces the per-write LLM routing call with a von Mises-Fisher KDE novelty score against an adaptive per-scope threshold, sending only ambiguous candidates to a merge prompt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Deciding what to write without an LLM</p>
+          <h1>SAGE Novelty Gate</h1>
+          <p class="document-deck">A mem0 fork that replaces the
+per-write LLM routing call with a von Mises-Fisher KDE novelty score
+against an adaptive per-scope threshold, sending only ambiguous
+candidates to a merge prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/swang1024/SAGE">
+              <span>Source</span>
+              <strong>swang1024/SAGE</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/swang1024/SAGE/commit/be5893e170278dc739235d109a4fb1259c8f00e9" title="be5893e170278dc739235d109a4fb1259c8f00e9">
+              <span>Analyzed revision</span>
+              <code>be5893e1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SAGE is a fork of <a href="../mem0/">mem0</a> that answers one
+question: <strong>does deciding what to write require an LLM?</strong>
+Base mem0 sends every extracted candidate fact, together with the
+existing memories near it, to a model that returns ADD, UPDATE, DELETE
+or NOOP. SAGE replaces that call with vector arithmetic — a von
+Mises–Fisher kernel-density novelty score against an adaptive per-scope
+threshold — and reserves the LLM for the band where the answer is
+genuinely ambiguous.</p>
+<p>The extraction step is untouched, so this is a swap of the write
+<em>decision</em>, not of the write path as a whole. Everything else in
+the report — the vector store, the scope filter, the history table — is
+base mem0 and is described here only because a reader evaluating the
+gate needs to know what it sits inside.</p>
+<p>Two things make it worth reading.</p>
+<p><strong>The published numbers recompute from committed artifacts,
+offline.</strong> <code>evaluation/paper_results/</code> holds
+per-question judge output for both arms of the headline run — 1,540 rows
+each, carrying the question, the reference answer, the system's
+response, the category and the judge's binary score. Recomputing the
+macro accuracy from those files gives 53.5 for mem0 and 52.2 for SAGE,
+matching the README to the decimal, with no API key and nothing
+installed. Almost nothing in this corpus can be checked that way.</p>
+<p><strong>The framing chosen is the one that makes the system look
+worse.</strong> The headline is a macro average over four LoCoMo
+categories, and on that measure SAGE loses 1.3 points. On the raw
+per-question count the two are level — 58.2 against 58.3, with SAGE
+marginally ahead — because macro weighting gives a 96-question category
+the same weight as an 841-question one. Reporting the number that
+disfavours your own system is rarer here than it should be.</p>
+<p>Two things sit against it, and the second is small but exact.</p>
+<p><strong>A refused candidate leaves nothing behind.</strong> A NOOP is
+<code>logger.info("NOOP for Memory.")</code> followed by
+<code>continue</code>. There is no record — not a tombstone, not a
+counter, not a row in the history table the fork inherits — that a fact
+was extracted and discarded. The efficiency claim is measured; what the
+gate dropped is not auditable after the fact.</p>
+<p><strong>The generated results paragraph names the wrong
+category.</strong> <code>make_results_tex.py</code> builds the takeaway
+prose with computed numbers plugged into fixed sentences, and one of
+them reads <em>"The residual gap is concentrated in single-hop
+recall"</em>. Single-hop drops 2.1 points; temporal drops 7.3. The
+committed table shows both honestly, and the temporal category is the
+smallest at n=96 so the swing is roughly seven questions — but the
+sentence is templated, so it will name single-hop whatever the numbers
+do.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A candidate fact is a point on a unit sphere. Memory is the set of
+points already there, for this scope. The question "is this new?"
+becomes "how far is this point from the density of what I already
+hold?"</p>
+<pre class="text"><code>novelty(x)  =  vMF-KDE score of x against the scope&#39;s memory vectors
+τ_t         =  per-scope threshold, decaying as the scope&#39;s density ρ_t rises
+
+           novelty ≥ τ + δ   →  ADD     (new fact, no LLM)
+   τ ≤ novelty &lt;  τ + δ      →  UPDATE  (merge into nearest, one LLM call)
+           novelty &lt;  τ      →  NOOP    (discard, no LLM, no record)</code></pre>
+<p><code>δ</code> is a hysteresis margin, so the two boundaries are not
+the same number and a candidate sitting exactly at the threshold does
+not flip between ADD and UPDATE on noise.</p>
+<p>The threshold decays deliberately, and the repository explains why:
+as a scope fills, new facts are more likely to land near an existing
+one, so a fixed threshold would make the system monotonically more
+conservative until it stopped writing. <code>τ_t</code> tracks a density
+proxy so that "novel enough" means novel <em>relative to how full this
+scope already is</em>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the only LLM call on the write path is extraction, unless a candidate lands in the hysteresis band, and the discard branch is the one that writes nothing anywhere</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the only LLM call on the write path is extraction, unless a candidate lands in the hysteresis band, and the discard branch is the one that writes nothing anywhere
+flowchart TB
+    M[&quot;conversation turn&quot;] --&gt; EX[&quot;fact extraction&lt;br/&gt;&lt;i&gt;LLM — unchanged from mem0&lt;/i&gt;&quot;]
+    EX --&gt; EMB[&quot;embed, l2-normalize&quot;]
+    EMB --&gt; SC[&quot;vMF-KDE novelty score&lt;br/&gt;&lt;i&gt;against this scope&#39;s vectors only&lt;/i&gt;&quot;]
+    SC --&gt; TH{&quot;route(novelty, τ)&quot;}
+    TH --&gt;|&quot;≥ τ + δ&quot;| ADD[&quot;ADD&lt;br/&gt;&lt;i&gt;write fact, no LLM&lt;/i&gt;&quot;]
+    TH --&gt;|&quot;τ … τ + δ&quot;| UPD[&quot;UPDATE&lt;br/&gt;&lt;i&gt;merge prompt — the only&lt;br/&gt;other LLM call&lt;/i&gt;&quot;]
+    TH --&gt;|&quot;&lt; τ&quot;| NOOP[&quot;NOOP&lt;br/&gt;&lt;i&gt;log line, continue&lt;/i&gt;&quot;]
+    ADD --&gt; VS[&quot;vector store + history row&quot;]
+    UPD --&gt; VS
+    NOOP --&gt; X[&quot;nothing durable&quot;]
+
+    style NOOP fill:#f4e2bd,stroke:#b8860b
+    style X fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The highlighted branch is the whole saving and the whole cost. Base
+mem0 spends a model call to reach that decision and records the outcome;
+SAGE reaches it with arithmetic and records nothing.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The fork is base mem0 with the sub-projects removed — no docs site,
+no JS/TS SDKs, no server, no examples — plus one module and an
+evaluation harness.</p>
+<ul>
+<li><code>mem0/memory/novelty_gate.py</code> (615 lines):
+<code>NoveltyScorer</code>, the per-scope state, the projection choices,
+the vMF concentration estimate, and the <code>AdaptiveThreshold</code>
+that owns <code>route()</code>.</li>
+<li><code>mem0/memory/main.py</code>: the write path, carrying both the
+original LLM router (kept, and documented as <em>"Original Mem0
+LLM-based gating"</em>) and the gated path beside it.</li>
+<li><code>evaluation/</code>: the harness, the LoCoMo dataset wiring,
+the table generators and <code>paper_results/</code>.</li>
+<li><code>demo/</code>: a browser demo of the gate, with no service
+behind it.</li>
+</ul>
+<p>Keeping the LLM router in the tree rather than deleting it is the
+right call for a paper artifact: the baseline arm is the same code the
+comparison ran against.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-score">The score</h3>
+<p><code>NoveltyScorer</code> l2-normalizes the scope's vectors,
+optionally projects them — random projection or PCA, selectable — and
+estimates a von Mises–Fisher concentration from the data rather than
+fixing it. A Gaussian KDE is available as an alternative method, and an
+unknown method name raises rather than falling back silently, which a
+committed case pins.</p>
+<p>FAISS is imported behind a <code>try</code>, so the index is optional
+and the gate degrades to a dense computation without it.</p>
+<h3 id="the-threshold">The threshold</h3>
+<p><code>AdaptiveThreshold</code> keeps one EMA per scope key. In
+<code>fixed</code> mode it returns a configured constant and refuses to
+be constructed without one; in <code>adaptive</code> mode the threshold
+moves with the scope's density proxy. <code>reset_scope</code> and
+<code>reset_all</code> exist and are tested, which matters for an
+evaluation harness that runs many conversations through one process.</p>
+<h3 id="the-scope-key">The scope key</h3>
+<pre class="python"><code>def _scope_key(filters):
+    return &quot;|&quot;.join([
+        str(filters.get(&quot;user_id&quot;) or &quot;&quot;),
+        str(filters.get(&quot;agent_id&quot;) or &quot;&quot;),
+        str(filters.get(&quot;run_id&quot;) or &quot;&quot;),
+    ])</code></pre>
+<p>The same three ids that filter mem0's reads partition the gate's
+state. A candidate is scored only against its own scope, so one user's
+memory cannot suppress another user's fact as redundant — which is a
+failure mode a global novelty index would have, and it is closed here by
+construction rather than by a check.</p>
+<h3 id="hydration">Hydration</h3>
+<p>A scope's vectors are loaded lazily and marked hydrated with a TTL;
+<code>is_hydrated_fresh</code> decides whether to re-read from the
+vector store. Concurrency is handled with a per-scope lock and two
+committed cases — one serializing concurrent <code>add_to_scope</code>,
+one scoring and adding at the same time.</p>
+<p>This is the part most likely to bite an adopter, and the report
+states it plainly: the gate's view of a scope is an in-process cache of
+a store that other processes can write. The TTL bounds the staleness; it
+does not eliminate it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Unchanged from mem0: a fact is text plus an embedding plus scope ids
+and metadata. The gate adds no field to it.</p>
+<p>That is the honest description of what this contribution is and is
+not. There is no status, no confidence, no provenance, no validity
+interval, and no record of a rejected value — and none of those absences
+are new here, because SAGE changes the decision and not the record. A
+reader wanting those should read the <a href="../mem0/">mem0</a> report
+and treat this as a write-path swap on top of it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Unchanged mem0 vector search, with the scope ids passed as filters
+into the store's own query. The gate is not consulted at read time at
+all — it exists only to decide what gets written.</p>
+<p>That asymmetry is worth naming, because it bounds what the efficiency
+claim means. SAGE makes writes cheaper. The committed latency file shows
+the search phase at 66.7 minutes for mem0 and a comparable figure for
+SAGE, against add phases of 39.3 and 15.7 — so on this benchmark the
+ingest saving is real and the end-to-end saving is diluted by a read
+phase the gate does not touch.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction is one LLM call per turn, unchanged. Then, per candidate
+fact: embed, score, route. ADD and NOOP cost no further model call.
+UPDATE costs exactly one, against a merge prompt the module ships in two
+variants with a comment explaining the choice — the short prompt for
+smaller models, which "tend to do BETTER with the short prompt" because
+a rule-heavy one overloads them, and a longer rule-bearing prompt
+preserved in a comment for stronger models.</p>
+<p>Shipping both variants with the reasoning, rather than one tuned
+default, is a small thing done well.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Whatever mem0 integrates with, since the public surface is unchanged.
+The contribution is a config choice, not a new API.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li>The scope key partitions the gate's state, so novelty is judged
+within a boundary rather than across one.</li>
+<li>The routing rule is a pure function of two numbers and is tested as
+one.</li>
+<li>The optional dependency degrades rather than failing, and an unknown
+method name raises rather than defaulting.</li>
+<li>Concurrency around the per-scope index is locked and tested.</li>
+<li>The baseline arm is the same code in the same tree, so the
+comparison is not against a description of mem0.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>A discarded candidate leaves no record.</strong> This is the
+one that matters. The gate's entire value is a decision to not write,
+and that decision is unauditable: no tombstone, no counter, no history
+row. An operator asking "what did the gate drop last week, and was it
+right?" has a log file or nothing.</li>
+<li><strong>The in-process scope cache can be stale</strong> against a
+store other writers share, bounded by a TTL rather than
+invalidated.</li>
+<li><strong>The threshold is not explainable to a user.</strong> A fact
+was dropped because a density estimate over a projected sphere put it
+below a moving line. That is a defensible engineering answer and a poor
+answer to "why don't you remember that I told you?"</li>
+<li><strong>No trust state.</strong> A routing decision is a write-time
+genre, and nothing survives it.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Sixteen committed cases in
+<code>tests/memory/test_novelty_gate.py</code> cover the scorer under
+two projection methods and both KDE variants, the density-tracking
+threshold, three-way routing, per-scope add/update/remove including an
+idempotent remove, two concurrency cases, the hydration TTL, and both
+reset paths. They test the gate as a component. None of them asserts
+anything about what a search returns, so there is no negative retrieval
+evidence here.</p>
+<p><strong>The evaluation is the reason this report exists.</strong>
+<code>evaluation/paper_results/</code> commits per-question judge output
+for both arms — 1,540 rows each — and the headline accuracy recomputes
+from it exactly:</p>
+<pre class="python"><code>rows = [r for conv in json.load(open(path)).values() for r in conv]
+macro = mean(per-category means of r[&quot;llm_score&quot;])
+# mem0  overall 58.2  macro 53.5
+# sage  overall 58.3  macro 52.2</code></pre>
+<p>Those macro figures are the README's, to the decimal, computed
+offline. The efficiency numbers have the same property:
+<code>measured_latency.json</code> carries the add and search phases per
+arm with a comment naming their provenance as <code>[TIMER]</code> lines
+from the run logs, and <code>action_stats_analysis.csv</code> carries
+per-model action counts across seven open-weight backbones.</p>
+<p><code>reproduce_main_result.sh</code> regenerates the whole thing and
+is honest about the price — <em>"a long, paid run (~2h ingest+search per
+system on gpt-4o-mini)"</em> — with a smoke split documented for a
+cheaper check. Nothing was run for this review.</p>
+<h3
+id="what-the-per-category-table-shows-and-the-paragraph-does-not">What
+the per-category table shows and the paragraph does not</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Category</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">mem0</th>
+<th style="text-align: right;">SAGE</th>
+<th style="text-align: right;">Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>single-hop</td>
+<td style="text-align: right;">282</td>
+<td style="text-align: right;">56.0</td>
+<td style="text-align: right;">53.9</td>
+<td style="text-align: right;">−2.1</td>
+</tr>
+<tr>
+<td>multi-hop</td>
+<td style="text-align: right;">321</td>
+<td style="text-align: right;">52.3</td>
+<td style="text-align: right;"><strong>56.1</strong></td>
+<td style="text-align: right;">+3.8</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">42.7</td>
+<td style="text-align: right;">35.4</td>
+<td style="text-align: right;">−7.3</td>
+</tr>
+<tr>
+<td>open-domain</td>
+<td style="text-align: right;">841</td>
+<td style="text-align: right;">62.9</td>
+<td style="text-align: right;"><strong>63.3</strong></td>
+<td style="text-align: right;">+0.4</td>
+</tr>
+</tbody>
+</table></div>
+<p>The committed <code>results_summary_twocol.tex</code> prints this
+table honestly, bolding mem0 as the winner where it wins. The generated
+takeaway paragraph above it says the residual gap is <em>"concentrated
+in single-hop recall"</em> and quotes the 53.9-against-56.0 pair. The
+larger drop is temporal, by more than three times, and it does not
+appear in the paragraph.</p>
+<p>Two things keep this a caveat rather than an accusation. The table is
+right there, so nothing is hidden. And temporal is the smallest category
+at n=96, so 7.3 points is about seven questions and carries a wide
+interval — which is also why the macro headline is sensitive to it, and
+why the micro count has the two systems level.</p>
+<p>The structural point is the durable one: the sentence is a template
+with numbers substituted, so it will report the gap as concentrated in
+single-hop no matter which category actually regresses. A results
+narrative that cannot change its conclusion is not reporting a
+result.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Ask whether the write decision needs a model at
+all.</strong> Extraction and routing are different problems, and this is
+a clean demonstration that the second one may not need the first one's
+tool.</li>
+<li><strong>Partition the novelty index by the same key that scopes
+reads.</strong> It closes cross-tenant suppression by construction.</li>
+<li><strong>Let the threshold move with density.</strong> A fixed
+novelty bar makes a system quietly stop writing as it fills.</li>
+<li><strong>Use a hysteresis band rather than one boundary</strong>, and
+reserve the expensive path for the band.</li>
+<li><strong>Commit per-question judge output, not just
+aggregates.</strong> It is what makes an accuracy claim checkable by
+someone with no budget, and it costs nothing.</li>
+<li><strong>Keep the baseline arm in the tree</strong> so the comparison
+runs against code rather than a description.</li>
+<li><strong>Ship the prompt variants with the reasoning for
+each</strong>, rather than one tuned default.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Discarding a candidate with no record.</strong> Whatever the
+gate is, it is a policy that loses information, and a policy that loses
+information should be able to say what it lost.</li>
+<li><strong>Templated results prose.</strong> Compute the sentence, or
+write it by hand after reading the table; do not fix the conclusion and
+substitute the numbers.</li>
+<li><strong>An in-process index of a shared store</strong>, unless the
+staleness window is a decision rather than a default.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow the gate if your write path is LLM-routed and your bill is
+dominated by it. Read section 10 before borrowing the accuracy claim:
+the macro-versus-micro choice moves the headline across zero, and the
+authors picked the unflattering one.</p>
+<p>Do not borrow this as a memory system. It is a write-decision
+component inside one, and every property a memory system is judged on
+here — status, provenance, correction, forgetting with a record —
+belongs to the base it forks.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What did the gate drop? Nothing in the repository can answer this
+after a run, and a NOOP counter per scope would cost almost
+nothing.</li>
+<li>Does the temporal regression survive a larger temporal split, or is
+n=96 the whole story?</li>
+<li>Should a NOOP write a rejected-value record, so that a fact refused
+as redundant can be distinguished from one never seen?</li>
+<li>What happens to the threshold when a scope is heavily deleted rather
+than only appended to? <code>remove_from_scope</code> updates the index;
+the density proxy's response to shrinkage is not shown.</li>
+<li>How stale can the hydrated scope get in a deployment with several
+writers, and what is the consequence of scoring against a stale view — a
+false ADD, or a false NOOP?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>The gate: <code>mem0/memory/novelty_gate.py</code> —
+<code>NoveltyScorer</code> <code>:122</code>, the vMF concentration
+estimate <code>:164</code>, projection selection <code>:180-238</code>,
+<code>score</code> <code>:534</code>, <code>AdaptiveThreshold</code>
+<code>:550</code>, <code>route</code> <code>:603</code>.</li>
+<li>The write path: <code>mem0/memory/main.py</code> —
+<code>_scope_key</code> <code>:413</code>, scope hydration
+<code>:450-480</code>, the gated branch and its NOOP
+<code>continue</code> <code>:1005-1030</code>, the retained LLM router
+<code>:863</code>.</li>
+<li>Inherited from mem0, unchanged: <code>mem0/memory/storage.py</code>
+(the <code>history</code> table <code>:66,106</code>,
+<code>add_history</code> <code>:127</code>),
+<code>_build_filters_and_metadata</code> <code>:171</code>,
+<code>_search_vector_store</code>.</li>
+<li>Tests: <code>tests/memory/test_novelty_gate.py</code> (16 cases),
+<code>tests/memory/test_reconciliation.py</code>.</li>
+<li>Evaluation: <code>evaluation/paper_results/</code> (per-question
+judge output for both arms, <code>measured_latency.json</code>,
+<code>action_stats_analysis.csv</code>,
+<code>results_summary_twocol.tex</code>),
+<code>evaluation/make_results_tex.py</code> <code>:185-215</code> (the
+takeaway template), <code>reproduce_main_result.sh</code>.</li>
+<li>Paper: <code>sage.pdf</code> in the tree, and <a
+href="https://arxiv.org/abs/2605.30711">arXiv:2605.30711</a>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;add_history&quot; mem0/memory/main.py        # add/update/delete paths only; the NOOP branch reaches none of them
+grep -n &quot;NOOP_EVENT&quot; mem0/memory/main.py          # :1012 — logger.info then `continue`, nothing durable
+grep -rn &quot;tombstone\|rejected&quot; mem0/memory/novelty_gate.py   # 0: a refused candidate is not recorded
+grep -rn &quot;not in\|assertNotIn&quot; tests/memory/test_novelty_gate.py  # 0: no case asserts a search omits anything</code></pre>
+<p><strong>Recomputing the published accuracy from committed
+artifacts</strong> (offline, no key):</p>
+<pre class="python"><code>import json, statistics, collections
+for arm in (&quot;mem0&quot;, &quot;sage&quot;):
+    d = json.load(open(f&quot;evaluation/paper_results/full_{arm}_gpt-4o-mini/eval_metrics_judge4omini.json&quot;))
+    rows = [r for conv in d.values() for r in conv]
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[str(r[&quot;category&quot;])].append(int(r[&quot;llm_score&quot;]))
+    print(arm, round(100 * sum(int(r[&quot;llm_score&quot;]) for r in rows) / len(rows), 1),
+          round(statistics.mean(100 * sum(v) / len(v) for v in by.values()), 1))
+# mem0 58.2 53.5
+# sage 58.3 52.2</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/swang1024/SAGE/commit/be5893e170278dc739235d109a4fb1259c8f00e9"><code class="commit-id" title="be5893e170278dc739235d109a4fb1259c8f00e9">be5893e1…</code></a>
+— first reading, at the head of <code>main</code>, Apache 2.0. Screened
+before anything was read: no auto-run surface, three build-time
+execution points, one unpinned requirements file, and a
+<code>poetry.lock</code> unchanged for 88 days so the tree sits outside
+the seven-day cooldown; nothing was installed and no suite was run.</p>
+<p>Two marks, both inherited from the mem0 core this forks rather than
+contributed by the gate, and the evidence records say so.
+<code>scope_enforced</code> rests on the base filter reaching
+<code>vector_store.search</code> — with the observation that the fork
+puts the same three ids to a second use, partitioning the novelty index
+so a candidate is scored only within its own scope.
+<code>audit_log</code> rests on the base <code>history</code> table,
+with the limit that matters here stated: a candidate the gate refuses
+never reaches a path that writes to it. <code>tombstone</code>,
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>human_review</code> and <code>negative_eval</code> are absent — a
+NOOP is a log line and a <code>continue</code>, a routing decision is a
+write-time genre rather than a state a fact carries, and no committed
+case asserts anything about what a search returns.</p>
+<p>The reading spent most of its time on the evaluation, because it is
+the rare case where a published number can be checked rather than
+repeated. The README's macro accuracy figures — 53.5 for mem0 and 52.2
+for SAGE — recompute exactly from
+<code>evaluation/paper_results/</code>, offline and without an API key,
+from 1,540 committed per-question judge rows per arm. On the raw
+per-question count the two systems are level (58.2 against 58.3), so the
+macro framing the authors chose is the one that disfavours their own
+system.</p>
+<p>One caveat is recorded against the generated prose rather than the
+data. <code>make_results_tex.py</code> builds its takeaway paragraph
+from fixed sentences with computed numbers substituted, and one of them
+states that the residual gap is "concentrated in single-hop recall"
+(−2.1 points) when the larger per-category drop is temporal (−7.3). The
+committed table prints both honestly and marks mem0 as the winner where
+it wins, and temporal is the smallest category at n=96 so the swing is
+roughly seven questions — but the sentence is a template and will name
+single-hop whatever the numbers do.</p>
+<p>A note on the name: the atlas already carries a report titled <a
+href="../sage-memory/">SAGE</a> for the unrelated
+<code>l33tdawg/sage</code>. The two share nothing but a name.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 393 reports.**
+**This page covers all 394 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1092,6 +1092,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no tests of any kind, for a regex pipeline that is a pure function over strings — the cheapest gap in the atlas to close; and the tree is a frozen v7.1.0 snapshot from March 2026 while the product ships as closed binaries at 12.9, so the gap can only be closed elsewhere.
 - Study when: you want a local assistant that quietly remembers preferences without shipping conversations to a vendor.
 - Do not copy when: you need a system of record, or you intend to reuse the implementation — the **BSL 1.1** licence makes this source-available rather than open source.
+
+### [`sage-novelty-gate`](../systems/sage-novelty-gate/)
+- Best idea: every published headline number recomputes from committed artifacts, offline and without an API key — 1,540 per-question judge rows per arm, and the README's 53.5 against 52.2 falls straight out of them.
+- Biggest risk: a candidate the gate refuses leaves a log line and nothing else — no tombstone, no counter, no history row — so the one thing this system exists to do is the one thing it cannot account for afterwards.
+- Most reusable component: partitioning the novelty index by the same key that scopes reads, which closes cross-tenant suppression by construction rather than by a check.
+- Maturity impression: a research artifact that keeps its baseline arm in the tree and picks the accuracy framing that disfavours itself — on the raw per-question count the two systems are level, and it reports the macro average where it loses.
+- Study when: your write path is LLM-routed and the bill is dominated by it, and you can tolerate a dedupe decision you cannot audit.
+- Do not copy when: you need a memory system — this is a write-decision component inside [mem0](../systems/mem0/), and status, provenance, correction and recorded forgetting all belong to the base it forks.
 
 ### [`soul-of-waifu`](../systems/soul-of-waifu/)
 - Best idea: a length floor on any LLM-generated overwrite, so a short or empty rewrite is rejected rather than stored — the clearest small example here of how to make a full-rewrite memory safe.

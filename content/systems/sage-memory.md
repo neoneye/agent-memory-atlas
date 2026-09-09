@@ -35,6 +35,10 @@ matrix:
 
 ## 1. Executive Summary
 
+The atlas carries a second, unrelated system of the same name: the
+[SAGE Novelty Gate](../sage-novelty-gate/), a mem0 fork from a different
+author. The two share nothing but the word.
+
 SAGE is a memory node built on a vendored CometBFT chain — Apache-2.0, 1,559
 commits between 2 March and 7 September 2026 by nine authors, 213,143 lines of
 Go outside tests and outside the vendored consensus engine, beside 209,255
