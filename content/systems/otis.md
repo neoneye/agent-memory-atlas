@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "TrianglLabs/otis"
 source_url: https://github.com/TrianglLabs/otis
-revision: 39e98023104d89a22e89b9cb534f7f681229cc1e
-revision_url: https://github.com/TrianglLabs/otis/commit/39e98023104d89a22e89b9cb534f7f681229cc1e
-analyzed_at: 2026-08-13
+revision: 0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
+revision_url: https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
+analyzed_at: 2026-09-09
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -20,7 +20,7 @@ matrix:
   write: "Every prompt, response, tool activity and compaction is appended as an event; skills are written only by an explicit install or update command"
   update_delete: "A session can be deleted or never written at all with `--ephemeral`; a skill is updated by `git pull --ff-only` from whatever its remote now holds"
   scoping: "Sessions are partitioned into a directory named `<basename>-<sha256 of the absolute path>`; no scope key is stored on a record or applied as a filter"
-  integration: "The agent is the product — a terminal UI and a headless CLI over Fireworks open-weight models, with nine tools including `skill`"
+  integration: "The agent is the product — a terminal UI, a headless CLI and an Electron desktop shell, over Fireworks models or a local llama.cpp runtime, with ten tools including `skill`"
   background: "None. Compaction runs in the turn loop at a token threshold; nothing rewrites the store on a schedule"
   trust: "No epistemic state anywhere. A skill is trusted because it is installed, and a session event is a record of what happened"
   strengths: "Compaction is lossy for the model and lossless for the store — the replaced messages are kept in the event that replaces them"
@@ -29,9 +29,10 @@ matrix:
 
 ## 1. Executive Summary
 
-Otis is a terminal coding agent — 11,531 lines of TypeScript, MIT, macOS and
-Linux — that runs against any public serverless Fireworks model supporting tool
-calls. The premise is locality: *"Sessions, configuration, usage, tool activity,
+Otis is a terminal coding agent — 23,700 lines of TypeScript at v0.1.36, MIT,
+macOS and Linux — that runs against any public serverless Fireworks model
+supporting tool calls, or against a llama.cpp runtime it downloads and manages
+itself. The premise is locality: *"Sessions, configuration, usage, tool activity,
 and diffs stay local"*, with inference under Fireworks' zero-data-retention
 default and no service of the project's own.
 
@@ -50,13 +51,20 @@ field for a commit or a hash, so what the agent will follow tomorrow is whatever
 that repository's default branch says tomorrow.
 
 That is worth naming because of what sits beside it. The same codebase verifies
-its **own** release archive — `sha256File(archivePath) !== artifact.sha256`
-aborts the install, and the manifest parser rejects a checksum that is missing or
-not 64 hex characters. And `skills-lock.json` in the repository root records a
-`computedHash` for the one skill vendored during development. That string appears
-**exactly once in the entire tree**: nothing in `src/` writes it, reads it or
-checks it. The project treats its own binary as a supply-chain risk and the
-instructions its agent follows as a URL.
+a SHA-256 in three other places. Its **own release archive**:
+`sha256File(archivePath) !== options.artifact.sha256` aborts the install, and the
+manifest parser rejects a checksum that is missing or not 64 hex characters. The
+**llama.cpp binaries** it downloads, against six hard-coded digests in
+`src/inference/llama-binary.ts`. And every **GGUF weight file**, in
+`src/inference/gguf-cache.ts`, which verifies before publishing into the cache,
+re-verifies a resumed partial download, and treats a mismatch as a discard.
+
+And `skills-lock.json` in the repository root records a `computedHash` for the
+one skill vendored during development. That string appears **exactly once in the
+entire tree**: nothing in `src/`, `scripts/` or `tests/` writes it, reads it or
+checks it. The project treats its own binary, its inference runtime and its model
+weights as supply-chain risks, and the instructions its agent reads and follows
+as a URL.
 
 **Where the skill code is rigorous is the other half.** `readSkillResource`
 refuses absolute paths, resolves the request against the skill root, asserts
@@ -126,8 +134,13 @@ flowchart TD
   updates, `catalog.ts` lists, `read.ts` serves a resource to the tool,
   `managed-manifest.ts` validates the on-disk manifest, `manager-lock.ts` is a
   PID-and-token mutex with a 30-second staleness rule.
-- **`src/tools/`** — nine tools: `web_search`, `web_read`, `skill`, `read`,
-  `grep`, `glob`, `write`, `edit`, `bash`.
+- **`src/tools/`** — ten tools: `web_search`, `web_read`, `skill`, `read`,
+  `grep`, `glob`, `write`, `edit`, `bash`, `agent`.
+- **`src/inference/`** — model catalogue, hardware probe, GGUF cache and a
+  managed llama.cpp binary, which is where the second and third checksum
+  surfaces live.
+- **`src/desktop/`** — an Electron main, preload and renderer beside the
+  terminal UI.
 - **`src/permissions/`, `src/local/`, `src/cli/`** — approval, platform paths and
   settings, and the terminal UI plus a headless CLI.
 
@@ -138,7 +151,7 @@ Fireworks key for inference and a Parallel key for web search and page reading.
 No database, no service, no daemon.
 
 The screen flagged what a reader should weigh before installing from source:
-`package.json` changed the day before this reading and has eight floating ranges
+`package.json` changed the day before this reading and has twenty-two floating ranges
 with no lockfile beside it, so a fresh install resolves whatever those ranges
 now allow.
 
@@ -230,7 +243,11 @@ nothing in the system would report that it moved.
 
 The fix is small and the project already owns the parts: record the resolved
 commit at install, clone at that commit, and make update an explicit bump that
-shows the diff. `git.ts` already runs arbitrary git argument lists.
+shows the diff. `git.ts` already runs arbitrary git argument lists, and
+`#updateSource` already calls `rev-parse HEAD` — but for rollback, not for
+provenance. The commit it resolves is captured into a local `previousCommit`,
+used to restore the checkout if a later step of the update fails, and never
+written to the manifest. The distance between that and pinning is one field.
 
 **The care elsewhere is real and worth crediting**, because it is what makes the
 gap legible rather than sloppy: `--` before a URL, `--ff-only` on pull, a
@@ -250,16 +267,20 @@ recorded anywhere a user would see it.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**42 test files** across ten directories mirroring `src/`, including a `skills/`
-suite, run by `bunx vitest` with a coverage script and a CI badge on the README.
-`npm run verify` chains lint, typecheck and tests.
+**82 test files, 18,051 lines**, across thirteen directories mirroring `src/`,
+including a `skills/` suite, run by `bunx vitest` with a coverage script and a CI
+badge on the README. `bun run verify` chains `check`, `typecheck` and `test`.
+
+`tests/skills/manager.test.ts` covers the update path's rollback, including the
+case where the pull succeeds and a later step fails. What no test asserts is a
+pinned revision, because there is none to assert.
 
 There is no benchmark and the project claims none — no accuracy number, no
 comparison, no leaderboard. For a coding agent that is the honest posture, and
 the atlas records it as such rather than as an absence.
 
 Nothing was run for this review: the manifest changed the day before the reading
-and carries eight floating ranges with no lockfile, which the seven-day cooldown
+and carries twenty-two floating ranges with no lockfile, which the seven-day cooldown
 in this project's screening rules refuses.
 
 ## 11. Patterns Worth Stealing
@@ -364,5 +385,13 @@ work; the belief-shaped machinery this atlas compares is absent by design.
 | `skills-lock.json` | A `computedHash` that appears once in the tree |
 
 ## History
+
+**2026-09-09** — [`0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee`](https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee) — second reading, at `v0.1.36`. The previous pin is no longer in the branch: `main` is 62 commits ahead of it and carries 24 the pin does not, so the history was rewritten underneath it. GitHub still serves `39e98023104d` by SHA and a fresh clone cannot reach it, which is why the previous reading's line anchors are not re-checkable from a checkout. Screened before reading: no auto-run surface, no build-time execution, one manifest inside the seven-day cooldown with twenty-two floating ranges and no lockfile; nothing was installed and no suite was run.
+
+The central finding is unchanged and the contrast around it is sharper. Installing a skill is still `git clone -- <url> <dir>` with no revision, the manifest is still `{ id, url, skills }` with nowhere to record one, and `skills-lock.json` still carries a `computedHash` that nothing in `src/`, `scripts/` or `tests/` reads. Beside it the project now verifies a SHA-256 in three places rather than one: its own release archive, the six llama.cpp binaries it may download, and every GGUF weight file — the last with resume validation and publish-only-after-verify.
+
+One thing that looks like a fix is not one. `#updateSource` resolves `rev-parse HEAD` into a `previousCommit` before `git pull --ff-only`, and `tests/skills/manager.test.ts` covers it. It is a rollback handle, restoring the checkout when a later step fails, and it is never written to the manifest.
+
+The tree roughly doubled — 11,531 lines to 23,700 — and most of the growth is context rather than memory: a local inference stack under `src/inference/` with a model catalogue, hardware probe, GGUF cache and managed llama.cpp runtime, an Electron shell under `src/desktop/`, and a tenth tool, `agent`. Tests went from 42 files across ten directories to 82 files and 18,051 lines across thirteen. No mark moves: sessions still carry no scope key applied as a filter, no epistemic state exists anywhere, compaction still keeps the messages it replaces inside the event that replaces them, and no committed case asserts that anything must not be retrieved.
 
 **2026-08-13** — [`39e98023104d89a22e89b9cb534f7f681229cc1e`](https://github.com/TrianglLabs/otis/commit/39e98023104d89a22e89b9cb534f7f681229cc1e) — first reading, at release v0.1.20. The screen reported a `package.json` changed the day before with eight floating ranges and no lockfile beside it, and an `AGENTS.md` addressed to a reading agent, read as data; nothing was installed and no test was run. The claim that `computedHash` is unused was checked by grepping the whole tree for that string and for `createHash`, `sha256` and `digest(`.

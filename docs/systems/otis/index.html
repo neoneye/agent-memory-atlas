@@ -111,14 +111,14 @@ binary on a checksum mismatch.</p>
               <strong>TrianglLabs/otis</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/TrianglLabs/otis/commit/39e98023104d89a22e89b9cb534f7f681229cc1e" title="39e98023104d89a22e89b9cb534f7f681229cc1e">
+            <a class="meta-pill revision-pill" href="https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee" title="0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee">
               <span>Analyzed revision</span>
-              <code>39e98023…</code>
+              <code>0f4025cb…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-13</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -137,9 +137,10 @@ binary on a checksum mismatch.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>Otis is a terminal coding agent — 11,531 lines of TypeScript, MIT,
-macOS and Linux — that runs against any public serverless Fireworks
-model supporting tool calls. The premise is locality: <em>"Sessions,
+<p>Otis is a terminal coding agent — 23,700 lines of TypeScript at
+v0.1.36, MIT, macOS and Linux — that runs against any public serverless
+Fireworks model supporting tool calls, or against a llama.cpp runtime it
+downloads and manages itself. The premise is locality: <em>"Sessions,
 configuration, usage, tool activity, and diffs stay local"</em>, with
 inference under Fireworks' zero-data-retention default and no service of
 the project's own.</p>
@@ -161,15 +162,24 @@ runtime manifest schema
 has no field for a commit or a hash, so what the agent will follow
 tomorrow is whatever that repository's default branch says tomorrow.</p>
 <p>That is worth naming because of what sits beside it. The same
-codebase verifies its <strong>own</strong> release archive —
-<code>sha256File(archivePath) !== artifact.sha256</code> aborts the
-install, and the manifest parser rejects a checksum that is missing or
-not 64 hex characters. And <code>skills-lock.json</code> in the
-repository root records a <code>computedHash</code> for the one skill
-vendored during development. That string appears <strong>exactly once in
-the entire tree</strong>: nothing in <code>src/</code> writes it, reads
-it or checks it. The project treats its own binary as a supply-chain
-risk and the instructions its agent follows as a URL.</p>
+codebase verifies a SHA-256 in three other places. Its <strong>own
+release archive</strong>:
+<code>sha256File(archivePath) !== options.artifact.sha256</code> aborts
+the install, and the manifest parser rejects a checksum that is missing
+or not 64 hex characters. The <strong>llama.cpp binaries</strong> it
+downloads, against six hard-coded digests in
+<code>src/inference/llama-binary.ts</code>. And every <strong>GGUF
+weight file</strong>, in <code>src/inference/gguf-cache.ts</code>, which
+verifies before publishing into the cache, re-verifies a resumed partial
+download, and treats a mismatch as a discard.</p>
+<p>And <code>skills-lock.json</code> in the repository root records a
+<code>computedHash</code> for the one skill vendored during development.
+That string appears <strong>exactly once in the entire tree</strong>:
+nothing in <code>src/</code>, <code>scripts/</code> or
+<code>tests/</code> writes it, reads it or checks it. The project treats
+its own binary, its inference runtime and its model weights as
+supply-chain risks, and the instructions its agent reads and follows as
+a URL.</p>
 <p><strong>Where the skill code is rigorous is the other half.</strong>
 <code>readSkillResource</code> refuses absolute paths, resolves the
 request against the skill root, asserts containment, calls
@@ -236,10 +246,16 @@ files: <code>manager.ts</code> installs and updates,
 the tool, <code>managed-manifest.ts</code> validates the on-disk
 manifest, <code>manager-lock.ts</code> is a PID-and-token mutex with a
 30-second staleness rule.</li>
-<li><strong><code>src/tools/</code></strong> — nine tools:
+<li><strong><code>src/tools/</code></strong> — ten tools:
 <code>web_search</code>, <code>web_read</code>, <code>skill</code>,
 <code>read</code>, <code>grep</code>, <code>glob</code>,
-<code>write</code>, <code>edit</code>, <code>bash</code>.</li>
+<code>write</code>, <code>edit</code>, <code>bash</code>,
+<code>agent</code>.</li>
+<li><strong><code>src/inference/</code></strong> — model catalogue,
+hardware probe, GGUF cache and a managed llama.cpp binary, which is
+where the second and third checksum surfaces live.</li>
+<li><strong><code>src/desktop/</code></strong> — an Electron main,
+preload and renderer beside the terminal UI.</li>
 <li><strong><code>src/permissions/</code>, <code>src/local/</code>,
 <code>src/cli/</code></strong> — approval, platform paths and settings,
 and the terminal UI plus a headless CLI.</li>
@@ -250,8 +266,8 @@ source. Two keys — a Fireworks key for inference and a Parallel key for
 web search and page reading. No database, no service, no daemon.</p>
 <p>The screen flagged what a reader should weigh before installing from
 source: <code>package.json</code> changed the day before this reading
-and has eight floating ranges with no lockfile beside it, so a fresh
-install resolves whatever those ranges now allow.</p>
+and has twenty-two floating ranges with no lockfile beside it, so a
+fresh install resolves whatever those ranges now allow.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>The session partition</strong> —
@@ -333,7 +349,12 @@ and nothing in the system would report that it moved.</p>
 <p>The fix is small and the project already owns the parts: record the
 resolved commit at install, clone at that commit, and make update an
 explicit bump that shows the diff. <code>git.ts</code> already runs
-arbitrary git argument lists.</p>
+arbitrary git argument lists, and <code>#updateSource</code> already
+calls <code>rev-parse HEAD</code> — but for rollback, not for
+provenance. The commit it resolves is captured into a local
+<code>previousCommit</code>, used to restore the checkout if a later
+step of the update fails, and never written to the manifest. The
+distance between that and pinning is one field.</p>
 <p><strong>The care elsewhere is real and worth crediting</strong>,
 because it is what makes the gap legible rather than sloppy:
 <code>--</code> before a URL, <code>--ff-only</code> on pull, a scrubbed
@@ -352,18 +373,24 @@ same basename, which is why it is there; the cost is not recorded
 anywhere a user would see it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>42 test files</strong> across ten directories mirroring
-<code>src/</code>, including a <code>skills/</code> suite, run by
-<code>bunx vitest</code> with a coverage script and a CI badge on the
-README. <code>npm run verify</code> chains lint, typecheck and
-tests.</p>
+<p><strong>82 test files, 18,051 lines</strong>, across thirteen
+directories mirroring <code>src/</code>, including a
+<code>skills/</code> suite, run by <code>bunx vitest</code> with a
+coverage script and a CI badge on the README.
+<code>bun run verify</code> chains <code>check</code>,
+<code>typecheck</code> and <code>test</code>.</p>
+<p><code>tests/skills/manager.test.ts</code> covers the update path's
+rollback, including the case where the pull succeeds and a later step
+fails. What no test asserts is a pinned revision, because there is none
+to assert.</p>
 <p>There is no benchmark and the project claims none — no accuracy
 number, no comparison, no leaderboard. For a coding agent that is the
 honest posture, and the atlas records it as such rather than as an
 absence.</p>
 <p>Nothing was run for this review: the manifest changed the day before
-the reading and carries eight floating ranges with no lockfile, which
-the seven-day cooldown in this project's screening rules refuses.</p>
+the reading and carries twenty-two floating ranges with no lockfile,
+which the seven-day cooldown in this project's screening rules
+refuses.</p>
 <h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -516,6 +543,45 @@ messages</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee"><code class="commit-id" title="0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee">0f4025cb…</code></a>
+— second reading, at <code>v0.1.36</code>. The previous pin is no longer
+in the branch: <code>main</code> is 62 commits ahead of it and carries
+24 the pin does not, so the history was rewritten underneath it. GitHub
+still serves <code>39e98023104d</code> by SHA and a fresh clone cannot
+reach it, which is why the previous reading's line anchors are not
+re-checkable from a checkout. Screened before reading: no auto-run
+surface, no build-time execution, one manifest inside the seven-day
+cooldown with twenty-two floating ranges and no lockfile; nothing was
+installed and no suite was run.</p>
+<p>The central finding is unchanged and the contrast around it is
+sharper. Installing a skill is still
+<code>git clone -- &lt;url&gt; &lt;dir&gt;</code> with no revision, the
+manifest is still <code>{ id, url, skills }</code> with nowhere to
+record one, and <code>skills-lock.json</code> still carries a
+<code>computedHash</code> that nothing in <code>src/</code>,
+<code>scripts/</code> or <code>tests/</code> reads. Beside it the
+project now verifies a SHA-256 in three places rather than one: its own
+release archive, the six llama.cpp binaries it may download, and every
+GGUF weight file — the last with resume validation and
+publish-only-after-verify.</p>
+<p>One thing that looks like a fix is not one.
+<code>#updateSource</code> resolves <code>rev-parse HEAD</code> into a
+<code>previousCommit</code> before <code>git pull --ff-only</code>, and
+<code>tests/skills/manager.test.ts</code> covers it. It is a rollback
+handle, restoring the checkout when a later step fails, and it is never
+written to the manifest.</p>
+<p>The tree roughly doubled — 11,531 lines to 23,700 — and most of the
+growth is context rather than memory: a local inference stack under
+<code>src/inference/</code> with a model catalogue, hardware probe, GGUF
+cache and managed llama.cpp runtime, an Electron shell under
+<code>src/desktop/</code>, and a tenth tool, <code>agent</code>. Tests
+went from 42 files across ten directories to 82 files and 18,051 lines
+across thirteen. No mark moves: sessions still carry no scope key
+applied as a filter, no epistemic state exists anywhere, compaction
+still keeps the messages it replaces inside the event that replaces
+them, and no committed case asserts that anything must not be
+retrieved.</p>
 <p><strong>2026-08-13</strong> — <a
 href="https://github.com/TrianglLabs/otis/commit/39e98023104d89a22e89b9cb534f7f681229cc1e"><code class="commit-id" title="39e98023104d89a22e89b9cb534f7f681229cc1e">39e98023…</code></a>
 — first reading, at release v0.1.20. The screen reported a
