@@ -357,11 +357,15 @@ Do not copy:
 rg -n 'tombstone|deleted_at|is_deleted|suppress' plugins/memory/holographic/          # 0: removal writes no record
 rg -n 'user_id|project_id|session_id|scope' plugins/memory/holographic/store.py       # 0: category is the only partition
 rg -n 'audit' plugins/memory/holographic/                                             # 0: no mutation log
-rg -n 'record_feedback|min_trust|unhelpful' tests/plugins/memory/test_holographic_*.py  # 1, a re-implementation of the
+rg -n 'record_feedback|min_trust|unhelpful' tests/plugins/memory/test_holographic_*.py   # 0
+rg -n 'record_feedback|min_trust|unhelpful|trust_score' tests/plugins/memory/test_holographic_*.py
+                                                                                      # 1, a re-implementation of the
                                                                                       #    scoring formula inside a
-                                                                                      #    determinism test; no case
-                                                                                      #    exercises the trust floor
-rg -n 'contradict' tests/                                                             # 0 under tests/plugins/memory/
+                                                                                      #    determinism test — the control
+                                                                                      #    showing the pattern can match
+rg -n 'contradict' tests/plugins/memory/                                              # 0; widened to tests/ it hits
+                                                                                      #    unrelated suites, so the term
+                                                                                      #    is findable, just not here
 rg -n 'rebuild_all_vectors' .                                                         # 0: no wholesale vector rebuild
 rg -n 'search_facts' .                                                                # 0: the store exposes list_facts
 ```

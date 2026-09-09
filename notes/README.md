@@ -8,6 +8,15 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-09-hermes-agent-two-pins-one-repo.md](2026-09-09-hermes-agent-two-pins-one-repo.md) —
+  the drift register found the only repository carrying two reports had them
+  pinned 7,068 commits apart, so the atlas described one tree in two states while
+  every per-report check passed. Both re-read at one commit; one credited strength
+  (`rebuild_all_vectors()`) no longer exists and a "permanently invisible" claim
+  contradicted its own section 4. Written as a verification protocol — clone
+  recipe, line anchors and re-runnable absence searches — plus the merge that was
+  begun and reversed, with the reasoning on both sides.
+
 - [2026-09-09-benchmark-hygiene-and-a-register.md](2026-09-09-benchmark-hygiene-and-a-register.md) —
   Terminal-Bench's shared canary and versioned archive suggest useful register
   fields, with limits the initial note overstated: a marker is not proof of
