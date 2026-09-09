@@ -116,14 +116,14 @@ the control loses nothing.</p>
               <strong>dahshanlabs/klypix-mcp</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/dahshanlabs/klypix-mcp/commit/9b1542691ea6c47b03826454f574818721cbeb5a" title="9b1542691ea6c47b03826454f574818721cbeb5a">
+            <a class="meta-pill revision-pill" href="https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657" title="ea6beaadb75f2d4b447f7d7105a8e02da1c19657">
               <span>Analyzed revision</span>
-              <code>9b154269…</code>
+              <code>ea6beaad…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-10</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -230,7 +230,7 @@ for a plain same-area supersede, <code>CORRECTION_SUPERSEDE_AT</code>
 <code>CLOSE_COVER_AT</code> 0.6, <code>QUESTION_MERGE_AT</code> 0.6.
 <code>docs/BRAIN_THRESHOLDS.md</code> tabulates every one against its
 file and calls itself <em>"the coherence contract"</em>. That document's
-header is stamped <code>v1.18.0</code> and the package is at 1.65.0 —
+header is stamped <code>v1.18.0</code> and the package is at 1.84.0 —
 but each constant listed in it still matches the code at this commit, so
 the version stamp is stale and the contract is not, which is the less
 common of the two ways a document like that goes wrong.</p>
@@ -765,8 +765,8 @@ it. The soak reports first-decile against last-decile p50 so a brain
 that slows as it grows would show it, and the "What these numbers are
 not" section rules out model quality and hosted services. The one flaw
 is freshness: the committed table is stamped 1.58.0 against a package at
-1.65.0, so the artifact is seven minor versions behind the code that
-would reproduce it.</p>
+1.84.0, so the artifact is twenty-six minor versions behind the code
+that would reproduce it.</p>
 <p><strong>Negative evaluations are present and precise.</strong>
 <code>test/archived-visibility.mjs</code> asserts that
 <code>structToBrief</code> <em>"still excludes archived cards
@@ -965,8 +965,69 @@ files), <code>src/brain-doctor.mjs</code>,
 <code>BENCHMARKS.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657"><code class="commit-id" title="ea6beaadb75f2d4b447f7d7105a8e02da1c19657">ea6beaad…</code></a>
+— second reading, 142 commits on at <code>v1.84.0</code>: 232 files,
+34,523 insertions, of which 4,026 land inside the seven paths this
+report's appendix names. Screened before reading: one auto-run surface
+(the MCP server manifest's start command), two manifests inside the
+seven-day cooldown, one unpinned surface with a lockfile beside it;
+nothing was installed and no suite was run.</p>
+<p>All four marks hold, and the report gains the
+<code>capability_evidence</code> block it was written before. Two of the
+records say something the prose did not.</p>
+<p><code>trust_state</code> rests on a split that is easy to miss and is
+the right one. Archived containment withholds on the
+<strong>injected</strong> read path — <code>structToBrief</code>, which
+builds the always-on session-start context, drops archived cards and
+reports the count as withheld — while the <strong>explicit
+search</strong> path keeps and labels them, on the stated ground that an
+archived card can be the right answer to "what did we try?".
+<code>structToMarkdown</code> now prefixes a banner reading "N card(s)
+below are marked archived — superseded, consolidated or retired. Read
+them as history, not as the current state." A state that withholds where
+the agent is not asking and labels where it is is a better answer than
+either alone.</p>
+<p><code>human_review</code> is one of the stronger instances in this
+corpus, and the code says why. Consolidation's apply step requires an
+approval code derived from the exact candidate set plus the day, and the
+code is deliberately not printed in the dry-run response: the human
+obtains it out of band and pastes it in. The comment records what it
+replaced — apply "used to be a bare flag the dry-run TEXT invited the
+agent to set — a model-proposes-model-approves loop with zero human in
+it" — and the property that closes it: "an agent that never showed the
+human the plan never gets the code."</p>
+<p>New since the previous pin, and the most instructive thing in the
+diff: the lifecycle state machine gained a <strong>line-1 precedence
+rule</strong>. A card's state glyph is a regex over its own prose, which
+invites the trap the comment names — a shipped milestone quoting "❓"
+ranks forever as an open question. Line 1 now decides when it carries a
+state glyph, with a whole-text fallback when it does not, and
+<code>🛠</code> exempted because a skill is additive and applying
+precedence to it "demoted 7 live skill cards to milestones, silently
+retiring 7 standing rules". The change is reported with measurements on
+the project's own brain: open 26 to 20 with six false positives removed
+and none lost, skills 97 to 97, milestones 303 to 309.</p>
+<p>Two published version figures are corrected.
+<code>docs/BRAIN_THRESHOLDS.md</code> is still stamped
+<code>v1.18.0</code> and every constant it tabulates still matches the
+code, so that observation stands with the package number updated to
+1.84.0. <code>BENCHMARKS.md</code> is still stamped 1.58.0 and untouched
+since 6 August, so the gap between the committed benchmark and the code
+that would reproduce it widened from seven minor versions to
+twenty-six.</p>
+<p>One documentation defect, which changes no mark.
+<code>src/brain-graveyard.mjs</code>'s header states that
+<code>read_canvas</code> and <code>search_canvases</code> "have no
+archive awareness at all" and that "<code>brain_ask</code> includes
+archived cards by design". The first half is no longer true of this
+tree: <code>structToMarkdown</code> — which is <code>read_canvas</code>
+— carries the archived banner and marks each card, and the
+archived-visibility suite exists to keep it that way. The comment
+explains a correct decision (why deletes go to a graveyard rather than
+to the Archive container) with a premise the code has moved past.</p>
 <p><strong>2026-08-10</strong> — <a
-href="https://github.com/dahshanlabs/klypix-mcp/commit/9b1542691ea6c47b03826454f574818721cbeb5a"><code class="commit-id" title="9b1542691ea6c47b03826454f574818721cbeb5a">9b154269…</code></a>
+href="https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657"><code class="commit-id" title="9b1542691ea6c47b03826454f574818721cbeb5a">9b154269…</code></a>
 — first reading, at 174 commits. Screened before reading: 1 auto-run
 surface (<code>smithery.yaml</code>, a stdio start command naming
 <code>bin/klypix-mcp.mjs</code>), 2 dependency surfaces inside the

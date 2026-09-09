@@ -6,10 +6,15 @@ root: ../..
 page_kind: system
 source_name: "dahshanlabs/klypix-mcp"
 source_url: https://github.com/dahshanlabs/klypix-mcp
-revision: 9b1542691ea6c47b03826454f574818721cbeb5a
-revision_url: https://github.com/dahshanlabs/klypix-mcp/commit/9b1542691ea6c47b03826454f574818721cbeb5a
-analyzed_at: 2026-08-10
+revision: ea6beaadb75f2d4b447f7d7105a8e02da1c19657
+revision_url: https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657
+analyzed_at: 2026-09-09
 capabilities: "trust_state, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "archived containment, withheld from the injected brief and labelled in search | src/klypix-format.mjs:1751,1760,1961,1985,6353 | \"archived\" is a containment fact — the card's parent container is titled Archive — and the two read paths treat it differently on purpose. `structToBrief`, which builds the always-on session-start context, drops archived cards outright with `texts.filter(c => !isArchived(c))` and reports the count as withheld rather than silently. The explicit search path keeps them and labels them instead, on the stated ground that an archived card can be the right answer to \"what did we try?\", so `structToMarkdown` prefixes a banner reading \"N card(s) below are marked archived — superseded, consolidated or retired. Read them as history, not as the current state.\" One state withholds on the default read path; the exception is documented and deliberate | test/archived-visibility.mjs"
+  audit_log: "the graveyard, where a deleted card keeps its bytes | src/brain-graveyard.mjs, src/brain-history.mjs | a delete removes the card from canvas.json's `order` and moves its bytes to `graveyard/` rather than dropping them, so the deletion is recoverable and the record of what was deleted survives it. The module states why the Archive container was not reused: archived cards are still in `order`, so routing deletes there would make a deleted card reappear on the canvas. `brain-history.mjs` adds restore points, with a header auditing which write paths were already lossless and naming the two that were not — a human deleting a card, and a multi-select delete | test/brain-graveyard.mjs, test/brain-history.mjs"
+  human_review: "the garden approval code, which the agent cannot obtain | src/klypix-core.mjs:970-984,1064 | consolidation is two-phase: a dry run returns the over-grown areas for the calling agent to synthesize, and apply requires `approve: \"<code>\"` derived from the exact candidate set plus the day. The code is deliberately not printed in the dry-run response — the human runs `npx klypix-mcp garden-code` out of band, reviews the plan, and pastes it in. The comment records what it replaced and why: apply \"used to be a bare flag the dry-run TEXT invited the agent to set — a model-proposes-model-approves loop with zero human in it\", and \"an agent that never showed the human the plan never gets the code\". Stale approvals die when the selection or the day changes | test/brain-garden.mjs"
+  negative_eval: "archived cards must not read as current fact | test/archived-visibility.mjs | the suite exists because three high-traffic read paths rendered archived cards indistinguishably from live ones — `structToMarkdown` printed no marker and never printed `area` at all, `opSearchCanvases` printed matches unlabelled, and a raw card count announced \"2013 cards\" for 1605 live. The cases assert the labelling holds on a populated brain rather than that a result is empty, which is the right shape: the file states that matching stays recall-first on purpose and that the fix is labelling, not hiding | this is the test"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -107,7 +112,7 @@ cross-area one, `RESOLVE_AT` 0.3 with a ±0.1 near-tie band capped at three,
 `UPDATE_AT` 0.45, `CLOSE_COVER_AT` 0.6, `QUESTION_MERGE_AT` 0.6.
 `docs/BRAIN_THRESHOLDS.md` tabulates every one against its file and calls itself
 *"the coherence contract"*. That document's header is stamped `v1.18.0` and the
-package is at 1.65.0 — but each constant listed in it still matches the code at
+package is at 1.84.0 — but each constant listed in it still matches the code at
 this commit, so the version stamp is stale and the contract is not, which is the
 less common of the two ways a document like that goes wrong.
 
@@ -569,8 +574,8 @@ and this is the only committed benchmark in the corpus that says so and then
 implements it. The soak reports first-decile against last-decile p50 so a brain
 that slows as it grows would show it, and the "What these numbers are not"
 section rules out model quality and hosted services. The one flaw is freshness:
-the committed table is stamped 1.58.0 against a package at 1.65.0, so the
-artifact is seven minor versions behind the code that would reproduce it.
+the committed table is stamped 1.58.0 against a package at 1.84.0, so the
+artifact is twenty-six minor versions behind the code that would reproduce it.
 
 **Negative evaluations are present and precise.**
 `test/archived-visibility.mjs` asserts that `structToBrief` *"still excludes
@@ -735,7 +740,21 @@ story is not in this repository.
 
 ## History
 
-**2026-08-10** — [`9b1542691ea6c47b03826454f574818721cbeb5a`](https://github.com/dahshanlabs/klypix-mcp/commit/9b1542691ea6c47b03826454f574818721cbeb5a) —
+**2026-09-09** — [`ea6beaadb75f2d4b447f7d7105a8e02da1c19657`](https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657) — second reading, 142 commits on at `v1.84.0`: 232 files, 34,523 insertions, of which 4,026 land inside the seven paths this report's appendix names. Screened before reading: one auto-run surface (the MCP server manifest's start command), two manifests inside the seven-day cooldown, one unpinned surface with a lockfile beside it; nothing was installed and no suite was run.
+
+All four marks hold, and the report gains the `capability_evidence` block it was written before. Two of the records say something the prose did not.
+
+`trust_state` rests on a split that is easy to miss and is the right one. Archived containment withholds on the **injected** read path — `structToBrief`, which builds the always-on session-start context, drops archived cards and reports the count as withheld — while the **explicit search** path keeps and labels them, on the stated ground that an archived card can be the right answer to "what did we try?". `structToMarkdown` now prefixes a banner reading "N card(s) below are marked archived — superseded, consolidated or retired. Read them as history, not as the current state." A state that withholds where the agent is not asking and labels where it is is a better answer than either alone.
+
+`human_review` is one of the stronger instances in this corpus, and the code says why. Consolidation's apply step requires an approval code derived from the exact candidate set plus the day, and the code is deliberately not printed in the dry-run response: the human obtains it out of band and pastes it in. The comment records what it replaced — apply "used to be a bare flag the dry-run TEXT invited the agent to set — a model-proposes-model-approves loop with zero human in it" — and the property that closes it: "an agent that never showed the human the plan never gets the code."
+
+New since the previous pin, and the most instructive thing in the diff: the lifecycle state machine gained a **line-1 precedence rule**. A card's state glyph is a regex over its own prose, which invites the trap the comment names — a shipped milestone quoting "❓" ranks forever as an open question. Line 1 now decides when it carries a state glyph, with a whole-text fallback when it does not, and `🛠` exempted because a skill is additive and applying precedence to it "demoted 7 live skill cards to milestones, silently retiring 7 standing rules". The change is reported with measurements on the project's own brain: open 26 to 20 with six false positives removed and none lost, skills 97 to 97, milestones 303 to 309.
+
+Two published version figures are corrected. `docs/BRAIN_THRESHOLDS.md` is still stamped `v1.18.0` and every constant it tabulates still matches the code, so that observation stands with the package number updated to 1.84.0. `BENCHMARKS.md` is still stamped 1.58.0 and untouched since 6 August, so the gap between the committed benchmark and the code that would reproduce it widened from seven minor versions to twenty-six.
+
+One documentation defect, which changes no mark. `src/brain-graveyard.mjs`'s header states that `read_canvas` and `search_canvases` "have no archive awareness at all" and that "`brain_ask` includes archived cards by design". The first half is no longer true of this tree: `structToMarkdown` — which is `read_canvas` — carries the archived banner and marks each card, and the archived-visibility suite exists to keep it that way. The comment explains a correct decision (why deletes go to a graveyard rather than to the Archive container) with a premise the code has moved past.
+
+**2026-08-10** — [`9b1542691ea6c47b03826454f574818721cbeb5a`](https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657) —
 first reading, at 174 commits. Screened before reading: 1 auto-run surface
 (`smithery.yaml`, a stdio start command naming `bin/klypix-mcp.mjs`), 2 dependency
 surfaces inside the seven-day cooldown (`package.json` changed 2 days before the
