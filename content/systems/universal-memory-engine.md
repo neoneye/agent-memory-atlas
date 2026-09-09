@@ -6,10 +6,17 @@ root: ../..
 page_kind: system
 source_name: "12ziyad/universal-memory-engine"
 source_url: https://github.com/12ziyad/universal-memory-engine
-revision: db98ef59999beb5c33d9aba190cb2c82bf9401cb
-revision_url: https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb
-analyzed_at: 2026-07-31
+revision: b17c5486553634b66b3aa70777a007928dab54d7
+revision_url: https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7
+analyzed_at: 2026-09-09
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "memory_suppressions, keyed on the canonicalized value and consulted inside the write gate | src/lib/db.js:134,146, src/pipeline/gates.js:33,756-761 | `getActiveSuppressions(env, userId, writeScope)` is loaded at the top of the gate and folded into a set keyed `kind:canonical_key`, and `isSuppressed(kind, label)` is checked with `canonicalKey(label)` before a node is created. The key is the value, not the row that carried it, so the same fact proposed again from a different source is refused rather than re-created — which is the distinction between this and an archived record | test/adversarial_idor.spec.js:263-266 asserts a denied suppression writes no row"
+  trust_state: "candidate status, where two of three states withhold | src/pipeline/candidates.js:176-206,266,287, migrations/0007_candidate_review.sql | a proposal enters as `pending` and reaches durable memory only through `promoteCandidate`; `rejectCandidate` moves it to `rejected` and the suppress path to `suppressed`. A pending candidate is not memory the recall path can return — it is a proposal waiting on a person — so the state filters rather than ranks | test/candidates.spec.js, which asserts the classification boundary in both directions including \"weak maybe remains a candidate\""
+  scope_enforced: "user_id and the project write scope, threaded into the query | src/lib/db.js:25-58,155-162, src/pipeline/gates.js:753-756 | reads compose `AND project_id IS ?` alongside the user predicate rather than filtering afterwards, and the same `writeScope` object is passed into the candidate, edge and suppression loads so a write is judged against its own scope's state. `normalizeProjectScope` is the one place the scope is derived, so callers cannot each invent their own | test/project_write_scope.spec.js, test/adversarial_idor.spec.js"
+  audit_log: "receipts, one row per write outcome | src/lib/db.js:438,505, src/pipeline/candidates.js:182 | every pipeline outcome writes a receipt carrying the source, the outcome, a summary and the saved total, and a candidate decision stores one under source `candidate_review`, so what the system did is recorded beside what it holds. Two qualifications the mark should carry: `clearFailedReceipts` prunes receipts where nothing was written (`saved_total = 0` or a failure outcome), and a retention `scrub_receipt` action blanks summary, detail and scope while keeping the row and only when no memory job still references it. So the record of a real mutation survives; its content is subject to a stated retention policy | test/cleanup.spec.js"
+  human_review: "the candidate queue, resolved by a person through the API | src/pipeline/candidates.js:186,204,266,287 | `listCandidates` defaults to `status: pending`, and `promoteCandidate`, `rejectCandidate` and `mergeCandidate` are the three resolutions. Rejection is not merely a discard: the suppress path writes the value into `memory_suppressions`, so a person's refusal is what later stops the same fact being re-proposed. That is the difference between a review queue and a display | test/candidates.spec.js, test/adversarial_idor.spec.js:243"
+  negative_eval: "the adversarial suite, asserting a refused action leaves no trace | test/adversarial_idor.spec.js:243-266 | an attacker attempting to reject or suppress another account's candidate is refused, and the test then asserts the victim's row is unchanged (`suppressed_at` still null) and that `SELECT id FROM memory_suppressions WHERE user_id = ?` for the victim `toHaveLength(0)`. It asserts the absence of a specific write against a populated store rather than an empty response, which is the shape the mark requires | this is the test; 235 spec files ship beside it"
 stack_storage: ""
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -395,4 +402,14 @@ under them. Those shapes are the part worth having.
 
 ## History
 
-**2026-07-31** — [`db98ef59999beb5c33d9aba190cb2c82bf9401cb`](https://github.com/12ziyad/universal-memory-engine/commit/db98ef59999beb5c33d9aba190cb2c82bf9401cb) — first reading.
+**2026-09-09** — [`b17c5486553634b66b3aa70777a007928dab54d7`](https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7) — second reading, 479 commits on: 1,003 files and 302,889 insertions, with migrations running from 0011 to 0063 and the appendix paths alone gaining 30,642 lines. Screened before reading: four auto-run surfaces, three build-time execution points, fifteen unpinned surfaces, no manifest inside the seven-day cooldown; nothing was installed and no suite was run.
+
+All six marks hold, on the same mechanisms, and the report gains the `capability_evidence` block it was written before — one record per mark, each with the file and lines to check and the covering test.
+
+The tombstone is the reason this report exists and it is intact. `getActiveSuppressions` is loaded at the top of the write gate and folded into a set keyed `kind:canonical_key`; `isSuppressed(kind, label)` runs `canonicalKey(label)` before a node is created. The key is the *value*, so the same fact proposed again from a different source is refused rather than duplicated — and the loop closes through the review queue, because a person's rejection is what writes the suppression in the first place.
+
+Two records carry a qualification the prose did not state. `audit_log` rests on receipts, and receipts are prunable and redactable under a stated policy: `clearFailedReceipts` deletes only rows where nothing was written (`saved_total = 0` or a failure outcome), and a retention `scrub_receipt` blanks summary, detail and scope while keeping the row, and only when no memory job still references it. The record of a real mutation survives; its content is subject to retention. `scope_enforced` is recorded as a query predicate — `AND project_id IS ?` composed alongside the user filter — with the note that `normalizeProjectScope` is the single place the scope is derived, so callers cannot each invent one.
+
+The best evidence in the tree is adversarial. `test/adversarial_idor.spec.js` has an attacker attempt to reject or suppress another account's candidate, and after the refusal asserts both that the victim's row is unchanged and that the victim's `memory_suppressions` table is empty. Asserting that a refused action left no write, against a populated store, is a stronger shape than an empty-response check, and it is what earns `negative_eval` here rather than a retrieval-exclusion case.
+
+**2026-07-31** — [`db98ef59999beb5c33d9aba190cb2c82bf9401cb`](https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7) — first reading.

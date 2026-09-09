@@ -19,7 +19,7 @@ Neither counts as screened.
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 101 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 112 |
-| Repositories with build-time execution (`EXEC`) | 191 |
+| Repositories with build-time execution (`EXEC`) | 192 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -125,7 +125,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
-| [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.vscode/settings.json` |
+| [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
