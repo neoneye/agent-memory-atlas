@@ -48,6 +48,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# Progress goes to stdout, and stdout block-buffers when it is redirected to a
+# file. The first run of this script printed 150 successes into a buffer that was
+# lost when the process was killed, so from the outside a working run was
+# indistinguishable from a hung one — only the stderr failures were visible.
+sys.stdout.reconfigure(line_buffering=True)
+
 ROOT = Path(__file__).resolve().parent.parent
 SYSTEMS = ROOT / "content" / "systems"
 STATE = ROOT / "scripts" / "state"
@@ -69,7 +75,32 @@ SOURCE_URL = re.compile(r"^source_url:\s*(\S+)\s*$", re.M)
 # 500/hour. ~400 forks fits inside the hourly budget only just, so the default
 # pace is deliberately under it rather than racing to the ceiling and being
 # throttled into a partial run that looks finished.
-SLEEP_SECONDS = 8.0
+SLEEP_SECONDS = 20.0
+
+# GitHub answers a secondary rate limit with 403 and the message "You have
+# exceeded a secondary rate limit... was submitted too quickly". The first
+# version of this script tested for the substring "rate", which that message
+# does not contain, so the backoff never fired: from the 160th repository on,
+# 130 in a row failed instantly instead of waiting. Match on what the API
+# actually says, and on the headers it sets, rather than on one hoped-for word.
+SECONDARY_MARKERS = (
+    "secondary rate limit",
+    "submitted too quickly",
+    "abuse detection",
+    "rate limit",
+    "retry your request again later",
+)
+
+
+def is_secondary_limit(status: int, payload: dict | None, headers: dict) -> bool:
+    if status not in (403, 429):
+        return False
+    message = str((payload or {}).get("message", "")).lower()
+    if any(marker in message for marker in SECONDARY_MARKERS):
+        return True
+    if headers.get("Retry-After"):
+        return True
+    return headers.get("X-RateLimit-Remaining") == "0"
 
 
 def token() -> str:
@@ -180,6 +211,42 @@ def suggest_helpers() -> int:
     return 0
 
 
+
+def fork_with_backoff(owner: str, repo: str, name: str, attempts: int = 5) -> tuple[str, str]:
+    """Fork one repository, waiting out a secondary rate limit rather than failing it.
+
+    Returns ("forked", ""), ("rate-limited", detail) when the wall outlasts the
+    retries, or (f"http-{code}", detail) for anything else. A rate limit is not
+    the repository's fault, so it never counts as that repository failing — it is
+    retried, and if it still will not pass the caller stops the run.
+    """
+    body = {"organization": ORG, "name": name, "default_branch_only": False}
+    url = f"{API}/repos/{owner}/{repo}/forks"
+    wait = 60
+    for attempt in range(1, attempts + 1):
+        status, payload, headers = request("POST", url, body)
+        if status in (200, 202):
+            return "forked", ""
+        # A renamed repository answers the POST with a redirect, and urllib will
+        # not follow a 307/301 on a POST because it must preserve the method.
+        # Twelve repositories in this corpus have been renamed since their report
+        # was written, and the first run recorded every one as a failure.
+        if status in (301, 307, 308) and headers.get("Location"):
+            url = headers["Location"]
+            continue
+        if is_secondary_limit(status, payload, headers):
+            if attempt == attempts:
+                return "rate-limited", str((payload or {}).get("message", ""))[:120]
+            delay = int(headers.get("Retry-After") or wait)
+            print(f"    secondary rate limit; waiting {delay}s (attempt {attempt}/{attempts})",
+                  file=sys.stderr)
+            time.sleep(delay + 1)
+            wait = min(wait * 2, 900)
+            continue
+        return f"http-{status}", str((payload or {}).get("message", ""))[:120]
+    return "rate-limited", "retries exhausted"
+
+
 def record(entry: dict) -> None:
     STATE.mkdir(parents=True, exist_ok=True)
     with LEDGER.open("a", encoding="utf-8") as fh:
@@ -226,37 +293,32 @@ def main() -> int:
         return 0
 
     created = failed = 0
+    pace = args.sleep
     for i, (key, owner, repo, name, slugs) in enumerate(todo, 1):
-        status, payload, headers = request(
-            "POST", f"{API}/repos/{owner}/{repo}/forks",
-            {"organization": ORG, "name": name, "default_branch_only": False},
-        )
-        if status in (200, 202):
+        outcome, detail = fork_with_backoff(owner, repo, name)
+        if outcome == "forked":
             created += 1
             print(f"[{i}/{len(todo)}] forked  {key} -> {ORG}/{name}")
             record({"upstream": key, "fork": f"{ORG}/{name}", "status": "forked", "slugs": slugs})
-        elif status == 403 and "rate" in str(payload.get("message", "")).lower():
-            wait = int(headers.get("Retry-After", 60))
-            print(f"[{i}/{len(todo)}] rate limited, sleeping {wait}s then retrying {key}",
-                  file=sys.stderr)
-            time.sleep(wait + 1)
-            status, payload, _ = request(
-                "POST", f"{API}/repos/{owner}/{repo}/forks",
-                {"organization": ORG, "name": name, "default_branch_only": False},
+        elif outcome == "rate-limited":
+            # Every remaining repository will hit the same wall. Stopping with the
+            # reason is honest; grinding through 200 instant failures is what the
+            # first run did, and it produced a ledger full of noise and no forks.
+            print(f"[{i}/{len(todo)}] STOPPING at {key}: {detail}", file=sys.stderr)
+            record({"upstream": key, "status": "rate-limited", "detail": detail, "slugs": slugs})
+            print(
+                f"\nSecondary rate limit still refusing after retries. {created} forked this run. "
+                f"Re-run to resume — already-forked repositories are skipped.",
+                file=sys.stderr,
             )
-            if status in (200, 202):
-                created += 1
-                record({"upstream": key, "fork": f"{ORG}/{name}", "status": "forked", "slugs": slugs})
-            else:
-                failed += 1
-                record({"upstream": key, "status": f"http-{status}",
-                        "detail": str(payload.get("message"))[:200], "slugs": slugs})
+            return 2
         else:
             failed += 1
-            msg = str((payload or {}).get("message"))[:120]
-            print(f"[{i}/{len(todo)}] FAILED  {key}: http-{status} {msg}", file=sys.stderr)
-            record({"upstream": key, "status": f"http-{status}", "detail": msg, "slugs": slugs})
-        time.sleep(args.sleep)
+            print(f"[{i}/{len(todo)}] FAILED  {key}: {outcome} {detail}", file=sys.stderr)
+            record({"upstream": key, "status": outcome, "detail": detail, "slugs": slugs})
+        # Every attempt spends the same budget, so pace on all of them rather
+        # than only on success.
+        time.sleep(pace)
 
     print(f"\n{created} forked, {failed} failed. Ledger: {LEDGER}", file=sys.stderr)
     # A repository that cannot be forked is the case this whole script exists for:
