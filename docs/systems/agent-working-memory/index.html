@@ -111,14 +111,14 @@ misinformation persists as a coherent story.</p>
               <strong>CompleteIdeas/agent-working-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/CompleteIdeas/agent-working-memory/commit/f129a697982c81efd6d488152408a586d7f5f4b0" title="f129a697982c81efd6d488152408a586d7f5f4b0">
+            <a class="meta-pill revision-pill" href="https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da" title="ed854014eae66d2960f50083f92dc9e04d2c93da">
               <span>Analyzed revision</span>
-              <code>f129a697…</code>
+              <code>ed854014…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -489,8 +489,52 @@ exclusion case <code>:343-356</code>),
 <code>tests/storage/pglite-engine-integration.test.ts</code>,
 <code>tests/integration/mcp-smoke.test.ts</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da"><code class="commit-id" title="ed854014eae66d2960f50083f92dc9e04d2c93da">ed854014…</code></a>
+— second reading, 51 commits on at <code>0.14.1</code>: 140 files,
+37,891 insertions. Screened before reading: no auto-run surface, one
+build-time execution point, one unpinned surface with a lockfile 17 days
+old; nothing was installed and no suite was run.</p>
+<p>The mechanism is untouched. <code>src/engine/retraction.ts</code>,
+<code>staging.ts</code> and <code>eval.ts</code> are byte-identical to
+the previous pin, and <code>src/storage/pglite.ts</code> moved by
+fourteen lines. All three marks hold on the same code, re-anchored, and
+the report gains the <code>capability_evidence</code> block it was
+written before — including the observation that the negative case is
+paired: a retracted engram must not activate, asserted in the same
+populated result as a positive on the correction that replaced it, so an
+empty activation fails the test rather than passing it.</p>
+<p>The reading's substance is elsewhere, and it is the benchmarks
+document. <code>docs/benchmarks.md</code> now carries a results table in
+which the project grades three of its own gauntlet runs
+<strong>NULL</strong>, with the reason attached to each: a re-run whose
+"baseline arm not retained"; a run at k=10 where "6/10 probes flip
+between identical runs", graded "NULL — fix probe determinism, not k".
+The completed two-arm run reports +7.0pp with Fisher exact two-tailed p
+= 0.31, and states its own epistemic status in a sentence this atlas has
+been asking for: <em>"Read it as consistent with the retrieval gains
+converting end-to-end, not as evidence that they do."</em> A per-probe
+table sits under it, including the one probe that got worse.</p>
+<p>The commit log carries the same posture.
+<code>docs: both gauntlet arms complete — +7.0pp (p=0.31), and the multihop claim was wrong</code>
+retracts a claim the project had made about itself; this report never
+repeated it, so nothing here needed correcting.</p>
+<p>One change is worth adopting rather than only recording.
+<code>0.14.1</code> distinguishes <strong>withheld</strong> from
+<strong>absent</strong> on the recall path. A bare empty array had been
+read as "no such memory" for candidates scoring 0.268 to 0.295 — well
+above the 0.05 floor that governs individual relevance — so recall now
+invokes an <code>onAbstain</code> callback carrying the reason, the
+candidate count, the top score, the confidence and the threshold. The
+tool description argues the default from measured cost in both
+directions: 0.05 "halves the rate of answering off-topic queries at zero
+cost to hit rate", and raising it is harmful because a miss sends the
+agent to read the codebase instead at roughly 2,106 tokens, so "0.20+
+cut net tokens saved by 25%".
+<code>tests/engine/abstention-reporting.test.ts</code> is 137 new lines
+behind it.</p>
 <p><strong>2026-08-09</strong> — <a
-href="https://github.com/CompleteIdeas/agent-working-memory/commit/f129a697982c81efd6d488152408a586d7f5f4b0"><code class="commit-id" title="f129a697982c81efd6d488152408a586d7f5f4b0">f129a697…</code></a>
+href="https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da"><code class="commit-id" title="f129a697982c81efd6d488152408a586d7f5f4b0">f129a697…</code></a>
 — first reading. Screened before reading; the tree was read, never
 installed, and no test was run.</p>
         </article>

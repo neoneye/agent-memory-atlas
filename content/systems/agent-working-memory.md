@@ -6,10 +6,14 @@ root: ../..
 page_kind: system
 source_name: "CompleteIdeas/agent-working-memory"
 source_url: https://github.com/CompleteIdeas/agent-working-memory
-revision: f129a697982c81efd6d488152408a586d7f5f4b0
-revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/f129a697982c81efd6d488152408a586d7f5f4b0
-analyzed_at: 2026-08-09
+revision: ed854014eae66d2960f50083f92dc9e04d2c93da
+revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da
+analyzed_at: 2026-09-09
 capabilities: "trust_state, scope_enforced, negative_eval"
+capability_evidence:
+  trust_state: "the retracted flag, composed into every read query | src/storage/pglite.ts:329,347,370,399,509,538,565,584,672,695, retractEngram :475 | `retracted` is a boolean on the engram and every read path appends `AND retracted = FALSE` to its SQL rather than filtering afterwards. Four of the ten sites gate it behind an explicit `includeRetracted` opt-in, so recovering a retracted memory is possible and is a deliberate act by the caller. A retraction does not delete: `retractEngram` sets the flag and records who retracted it, and the engine writes a correction engram beside it | tests/integration/memory-lifecycle.test.ts"
+  scope_enforced: "agent_id as the leading predicate on the same queries | src/storage/pglite.ts:323,341,364,393,499,509,565,584,672,695 | every read is `WHERE agent_id = $1` or `agent_id = ANY($1::text[])` for the shared-scope variants, in the query rather than after it, so an agent cannot rank against another agent's engrams and a `LIMIT` means the same thing for every caller. The multi-agent form takes an explicit array, so sharing is a stated set rather than an absent filter | tests/coordination/"
+  negative_eval: "a retracted engram must not activate, paired with a positive on the same result | tests/integration/memory-lifecycle.test.ts:219-231 | after retracting an engram the test runs a real activation against the populated store and asserts `expect(foundRetracted).toBeUndefined()` — and in the same result asserts the correction engram `toBeDefined()`. The positive control is what makes it evidence: an activation returning nothing fails this test rather than passing it, which is the check most negative suites in this corpus omit | this is the test"
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -379,4 +383,14 @@ contract `:3-17`), `tests/storage/pglite-engine-integration.test.ts`,
 
 ## History
 
-**2026-08-09** — [`f129a697982c81efd6d488152408a586d7f5f4b0`](https://github.com/CompleteIdeas/agent-working-memory/commit/f129a697982c81efd6d488152408a586d7f5f4b0) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
+**2026-09-09** — [`ed854014eae66d2960f50083f92dc9e04d2c93da`](https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da) — second reading, 51 commits on at `0.14.1`: 140 files, 37,891 insertions. Screened before reading: no auto-run surface, one build-time execution point, one unpinned surface with a lockfile 17 days old; nothing was installed and no suite was run.
+
+The mechanism is untouched. `src/engine/retraction.ts`, `staging.ts` and `eval.ts` are byte-identical to the previous pin, and `src/storage/pglite.ts` moved by fourteen lines. All three marks hold on the same code, re-anchored, and the report gains the `capability_evidence` block it was written before — including the observation that the negative case is paired: a retracted engram must not activate, asserted in the same populated result as a positive on the correction that replaced it, so an empty activation fails the test rather than passing it.
+
+The reading's substance is elsewhere, and it is the benchmarks document. `docs/benchmarks.md` now carries a results table in which the project grades three of its own gauntlet runs **NULL**, with the reason attached to each: a re-run whose "baseline arm not retained"; a run at k=10 where "6/10 probes flip between identical runs", graded "NULL — fix probe determinism, not k". The completed two-arm run reports +7.0pp with Fisher exact two-tailed p = 0.31, and states its own epistemic status in a sentence this atlas has been asking for: *"Read it as consistent with the retrieval gains converting end-to-end, not as evidence that they do."* A per-probe table sits under it, including the one probe that got worse.
+
+The commit log carries the same posture. `docs: both gauntlet arms complete — +7.0pp (p=0.31), and the multihop claim was wrong` retracts a claim the project had made about itself; this report never repeated it, so nothing here needed correcting.
+
+One change is worth adopting rather than only recording. `0.14.1` distinguishes **withheld** from **absent** on the recall path. A bare empty array had been read as "no such memory" for candidates scoring 0.268 to 0.295 — well above the 0.05 floor that governs individual relevance — so recall now invokes an `onAbstain` callback carrying the reason, the candidate count, the top score, the confidence and the threshold. The tool description argues the default from measured cost in both directions: 0.05 "halves the rate of answering off-topic queries at zero cost to hit rate", and raising it is harmful because a miss sends the agent to read the codebase instead at roughly 2,106 tokens, so "0.20+ cut net tokens saved by 25%". `tests/engine/abstention-reporting.test.ts` is 137 new lines behind it.
+
+**2026-08-09** — [`f129a697982c81efd6d488152408a586d7f5f4b0`](https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
