@@ -6,13 +6,16 @@ root: ../..
 page_kind: system
 source_name: "derekhu0002/Argo"
 source_url: https://github.com/derekhu0002/Argo
-revision: 9cd3e70fa28f4336b6df1181a771af9289f0f0f7
-revision_url: https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7
-analyzed_at: 2026-08-04
+revision: 607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
+revision_url: https://github.com/derekhu0002/Argo/commit/607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
+analyzed_at: 2026-09-09
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the channel key inside the vector query, on the shipped semantic read path | .argo/scripts/graph-rag/defaultSemanticRetrieval.js:60-66 | `VECTOR_QUERY_CYPHER` composes `WHERE node.channel = $channel` into the same Cypher statement as `CALL db.index.vector.queryNodes($indexName, $topK, $vector)`, so the channel bounds the ranked set the index returns rather than filtering it afterwards — which is the difference that decides whether `$topK` means the same thing for every caller. Fully parameterised, and the three production indexes for elements, relationships and views are queried independently | tests/mcp/systemarchitecture-mcp.test.js"
+  negative_eval: "the fail-closed readiness gates, as committed acceptance cases | design/KG/SystemArchitecture.json, design/persistant-memory/intention-design.md | `embeddingQualificationGate` and `liveEmbeddingIndexGate` sit in front of retrieval, and the committed cases assert the unhappy path: the canonical model records that every query re-reads readiness and \"rejects disabled, pending, partial, stale, failed, unknown, version-mismatched, or channel-incomplete state\" with `fullSnapshotFallback:false` before any provider or vector work, so a store that cannot vouch for its index refuses rather than answering from stale or lexical results. `SP-04-FailClosedReadiness` and `BP-AUTOALIGN-QUERY-FAILS-CLOSED` are the named cases | the acceptance cases themselves; no separate suite asserts a specific record is absent from a populated result"
 stack_storage: "graph, files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An ArchiMate 3.2 element, relationship or view — 96, 140 and 47 of them in the committed graph"
   storage: "`design/KG/SystemArchitecture.json` is canonical; Neo4j is a projection rebuilt wholesale, plus a live vector index"
@@ -39,7 +42,7 @@ ArchiMate's constrained relationship types make architectural context
 schema doing work that free-form extraction cannot.
 
 The committed graph is real: `design/KG/SystemArchitecture.json` is 400 KB
-holding **96 elements, 140 relationships and 47 views**. Around it sit 6,674
+holding **155 elements, 206 relationships and 56 views**. Around it sit 6,674
 lines of GraphRAG JavaScript over Neo4j with a live embedding lifecycle, MCP
 servers, and platform bundles for Cursor, GitHub Copilot and OpenCode. MIT
 licensed, 861 commits.
@@ -288,7 +291,7 @@ index does not report success.
 
 A Neo4j instance and an embedding provider, both required for the semantic path
 and both declared. The sync is O(graph) on every run because it rebuilds, which
-is cheap at 96 elements and is the number to watch if the model grows. No model
+is cheap at 155 elements and is the number to watch if the model grows. No model
 sits in the read path; the models sit in the delivery loop that authors the
 model.
 
@@ -425,8 +428,8 @@ adopting a modelling practice first and a retrieval stack second.
 
 ## Appendix: File Index
 
-- Canonical memory: `design/KG/SystemArchitecture.json` (96 elements, 140
-  relationships, 47 views), `.argo/schema/SystemArchitecture.schema.json`,
+- Canonical memory: `design/KG/SystemArchitecture.json` (155 elements, 206
+  relationships, 56 views), `.argo/schema/SystemArchitecture.schema.json`,
   `.argo/scripts/archimate32-rules.js`.
 - Projection: `.argo/scripts/neo4j-system-architecture-store.js` (`clearGraph`,
   element/relationship/view writers), `.argo/scripts/syncSystemArchitectureToNeo4j.js`.
@@ -447,5 +450,11 @@ adopting a modelling practice first and a retrieval stack second.
 - Decisions: `.argo/history/decision-tree/`, `.argo/rules/`.
 
 ## History
+
+**2026-09-09** — [`607a1c1dd0cd310fdfcb1ae8f060f01675142a7b`](https://github.com/derekhu0002/Argo/commit/607a1c1dd0cd310fdfcb1ae8f060f01675142a7b) — second reading, 51 commits on: 130 files, 13,276 insertions. Screened before reading; nothing was installed and no suite was run.
+
+The canonical store grew and the published counts are corrected in all three places they appeared: 96 elements, 140 relationships and 47 views become 155, 206 and 56. `design/KG/SystemArchitecture.json` accounts for 3,154 of the changed lines, so most of the commit range is the model itself rather than the machinery around it.
+
+Both marks hold on the same mechanisms. `VECTOR_QUERY_CYPHER` in `defaultSemanticRetrieval.js` is byte-for-byte what the report quotes, with `WHERE node.channel = $channel` inside the same statement as the vector call. `SP-04-FailClosedReadiness` and `BP-AUTOALIGN-QUERY-FAILS-CLOSED` are both still committed. The report carried no `capability_evidence` block and has one now, with the scope record naming the line range and the negative-evidence record stating its own limit — the cases assert a gate refuses, not that a particular record is absent from a populated result.
 
 **2026-08-04** — [`9cd3e70fa28f4336b6df1181a771af9289f0f0f7`](https://github.com/derekhu0002/Argo/commit/9cd3e70fa28f4336b6df1181a771af9289f0f0f7) — first reading. `node .argo/scripts/runArchitectureTests.js` was executed on a clean clone: 61 acceptance cases, 114 passed, 8 failed, exit 1. The `TS-07` credential-boundary failure was traced to `cypherCredentialLeaks` naming `mutationEmbeddingVectorLifecycle.js`, and the flagged Cypher was extracted and confirmed to carry no credential — a file-scoped taint rule, not a leak. Marks are withheld for trust state, bi-temporal validity, audit log, tombstone and human review because the Neo4j graph is rebuilt wholesale by `clearGraph` on every sync and carries no per-element lifecycle, and because no schema records an approver.
