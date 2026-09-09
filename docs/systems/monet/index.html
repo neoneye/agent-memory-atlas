@@ -114,14 +114,14 @@ marketed as a clean trio, built as a graph with a gate.</p>
               <strong>team-monet/monet</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/team-monet/monet/commit/eafaf3cceb4849293f17d13a7f8864a9ed945906" title="eafaf3cceb4849293f17d13a7f8864a9ed945906">
+            <a class="meta-pill revision-pill" href="https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6" title="1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6">
               <span>Analyzed revision</span>
-              <code>eafaf3cc…</code>
+              <code>1c7d1e5a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -253,9 +253,9 @@ and <code>gate_events</code>.</li>
 <li><strong><code>packages/core/src/retrieval.ts</code></strong>,
 <code>lexical-overlap.ts</code>, <code>embedding-onnx.ts</code> — hybrid
 on-device retrieval.</li>
-<li><strong><code>packages/core/src/source-*.ts</code></strong>
-(~10,000) — the RAG source-ingestion subsystem, provisionally retired
-(§7).</li>
+<li><strong><code>packages/core/src/source-retirement.ts</code></strong>
+(394) — what remains of the RAG source-ingestion subsystem after its
+removal (§7).</li>
 <li><strong><code>packages/cli/src/cli.ts</code></strong> —
 <code>monet start|status|config|dashboard|gate|source|materialize|install</code>.</li>
 <li><strong><code>harness/</code></strong> —
@@ -431,18 +431,21 @@ recorded so they never need making twice" is true in that the
 blocks the mistake from being re-added. Background work is the
 contradiction detection, near-duplicate handling and on-device
 embedding; there is no cloud pass.</p>
-<p>The <strong>retired source subsystem</strong> belongs here because it
-is the capture path Monet chose not to ship. <code>source-*.ts</code>
-(~10,000 lines) registers a git repo or markdown tree as a "source",
-clones/scans/chunks/embeds it, and surfaces it via
-<code>memory_search</code> — a RAG ingestion pipeline. The last commit
-("Stop documenting the provisionally retired source subsystem") withdrew
-~97 lines of docs only; the code and MCP tools remain but are
-mothballed, with the install notes explaining the reasoning that reading
-live files directly beats indexing them (<code>install.md:275</code>,
-"exists, deliberately not offered … that design question is open"). It
-is worth recording because it is a deliberate scope choice — a working
-ingestion path set aside — not an unfinished feature.</p>
+<p>The <strong>removed source subsystem</strong> belongs here because it
+is the capture path Monet chose not to ship, and then deleted rather
+than leaving dark. <code>source-*.ts</code> was roughly 10,000 lines
+that registered a git repo or markdown tree as a "source", cloned,
+scanned, chunked and embedded it, and surfaced it via
+<code>memory_search</code> — a RAG ingestion pipeline.
+<code>source-scanner.ts</code>, <code>source-sync.ts</code>,
+<code>source-types.ts</code>, <code>source-safe-remove.ts</code> and
+<code>source-scheduler.ts</code> are gone from the tree, and a 394-line
+<code>source-retirement.ts</code> stands in their place. The reasoning
+recorded while it was still mothballed was that reading live files
+directly beats indexing them. It is worth recording because a working
+ingestion path was set aside and then actually removed, which is rarer
+than either half alone: most projects mothball a subsystem and leave it
+to rot in the tree.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Monet is an MCP server (~20 tools: <code>memory_store</code>,
 <code>memory_declare</code>, <code>memory_ratify</code>,
@@ -617,8 +620,49 @@ retired RAG ingestion subsystem.</li>
 — disputed/scope exclusion.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6"><code class="commit-id" title="1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6">1c7d1e5a…</code></a>
+— second reading, 45 commits on: 176 files, 31,201 insertions against
+50,798 deletions, so the system is roughly 16,000 lines smaller than at
+the previous pin. Screened before reading: no auto-run surface, one
+build-time execution point, two unpinned surfaces with lockfiles beside
+them; nothing was installed and no suite was run.</p>
+<p><strong>The provisional retirement completed.</strong> The previous
+reading described the RAG ingestion subsystem as <em>provisionally</em>
+retired. It is gone: <code>source-scanner.ts</code>,
+<code>source-sync.ts</code>, <code>source-types.ts</code>,
+<code>source-safe-remove.ts</code> and <code>source-scheduler.ts</code>
+are deleted, and a 394-line <code>source-retirement.ts</code> stands in
+their place. That accounts for most of the net shrinkage, and it is the
+rare case of a project removing a subsystem rather than leaving it
+dark.</p>
+<p>All five marks hold on the same mechanisms and the report gains the
+<code>capability_evidence</code> block it was written before. Two
+records carry something the prose did not.</p>
+<p>The <code>human_review</code> record now leads with the schema rather
+than the tool. <code>memory_ratify</code> is an explicit MCP call the
+server prompt tells the agent to use "never on your own initiative", but
+the load-bearing half is a table constraint:
+<code>CHECK (severity != 'blocking' OR origin = 'declaration')</code>,
+under a comment reading <em>"THE SAFETY BOUNDARY, in the schema.
+Blocking severity exists only by declaration."</em> An agent cannot mint
+a blocking rule by inference, because the database refuses the row. A
+boundary a model cannot argue with is worth more than a prompt asking it
+not to.</p>
+<p>The <code>trust_state</code> record names the shape of the signal. A
+projected rule carries <code>parentDisputed</code> exactly when its
+principle is disputed and omits the field otherwise — never
+<code>false</code>, because absence is the signal — and a
+<em>superseded</em> rule deliberately keeps <code>status='active'</code>
+and its binding, on the stated ground that it is history. Two different
+treatments of "no longer current", each with a reason.</p>
+<p><code>concept_tombstones</code> exists in the schema and this report
+still carries no <code>tombstone</code> mark, which is the right call
+and worth stating: the table records retirement with a
+<code>retired_at</code>, keyed on the concept rather than on a rejected
+value, and nothing consults it to refuse a later assertion.</p>
 <p><strong>2026-08-15</strong> — <a
-href="https://github.com/team-monet/monet/commit/eafaf3cceb4849293f17d13a7f8864a9ed945906"><code class="commit-id" title="eafaf3cceb4849293f17d13a7f8864a9ed945906">eafaf3cc…</code></a>
+href="https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6"><code class="commit-id" title="eafaf3cceb4849293f17d13a7f8864a9ed945906">eafaf3cc…</code></a>
 — first reading, one commit after the source subsystem's documentation
 was withdrawn. Screened before opening: FRESH manifests behind a
 committed <code>pnpm-lock.yaml</code>; nothing was installed or run. The

@@ -6,10 +6,16 @@ root: ../..
 page_kind: system
 source_name: "team-monet/monet"
 source_url: https://github.com/team-monet/monet
-revision: eafaf3cceb4849293f17d13a7f8864a9ed945906
-revision_url: https://github.com/team-monet/monet/commit/eafaf3cceb4849293f17d13a7f8864a9ed945906
-analyzed_at: 2026-08-15
+revision: 1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
+revision_url: https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
+analyzed_at: 2026-09-09
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "the disputed status on a principle, withheld from what a rule discloses | packages/core/src/gates.ts:1566-1583 | a projected rule carries `parentDisputed` exactly when the principle it derives from has status `disputed`, and the field is omitted otherwise — the comment is explicit that it is never `false`, because absence is the signal. A disputed parent changes what the gate is willing to assert on that rule's behalf rather than reordering it. A superseded rule is deliberately different: it stays `status='active'` and keeps its binding, because it is history | packages/core/src/__tests__/contradiction.test.ts"
+  scope_enforced: "the circle, applied to store-wide read paths | packages/core/src/engine.ts:1076-1082, packages/core/src/retrieval.ts:143,245 | a circle bounds what a store-wide query considers, and retrieval normalizes an observation's circle against its owning native concept so the key cannot be asserted independently of the concept it belongs to. The semantics are documented rather than assumed: archiving a circle removes it from store-wide search, the overview and `listCircles` while leaving it fetchable by name — so archiving narrows the default read path without sealing the circle, and the code says so where a caller might assume otherwise | packages/core/src/__tests__/cross-circle.test.ts, circle-lifecycle.test.ts"
+  audit_log: "resolution_events and gate_events, durable and joined for provenance | packages/core/src/engine.ts:3600,1053,2254, packages/core/src/gates.ts | `resolution_events` records how a contradiction was settled and is durable enough to be the idempotency source — the comment notes a retry reads its mode back out so it is indistinguishable from the first call — and the same log is joined against subsequent detach or reassign to reconstruct what a human did. `gate_events` is the equivalent for rule firing. These record decisions about memory, not merely session activity | the resolution suite"
+  human_review: "memory_ratify, and blocking severity reachable only by declaration | packages/core/src/mcp-server.ts:1537-1617, packages/core/src/gates.ts:260,277-278 | ratification is an explicit MCP tool, and the server prompt instructs the agent to use it \"never on your own initiative\". The stronger half is in the schema: `CHECK (severity != 'blocking' OR origin = 'declaration')` with the comment \"THE SAFETY BOUNDARY, in the schema. Blocking severity exists only by declaration.\" An agent cannot mint a blocking rule by inference — the database refuses the row | packages/core/src/__tests__/"
+  negative_eval: "disputed and cross-circle exclusion, as committed cases | packages/core/src/__tests__/contradiction.test.ts, cross-circle.test.ts, circle-lifecycle.test.ts | the suite asserts that a disputed principle and a concept outside the querying circle are excluded from what a populated store returns, rather than that a result is empty. 98 test files ship in the package | these are the tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -21,7 +27,7 @@ matrix:
   update_delete: "safeUpdate-style supersession — the losing observation is marked superseded_at and excluded from ranking; memory_resolve mediates a contradiction (accept-new / keep-current / dismiss); retire/restore lifecycle with a content-free concept_tombstones sync event"
   scoping: "A circle (project scope) on nearly every table, filtered on read and enforced with explicit refusals in memory_resolve; cross-circle exclusion is tested; rules also carry a per-model tag"
   integration: "An MCP server (~20 tools) plus a with-monet harness of agent roles; a standing skeleton materialized to a file and auto-prewarmed into the first tool response"
-  background: "Contradiction detection and resolution, near-duplicate handling on write, embedding on-device; a RAG source-ingestion subsystem exists but is provisionally retired"
+  background: "Contradiction detection and resolution, near-duplicate handling on write, embedding on-device; the RAG source-ingestion subsystem was removed, leaving a retirement module in its place"
   trust: "concepts.status (active/disputed) plus a confidence float, consumed on read — disputed principles are dropped from the skeleton and only active rules are delivered at a stage"
   strengths: "Genuinely local-first with on-device hybrid retrieval, real circle-scoped reads, human-in-the-loop declare/ratify/resolve governance, and append-only resolution and gate event logs"
   risks: "The headline mechanisms are softer than the prose — moments are lexical token-matches on user-authored stages and the shipped harness relies on the agent pulling rules, and corrections are supersession (retrieve-the-winner) rather than a value-keyed tombstone that prevents recurrence"
@@ -136,8 +142,8 @@ One SQLite file, an MCP server, and a harness of agent roles.
 - **`packages/core/src/storage.ts`** — `BetterSqlitePort` over a single WAL file.
 - **`packages/core/src/retrieval.ts`**, `lexical-overlap.ts`,
   `embedding-onnx.ts` — hybrid on-device retrieval.
-- **`packages/core/src/source-*.ts`** (~10,000) — the RAG source-ingestion
-  subsystem, provisionally retired (§7).
+- **`packages/core/src/source-retirement.ts`** (394) — what remains of the RAG
+  source-ingestion subsystem after its removal (§7).
 - **`packages/cli/src/cli.ts`** — `monet start|status|config|dashboard|gate|source|materialize|install`.
 - **`harness/`** — `bootstrap/install.md`, `roster.json`, agent roles
   (`stig`, `investigator`, `developer`, `verifier`), `mcp/monet.json`.
@@ -277,16 +283,17 @@ twice" is true in that the *live* concept holds the winner; it is not true that 
 system blocks the mistake from being re-added. Background work is the contradiction
 detection, near-duplicate handling and on-device embedding; there is no cloud pass.
 
-The **retired source subsystem** belongs here because it is the capture path Monet
-chose not to ship. `source-*.ts` (~10,000 lines) registers a git repo or markdown
-tree as a "source", clones/scans/chunks/embeds it, and surfaces it via
-`memory_search` — a RAG ingestion pipeline. The last commit ("Stop documenting the
-provisionally retired source subsystem") withdrew ~97 lines of docs only; the code
-and MCP tools remain but are mothballed, with the install notes explaining the
-reasoning that reading live files directly beats indexing them
-(`install.md:275`, "exists, deliberately not offered … that design question is
-open"). It is worth recording because it is a deliberate scope choice — a working
-ingestion path set aside — not an unfinished feature.
+The **removed source subsystem** belongs here because it is the capture path Monet
+chose not to ship, and then deleted rather than leaving dark. `source-*.ts` was
+roughly 10,000 lines that registered a git repo or markdown tree as a "source",
+cloned, scanned, chunked and embedded it, and surfaced it via `memory_search` — a
+RAG ingestion pipeline. `source-scanner.ts`, `source-sync.ts`, `source-types.ts`,
+`source-safe-remove.ts` and `source-scheduler.ts` are gone from the tree, and a
+394-line `source-retirement.ts` stands in their place. The reasoning recorded
+while it was still mothballed was that reading live files directly beats indexing
+them. It is worth recording because a working ingestion path was set aside and
+then actually removed, which is rarer than either half alone: most projects
+mothball a subsystem and leave it to rot in the tree.
 
 ## 8. Agent Integration
 
@@ -430,4 +437,16 @@ surface to understand is larger than the pitch implies.
 
 ## History
 
-**2026-08-15** — [`eafaf3cceb4849293f17d13a7f8864a9ed945906`](https://github.com/team-monet/monet/commit/eafaf3cceb4849293f17d13a7f8864a9ed945906) — first reading, one commit after the source subsystem's documentation was withdrawn. Screened before opening: FRESH manifests behind a committed `pnpm-lock.yaml`; nothing was installed or run. The concept–observation store, the stage/rule binding and its lexical trigger matcher, the declare/ratify/resolve human loop, the circle scoping, and the append-only `resolution_events`/`gate_events` were read from `engine.ts`, `gates.ts`, `mcp-server.ts` and `resolution.ts` and cross-checked against the Vitest suite (`contradiction.test.ts`, `cross-circle.test.ts`, `circle-lifecycle.test.ts`). `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` are earned; `tombstone` (supersession keyed on concept id, `concept_tombstones` content-free) and `bitemporal` (record time only) are withheld. The report sizes two claims below the prose: stage-binding is lexical token-matching on user-authored stages delivered by an agent pull in the shipped harness, and corrections are retrieve-the-winner supersession, not recurrence prevention. No paper exists in the tree.
+**2026-09-09** — [`1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6`](https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6) — second reading, 45 commits on: 176 files, 31,201 insertions against 50,798 deletions, so the system is roughly 16,000 lines smaller than at the previous pin. Screened before reading: no auto-run surface, one build-time execution point, two unpinned surfaces with lockfiles beside them; nothing was installed and no suite was run.
+
+**The provisional retirement completed.** The previous reading described the RAG ingestion subsystem as *provisionally* retired. It is gone: `source-scanner.ts`, `source-sync.ts`, `source-types.ts`, `source-safe-remove.ts` and `source-scheduler.ts` are deleted, and a 394-line `source-retirement.ts` stands in their place. That accounts for most of the net shrinkage, and it is the rare case of a project removing a subsystem rather than leaving it dark.
+
+All five marks hold on the same mechanisms and the report gains the `capability_evidence` block it was written before. Two records carry something the prose did not.
+
+The `human_review` record now leads with the schema rather than the tool. `memory_ratify` is an explicit MCP call the server prompt tells the agent to use "never on your own initiative", but the load-bearing half is a table constraint: `CHECK (severity != 'blocking' OR origin = 'declaration')`, under a comment reading *"THE SAFETY BOUNDARY, in the schema. Blocking severity exists only by declaration."* An agent cannot mint a blocking rule by inference, because the database refuses the row. A boundary a model cannot argue with is worth more than a prompt asking it not to.
+
+The `trust_state` record names the shape of the signal. A projected rule carries `parentDisputed` exactly when its principle is disputed and omits the field otherwise — never `false`, because absence is the signal — and a *superseded* rule deliberately keeps `status='active'` and its binding, on the stated ground that it is history. Two different treatments of "no longer current", each with a reason.
+
+`concept_tombstones` exists in the schema and this report still carries no `tombstone` mark, which is the right call and worth stating: the table records retirement with a `retired_at`, keyed on the concept rather than on a rejected value, and nothing consults it to refuse a later assertion.
+
+**2026-08-15** — [`eafaf3cceb4849293f17d13a7f8864a9ed945906`](https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6) — first reading, one commit after the source subsystem's documentation was withdrawn. Screened before opening: FRESH manifests behind a committed `pnpm-lock.yaml`; nothing was installed or run. The concept–observation store, the stage/rule binding and its lexical trigger matcher, the declare/ratify/resolve human loop, the circle scoping, and the append-only `resolution_events`/`gate_events` were read from `engine.ts`, `gates.ts`, `mcp-server.ts` and `resolution.ts` and cross-checked against the Vitest suite (`contradiction.test.ts`, `cross-circle.test.ts`, `circle-lifecycle.test.ts`). `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` are earned; `tombstone` (supersession keyed on concept id, `concept_tombstones` content-free) and `bitemporal` (record time only) are withheld. The report sizes two claims below the prose: stage-binding is lexical token-matching on user-authored stages delivered by an agent pull in the shipped harness, and corrections are retrieve-the-winner supersession, not recurrence prevention. No paper exists in the tree.
