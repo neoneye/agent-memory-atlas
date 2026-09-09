@@ -6,16 +6,16 @@ root: ../..
 page_kind: system
 source_name: "buiilding/Windie-Sandbox"
 source_url: https://github.com/buiilding/Windie-Sandbox
-revision: 90f949b88be84243a79691b0183a0693641df4d8
-revision_url: https://github.com/buiilding/Windie-Sandbox/commit/90f949b88be84243a79691b0183a0693641df4d8
-analyzed_at: 2026-08-10
+revision: b8e9cc9283bb45ec5d151491440e02b25addc256
+revision_url: https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256
+analyzed_at: 2026-09-09
 capabilities: "human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  human_review: "the message tree, as first-class user operations | src/operation/message.rs | replace_message, remove_message and truncate_after_message are exposed operations a person invokes against persisted history, guarded by ensure_message_mutation_allowed | src/store/tests.rs, replacing_message_text_preserves_metadata and the splice-delete cases"
-  negative_eval: "selected-head path resolution, read path | src/store/tests.rs | loads_path_to_message builds two sibling branches off one root, resolves the path to the first, and asserts with assert_ne! that the second branch's id is not in the returned path | same test, and the deleted-id case at line 2968"
+  human_review: "the message tree, as first-class user operations | src/store/message.rs:599,651,788, src/operation/message.rs:81, src/store/session.rs:115 | `replace_message`, `remove_message` and `truncate_after_message` are store operations a person invokes against persisted history — the edit entry point is `src/operation/message.rs`, the implementations are in the store layer — and every one is guarded by `ensure_message_mutation_allowed`. A person rewrites what the agent will read next, rather than approving a queue | src/store/tests.rs:991 replacing_message_text_preserves_metadata, with the splice-delete cases at :1732, :1775 and :1989"
+  negative_eval: "selected-head path resolution, read path | src/store/tests.rs:732,764 | `loads_path_to_message` builds two sibling branches off one root, resolves the path to the first, and asserts with `assert_ne!` that the second branch's id is not in the returned path — a populated tree with a specific record that must not appear, not an empty result | same test; the fork case at :2861 asserts the same shape across a forked conversation"
 matrix:
   memory_unit: "One message row — id, conversation id, parent message id, role, content, metadata, created_at — with ordered `message_parts` beneath it for text and image content"
   storage: "One SQLite database. Messages form a tree by parent link; sessions, session events, session inputs, compactions, tool schemas and provider state sit beside it"
@@ -506,7 +506,15 @@ point of view, gone.
 
 ## History
 
-**2026-08-10** — [`90f949b88be84243a79691b0183a0693641df4d8`](https://github.com/buiilding/Windie-Sandbox/commit/90f949b88be84243a79691b0183a0693641df4d8)
+**2026-09-09** — [`b8e9cc9283bb45ec5d151491440e02b25addc256`](https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256) — second reading, 64 commits on: 269 files, 22,589 insertions, of which 3,366 land in the store and operation paths the appendix names. Screened before reading: one auto-run surface, no build-time execution, two unpinned surfaces with a `Cargo.lock` eight days old; nothing was installed and no suite was run.
+
+Both marks hold and both evidence records are re-anchored. The `human_review` record named `src/operation/message.rs` for all three mutations; at this commit that file is the edit entry point and the implementations live in `src/store/message.rs`, so the record names both layers with line numbers. `ensure_message_mutation_allowed` still guards every one. The `negative_eval` record gains its lines: `loads_path_to_message` at `:732` with the `assert_ne!` at `:764`, and the equivalent assertion across a forked conversation at `:2861`.
+
+A mark was examined and withheld, and the reason is worth recording because the mechanism looks like the one that would earn it. `src/store/session.rs` grew by roughly a thousand lines carrying a session-execution lease — `claim_session_execution`, `finish_claimed_session_execution`, `release_cancelled_session_execution` — and a persisted event stream with monotonic ids and cursor reads: `append_session_event`, `load_session_events_after`, `latest_global_session_event_id`. That is a durable, ordered record in the system's own store, which is most of the shape of `audit_log`. It is not one, for two reasons that both had to be checked rather than assumed. The events are session run-state — `Cancelled`, `Completed` — and record no message mutation. And the table is not append-only in the sense the mark requires: `DELETE FROM session_events` appears three times, in `session.rs:760`, `conversation.rs:275` and `message.rs:1774`, so a removed session or conversation takes its events with it.
+
+New beside it: `src/store/runtime_access.rs`, a durable record of the one hosted account paired with a local runtime, whose header states the boundary plainly — the runtime "remains entirely local, but its API is reachable from the hosted Inspector". That is an authorization record over the runtime rather than a scope key filtering memory reads, so it moves no mark either. Most of the remaining commit range is an architecture-documentation rewrite.
+
+**2026-08-10** — [`90f949b88be84243a79691b0183a0693641df4d8`](https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256)
 — first reading. Screened before reading: 1 auto-run surface (`.gitmodules`,
 declaring three submodules owned by the same account, one of them tracking a
 `dev` branch), 0 build-time exec surfaces and no `build.rs` anywhere in the tree,
