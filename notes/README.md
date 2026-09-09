@@ -1020,7 +1020,10 @@ when the work happens.
   file at all, which is a caveat to state in section 1 rather than a reason to
   skip.
 - [2026-08-04-automating-re-analysis.md](2026-08-04-automating-re-analysis.md) —
-  a proposal for scheduling re-reads at 147 systems, arguing that the gap is
+  **partly built as of 2026-09-09**: the register, the offline renderer, the
+  ranked queue and the cadence cap exist; the appendix diff, the tier-1 list and
+  the saved-demonstration convention do not.
+  A proposal for scheduling re-reads at 147 systems, arguing that the gap is
   prioritisation rather than detection since `check_freshness.py` already exists.
   The strongest signal is a maintainer who has turned up in the Discord or
   answered a report before — engagement observed rather than proxied, so it is a
