@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omnimemory"
 source_url: https://github.com/OmniNode-ai/omnimemory
-revision: 5dacb73c3319fad338870916bfb30025af5cf39c
-revision_url: https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c
-analyzed_at: 2026-08-09
+revision: 6d340f89715abea95021f8eeef4280adef0d2dee
+revision_url: https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee
+analyzed_at: 2026-09-09
 capabilities: ""
 stack_storage: "postgres, graph, qdrant, redis, files, delegated"
 stack_retrieval: ""
@@ -191,6 +191,38 @@ is a fact a reader evaluating this as a memory system needs stated plainly.
 by the lifecycle orchestrator's own sweep and transition SQL, so an EXPIRED or
 ARCHIVED memory is not filtered out on the read path by anything found here.
 
+### The composed read path
+
+`handler_memory_retrieval.py` fans out to a semantic leg and a full-text leg and
+fuses their *rankings* rather than their scores, with the reason written down:
+fusing first "would let a leg that matched" on a stray term carry a document into
+the answer on one leg's strength alone. `fuse_rrf_scores` is reciprocal-rank
+fusion at `RRF_K_DEFAULT = 60`, weighted rather than plain, because on a
+paraphrase query the lexical leg can match a stray token and unweighted RRF would
+promote it.
+
+`handler_decay.py` then modulates the fused score multiplicatively —
+`A(t) = A_0 * exp(-lambda * dt)` with `DECAY_LAMBDA_PER_DAY = 0.015` — and the
+ordering is deliberate: decay is applied **after** fusion, "not as a third ranked
+list inside the fusion."
+
+Two details are worth copying. The freshness input degrades **per instance**
+rather than per model: the plan specifies `max(created_at, last_accessed_at)`,
+but the retrieval path returns a frozen `ModelMemorySnapshot` from a shared core
+package that carries only `created_at`, and the models that do declare
+`last_accessed_at` type it `datetime | None`, so `freshest_timestamp` falls back
+per record instead of assuming the field is populated. The docstring states the
+policy that follows from it — whether the `created_at`-only path costs ranking
+quality "is a question to answer with the fixture harness, not by assumption",
+and until that is measured no change to the shared core model is justified.
+
+`STALE_ACTIVATION_THRESHOLD = 0.3` is exported from the same module, with the
+stated reason that "ranking and the lifecycle orchestrator must agree on what
+'stale' means". The agreement is not yet wired: `rg -n "is_stale" src/` finds the
+name only in the module's own `__all__`, and the six committed cases that
+exercise it are the only callers. So staleness is a defined, tested predicate
+that nothing filters or expires on.
+
 No memory-level scope key — tenant, user, project or agent — was found as a read
 filter. `agent_id` exists on persona and coordinator models, not as a retrieval
 predicate.
@@ -366,5 +398,17 @@ six checker controls `:293-390`, the seam pin `:446`, the residual test `:472`)
 `docs/migrations/MARKET_MIGRATION_BOUNDARY.md`
 
 ## History
+
+**2026-09-09** — [`6d340f89715abea95021f8eeef4280adef0d2dee`](https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee) — second reading, 54 commits along the default `dev` branch. Screened before reading; nothing was installed and no suite was run.
+
+Every path this report's appendix names is byte-identical to the previous pin — `git diff --stat <old>..HEAD --` over the gate, the lifecycle node and the runtime returns nothing, and every cited line anchor still resolves to the symbol it named. The commit subjects are dependency bumps, sibling-lock refreshes, CI gates and doc scrubbing.
+
+An empty appendix diff is weak evidence that nothing happened, and here it was wrong. Three handlers arrived beside the paths the appendix lists — `handler_memory_retrieval.py`, `handler_fusion.py` and `handler_decay.py`, 437 lines together — carrying a composed read path the report did not describe: rank-level reciprocal-rank fusion at `k = 60`, weighted so a stray lexical match cannot carry a document alone, then a multiplicative activation decay at `lambda = 0.015` per day applied after fusion rather than as a third ranked list. Section 6 now covers it.
+
+The most useful thing in it is a refusal. The freshness input degrades per *instance* rather than per model, because the retrieval path returns a frozen snapshot from a shared core package that carries only `created_at`, and the module says why it declines to change that model: whether the fallback costs ranking quality "is a question to answer with the fixture harness, not by assumption."
+
+No mark moves, and one near-miss is worth stating. `STALE_ACTIVATION_THRESHOLD = 0.3` is exported so that "ranking and the lifecycle orchestrator must agree on what 'stale' means", and `is_stale` has six committed cases — but `rg -n "is_stale" src/` finds the name only in its own `__all__`. It is a defined, tested predicate with no caller, so nothing filters or expires on it and `trust_state` stays withheld.
+
+Tests grew by roughly 1,700 lines across activation decay, decay ranking, hybrid retrieval fusion with a committed corpus fixture, and a PII detector adapter with live-call-path coverage.
 
 **2026-08-09** — [`5dacb73c3319fad338870916bfb30025af5cf39c`](https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c) — first reading. Screened before reading; the tree was read, never installed, and no test was run.

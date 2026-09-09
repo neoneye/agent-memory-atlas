@@ -111,14 +111,14 @@ lifecycle runtime that is a logged no-op.</p>
               <strong>OmniNode-ai/omnimemory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c" title="5dacb73c3319fad338870916bfb30025af5cf39c">
+            <a class="meta-pill revision-pill" href="https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee" title="6d340f89715abea95021f8eeef4280adef0d2dee">
               <span>Analyzed revision</span>
-              <code>5dacb73c…</code>
+              <code>6d340f89…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -294,6 +294,39 @@ needs stated plainly.</p>
 is read and written only by the lifecycle orchestrator's own sweep and
 transition SQL, so an EXPIRED or ARCHIVED memory is not filtered out on
 the read path by anything found here.</p>
+<h3 id="the-composed-read-path">The composed read path</h3>
+<p><code>handler_memory_retrieval.py</code> fans out to a semantic leg
+and a full-text leg and fuses their <em>rankings</em> rather than their
+scores, with the reason written down: fusing first "would let a leg that
+matched" on a stray term carry a document into the answer on one leg's
+strength alone. <code>fuse_rrf_scores</code> is reciprocal-rank fusion
+at <code>RRF_K_DEFAULT = 60</code>, weighted rather than plain, because
+on a paraphrase query the lexical leg can match a stray token and
+unweighted RRF would promote it.</p>
+<p><code>handler_decay.py</code> then modulates the fused score
+multiplicatively — <code>A(t) = A_0 * exp(-lambda * dt)</code> with
+<code>DECAY_LAMBDA_PER_DAY = 0.015</code> — and the ordering is
+deliberate: decay is applied <strong>after</strong> fusion, "not as a
+third ranked list inside the fusion."</p>
+<p>Two details are worth copying. The freshness input degrades
+<strong>per instance</strong> rather than per model: the plan specifies
+<code>max(created_at, last_accessed_at)</code>, but the retrieval path
+returns a frozen <code>ModelMemorySnapshot</code> from a shared core
+package that carries only <code>created_at</code>, and the models that
+do declare <code>last_accessed_at</code> type it
+<code>datetime | None</code>, so <code>freshest_timestamp</code> falls
+back per record instead of assuming the field is populated. The
+docstring states the policy that follows from it — whether the
+<code>created_at</code>-only path costs ranking quality "is a question
+to answer with the fixture harness, not by assumption", and until that
+is measured no change to the shared core model is justified.</p>
+<p><code>STALE_ACTIVATION_THRESHOLD = 0.3</code> is exported from the
+same module, with the stated reason that "ranking and the lifecycle
+orchestrator must agree on what 'stale' means". The agreement is not yet
+wired: <code>rg -n "is_stale" src/</code> finds the name only in the
+module's own <code>__all__</code>, and the six committed cases that
+exercise it are the only callers. So staleness is a defined, tested
+predicate that nothing filters or expires on.</p>
 <p>No memory-level scope key — tenant, user, project or agent — was
 found as a read filter. <code>agent_id</code> exists on persona and
 coordinator models, not as a retrieval predicate.</p>
@@ -483,6 +516,44 @@ empty-allowlist assertion <code>:285</code>, the six checker controls
 ownership roles),
 <code>docs/migrations/MARKET_MIGRATION_BOUNDARY.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee"><code class="commit-id" title="6d340f89715abea95021f8eeef4280adef0d2dee">6d340f89…</code></a>
+— second reading, 54 commits along the default <code>dev</code> branch.
+Screened before reading; nothing was installed and no suite was run.</p>
+<p>Every path this report's appendix names is byte-identical to the
+previous pin — <code>git diff --stat &lt;old&gt;..HEAD --</code> over
+the gate, the lifecycle node and the runtime returns nothing, and every
+cited line anchor still resolves to the symbol it named. The commit
+subjects are dependency bumps, sibling-lock refreshes, CI gates and doc
+scrubbing.</p>
+<p>An empty appendix diff is weak evidence that nothing happened, and
+here it was wrong. Three handlers arrived beside the paths the appendix
+lists — <code>handler_memory_retrieval.py</code>,
+<code>handler_fusion.py</code> and <code>handler_decay.py</code>, 437
+lines together — carrying a composed read path the report did not
+describe: rank-level reciprocal-rank fusion at <code>k = 60</code>,
+weighted so a stray lexical match cannot carry a document alone, then a
+multiplicative activation decay at <code>lambda = 0.015</code> per day
+applied after fusion rather than as a third ranked list. Section 6 now
+covers it.</p>
+<p>The most useful thing in it is a refusal. The freshness input
+degrades per <em>instance</em> rather than per model, because the
+retrieval path returns a frozen snapshot from a shared core package that
+carries only <code>created_at</code>, and the module says why it
+declines to change that model: whether the fallback costs ranking
+quality "is a question to answer with the fixture harness, not by
+assumption."</p>
+<p>No mark moves, and one near-miss is worth stating.
+<code>STALE_ACTIVATION_THRESHOLD = 0.3</code> is exported so that
+"ranking and the lifecycle orchestrator must agree on what 'stale'
+means", and <code>is_stale</code> has six committed cases — but
+<code>rg -n "is_stale" src/</code> finds the name only in its own
+<code>__all__</code>. It is a defined, tested predicate with no caller,
+so nothing filters or expires on it and <code>trust_state</code> stays
+withheld.</p>
+<p>Tests grew by roughly 1,700 lines across activation decay, decay
+ranking, hybrid retrieval fusion with a committed corpus fixture, and a
+PII detector adapter with live-call-path coverage.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/OmniNode-ai/omnimemory/commit/5dacb73c3319fad338870916bfb30025af5cf39c"><code class="commit-id" title="5dacb73c3319fad338870916bfb30025af5cf39c">5dacb73c…</code></a>
 — first reading. Screened before reading; the tree was read, never
