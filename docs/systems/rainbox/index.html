@@ -106,14 +106,14 @@ evals.</p>
               <strong>neoneye/RainBox</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c" title="9f565bf26175bc5e09288f70ec666a4616a2323c">
+            <a class="meta-pill revision-pill" href="https://github.com/neoneye/RainBox/commit/2e22c8e59937c4f1765354343c297c42f1ec5b9c" title="2e22c8e59937c4f1765354343c297c42f1ec5b9c">
               <span>Analyzed revision</span>
-              <code>9f565bf2…</code>
+              <code>2e22c8e5…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -1005,6 +1005,37 @@ added?</li>
 <code>test_assistant_profile.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/neoneye/RainBox/commit/2e22c8e59937c4f1765354343c297c42f1ec5b9c"><code class="commit-id" title="2e22c8e59937c4f1765354343c297c42f1ec5b9c">2e22c8e5…</code></a>
+— second reading, 693 commits past the previous pin: 590 files, 97,702
+insertions. Screened before reading; nothing was installed and no suite
+was run.</p>
+<p>All four marks were re-established from the code rather than carried
+forward, and all four hold on the same mechanisms.
+<code>record_belief</code> still names its own order in its docstring —
+<code>dedupe -&gt; tombstone (exact+global) -&gt; conflict -&gt; create</code>
+— and still runs two <code>check_tombstone</code> lookups, the exact
+scope tuple and a global one, so a value rejected globally cannot be
+re-asserted into a narrower scope. <code>MemoryClaim.status</code> is
+still constrained to five values with retrieval filtering on
+<code>active</code>. Scope, room and agent are still composed into the
+query rather than applied after it. The confirm-tier write queue is
+still a queue a person resolves.</p>
+<p>The report carried no <code>capability_evidence</code> block, having
+been written before that block existed. It has one now, one record per
+mark, each naming the file and lines a reader can check and the tests
+that cover it — which is the part of a mark that ages, and the part this
+corpus keeps getting wrong when a report is written once and re-pinned
+twice.</p>
+<p>Two details are worth having in the evidence rather than only in the
+prose. The tombstone is keyed on the <em>value</em> —
+<code>(scope, subj_pred_key, value_key, room_uuid)</code> — not on the
+claim, which is what makes it a rejected-value record rather than an
+archived row. And <code>AssistantWriteIntent</code> binds its payload by
+<code>payload_hash</code> so that, in the model's own words, "a
+confirmed intent executes exactly what was previewed — the assistant
+cannot mutate it after confirmation": the approval covers a specific
+payload, not a permission.</p>
 <p><strong>2026-07-26</strong> — <a
 href="https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c"><code class="commit-id" title="9f565bf26175bc5e09288f70ec666a4616a2323c">9f565bf2…</code></a>
 — Re-pinned the same day, during the atlas's first publication.</p>

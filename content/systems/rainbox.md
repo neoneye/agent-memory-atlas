@@ -6,13 +6,18 @@ root: ../..
 page_kind: system
 source_name: neoneye/RainBox
 source_url: https://github.com/neoneye/RainBox
-revision: 9f565bf26175bc5e09288f70ec666a4616a2323c
-revision_url: https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c
-analyzed_at: 2026-07-26
+revision: 2e22c8e59937c4f1765354343c297c42f1ec5b9c
+revision_url: https://github.com/neoneye/RainBox/commit/2e22c8e59937c4f1765354343c297c42f1ec5b9c
+analyzed_at: 2026-09-09
 capabilities: "tombstone, trust_state, scope_enforced, human_review"
+capability_evidence:
+  tombstone: "MemoryRejectedValue, consulted on the governed write path | source/db/memory.py:589-608,755-759, source/db/models.py:825 | a rejected value is stored keyed on `(scope, subj_pred_key, value_key, room_uuid)` — the value, not the claim — and `record_belief` consults it before creating anything, its docstring naming the order as `dedupe -> tombstone (exact+global) -> conflict -> create`. Two lookups run: the exact scope/room/agent tuple, and a global one, so a value rejected globally cannot be re-asserted into a narrower scope. `clear_tombstone` is the deliberate reversal, and `correct_belief` consults the same record at :561 | source/db/test_tombstones.py, source/db/test_record_belief_conflict.py"
+  trust_state: "MemoryClaim.status, withholding on the retrieval path | source/db/memory.py:644, source/db/models.py:777 | the column is constrained to `candidate, active, superseded, rejected, expired`, and conflict retrieval filters `MemoryClaim.status == \"active\"`, so four of the five states withhold rather than rank. `candidate` is the one that matters: a claim can exist, be addressable and be reviewable without being retrievable | source/db/test_memory_trust_schema.py, source/db/test_conflict_resolution.py"
+  scope_enforced: "scope, room and agent as query predicates on the same read path | source/db/memory.py:106,193,645-651 | retrieval walks a level list and composes `MemoryClaim.scope == lv_scope` into the query, narrowing further by `room_uuid` and `agent_uuid` for non-global levels rather than filtering afterwards. The scope key is also part of the tombstone key, so the boundary holds on the write path as well as the read | source/db/test_memory.py, source/db/test_conflict_resolution.py"
+  human_review: "AssistantWriteIntent, a confirm-tier queue over assistant memory writes | source/db/models.py:1207-1216, source/webapp/chat_api.py:783-820 | a confirm-tier write is proposed and must not execute until an operator approves it, and the payload is bound by `payload_hash` so \"a confirmed intent executes exactly what was previewed — the assistant cannot mutate it after confirmation\". The state machine is `proposed -> confirmed -> executing -> completed | failed` with `rejected` and `undone` as terminal states, and all three operator verbs are HTTP endpoints: confirm, reject, undo | source/agents/test_assistant_writes.py"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Claim, evidence, embedding, retrieval event"
   storage: "Postgres/SQLAlchemy plus pgvector"
@@ -652,6 +657,14 @@ RainBox is worth studying if you want memory to be an inspectable, governed oper
 - Tests: `rainbox/source/**/test_*memory*.py`, `rainbox/source/agents/test_chat_context.py`, `test_assistant_writes.py`, `test_assistant_profile.py`.
 
 ## History
+
+**2026-09-09** — [`2e22c8e59937c4f1765354343c297c42f1ec5b9c`](https://github.com/neoneye/RainBox/commit/2e22c8e59937c4f1765354343c297c42f1ec5b9c) — second reading, 693 commits past the previous pin: 590 files, 97,702 insertions. Screened before reading; nothing was installed and no suite was run.
+
+All four marks were re-established from the code rather than carried forward, and all four hold on the same mechanisms. `record_belief` still names its own order in its docstring — `dedupe -> tombstone (exact+global) -> conflict -> create` — and still runs two `check_tombstone` lookups, the exact scope tuple and a global one, so a value rejected globally cannot be re-asserted into a narrower scope. `MemoryClaim.status` is still constrained to five values with retrieval filtering on `active`. Scope, room and agent are still composed into the query rather than applied after it. The confirm-tier write queue is still a queue a person resolves.
+
+The report carried no `capability_evidence` block, having been written before that block existed. It has one now, one record per mark, each naming the file and lines a reader can check and the tests that cover it — which is the part of a mark that ages, and the part this corpus keeps getting wrong when a report is written once and re-pinned twice.
+
+Two details are worth having in the evidence rather than only in the prose. The tombstone is keyed on the *value* — `(scope, subj_pred_key, value_key, room_uuid)` — not on the claim, which is what makes it a rejected-value record rather than an archived row. And `AssistantWriteIntent` binds its payload by `payload_hash` so that, in the model's own words, "a confirmed intent executes exactly what was previewed — the assistant cannot mutate it after confirmation": the approval covers a specific payload, not a permission.
 
 **2026-07-26** — [`9f565bf26175bc5e09288f70ec666a4616a2323c`](https://github.com/neoneye/RainBox/commit/9f565bf26175bc5e09288f70ec666a4616a2323c) — Re-pinned the same day, during the atlas's first publication.
 
