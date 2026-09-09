@@ -6,10 +6,15 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omniintelligence"
 source_url: https://github.com/OmniNode-ai/omniintelligence
-revision: 8c67665add2b611307a78a3f351e0fac18c5bad8
-revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/8c67665add2b611307a78a3f351e0fac18c5bad8
-analyzed_at: 2026-08-11
+revision: ce104631eab515b58fd984b748c5157337ea0176
+revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176
+analyzed_at: 2026-09-09
 capabilities: "trust_state, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "learned_patterns.status, filtered on the injection read path | deployment/database/migrations/005_create_learned_patterns.sql:36, src/omniintelligence/repositories/learned_patterns.repository.yaml:80,134,228 | the column is constrained to `candidate, provisional, validated, deprecated`, and three injection queries in the repository contract carry an explicit lifecycle filter marked in the YAML as OMN-1894 -- only injectable states are returned, so a candidate or deprecated pattern is withheld from a session rather than ranked below the others | tests/unit/repositories/test_contract_lifecycle_filter.py"
+  audit_log: "pattern_lifecycle_transitions, one row per state change | deployment/database/migrations/010_create_pattern_lifecycle_audit.sql, src/omniintelligence/nodes/node_pattern_lifecycle_effect/handlers/handler_transition.py | a separate table records the transitions rather than overwriting a status column in place, and the transition handler is the writer, so promotion and demotion both leave a durable trail. It is the state-change history, not a content history: the row records the move, not the pattern text before and after | tests/integration/test_promotion_lifecycle_integration.py"
+  human_review: "pattern_disable_events, an actor-and-reason record over disable and re-enable | deployment/database/migrations/006_create_pattern_disable_events.sql:16-40, 008_create_disabled_patterns_current_view.sql | `reason TEXT NOT NULL` and `actor VARCHAR(100) NOT NULL` are both required by the schema, so a disable cannot be recorded anonymously or without an explanation, and `event_type` is constrained to `disabled` or `re_enabled` so the reversal is a first-class event rather than a delete. A target may be one pattern or a whole pattern class. The schema does not distinguish a human actor from an automated one -- the column admits `user, system, or automated process` by its own comment -- so the mark rests on the surface existing and being mandatory, not on a proof that a person used it | none"
+  negative_eval: "the contract lifecycle filter, asserted against the SQL rather than a result set | tests/unit/repositories/test_contract_lifecycle_filter.py | the case loads the repository contract and inspects the SQL of every injection query for a status it must not permit, so a query that would return a deprecated pattern fails at contract level rather than only when a fixture happens to contain one. It is a static assertion about the read path, which is stronger than a single populated-result case in coverage and weaker in that it never exercises the database | this is the test"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -279,6 +284,16 @@ Gaps:
 
 Roughly 150,000 lines of tests, with per-node suites under `node_tests/` alongside shared `tests/unit`, `tests/integration` and `tests/integration/e2e`.
 
+### The retrieval eval, and what it refuses to claim
+
+`src/omniintelligence/code_projection/retrieval_eval/` is a committed harness over a committed corpus — a golden query set, metrics, a replay driver, a scorecard and a baseline — and the interesting part is what it says about its own limits rather than what it scores.
+
+The golden set is ten rows: six positives and four negatives. Its docstring gives the reason for the size rather than the number alone — the corpus exposes two retrievable chunk keys, so *"six positives — two documents times three genuinely distinct intents — exhausts the honest positive space; a fourth phrasing per document would paraphrase one of those three rather than add a new correct answer."* Volume comes from replaying each row at every state where it has a deterministic expected result, not from padding the set.
+
+`metrics.py` then states which of its own metrics cannot discriminate on that corpus. `recall@10` is pinned at 1.00 for every N ≤ 10, *"so it cannot express a failure below N = 11"*, and the module records the chance floors that would apply at N = 20 — 0.50 for recall@10, 0.25 for recall@5, 0.05 for recall@1 and 0.18 for MRR — as an `ARMING_MINIMUM_DISTINCT_DOCUMENTS` threshold the eval must clear before its ranking numbers mean anything.
+
+A harness that ships the conditions under which its own headline metric is uninformative is rare in this corpus, and it is the opposite failure mode to the one the [benchmarks page](../../benchmarks/) spends its length on. The committed `baseline_scorecard.json` carries the corpus manifest id, the distinct chunk keys, an embedding compatibility key and an assertion count, so a later run can be compared against it or refused as incomparable.
+
 The **negative retrieval assertion** is `tests/unit/repositories/test_contract_lifecycle_filter.py`, and it is an unusual shape. Rather than asserting about a result set, it loads the repository contract and greps the SQL of every injection query for a status it must not permit:
 
 > *"DEPRECATED patterns have been demoted and should no longer be used. They MUST NOT be injected."*
@@ -347,4 +362,12 @@ The uncomfortable judgement is about the gap between the design and its wiring. 
 
 ## History
 
-**2026-08-11** — [`8c67665add2b611307a78a3f351e0fac18c5bad8`](https://github.com/OmniNode-ai/omniintelligence/commit/8c67665add2b611307a78a3f351e0fac18c5bad8) — first reading, on the `dev` default branch. Screened before reading: 0 auto-run surfaces, 29 build-time exec surfaces (all `conftest.py`), 0 unpinned manifests, and a `uv.lock` unchanged for 16 days; nothing was installed and nothing was executed. The three `omnibase-*`/`omnimarket` git dependencies were not readable at this reading, so no claim here rests on them.
+**2026-09-09** — [`ce104631eab515b58fd984b748c5157337ea0176`](https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176) — second reading, 59 commits along the default `dev` branch: 226 files, 23,928 insertions. Screened before reading; nothing was installed and no suite was run.
+
+The four marks are untouched. Every path this report's appendix names still exists, and the diff across all of them is 71 files and 172 insertions, most of it one-line `contract.yaml` edits — so the lifecycle audit table, the disable-events table, the transition gate, the guardrails and the contract-filter test are all as described.
+
+The 24,000 insertions landed almost entirely in a subsystem the report did not cover: `code_projection`, with `context_serving` and `retrieval_eval` beside it. Section 10 now covers the eval, because it is the part with something to say to this atlas. It is a committed harness over a committed corpus whose golden set is ten rows, and both the set size and the metric selection are argued rather than asserted — the docstring explains why a seventh positive would be a paraphrase rather than a new answer, and `metrics.py` records that `recall@10` is pinned at 1.00 below eleven distinct documents and therefore "cannot express a failure", along with the chance floors that would apply once the corpus is large enough to arm it.
+
+Six new migrations arrived (020 through 028, with debug-intelligence tables, LLM routing decisions, review calibration runs and an agent-actions retention policy); none of them touches the pattern lifecycle the marks rest on.
+
+**2026-08-11** — [`8c67665add2b611307a78a3f351e0fac18c5bad8`](https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176) — first reading, on the `dev` default branch. Screened before reading: 0 auto-run surfaces, 29 build-time exec surfaces (all `conftest.py`), 0 unpinned manifests, and a `uv.lock` unchanged for 16 days; nothing was installed and nothing was executed. The three `omnibase-*`/`omnimarket` git dependencies were not readable at this reading, so no claim here rests on them.
