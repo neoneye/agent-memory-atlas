@@ -6,9 +6,9 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omniclaude"
 source_url: https://github.com/OmniNode-ai/omniclaude
-revision: 9604842857f74ecdba5b063c67bf142a7649502e
-revision_url: https://github.com/OmniNode-ai/omniclaude/commit/9604842857f74ecdba5b063c67bf142a7649502e
-analyzed_at: 2026-08-11
+revision: 59b3c0ec3524b029abd4bc9f89e7d43d89be4abe
+revision_url: https://github.com/OmniNode-ai/omniclaude/commit/59b3c0ec3524b029abd4bc9f89e7d43d89be4abe
+analyzed_at: 2026-09-09
 capabilities: ""
 stack_storage: "delegated"
 stack_retrieval: ""
@@ -29,7 +29,7 @@ matrix:
 
 ## 1. Executive Summary
 
-OmniClaude is a Claude Code plugin and the delivery half of a two-repository memory loop. [OmniIntelligence](../omniintelligence/) learns patterns from session events and grades them; this repository fetches the survivors over HTTP, injects them into sessions through hooks, records what it injected, and reports outcomes back. MIT-licensed, about 108,000 lines of Python with a further 195,000 lines of tests.
+OmniClaude is a Claude Code plugin and the delivery half of a two-repository memory loop. [OmniIntelligence](../omniintelligence/) learns patterns from session events and grades them; this repository fetches the survivors over HTTP, injects them into sessions through hooks, records what it injected, and reports outcomes back. MIT-licensed, about 110,000 lines of Python with a further 221,000 lines of tests.
 
 It stores no memory of its own, and it is in this atlas for a different reason: **it is the only system here that runs a standing randomized trial on whether its memory helps.** `assign_cohort` hashes an identity with a salt, takes the result mod 100, and sends the bottom 20% to a control cohort that receives no injection at all. The control session still writes an injection record — with an empty pattern list, `source = CONTROL_COHORT`, the assignment seed, and the effective control percentage and salt that produced the assignment — so an analysis months later can tell which configuration generated which arm. Almost every memory system in this corpus argues that its memory helps; this one is set up to find out, and it is the reason the report exists.
 
@@ -258,5 +258,13 @@ Adopt the whole loop only if you are already running the other half. And read th
 - The store this depends on: [OmniIntelligence](../omniintelligence/), `GET /api/v1/patterns`.
 
 ## History
+
+**2026-09-09** — [`59b3c0ec3524b029abd4bc9f89e7d43d89be4abe`](https://github.com/OmniNode-ai/omniclaude/commit/59b3c0ec3524b029abd4bc9f89e7d43d89be4abe) — second reading, 128 commits along the default `dev` branch: 460 files, 53,331 insertions, of which 117 files and 26,880 insertions land inside the paths this report's appendix names. Screened before reading; nothing was installed and no suite was run.
+
+Both criticisms hold, and neither has been narrowed. `assign_cohort` still takes `user_id` and `repo_path` for sticky identity, and the single production caller at `handler_context_injection.py:409` still passes neither — `assign_cohort(session_id, config=cfg.cohort)` — so the arms are still re-drawn per session. The injection hooks are still unregistered: the manifest still opens with *"Every context-injection/measurement hook stays DISABLED"*, and the number of narrowly-scoped guards re-registered beside that sentence has grown from four to sixteen.
+
+The growth in that manifest is the reading's finding. Each carve-out now carries a required record — owner, reason, expiry, restoration — under a standing rule the file states in its own words: *"A disable with no expiry and no re-enable ticket is how OMN-13244 left enforcement dark for months while the rule it enforced was corrected by hand ~61 times."* Two of the newer guards were added after measuring exactly that failure shape at a tool seam no repository gate can see: a background-model guard after 41 workflow dispatches in one session inherited a banned model, and a ticket-creation gate after roughly 1,500 tickets were minted in a fortnight against a rule that existed only as prose. The rule this repository derives from its own history — that a control living in prose or in memory fails silently and at scale — is the same claim the atlas makes about memory systems generally, arrived at from the other direction.
+
+No mark moves; this repository still stores nothing of its own. The scoring formula is unchanged, with `provisional_dampening` still a multiplier rather than an admission decision.
 
 **2026-08-11** — [`9604842857f74ecdba5b063c67bf142a7649502e`](https://github.com/OmniNode-ai/omniclaude/commit/9604842857f74ecdba5b063c67bf142a7649502e) — first reading, on the `dev` default branch. Screened before reading: 0 auto-run surfaces, 11 build-time exec surfaces (`conftest.py`), three uninstalled git-hook payloads under `scripts/git-hooks/`, 0 unpinned manifests, and a `uv.lock` unchanged for 9 days; nothing was installed and nothing was executed. Read as the injection half of a loop whose store is [OmniIntelligence](../omniintelligence/); the shared `omnibase-*` git dependencies were not publicly readable at this reading.
