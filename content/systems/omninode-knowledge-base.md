@@ -1,15 +1,17 @@
 ---
 title: "OmniNode Knowledge Base"
 eyebrow: "Every claim needs evidence, and none has any"
-description: "A decision ledger with a typed schema, a per-type status enum and five CI-enforced checks — whose own rule that an accepted claim carries an evidence artifact has zero instances, and whose ledger contains two records with the same id."
+description: "A decision ledger with a typed schema, a per-type status enum and eight CI-enforced checks — whose own rule that an accepted claim carries an evidence artifact has zero instances, and whose ledger contains two records with the same id."
 root: ../..
 page_kind: system
 source_name: "OmniNode-ai/knowledge-base"
 source_url: https://github.com/OmniNode-ai/knowledge-base
-revision: 37f76b13827987823dd71ef7fe3c9358dbc06a41
-revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/37f76b13827987823dd71ef7fe3c9358dbc06a41
-analyzed_at: 2026-08-12
+revision: 5e32bc35dc5aec727799199c0991f3cb412cf7b4
+revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4
+analyzed_at: 2026-09-09
 capabilities: "trust_state"
+capability_evidence:
+  trust_state: "the per-type status enum, validated at CI | scripts/validate.py:386-425, schemas/frontmatter.schema.json | every artifact carries a `status` from a per-type enum, checked by `validate_frontmatter` against Pydantic models and by a generated JSON schema CI fails on if it drifts. At this commit the ledger holds 37 accepted, 20 proposed, 1 superseded and 1 emerging. The mark measures a discrete state that governs whether a record counts as settled — `proposed` and `superseded` are not the current answer to anything — and the honest limit is that this is a documentation repository: nothing retrieves from it at runtime, so the state governs a reader rather than filtering a query | tests/ runs the validator; no test asserts a superseded record is excluded from a result, because there is no result to exclude it from"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -60,12 +62,13 @@ evidence artifact exists and is referenced."* `evidence/README.md` puts the rule
 in one line: *"Every accepted ADR and confirmed pivot should have at least one
 evidence file. Claims without evidence are hypotheses."*
 
-`evidence/` contains a README and nothing else. So do `plans/` and
-`experiments/`. Three of the nine documented artifact types have zero instances,
-and the missing one is the type the whole philosophy rests on — against 28 ADRs
-and 15 doctrine documents. The rule names two kinds specifically: 8 ADRs carry
-`status: accepted` and 5 pivots do, so 13 artifacts fail it by name and 29 carry
-an accepted-family status overall.
+`experiments/` contains a README and a template and nothing else — the directory
+that would hold the evidence an accepted claim is supposed to carry. `plans/`
+has filled since, at 21 documents, and `evidence/` no longer exists as a
+directory at all. So one of the documented artifact types has zero instances,
+and it is the type the whole philosophy rests on — against 52 ADRs, 15 doctrine
+documents and 104 guides. The rule names two kinds specifically: 37 ADRs carry
+`status: accepted` and 7 pivots do, so 44 artifacts fail it by name.
 
 **And the ledger has a key collision.** `adrs/ADR-0010-adaptive-recursive-contract-bisection.md`
 and `adrs/ADR-0010-required-context-parity-ratchet.md` both declare
@@ -253,7 +256,7 @@ sentence in a contributing guide.
 repository as central:
 
 1. *"Every accepted ADR and confirmed pivot should have at least one evidence
-   file."* Eight accepted ADRs, five accepted pivots, zero evidence files. Under
+   file."* Thirty-seven accepted ADRs, seven accepted pivots, zero evidence files. Under
    the repository's own next sentence — *"Claims without evidence are
    hypotheses"* — the ledger holds no accepted decisions at all, only hypotheses
    that say `accepted`.
@@ -394,4 +397,14 @@ turns the project's philosophy from a paragraph into a property.
 
 ## History
 
-**2026-08-12** — [`37f76b13827987823dd71ef7fe3c9358dbc06a41`](https://github.com/OmniNode-ai/knowledge-base/commit/37f76b13827987823dd71ef7fe3c9358dbc06a41) — first reading. The screen found no auto-run surface, no build-time execution and a `uv.lock` unchanged for 81 days; `CLAUDE.md` is addressed to a reading agent and was read as data. Nothing was installed or run — the artifact counts, the status distribution, the empty directories and the duplicate `adr_id` come from reading the frontmatter of every file in the tree.
+**2026-09-09** — [`5e32bc35dc5aec727799199c0991f3cb412cf7b4`](https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4) — second reading, 52 commits on: 452 files and 162,080 insertions, most of it artifacts rather than machinery. Screened before reading: no auto-run surface, no build-time execution, no unpinned surface, nothing inside the cooldown — the cleanest screen in this corpus. Nothing was installed and no suite was run.
+
+**The central finding holds and has widened.** ADR-0019 still states the rule — *"agents lie, and self-attestation is not proof"* — and `experiments/`, the directory that would hold the evidence artifacts an accepted claim is supposed to carry, still contains exactly a README and a template. Accepted records went from thirteen to **forty-four** across ADRs and pivots. No `evidence:` field anywhere in `adrs/` or `pivots/` carries a value. The repository's most load-bearing claim about itself has more instances than before and the same zero artifacts behind it.
+
+**The duplicate-id defect was answered, and the answer is an exemption rather than a resolution.** `scripts/validate.py` gained `check_adr_id_uniqueness`, written for exactly this defect and explaining why nothing else caught it: `adr_id` is a bare `str` with no uniqueness constraint, both records validate individually, and the generated indexes are keyed off frontmatter so they do not surface it either. But `ADR-0010` is still claimed by two files — `ADR-0010-adaptive-recursive-contract-bisection.md` and `ADR-0010-required-context-parity-ratchet.md` — and passes because `_KNOWN_ADR_ID_COLLISIONS` exempts it.
+
+The exemption is the good kind, and the distinction is worth drawing rather than scoring. It is keyed on the **exact path set**, so a third colliding file, an unrelated file joining the same id, or a different id colliding all still fail; the comment states that "an entry is removed the moment its collision is resolved" and calls it "pending owner sign-off". So the defect is registered, bounded, and cannot silently grow — which is a better outcome than a check that was never written, and a worse one than a fix. The report says it is still there because it is.
+
+The mark is unchanged, and its evidence record states the limit that matters for a documentation repository: the status enum governs a reader, not a query, because nothing retrieves from this store at runtime.
+
+**2026-08-12** — [`37f76b13827987823dd71ef7fe3c9358dbc06a41`](https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4) — first reading. The screen found no auto-run surface, no build-time execution and a `uv.lock` unchanged for 81 days; `CLAUDE.md` is addressed to a reading agent and was read as data. Nothing was installed or run — the artifact counts, the status distribution, the empty directories and the duplicate `adr_id` come from reading the frontmatter of every file in the tree.
