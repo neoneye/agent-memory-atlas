@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **394 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **395 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -367,6 +367,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/opencode/"><span class="az-id">OpenCode</span><span class="az-what">Hooks, no contract</span><code class="az-repo">anomalyco/opencode</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/opencode-mem/"><span class="az-id">OpenCode Memory</span><span class="az-what">A path traversal it found in itself, with the payload printed</span><code class="az-repo">tickernelz/opencode-mem</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/opencompany/"><span class="az-id">OpenCompany</span><span class="az-what">The model cannot name the namespace</span><code class="az-repo">zeenie-ai/OpenCompany</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/opencontext/"><span class="az-id">OpenContext</span><span class="az-what">The store owns the index, not the text</span><code class="az-repo">0xranx/OpenContext</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/openexecutive/"><span class="az-id">OpenExecutive</span><span class="az-what">The audit watches the read</span><code class="az-repo">SenteLabsAI/OpenExecutive</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/openhands-sdk/"><span class="az-id">OpenHands SDK</span><span class="az-what">Six thousand characters, oldest lines first</span><code class="az-repo">OpenHands/software-agent-sdk</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/openhuman/"><span class="az-id">OpenHuman</span><span class="az-what">Taint-gated memory</span><code class="az-repo">tinyhumansai/openhuman</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

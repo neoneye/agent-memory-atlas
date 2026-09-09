@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 394 reports.</strong></p>
+<p><strong>This page covers all 395 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -1555,6 +1555,30 @@ stand up a service to get it.</li>
 <li>Do not copy when: corrections must survive a background pass —
 unless the correction can live in <code>pinned/</code>, which is the
 narrow case this design does answer.</li>
+</ul>
+<h3 id="opencontext"><a
+href="../systems/opencontext/"><code>opencontext</code></a></h3>
+<ul>
+<li>Best idea: the memory is the file. SQLite indexes it and LanceDB
+projects it, but nothing holds a second copy of the text, so an index
+that has drifted from the user's real notes is not a state this design
+can reach.</li>
+<li>Biggest risk: there is no scope of any kind on the read path —
+<code>SearchOptions</code> has five fields and none is a folder, project
+or tenant — so folders organise results without bounding them.</li>
+<li>Most reusable component: <code>stable_id</code> beside the path, so
+a document stays resolvable through a rename; and a one-line human
+<code>description</code> in the index, which turns a manifest into a
+triage surface.</li>
+<li>Maturity impression: a coherent young project that hands an agent an
+address rather than content, with two narrow defects — a type filter
+applied after the candidate cut, and an <code>npm test</code> that skips
+the Rust suite holding most of the assertions.</li>
+<li>Study when: your users already keep knowledge in files and you want
+to be the index rather than the owner.</li>
+<li>Do not copy when: you need status, provenance, supersession or more
+than one user — the design delegates history to git, and the tree does
+not require the contexts root to be a repository.</li>
 </ul>
 <h3 id="opencode"><a
 href="../systems/opencode/"><code>opencode</code></a></h3>

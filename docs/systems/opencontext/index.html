@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal context store whose
+memory is Markdown files in a folder tree, with SQLite as the index and
+LanceDB as the vector store, handing an agent paths to read rather than
+content to consume.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenContext — Agent Memory Atlas">
+    <meta property="og:description" content="A personal context store
+whose memory is Markdown files in a folder tree, with SQLite as the
+index and LanceDB as the vector store, handing an agent paths to read
+rather than content to consume.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenContext — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal context store
+whose memory is Markdown files in a folder tree, with SQLite as the
+index and LanceDB as the vector store, handing an agent paths to read
+rather than content to consume.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenContext — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenContext",
+      "description": "A personal context store whose memory is Markdown files in a folder tree, with SQLite as the index and LanceDB as the vector store, handing an agent paths to read rather than content to consume.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The store owns the index, not the text</p>
+          <h1>OpenContext</h1>
+          <p class="document-deck">A personal context store whose memory
+is Markdown files in a folder tree, with SQLite as the index and LanceDB
+as the vector store, handing an agent paths to read rather than content
+to consume.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/0xranx/OpenContext">
+              <span>Source</span>
+              <strong>0xranx/OpenContext</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f" title="0649e7134346f6f5038a9b29cc5c824ae6a54f3f">
+              <span>Analyzed revision</span>
+              <code>0649e713…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-09</strong>
+            </div>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenContext is a personal context store — MIT, 93 commits, roughly
+23,400 lines of JavaScript under <code>src/</code>, 7,000 lines of Rust
+across two crates, 3,800 more in a Tauri shell, and an Expo iOS client
+beside them. The pitch is <em>"Bring your own coding agent"</em>: it
+does not ship an agent, it makes the context an agent already has
+somewhere reusable across agents and repositories.</p>
+<p><strong>The design decision worth reading is what it declines to
+store.</strong> A memory here is a file. SQLite holds an index — an id,
+a parent, a unique relative path, an absolute path, a human description,
+a <code>stable_id</code> and two timestamps — and LanceDB holds chunk
+vectors. The text itself stays on disk as Markdown. What the MCP surface
+hands an agent is consequently a <em>path</em>: <code>oc_manifest</code>
+returns a JSON list of a folder's documents "for the agent to read
+context by path", and <code>oc_resolve</code> and
+<code>oc_get_link</code> turn a name into an address.</p>
+<p>That is why the tool list is shorter than it first appears. There are
+ten tools, and none of them writes a document body or deletes
+anything:</p>
+<pre><code>oc_list_folders   oc_list_docs     oc_create_doc    oc_set_doc_desc   oc_manifest
+oc_search         oc_resolve       oc_get_link      oc_folder_create  oc_index_status</code></pre>
+<p>An agent creates a doc, names it, describes it, and then writes the
+body with the file tools it already had. The store never becomes a
+second copy of the text, and the failure mode where a memory system's
+index and the user's actual files drift apart cannot arise, because
+there is only one artefact.</p>
+<p>Two things sit against it, and both are narrow rather than
+structural.</p>
+<p><strong>The type filter runs after the candidate set is cut.</strong>
+<code>search</code> retrieves, then applies
+<code>hits.retain(...)</code> for <code>doc_type</code>. When results
+are aggregated by content the candidate limit <em>is</em> the requested
+limit, so a filtered search silently returns fewer rows than asked for
+rather than fetching deeper. The other two aggregation modes take
+<code>limit * 5</code> candidates first and are not exposed to this.</p>
+<p><strong><code>npm test</code> does not run most of the
+tests.</strong> It chains <code>test:core</code>,
+<code>test:search</code> and <code>test:native</code>; the Rust suite —
+where 130 of the assertions live — is <code>test:rust</code>, reachable
+only through <code>test:all</code>, along with the CLI integration
+suite.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three layers, and only the first is durable.</p>
+<pre class="text"><code>contexts/&lt;folder&gt;/&lt;doc&gt;.md        the memory. plain files.
+SQLite: folders, docs             the index. paths, descriptions, ids, timestamps.
+LanceDB: chunk vectors            the search projection. rebuildable from the files.</code></pre>
+<p>A folder is a tree node with a <code>rel_path</code> that is
+<code>UNIQUE</code>, and <code>ON DELETE CASCADE</code> down to its
+docs. A doc is a row pointing at a file. The <code>description</code>
+column is the one editorial field in the schema: a short human statement
+of what the file is for, which is what <code>oc_manifest</code> gives an
+agent so it can decide which paths are worth opening without reading
+them all.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the store indexes files rather than holding text, so an agent is handed an address and reads the body with the tools it already has, and the vector layer is a rebuildable projection of the same files</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the store indexes files rather than holding text, so an agent is handed an address and reads the body with the tools it already has, and the vector layer is a rebuildable projection of the same files
+flowchart TB
+    P[&quot;person or agent&quot;] --&gt; CR[&quot;oc_create_doc&lt;br/&gt;&lt;i&gt;name + description&lt;/i&gt;&quot;]
+    CR --&gt; DB[(&quot;SQLite index&lt;br/&gt;folders, docs&quot;)]
+    P --&gt; FILE[&quot;writes the body&lt;br/&gt;&lt;i&gt;ordinary file tools&lt;/i&gt;&quot;]
+    FILE --&gt; FS[(&quot;contexts/*.md&lt;br/&gt;&lt;b&gt;the memory&lt;/b&gt;&quot;)]
+    FS --&gt; EV[&quot;DocEvent bus&lt;br/&gt;&lt;i&gt;created / updated&lt;/i&gt;&quot;]
+    EV --&gt; IDX[&quot;indexer + chunker&quot;]
+    IDX --&gt; EMB[&quot;OpenAI embedding API&quot;]
+    EMB --&gt; LDB[(&quot;LanceDB&lt;br/&gt;chunk vectors&quot;)]
+    Q[&quot;oc_search&quot;] --&gt; MODE{&quot;mode&quot;}
+    MODE --&gt;|keyword| KW[&quot;lexical&quot;]
+    MODE --&gt;|vector| VEC[&quot;LanceDB ANN&quot;]
+    MODE --&gt;|hybrid| RRF[&quot;RRF fusion&lt;br/&gt;&lt;i&gt;3× candidates&lt;/i&gt;&quot;]
+    KW --&gt; AGG[&quot;aggregate by content, doc or folder&quot;]
+    VEC --&gt; AGG
+    RRF --&gt; AGG
+    AGG --&gt; PATHS[&quot;paths + snippets&quot;]
+    PATHS --&gt; P
+
+    style FS fill:#e7efe9,stroke:#3d6b59</code></pre></details></figure>
+<p>The highlighted node is the point. Everything else in the diagram can
+be deleted and rebuilt from it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<ul>
+<li><code>crates/opencontext-core/src/lib.rs</code> (1,254 lines): the
+store — schema, folder and doc CRUD, path resolution, migrations, and
+the optional <code>search</code> feature gate.</li>
+<li><code>crates/opencontext-core/src/search/</code> (~2,700 lines):
+<code>searcher.rs</code> for the three modes and RRF,
+<code>vector_store.rs</code> for LanceDB, <code>indexer.rs</code>,
+<code>chunker.rs</code>, <code>embedding.rs</code> for the OpenAI
+client, <code>index_sync.rs</code> for the event-driven reindex.</li>
+<li><code>crates/opencontext-core/src/events.rs</code>: a tokio
+broadcast bus carrying <code>DocEvent</code> and
+<code>FolderEvent</code>, which is how a file change reaches the indexer
+without the store depending on it.</li>
+<li><code>src/</code> (84 files, ~23,400 lines of JavaScript): the CLI
+internals, the MCP server, and the web UI.</li>
+<li><code>src/mcp/server.js</code> (269 lines): the ten tools.</li>
+<li><code>bin/oc.js</code> (827 lines): the <code>oc</code> command —
+<code>mcp</code>, <code>ui</code>, search and store subcommands.</li>
+<li><code>src-tauri/</code> (3,804 lines of Rust) and
+<code>src-ios/</code> (26 files): the desktop and mobile shells.</li>
+</ul>
+<p>The Rust core is exposed to the JavaScript through
+<code>crates/opencontext-node</code>, a napi binding, so the CLI and the
+MCP server call the same store the desktop app does.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-index-and-what-it-does-not-hold">The index, and what it does
+not hold</h3>
+<pre class="sql"><code>CREATE TABLE IF NOT EXISTS docs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    rel_path TEXT NOT NULL UNIQUE,
+    abs_path TEXT NOT NULL,
+    description TEXT DEFAULT &#39;&#39;,
+    stable_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);</code></pre>
+<p>No content column. <code>stable_id</code> is the interesting one:
+<code>get_doc_by_stable_id</code> resolves a doc by an identity that is
+not its path, which is what lets a rename or a move keep an existing
+reference working — the failure that breaks a memory system addressed by
+path alone.</p>
+<h3 id="search">Search</h3>
+<p>Three modes. <code>keyword_search</code> is lexical;
+<code>vector_search</code> queries LanceDB; <code>hybrid_search</code>
+takes <code>limit * 3</code> candidates from each and fuses them with
+reciprocal rank fusion keyed on <code>file_path:line_start</code>.
+Results are then aggregated at one of three levels — the raw chunk, the
+document, or the folder — which is a genuinely useful control for a
+store whose unit is a file: "which folder should I look in" and "which
+chunk answers this" are different questions.</p>
+<p>Two behaviours a reader should know before relying on it.</p>
+<p><strong>There is no scope filter.</strong> <code>SearchOptions</code>
+carries exactly five fields: <code>query</code>, <code>limit</code>,
+<code>mode</code>, <code>aggregate_by</code>, <code>doc_type</code>.
+There is no folder parameter, no project key, no way to bound a search
+to a subtree. Folders are an organising and aggregating device, not a
+boundary — which is a reasonable choice for a single-user store and is
+the reason this report carries no scope mark.</p>
+<p><strong><code>doc_type</code> is a post-filter.</strong> It is
+applied with <code>hits.retain(...)</code> after the candidate set has
+been retrieved, and the candidate count depends on the aggregation
+mode:</p>
+<pre class="rust"><code>let search_limit = if aggregate_by == AggregateBy::Content {
+    limit                 // no headroom — the filter can only remove
+} else {
+    limit * 5
+};</code></pre>
+<p>So <code>doc_type: "idea"</code> with content aggregation returns
+however many of the top <code>limit</code> chunks happen to be ideas,
+not the top <code>limit</code> ideas.</p>
+<h3 id="index-synchronisation">Index synchronisation</h3>
+<p><code>index_sync.rs</code> subscribes to the event bus and reindexes
+on document lifecycle events, so the vector layer follows the files
+without the store having to call the indexer. Embeddings come from the
+OpenAI embedding API, with the actual dimension detected from the first
+response rather than assumed — a small correctness detail that saves a
+class of configuration error.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A doc is a path with a description. That is the whole model, and the
+absences follow from it rather than being oversights in it:</p>
+<ul>
+<li><strong>No status.</strong> Nothing distinguishes a draft from a
+settled note, or a candidate from a confirmed one.</li>
+<li><strong>No provenance.</strong> A doc does not record which agent or
+session created it, or from what.</li>
+<li><strong>No confidence.</strong></li>
+<li><strong>No validity time.</strong> <code>created_at</code> and
+<code>updated_at</code> are record time. There is no axis for when the
+thing described was true.</li>
+<li><strong>No supersession.</strong> A correction is an edit to a file;
+the previous text is whatever the user's own version control kept.</li>
+</ul>
+<p>The last one is the honest summary of the design: OpenContext
+delegates history to git, because the memory is files and files are
+already versioned by the tool the audience uses. That is a defensible
+answer, and it is an answer this report cannot verify, because nothing
+in the tree requires the contexts directory to be a repository.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Covered in section 4. The point worth repeating here is what a search
+returns: paths and snippets, not assembled context. There is no prompt
+block, no token budget, no injection step. What the agent does with the
+addresses is the agent's business, which is the consistent consequence
+of the "bring your own agent" premise.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>There is no automatic capture. Nothing watches a conversation,
+extracts facts, or writes on the agent's behalf. A doc exists because a
+person or an agent called <code>oc_create_doc</code>, and it has content
+because something wrote the file.</p>
+<p>For a memory system this is unusual and worth stating plainly rather
+than treating as a gap: the write path is entirely explicit, so the
+failure modes that dominate this corpus — a model deciding what is worth
+remembering, an extractor laundering its own output back into the store
+— cannot occur here. The cost is that nothing accumulates unless someone
+does the work.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Ten MCP tools, listed in section 1. The set is deliberately
+read-and-address heavy: four list or resolve, one searches, one reports
+index status, and three mutate the <em>index</em> — create a folder,
+create a doc, set a description. Nothing writes a body and nothing
+deletes.</p>
+<p>The tool descriptions in <code>src/mcp/server.js</code> are written
+in Chinese while the README ships in English and Chinese, so an
+English-only agent reads the schema and the parameter names but not the
+prose intent. That is a fact about the surface rather than a defect.</p>
+<p>Deletion exists in the core crate and the CLI —
+<code>DELETE FROM docs</code>, cascading folder removal, a force flag
+for non-empty folders — so the capability is present and simply not
+exposed to the agent. Given that a delete here removes a row and, on the
+folder path, cascades, keeping it out of the model's reach is a
+defensible boundary.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>The memory is the file.</strong> No second copy, no
+reconciliation problem, no drift between what the user edits and what
+the store believes.</li>
+<li><strong>The vector layer is a rebuildable projection</strong> driven
+by an event bus rather than by callers remembering to reindex.</li>
+<li><strong><code>stable_id</code> survives a rename</strong>, which is
+the failure a path-addressed store otherwise walks into.</li>
+<li><strong>Embedding dimensions are detected, not
+assumed.</strong></li>
+<li><strong>The agent-facing surface cannot delete</strong>, and cannot
+silently rewrite a body.</li>
+<li><strong><code>rel_path</code> is <code>UNIQUE</code> and foreign
+keys are on</strong>, with <code>ON DELETE CASCADE</code> making folder
+removal a single decision rather than a sweep.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong>No scope of any kind on the read path.</strong> Correct for
+one user and one machine; the thing to fix first if this ever serves
+two.</li>
+<li><strong>The <code>doc_type</code> post-filter can
+under-return</strong> in content aggregation.</li>
+<li><strong>No epistemic state at all</strong>, so a stale note and a
+current one are indistinguishable to a search that ranks on
+similarity.</li>
+<li><strong>Embeddings go to a third-party API</strong> — the store is
+local, the index is not, and a reader evaluating this as a private
+context store should know where the text goes.</li>
+<li><strong>The default <code>npm test</code> is not the test
+suite.</strong> Most assertions live behind <code>test:rust</code> and
+<code>test:integration</code>, which <code>npm test</code> does not
+call.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Two suites, and the split matters.</p>
+<p><strong>JavaScript</strong>: 1,024 lines across five files —
+<code>tests/core/config.test.js</code>,
+<code>tests/search/formatter.test.js</code>,
+<code>tests/native/native-adapter.test.js</code>,
+<code>tests/native/store-native.test.js</code>, and
+<code>tests/integration/cli.test.js</code> — run with
+<code>node --test</code>.</p>
+<p><strong>Rust</strong>: 130 test attributes across
+<code>crates/opencontext-core/src/tests.rs</code> (98) and
+<code>src/search/tests.rs</code> (32), covering folder and doc CRUD,
+renames, moves, the force flag on non-empty folder removal, and the
+error paths for every not-found case.</p>
+<pre class="json"><code>&quot;test&quot;:  &quot;npm run test:core &amp;&amp; npm run test:search &amp;&amp; npm run test:native&quot;,
+&quot;test:all&quot;: &quot;npm run test &amp;&amp; npm run test:integration &amp;&amp; npm run test:rust&quot;</code></pre>
+<p>The plain <code>test</code> script skips both the CLI integration
+suite and the entire Rust suite. A contributor running
+<code>npm test</code>, or a CI job configured with it, exercises neither
+the store nor the searcher.</p>
+<p><strong>No benchmark, and none claimed.</strong> There is no accuracy
+number, no comparison and no leaderboard anywhere in the tree or the
+README — which for a personal context store is the honest posture, and
+the atlas records it as that rather than as an absence.</p>
+<p><strong>No negative retrieval evidence.</strong> The
+<code>*_not_found</code> cases are error paths — a rename against a
+missing folder returns an error — not assertions that a populated search
+omits something it should. Nothing here earns
+<code>negative_eval</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Index files, do not copy them.</strong> If your users
+already keep their knowledge in files, a store that owns the index and
+hands back paths avoids the entire drift problem and inherits their
+version control for free.</li>
+<li><strong>Give every document a <code>stable_id</code> alongside its
+path.</strong> A path is an address that changes; an identity is
+not.</li>
+<li><strong>Return an address, not assembled context</strong>, when the
+consumer is an agent that already has file tools.</li>
+<li><strong>Put a one-line human <code>description</code> in the
+index</strong>, so a manifest is a triage surface rather than a
+directory listing.</li>
+<li><strong>Drive reindexing from a lifecycle event bus</strong> rather
+than from callers.</li>
+<li><strong>Detect the embedding dimension from the first API
+response.</strong></li>
+<li><strong>Aggregate results at three levels</strong> — chunk,
+document, folder — because "where should I look" and "what is the
+answer" are different questions.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Filtering after the candidate cut</strong> without giving
+the filter headroom; the content-aggregation path here can return fewer
+results than requested.</li>
+<li><strong>A default test script that runs the minority of your
+tests.</strong></li>
+<li><strong>Documenting an agent-facing tool surface in one language
+while shipping a bilingual README.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Borrow the file-as-memory shape if your users write things down
+anyway and you want to be the index rather than the owner. Read section
+5 first if you need status, provenance or supersession — none of them
+exist here, and the design's answer is that they belong to git, which
+the tree does not require.</p>
+<p>Do not borrow this as a multi-user store. There is no scope key on
+the read path and no place to put one without changing
+<code>SearchOptions</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>doc_type</code> be pushed into the vector query rather
+than applied after it, so a filtered search returns <code>limit</code>
+results?</li>
+<li>Should the contexts root be required to be a git repository, given
+that the design delegates history to it?</li>
+<li>What happens to <code>stable_id</code> when a file is moved by the
+user outside the app — is the identity recovered, or is a new row
+created beside the old one?</li>
+<li>Is there a reason the MCP surface omits deletion permanently, or is
+it pending a confirmation flow?</li>
+<li>Would a folder parameter on <code>SearchOptions</code> be enough to
+make this usable for two people, or does the single-user assumption
+reach further than the search path?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>The store and schema:
+<code>crates/opencontext-core/src/lib.rs</code> — the <code>docs</code>
+and <code>folders</code> DDL <code>:117-139</code>,
+<code>get_doc_by_stable_id</code> <code>:182</code>, the cascading
+folder delete <code>:592-600</code>, the doc delete
+<code>:838</code>.</li>
+<li>Search: <code>crates/opencontext-core/src/search/searcher.rs</code>
+— <code>search</code> <code>:54</code>, the <code>doc_type</code> retain
+<code>:85-91</code>, the candidate-limit branch <code>:70-74</code>,
+<code>hybrid_search</code> <code>:335</code>, <code>rrf_fusion</code>
+<code>:350</code>.</li>
+<li>Options: <code>crates/opencontext-core/src/search/types.rs</code> —
+<code>SearchOptions</code> <code>:93-104</code> (five fields, none of
+them a scope).</li>
+<li>Vector store and embeddings: <code>search/vector_store.rs</code>
+(LanceDB), <code>search/embedding.rs</code> (the OpenAI client and its
+dimension detection), <code>search/chunker.rs</code>,
+<code>search/indexer.rs</code>, <code>search/index_sync.rs</code>.</li>
+<li>Events: <code>crates/opencontext-core/src/events.rs</code> —
+<code>DocEvent</code>, <code>FolderEvent</code>, a tokio broadcast
+bus.</li>
+<li>Agent surface: <code>src/mcp/server.js</code> — ten
+<code>registerTool</code> calls at
+<code>:29,43,58,74,89,110,149,170,197,217</code>.</li>
+<li>CLI: <code>bin/oc.js</code> — the <code>mcp</code> command
+<code>:780</code>, the <code>ui</code> command <code>:790</code>.</li>
+<li>Native binding:
+<code>crates/opencontext-node/src/lib.rs</code>.</li>
+<li>Tests: <code>tests/{core,search,native,integration}/</code>,
+<code>crates/opencontext-core/src/tests.rs</code>,
+<code>crates/opencontext-core/src/search/tests.rs</code>; the script
+wiring is <code>package.json:12-19</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -n &quot;delete\|remove\|write_doc\|set_content\|update_doc&quot; src/mcp/server.js
+#   0 — the agent surface exposes no deletion and no content write
+
+grep -n -A 20 &quot;pub struct SearchOptions&quot; crates/opencontext-core/src/search/types.rs
+#   five fields: query, limit, mode, aggregate_by, doc_type — no folder, project or tenant key
+
+grep -rn &quot;audit\|history\|journal\|event_log&quot; crates/opencontext-core/src/lib.rs
+#   0 — events.rs is an in-process tokio broadcast bus for index sync, not a durable record
+
+grep -n &quot;fn .*not_\|fn .*exclud\|fn .*filter&quot; crates/opencontext-core/src/*/tests.rs crates/opencontext-core/src/tests.rs
+#   only *_not_found error paths; no case asserts a populated search omits a record</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f"><code class="commit-id" title="0649e7134346f6f5038a9b29cc5c824ae6a54f3f">0649e713…</code></a>
+— first reading, at the head of <code>main</code>, MIT, 93 commits, last
+pushed 16 June 2026. Screened before anything was read: no auto-run
+surface, four build-time execution points, three unpinned manifests all
+with lockfiles beside them, three lockfiles between 222 and 253 days old
+so the tree sits well outside the seven-day cooldown, and an
+<code>AGENTS.md</code> addressed to a reading agent, read as data. A
+<code>scripts/pre-commit</code> hook payload is present and inert — not
+installed into <code>.git/hooks</code> — and was read rather than run.
+Nothing was installed and no suite was run.</p>
+<p>No capability marks, and the reasons are structural rather than
+incidental. <code>scope_enforced</code> is withheld because
+<code>SearchOptions</code> carries no scope of any kind — folders
+aggregate results and do not bound them. <code>audit_log</code> is
+withheld because the only event machinery is a tokio broadcast bus for
+index synchronisation, with nothing durable behind it.
+<code>trust_state</code>, <code>bitemporal</code> and
+<code>tombstone</code> are withheld because a doc row carries a
+description, a <code>stable_id</code> and two record timestamps and
+nothing else: no status, no validity axis, no record of a value refused.
+<code>human_review</code> is withheld because the GUI displays and edits
+rather than adjudicating, and <code>negative_eval</code> because the
+committed <code>*_not_found</code> cases are error paths rather than
+assertions that a populated result omits something.</p>
+<p>The reading's finding is what the design declines to own. A memory
+here is a file; SQLite indexes it and LanceDB projects it, and the MCP
+surface hands an agent a path rather than content —
+<code>oc_manifest</code> returns a folder's documents for the agent to
+read by path. None of the ten tools writes a body or deletes anything,
+so the store never becomes a second copy of the text and the drift
+between an index and a user's real files cannot arise.
+<code>stable_id</code> is the detail that makes it hold: a doc is
+resolvable by an identity that survives a rename, which is the failure a
+path-addressed store otherwise walks into.</p>
+<p>Two narrow defects are recorded against it. The <code>doc_type</code>
+filter is applied with <code>hits.retain</code> after the candidate set
+is taken, and in content-aggregation mode the candidate limit equals the
+requested limit, so a filtered search returns fewer rows rather than
+searching deeper. And <code>npm test</code> chains only the core, search
+and native suites — the CLI integration tests and the entire Rust suite,
+which holds 130 of the assertions, run only under
+<code>test:all</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

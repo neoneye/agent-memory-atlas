@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 394 reports.**
+**This page covers all 395 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -590,6 +590,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: ~9,000 lines with a test beside nearly every module, and comments that read as scar tissue — per-operation kill signals for git, `execFile` with no shell.
 - Study when: a team wants shared agent memory and does not want to stand up a service to get it.
 - Do not copy when: corrections must survive a background pass — unless the correction can live in `pinned/`, which is the narrow case this design does answer.
+
+### [`opencontext`](../systems/opencontext/)
+- Best idea: the memory is the file. SQLite indexes it and LanceDB projects it, but nothing holds a second copy of the text, so an index that has drifted from the user's real notes is not a state this design can reach.
+- Biggest risk: there is no scope of any kind on the read path — `SearchOptions` has five fields and none is a folder, project or tenant — so folders organise results without bounding them.
+- Most reusable component: `stable_id` beside the path, so a document stays resolvable through a rename; and a one-line human `description` in the index, which turns a manifest into a triage surface.
+- Maturity impression: a coherent young project that hands an agent an address rather than content, with two narrow defects — a type filter applied after the candidate cut, and an `npm test` that skips the Rust suite holding most of the assertions.
+- Study when: your users already keep knowledge in files and you want to be the index rather than the owner.
+- Do not copy when: you need status, provenance, supersession or more than one user — the design delegates history to git, and the tree does not require the contexts root to be a repository.
 
 ### [`opencode`](../systems/opencode/)
 - Best idea: a compaction hook that lets a plugin append context as well as replace the prompt — the moment a memory system most needs, and one few hosts expose.
