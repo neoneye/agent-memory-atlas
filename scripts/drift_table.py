@@ -34,13 +34,23 @@ import json
 import sys
 from pathlib import Path
 
-UNCHECKABLE = {"unreachable", "orphaned", "gone"}
+UNCHECKABLE = {"pin-not-in-branch", "pin-unresolvable", "repo-gone"}
 
+# Phrased so a reader cannot mistake a statement about the pin for a statement
+# about the repository. The first version said "unreachable" of a live repo whose
+# pin had been rewritten out of its branch, and it was read the obvious way.
 REASON = {
-    "unreachable": "pin not comparable to the current default branch",
-    "orphaned": "branch was rewritten under the pin",
-    "gone": "repository deleted, renamed away, or private",
+    "pin-not-in-branch": "repo is live and the commit still resolves, but it is "
+                         "no longer in the default branch's history",
+    "pin-unresolvable": "GitHub no longer serves the pinned commit at all",
+    "repo-gone": "repository deleted, renamed away, or private",
 }
+
+# The workflow keeps registers for 90 days so one week can be diffed against
+# another, which means this has to keep reading files written before the rename.
+# Without these an old artifact's uncheckable rows would fall through to "other"
+# and silently stop being counted.
+LEGACY = {"unreachable": "pin-not-in-branch", "orphaned": "pin-not-in-branch", "gone": "repo-gone"}
 
 
 def load(path: str | None) -> list[dict]:
@@ -59,6 +69,8 @@ def main() -> int:
     if not rows:
         print("empty register", file=sys.stderr)
         return 1
+    for row in rows:
+        row["status"] = LEGACY.get(row["status"], row["status"])
 
     broken = [r for r in rows if r["status"] in UNCHECKABLE]
     stale = sorted(
@@ -70,11 +82,21 @@ def main() -> int:
 
     out = []
     if broken:
-        out.append("### Uncheckable pins — re-pin or re-review")
+        out.append("### Pins that no longer anchor — re-pin or re-review")
         out.append("")
         for r in sorted(broken, key=lambda r: r["slug"]):
-            out.append(f"- `{r['slug']}` — {r['repo']} — {REASON.get(r['status'], r['status'])}")
+            out.append(f"- `{r['slug']}` — {r['repo']} — **{r['status']}**: "
+                       f"{REASON.get(r['status'], r['status'])}")
         out.append("")
+
+    if not stale:
+        out.append(f"No drifted reports in this register ({len(rows)} rows).")
+        out.append("")
+        print("\n".join(out + [
+            f"{len(rows)} reports: {len(current)} at head, 0 drifted, "
+            f"{len(broken)} uncheckable, {len(other)} other."
+        ]))
+        return 0
 
     out.append(f"### Most drifted ({min(args.top, len(stale))} of {len(stale)} stale)")
     out.append("")

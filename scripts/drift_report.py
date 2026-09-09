@@ -62,6 +62,7 @@ SYSTEMS = ROOT / "content" / "systems"
 REPO_API = "https://api.github.com/repos/{owner}/{repo}"
 HEAD_API = "https://api.github.com/repos/{owner}/{repo}/commits?sha={branch}&per_page=1"
 COMPARE_API = "https://api.github.com/repos/{owner}/{repo}/compare/{base}...{head}"
+COMMIT_API = "https://api.github.com/repos/{owner}/{repo}/commits/{sha}"
 
 REPO_RE = re.compile(r"github\.com/([^/]+)/([^/\s]+?)(?:\.git)?/?$")
 HISTORY_RE = re.compile(r"^## History\s*$", re.M)
@@ -70,7 +71,13 @@ ENTRY_RE = re.compile(r"^\*\*(\d{4}-\d{2}-\d{2})\*\*", re.M)
 # Statuses that mean the report's own claims have stopped being verifiable by
 # anyone, as opposed to merely describing an older commit. These are what the
 # scheduled run fails on; drift is not.
-UNCHECKABLE = {"unreachable", "orphaned", "gone"}
+#
+# The names say what is wrong with the *pin*, not with the repository, because
+# the first version of this said "unreachable" for a pin that had been rewritten
+# out of its branch and a reader took it — correctly, from the word — to mean the
+# repository could not be reached. Lolaplex/agents-memory was the case: the repo
+# is live, its pin still resolves by SHA, and it is simply not in `main` any more.
+UNCHECKABLE = {"pin-not-in-branch", "pin-unresolvable", "repo-gone"}
 
 
 class RateLimited(Exception):
@@ -176,7 +183,7 @@ def measure(row: dict) -> dict:
         # A 404 here is not a failed request. The repository has been deleted,
         # renamed without a redirect, or taken private, and the report's source
         # link is dead — a finding, and one no drift number would ever show.
-        row["status"] = "gone" if meta["_error"] == "http-404" else "error-" + meta["_error"]
+        row["status"] = "repo-gone" if meta["_error"] == "http-404" else "error-" + meta["_error"]
         return row
     # A rename redirects and still resolves, so the row records where the repo
     # is *now* — a moved project is a re-read trigger of its own.
@@ -187,18 +194,26 @@ def measure(row: dict) -> dict:
 
     data = request(COMPARE_API.format(owner=owner, repo=repo, base=revision, head=branch))
     if "_error" in data:
-        # A pin can be *unreachable* rather than merely old: force-pushes,
-        # rebases and a swapped default branch leave commits GitHub still serves
-        # by SHA but can no longer compare, so this is the only call that fails.
-        # That is worse than staleness — the report cites a state that is not in
-        # the branch's history at all, so every line number in it is unanchored.
-        # TencentDB Agent Memory is the live case: its default branch is now
-        # `feat/server_team`, which shares no ancestor with the pinned commit.
-        # A transport failure is not the same finding and keeps its own status.
+        # A pin can be cut out of its branch rather than merely left behind:
+        # force-pushes, rebases and a swapped default branch all produce a commit
+        # GitHub may still serve by SHA while `compare` answers "No common
+        # ancestor". That is worse than staleness — the report cites a state that
+        # is not in the branch's history, so its line numbers anchor to nothing a
+        # reader can navigate to — but it says nothing about the repository being
+        # reachable, and the status must not imply that it does.
+        #
+        # Which of the two it is costs one extra call, made only on this path
+        # (8 of 393 reports at the first full run), and the two call for
+        # different work: a pin GitHub still serves can be re-read as it stands,
+        # while one it refuses is gone for everyone and the report has to be
+        # re-pinned or withdrawn. A transport failure is neither and keeps its
+        # own status.
+        if data["_error"] not in {"http-404", "http-422"}:
+            row["status"] = "error-" + data["_error"]
+            return row
+        pinned = request(COMMIT_API.format(owner=owner, repo=repo, sha=revision))
         row["status"] = (
-            "unreachable"
-            if data["_error"] in {"http-404", "http-422"}
-            else "error-" + data["_error"]
+            "pin-unresolvable" if "_error" in pinned else "pin-not-in-branch"
         )
         return row
 
@@ -220,7 +235,10 @@ def measure(row: dict) -> dict:
             row["head"] = head[0]["sha"]
 
     if data.get("status") == "diverged":
-        row["status"] = "orphaned"
+        # The compare resolved, so the pin is reachable — but the branch carries
+        # commits the pin does not and vice versa, which is the same rewritten
+        # history seen from the side where an ancestor still exists.
+        row["status"] = "pin-not-in-branch"
     elif ahead == 0:
         row["status"] = "current"
     else:
