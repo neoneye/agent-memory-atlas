@@ -220,12 +220,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: a small auditable store is enough or shared-by-default agent memory is unsafe.
 
 ### [`tencentdb-agent-memory`](../systems/tencentdb-agent-memory/)
-- Best idea: progressive disclosure from raw evidence through records, scenes, persona, and navigable tool-output maps.
-- Biggest risk: non-atomic JSONL/store updates and fail-open deduplication can create loss or contradictions.
-- Most reusable component: L0/L1/L2/L3 context split and symbolic offload drill-down.
-- Maturity impression: inventive OpenClaw/Hermes integration, but central lifecycle tests and reproducible benchmark evidence are thin.
-- Study when: tool-heavy sessions exceed the context window and raw drill-down must remain possible.
-- Do not copy when: authoritative cross-store consistency, multi-tenant boundaries, or verified memory are required.
+- Best idea: the isolation key is composed into the SQL — on the lexical path, the vector path and the delete path — and mirrored into the FTS5 tables, so a boundary that would silently leak under a post-filter holds under `LIMIT`.
+- Biggest risk: the repository ships no tests at all. Three packages declare `vitest run` and carry configs whose patterns match nothing, so every mechanism here rests on reading the source.
+- Most reusable component: `memory_audit` — one append-only row per L1/L2/L3 mutation, fresh id per event, no delete path, implemented in all three backends.
+- Maturity impression: a four-service platform reached by pointing an agent's `base_url` at a proxy, carrying two real mechanisms and no committed evidence for either; the README's PersonaMem figure has no harness behind it.
+- Study when: integration cost is what blocks a memory layer, or a tenant boundary has to survive ranking and deletion rather than only listing.
+- Do not copy when: a boundary must refuse an unidentified caller, an audit must be complete rather than best-effort, or a failed conflict check must reach the caller.
 
 ### [`cognee`](../systems/cognee/)
 - Best idea: source-preserving, ontology-aware graph/vector pipelines with provenance rollback behind a small remember/recall API.

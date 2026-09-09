@@ -150,7 +150,7 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 206 of 393 apply a scope key as a filter on the
+shallowest.</strong> 207 of 393 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 147 of
@@ -352,7 +352,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 206 of
+A scope <em>key applied as a filter on the read path</em> is what 207 of
 393 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -17699,24 +17699,31 @@ node</td>
 </tr>
 <tr>
 <td><code>tencentdb-agent-memory</code></td>
-<td>L0 conversation, L1 memory record, L2 scene, L3 persona, offload
-reference/map</td>
-<td>JSONL/Markdown plus SQLite FTS5/sqlite-vec or Tencent VectorDB</td>
-<td>FTS + vector hybrid RRF; native cloud hybrid; layered scene/persona
-context</td>
-<td>Successful-turn capture, LLM extraction, store/update/merge/skip
-judge, symbolic tool-output offload</td>
-<td>Internal merge/delete/cleanup; no first-class correction/forget
-tool</td>
-<td>Session fields and data directories; no general tenant boundary</td>
-<td>OpenClaw hooks/tools/context engine; Hermes gateway</td>
-<td>Deferred embeddings, scene/persona generation, retention
-reclamation</td>
-<td>Source message IDs and raw evidence; no verification/rejection
-state</td>
-<td>Layered progressive disclosure with raw drill-down</td>
-<td>Non-atomic dual writes, fail-open dedup, thin core tests,
-unsupported benchmark claims</td>
+<td>L0 conversation row, L1 record, L2 scene and L3 persona artefacts,
+versioned skill</td>
+<td>SQLite with FTS5 and sqlite-vec by default; MongoDB and Tencent
+VectorDB as alternate backends; L2/L3 as files on the SQLite path</td>
+<td>FTS5 plus vector, both filtered by the isolation key; conversation
+search as a tool</td>
+<td>Traffic captured at the proxy, L1 extracted by an LLM in a
+background pipeline worker, deduplicated against existing records</td>
+<td>Versioned update and delete through five v2 handlers, each
+journalled to memory_audit; skills supersede by head flag and keep only
+recent versions</td>
+<td>team_id, user_id, agent_id and task_id as columns and query
+predicates on L0 and L1, resolved from the request body or x-tdai-*
+headers</td>
+<td>A reverse proxy in front of the model API — no plugin, hook or MCP
+server; SDKs and an OpenClaw plugin also ship</td>
+<td>Pipeline worker and timer scanner for extraction, embeddings, scene
+and persona generation</td>
+<td>Source conversation rows behind every record and an audit row behind
+every mutation; no verification, confidence or rejection state</td>
+<td>Isolation carried into the SQL rather than applied after it; an
+append-only mutation journal in all three backends</td>
+<td>No committed tests anywhere in the tree; a benchmark claim with no
+harness behind it; deduplication that stores everything when its
+conflict check fails</td>
 </tr>
 <tr>
 <td><code>terse-memory</code></td>
@@ -19118,7 +19125,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>206 of 393:</em> <a
+<p><em>207 of 393:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -19311,7 +19318,8 @@ href="../systems/superlocalmemory/"><code>superlocalmemory</code></a>,
 <a href="../systems/supermemory/"><code>supermemory</code></a>, <a
 href="../systems/teamai-cli/"><code>teamai-cli</code></a>, <a
 href="../systems/telemem/"><code>telemem</code></a>, <a
-href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
+href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a>,
+<a href="../systems/tigrimosr/"><code>tigrimosr</code></a>, <a
 href="../systems/token-optimizer/"><code>token-optimizer</code></a>, <a
 href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
@@ -19332,7 +19340,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>126 of 393:</em> <a
+<p><em>127 of 393:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -19446,6 +19454,8 @@ href="../systems/simplemem/"><code>simplemem</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/soul-of-waifu/"><code>soul-of-waifu</code></a>, <a
 href="../systems/superlocalmemory/"><code>superlocalmemory</code></a>,
+<a
+href="../systems/tencentdb-agent-memory/"><code>tencentdb-agent-memory</code></a>,
 <a href="../systems/thoughtdag/"><code>thoughtdag</code></a>, <a
 href="../systems/token-savior/"><code>token-savior</code></a>, <a
 href="../systems/tokenmizer/"><code>tokenmizer</code></a>, <a
@@ -24268,7 +24278,7 @@ href="https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720ed
 <li><a
 href="https://github.com/TencentCloud/tencentdb-agent-memory">TencentCloud/tencentdb-agent-memory</a>
 at <a
-href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/45e6e80ae2e63b65fad0d89f5e13171229c8f295"><code class="commit-id" title="45e6e80ae2e63b65fad0d89f5e13171229c8f295">45e6e80a…</code></a></li>
+href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/c387ea4534d08f3204d50a137ef55206d7c50301"><code class="commit-id" title="c387ea4534d08f3204d50a137ef55206d7c50301">c387ea45…</code></a></li>
 <li><a
 href="https://github.com/topoteretes/cognee">topoteretes/cognee</a> at
 <a
