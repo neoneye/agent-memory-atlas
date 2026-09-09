@@ -89,7 +89,15 @@ STATE = ROOT / "scripts" / "state"
 REGISTER = STATE / "drift.jsonl"
 QUEUE = STATE / "queue.txt"
 
-DEFAULT_MAX = 5
+# The queue holds five. This is a ceiling, not a default: a longer queue is a
+# backlog, and a backlog has no point at which the work is finished. The first
+# version made this a plain `--max` default, and within a day it was raised to
+# ten to satisfy a request for "five more" on a queue that already held five —
+# quoting the budget argument while breaking it. The correct answer to that
+# request is to process the five first, so `--max` can lower the ceiling and
+# cannot raise it.
+QUEUE_CEILING = 5
+DEFAULT_MAX = QUEUE_CEILING
 DEFAULT_CADENCE_DAYS = 21
 
 # A pin that no longer anchors is not far along a scale that starts at "current";
@@ -127,6 +135,36 @@ def load_register(path: Path) -> list[dict]:
     # one silently queues work that may already be done. Warn rather than refuse:
     # an offline rank against last week's numbers is still a reasonable thing to
     # want, as long as nobody mistakes it for this week's.
+    # Reconcile against the reports on disk before ranking. A register is a
+    # measurement taken at a moment; the reports move on without it, and a row
+    # whose `analyzed_at` predates the report's would re-queue work already done.
+    # Eleven reports were re-read in one pass on 2026-09-09 against a register
+    # measured that morning, and every one of them stayed eligible in it.
+    # Cheap to fix and entirely offline: the report is the authority on when it
+    # was last read.
+    restated = 0
+    for row in rows:
+        report = SYSTEMS / f"{row['slug']}.md"
+        if not report.is_file():
+            continue
+        text = report.read_text(encoding="utf-8")
+        seen = re.search(r"^analyzed_at:\s*(\d{4}-\d{2}-\d{2})\s*$", text, re.M)
+        pinned = re.search(r"^revision:\s*(\S+)\s*$", text, re.M)
+        if seen and seen.group(1) != row.get("analyzed_at"):
+            row["analyzed_at"] = seen.group(1)
+            row["days_since_analysis"] = (dt.date.today() - dt.date.fromisoformat(seen.group(1))).days
+            restated += 1
+        # A report re-pinned since the measurement has no drift the register can
+        # still vouch for, so it is not a candidate until the next run measures it.
+        if pinned and row.get("revision") and pinned.group(1).strip('"') != row["revision"]:
+            row["status"] = "repinned-since-measurement"
+    if restated:
+        print(
+            f"note: {restated} row(s) restated from the reports on disk, which have been "
+            f"read since this register was measured.",
+            file=sys.stderr,
+        )
+
     stamps = sorted({r.get("checked_at") for r in rows if r.get("checked_at")})
     if stamps:
         age = (dt.date.today() - dt.date.fromisoformat(stamps[0])).days
@@ -164,7 +202,7 @@ def score(row: dict) -> tuple[float, str]:
 def candidates(rows: list[dict], cadence_days: int) -> list[tuple[float, dict, str]]:
     out = []
     for row in rows:
-        if row["status"] == "repo-gone" or not row.get("source_url"):
+        if row["status"] in ("repo-gone", "repinned-since-measurement") or not row.get("source_url"):
             continue
         if row["status"] not in BROKEN:
             if row["status"] != "stale":
@@ -310,7 +348,8 @@ def cmd_rank(args) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--register", type=Path, default=REGISTER)
-    ap.add_argument("--max", type=int, default=DEFAULT_MAX)
+    ap.add_argument("--max", type=int, default=DEFAULT_MAX,
+                    help=f"lower the queue ceiling below {QUEUE_CEILING}; it cannot be raised")
     ap.add_argument("--cadence-days", type=int, default=DEFAULT_CADENCE_DAYS)
     sub = ap.add_subparsers(dest="cmd")
     sub.add_parser("fill").set_defaults(fn=cmd_fill)
@@ -320,6 +359,14 @@ def main() -> int:
     p = sub.add_parser("done"); p.add_argument("url"); p.set_defaults(fn=cmd_done)
     p = sub.add_parser("rank"); p.add_argument("--top", type=int, default=20); p.set_defaults(fn=cmd_rank)
     args = ap.parse_args()
+    if args.max > QUEUE_CEILING:
+        sys.exit(
+            f"--max {args.max} exceeds the queue ceiling of {QUEUE_CEILING}. The cap is the "
+            f"point of the queue: it is a selection against a budget, not a backlog that grows "
+            f"with staleness.\n"
+            f"If the queue is full and more work needs queueing, process what is in it first, "
+            f"or use `add` to put one item at the front and let the tail fall off."
+        )
     if not getattr(args, "fn", None):
         args.fn = cmd_list
     return args.fn(args)

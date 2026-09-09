@@ -136,3 +136,34 @@ Finish one and stop, unless the user asked to keep going. Each item is a full
 reading: a clone, a screen, a report, a count sweep, a build and a push. Batching
 them produces one enormous commit nobody can review and one context window that
 runs out halfway through the third.
+
+## The queue holds five, and that is the point
+
+`scripts/queue.py` refuses a `--max` above five. If asked to add work to a queue
+that is already full, **say so and push back** rather than raising the ceiling:
+
+> The queue already holds five, which is its cap. Shall I work through these
+> first, or should something jump the front with `add` and let the tail fall off?
+
+The cap is not tidiness. A queue with no ceiling is a backlog, and a backlog has
+no point at which the work is finished — which is what happened to the freshness
+output this whole register replaced. `notes/2026-08-04-automating-re-analysis.md`
+argues it directly: the queue is *a selection against a budget*, not a work list
+that grows with staleness.
+
+This has already gone wrong once, on 2026-09-09: a request for "five more" on a
+full queue was answered by setting `--max 10` and working eleven systems in one
+pass. The reading was sound and the batch was not — there was no natural point
+to stop and look at what had been produced. The ceiling is now enforced in the
+tool rather than left to judgement, because a control that lives only in prose
+fails silently, which is a claim this atlas makes about other people's systems.
+
+## The register ages out from under you
+
+`fill` and `rank` restate each row against the report on disk before ranking,
+because a register is a measurement from a moment and the reports move on
+without it. A row whose report has been re-pinned since the measurement is
+marked `repinned-since-measurement` and is not a candidate until the next
+`drift_report.py` run measures it. If you see that note on stderr, it is working
+— but a register more than a few days old should be rebuilt rather than
+reconciled.
