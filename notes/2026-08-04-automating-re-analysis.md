@@ -1,7 +1,14 @@
 # Automating re-analysis, and why stars belong in the scheduler and nowhere else
 
-**Status:** proposal, nothing built. Written after a day of six first readings and
-four re-readings, which is the sample it argues from.
+**Status:** proposal. Written after a day of six first readings and four
+re-readings, which is the sample it argues from. Part of step 2 of the suggested
+order was built on 2026-09-09 — `scripts/drift_report.py` persists a register
+(pin, head, commits of drift, stars, total re-readings, re-readings in a window)
+to gitignored `scripts/state/`, `scripts/drift_table.py` renders it offline, and
+the weekly workflow runs both. The scoring, the cadence cap, the appendix diff,
+the tier-1 list and the `demos/<slug>/` convention are all still unbuilt, and the
+register deliberately does not rank — see below for why sorting by drift is the
+wrong rule.
 **Origin:** the corpus passed 147 reports and manual re-reading stopped scaling.
 
 ## The arithmetic that forces this

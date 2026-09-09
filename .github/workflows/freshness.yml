@@ -1,15 +1,20 @@
 name: Freshness
 
 # Commit pinning makes every claim auditable and makes the atlas go quietly
-# stale. Ordinary drift does not fail: commits landing upstream is the normal
-# state of every report here, and a job that goes red weekly for that is a job
-# nobody reads.
+# stale. Nothing here re-reads a system — that is the expensive part — but a
+# weekly register turns an unbounded maintenance worry into a ranked work list.
 #
-# Two things do fail, because they are not staleness. An orphaned or unreachable
-# pin means the revision a report cites is gone from the project's history, so
-# every quotation and line number in that report has stopped being checkable by
-# anyone. And a run where most requests failed measured nothing while looking
-# exactly like a clean result. `check_freshness.py` returns 1 for both.
+# Ordinary drift does not fail: commits landing upstream is the normal state of
+# every report here, and a job that goes red weekly for that is a job nobody
+# reads. Two things do fail, because they are not staleness. A pin that is no
+# longer reachable from its branch — force-pushed, rebased, or left behind by a
+# swapped default branch — means every quotation and line number in that report
+# has stopped being checkable by anyone. And a run where most requests failed
+# measured nothing while looking exactly like a clean result.
+#
+# `drift_report.py` writes the register and returns 1 for both of those;
+# `drift_table.py` renders it without touching the network, so the same file can
+# be re-ranked later or diffed against an older week's artifact.
 on:
   schedule:
     - cron: "0 6 * * 1"
@@ -23,32 +28,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compare each pinned revision against its default branch
-        id: freshness
+
+      - name: Measure drift for every pinned revision
+        id: drift
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          set -o pipefail
           status=0
-          python3 scripts/check_freshness.py > freshness.txt 2>&1 || status=$?
-          {
-            echo "## Pinned revision drift"
-            echo
-            echo '```'
-            cat freshness.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          cat freshness.txt
-          exit $status
+          python3 scripts/drift_report.py --out drift.jsonl 2> drift.log || status=$?
+          cat drift.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
 
-      # The job summary is deleted with the run, so a week-old freshness reading
-      # had nowhere to live and could not be compared against the next one. The
-      # artifact is the durable copy, and it is uploaded whether the step passed
-      # or failed — a failing run is the one whose output is worth keeping.
-      - name: Keep the reading
+      # Rendered from the register rather than printed during the run, so the
+      # artifact and the summary can never disagree about what was measured.
+      - name: Render the work list
+        if: always()
+        run: |
+          if [ -s drift.jsonl ]; then
+            python3 scripts/drift_table.py drift.jsonl --top 40
+            {
+              python3 scripts/drift_table.py drift.jsonl --top 40 --markdown
+              echo
+              echo '<details><summary>Run log</summary>'
+              echo
+              echo '```'
+              cat drift.log
+              echo '```'
+              echo
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## No register written"
+              echo
+              echo '```'
+              cat drift.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The job summary is deleted with the run, so a week-old reading had
+      # nowhere to live and could not be compared against the next one. The
+      # artifact is the durable copy, uploaded whether the step passed or failed
+      # — a failing run is the one whose output is worth keeping.
+      - name: Keep the register
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: freshness
-          path: freshness.txt
+          name: drift
+          path: |
+            drift.jsonl
+            drift.log
           retention-days: 90
+
+      - name: Report the verdict
+        if: always()
+        # Defaults to 1: if the measuring step died before recording an exit
+        # code, this run did not measure anything and must not read as green.
+        run: exit ${{ steps.drift.outputs.status || '1' }}
