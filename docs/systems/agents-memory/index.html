@@ -110,14 +110,14 @@ enforced by a sentence returned to the model.</p>
               <strong>Lolaplex/agents-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202" title="a2c7812a667a46792a26ea719ad7ea83f875b202">
+            <a class="meta-pill revision-pill" href="https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3" title="a60babbb713f1c3818a3fdc85144a8bd1d5884d3">
               <span>Analyzed revision</span>
-              <code>a2c7812a…</code>
+              <code>a60babbb…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-09</strong>
             </div>
                       </div>
                                         <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
@@ -309,21 +309,27 @@ every matching line.</p>
 <code>iter_project_memory_files(slug)</code>, where
 <code>if slug and p.slug != slug: continue</code> drops other projects.
 With no slug, <strong>every</strong> registered project's store is in
-scope. The user layer is never excluded, under a literal no-op:</p>
-<pre class="python"><code>if project:
-    # still include user layer so cross-cutting facts remain findable
-    pass</code></pre>
-<p>A branch that does nothing, kept to say that nothing happens, is a
-clearer statement of intent than most comments manage.</p>
+scope. The user layer is never excluded, and the docstring states the
+rule rather than a branch:</p>
+<pre class="python"><code>def iter_memory_files(project: str = &quot;&quot;) -&gt; List[Path]:
+    &quot;&quot;&quot;Overarching retrieval: project store(s) first (higher priority), then user store.&quot;&quot;&quot;
+    chunks = iter_project_memory_files(project.strip() if project else &quot;&quot;)
+    chunks.extend(iter_user_memory_files())</code></pre>
+<p>Priority is expressed as list order and de-duplication is by resolved
+path, lower-cased, so the same file reached two ways is returned
+once.</p>
 <p><strong>Delete.</strong> <code>delete_memory(memory_id)</code>
 requires an id containing <code>:</code>, resolves the path,
 bounds-checks the line, pops it and rewrites the file.</p>
-<p><strong>Tests.</strong> Fifteen files including
+<p><strong>Tests.</strong> Twenty-six files including
 <code>test_extract_filters.py</code>,
 <code>test_ingest_pipeline.py</code>,
 <code>test_distill_benchmark.py</code>,
-<code>test_cli_comprehensive.py</code> and
-<code>test_auto_triggering.py</code>, with a
+<code>test_cli_comprehensive.py</code>,
+<code>test_auto_triggering.py</code>, and a <code>remote</code> group —
+<code>test_remote_e2e.py</code>, <code>test_remote_hybrid.py</code>,
+<code>test_remote_merge.py</code>,
+<code>test_remote_server_client.py</code> — with a
 <code>run_all_tests.py</code> runner.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>There is no schema object. The model is the filesystem, and
@@ -454,9 +460,19 @@ line.</p>
 <p><strong>Deletion is real</strong> — a line is removed from a file the
 user owns, with no copies, no index and no export to chase. That is the
 upside of the design and it is a large one.</p>
+<p><strong>The sync bundle is not scoped by the project key.</strong>
+<code>collect_sync_bundle(include_projects=True)</code> gathers the user
+store, the rules and every stored project mirror into one payload, and
+<code>remote/server.py</code> serves it behind a Bearer-token middleware
+that is a pass-through when no token is configured —
+<code>if scope["type"] != "http" or not self.expected_token: return await self.app(...)</code>.
+So the local read path narrows by project and the transport path does
+not, which is a defensible split for a personal mirror and a surprising
+one if the remote is shared. The mark in this report's frontmatter
+measures the read path and says so.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Fifteen test files with a plain runner. The ingest and extraction
+<p>Twenty-six test files with a plain runner. The ingest and extraction
 path is the best covered: <code>test_extract_filters.py</code> asserts
 across three fixtures that the user's question, the assistant's
 acknowledgement and an example hostname do not appear in extracted
@@ -466,6 +482,8 @@ strengths the rubric distinguishes, and unambiguous within it.</p>
 <p><code>test_distill_benchmark.py</code> is the nearest thing to an
 eval and measures distillation throughput rather than quality; no result
 artifact is committed.</p>
+<p>Four <code>test_remote_*.py</code> files cover the sync surface end
+to end, which is where a scoping mistake would travel furthest.</p>
 <p><strong>What I would want before trusting it:</strong> a case
 asserting that <code>search_memory(project="a")</code> never returns a
 line from project b's store, and a case for the id contract — that an id
@@ -567,6 +585,44 @@ the tree.</li>
 <code>test_distill_benchmark.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-09</strong> — <a
+href="https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3"><code class="commit-id" title="a60babbb713f1c3818a3fdc85144a8bd1d5884d3">a60babbb…</code></a>
+— second reading, at <code>v1.1.0</code>. The previous pin is not an
+ancestor of <code>main</code> and the compare API reports no common
+ancestor between them, because <code>a2c7812a</code> is a root commit in
+a history the project replaced. The content survived the replacement:
+<code>a2c7812a^{tree}</code> is <code>2ad78f1d</code>, byte-identical to
+the tree of <code>98d77b38</code> on <code>main</code>, so what the
+previous reading described is still readable and the drift that matters
+is the 76 commits from there to here — 122 files, 9,950 insertions.
+Screened before reading: no auto-run surface, no build-time execution,
+one manifest inside the seven-day cooldown, and two files addressed to a
+reading agent, read as data; nothing was installed and no suite was
+run.</p>
+<p>Both marks survive on the same mechanisms.
+<code>scope_enforced</code> still rests on
+<code>if slug and p.slug != slug: continue</code> in
+<code>iter_project_memory_files</code>, and its evidence record gains
+line numbers. <code>negative_eval</code> still rests on
+<code>tests/test_extract_filters.py</code>, whose three fixtures assert
+the user's question, the assistant's acknowledgement and an example
+hostname stay out of extracted output.</p>
+<p>One published quotation was wrong at this commit and is corrected.
+The report showed a literal no-op — <code>if project: pass</code> under
+the comment <em>"still include user layer so cross-cutting facts remain
+findable"</em> — and praised it as a statement of intent. That branch is
+gone. The behaviour it described is unchanged:
+<code>iter_memory_files</code> extends the project chunks with
+<code>iter_user_memory_files()</code> unconditionally, and the docstring
+now carries the rule the comment used to.</p>
+<p>New material, and the reason the scope mark's wording is narrowed to
+the read path: a <code>remote/</code> package with a sync server,
+client, merge, locality, a hybrid MCP surface and bundled sync hooks.
+<code>collect_sync_bundle(include_projects=True)</code> ships the user
+store, the rules and every stored project mirror in one payload, behind
+a Bearer-token middleware that passes through unauthenticated when no
+token is configured. Tests went from fifteen files to twenty-six, four
+of them covering the remote path.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202"><code class="commit-id" title="a2c7812a667a46792a26ea719ad7ea83f875b202">a2c7812a…</code></a>
 — first reading, at version 1.0.0, on a repository whose history is a

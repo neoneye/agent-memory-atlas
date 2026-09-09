@@ -6,12 +6,12 @@ root: ../..
 page_kind: system
 source_name: "Lolaplex/agents-memory"
 source_url: https://github.com/Lolaplex/agents-memory
-revision: a2c7812a667a46792a26ea719ad7ea83f875b202
-revision_url: https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202
-analyzed_at: 2026-08-20
+revision: a60babbb713f1c3818a3fdc85144a8bd1d5884d3
+revision_url: https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3
+analyzed_at: 2026-09-09
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "the one retrieval path, filtering the project layer | src/agents_memory/store.py `iter_memory_files`, `iter_project_memory_files`, `search_memory` | `search_memory(query, project=…)` calls `iter_memory_files(project)`, which passes the slug to `iter_project_memory_files` where `if slug and p.slug != slug: continue` drops every other project's store — the key reaches the query. It narrows rather than isolates, deliberately: the user layer is always unioned in, under a literal no-op `if project: pass` carrying the comment *\"still include user layer so cross-cutting facts remain findable\"* | tests/test_cli_comprehensive.py exercises search; no committed case asserts cross-project exclusion"
+  scope_enforced: "the one local retrieval path, filtering the project layer | src/agents_memory/store.py:2022-2049,2088-2092 | `search_memory(query, project=…)` calls `iter_memory_files(project)`, which passes the slug to `iter_project_memory_files` where `if slug and p.slug != slug: continue` drops every other project's store — the key reaches the query. It narrows rather than isolates, deliberately: `iter_memory_files` extends the project chunks with `iter_user_memory_files()` unconditionally, under the docstring *\"project store(s) first (higher priority), then user store\"*. The mark measures this read path only; the sync bundle at src/agents_memory/remote/server.py:32-33 collects every stored project mirror in one call and is not scoped by it | tests/test_cli_comprehensive.py exercises search; no committed case asserts cross-project exclusion"
   negative_eval: "the ingest extractor, as committed cases | tests/test_extract_filters.py | extraction from session logs must not carry the user's own question, the assistant's acknowledgement noise or example hostnames into a durable memory — `assertNotIn(\"How can I fix\", joined)`, `assertNotIn(\"[ok]\", joined)`, `assertNotIn(\"example.com\", joined)` across three fixtures | tests/test_extract_filters.py"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -192,24 +192,27 @@ completed move from a partial one.
 **Scope.** `iter_memory_files` unions `iter_user_memory_files()` with
 `iter_project_memory_files(slug)`, where `if slug and p.slug != slug: continue`
 drops other projects. With no slug, **every** registered project's store is in
-scope. The user layer is never excluded, under a literal no-op:
+scope. The user layer is never excluded, and the docstring states the rule
+rather than a branch:
 
 ```python
-if project:
-    # still include user layer so cross-cutting facts remain findable
-    pass
+def iter_memory_files(project: str = "") -> List[Path]:
+    """Overarching retrieval: project store(s) first (higher priority), then user store."""
+    chunks = iter_project_memory_files(project.strip() if project else "")
+    chunks.extend(iter_user_memory_files())
 ```
 
-A branch that does nothing, kept to say that nothing happens, is a clearer
-statement of intent than most comments manage.
+Priority is expressed as list order and de-duplication is by resolved path,
+lower-cased, so the same file reached two ways is returned once.
 
 **Delete.** `delete_memory(memory_id)` requires an id containing `:`, resolves
 the path, bounds-checks the line, pops it and rewrites the file.
 
-**Tests.** Fifteen files including `test_extract_filters.py`,
+**Tests.** Twenty-six files including `test_extract_filters.py`,
 `test_ingest_pipeline.py`, `test_distill_benchmark.py`,
-`test_cli_comprehensive.py` and `test_auto_triggering.py`, with a
-`run_all_tests.py` runner.
+`test_cli_comprehensive.py`, `test_auto_triggering.py`, and a `remote` group —
+`test_remote_e2e.py`, `test_remote_hybrid.py`, `test_remote_merge.py`,
+`test_remote_server_client.py` — with a `run_all_tests.py` runner.
 
 ## 5. Memory Data Model
 
@@ -324,10 +327,19 @@ the whole file rather than the line.
 copies, no index and no export to chase. That is the upside of the design and it
 is a large one.
 
+**The sync bundle is not scoped by the project key.** `collect_sync_bundle(include_projects=True)`
+gathers the user store, the rules and every stored project mirror into one
+payload, and `remote/server.py` serves it behind a Bearer-token middleware that
+is a pass-through when no token is configured — `if scope["type"] != "http" or
+not self.expected_token: return await self.app(...)`. So the local read path
+narrows by project and the transport path does not, which is a defensible split
+for a personal mirror and a surprising one if the remote is shared. The mark in
+this report's frontmatter measures the read path and says so.
+
 ## 10. Tests, Evals, and Benchmarks
 
-Fifteen test files with a plain runner. The ingest and extraction path is the
-best covered: `test_extract_filters.py` asserts across three fixtures that the
+Twenty-six test files with a plain runner. The ingest and extraction path is
+the best covered: `test_extract_filters.py` asserts across three fixtures that the
 user's question, the assistant's acknowledgement and an example hostname do not
 appear in extracted output, which is what earns `negative_eval` — material kept
 out of a *write* rather than out of a read, the weaker of the two strengths the
@@ -335,6 +347,9 @@ rubric distinguishes, and unambiguous within it.
 
 `test_distill_benchmark.py` is the nearest thing to an eval and measures
 distillation throughput rather than quality; no result artifact is committed.
+
+Four `test_remote_*.py` files cover the sync surface end to end, which is where
+a scoping mistake would travel furthest.
 
 **What I would want before trusting it:** a case asserting that
 `search_memory(project="a")` never returns a line from project b's store, and a
@@ -414,5 +429,13 @@ name — the search is a substring scan and the taxonomy is doing all the work.
 - **Tests:** `tests/test_extract_filters.py`, `test_ingest_pipeline.py`, `test_cli_comprehensive.py`, `test_distill_benchmark.py`
 
 ## History
+
+**2026-09-09** — [`a60babbb713f1c3818a3fdc85144a8bd1d5884d3`](https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3) — second reading, at `v1.1.0`. The previous pin is not an ancestor of `main` and the compare API reports no common ancestor between them, because `a2c7812a` is a root commit in a history the project replaced. The content survived the replacement: `a2c7812a^{tree}` is `2ad78f1d`, byte-identical to the tree of `98d77b38` on `main`, so what the previous reading described is still readable and the drift that matters is the 76 commits from there to here — 122 files, 9,950 insertions. Screened before reading: no auto-run surface, no build-time execution, one manifest inside the seven-day cooldown, and two files addressed to a reading agent, read as data; nothing was installed and no suite was run.
+
+Both marks survive on the same mechanisms. `scope_enforced` still rests on `if slug and p.slug != slug: continue` in `iter_project_memory_files`, and its evidence record gains line numbers. `negative_eval` still rests on `tests/test_extract_filters.py`, whose three fixtures assert the user's question, the assistant's acknowledgement and an example hostname stay out of extracted output.
+
+One published quotation was wrong at this commit and is corrected. The report showed a literal no-op — `if project: pass` under the comment *"still include user layer so cross-cutting facts remain findable"* — and praised it as a statement of intent. That branch is gone. The behaviour it described is unchanged: `iter_memory_files` extends the project chunks with `iter_user_memory_files()` unconditionally, and the docstring now carries the rule the comment used to.
+
+New material, and the reason the scope mark's wording is narrowed to the read path: a `remote/` package with a sync server, client, merge, locality, a hybrid MCP surface and bundled sync hooks. `collect_sync_bundle(include_projects=True)` ships the user store, the rules and every stored project mirror in one payload, behind a Bearer-token middleware that passes through unauthenticated when no token is configured. Tests went from fifteen files to twenty-six, four of them covering the remote path.
 
 **2026-08-20** — [`a2c7812a667a46792a26ea719ad7ea83f875b202`](https://github.com/Lolaplex/agents-memory/commit/a2c7812a667a46792a26ea719ad7ea83f875b202) — first reading, at version 1.0.0, on a repository whose history is a single commit titled `.agents/memory v1`. Screened before anything was read: no auto-executing surface, no build-time execution, `pyproject.toml` and `requirements.txt` both inside the seven-day cooldown, one unpinned surface, and `AGENTS.md` and `CLAUDE.md` addressed to a reading agent and recorded as data; nothing was installed and no test was run. The line-numbered id and the revise-in-place return string were established by reading `store.py` against the ABI it implements.
