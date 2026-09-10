@@ -7,10 +7,15 @@ page_kind: system
 source_name: "7xuanlu/origin"
 source_url: https://github.com/7xuanlu/origin
 archive_name: "7xuanlu--origin"
-revision: 87ee2831a8b9445026c33139adfd8d87bf60ad45
-revision_url: https://github.com/7xuanlu/origin/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45
-analyzed_at: 2026-08-09
-capabilities: "tombstone, scope_enforced, human_review"
+revision: 82d30581723cc59f806f4c5364fc1e4c225b57b2
+revision_url: https://github.com/7xuanlu/origin/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2
+analyzed_at: 2026-09-10
+capabilities: "tombstone, scope_enforced, human_review, negative_eval"
+capability_evidence:
+  tombstone: "a dismissed map node keeps its row so its fingerprint stays occupied, and every insert is a no-op against it | crates/wenlan-core/src/db.rs:9236, crates/wenlan-core/src/db/page_map.rs:113, :895, crates/wenlan-core/src/page_map_improve.rs:11, :115-116 | A page-map node carries a `fingerprint` derived from what it points at and where it hangs, under `CREATE UNIQUE INDEX idx_pmn_fp ON page_map_nodes(page_id, fingerprint)`. Dismissing sets `status = dismissed` and keeps the row, so the key stays taken, and every insert is `ON CONFLICT(page_id, fingerprint) DO NOTHING` — the comment states the guarantee, that a fresh uuid cannot bypass it. The conflicting row is then read back to separate a live `Duplicate` from a `Tombstoned`, which is a named outcome the caller handles rather than a silent no-op, and the suggestion pass is insert-only so it *can never modify, resurrect, or overwrite a pinned/active/dismissed row*. What it protects is graph placement rather than the truth of a claim | crates/wenlan-core/src/db/page_map.rs tests"
+  scope_enforced: "a read scope that reaches the SQL and a resolver that refuses ambiguity rather than defaulting | crates/wenlan-core/src/db.rs:26910, :27293, crates/wenlan-mcp/tests/space_roundtrip_e2e.rs | `ReadScope` selects the statement rather than trimming its result — `matches!(scope, ReadScope::Global)` branches the SQL itself — and the space a caller names travels to the wire, which the round-trip test verifies by inspecting the recorded request. The resolver refuses an ambiguous scope instead of picking a default, so a caller who names nothing gets an error rather than a silent widening | crates/wenlan-core/tests/space_scoping_e2e.rs, crates/wenlan-mcp/tests/space_roundtrip_e2e.rs"
+  human_review: "a refinement queue with an awaiting-review status, a partial index over exactly the open states, and three MCP tools plus a CLI that move a row out of it | crates/wenlan-core/src/synthesis/refinement_queue.rs, crates/wenlan-core/src/maintenance.rs:500, :551, :623, crates/wenlan-core/src/repair.rs:3960 | The queue holds proposed changes at `pending` or `awaiting_review` under a partial index over exactly those two, with a `resolved_at` stamp, and `resolve_refinement_if_open` is the transition a person's action causes. The epistemic state lives on the proposed change rather than on the claim, which is why `trust_state` is withheld and this is not | crates/wenlan-core/src/synthesis/refinement_queue.rs tests"
+  negative_eval: "committed cases asserting that another space's content must not come back from a populated result, with the in-scope control asserted first | crates/wenlan-mcp/tests/space_roundtrip_e2e.rs:184-195, crates/wenlan-core/tests/space_scoping_e2e.rs:106, crates/wenlan-core/src/synthesis/refinement_queue.rs:3227-3271 | The MCP round trip seeds two spaces, recalls with `space = alpha`, asserts *alpha result must appear in recall output*, then asserts `!text.contains(\"beta fact two\")` under the message *beta result must not appear when space=alpha* — the positive control precedes the exclusion on the same result, and the comment names the failure it guards: the daemon filtered it out and *the MCP layer must not re-add it*. Beside it, a core test pins that an alpha-tagged memory must not appear under the uncategorized filter, and four assertions pin that unconfirmed folder-document chunks are excluded from both synthesis pools by the `confirmed != 1` predicate, in the direct and the refinement-queue path | 5,819 test attributes across the crates"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -280,9 +285,20 @@ real append-only table and records reads for recency scoring, not mutations.
 **Bitemporal — no.** No validity axis; `last_modified` and `created_at` are
 record time, and there is no as-of read.
 
-**Negative eval — no.** The evaluation harness is large and entirely
-positive-signal: recall, MRR, NDCG, faithfulness, rank overlap. No committed case
-asserts that particular material must not be returned.
+**Negative eval — awarded, and not from the evaluation harness.** That harness is
+large and entirely positive-signal: recall, MRR, NDCG, faithfulness, rank
+overlap. The exclusion assertions live in the test tree instead.
+`space_roundtrip_e2e.rs` seeds two spaces, recalls with `space = alpha`, asserts
+the alpha content appears, then asserts the beta content does not — the positive
+control first, on the same result, so neither half can pass on an empty one. Its
+comment names the failure it guards, which is the interesting part: the daemon
+already filtered the other space out, and the assertion exists because *"the MCP
+layer must not re-add it"* — a test aimed at the seam between two components
+that each believe the other did the filtering. A core test pins that an
+alpha-tagged memory must not appear under the uncategorized filter, and four
+assertions in the refinement queue pin that unconfirmed folder-document chunks
+are excluded from both synthesis pools, in the direct path and again in the
+queue path.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -428,5 +444,7 @@ atlas, and the reason it works is a database constraint rather than a policy.
 `rank_overlap.rs`, `goldens/`), `docs/eval/`
 
 ## History
+
+**2026-09-10** — [`82d30581723cc59f806f4c5364fc1e4c225b57b2`](https://github.com/7xuanlu/origin/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2) — read again, 333 commits and 1,206 files past the previous pin against 268,626 insertions. The three awarded marks hold and now carry evidence records: the page-map fingerprint is still unique per page with `ON CONFLICT … DO NOTHING`, the `Tombstoned` outcome is still a named variant the caller handles, `ReadScope` still branches the SQL rather than trimming its result, and the refinement queue still carries `awaiting_review` under a partial index. **`negative_eval` is added as a first-reading error.** The report said no committed case asserts that particular material must not be returned; `crates/wenlan-mcp/tests/space_roundtrip_e2e.rs` asserted exactly that at the previous pin, in the same file at lines 189-192, with the in-scope positive control immediately before it — and the tree carries further exclusion assertions in `space_scoping_e2e.rs` and four in the refinement queue. The claim was made against the evaluation harness, which is positive-signal, and not against the test tree, which is where the assertions are. Test attributes run 5,819. Screened before reading: a dependency surface changed within the seven-day cooldown; nothing was installed, built or run.
 
 **2026-08-09** — [`87ee2831a8b9445026c33139adfd8d87bf60ad45`](https://github.com/7xuanlu/origin/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45) — first reading. Screened before reading: three auto-run surfaces (`.claude/hooks/`, `.claude/settings.json`, `.githooks/`), build-time execution in two `build.rs` files and an npm manifest, and eleven dependency manifests changed inside the seven-day cooldown including `Cargo.lock`. The tree was read, never built, and no test or eval was run.

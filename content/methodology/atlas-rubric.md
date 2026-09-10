@@ -161,7 +161,7 @@ writing in a report is a queue nothing in the tree ever drains.
 
 **Why:** every scope claim, every deletion claim, and every correction claim in
 this atlas ultimately rests on an assertion of this shape. The negative
-retrieval assertion is carried by one hundred and sixty repositories of four hundred and twelve, and they are not all
+retrieval assertion is carried by one hundred and sixty-one repositories of four hundred and twelve, and they are not all
 asserting the same thing: the
 [benchmarks page](../../benchmarks/#5-what-gets-measured-and-what-does-not)
 separates the ones asserting about *content* from the ones asserting about a
@@ -186,7 +186,7 @@ it also names the one mark that cites no case at all and should probably be
 dropped.
 
 **Three numbers appear above and they are not the same kind of number.** The
-negative retrieval assertion count — one hundred and sixty systems of four hundred and twelve — is live, checked against report frontmatter on every build. Thirty-seven
+negative retrieval assertion count — one hundred and sixty-one systems of four hundred and twelve — is live, checked against report frontmatter on every build. Thirty-seven
 and twenty-seven are dated: what the corpus held, and what the re-score found in it,
 on 2026-08-08. Every mark awarded since was judged against the strict definition
 at the top of this section, but **the read-path share has not been recomputed** —
