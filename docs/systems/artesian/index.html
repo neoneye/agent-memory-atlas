@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Rust workspace of
+fourteen crates that governs one agent loop's committed context and
+keeps a durable store beneath it — where a memory's identity is a hash
+of its content and its routing keys, a stored scope key is applied as a
+read-path filter by every backend, a three-state lifecycle lets a person
+retract a memory out of recall without deleting it, an eviction pass
+appends its archive and delete decisions to a JSONL log, and a CI gate
+proves one project's private memory does not reach another's query while
+two controls in the same result prove the query was not simply empty.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Artesian — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Rust
+workspace of fourteen crates that governs one agent loop's committed
+context and keeps a durable store beneath it — where a memory's identity
+is a hash of its content and its routing keys, a stored scope key is
+applied as a read-path filter by every backend, a three-state lifecycle
+lets a person retract a memory out of recall without deleting it, an
+eviction pass appends its archive and delete decisions to a JSONL log,
+and a CI gate proves one project's private memory does not reach
+another's query while two controls in the same result prove the query
+was not simply empty.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Artesian — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Rust
+workspace of fourteen crates that governs one agent loop's committed
+context and keeps a durable store beneath it — where a memory's identity
+is a hash of its content and its routing keys, a stored scope key is
+applied as a read-path filter by every backend, a three-state lifecycle
+lets a person retract a memory out of recall without deleting it, an
+eviction pass appends its archive and delete decisions to a JSONL log,
+and a CI gate proves one project's private memory does not reach
+another's query while two controls in the same result prove the query
+was not simply empty.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Artesian — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Artesian",
+      "description": "An Apache-2.0 Rust workspace of fourteen crates that governs one agent loop's committed context and keeps a durable store beneath it \u2014 where a memory's identity is a hash of its content and its routing keys, a stored scope key is applied as a read-path filter by every backend, a three-state lifecycle lets a person retract a memory out of recall without deleting it, an eviction pass appends its archive and delete decisions to a JSONL log, and a CI gate proves one project's private memory does not reach another's query while two controls in the same result prove the query was not simply empty.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The gate is the context; the memory is
+underneath</p>
+          <h1>Artesian</h1>
+          <p class="document-deck">An Apache-2.0 Rust workspace of
+fourteen crates that governs one agent loop's committed context and
+keeps a durable store beneath it — where a memory's identity is a hash
+of its content and its routing keys, a stored scope key is applied as a
+read-path filter by every backend, a three-state lifecycle lets a person
+retract a memory out of recall without deleting it, an eviction pass
+appends its archive and delete decisions to a JSONL log, and a CI gate
+proves one project's private memory does not reach another's query while
+two controls in the same result prove the query was not simply
+empty.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aquifer-labs/artesian">
+              <span>Source</span>
+              <strong>aquifer-labs/artesian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d" title="14e4f2d9494d396695f79350b9e42bacd82d953d">
+              <span>Analyzed revision</span>
+              <code>14e4f2d9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aquifer-labs--artesian" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>aquifer-labs--artesian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Artesian is two systems in one workspace, and the interesting thing
+about it is which half the engineering went into. <code>headgate</code>
+is a <strong>context governor</strong>: it decides what enters one agent
+loop's bounded committed context, evicts under saturation, compresses to
+fit, and records an admit-or-reject decision with a reason code for
+every candidate. <code>aquifer</code> is the <strong>durable
+memory</strong> underneath it: nineteen thousand lines of store,
+backends, decay, eviction, entity extraction, relations and
+consolidation. Both are real. The marks in this report all sit on the
+second, and that is worth saying plainly, because a reader who follows
+the better prose will end up in the first.</p>
+<p>Apache-2.0; fourteen crates and 67,852 lines of Rust; 213 commits
+between 13 June and 21 August 2026 from two authors; version 0.5.11; 523
+test cases across 28 integration files and the inline modules. The
+screen found no auto-run surface, no build-time execution path, nothing
+inside the seven-day cooldown, one unpinned dependency surface in the
+Python bindings, and an <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> treated as data; nothing was installed, built or
+run.</p>
+<p><strong>A memory's identity is a hash of its value and its
+address.</strong> <code>stable_memory_id</code>
+(<code>crates/aquifer/src/identity.rs:7-31</code>) is a SHA-256 over the
+content, the tier, the node id, and each of the six routing keys that is
+set. Two consequences follow, and they are the spine of this design.
+Storing the same sentence twice is idempotent — the second
+<code>store</code> finds the existing record and returns it without
+writing. And storing the same sentence under a different project, user
+or session produces a <em>different</em> record, so deduplication can
+never collapse two tenants' memories into one.</p>
+<p><strong>The scope key is applied inside the index, not after
+it.</strong> Every populated key on a <code>MemoryQuery</code> becomes
+an equality requirement: a predicate in the files backend
+(<code>files.rs:795-812</code>), a <code>must_eq</code> condition pushed
+into the vector store's own filter in the other family
+(<code>vector_memory.rs:1973-2003</code>). The producers are wired — the
+MCP server stamps <code>project</code> from its config, takes
+<code>agent_id</code> and <code>user_id</code> from the request, and
+fills scope, user, session and task from a <code>SessionKey</code> for
+session-scoped recall. This earns <code>scope_enforced</code>.</p>
+<p><strong>A committed CI gate proves the isolation, and cannot pass
+vacuously.</strong> <code>run_files_leak_gate</code>
+(<code>gauge/src/retrieval_regression.rs:355-392</code>) stores three
+sentinels — project <code>A</code>, <code>shared</code>, project
+<code>B</code> — queries as <code>A</code>, then queries with no project
+at all. The pass condition is a five-clause conjunction:
+<code>!project_leaks_b &amp;&amp; project_has_a &amp;&amp; project_has_shared &amp;&amp; !default_has_private &amp;&amp; default_bounded</code>.
+The two negative clauses are guarded by two positive controls in the
+same result set, so an empty result fails rather than passes.
+<code>run_regression_suite</code> hard-fails on it and CI runs the
+binary on every push. This earns <code>negative_eval</code>, and it is
+the single best-built thing in the repository.</p>
+<p><strong>Retraction withholds without deleting, and only a person can
+do it.</strong> <code>MemoryState</code> is <code>Active</code>,
+<code>Archived</code> or <code>Retracted</code> on the record itself.
+<code>retract</code> sets the state, stamps <code>retracted_at</code>,
+adds a <code>superseded_by</code> relation and stores a separate
+retraction record; the original stays reachable through
+<code>get_node</code> or a query with <code>include_archived</code>, and
+leaves default recall entirely. Both backends filter on the state rather
+than ranking with it, which is the line the <code>trust_state</code>
+mark draws — and <code>confidence</code> sits beside it as a float used
+for ranking, on the other side of that line. Neither
+<code>retract</code> nor <code>evict</code> is an MCP tool: the
+twenty-eight-tool surface an agent sees has no way to remove
+anything.</p>
+<p><strong>The eviction log is the audit record, and it is narrower than
+the README implies.</strong> <code>append_eviction_log</code>
+(<code>eviction.rs:243-262</code>) opens
+<code>~/.artesian/eviction.jsonl</code> in append mode and writes one
+JSON object per decision, carrying the action, a reason and the
+retrieval strength that produced it. That earns <code>audit_log</code>.
+But the README's headline — <em>"every admit/reject decision in an
+append-only audit log"</em> — points at <code>qualify.jsonl</code>, and
+that file is written with <code>std::fs::write</code>
+(<code>headgate/src/bundle.rs:602-607</code>), which truncates: it is a
+dump of an in-memory vector, append-only in RAM and rewritten whole on
+disk. <code>lifecycle.jsonl</code> is written the same way
+(<code>:393-398</code>).</p>
+<p><strong>And the audit only ever fires on one backend.</strong> The
+<code>artesian memory evict</code> handler constructs
+<code>aquifer::FilesBackend::new(&amp;files_root)</code> unconditionally
+(<code>artesian-cli/src/main.rs:3900-3913</code>) and applies its
+decisions by walking the memory directory for <code>.md</code> files. On
+the sqlite-vec backend the README recommends as the zero-infrastructure
+default, the eviction pass reads no records, archives nothing, deletes
+nothing, and appends nothing. Decay is computed at read time and still
+ranks, so retrieval degrades gracefully — but the forgetting model the
+type documentation describes is unreachable wherever most users will
+start.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A candidate arrives — recalled from the durable store, or produced by
+the loop — and meets a gate before it is allowed to occupy context. The
+gate scores it on relevance, checks it against what is already committed
+for redundancy, and can consult an LLM judge or a council for drift;
+whatever it decides, it emits a <code>QualifyDecision</code> carrying
+<code>admitted</code>, a score, a human reason and a
+<code>ReasonCode</code> from a closed enum. Admitted units live in a
+bounded committed state that evicts and compresses when the token budget
+saturates. That is the governor, and it is about the present turn.</p>
+<p>Underneath, and on a different clock, is the store. A memory is
+written once, addressed by the hash of what it says and where it
+belongs, and then it is subject to three forces. Recall filters it by
+its routing keys and its lifecycle state. Decay dampens how strongly it
+ranks as it goes untouched. A person can retract it — which is a claim
+about its truth — or evict it, which is a claim about its usefulness.
+The two are deliberately different verbs with different records:
+retraction leaves a superseding memory in the store, eviction leaves a
+line in a log outside it.</p>
+<p>The design's central bet is that these two clocks should not be the
+same mechanism. What the agent may act on right now is a budget problem;
+what the system believes is a lifecycle problem. Most of the systems
+that fail at this conflate them, and Artesian's separation is the reason
+its scope filter and its state filter are one line apart in the same
+predicate while its gate lives in a different crate entirely.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a candidate meets the qualify gate, which admits it to the bounded committed context or records a reason code for rejecting it; what is committed can be stored as a memory record whose id hashes its content together with its routing keys; recall filters on those keys and on the lifecycle state; retraction and eviction are the two exits, both CLI-only, and only eviction writes an append-only log</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a candidate meets the qualify gate, which admits it to the bounded committed context or records a reason code for rejecting it; what is committed can be stored as a memory record whose id hashes its content together with its routing keys; recall filters on those keys and on the lifecycle state; retraction and eviction are the two exits, both CLI-only, and only eviction writes an append-only log
+flowchart TB
+    C[&quot;candidate unit&lt;br/&gt;recalled, or produced by the loop&quot;]
+    G{&quot;qualify gate&lt;br/&gt;relevance, redundancy, drift&quot;}
+    Q[(&quot;qualify.jsonl&lt;br/&gt;admit or reject with a reason code&lt;br/&gt;written with fs::write — truncates&quot;)]
+    ACC[(&quot;committed context&lt;br/&gt;bounded by a token budget&lt;br/&gt;evicts and compresses when saturated&quot;)]
+    S[&quot;store: id = sha256 of content,&lt;br/&gt;tier, node id and every routing key&quot;]
+    DUP{&quot;id already&lt;br/&gt;present?&quot;}
+    R[(&quot;durable store&lt;br/&gt;files, sqlite-vec, qdrant, pgvector&quot;)]
+    F[&quot;find: keyword hits&lt;br/&gt;merged with vector hits&quot;]
+    T[&quot;scope filter: scope, agent,&lt;br/&gt;session, task, user, project&quot;]
+    ST[&quot;state filter: Active only,&lt;br/&gt;unless include_archived&quot;]
+    OUT[&quot;hits returned to the agent&quot;]
+    RT[&quot;artesian memory retract&lt;br/&gt;CLI only, not an MCP tool&quot;]
+    EV[&quot;artesian memory evict&lt;br/&gt;CLI only, files backend only&quot;]
+    EL[(&quot;~/.artesian/eviction.jsonl&lt;br/&gt;append-only: action, reason, strength&quot;)]
+
+    C --&gt; G
+    G --&gt;|&quot;reason code, either way&quot;| Q
+    G --&gt;|admitted| ACC
+    ACC --&gt; S
+    S --&gt; DUP
+    DUP --&gt;|&quot;yes — return it unchanged&quot;| R
+    DUP --&gt;|no| R
+    R --&gt; F
+    F --&gt; T
+    T --&gt; ST
+    ST --&gt; OUT
+    RT --&gt;|&quot;state = Retracted,&lt;br/&gt;plus a stored retraction record&quot;| R
+    EV --&gt;|&quot;state = Archived,&lt;br/&gt;then delete if --hard&quot;| R
+    EV --&gt; EL</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Rust workspace on edition 2024, minimum toolchain 1.85, resolver 2.
+Fourteen member crates, of which five carry the memory story:
+<code>aquifer</code> (19,750 lines) is the store, its backends and its
+lifecycle; <code>headgate</code> (5,674) is the context governor;
+<code>flume</code> (8,833) is the agent loop, its quota accounting and
+its subagent receipts; <code>headrace</code> (1,335) is a small
+store-and-verify layer; and <code>gauge</code> (2,928) is the evaluation
+harness. <code>artesian-mcp</code> (9,237) and <code>artesian-cli</code>
+(12,279) are the two surfaces. <code>artesian</code> itself is a
+ten-line name-reservation placeholder that says so in its own
+manifest.</p>
+<p>Four backends implement one <code>MemoryBackend</code> trait
+(<code>crates/aquifer/src/backend.rs</code>): Markdown files on disk,
+sqlite-vec, Qdrant, and TencentDB, with pgvector beside them. The trait
+carries default implementations for the optional half of the surface —
+<code>mark_used</code>, <code>retract</code>, <code>neighbors</code>,
+<code>by_entity</code>, <code>projects</code> and
+<code>bulk_store</code> all default to a no-op or an empty vector so a
+third-party backend stays source-compatible. That is a deliberate and
+honest choice, and it is also where the coverage asymmetry in this
+report comes from: a backend that does not override <code>retract</code>
+silently has no retraction.</p>
+<p>Operationally the floor is low.
+<code>artesian init --backend sqlite-vec</code> needs no infrastructure;
+the files backend needs none either. Qdrant and pgvector are opt-in
+network dependencies. There is no daemon in the memory path: decay is a
+function of the record and the clock evaluated during ranking, not a
+sweep. Consolidation, backfill, the <code>dream</code> pass and eviction
+are commands a person runs. A Homebrew tap, a Dockerfile and a
+<code>deploy/</code> directory exist; Python bindings ship under
+<code>bindings/python</code> with a <code>pyproject.toml</code> that
+declares dependencies without a lockfile beside it — the one unpinned
+surface the screen found.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>MemoryBackend::store</code> →
+<code>memory.validate_confidence()</code> →
+<code>SessionLaneLock::acquire</code> on the collection and session →
+<code>stable_memory_id(&amp;memory)</code> → an existence check that
+returns the stored record unchanged if the id is present → construct the
+<code>MemoryRecord</code> with <code>state: MemoryState::Active</code> →
+atomic file write → <code>append_update_log</code>
+(<code>crates/aquifer/src/files.rs:236-292</code>).</li>
+<li><strong>Read.</strong> <code>MemoryBackend::find</code> → keyword
+hits and vector hits gathered separately →
+<code>merge(&amp;[keyword_hits, vector_hits], options)</code> in the
+trait default (<code>backend.rs:60-72</code>) → tenancy predicate →
+state predicate → decay applied to the score → optional MMR
+diversification.</li>
+<li><strong>Scope filter.</strong> <code>matches_tenancy</code>
+(<code>files.rs:795-812</code>) for the files family;
+<code>filter_from_query</code> (<code>vector_memory.rs:1973-2003</code>)
+for the vector family, which also excludes the compatibility sentinel
+point by <code>must_not</code>.</li>
+<li><strong>Retract.</strong> <code>artesian-cli/src/main.rs:3319</code>
+→ <code>backend.retract(node_id)</code> → set <code>Retracted</code>,
+stamp <code>retracted_at</code>, normalise a <code>superseded_by</code>
+relation onto a <code>retract:&lt;node_id&gt;</code> target, write the
+record, then <code>store</code> a second record whose content is
+<em>"Memory <code>&lt;node_id&gt;</code> was retracted."</em> with tags
+<code>retraction</code> and <code>supersede</code> and the retracted ids
+in metadata (<code>files.rs:294-336</code>).</li>
+<li><strong>Evict.</strong>
+<code>artesian-cli/src/main.rs:3900-3980</code> → load every record
+including archived through a <code>FilesBackend</code> →
+<code>evict(&amp;all_records, &amp;policy)</code> computes a plan of
+<code>EvictionLogEntry</code> values →
+<code>apply_eviction_to_dir</code> walks the directory applying archives
+and deletes and counting its own successes →
+<code>append_eviction_log(&amp;report.log_entries)</code> appends the
+<em>plan</em>.</li>
+<li><strong>Qualify.</strong> <code>headgate::gate</code> scores a
+candidate and returns a <code>QualifyDecision</code>;
+<code>council</code> and <code>judge</code> add an LLM arm when
+configured; <code>bundle</code> collects the decisions and dumps them as
+<code>qualify.jsonl</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryRecord</code>
+(<code>crates/aquifer/src/types.rs:123-163</code>) carries
+<code>id</code>, <code>node_id</code>, <code>content</code>,
+<code>tags</code>, a <code>BTreeMap&lt;String, String&gt;</code> of
+metadata, a <code>tier</code>, a <code>created_at</code>, and then the
+parts that make this report interesting.</p>
+<p><strong>Six routing keys.</strong> <code>scope</code> is a
+<code>MemoryScope</code> — <code>Shared</code>, <code>Agent</code>,
+<code>Session</code> or <code>Task</code>. Beside it sit
+<code>agent_id</code>, <code>session_id</code>, <code>task_id</code>,
+<code>user_id</code> and <code>project</code> as optional strings, plus
+<code>source</code> and an <code>author_id</code> documented as
+<em>"Writer identity/provenance. Distinct from <code>scope</code>,
+<code>user_id</code>, and project routing keys."</em></p>
+<p><strong>Four tiers.</strong> <code>L0Raw</code>, <code>L1Atom</code>,
+<code>L2Scenario</code>, <code>L3Project</code> — a coarseness ladder
+rather than a trust ladder. The decay pass treats <code>L0Raw</code>
+specially: a record is a decay candidate only when its score is under
+half the admit threshold <em>and</em> its tier is <code>L0Raw</code>
+(<code>dream.rs:369-370</code>), so refined material is protected from
+automatic forgetting.</p>
+<p><strong>One lifecycle state.</strong> <code>MemoryState</code> is
+<code>Active</code> by serde default, or <code>Archived</code> —
+<em>"excluded from default <code>find</code>, stored, drillable via
+<code>get_node</code>"</em> — or <code>Retracted</code> — <em>"excluded
+from default <code>find</code>, stored for audit/drill-down."</em> The
+type's own documentation frames the model: decay <em>"dampens
+accessibility (retrieval strength) without silent deletion."</em></p>
+<p><strong>Three usage counters and one score.</strong>
+<code>last_access</code>, <code>access_count</code> and
+<code>useful_count</code> feed the decay function;
+<code>confidence</code> is an <code>Option&lt;f32&gt;</code> validated
+to <code>0.0..=1.0</code> and used for ranking. Keeping the ranking
+number and the filtering state as separate fields is what makes the
+<code>trust_state</code> mark clean here rather than arguable.</p>
+<p><strong>No validity time.</strong> A search of the whole workspace
+for <code>valid_from</code>, <code>valid_to</code>,
+<code>valid_time</code>, <code>as_of</code>, <code>observed_at</code>
+and <code>transaction_time</code> returns nothing.
+<code>created_at</code> is a record time; there is no way to say a
+memory was true between two dates, and no way to ask what the store
+believed at a past moment. <code>bitemporal</code> is withheld on
+that.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>find</code> takes a <code>MemoryQuery</code> — text, limit,
+tags, an optional node id, the six routing keys, and
+<code>include_archived</code>. The trait's default implementation
+gathers keyword hits and vector hits and merges them; backends that can
+do better override it. Filtering happens before ranking and in two
+stages.</p>
+<p>The tenancy stage is an AND over the populated keys.
+<code>matches_tenancy</code> requires each of <code>scope</code>,
+<code>agent_id</code>, <code>session_id</code>, <code>task_id</code> and
+<code>user_id</code> to match when the query sets it, and delegates the
+project to <code>matches_project_union</code>, which admits the shared
+project alongside the named one — the behaviour the leak gate pins. The
+vector family expresses the identical thing as filter conditions the
+store evaluates itself, which matters for a hosted Qdrant: the excluded
+records never leave the index.</p>
+<p>The state stage is one predicate:
+<code>include_archived || record.state == MemoryState::Active</code>
+(<code>vector_memory.rs:2006-2012</code>). The flag's name says
+<em>archived</em> and its behaviour covers retracted too — the backend
+contract test calls it <em>"include archived/retracted"</em> in its own
+message. That is a naming seam rather than a defect, but a caller
+reading the field name will not expect retracted material back.</p>
+<p>Ranking then applies decay. <code>retrieval_strength</code>
+(<code>decay.rs:68</code>) is an exponential over days since last access
+with a thirty-day half-life — <code>lambda = ln(2) / half_life</code> —
+boosted by access and usefulness counts. Its unit tests are specific
+about the intent: <code>stale_record_is_dampened_but_not_zeroed</code>
+and <code>stale_downranks_vs_fresh_same_base_score</code>.
+<code>mmr.rs</code> diversifies the result. <code>neighbors</code> and
+<code>by_entity</code> walk the relation graph, but as separate trait
+calls — the graph is not an arm of <code>find</code>, which is why this
+report's retrieval stack is lexical and vector rather than lexical,
+vector and graph.</p>
+<p>A semantic cache sits in front, and it is careful:
+<code>is_cacheable</code> (<code>semantic_cache.rs:194-204</code>)
+returns false unless the node id and all six routing keys are
+<code>None</code> and the tag list is empty, so a scoped query is never
+answered from a cache a different tenant's question populated — the
+cache serves only the unscoped case, where there is nothing to leak.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, local and cheap. <code>store</code> validates
+the confidence range, acquires a per-session lane lock scoped to the
+collection, computes the identity hash, and checks for an existing
+record. <strong>If the id is already present, the write returns the
+stored record and does nothing else</strong> — including when that
+record's state is <code>Retracted</code>. No LLM call is on this path;
+the README's <em>"zero LLM writes"</em> claim holds, and consolidation,
+compression and the judge are opt-in.</p>
+<p>The lag between a write and its retrievability is a file write plus,
+on the vector backends, an upsert — there is no queue and no batch
+window. <code>bulk_store</code> exists for imports and the vector family
+overrides it to batch the upserts and skip the per-chunk existence
+round-trip.</p>
+<p>The files backend also appends to <code>log.md</code>: one Markdown
+bullet per store, carrying the timestamp, the record id and the node id
+(<code>files.rs:106-124</code>). It records stores only — not
+retractions, not deletions — and it exists only in that backend. The
+same file doubles as the session anchor store
+(<code>anchor.rs:46-52</code>), which is a small overload worth knowing
+about.</p>
+<p><strong>The retraction record is a memory, not a log line.</strong>
+<code>retract</code> stores a second <code>MemoryRecord</code> whose
+content is a sentence about the first, tagged <code>retraction</code>
+and <code>supersede</code>, with <code>retracted_node_id</code>,
+<code>retracted_record_id</code> and <code>retracted_at</code> in its
+metadata and <code>artesian.retract</code> as its source. That record is
+itself <code>Active</code> and itself retrievable — a design that keeps
+the history inside the store rather than beside it, at the cost of
+putting a sentence about bookkeeping into the same result set as
+substance.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Twenty-eight MCP tools, of which nine touch memory:
+<code>memory.find</code>, <code>memory.store</code>,
+<code>memory.answer</code>, <code>memory.context</code>,
+<code>memory.anchor.get</code>, <code>memory.anchor.set</code>,
+<code>memory.session.checkpoint</code>,
+<code>memory.session.resume</code> and <code>agents.list</code>. The
+other nineteen are orchestration and team coordination —
+<code>orchestrate.delegate</code>, <code>orchestrate.handoff</code>,
+<code>team.task.claim</code>, <code>team.task.complete</code> and the
+rest.</p>
+<p><strong>Nothing on that surface removes anything.</strong> A search
+of the MCP crate for <code>retract</code> and <code>evict</code> finds
+only a metrics counter and two doc comments; both destructive commands
+live on the CLI alone. Whether that is a safety property or a gap
+depends on the deployment — an agent that cannot retract cannot correct
+itself without a human, and an agent that cannot retract cannot poison
+the store by retracting what it dislikes. The repository does not argue
+the point either way, which is the one place a sentence of intent would
+help.</p>
+<p>Session continuity is the feature the README leads with. A
+deterministic session anchor plus targeted recall lets a loop resume
+after a context reset or a disconnect;
+<code>memory.session.checkpoint</code> and
+<code>memory.session.resume</code> are the tool pair, and
+<code>session_scoped_hits</code> is the read that fills them, with
+scope, user, session and task all pinned from a <code>SessionKey</code>
+and the session's own bookkeeping records filtered out by tag.</p>
+<p>The CLI is the larger surface: <code>init</code>,
+<code>memory store|find|retract|evict</code>, <code>tokens</code>,
+<code>perf</code>, <code>doctor</code>, <code>migrate</code>,
+<code>import</code>, plus team and orchestration subcommands. A
+<code>team task complete --reviewer --approved</code> command exists and
+is a review of a <em>task</em>, not of a memory — which is why
+<code>human_review</code> is withheld below.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> Six stored keys, the same six on
+the query, applied as an AND before ranking by both backend families,
+with the vector family pushing them into the store's own filter. The
+producers are wired on the read path, the keys are part of the record's
+identity hash so a cross-tenant duplicate is impossible, the project
+filter's shared-union behaviour is explicit, and the semantic cache
+declines to serve any query that carries a key. A CI gate proves it.</p>
+<p><strong>Trust state — awarded, on a lifecycle rather than a
+ladder.</strong> <code>MemoryState</code> is a stored, discrete,
+three-value field; <code>Retracted</code> withholds a memory from being
+treated as true; both backends <em>filter</em> on it rather than ranking
+with it; and the ranking number lives in a separate
+<code>confidence</code> field. That is what the mark asks for. The limit
+is worth naming precisely: there is no candidate tier. Everything enters
+<code>Active</code>, so the state can only ever demote something already
+trusted — it cannot gate admission, and nothing in the store
+distinguishes a memory a person asserted from one an agent inferred
+except the <code>author_id</code> string, which nothing filters on.</p>
+<p><strong>Audit log — awarded, on eviction only.</strong>
+<code>~/.artesian/eviction.jsonl</code> is opened in append mode and
+takes one JSON object per archive or delete, carrying the action, the
+reason and the retrieval strength that justified it. It is an explicit,
+append-only, structured record of mutations, and it is exactly the kind
+that is hard to reconstruct after the fact. Three limits: the log
+records the plan <code>evict</code> computed, while
+<code>apply_eviction_to_dir</code> counts its applied archives and
+deletes into separate variables, so a partial application leaves the log
+claiming more than happened; and the file lives in the home directory
+rather than in the memory collection, so a store that is copied, synced
+or committed to a repository arrives without its own history. And it is
+the only log of its kind: the <code>dream</code> consolidation pass,
+which never mutates its source, records its promote, merge, drop and
+supersede decisions into <code>qualify.jsonl</code> — the file whose
+writer truncates.</p>
+<p><strong>Negative evaluation — awarded, and it is the most carefully
+built mechanism in this repository.</strong> The partition leak gate is
+described in section 10.</p>
+<p><strong>Tombstone — withheld, and this is the closest miss.</strong>
+Retraction produces a durable record, and there is a real sense in which
+a retracted value cannot come back: <code>store</code> computes the
+content-and-scope hash, finds the retracted record, and returns it
+rather than writing a fresh <code>Active</code> one. But that is
+content-addressing doing the work, not a rejection record being
+consulted. The retraction memory — the one tagged
+<code>retraction</code> and <code>supersede</code> — is read by nothing
+on any write path — <code>rg -n '"retraction"' crates</code> finds two
+writers, one per backend, and no reader. Change one word of the content
+and the sentence re-enters as <code>Active</code>; store the same
+sentence under a different project and it enters as a different record
+entirely. And a hard delete of the retracted row removes the block,
+because the block <em>was</em> the row.</p>
+<p><strong>Human review — withheld.</strong> The
+<code>--reviewer --approved</code> pair on
+<code>team task complete</code> adjudicates a delegated task, not memory
+content. No surface in this repository shows a person a memory and asks
+whether to keep it.</p>
+<p><strong>Bitemporal — withheld.</strong> No validity time exists; the
+search is in the appendix.</p>
+<p><strong>Two claims in the tree that the code does not
+support.</strong> The type documentation for <code>MemoryState</code>
+says <em>"Hard deletion is explicit and audited"</em> — hard deletion is
+explicit, and the audit reaches it only through the eviction path on the
+files backend. And the receipts and bundle modules say they mirror
+<code>ocf/SPEC.md</code> and
+<code>ocf/schema/receipts.schema.json</code> <em>"exactly"</em>; neither
+file is in this repository, and a search of the tree for
+<code>SPEC.md</code> and <code>receipts.schema.json</code> returns
+nothing. The code names a sibling repository for them, so this is a
+split-repo layout rather than a fabrication — but a schema described as
+a checkable contract is not checkable from here.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>523 test cases across 28 integration files and the inline
+<code>mod tests</code> modules. The backend contract suite
+(<code>crates/aquifer/tests/memory_backend_contract.rs</code>) is the
+load-bearing one: it runs the same assertions against the files backend
+and the vector backend, which is how a trait with this many defaulted
+methods stays honest.</p>
+<p><strong>The partition leak gate.</strong>
+<code>run_files_leak_gate</code> stores three sentinels whose content is
+deliberately near-identical — <em>"partition sentinel belongs to project
+A private memory"</em>, <em>"...to shared memory"</em>, <em>"...to
+project B private memory"</em> — so a lexical retriever cannot separate
+them by accident. It queries as project <code>A</code>, then with no
+project. <code>validate_partition_hits</code> passes only on
+<code>!project_leaks_b &amp;&amp; project_has_a &amp;&amp; project_has_shared &amp;&amp; !default_has_private &amp;&amp; default_bounded</code>.
+The two present controls sit in the same conjunction as the two absence
+checks, which is precisely the guard against a negative assertion
+passing over an empty result. <code>run_regression_suite</code> returns
+<code>RegressionError::Gate</code> when it fails, and
+<code>.github/workflows/ci.yml:30-31</code> runs
+<code>gauge-ci-eval</code> on every push. The scope of it is one
+backend: the gate is named <code>run_files_leak_gate</code> and
+constructs a <code>FilesBackend</code>, while the surrounding regression
+suite runs both families.</p>
+<p><strong>The retraction contract case</strong>
+(<code>memory_backend_contract.rs:583-639</code>) asserts the state
+changed, the supersede record carries <code>artesian.retract</code> as
+its source and a <code>superseded_by</code> relation, the retracted node
+is absent from default recall, and the same query with
+<code>include_archived</code> returns it. The absence assertion there is
+weaker than the leak gate's: nothing in the test establishes that the
+default result set was non-empty, so it would pass over a retriever that
+returned nothing. The <code>include_archived</code> assertion proves the
+record exists, which is not the same guarantee.</p>
+<p><strong>Decay and eviction</strong>
+(<code>decay_reconcile_eviction.rs</code>) drive the policy through TTL,
+LRU, minimum strength and keep-cap arms and check the log entries name
+the right records with the right action. The decay unit tests assert
+direction rather than exact values —
+<code>stale_record_is_dampened_but_not_zeroed</code>,
+<code>stale_downranks_vs_fresh_same_base_score</code> — which is the
+right shape for a scoring function.</p>
+<p><strong>Benchmarks and papers.</strong> <code>gauge</code> ships an
+agentic eval harness the README describes as <em>"multi-session tasks
+where success = correct next action given accumulated memory, not just
+recall of a fact"</em>, and it is explicit that <strong>published scores
+are not committed</strong>: <em>"Published scores vary by model and task
+set — run <code>just bench-agentic</code> to measure on your own
+setup."</em> No score file is in the tree; <code>artesian-bench</code>
+and <code>gauge</code> provide the harness. The project has no paper of
+its own — a search of the README, <code>docs/</code> and
+<code>ARTESIAN.md</code> for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>@misc</code>, <code>Citation</code>,
+<code>CITATION.cff</code> and <code>doi</code> turns up citations
+<em>to</em> others and none of its own. Two are load-bearing and worth
+following: <a
+href="https://arxiv.org/abs/2601.11653">arXiv:2601.11653</a>
+(Bousetouane, <em>AI Agents Need Memory Control Over More Context</em>),
+which the README names as <em>"the model <code>headgate</code>
+implements"</em>, and <a
+href="https://arxiv.org/abs/2602.16313">arXiv:2602.16313</a>
+(MemoryArena), which it credits for the <em>"recall ≠ use"</em> framing.
+Neither was re-derived here; the claim checked is that the repository
+contains the harness and not the results.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Hash the routing keys into the memory's identity.</strong>
+Making <code>id</code> a digest of content <em>plus</em> project, user,
+session and scope means deduplication can never merge two tenants'
+memories, and idempotent re-import stays idempotent per tenant. It costs
+one line in the hasher and removes a whole class of leak.</li>
+<li><strong>Put the scope filter inside the store's filter, not after
+the search.</strong> <code>filter_from_query</code> builds
+<code>must_eq</code> conditions the vector database evaluates itself, so
+excluded records never cross the wire. A post-filter over returned hits
+gives the same answers and a worse failure mode.</li>
+<li><strong>Guard a leak test with two present controls in the same
+assertion.</strong> The five-clause conjunction in
+<code>validate_partition_hits</code> is the cheapest possible defence
+against the vacuous negative, and it turns an isolation claim into
+something CI can hold.</li>
+<li><strong>Separate the number that ranks from the state that
+filters.</strong> <code>confidence</code> and <code>MemoryState</code>
+are different fields with different jobs, and the read path uses each
+for one thing. Systems that spend a trust state as a score multiplier
+end up with neither.</li>
+<li><strong>Log the reason and the strength, not just the
+action.</strong> An eviction line carrying
+<code>retrieval_strength</code> at decision time lets someone later ask
+whether the policy was too aggressive, which an action-only log cannot
+answer.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A destructive command that hardcodes one backend.</strong>
+<code>artesian memory evict</code> builds a <code>FilesBackend</code>
+regardless of configuration, so on the recommended backend the entire
+decay-and-forget lifecycle is a no-op that reports success. A command
+whose behaviour silently depends on a setting it ignores is worse than
+one that refuses to run.</li>
+<li><strong>Calling a file append-only when the writer truncates
+it.</strong> <code>qualify.jsonl</code> and <code>lifecycle.jsonl</code>
+are <code>std::fs::write</code> of a serialized vector. The in-memory
+list is append-only; the artifact is a snapshot. If a reader is expected
+to tail it, the difference is the whole feature.</li>
+<li><strong>Logging the plan and applying it separately.</strong>
+<code>append_eviction_log</code> takes the decisions <code>evict</code>
+computed, while <code>apply_eviction_to_dir</code> counts what it
+managed to change. The two numbers are printed side by side and the log
+keeps only the optimistic one.</li>
+<li><strong>Trait defaults that turn a missing capability into a silent
+no-op.</strong> <code>retract</code> defaulting to <code>Ok(None)</code>
+keeps third-party backends compiling and means a backend without
+retraction reports nothing rather than failing.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Artesian suits a team running one or a few agent loops on a
+workstation or a single node, that has felt the specific pain of a
+context reset losing the thread, and that wants the recovery to be
+deterministic rather than a re-embedding of everything. The Rust build
+and the single-binary install make the operational cost genuinely low,
+and the scope model is strong enough to put several projects in one
+store without worrying. It is a poor fit for a multi-tenant service
+today — not because the isolation is weak, which it is not, but because
+the destructive half of the lifecycle only works on the files backend
+and the audit trail lives in one user's home directory. It is also a
+poor fit for anyone who needs to reason about <em>when</em> a fact was
+true, which the data model has no way to express. A reader evaluating it
+should install the files backend first, run an eviction, and read
+<code>eviction.jsonl</code> — that is the fastest way to see both what
+this design gets right and where it stops.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>evict</code> respect the configured backend? The plan
+step is backend-agnostic — <code>evict(&amp;records, &amp;policy)</code>
+takes a slice — so the gap is entirely in the loading and the applying,
+which is a smaller change than it looks.</li>
+<li>Should the retraction record be consulted on write? The store
+already computes a content hash; matching against retracted content
+under <em>other</em> scope keys, or on a normalized form, would turn the
+current incidental block into a tombstone.</li>
+<li>Is the absent MCP retraction tool a policy or an omission? An agent
+can write and read but not correct, and nothing in the tree states which
+of those was intended.</li>
+<li>Where does <code>author_id</code> get used? It is documented as
+writer provenance and distinct from the routing keys, it is hashed into
+the identity, and no read path filters or ranks on it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/aquifer/</code></td>
+<td>19,750</td>
+<td>The durable store: types, backends, decay, eviction, entities,
+relations, consolidation</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/types.rs</code></td>
+<td>—</td>
+<td><code>MemoryRecord</code> (123-163), <code>MemoryState</code>
+(17-35), <code>MemoryScope</code> (100-119), <code>MemoryTier</code>
+(93-99), <code>MemoryQuery</code> (321-341)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/identity.rs</code></td>
+<td>31</td>
+<td><code>stable_memory_id</code> — the SHA-256 over content, tier, node
+id and every routing key</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/files.rs</code></td>
+<td>—</td>
+<td>The Markdown backend: <code>store</code> (236-292),
+<code>retract</code> (294-336), <code>append_update_log</code>
+(106-124), <code>matches_tenancy</code> (795-812)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/vector_memory.rs</code></td>
+<td>—</td>
+<td>The vector backend: <code>filter_from_query</code> (1973-2003), the
+state predicate (2006-2012), retraction (1543)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/eviction.rs</code></td>
+<td>—</td>
+<td><code>EvictionLogEntry</code> (33-41), <code>EvictionAction</code>
+(44-51), <code>append_eviction_log</code> (243-262), the policy tests
+(264-330)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/decay.rs</code></td>
+<td>—</td>
+<td><code>DecayConfig</code> with a 30-day half-life,
+<code>retrieval_strength</code> (68)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/semantic_cache.rs</code></td>
+<td>—</td>
+<td>The scoped-query refusal (195-203)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/src/backend.rs</code></td>
+<td>—</td>
+<td>The <code>MemoryBackend</code> trait, its merged default
+<code>find</code> (60-72), the defaulted optional methods (76-115)</td>
+</tr>
+<tr>
+<td><code>crates/headgate/</code></td>
+<td>5,674</td>
+<td>The context governor: <code>gate</code>, <code>council</code>,
+<code>judge</code>, <code>ccs</code>, <code>controller</code>,
+<code>compressor</code>, <code>bundle</code></td>
+</tr>
+<tr>
+<td><code>crates/headgate/src/gate.rs</code></td>
+<td>—</td>
+<td><code>QualifyDecision</code> and the <code>ReasonCode</code> enum
+(18-36)</td>
+</tr>
+<tr>
+<td><code>crates/headgate/src/bundle.rs</code></td>
+<td>—</td>
+<td><code>write_dir</code> (383-401), <code>write_ocf_dir</code>
+(588-612), <code>QualifyRecord</code> (562-580)</td>
+</tr>
+<tr>
+<td><code>crates/flume/src/receipts.rs</code></td>
+<td>—</td>
+<td><code>SpawnReceipt</code>, <code>ReturnReceipt</code>,
+<code>StopReason</code>, the fail-closed toggle</td>
+</tr>
+<tr>
+<td><code>crates/gauge/src/retrieval_regression.rs</code></td>
+<td>—</td>
+<td><code>run_regression_suite</code> (131-152),
+<code>run_files_leak_gate</code> (355-392),
+<code>validate_partition_hits</code> (394-431)</td>
+</tr>
+<tr>
+<td><code>crates/artesian-mcp/src/lib.rs</code></td>
+<td>9,237</td>
+<td>Twenty-eight tools; <code>session_scoped_hits</code> (1398-1418);
+the project stamp (4135)</td>
+</tr>
+<tr>
+<td><code>crates/artesian-cli/src/main.rs</code></td>
+<td>12,279</td>
+<td><code>retract</code> (3319), the eviction handler (3900-3980), the
+team review command (2455-2475)</td>
+</tr>
+<tr>
+<td><code>crates/aquifer/tests/</code>,
+<code>crates/*/tests/</code></td>
+<td>—</td>
+<td>28 files; 523 cases with the inline modules</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;valid_from|valid_to|valid_time|as_of|observed_at|transaction_time&#39; crates   # none: no validity time, so no bitemporal
+rg -n &#39;retract|evict&#39; crates/artesian-mcp/src/lib.rs                    # a metrics counter and two doc comments: neither is a tool
+rg -n &#39;append_update_log|log\.md&#39;  crates                               # the store log exists only in the files backend
+rg -n &#39;MemoryState::Retracted&#39; crates                                   # one writer per backend, one CLI caller, two test assertions
+rg -n &#39;&quot;retraction&quot;&#39; crates                                             # two writers, one per backend; no reader anywhere
+fd -g &#39;SPEC.md&#39; -g &#39;receipts.schema.json&#39; .                             # none: the OCF schema the code mirrors is not in this tree
+rg -n &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs ARTESIAN.md  # citations to others; no paper of its own
+rg -n &#39;FilesBackend::new&#39; crates/artesian-cli/src/main.rs                # the eviction handler constructs one unconditionally</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d"><code class="commit-id" title="14e4f2d9494d396695f79350b9e42bacd82d953d">14e4f2d9…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 21
+August 2026. Screened before reading: no auto-run surface, no build-time
+execution path, nothing inside the seven-day cooldown, one unpinned
+dependency surface in the Python bindings, and <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> treated as data; nothing was installed, built
+or run, and the read was made from a full clone. Four marks. The reading
+covered the durable store — records, identity, backends, retrieval
+filters, decay, retraction and eviction — and treated the context
+governor, the orchestration tools and the team runtime as context rather
+than subject, which is the boundary the marks are checked against: every
+one of them is earned by a mechanism in <code>aquifer</code> or by a
+gate over it, not by the committed-context machinery in
+<code>headgate</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

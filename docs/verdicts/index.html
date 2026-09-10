@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 395 reports.</strong></p>
+<p><strong>This page covers all 396 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -13793,6 +13793,45 @@ prepared to read the code rather than the search documentation.</li>
 below <em>true</em>, a server-side dedupe or conflict check, a memory
 that can be erased, or an audit that is on by default and cannot be lost
 to a swallowed exception.</li>
+</ul>
+<h3 id="artesian"><a
+href="../systems/artesian/"><code>artesian</code></a></h3>
+<ul>
+<li>Best idea: <strong>a memory's identity is a hash of its content and
+its address.</strong> <code>stable_memory_id</code> digests the content,
+the tier, the node id and every one of the six routing keys that is set,
+so an idempotent re-import stays idempotent <em>per tenant</em> and
+deduplication can never collapse two projects' memories into one
+record.</li>
+<li>Biggest risk: <strong>the destructive half of the lifecycle only
+runs on one backend.</strong> <code>artesian memory evict</code>
+constructs a <code>FilesBackend</code> regardless of configuration and
+applies its decisions by walking a directory of <code>.md</code> files,
+so on the sqlite-vec backend the README recommends as the
+zero-infrastructure default nothing decays, nothing is archived, nothing
+is deleted, and the <code>eviction.jsonl</code> audit log stays empty
+while the command reports success.</li>
+<li>Most reusable component:
+<code>crates/gauge/src/retrieval_regression.rs</code> — a partition leak
+gate whose pass condition is one five-clause conjunction,
+<code>!project_leaks_b &amp;&amp; project_has_a &amp;&amp; project_has_shared &amp;&amp; !default_has_private &amp;&amp; default_bounded</code>,
+so the two absence checks sit beside two present controls in the same
+result set and cannot pass over an empty one; it hard-fails the suite
+and CI runs it on every push.</li>
+<li>Maturity impression: Apache-2.0, 213 commits between 13 June and 21
+August 2026 by two authors, version 0.5.11, fourteen crates and 67,852
+lines of Rust with 523 test cases across 28 integration files and the
+inline modules, four backends behind one trait; four of seven capability
+marks.</li>
+<li>Study when: you want scope isolation you can prove rather than
+assert, a retraction that withholds a memory from recall without
+deleting it, and a forgetting pass that records the reason and the
+retrieval strength behind every archive — on a workstation, with no
+infrastructure.</li>
+<li>Do not copy when: you need a validity interval, a candidate tier
+that gates admission rather than a state that only demotes, an audit
+trail that travels with the store rather than living in one user's home
+directory, or destructive operations an agent can reach over MCP.</li>
 </ul>
         </article>
       </div>

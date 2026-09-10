@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 395 reports.**
+**This page covers all 396 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3503,3 +3503,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 236 commits between 20 October 2025 and 1 September 2026, 44,883 lines of Python under `app/` and 41,806 under `tests/` with 1,454 test functions in three suites, the SQLite end-to-end suite running the real embedder and cross-encoder in-process on every push, a PyPI package and a container image, a containerised UAT harness with no scored metric and no benchmark; three of seven capability marks.
 - Study when: you want one shared knowledge base behind several coding agents with a small tool surface, per-user isolation on both SQLite and Postgres, and a soft delete whose reason is mandatory — and you are prepared to read the code rather than the search documentation.
 - Do not copy when: you need exact-identifier recall, a trust level below *true*, a server-side dedupe or conflict check, a memory that can be erased, or an audit that is on by default and cannot be lost to a swallowed exception.
+
+### [`artesian`](../systems/artesian/)
+- Best idea: **a memory's identity is a hash of its content and its address.** `stable_memory_id` digests the content, the tier, the node id and every one of the six routing keys that is set, so an idempotent re-import stays idempotent *per tenant* and deduplication can never collapse two projects' memories into one record.
+- Biggest risk: **the destructive half of the lifecycle only runs on one backend.** `artesian memory evict` constructs a `FilesBackend` regardless of configuration and applies its decisions by walking a directory of `.md` files, so on the sqlite-vec backend the README recommends as the zero-infrastructure default nothing decays, nothing is archived, nothing is deleted, and the `eviction.jsonl` audit log stays empty while the command reports success.
+- Most reusable component: `crates/gauge/src/retrieval_regression.rs` — a partition leak gate whose pass condition is one five-clause conjunction, `!project_leaks_b && project_has_a && project_has_shared && !default_has_private && default_bounded`, so the two absence checks sit beside two present controls in the same result set and cannot pass over an empty one; it hard-fails the suite and CI runs it on every push.
+- Maturity impression: Apache-2.0, 213 commits between 13 June and 21 August 2026 by two authors, version 0.5.11, fourteen crates and 67,852 lines of Rust with 523 test cases across 28 integration files and the inline modules, four backends behind one trait; four of seven capability marks.
+- Study when: you want scope isolation you can prove rather than assert, a retraction that withholds a memory from recall without deleting it, and a forgetting pass that records the reason and the retrieval strength behind every archive — on a workstation, with no infrastructure.
+- Do not copy when: you need a validity interval, a candidate tier that gates admission rather than a state that only demotes, an audit trail that travels with the store rather than living in one user's home directory, or destructive operations an agent can reach over MCP.
