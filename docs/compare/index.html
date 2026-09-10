@@ -31544,6 +31544,62 @@ recorded as a method rather than reviewed as a system. The transferable
 claim for the corpus: split procedural memory by <em>when it is
 needed</em> — inject strategy and example always, retrieve convention
 only on failure — and the middle tier carries the most weight.</li>
+<li><strong><code>zjunlp/SciAtlas</code> was examined and has no report:
+it is a literature knowledge graph behind a hosted API, and nothing a
+user or an agent concludes outlives a run.</strong> MIT, 77,560 lines of
+Python across 214 files from 58 commits between 20 April and 16 July
+2026 by five authors, read at <a
+href="https://github.com/zjunlp/SciAtlas/commit/a9a345da42606e6979bb6cedde9b047691b0df4c"><code class="commit-id" title="a9a345da42606e6979bb6cedde9b047691b0df4c">a9a345da…</code></a>,
+with a paper at <a
+href="https://arxiv.org/abs/2605.22878">arXiv:2605.22878</a>. The graph
+links papers, authors, institutions, venues, keywords and citations to a
+four-level <code>domain → field → subfield → topic</code> taxonomy, and
+the repository packages a client for it: the README's own framing is
+that a user installs with <code>pip</code>, registers a token and works
+<em>"without setting up Neo4j, maintaining graph data, or touching
+backend infrastructure"</em>. The local pipelines can be pointed at a
+<code>bolt://localhost:7687</code> of your own, and no graph data ships.
+The scope call is the one already drawn for <a
+href="https://github.com/Luqueee/kivgraph"><code>kivgraph</code></a> and
+<code>codebreaker77/Fullerenes</code>, one domain over: a corpus index
+of published work, regenerated from the corpus, where correction means
+re-ingesting rather than revising a belief. Two searches settle it.
+Across 214 Python files the memory vocabulary is absent — every
+occurrence of <code>recall</code> is the IR metric or a retrieval-arm
+name (<code>--kg-topk-title-vector</code>, <em>"embedding recall
+path"</em>), and <code>remember</code>, <code>forget</code> and
+<code>episodic</code> appear nowhere. And nothing reads a prior run:
+<code>runs/&lt;run_id&gt;/</code> holds <code>request.json</code>,
+<code>response.json</code>, <code>summary.txt</code> and
+<code>report.md</code> as per-run artifacts, and no code path lists or
+loads an earlier one. The CLI's <em>"skills"</em> are the nearest thing,
+and they are hand-edited JSON presets loaded from
+<code>./skills/</code>, <code>~/.sciatlas/skills/</code> or
+<code>SCIATLAS_SKILLS_DIR</code> — saved parameter sets a person writes,
+not procedural memory the system accumulates. <strong>Recorded for three
+things a reader can take.</strong> The taxonomy is a retrieval axis
+rather than a label: a search can propagate along the subfield hierarchy
+as well as along citations, which is the structural answer to the
+vocabulary-gap problem several stores in this atlas hit with embeddings
+alone. Each workflow ships a <code>flash</code> and a <code>full</code>
+preset — a cheap first pass and an expensive second, chosen by the
+caller — which is the <a href="../patterns/">gate-the-expensive-path</a>
+shape applied to research rather than to retrieval. And
+<code>agent-skill/</code> packages seven <code>SKILL.md</code> folders
+that migrate the workflows into Codex and Claude Code, whose stated
+contract is zero-start: the agent installs the CLI, guides registration,
+and asks the human only for values a human must supply. Two things sit
+against it. Every documented endpoint is plain <code>http://</code> —
+the registration page that issues a personal token, the token-status
+endpoint, and the <code>SCIATLAS_API_BASE_URL</code> that token is then
+sent to — so the credential travels in the clear. And
+<code>literature_review_pipeline/kg_search/config.py</code> defaults its
+embedding and reranker paths to
+<code>/home/weiyunxiang/yunx/hf-models/…</code>, a specific researcher's
+home directory, so the documented defaults resolve on one machine.
+Screened before reading: no auto-run surface, no manifest inside the
+seven-day cooldown, no build-time execution path and three unpinned
+dependency surfaces; nothing was installed or run.</li>
 <li><strong><code>codebreaker77/Fullerenes</code> was examined and has
 no report: it is a code index, and the one thing in it that behaves like
 memory is the thing that can delete a hand-written file.</strong> MIT,
