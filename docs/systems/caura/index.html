@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Postgres memory
+layer for multi-agent fleets where a memory carries a tenant, a fleet,
+an agent and one of three visibility tiers applied by a single shared
+clause builder written after the same predicate leaked from one copy to
+the next, one of eight statuses of which only three are live on the read
+path, and a validity window a <code>valid_at</code> parameter queries;
+where every mutation appends to a per-tenant tamper-evident hash chain;
+and where a person rejecting a candidate skill writes its cluster
+fingerprint to a poison table the next distillation run consults before
+it proposes anything.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Caura — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Postgres
+memory layer for multi-agent fleets where a memory carries a tenant, a
+fleet, an agent and one of three visibility tiers applied by a single
+shared clause builder written after the same predicate leaked from one
+copy to the next, one of eight statuses of which only three are live on
+the read path, and a validity window a <code>valid_at</code> parameter
+queries; where every mutation appends to a per-tenant tamper-evident
+hash chain; and where a person rejecting a candidate skill writes its
+cluster fingerprint to a poison table the next distillation run consults
+before it proposes anything.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caura — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Postgres
+memory layer for multi-agent fleets where a memory carries a tenant, a
+fleet, an agent and one of three visibility tiers applied by a single
+shared clause builder written after the same predicate leaked from one
+copy to the next, one of eight statuses of which only three are live on
+the read path, and a validity window a <code>valid_at</code> parameter
+queries; where every mutation appends to a per-tenant tamper-evident
+hash chain; and where a person rejecting a candidate skill writes its
+cluster fingerprint to a poison table the next distillation run consults
+before it proposes anything.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Caura — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Caura",
+      "description": "An Apache-2.0 Postgres memory layer for multi-agent fleets where a memory carries a tenant, a fleet, an agent and one of three visibility tiers applied by a single shared clause builder written after the same predicate leaked from one copy to the next, one of eight statuses of which only three are live on the read path, and a validity window a `valid_at` parameter queries; where every mutation appends to a per-tenant tamper-evident hash chain; and where a person rejecting a candidate skill writes its cluster fingerprint to a poison table the next distillation run consults before it proposes anything.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A rejected skill is remembered by its
+fingerprint</p>
+          <h1>Caura</h1>
+          <p class="document-deck">An Apache-2.0 Postgres memory layer
+for multi-agent fleets where a memory carries a tenant, a fleet, an
+agent and one of three visibility tiers applied by a single shared
+clause builder written after the same predicate leaked from one copy to
+the next, one of eight statuses of which only three are live on the read
+path, and a validity window a <code>valid_at</code> parameter queries;
+where every mutation appends to a per-tenant tamper-evident hash chain;
+and where a person rejecting a candidate skill writes its cluster
+fingerprint to a poison table the next distillation run consults before
+it proposes anything.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/caura-ai/caura">
+              <span>Source</span>
+              <strong>caura-ai/caura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/caura-ai/caura/commit/816be36e32540c9133a817ad1e0e141823bae78d" title="816be36e32540c9133a817ad1e0e141823bae78d">
+              <span>Analyzed revision</span>
+              <code>816be36e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/caura-ai--caura" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>caura-ai--caura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Caura — renamed from MemClaw, with the old <code>memclaw_*</code>
+tool names, environment variables and URLs kept working — is a governed
+memory layer for fleets of agents sharing one store. It is the largest
+and most complete system in this reading: Apache-2.0, version 3.7.0,
+1,199 commits between 26 April and 10 September 2026 from eighteen
+authors, 66,323 lines in <code>core-api</code> and 36,570 in
+<code>core-storage-api</code>, beside 143,878 lines of tests holding
+5,729 test functions. PostgreSQL with pgvector at 1,024 dimensions and a
+<code>tsvector</code> column, four services, a plugin, and clients on
+npm and PyPI.</p>
+<p>It carries all seven capability marks. That is worth stating
+carefully, because the interesting question is not the count but whether
+each mechanism is wired to a path a user or an agent can reach — and
+each one is.</p>
+<p><strong>A rejection is remembered by the value, not the row.</strong>
+When a person rejects a staged skill in the inbox,
+<code>write_rejected_fingerprint</code> stores the candidate's
+<code>cluster_fingerprint</code> in
+<code>forge_rejected_fingerprints</code> with the rejecting agent, a
+reason and a cooloff. The next distillation run is handed a
+<code>PoisonChecker</code> built against that table;
+<code>_distill_cluster</code> raises <code>_PoisonedClusterSkip</code>
+on a hit and the run counts <code>candidates_skipped_poisoned</code>
+instead of proposing again. The module docstring states the acceptance
+gate it was written for: <em>"Reject → fingerprint written to poison
+table; Forge re-run does NOT propose the same fingerprint."</em> That is
+a tombstone in the sense this atlas means — keyed on the value, durable,
+consulted on a later write — and it is the mark almost nothing else
+earns. Its limit is real and belongs in the same breath: the cooloff
+defaults to thirty days, so this is a moratorium rather than a permanent
+refusal.</p>
+<p><strong>Admissibility, ranking and provenance are three different
+fields.</strong> Status is one of eight values — <code>active</code>,
+<code>pending</code>, <code>confirmed</code>, <code>cancelled</code>,
+<code>outdated</code>, <code>conflicted</code>, <code>archived</code>,
+<code>deleted</code> — and the enrichment LLM may downgrade a write to
+<code>cancelled</code> or <code>conflicted</code> at capture.
+<code>LIVE_MEMORY_STATUSES</code> is the three-value subset
+<code>(active, confirmed, pending)</code> that reads filter to, so five
+of the eight withhold a memory entirely. Beside it,
+<code>confidence</code> is a nullable float explicitly described as
+confidence in the <em>claim</em>, and <code>is_inferred</code> marks a
+memory the system materialised by inference <em>"so it never silently
+overrides an explicit fact."</em> Most systems here collapse those three
+into one number.</p>
+<p><strong>The audit log is a hash chain with its own serialisation
+point.</strong> Every mutation appends a row carrying a tenant, an
+agent, an action, a resource type and a JSONB detail. Migration 025
+added a per-tenant chain — a monotonic <code>seq</code>, the prior
+event's hash as <code>prev_hash</code>, and
+<code>event_hash = SHA256(canonical_event || prev_hash)</code> — and put
+the head in a separate one-row-per-tenant table locked
+<code>FOR UPDATE</code>, so same-tenant batches serialise against each
+other <em>"without taking a lock on the (large, append-only)
+<code>audit_log</code> table, and different tenants never block one
+another."</em> Migration 026 added a per-event idempotency key so a
+lost-ack retry of the async flush dedups before <code>seq</code> is
+assigned rather than double-appending to the chain.</p>
+<p><strong>The scope clause exists because the leak moved.</strong>
+<code>_fleet_visibility_clause</code> is the one builder every
+fleet-scoped read calls, and its docstring says why: <em>"A54
+established what happens otherwise — the identical predicate lived in
+several queries, one was fixed, and the leak simply moved to the next
+copy."</em> This is the third system in this reading to centralise a
+scope predicate after discovering copies of it disagreed, which suggests
+the lesson is structural rather than anecdotal.</p>
+<p><strong>Where a reader should be careful.</strong> Two of the seven
+marks — the tombstone and the human review — live behind
+<code>org_settings.skills_factory.enabled</code> and return
+<code>403 SKILLS_FACTORY_DISABLED</code> when the flag is off. They are
+reachable, tested and real, and they are also a feature a tenant turns
+on rather than the default path. And the accuracy figures in
+<code>BENCHMARKS.md</code> cannot be reproduced from this tree; the file
+says so itself.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An agent writes plain text. Enrichment classifies it into one of
+fourteen types, assigns a status, and may downgrade the write on the
+spot — a claim the classifier reads as retracted becomes
+<code>cancelled</code>, one that contradicts a live memory becomes
+<code>conflicted</code>. Three types the server derives for itself —
+<code>outcome</code>, <code>rule</code>, <code>insight</code> — are
+refused at the write boundary, omitted from the vocabulary the
+classifier is offered, and demoted if one slips through, so an agent
+cannot mint the conclusions the system is supposed to reach on its
+own.</p>
+<p>Once stored, a memory sits in a three-dimensional address: a tenant,
+an optional fleet, an agent, and a visibility tier the writer chose. A
+read reconstructs the intersection of those with one shared clause,
+filters to the three live statuses, and ranks what remains by vector
+similarity and full-text score, with soft multipliers where a hard
+filter would over-prune.</p>
+<p>Above that sits the part the design is really about: the fleet
+learns. Outcomes become rules, clusters of memories become candidate
+skills, and a candidate does not become a skill until a person in an
+inbox approves it. If they reject it, the fingerprint of the cluster is
+written down so the distiller does not walk back with the same proposal.
+Every step of that — the write, the status change, the approval, the
+rejection — appends to a hash chain that can be verified after the
+fact.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent writes plain text, enrichment types it and may downgrade its status at capture, and three types are refused at the boundary; a read intersects tenant, fleet and visibility through one shared clause and admits only the three live statuses; separately a distiller clusters memories into candidate skills that a person approves or rejects in an inbox, and a rejection writes the cluster fingerprint to a poison table the next run consults before proposing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent writes plain text, enrichment types it and may downgrade its status at capture, and three types are refused at the boundary; a read intersects tenant, fleet and visibility through one shared clause and admits only the three live statuses; separately a distiller clusters memories into candidate skills that a person approves or rejects in an inbox, and a rejection writes the cluster fingerprint to a poison table the next run consults before proposing
+flowchart TB
+    W[&quot;agent writes plain text&lt;br/&gt;caura_write&quot;]
+    EN{&quot;enrichment: classify type,&lt;br/&gt;assign status&quot;}
+    RSV[&quot;outcome, rule and insight&lt;br/&gt;refused at the boundary,&lt;br/&gt;demoted if the LLM mints one&quot;]
+    M[(&quot;memories&lt;br/&gt;14 types, 8 statuses, 3 visibility tiers&lt;br/&gt;tenant + fleet + agent&lt;br/&gt;ts_valid_start / ts_valid_end&lt;br/&gt;confidence, is_inferred, scope&quot;)]
+    RD{&quot;read: one shared clause&lt;br/&gt;tenant + fleet + visibility&lt;br/&gt;status in the 3 live values&quot;}
+    RANK[&quot;hybrid rank: vector + full text,&lt;br/&gt;soft currency and date multipliers&quot;]
+    OUT[&quot;recall returns to the agent&quot;]
+    FORGE[&quot;Forge: cluster memories&lt;br/&gt;into a candidate skill&quot;]
+    PC{&quot;fingerprint&lt;br/&gt;poisoned?&quot;}
+    INBOX[&quot;skills inbox — a person acts&quot;]
+    ACT[&quot;approve: staged to active&quot;]
+    REJ[&quot;reject: staged to rejected&quot;]
+    POISON[(&quot;forge_rejected_fingerprints&lt;br/&gt;cluster fingerprint, reason,&lt;br/&gt;rejecting agent, cooloff&quot;)]
+    AUD[(&quot;audit_log — append only&lt;br/&gt;seq, prev_hash,&lt;br/&gt;event_hash = SHA256(event || prev)&quot;)]
+
+    W --&gt; EN
+    EN --&gt;|&quot;reserved type&quot;| RSV
+    RSV --&gt; M
+    EN --&gt; M
+    M --&gt; RD
+    RD --&gt; RANK
+    RANK --&gt; OUT
+    M --&gt; FORGE
+    FORGE --&gt; PC
+    PC --&gt;|&quot;yes — skipped,&lt;br/&gt;counted, not proposed&quot;| FORGE
+    PC --&gt;|no| INBOX
+    INBOX --&gt; ACT
+    INBOX --&gt; REJ
+    REJ --&gt; POISON
+    POISON -.-&gt;|&quot;consulted before&lt;br/&gt;the next proposal&quot;| PC
+    ACT -.-&gt; M
+    M -.-&gt; AUD
+    INBOX -.-&gt; AUD</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four Python services and a plugin. <code>core-api</code> (66,323
+lines) is the agent-facing surface: MCP tools, HTTP routes, enrichment,
+the crystallizer, the evolve and insights services, and the Forge.
+<code>core-storage-api</code> (36,570) owns PostgreSQL — every SQL
+predicate lives here, which is what makes the single shared visibility
+clause enforceable. <code>core-worker</code> (4,487) runs async work,
+<code>core-operations</code> (2,041) holds operational tooling, and
+<code>plugin/</code> (17,830 lines of TypeScript) is the harness
+integration. Clients ship for TypeScript and Python.</p>
+<p>Storage is PostgreSQL with pgvector at 1,024 dimensions — the native
+width of BAAI/bge-m3, with a comment tying the constant to the migration
+that widened the column — and a <code>tsvector</code> column for full
+text. The migration chain is past forty, and several migrations are
+quoted in the model file to explain indexes that exist concurrently in
+both places.</p>
+<p>Operationally this is a deployment, not a dependency: Docker Compose
+files for development and for a local reranker, a release-please setup,
+pre-commit hooks, CODEOWNERS, and a separate versioned plugin. A team
+adopting it is standing up four services and a Postgres, which is the
+honest cost of what it does.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>caura_write</code> → enrichment
+classifies type and status (<code>common/enrichment/service.py:92</code>
+validates against <code>MEMORY_STATUSES</code>) → reserved types demoted
+(<code>SERVER_RESERVED_MEMORY_TYPES</code>,
+<code>common/enrichment/constants.py:170</code>) → insert, guarded by
+<code>uq_memories_live_content_hash</code> on
+<code>(tenant, fleet, agent, content_hash)</code> where
+<code>deleted_at IS NULL</code>.</li>
+<li><strong>Scope clause.</strong> <code>_fleet_visibility_clause</code>
+(<code>core-storage-api/.../postgres_service.py:275-291</code>) →
+<code>fleet_id IN (...)</code>, plus <code>fleet_id IS NULL</code> when
+not strict, plus <code>visibility == 'scope_org'</code> when org
+visibility is included.</li>
+<li><strong>Read.</strong> hybrid search → tenant and fleet predicates,
+status in <code>LIVE_MEMORY_STATUSES</code>,
+<code>deleted_at IS NULL</code> → optional <code>valid_at</code> hard
+filter on <code>ts_valid_start</code> at day granularity
+(<code>:2735-2760</code>) → vector and full-text scores in the
+<code>ingredients</code> CTE → soft <code>currency_factor</code> for a
+lapsed <code>ts_valid_end</code> → optional rerank → top k.</li>
+<li><strong>Audit.</strong> <code>log_action</code> mints a
+<code>client_event_id</code> → async flush batches to
+<code>core-storage-api</code> → the per-tenant
+<code>audit_chain_head</code> row is locked <code>FOR UPDATE</code> →
+dedup on <code>client_event_id</code> before <code>seq</code> is
+assigned → append with <code>prev_hash</code> and
+<code>event_hash</code>.</li>
+<li><strong>Distil.</strong> the Forge cron builds a poison checker
+(<code>cron_handler._make_poison_checker(tenant, fleet)</code>) →
+<code>run_forge</code> clusters memories → <code>_distill_cluster</code>
+raises <code>_PoisonedClusterSkip</code> on a poisoned fingerprint →
+surviving candidates are filed to the inbox as <code>staged</code>.</li>
+<li><strong>Review.</strong> <code>GET /v1/skills-inbox</code> lists
+staged → <code>approve</code> (with a pre-apply rescan),
+<code>reject</code> (plus <code>write_rejected_fingerprint</code>),
+<code>quarantine</code>, <code>defer</code> or <code>edit</code>
+(rehash, rescan, stay staged).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The memory row is the densest in this reading. Beyond content and
+type it carries:</p>
+<p><strong>Three address keys and a tier.</strong>
+<code>tenant_id</code>, <code>fleet_id</code>, <code>agent_id</code>,
+and <code>visibility</code> in <code>scope_agent</code> /
+<code>scope_team</code> / <code>scope_org</code>, defaulting to
+<code>scope_team</code>. The constants file insists call sites import
+the named constant rather than the bare string <em>"so a typo turns into
+a NameError at import time, not a silent miss."</em></p>
+<p><strong>A status and two things that are not a status.</strong>
+<code>status</code> decides admissibility. <code>confidence</code> is
+<em>"confidence in this memory's CLAIM (extraction + assertion), NULL =
+unknown/legacy"</em> and guards an invariant the comment numbers —
+<em>"weak evidence must not delete strong."</em>
+<code>is_inferred</code> is true when the system materialised the memory
+by inference, <em>"so it never silently overrides an explicit
+fact,"</em> with lineage in <code>memory_derivations</code>.</p>
+<p><strong>A validity window and a structured scope.</strong>
+<code>ts_valid_start</code> and <code>ts_valid_end</code> beside
+<code>created_at</code> and <code>updated_at</code>. The JSONB
+<code>scope</code> holds <em>"structured validity qualifiers
+(role/task/location); two memories conflict only if scopes overlap"</em>
+— so a contradiction is scoped rather than global, which is a
+distinction most conflict detectors skip.</p>
+<p><strong>An RDF projection.</strong> <code>subject_entity_id</code>,
+<code>predicate</code> and <code>object_value</code> render a memory as
+a triple against an <code>entities</code> table.</p>
+<p><strong>Two unique indexes that are load-bearing.</strong>
+<code>ix_memories_attempt_unique</code> on
+<code>(tenant, COALESCE(fleet,''), client_request_id)</code> gives
+bulk-write idempotency; <code>uq_memories_live_content_hash</code> on
+<code>(tenant, COALESCE(fleet,''), agent, content_hash)</code> where not
+deleted enforces the dedup contract. The comment on the second is worth
+quoting for its candour about the first attempt:
+<code>ix_memories_content_hash</code> <em>"is NOT a substitute: it is
+non-unique and keyed on <code>(tenant_id, content_hash)</code> only — it
+makes the lookup fast, it never made it correct."</em> And
+<code>COALESCE(fleet_id, '')</code> appears in both because PostgreSQL
+treats NULLs as distinct, so fleetless rows would otherwise escape the
+constraint.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A hybrid SQL search assembled in layers. The <code>ingredients</code>
+CTE computes vector similarity against pgvector and a full-text score
+from <code>ts_rank_cd</code>, carrying raw row fields along <em>"so the
+derived layer never touches <code>memories</code> again before the final
+top_k join."</em></p>
+<p>Hard predicates come first: tenant, the fleet-visibility disjunction
+from the shared clause, <code>status IN LIVE_MEMORY_STATUSES</code>,
+<code>deleted_at IS NULL</code>. Then the design makes a choice worth
+naming — <strong>what would over-prune becomes a multiplier rather than
+a filter</strong>. A <code>valid_at</code> query hard-filters the start
+side of the validity window but not the end side: a lapsed
+<code>ts_valid_end</code> applies a <code>currency_factor</code>
+(default 0.5×) so <em>"an over-eager enrichment date can't silently hide
+a semantically strong memory from historical-question queries."</em> A
+date range does the same through <code>date_range_boost</code>. The
+start-side filter is cast to DATE deliberately, because a strict
+timestamp comparison <em>"excludes same-day memories written a few hours
+after the query was asked, which is too aggressive for workflows where
+the question + its evidence share a day."</em></p>
+<p>That pattern — hard-filter what must be excluded, soft-weight what is
+merely less likely — is the right instinct and it does mean a memory
+whose validity has formally lapsed can still be returned, ranked
+down.</p>
+<p><strong>The same parameter means two things in two queries, which is
+worth knowing before relying on it.</strong> On the hybrid search path
+the end bound is advisory. In <code>memory_find_successors</code>
+(<code>:3496-3551</code>) <code>valid_at</code> hard-filters
+<em>both</em> bounds at timestamp granularity —
+<code>ts_valid_start IS NULL OR &lt;= valid_at</code>
+<strong>and</strong>
+<code>ts_valid_end IS NULL OR &gt;= valid_at</code>. So a strict as-of
+window does exist in this codebase; it is on the successor lookup rather
+than on search, and a caller who reads the search comment and assumes
+the semantics are shared would be wrong in the safe direction on one
+path and the unsafe direction on the other.</p>
+<p>An optional rerank pass runs against a local model, with its own
+Compose file.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>caura_write</code> takes plain text. Enrichment classifies the
+memory type and the status, and the status vocabulary is a real
+classification rather than a constant: the prompt's rules can land
+<code>cancelled</code> or <code>conflicted</code> at capture, so a
+contradiction is caught on the way in rather than discovered on the way
+out.</p>
+<p><strong>Three types an agent may not write.</strong>
+<code>outcome</code>, <code>rule</code> and <code>insight</code> come
+out of the evolve and insights services. They remain valid at the
+storage layer — the schema enum is unchanged — but the route and MCP
+boundaries reject explicit agent-supplied values, the enrichment prompt
+omits them from the offered vocabulary, and
+<code>_validate_enrichment</code> demotes any that slips through to the
+default type. The comment names the ticket and the reasoning: the
+classifier <em>"must NOT mint these from agent content either."</em>
+This is a small, precise piece of governance — the system reserves the
+vocabulary of its own conclusions.</p>
+<p>Deduplication is enforced by a unique index rather than a check, and
+the write path advertises the contract the index enforces. Bulk writes
+carry a server-derived <code>client_request_id</code> from
+<code>X-Bulk-Attempt-Id</code> plus an index, so a retried batch cannot
+double-insert.</p>
+<p>Writes are not blocking on a model in the sense that matters:
+enrichment runs on the write path but a degraded extraction is surfaced
+rather than swallowed — there is a test named for exactly that
+(<code>test_a69_degraded_extraction_is_visible</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Sixteen MCP tools. The memory core is <code>caura_write</code>,
+<code>caura_recall</code>, <code>caura_list</code>,
+<code>caura_manage</code> and <code>caura_stats</code>;
+<code>caura_evolve</code> turns outcomes into rules and
+<code>caura_insights</code> derives insights;
+<code>caura_keystones</code> and <code>caura_keystones_set</code> pin
+the memories that should always be in reach; <code>caura_doc</code> and
+<code>caura_doc_search</code> handle documents, with the note that
+<code>caura_recall</code> never returns documents and a doc's body
+becomes reachable by meaning only through a minted memory;
+<code>caura_tune</code> and <code>caura_entity_get</code> complete the
+surface.</p>
+<p>The rename is handled with unusual care for a reader:
+<code>memclaw_*</code> tool names, environment variables and URLs keep
+working, the yanked PyPI release still installs the new client for exact
+pins, and the README states plainly which aliases were <em>not</em>
+preserved.</p>
+<p>Beside MCP there is an HTTP API, a versioned plugin, and clients on
+npm and PyPI. The <code>.mcp.json</code> and <code>.claude/</code>
+directory in the repository are the project's own agent configuration —
+the screen flagged them as auto-run surfaces, which they are, for anyone
+who opens this tree in a harness.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — awarded, and it is the clearest instance in this
+reading.</strong> A rejected cluster fingerprint is written to
+<code>forge_rejected_fingerprints</code> with the rejecting agent, a
+reason and a cooloff; the next distillation run is handed a checker
+built against that table and skips the cluster, counting
+<code>candidates_skipped_poisoned</code> rather than proposing. Keyed on
+the value, durable, consulted on a later write. <strong>The limit is the
+cooloff</strong>: thirty days by default, tenant-overridable through
+<code>org_settings.skills_factory.rejection_cooloff_days</code>. After
+it lapses the same cluster is proposable again, so this refuses a value
+for a window rather than forever — a moratorium with an expiry, not a
+permanent record. It also covers distilled skills rather than ordinary
+memories: rejecting a memory is a status change, and nothing consults
+the rejected memory on a later write.</p>
+<p><strong>Trust state — awarded.</strong> Eight statuses, three live,
+five withholding. <code>confidence</code> and <code>is_inferred</code>
+are separate fields doing separate jobs, and the comment on
+<code>confidence</code> names the invariant it guards.</p>
+<p><strong>Bitemporal — awarded.</strong> A validity window queried by
+<code>valid_at</code>, distinct from <code>created_at</code>. The soft
+end side is a deliberate weakening and is described above.</p>
+<p><strong>Scope — awarded.</strong> Tenant, fleet, agent and a
+three-tier visibility, applied through one shared clause whose docstring
+records the leak that produced it.</p>
+<p><strong>Audit log — awarded.</strong> Append-only, per-tenant
+hash-chained, with a separate serialisation head so the log is never
+locked, and per-event idempotency so a retried flush cannot
+double-append. Legacy rows are explicitly unchained and excluded from
+verification rather than quietly treated as verified — a distinction a
+weaker implementation would have blurred.</p>
+<p><strong>Human review — awarded.</strong> The Skills Inbox is a
+genuine human-in-the-loop surface: five actions over staged candidates,
+an approve that rescans before applying, and an edit that rehashes and
+returns the candidate to staged rather than sneaking a revision through.
+A candidate that is not approved does not reach an agent.</p>
+<p><strong>Negative evaluation — awarded.</strong> Fleet-visibility
+isolation asserted in both directions through the API, with the positive
+case exercising the same write and search path so the absence case
+cannot pass on an empty corpus.</p>
+<p><strong>Two caveats that belong beside the seven.</strong> First, the
+inbox and the poison table are gated on
+<code>org_settings.skills_factory.enabled</code> and return 403 when it
+is off; both are reachable and tested, and both are a feature a tenant
+enables rather than the default path. Second, the seven marks are not
+evenly weighted in this design: the audit chain and the scope clause are
+load-bearing in every request, while the tombstone and the review sit on
+the skill-distillation loop, which is the newest part of the system.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>5,729 test functions across <code>tests/</code> and
+<code>e2e/</code>, 143,878 lines — more test code than application code.
+The naming is a map of the project's own defect history: files are
+prefixed with ticket ids (<code>test_a13_</code>,
+<code>test_a54_</code>, <code>test_a55_</code>, <code>test_a69_</code>,
+<code>test_c28_</code>, <code>test_caura721_</code>,
+<code>test_ph5a_</code>), so a reader can trace a mechanism back to the
+incident that produced it.</p>
+<p>The isolation family is the load-bearing one:
+<code>test_a13_fleet_less_visible_to_fleet_scoped_search.py</code>
+writes through the API with a per-test unique substring, makes
+enrichment synchronous <em>"so the assertion is deterministic"</em>, and
+then asserts the four visibility cases including fleet X visible to X
+and not visible to Y. <code>test_cross_tenant_auth.py</code>,
+<code>test_cross_tenant_audit_surfaces.py</code>,
+<code>test_entity_relations_scope.py</code> and
+<code>test_c28_confirm_scope_tenant_delete.py</code> cover the same
+boundary on other surfaces.</p>
+<p><strong>Benchmarks are claimed and not reproducible from this tree,
+and the project says so.</strong> <code>BENCHMARKS.md</code> reports
+LoCoMo accuracy of 77.6%, LongMemEval of 72.5%, token savings of 96.6%
+and 98.2%, and search latency of 23 ms p50 / 27 ms p95 warm. It also
+states that <em>"the end-to-end accuracy/token harness isn't bundled
+yet"</em>. What is committed is a rerank harness and a
+<code>benchmark/</code> directory with focused scripts. The README
+additionally reports a production deployment at eToro with 300+ agents,
+26,500+ memories and 1,372 shared skills; that is a product claim about
+an installation, not something a reading of this tree can check, and it
+is recorded here as the former.</p>
+<p>No paper of its own. The search turns up arXiv links, and they are
+citations <em>to</em> the benchmarks it reports against — LoCoMo and
+LongMemEval in <code>docs/performance.md:73</code> — rather than to work
+by this project. Nothing here claims a publication.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Key the rejection on the value and check it before proposing
+again.</strong> The poison table is the whole tombstone pattern in one
+small mechanism: a fingerprint, a reason, a cooloff, and a checker
+injected into the loop that would otherwise repeat itself. The
+acceptance gate is written in the docstring, which is why it stayed
+wired.</li>
+<li><strong>Give the audit chain its own serialisation row.</strong>
+Locking a one-row-per-tenant head <code>FOR UPDATE</code> gets ordering
+without contending on a large append-only table, and lets different
+tenants proceed independently.</li>
+<li><strong>Dedup the audit event before assigning the sequence
+number.</strong> A retried flush that appends twice corrupts the chain;
+a <code>client_event_id</code> checked under the head lock makes the
+retry safe.</li>
+<li><strong>Separate admissibility, confidence and provenance into three
+fields.</strong> <code>status</code>, <code>confidence</code> and
+<code>is_inferred</code> answer <em>may this be used</em>, <em>how sure
+are we of the claim</em>, and <em>did anyone actually say this</em> —
+questions a single score cannot keep apart.</li>
+<li><strong>Reserve the vocabulary of your own conclusions.</strong>
+Refusing agent-supplied <code>outcome</code>, <code>rule</code> and
+<code>insight</code> at the boundary, omitting them from the
+classifier's offered vocabulary, and demoting any that slip through,
+stops an agent asserting the thing the system is supposed to
+derive.</li>
+<li><strong>Hard-filter what must be excluded; soft-weight what is
+merely less likely.</strong> The lapsed-validity currency factor and the
+day-granularity start cast are both cases of resisting the over-eager
+filter.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Calling a cooloff a tombstone without saying so.</strong>
+Thirty days is a reasonable policy and a different guarantee from
+<em>never again</em>; a reader scanning for a rejection record should
+not have to find the default in a constant.</li>
+<li><strong>Putting two of your governance mechanisms behind one feature
+flag.</strong> The review surface and the rejection record are both dark
+when <code>skills_factory.enabled</code> is false, which is the
+configuration a new tenant starts in.</li>
+<li><strong>Publishing accuracy numbers whose harness is not in the
+tree.</strong> The file is honest that the harness is not bundled, which
+is the right disclosure and still leaves the headline figures
+uncheckable by a reader.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Caura suits an organisation running many agents on behalf of one
+company that needs the memory to be governed rather than merely
+persistent — where somebody will eventually ask who approved a shared
+skill, what an agent was allowed to see, and whether the record of that
+has been tampered with. It answers all three in the schema rather than
+in a policy document. The cost is proportionate: four services, a
+Postgres with pgvector, a migration chain past forty, and a surface big
+enough that adopting it is a platform decision. For a single agent on a
+laptop this is enormously more machinery than the problem needs, and the
+README says as much — the fleet axes are what it is built for. The team
+most likely to be disappointed is one that wants the seven mechanisms
+without turning the skills factory on, since two of them live there.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a rejected <em>memory</em> poison its content the way a
+rejected skill poisons its cluster fingerprint? The mechanism exists one
+layer up and the memory path has a content hash that would key it.</li>
+<li>What happens at the end of a cooloff — is the operator told the
+fingerprint is eligible again, or does the same candidate simply
+reappear in the inbox?</li>
+<li>Is the audit chain verified on a schedule, or only on demand? The
+verification path excludes pre-migration rows by design; nothing in the
+tree says how often it runs.</li>
+<li>Should <code>valid_at</code> mean the same thing on both paths?
+Search treats the end bound as advisory and
+<code>memory_find_successors</code> treats it as binding; each choice is
+defensible alone and the pair is a trap for a caller.</li>
+<li>The JSONB <code>scope</code> says two memories conflict only when
+their validity qualifiers overlap. What populates it — the enrichment
+prompt, or a caller?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core-api/</code></td>
+<td>66,323</td>
+<td>MCP tools, HTTP routes, enrichment, crystallizer, evolve, insights,
+Forge</td>
+</tr>
+<tr>
+<td><code>core-storage-api/</code></td>
+<td>36,570</td>
+<td>Every SQL predicate; <code>postgres_service.py</code> with the
+shared visibility clause (275-291), the hybrid search (2600-2900) and
+the poison lookup (9131-9145)</td>
+</tr>
+<tr>
+<td><code>common/models/memory.py</code></td>
+<td>—</td>
+<td>The memory row: validity window (82-85), status (88-91), visibility
+(92-97), the contradiction model (118-128), the two unique indexes</td>
+</tr>
+<tr>
+<td><code>common/models/audit.py</code></td>
+<td>—</td>
+<td><code>AuditLog</code> with the hash chain (11-59) and
+<code>AuditChainHead</code> (62-80)</td>
+</tr>
+<tr>
+<td><code>common/enrichment/constants.py</code></td>
+<td>—</td>
+<td><code>MemoryType</code> (14 values), <code>MEMORY_STATUSES</code>
+(232-244), <code>SERVER_RESERVED_MEMORY_TYPES</code> (170)</td>
+</tr>
+<tr>
+<td><code>common/constants.py</code></td>
+<td>—</td>
+<td><code>LIVE_MEMORY_STATUSES</code> (25), <code>VECTOR_DIM</code>
+(31)</td>
+</tr>
+<tr>
+<td><code>core-api/src/core_api/constants.py</code></td>
+<td>—</td>
+<td><code>MEMORY_VISIBILITIES</code> (208-225)</td>
+</tr>
+<tr>
+<td><code>core-api/src/core_api/services/forge/</code></td>
+<td>—</td>
+<td><code>poison.py</code> (the rejected-fingerprint writer and
+checker), <code>forge_service.py</code> (the <code>PoisonChecker</code>
+type and the skip), <code>cron_handler.py</code> (the producer)</td>
+</tr>
+<tr>
+<td><code>core-api/src/core_api/routes/skills_inbox.py</code></td>
+<td>—</td>
+<td>The HITL inbox: approve, reject, quarantine, defer, edit</td>
+</tr>
+<tr>
+<td><code>plugin/</code></td>
+<td>17,830</td>
+<td>The TypeScript harness integration</td>
+</tr>
+<tr>
+<td><code>tests/</code>, <code>e2e/</code></td>
+<td>143,878</td>
+<td>5,729 test functions, ticket-prefixed by the defect each pins</td>
+</tr>
+<tr>
+<td><code>BENCHMARKS.md</code>, <code>benchmark/</code></td>
+<td>—</td>
+<td>The claims, and the rerank harness that is bundled</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;is_fingerprint_poisoned&#39; --glob &#39;!tests/**&#39;                      # the checker, its route, and the Forge call site
+rg -n &#39;LIVE_MEMORY_STATUSES&#39; --glob &#39;!tests/**&#39;                         # the three-value live set on every read path
+rg -n &#39;ts_valid_end&#39; core-storage-api/src | rg -n &#39;where|&gt;=&#39;            # soft on the search path (2755), hard on memory_find_successors (3548)
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs   # citations to LoCoMo and LongMemEval; no paper of its own
+rg -n &#39;harness&#39; BENCHMARKS.md                                           # the file&#39;s own statement that the accuracy harness is not bundled
+rg -n &#39;skills_factory.enabled&#39; core-api/src                             # the flag gating the inbox and the poison write</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/caura-ai/caura/commit/816be36e32540c9133a817ad1e0e141823bae78d"><code class="commit-id" title="816be36e32540c9133a817ad1e0e141823bae78d">816be36e…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 10
+September 2026. Screened before reading: three auto-run surfaces — the
+project's own <code>.claude/hooks/</code>,
+<code>.claude/settings.json</code> and <code>.mcp.json</code> — thirteen
+manifests inside the seven-day cooldown including four changed the same
+day, four build-time execution paths and ten unpinned dependency
+surfaces; nothing was installed, built or run, and the read was made
+from a full clone. Seven marks. The project was formerly MemClaw; the
+atlas held no report under either name, and <code>clawmem</code> is an
+unrelated repository. The reading covered the memory row and its
+lifecycle, the scope and status filters on the read path, the enrichment
+write boundary, the audit chain, and the skill-distillation loop with
+its inbox and poison table; the document, entity, keystone, insights and
+operational surfaces were read as context rather than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

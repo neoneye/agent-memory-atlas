@@ -84,6 +84,8 @@ MARK_CONTEXTS = [
     "of {n} systems", "of {n} repositories", "of {n} in the atlas",
     "of {n} —", "of {n}:", "{n} of", "systems of {n}", "repositories of {n}",
     "{n} negative-eval suites", "{n} tombstones", "{n} trust states",
+    # numerator-first shapes: "32 systems of 399 carry a ..."
+    "{n} systems of", "{n} repositories of", "{n} reports of",
 ]
 
 REPO_CONTEXTS = [

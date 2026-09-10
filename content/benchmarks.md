@@ -229,7 +229,7 @@ evaluation. In the
 repository that competency is named `Conflict_Resolution`, and its dataset is
 `FactConsolidation`. Reading what it actually asks:
 
-- The context is a flat numbered list of facts — 455 of them in the 6K
+- The context is a flat numbered list of facts — 456 of them in the 6K
   multi-hop split, of which 123 subjects carry a second, contradicting entry at
   a higher index. `0. Thomas Kyd was born in the city of London` is still there
   when `306. Thomas Kyd was born in the city of Leeds` arrives.
@@ -1136,7 +1136,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and fifty of three hundred and ninety-eight. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and fifty-one of three hundred and ninety-nine. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -2016,7 +2016,7 @@ One hundred against six, on one metric, is the largest gap this page has had to
 explain, and none of it is the metric's fault. Three rules separate the venues.
 The Kaggle competition runs as a notebook with **internet access disabled** and
 a nine-hour cap, so a harness built on paid frontier-model calls cannot enter —
-which is what Tycho and Retrodict are, at $2,986 and $655 of API list price for
+which is what Tycho and Retrodict are, at $2,986 and $656 of API list price for
 a single 25-game run. Its games are **hidden**, where the community entries run
 the 25 public ones a developer can iterate a harness, a prompt set and a
 world-model template against. And a Kaggle entry gets nine hours for everything.
@@ -3339,7 +3339,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 397 repositories,
+  [comparative report](../compare/). It is a statement about 398 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

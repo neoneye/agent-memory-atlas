@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 398 reports.</strong></p>
+<p><strong>This page covers all 399 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -752,7 +752,7 @@ was stored, and no boundary separates principals.</li>
 whose every §5 number traces to a script and a committed JSON —
 including one named <code>chain_induction_failures.json</code>. Two
 marks. The WAL docstring carries a measured silent-loss report: four
-handles, 300 fsync'd lines each, 1055 of 1200 arriving, zero
+handles, 300 fsync'd lines each, 1056 of 1200 arriving, zero
 unparseable, <em>"the torn-line check in <code>replay()</code> cannot
 detect this class of loss."</em></li>
 <li>Study when: you need answers that cannot be fabricated and a
@@ -1790,7 +1790,7 @@ backend collapses every entity written through the simple API onto one
 node named <code>entity_0</code>.</li>
 <li>Most reusable component: content-hash document ids, four lines that
 make re-ingestion idempotent, under a two-method
-<code>remember</code>/<code>recall</code> API over a thirty-two-method
+<code>remember</code>/<code>recall</code> API over a thirty-three-method
 manager.</li>
 <li>Maturity impression: 7,016 lines across SQLite, Chroma and an
 optional Neo4j graph; one of seven capability marks,
@@ -13909,6 +13909,45 @@ receipt rather than a guess.</li>
 service, you need per-memory correction by an end user — erasure here is
 subject-level — or you need a memory a person approves before it can be
 retrieved.</li>
+</ul>
+<h3 id="caura"><a href="../systems/caura/"><code>caura</code></a></h3>
+<ul>
+<li>Best idea: <strong>a rejection remembered by the value, and
+consulted before the next proposal.</strong> Rejecting a staged skill
+writes its cluster fingerprint to a poison table with the rejecting
+agent, a reason and a cooloff; the next distillation run is handed a
+checker built against it and skips the cluster instead of proposing
+again. The module docstring states the acceptance gate: <em>"Reject →
+fingerprint written to poison table; Forge re-run does NOT propose the
+same fingerprint."</em></li>
+<li>Biggest risk: <strong>two of its governance mechanisms are behind
+one feature flag, and the rejection expires.</strong> The inbox and the
+poison table both require
+<code>org_settings.skills_factory.enabled</code> and return 403 when it
+is off — the state a new tenant starts in. The poison record's cooloff
+defaults to thirty days, so the same cluster becomes proposable again;
+this refuses a value for a window rather than permanently.</li>
+<li>Most reusable component: <code>common/models/audit.py</code> — an
+append-only log with a per-tenant hash chain
+(<code>event_hash = SHA256(canonical_event || prev_hash)</code>), a
+separate one-row <code>audit_chain_head</code> locked
+<code>FOR UPDATE</code> so the large log is never itself locked, and a
+per-event idempotency key checked under that lock so a lost-ack retry
+cannot double-append.</li>
+<li>Maturity impression: Apache-2.0, 1,199 commits between 26 April and
+10 September 2026 by eighteen authors, version 3.7.0, 66,323 lines in
+<code>core-api</code> and 36,570 in <code>core-storage-api</code> over
+PostgreSQL with pgvector, beside 143,878 lines of tests holding 5,729
+functions, a migration chain past forty, four services and a plugin;
+seven of seven capability marks.</li>
+<li>Study when: you run many agents for one organisation and need the
+memory governed rather than merely persistent — who approved a shared
+skill, what an agent was allowed to see, and whether the record of
+either has been tampered with, all answered in the schema.</li>
+<li>Do not copy when: you want a library rather than a platform — this
+is four services, a Postgres and a migration chain — or when you need
+the rejection record and the review queue without enabling the skills
+factory, since both live there.</li>
 </ul>
         </article>
       </div>
