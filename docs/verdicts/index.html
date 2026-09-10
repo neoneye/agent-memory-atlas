@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 404 reports.</strong></p>
+<p><strong>This page covers all 405 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14135,6 +14135,43 @@ pattern — which is what the README asks for.</li>
 <li>Do not copy when: you need it to run, you need a licence, or you
 need more than one owner — there is one workspace, one observation file
 and no scope key anywhere.</li>
+</ul>
+<h3 id="commonground"><a
+href="../systems/commonground/"><code>commonground</code></a></h3>
+<ul>
+<li>Best idea: <strong>the cause is a column on the audit row.</strong>
+<code>cg_kernel_ledger</code> carries <code>cause_kind</code> and
+<code>cause_id</code> beside <code>actor_kind</code> and
+<code>actor_id</code>, so an event records not only what happened and
+who did it but what event produced it — a chain a reader can walk
+backwards, from two nullable columns.</li>
+<li>Biggest risk: <strong>the payloads are in a submodule this
+repository does not contain.</strong> Every ledger row and semantic
+record points at a
+<code>cardbox_project_id</code>/<code>cardbox_id</code> pair, and
+CG-Cardbox is not checked in with the parent — so every question about
+how content is retained, corrected or deleted is answered somewhere
+else. The kernel is coherent and incomplete on its own.</li>
+<li>Most reusable component: the scoping — <code>project_id</code>
+applied on every repository read <em>and</em> built into every composite
+primary key and foreign key, so a cross-project reference is not
+something a bug can produce, with a
+<code>bigint generated always as identity</code> sequence and a partial
+unique index expressing single-flight in the schema rather than in
+application code.</li>
+<li>Maturity impression: Apache-2.0, twenty commits between 15 February
+and 20 May 2026 by eight authors and nothing since,
+<code>v3r1-preview</code>, 41,006 lines of Python on 3.13+ over
+PostgreSQL, fifty-one test files running against a real database; two of
+seven capability marks.</li>
+<li>Study when: you are building several independent agent runtimes that
+must cooperate on one project without any of them owning the state, and
+you want the substrate to record attribution and causality rather than
+interpret.</li>
+<li>Do not copy when: you want a memory rather than a ledger — there is
+no retrieval by meaning at all, not even an <code>ilike</code> — or when
+you need something finished; twenty commits and four months quiet
+against a preview label is an early cut of a considered design.</li>
 </ul>
         </article>
       </div>

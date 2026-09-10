@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Postgres kernel that
+records multi-agent work as an append-only ledger — every row carrying
+an actor, a subject and the cause that produced it, with a companion
+index keyed by scope — where each of twenty-six repository reads is
+keyed on the project taken from the caller's header, and where the
+content those rows point at lives in a Cardbox submodule this repository
+does not contain.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CommonGround
+Kernel — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Postgres
+kernel that records multi-agent work as an append-only ledger — every
+row carrying an actor, a subject and the cause that produced it, with a
+companion index keyed by scope — where each of twenty-six repository
+reads is keyed on the project taken from the caller's header, and where
+the content those rows point at lives in a Cardbox submodule this
+repository does not contain.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CommonGround
+Kernel — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Postgres
+kernel that records multi-agent work as an append-only ledger — every
+row carrying an actor, a subject and the cause that produced it, with a
+companion index keyed by scope — where each of twenty-six repository
+reads is keyed on the project taken from the caller's header, and where
+the content those rows point at lives in a Cardbox submodule this
+repository does not contain.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CommonGround Kernel — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CommonGround Kernel",
+      "description": "An Apache-2.0 Postgres kernel that records multi-agent work as an append-only ledger \u2014 every row carrying an actor, a subject and the cause that produced it, with a companion index keyed by scope \u2014 where each of twenty-six repository reads is keyed on the project taken from the caller's header, and where the content those rows point at lives in a Cardbox submodule this repository does not contain.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A ledger of who did what, and the payloads
+live elsewhere</p>
+          <h1>CommonGround Kernel</h1>
+          <p class="document-deck">An Apache-2.0 Postgres kernel that
+records multi-agent work as an append-only ledger — every row carrying
+an actor, a subject and the cause that produced it, with a companion
+index keyed by scope — where each of twenty-six repository reads is
+keyed on the project taken from the caller's header, and where the
+content those rows point at lives in a Cardbox submodule this repository
+does not contain.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Intelligent-Internet/CommonGround">
+              <span>Source</span>
+              <strong>Intelligent-Internet/CommonGround</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Intelligent-Internet/CommonGround/commit/10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b" title="10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b">
+              <span>Analyzed revision</span>
+              <code>10b50ddb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Intelligent-Internet--CommonGround" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Intelligent-Internet--CommonGround</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CommonGround Kernel is not trying to be a memory that answers
+questions. It is trying to be the substrate several independent agents
+can cooperate over without one of them owning the state — what the
+README calls <em>"a small <strong>constitutional ledger kernel</strong>:
+it defines the minimum public facts, work boundaries, semantic
+ownership, and causal relationships needed for independent participants
+to cooperate without being absorbed into one central runtime."</em></p>
+<p>Apache-2.0; 20 commits between 15 February and 20 May 2026 from eight
+authors, and nothing since; version <code>v3r1-preview</code>; 41,006
+lines of Python on 3.13+ over PostgreSQL. The screen found one auto-run
+surface, one build-time execution path in a pytest conftest, a
+<code>uv.lock</code> unchanged for 113 days, and an
+<code>AGENTS.md</code> treated as data; nothing was installed or
+run.</p>
+<p><strong>The ledger is the mark, and the causal columns are
+why.</strong> <code>cg_kernel_ledger</code> carries a monotonic
+<code>ledger_seq</code>, the project, an <code>event_type</code>, a
+<code>subject_kind</code>/<code>subject_id</code>, an
+<code>actor_kind</code>/<code>actor_id</code>, and — the part most audit
+tables omit — a nullable <code>cause_kind</code>/<code>cause_id</code>.
+So a row records not only that something happened to a subject and who
+did it, but what event caused it. Two statements in the repository layer
+write the table and both are inserts; nothing updates or deletes it. A
+companion <code>cg_ledger_scope_index</code> on
+<code>(project_id, scope_kind, scope_id, ledger_seq)</code> gives a
+second way in.</p>
+<p><strong>The project key is a primary key, not a filter to
+remember.</strong> <code>project_id</code> arrives on a request header
+and is applied as a predicate on every read — there are twenty-six
+<code>where project_id = %s</code> clauses in the repository layer — but
+the stronger property is in the schema: <code>cg_semantic_records</code>
+is keyed <code>(project_id, record_id)</code>, the scope index is keyed
+with the project first, and the foreign keys are composite, so a row
+referencing a parent in another project is not something a bug can
+produce. A test drives the boundary end to end: one project's admin
+service registering an agent into another project is refused with
+<code>caller project must match path project</code>, and the agent is
+then asserted absent from the target project's topology.</p>
+<p><strong>It deliberately offers no retrieval by meaning.</strong> No
+embedding, no vector column, no full-text index, not even an
+<code>ilike</code>. Reading is by identity or by sequence — fetch a
+subject, page a feed after a ledger sequence, walk a scope. For a kernel
+whose stated job is the minimum public facts, that is a coherent choice
+and it is also the thing an adopter must supply themselves.</p>
+<p><strong>The content is not in this repository.</strong> Every ledger
+row and every semantic record points at a
+<code>cardbox_project_id</code>/<code>cardbox_id</code> pair, and
+CG-Cardbox is a git submodule that is not checked in with the parent. So
+the thing the ledger indexes — the actual payloads, and with them every
+question about retention, correction and deletion of content — sits in a
+repository this reading did not have. What is here is the index and the
+rules; the store is elsewhere.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Several agents, possibly built by different people on different
+runtimes, work on one project. None of them owns the truth. The kernel's
+job is to hold the minimum set of facts they all need in order to hand
+work to each other: who is registered, what turn is in flight, what was
+produced, what caused what.</p>
+<p>A turn is the unit of work. It produces semantic records — keyed to
+the turn and a sequence within it, each with a <code>record_role</code>
+saying what kind of contribution it is — and it produces ledger events.
+The records are the <em>what</em>; the ledger is the <em>history of
+what</em>, with an actor and a cause on every line.</p>
+<p>Nothing is edited. A correction is a later record with a later
+sequence, and a revoked credential is a status change rather than a
+deletion. The ledger has no update path at all, which is what lets a
+participant that has been away rebuild its picture by replaying from a
+sequence number.</p>
+<p>What the kernel deliberately does not do is interpret. There is no
+summariser, no consolidation, no decay, and no search. A participant
+that wants recall by meaning builds it over the feed. The design's bet
+is that agreeing on the facts is the hard part and that interpretation
+should stay at the edges — <em>"Independent agents at the edges. Durable
+public work records at the kernel."</em></p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — agents authenticate per project against a v3r1 API; a turn produces semantic records keyed to a turn sequence and ledger events carrying an actor and the cause that produced them; the ledger is insert-only and read by sequence or by scope, every read narrowed on the project from the caller's header; the payloads those rows point at live in a Cardbox submodule this repository does not contain</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: agents authenticate per project against a v3r1 API; a turn produces semantic records keyed to a turn sequence and ledger events carrying an actor and the cause that produced them; the ledger is insert-only and read by sequence or by scope, every read narrowed on the project from the caller&#39;s header; the payloads those rows point at live in a Cardbox submodule this repository does not contain
+flowchart TB
+    A[&quot;an agent, registered into a project&lt;br/&gt;with a provenance record&quot;]
+    AUTH{&quot;project_id from the&lt;br/&gt;caller&#39;s header&quot;}
+    REJ[&quot;409 — caller project&lt;br/&gt;must match path project&quot;]
+    TURN[&quot;a turn: the unit of work&quot;]
+    REC[(&quot;cg_semantic_records&lt;br/&gt;key (project_id, record_id)&lt;br/&gt;record_role, turn_id, turn_seq&lt;br/&gt;→ cardbox reference&quot;)]
+    LED[(&quot;cg_kernel_ledger — insert only&lt;br/&gt;ledger_seq, event_type&lt;br/&gt;subject_kind/id · actor_kind/id&lt;br/&gt;cause_kind/id · annotations&quot;)]
+    SCOPE[(&quot;cg_ledger_scope_index&lt;br/&gt;(project, scope_kind, scope_id, seq)&quot;)]
+    FEED[&quot;project feed:&lt;br/&gt;read after a ledger sequence&quot;]
+    CB[(&quot;CG-Cardbox — the payloads&lt;br/&gt;a submodule, not in this repository&quot;)]
+    READ[&quot;every repository read:&lt;br/&gt;where project_id = %s&quot;]
+
+    A --&gt; AUTH
+    AUTH --&gt;|&quot;mismatch&quot;| REJ
+    AUTH --&gt;|match| TURN
+    TURN --&gt; REC
+    TURN --&gt; LED
+    LED --&gt; SCOPE
+    LED --&gt; FEED
+    SCOPE --&gt; READ
+    REC --&gt; READ
+    REC -.-&gt;|&quot;payload_ref&quot;| CB
+    LED -.-&gt;|&quot;payload_ref&quot;| CB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package with a clean separation the code actually keeps.
+<code>kernel/</code> holds the four small modules that are the design —
+<code>ledger.py</code>, <code>lifecycle.py</code>,
+<code>semantic.py</code>, <code>topology.py</code>.
+<code>contracts/</code> holds the ports and the value types:
+<code>TruthRepositoryPort</code>, <code>CardBoxPort</code>,
+<code>ClaimToken</code>, <code>ConflictError</code>,
+<code>SemanticRecordSpec</code>, <code>TraceContext</code>.
+<code>infra/</code> holds the Postgres schema and the repositories that
+implement those ports. <code>service/</code> is the HTTP surface with
+its auth, and <code>sdk/</code>, <code>agent_client/</code> and
+<code>projection_client/</code> are the client sides.</p>
+<p>The kernel classes take ports rather than a database —
+<code>SemanticKernel(truth: TruthRepositoryPort, cardbox: CardBoxPort)</code>
+— so the domain logic is testable without Postgres and the payload store
+is swappable by construction. That is a hexagonal shape, and it is
+followed rather than declared.</p>
+<p>Operationally: PostgreSQL, Python 3.13, an HTTP service, a CLI for
+project and agent provisioning, and an <code>Integrations</code>
+directory. There is no worker, no queue and no scheduler, which is
+consistent with a kernel that does not interpret.</p>
+<p><strong>CG-Cardbox is a submodule.</strong> <code>.gitmodules</code>
+declares one entry pointing at
+<code>Intelligent-Internet/CG-Cardbox</code>, and the directory is empty
+in a clone without <code>--recursive</code>. This report is therefore
+about the kernel: the ledger, the records, the scoping and the API. The
+payload store, and everything about how content is stored, corrected or
+removed, is in a repository that was not read.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Authenticate and scope.</strong>
+<code>service/auth.py:32</code> reads <code>project_id</code> from the
+configured agent-project header; every repository read then narrows on
+it — twenty-six <code>where project_id = %s</code> clauses in
+<code>infra/repositories.py</code>.</li>
+<li><strong>Register.</strong> <code>agent_registration.py</code> with a
+provenance kind and external reference; the service refuses a caller
+whose project does not match the path project with a 409.</li>
+<li><strong>Record.</strong> <code>SemanticKernel</code> writes a
+<code>cg_semantic_records</code> row keyed
+<code>(project_id, record_id)</code> with a <code>record_role</code>, a
+<code>turn_id</code> and a <code>turn_seq</code>, and a Cardbox
+reference, under a unique constraint on
+<code>(project_id, turn_id, turn_seq)</code>.</li>
+<li><strong>Append.</strong> <code>kernel/ledger.py</code> →
+<code>infra/repositories.py:1604</code> and <code>:1656</code>, both
+<code>insert into cg_kernel_ledger (...)</code>, with the actor, subject
+and cause columns filled from the operation's metadata.</li>
+<li><strong>Index by scope.</strong> <code>cg_ledger_scope_index</code>
+takes a row per
+<code>(project_id, scope_kind, scope_id, ledger_seq)</code>, so a
+scope's events are a range scan rather than a filter over the whole
+ledger.</li>
+<li><strong>Replay.</strong> the CLI's
+<code>project feed --after-ledger-seq N</code> and the projection client
+page events after a sequence, which is how a participant that has been
+away rebuilds its view.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The ledger event.</strong> <code>ledger_seq</code> is
+<code>bigint generated always as identity</code> — monotonic and
+assigned by the database rather than by the writer. Then
+<code>project_id</code>, <code>event_type</code>,
+<code>subject_kind</code> and <code>subject_id</code>,
+<code>actor_kind</code> and <code>actor_id</code>, a nullable
+<code>cause_kind</code> and <code>cause_id</code>,
+<code>created_at</code>, a nullable free-text <code>note</code>, a
+<code>jsonb annotations</code> that is <code>not null</code>, and
+<code>payload_ref_project_id</code>/<code>payload_ref_cardbox_id</code>.</p>
+<p>The actor and cause columns are what raise this above a change log.
+Most audit tables record a subject and a timestamp; recording the actor
+makes attribution possible, and recording the cause makes a chain
+reconstructable — this event happened <em>because</em> that one did. A
+reader asking why a turn was spawned has a column to follow rather than
+a timestamp to guess from.</p>
+<p><strong>The semantic record.</strong>
+<code>(project_id, record_id)</code> as the primary key,
+<code>turn_id</code>, <code>turn_seq</code>, <code>record_role</code>,
+and the Cardbox pair, with
+<code>unique (project_id, turn_id, turn_seq)</code> so a turn's
+contributions are ordered and cannot collide. A partial unique index
+enforces one <code>provision_launch_started</code> record per turn — a
+single-flight guarantee expressed in the schema rather than in code.</p>
+<p><strong>What is absent from both.</strong> No confidence, no
+verification state, no validity interval. The only status in the schema
+is on <code>cg_agent_credentials</code>, checked to <code>active</code>
+or <code>revoked</code>, which is an authentication state rather than a
+claim about whether a stored fact is true. <code>trust_state</code> and
+<code>bitemporal</code> are withheld on that.</p>
+<p><strong>And no content.</strong> Both tables reference Cardbox rather
+than holding the payload. The kernel is an index over a store it does
+not contain.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval by meaning, and the absence is total: a search
+of the package for <code>embedding</code>, <code>vector</code>,
+<code>tsvector</code>, <code>ilike</code> and full-text returns nothing.
+This report's retrieval arms are empty for that reason.</p>
+<p>What exists is address and order. A subject is fetched by its keys. A
+project feed is paged after a ledger sequence — the CLI exposes
+<code>--after-ledger-seq</code> with a default of 0 — which is the
+replay primitive. A scope's events come through
+<code>cg_ledger_scope_index</code> as a range over
+<code>(project_id, scope_kind, scope_id, ledger_seq)</code>.</p>
+<p>For a ledger that is the correct design. A participant needing to
+answer <em>what do we know about X</em> builds a projection over the
+feed, which is what <code>projection_client/</code> is for. It does mean
+that adopting CommonGround as an agent's memory means adopting a
+substrate and writing the recall layer, not installing a memory.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through the <code>v3r1</code> HTTP API, authenticated per
+agent with credentials carrying an
+<code>active</code>/<code>revoked</code> status. The path project and
+the caller's project must agree, which is checked before anything is
+written.</p>
+<p>The kernel's contracts carry a <code>ClaimToken</code> and a
+<code>ConflictError</code>, which is optimistic concurrency: a writer
+holds a token, and a conflicting write is refused rather than silently
+ordered. Combined with the unique constraints on
+<code>(project_id, turn_id, turn_seq)</code> and the partial index for
+provision-launch, the concurrency story is expressed at the schema
+boundary rather than in application locking.</p>
+<p>Ledger writes are inserts, and only inserts. The sequence is
+database-assigned, so two concurrent writers cannot produce the same
+ordering claim. Nothing in the tree updates or deletes a ledger row.</p>
+<p>Because the payload lives in Cardbox, a write here is a fact plus a
+reference. That split is what makes the ledger cheap and it also means
+the durability argument the README makes — <em>"durable public work
+records"</em> — is only as strong as the store this repository does not
+contain.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An HTTP API at <code>/v3r1</code> with an SDK and two clients:
+<code>agent_client</code> for participating and
+<code>projection_client</code> for building read models over the feed.
+The CLI covers provisioning — creating a project, registering agents,
+issuing credentials, reading the feed — and
+<code>provision_launch.py</code> and <code>provision_roles.py</code>
+handle the bootstrap.</p>
+<p>Registration is where the design's care shows. An agent is registered
+with a provenance record naming the kind and an external reference, and
+a test asserts that the authority which created the project does
+<em>not</em> appear in the kernel's snapshot or public metadata —
+<code>assert "creator" not in str(snapshot.public_metadata).lower()</code>
+beside three assertions that the registration provenance fields are
+<code>None</code>. Keeping the creator out of the public substrate is a
+deliberate constitutional choice, and it is tested.</p>
+<p>There is no MCP surface, no harness plugin and no hook. This is
+infrastructure several agent runtimes talk to, not something dropped
+into one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded, and it is structural.</strong> The project
+key is applied on every repository read, and more importantly it is part
+of every composite primary key and every composite foreign key, so a
+cross-project reference is not a bug that can be written. The 409 on a
+mismatched caller is tested end to end, with the agent then asserted
+absent from the target project.</p>
+<p><strong>Audit log — awarded, on the causal columns.</strong> An
+append-only table with a database-assigned sequence, an actor, a subject
+and the cause of the event, plus a scope index and JSONB annotations.
+Two insert statements, no update and no delete. This is the shape an
+audit needs to answer <em>why</em>, which most do not.</p>
+<p><strong>Trust state — withheld.</strong> The only status in the
+schema is on agent credentials — <code>active</code> or
+<code>revoked</code> — which gates authentication rather than whether a
+stored fact may be treated as true. No semantic record or ledger event
+carries a verification state.</p>
+<p><strong>Tombstone — withheld.</strong> Nothing records a rejected
+value. A correction is a later record with a later turn sequence, which
+is supersession by ordering, and supersession is explicitly not this
+mark.</p>
+<p><strong>Bitemporal — withheld.</strong> <code>created_at</code> on
+the ledger and the records, both record time.</p>
+<p><strong>Human review — withheld.</strong> No surface adjudicates
+content. The admission machinery — registration, provenance, credentials
+— governs <em>participants</em>, not memories.</p>
+<p><strong>Negative evaluation — withheld, with the near miss
+named.</strong>
+<code>test_other_project_admin_service_cannot_register_into_this_project</code>
+is the right instinct: it drives a cross-project attempt through the
+API, asserts the 409 and its message, then asserts the agent is absent
+from the target project's topology. But that asserts a <em>write was
+refused</em>, not that stored material was excluded from a populated
+read. Nothing in the suite seeds two projects' events and asserts that a
+feed read for one returns its own and not the other's — which, given the
+scope index and the twenty-six predicates, would be a short test and
+would convert a structural argument into an observed one.</p>
+<p><strong>The limit that matters more than any mark.</strong> The
+payload store is a submodule that is not in this repository. Every
+question about how content is retained, corrected or deleted — the
+questions this atlas exists to ask — has its answer in CG-Cardbox. What
+can be said from here is that the kernel's own records are append-only
+and scoped, and that is what is claimed above.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Fifty-one test files, with support modules for auth and projections,
+covering the admin service, project bootstrap, agent credentials, the
+admission API, projection feeds and agents, the CLI, and package
+resources. The suite runs against a real Postgres —
+<code>test_pg_dsn</code> is a fixture — so the schema constraints are
+exercised rather than mocked.</p>
+<p>Two tests are worth naming for what they choose to assert.
+<code>test_other_project_admin_service_cannot_register_into_this_project</code>
+drives the boundary through the HTTP API and checks the aftermath, not
+just the status code. And
+<code>test_creator_authority_does_not_enter_kernel_snapshot_or_metadata</code>
+asserts an absence about the kernel's <em>own</em> public surface — that
+the party who created a project leaves no trace in the substrate — which
+is a constitutional property rather than a functional one, and an
+unusual thing to test.</p>
+<p>No benchmark, and none claimed. No paper: a search of the README and
+docs for <code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>@misc</code>, <code>Citation</code>, <code>CITATION.cff</code> and
+<code>doi</code> returns nothing.</p>
+<p>The maturity signal is the commit history rather than the test count:
+twenty commits over three months, ending in May 2026, against a
+<code>v3r1-preview</code> label and a
+<code>docs/en/release-notes.md</code> reference. This is an early cut of
+a considered design, not a settled system.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the cause on the audit row.</strong>
+<code>cause_kind</code> and <code>cause_id</code> beside
+<code>actor_kind</code> and <code>actor_id</code> turn a change log into
+something a reader can walk backwards. Two nullable columns.</li>
+<li><strong>Make the scope a primary key, not a predicate.</strong>
+Twenty-six <code>where project_id = %s</code> clauses are good
+discipline; <code>primary key (project_id, record_id)</code> and
+composite foreign keys mean the discipline cannot lapse.</li>
+<li><strong>Let the database assign the sequence.</strong>
+<code>bigint generated always as identity</code> removes a whole class
+of concurrent-writer ordering bug that a writer-assigned sequence
+invites.</li>
+<li><strong>Express single-flight in the schema.</strong> A partial
+unique index —
+<code>on cg_semantic_records (project_id, turn_id) where record_role = 'provision_launch_started'</code>
+— is a guarantee application code cannot forget.</li>
+<li><strong>Test that your own authority does not leak.</strong>
+Asserting the project creator is absent from the kernel snapshot and the
+public metadata is a property most systems would never think to
+check.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Splitting the facts from the payloads without saying where
+the payloads went.</strong> The kernel is coherent and incomplete on its
+own: a reader evaluating durability, deletion or correction has to go to
+another repository, and the README does not lead with that.</li>
+<li><strong>Assuming a scoped write path implies a scoped read
+test.</strong> The schema makes cross-project reference impossible and
+the suite proves the write is refused; nothing proves a read is
+filtered, which is the assertion an operator would want.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>CommonGround suits a team building several independent agent runtimes
+that must cooperate on one project without one of them becoming the
+owner of state — the problem it names is real and under-served, and the
+ledger's actor-and-cause shape is the right primitive for it. It is a
+substrate, not a memory: there is no recall by meaning, no
+interpretation layer and no consolidation, and an adopter supplies all
+three over the feed. It is the wrong choice today for anyone who wants
+something finished — twenty commits, four months quiet, a preview label
+— and it cannot be evaluated for content durability at all without also
+reading CG-Cardbox, which is where the payloads actually live.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What does CG-Cardbox guarantee about retention, correction and
+deletion? Every memory question this atlas asks about content has its
+answer there.</li>
+<li>Is there a read-side test for cross-project isolation anywhere? The
+schema makes the leak structurally impossible, which may be why nobody
+wrote one.</li>
+<li>Are <code>cause_kind</code>/<code>cause_id</code> populated on every
+event, or only where a cause is obvious? A causal chain with gaps is a
+different tool from one without.</li>
+<li>Is the project dormant or paced? Twenty commits ending in May
+against a preview label reads either way.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CommonGround/</code></td>
+<td>41,006</td>
+<td>The kernel package</td>
+</tr>
+<tr>
+<td><code>CommonGround/kernel/</code></td>
+<td>—</td>
+<td><code>ledger.py</code>, <code>lifecycle.py</code>,
+<code>semantic.py</code>, <code>topology.py</code> — the four modules
+that are the design</td>
+</tr>
+<tr>
+<td><code>CommonGround/contracts/</code></td>
+<td>—</td>
+<td><code>TruthRepositoryPort</code>, <code>CardBoxPort</code>,
+<code>ClaimToken</code>, <code>ConflictError</code>,
+<code>SemanticRecordSpec</code>, <code>TraceContext</code></td>
+</tr>
+<tr>
+<td><code>CommonGround/infra/postgres.py</code></td>
+<td>—</td>
+<td>The schema: <code>cg_semantic_records</code> (79-90),
+<code>cg_kernel_ledger</code> (106-121),
+<code>cg_ledger_scope_index</code> (123-129), the partial unique index
+(131-133), the composite foreign keys</td>
+</tr>
+<tr>
+<td><code>CommonGround/infra/repositories.py</code></td>
+<td>—</td>
+<td>Twenty-six <code>where project_id = %s</code> reads; the two ledger
+inserts (1604, 1656)</td>
+</tr>
+<tr>
+<td><code>CommonGround/service/auth.py</code></td>
+<td>—</td>
+<td>The project header (32)</td>
+</tr>
+<tr>
+<td><code>CommonGround/sdk/</code>, <code>agent_client/</code>,
+<code>projection_client/</code></td>
+<td>—</td>
+<td>The client sides: participate, and build read models over the
+feed</td>
+</tr>
+<tr>
+<td><code>CommonGround/cli.py</code></td>
+<td>—</td>
+<td>Project, agent, feed and provisioning subcommands;
+<code>--after-ledger-seq</code> (897)</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>—</td>
+<td>Fifty-one files against a real Postgres; the cross-project
+registration refusal (118-139) and the creator-authority absence
+test</td>
+</tr>
+<tr>
+<td><code>CG-Cardbox</code></td>
+<td>—</td>
+<td>A submodule pointing at
+<code>Intelligent-Internet/CG-Cardbox</code>; empty in a non-recursive
+clone, and where the payloads live</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;embedding|vector|tsvector|ilike&#39; CommonGround --glob &#39;!*test*&#39;    # none: no retrieval by meaning anywhere
+rg -n &#39;cg_kernel_ledger&#39; CommonGround --glob &#39;*.py&#39; | rg -n &#39;update|delete&#39;  # none: two inserts and no mutation
+rg -n &#39;status&#39; CommonGround/infra/postgres.py                            # one status column, on agent credentials, checked active/revoked
+rg -n &#39;valid_from|valid_to|as_of&#39; CommonGround                           # none: created_at only, record time
+cat .gitmodules                                                          # one entry: CG-Cardbox, the payload store, not in this tree
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/Intelligent-Internet/CommonGround/commit/10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b"><code class="commit-id" title="10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b">10b50ddb…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 20
+May 2026. Screened before reading: one auto-run surface, one build-time
+execution path in a pytest conftest, no unpinned dependency surface, a
+<code>uv.lock</code> unchanged for 113 days, and an
+<code>AGENTS.md</code> treated as data; nothing was installed or run,
+and the read was made from a full clone without submodules. Two marks.
+The reading covered the ledger and its schema, the semantic records, the
+project scoping and the HTTP and CLI surfaces. CG-Cardbox — the payload
+store every record references — is a submodule and was not present in
+the checkout, so nothing here describes how content is retained,
+corrected or deleted; that is recorded as a limit rather than as an
+absence in the design.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

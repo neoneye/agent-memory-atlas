@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 404 reports.**
+**This page covers all 405 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3575,3 +3575,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 159 commits between 15 March and 6 September 2026 by three authors, 10,646 lines of Markdown against 3,496 of Python, one test file covering an unrelated PDF skill, both trigger scripts shipping `/path/to/your/workspace` and `<your-model-id>` placeholders so nothing runs as committed, and **no licence file at all**; no capability marks.
 - Study when: you want to see the shape of a personal context system somebody has lived with, and you intend to build your own from the pattern — which is what the README asks for.
 - Do not copy when: you need it to run, you need a licence, or you need more than one owner — there is one workspace, one observation file and no scope key anywhere.
+
+### [`commonground`](../systems/commonground/)
+- Best idea: **the cause is a column on the audit row.** `cg_kernel_ledger` carries `cause_kind` and `cause_id` beside `actor_kind` and `actor_id`, so an event records not only what happened and who did it but what event produced it — a chain a reader can walk backwards, from two nullable columns.
+- Biggest risk: **the payloads are in a submodule this repository does not contain.** Every ledger row and semantic record points at a `cardbox_project_id`/`cardbox_id` pair, and CG-Cardbox is not checked in with the parent — so every question about how content is retained, corrected or deleted is answered somewhere else. The kernel is coherent and incomplete on its own.
+- Most reusable component: the scoping — `project_id` applied on every repository read *and* built into every composite primary key and foreign key, so a cross-project reference is not something a bug can produce, with a `bigint generated always as identity` sequence and a partial unique index expressing single-flight in the schema rather than in application code.
+- Maturity impression: Apache-2.0, twenty commits between 15 February and 20 May 2026 by eight authors and nothing since, `v3r1-preview`, 41,006 lines of Python on 3.13+ over PostgreSQL, fifty-one test files running against a real database; two of seven capability marks.
+- Study when: you are building several independent agent runtimes that must cooperate on one project without any of them owning the state, and you want the substrate to record attribution and causality rather than interpret.
+- Do not copy when: you want a memory rather than a ledger — there is no retrieval by meaning at all, not even an `ilike` — or when you need something finished; twenty commits and four months quiet against a preview label is an early cut of a considered design.
