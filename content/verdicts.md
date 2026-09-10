@@ -1825,12 +1825,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`virtual-context`](../systems/virtual-context/)
 
-- Best idea: a tag vocabulary that reorganises itself without breaking what was written against the old shape — a feedback loop that makes the tagger reuse `storage` rather than invent `data-persistence`, a splitter that breaks up a tag grown too broad, and `tag_aliases` mapping the old name to the canonical one so existing queries still resolve.
-- Biggest risk: tagging, convergence, splitting, summarising and supersession are five model-driven judgements measured by one end-to-end accuracy number, and the aliases that make a bad split harmless to queries also make it invisible.
-- Most reusable component: `tag_summaries` with `covers_through_turn` plus enumerated `source_segment_refs` and `source_turn_numbers` — a rolling summary that records exactly which material it covers and where it stops, which is how incremental summarisation avoids double-counting.
-- Maturity impression: 257,000 lines of Python deployed as a proxy so an existing agent needs no changes, AGPL-3.0 with a commercial contact, benchmark harnesses for five suites committed in-tree, and a LongMemEval run reporting its seeds, all three model roles and a per-category breakdown.
-- Study when: you let a model invent tags and your vocabulary has started to sprawl.
-- Do not copy when: you need memory you can defend — correction is a mark on a contradicted fact, and there is no trust state or review.
+- Best idea: `fact_decisions` — every accept and every reject of a fact mutation written in the same transaction as the mutation, with the proposal, the before, the after, the reason and a policy version, in a table a `BEFORE UPDATE` trigger refuses to let anything edit. Append-only enforced by the schema binds every writer, including the one written next year.
+- Biggest risk: the rejects are kept and never read. `get_fact_decisions` is the ledger's only reader and every caller outside the composite-store delegation is a test, so a claim the pipeline has already refused is proposed again, evaluated again and refused again — one `SELECT` short of a gate.
+- Most reusable component: still `tag_summaries` with `covers_through_turn` plus enumerated `source_segment_refs` and `source_turn_numbers` — a rolling summary that records exactly which material it covers and where it stops — with the vocabulary splitter and its aliases close behind.
+- Maturity impression: 306,547 lines of Python of which 151,627 are the test tree across 406 files — a suite larger than the package — deployed as a proxy so an existing agent needs no changes, AGPL-3.0-or-later with a commercial contact, benchmark harnesses for six suites committed in-tree, and a LongMemEval run reporting its seeds, all three model roles and a per-category breakdown.
+- Study when: you have to answer *why is this in the memory* after the fact, or you let a model invent tags and your vocabulary has started to sprawl.
+- Do not copy when: you need the memory to refuse a claim it has already refused. The refusal is recorded and never consulted, there is no trust state — `facts.status` answers *is this still happening*, not *do we believe it* — and no human review surface for memory.
 
 ### [`memorybear`](../systems/memorybear/)
 

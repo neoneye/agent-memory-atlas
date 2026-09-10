@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 212 of 412 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 161 of
+<li><strong>Negative evidence is almost never tested.</strong> 162 of
 412 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-thirty-five tombstones, one hundred and sixty-one negative-eval suites —
+thirty-five tombstones, one hundred and sixty-two negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -20620,28 +20620,47 @@ survives them</td>
 </tr>
 <tr>
 <td><code>virtual-context</code></td>
-<td>A segment — a compacted span of turns with a summary, full text, a
-primary tag and a tag set</td>
-<td>SQLite with segments, a tag graph, per-tag summaries, engine state
-and a cost ledger; Redis for session state</td>
+<td>Three: a segment (a compacted span of turns with summary and full
+text), a fact (subject/verb/object with a temporal status, typed links
+and an author actor), and an actor-card entry (a kind-checked claim
+about a person citing the fact ids it rests on)</td>
+<td>SQLite or Postgres with pgvector as the relational store — segments,
+facts, fact links and embeddings, actor cards, canonical turns, a tag
+graph, per-tag summaries and a cost ledger — beside Neo4j and FalkorDB
+fact-link backends, a filesystem backend and Redis for session
+state</td>
 <td>Tag-directed with a local embedding tagger on the request path, so
-recall never waits on a model call</td>
+recall never waits on a model call, plus a temporal
+<code>remember_when</code> mode that resolves a date window and can
+anchor on a state as of a target date</td>
 <td>Turns are tagged by an LLM after the response, compacted under
-budget pressure, and superseded when contradicted</td>
-<td>A supersession checker marks contradicted facts; conversations
-tombstone in Redis with a day-long TTL</td>
-<td>conversation_id on segments, tags, aliases, tag summaries and engine
-state — every table carries it</td>
-<td>A proxy in front of the provider API, an MCP server, a CLI, a TUI
-and an OpenClaw integration</td>
+budget pressure, and superseded when contradicted — with every accept
+and reject written to <code>fact_decisions</code> inside the same
+transaction</td>
+<td>A supersession checker sets <code>superseded_by</code> and search
+appends <code>IS NULL</code>; an actor-card entry can also expire out of
+the read path on its own validity window; conversations tombstone in
+Redis with a day-long TTL</td>
+<td>Three keys applied as predicates, not partitions:
+<code>tenant_id</code>, <code>conversation_id</code> and
+<code>audience_conversation_id</code>, with 354 conversation and 85
+tenant predicates in the SQLite backend alone and an
+<code>audience_scope</code> CHECK on every card entry</td>
+<td>A proxy in front of the provider API, an MCP server, a CLI, a TUI, a
+Discord community surface and an OpenClaw integration</td>
 <td>Tag generation, vocabulary canonicalisation, tag splitting, per-tag
-summarisation and compaction</td>
-<td>None epistemic — supersession marks contradiction, and nothing
-records a verdict on a fact</td>
-<td>A tag that grows too broad is split into subtags with aliases, so
-old queries still resolve</td>
+summarisation, compaction and a due-queue of actor-card rebuilds</td>
+<td>None epistemic. <code>facts.status</code> is a temporal status — is
+this still happening — and <code>actor_card_entries.confidence</code> is
+a float nothing filters on; the discrete verdict is on the
+<em>decision</em>, in the ledger, not on the fact</td>
+<td>An append-only decision ledger a database trigger refuses to let
+anyone edit, recording the before, the after, the proposal and the
+reason for every accept and every reject</td>
 <td>Everything about the vocabulary is an LLM judgement, and only the
-end-to-end accuracy is measured</td>
+end-to-end accuracy is measured; and the rejects the ledger keeps are
+never read back, so the same wrong fact can be proposed and refused
+forever</td>
 </tr>
 <tr>
 <td><code>virtualwife</code></td>
@@ -21324,7 +21343,7 @@ href="../systems/vir/"><code>vir</code></a>, <a
 href="../systems/weave/"><code>weave</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>58 of 412:</em> <a
+<p><em>59 of 412:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -21383,6 +21402,7 @@ href="../systems/statewave/"><code>statewave</code></a>, <a
 href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
 href="../systems/vestige/"><code>vestige</code></a>, <a
+href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
 href="../systems/zep/"><code>zep</code></a></p>
 <p><strong>Scope enforced in retrieval</strong> — A stored scope key
 (user, project, agent, tenant) applied as a filter on the read path, not
@@ -21878,7 +21898,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>161 of 412:</em> <a
+<p><em>162 of 412:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
@@ -22037,6 +22057,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
 <a href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
+href="../systems/virtual-context/"><code>virtual-context</code></a>, <a
 href="../systems/vllm-semantic-router/"><code>vllm-semantic-router</code></a>,
 <a href="../systems/wax/"><code>wax</code></a>, <a
 href="../systems/wenlan/"><code>wenlan</code></a>, <a
@@ -22060,7 +22081,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and sixty-one repositories of four hundred and twelve assert
+hundred and sixty-two repositories of four hundred and twelve assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -27303,7 +27324,7 @@ href="https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f09236
 <li><a
 href="https://github.com/virtual-context/virtual-context">virtual-context/virtual-context</a>
 at <a
-href="https://github.com/virtual-context/virtual-context/commit/6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d"><code class="commit-id" title="6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d">6566ec7d…</code></a>
+href="https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f"><code class="commit-id" title="65d2640e15547519f54bec0ddcfab4210c1dd06f">65d2640e…</code></a>
 — AGPL-3.0 with a commercial-licence contact</li>
 <li><a
 href="https://github.com/SuanmoSuanyangTechnology/MemoryBear">SuanmoSuanyangTechnology/MemoryBear</a>
