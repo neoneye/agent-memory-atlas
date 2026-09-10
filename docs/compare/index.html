@@ -3350,8 +3350,8 @@ test file, on the skill optimizer.</p>
 <p><strong><a href="../systems/teamai-cli/">teamai-cli</a> is the
 family's team-scale knowledge base, and its lessons are documents a
 reviewer merges and votes only credit when the transcript shows they
-were read.</strong> Tencent's CLI — MIT, 655 commits from 3 March to 8
-September 2026 by thirty-five authors, 62,160 lines under 2,829 tests —
+were read.</strong> Tencent's CLI — MIT, 720 commits from 3 March to 10
+September 2026 by forty-four authors, 64,635 lines under 3,020 tests —
 distributes a team's skills, rules and knowledge from a git repository
 into ten coding agents. A learning is a Markdown document with
 frontmatter that <code>contribute</code> pushes as a merge request after
@@ -3370,11 +3370,16 @@ recalled, a confidence over counts and recency drives a prune that
 removes or archives and a promotion that rewrites, and a review command
 adjudicates machine-written wiki sections queued with a risk. Three
 marks. The merge-request importer computes which session learnings a
-draft supersedes and nothing consumes the list; and deleting a rule, a
-skill or an agent appends its name to a committed <code>.removed</code>
-file that the next pull uses to delete every member's copy and the push
-scan reads so a stale copy cannot re-upload it, while a learning has
-neither, so a maintainer's prune stops at the repository.</p>
+draft supersedes and nothing consumes the list; and the two ways this
+tool forgets are different in kind. Deleting a rule, a skill or an agent
+appends its name to a committed <code>.removed</code> file that the next
+pull uses to delete every member's copy and the push scan reads so a
+stale copy cannot re-upload it — a record that outlives the resource. A
+learning has no entry in that list; what reaches a member is
+<code>mirrorLearnings</code>, which treats the local cache as owned by
+the repository and deletes whatever the repository no longer holds
+before rebuilding the index, so a prune travels but leaves nothing
+behind that a later contribution consults.</p>
 <p><strong><a href="../systems/evox-genesis/">EvoX Genesis</a> is the
 family's argument that a memory needs no store of its own, because the
 directory it describes is the key.</strong> An Elixir umbrella from the
@@ -17593,7 +17598,7 @@ docs, rules, skills and a codebase wiki indexed the same way</td>
 directory; <code>manifest/roles.yaml</code> and
 <code>manifest/projects.yaml</code> declaring the namespaces;
 <code>search-index.json</code> per scope;
-<code>~/.teamai/learnings/</code> as a copy in user scope;
+<code>~/.teamai/learnings/</code> as a reconciled cache in user scope;
 <code>~/.teamai/votes/&lt;user&gt;.yaml</code> synced to
 <code>votes/</code> in the repository or its reports branch;
 <code>usage.jsonl</code>, sessions and contribute state under
@@ -17628,9 +17633,16 @@ rule, skill, agent or MCP name to a committed
 <code>&lt;type&gt;/.removed</code> file that the next pull uses to
 delete every member's local copy and that the push scan consults so a
 stale copy is never re-uploaded — a mechanism learnings and docs are not
-part of; a user-scope pull drops a project subdirectory that stops being
-active and copies the root learnings over the local copy with overwrite
-and no removal</td>
+part of, and one whose pull-side deletion of a skill is conditional: a
+tombstoned skill directory holding nested VCS metadata is kept with a
+warning, and a skill dropped by a role or tag change is deleted only
+when it is byte-identical to its team-repo source; a user-scope pull and
+a user-scope contribute reconcile <code>~/.teamai/learnings/</code>
+against the repository with <code>mirrorLearnings</code>, which deletes
+a shared root document, an inactive namespace directory and a file under
+an active namespace that the repository has dropped before the overwrite
+copy, so a prune or an archive reaches every member's cache and the
+index built from it</td>
 <td>Project scope from the working directory's configuration, user scope
 from the home directory, chosen at read time with user results admitted
 only on opt-in; inside a scope, a project manifest maps an active
@@ -17661,15 +17673,19 @@ be credited; a relevance verdict that reports its threshold and the
 matched and missing terms; a review queue with a risk level for
 machine-written knowledge; a namespace key applied at the copy, the
 index and the contribution, with a path-segment guard at three
-boundaries; scope isolation proved by tests; 2,829 test cases</td>
-<td>Supersession is computed and written to nothing; a deletion
-propagates to every machine for a rule, a skill or an agent and for a
-learning does not, so a pruned or archived learning survives in every
-user-scope member's root copy and index; retrieval is title and tag
-matching with a body fallback, no vector arm; the recall block tells the
-model it <em>should</em> invoke the subagent with four skip conditions,
-so recall is advisory; documents are required to be in Chinese by the
-share skill</td>
+boundaries; scope isolation proved by tests; 3,020 test cases</td>
+<td>Supersession is computed and written to nothing;
+<code>teamai remove</code> has no learnings handler, so retiring a
+lesson by name is a repository edit rather than a record any later write
+consults; the skill deletion that does propagate is skipped for a
+deployed copy that differs from its source or cannot be compared against
+one, which is the copy a member is most likely to have edited; the
+learnings reconcile treats its source as authoritative, so a call site
+passing a partial snapshot deletes whatever the snapshot omits;
+retrieval is title and tag matching with a body fallback, no vector arm;
+the recall block tells the model it <em>should</em> invoke the subagent
+with four skip conditions, so recall is advisory; documents are required
+to be in Chinese by the share skill</td>
 </tr>
 <tr>
 <td><code>telemem</code></td>
@@ -25343,8 +25359,8 @@ a 96-day-old lockfile, MIT asserted with no licence file</li>
 <li><a
 href="https://github.com/Tencent/teamai-cli">Tencent/teamai-cli</a> at
 <a
-href="https://github.com/Tencent/teamai-cli/commit/24260bd5f7039a0dbd8b82577667b78b744a5529"><code class="commit-id" title="24260bd5f7039a0dbd8b82577667b78b744a5529">24260bd5…</code></a>
-— read only; two manifests inside the seven-day cooldown,
+href="https://github.com/Tencent/teamai-cli/commit/9e7adc79faa03ef4c3a49cb7a148bba83b7dc1f3"><code class="commit-id" title="9e7adc79faa03ef4c3a49cb7a148bba83b7dc1f3">9e7adc79…</code></a>
+— read only; <code>package.json</code> inside the seven-day cooldown,
 <code>AGENTS.md</code> and <code>CLAUDE.md</code> treated as data</li>
 <li><a href="https://github.com/openmasq/openmasq">openmasq/openmasq</a>
 at <a
