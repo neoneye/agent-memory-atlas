@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 396 reports.**
+**This page covers all 397 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3511,3 +3511,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 213 commits between 13 June and 21 August 2026 by two authors, version 0.5.11, fourteen crates and 67,852 lines of Rust with 523 test cases across 28 integration files and the inline modules, four backends behind one trait; four of seven capability marks.
 - Study when: you want scope isolation you can prove rather than assert, a retraction that withholds a memory from recall without deleting it, and a forgetting pass that records the reason and the retrieval strength behind every archive — on a workstation, with no infrastructure.
 - Do not copy when: you need a validity interval, a candidate tier that gates admission rather than a state that only demotes, an audit trail that travels with the store rather than living in one user's home directory, or destructive operations an agent can reach over MCP.
+
+### [`context-keeper`](../systems/context-keeper/)
+- Best idea: **the schema refuses a thin memory instead of storing it.** A decision needs a 40-character `problem` and a 60-character `why_chosen`; `_check_min_lengths` returns the field, the actual length and the minimum, and `update_entry` re-applies the floors so an entry cannot be edited below the bar it was admitted at.
+- Biggest risk: **the capture-time conflict check skips everything you retired.** `_find_similar_entries` is the only write-path consultation of stored memory, and `server.py:1110-1111` drops every entry whose status is `deprecated` or `superseded`, so a rule retired with a mandatory reason can be recorded again with no warning that it was ever rejected.
+- Most reusable component: the pair of read tools — `get_context` ranked inside a 4,000-token budget with a measured abstention flag, beside `query_entries` applying exact predicates over status, origin, hardness, scope and supersession with no ranking at all — plus `scope_rules.py`, one implementation of scope coverage written after four surfaces disagreed on two of ten cases.
+- Maturity impression: MIT, 74 commits between 9 April and 6 August 2026 by three authors, version 0.19.0, 7,587 lines of Python with zero runtime dependencies beside 7,510 lines of tests holding 511 cases, fourteen MCP tools and seven hooks; three of seven capability marks.
+- Study when: you want an agent's project memory to be structured rather than freeform, you are willing to have a schema reject your thin rationale, and you want a retrieval that tells you when it has no confident answer.
+- Do not copy when: you need a retired rule to stay retired without a person noticing, a record of what an entry said before it was edited, a validity interval, or an abstention that withholds rather than annotates.

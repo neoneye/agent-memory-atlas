@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A dependency-free MCP server that
+holds a project's decisions, pipelines and constraints as typed JSON
+entries whose fields the server refuses below a character floor, serves
+them through two read paths — one relevance-ranked inside a token budget
+that annotates its own low-confidence answers, one an exact filter over
+status, origin, hardness and scope — and warns at capture when a new
+entry contradicts a live one, a check that skips every entry already
+deprecated or superseded.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Context
+Keeper — Agent Memory Atlas">
+    <meta property="og:description" content="A dependency-free MCP
+server that holds a project's decisions, pipelines and constraints as
+typed JSON entries whose fields the server refuses below a character
+floor, serves them through two read paths — one relevance-ranked inside
+a token budget that annotates its own low-confidence answers, one an
+exact filter over status, origin, hardness and scope — and warns at
+capture when a new entry contradicts a live one, a check that skips
+every entry already deprecated or superseded.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Context
+Keeper — Agent Memory Atlas">
+    <meta name="twitter:description" content="A dependency-free MCP
+server that holds a project's decisions, pipelines and constraints as
+typed JSON entries whose fields the server refuses below a character
+floor, serves them through two read paths — one relevance-ranked inside
+a token budget that annotates its own low-confidence answers, one an
+exact filter over status, origin, hardness and scope — and warns at
+capture when a new entry contradicts a live one, a check that skips
+every entry already deprecated or superseded.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Context Keeper — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Context Keeper",
+      "description": "A dependency-free MCP server that holds a project's decisions, pipelines and constraints as typed JSON entries whose fields the server refuses below a character floor, serves them through two read paths \u2014 one relevance-ranked inside a token budget that annotates its own low-confidence answers, one an exact filter over status, origin, hardness and scope \u2014 and warns at capture when a new entry contradicts a live one, a check that skips every entry already deprecated or superseded.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The schema rejects a thin memory at the
+door</p>
+          <h1>Context Keeper</h1>
+          <p class="document-deck">A dependency-free MCP server that
+holds a project's decisions, pipelines and constraints as typed JSON
+entries whose fields the server refuses below a character floor, serves
+them through two read paths — one relevance-ranked inside a token budget
+that annotates its own low-confidence answers, one an exact filter over
+status, origin, hardness and scope — and warns at capture when a new
+entry contradicts a live one, a check that skips every entry already
+deprecated or superseded.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jarmstrong158/context-keeper">
+              <span>Source</span>
+              <strong>jarmstrong158/context-keeper</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jarmstrong158/context-keeper/commit/d08355a46548d5a20d9170d3271e2054c51a4db9" title="d08355a46548d5a20d9170d3271e2054c51a4db9">
+              <span>Analyzed revision</span>
+              <code>d08355a4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jarmstrong158--context-keeper" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jarmstrong158--context-keeper</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Context Keeper is project memory for a coding agent, and its
+distinguishing decision is made before anything is stored: <strong>the
+schema refuses an entry that is too thin to be worth keeping.</strong> A
+decision needs a <code>problem</code> of at least 40 characters and a
+<code>why_chosen</code> of at least 60; a constraint needs a
+<code>reason</code> of at least 40; a pipeline needs a
+<code>purpose</code> of at least 40 and at least one step.
+<code>_check_min_lengths</code> (<code>server.py:972-996</code>) returns
+a rejection carrying the field, the actual length and the minimum, with
+the message <em>"Entry rejected: required fields missing or too
+short."</em> <code>update_entry</code> re-applies the same floors. Most
+systems in this corpus accept whatever an agent writes and try to rank
+the result; this one sets a bar at the door.</p>
+<p>MIT; 74 commits between 9 April and 6 August 2026 from three authors;
+version 0.19.0; 7,587 lines of Python including the hooks, beside 7,510
+lines of tests holding 511 cases; <strong>zero runtime
+dependencies</strong>. The screen found two auto-run surfaces — a
+<code>hooks/</code> directory with seven scripts a plugin manifest
+registers, and a <code>server.json</code> declaring a start command —
+one build-time execution path in <code>tests/conftest.py</code>, and one
+unpinned dependency surface; nothing was installed or run, and the read
+was made from a full clone.</p>
+<p><strong>Two read paths with different contracts, and the difference
+is the point.</strong> <code>get_context</code> ranks by tag and text
+overlap with a scope boost, recency, status and origin, follows
+<code>related_to</code> links, and fills a 4,000-token budget, setting
+<code>budget_truncated</code> when it cannot fit everything.
+<code>query_entries</code> applies exact predicates — status, origin,
+hardness, tags, scope, <code>superseded_by</code>,
+<code>supersedes</code>, date bounds — and does no ranking whatsoever. A
+caller that needs <em>the relevant thing</em> and a caller that needs
+<em>every entry matching these fields</em> are served by different
+functions, which is a clarity most memory tools give up in favour of one
+endpoint with a relevance knob.</p>
+<p><strong>The retrieval knows when it does not know.</strong>
+<code>get_context</code> computes a relevance signal from tag and text
+overlap and, when the top entry falls below a 0.20 floor, sets
+<code>no_confident_match</code> and <code>top_relevance</code> on the
+response (<code>server.py:2212-2229</code>). The floor is not a guess:
+the config comment records it as <em>"the highest value with zero
+false-abstention on the eval set"</em>, and the calibration note beside
+it explains why a raw cosine could not be used — <em>"nomic-embed
+cosines never drop below ~0.51 even for a completely unrelated question,
+so comparing a raw cosine to this floor would put every query above it
+and disable abstention entirely."</em> That is a project that measured
+its own abstention rather than asserting it.</p>
+<p><strong>Scope has one implementation, and the docstring says what it
+cost to get there.</strong> <code>scope_rules.py</code> opens by naming
+four surfaces that each had their own matcher and disagreed on two of
+ten cases, with the consequence spelled out: a substring test matched
+<code>webhooks/send.py</code> against a <code>hooks/</code> scope, and
+because the guard hook injects each constraint at most once per session,
+<em>"a false positive MARKS THAT CONSTRAINT DELIVERED and the file it
+actually governs never receives it. An over-eager match causes a silent
+under-delivery."</em> The module imports nothing, deliberately, because
+it runs on PreToolUse before every edit.</p>
+<p><strong>The finding that costs it a mark.</strong>
+<code>_find_similar_entries</code> is the one write-path check that
+consults what is already stored — it computes Jaccard overlap against
+existing entries and labels a high-overlap pair
+<code>likely_contradiction</code> or <code>likely_restatement</code> so
+the caller can resolve it before a second live rule contradicts the
+first. It skips every entry whose status is <code>deprecated</code> or
+<code>superseded</code> (<code>server.py:1110-1111</code>). So a
+constraint you deprecated last month can be recorded again tomorrow, and
+the check that exists to catch exactly that will say nothing. The store
+holds the record of the rejection and never consults it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An entry becomes memory only if it clears a bar. The agent calls
+<code>record_entry</code> with a <code>kind</code>; the server validates
+the fields for that kind against character floors and rejects the write
+outright if they are short. If it passes, the server looks for
+near-duplicates among the <em>live</em> entries and hands back a
+<code>similar_entries</code> list with each pair labelled a likely
+restatement or a likely contradiction — a prompt to the caller, not a
+block.</p>
+<p>Once stored, an entry has three ways to stop being true. It can be
+<em>superseded</em>, which happens automatically when a newer entry
+names it, demoting it out of default recall while leaving it findable.
+It can be <em>deprecated</em> by an explicit call with a mandatory
+reason, optionally folded into a survivor. Or it can go <em>stale</em> —
+<code>prune_stale</code> reports entries not verified within a
+threshold, and <code>code_drift</code> counts commits touching the
+entry's scope since it was last verified, flagging a scope whose file no
+longer exists as <code>orphaned_scope</code> rather than as drift. None
+of the three deletes anything.</p>
+<p>Reading is where the design's care shows. The ranked path serves an
+agent asking a question and tells it when the answer is weak; the exact
+path serves a caller asking for a set and never guesses. Both drop what
+is not <code>active</code> by default. The hooks close the loop:
+constraints covering a file are injected before it is edited, so a rule
+reaches the agent at the moment it applies rather than at the start of a
+session it has since forgotten.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is rejected outright if its fields are under the character floor; if it passes, the server compares it against live entries only and labels a high-overlap pair a likely contradiction or restatement; stored entries leave default recall by being superseded, deprecated or filtered by status, and two read paths serve them — one ranked inside a token budget that flags its own weak answers, one an exact filter</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is rejected outright if its fields are under the character floor; if it passes, the server compares it against live entries only and labels a high-overlap pair a likely contradiction or restatement; stored entries leave default recall by being superseded, deprecated or filtered by status, and two read paths serve them — one ranked inside a token budget that flags its own weak answers, one an exact filter
+flowchart TB
+    W[&quot;record_entry(kind=...)&quot;]
+    F{&quot;field lengths&lt;br/&gt;problem 40, why_chosen 60,&lt;br/&gt;reason 40, purpose 40&quot;}
+    REJ[&quot;rejected: field, actual, minimum&lt;br/&gt;nothing is stored&quot;]
+    SIM{&quot;high overlap with&lt;br/&gt;a live entry?&quot;}
+    LBL[&quot;similar_entries:&lt;br/&gt;likely_contradiction&lt;br/&gt;or likely_restatement&quot;]
+    ST[(&quot;.context/*.json&lt;br/&gt;typed entries, human-editable&lt;br/&gt;status, origin, scope, tags&quot;)]
+    SUP[&quot;a newer entry names it:&lt;br/&gt;status = superseded&quot;]
+    DEP[&quot;deprecate_entry(reason)&lt;br/&gt;status = deprecated&quot;]
+    GC[&quot;get_context&lt;br/&gt;ranked, related_to followed,&lt;br/&gt;4,000-token budget&quot;]
+    AB{&quot;top relevance&lt;br/&gt;below 0.20?&quot;}
+    FLAG[&quot;no_confident_match + top_relevance&lt;br/&gt;results returned anyway&quot;]
+    QE[&quot;query_entries&lt;br/&gt;exact: status, origin, hardness,&lt;br/&gt;scope, tags, supersession&quot;]
+    SKIP[&quot;the capture check&lt;br/&gt;skips deprecated and superseded&quot;]
+
+    W --&gt; F
+    F --&gt;|under the floor| REJ
+    F --&gt;|passes| SIM
+    SIM --&gt;|yes| LBL
+    SIM --&gt;|no| ST
+    LBL --&gt; ST
+    ST --&gt; SUP
+    ST --&gt; DEP
+    ST --&gt; GC
+    ST --&gt; QE
+    GC --&gt; AB
+    AB --&gt;|yes| FLAG
+    DEP -.-&gt;|&quot;never consulted again&quot;| SKIP
+    SUP -.-&gt; SKIP
+    SKIP -.-&gt;|&quot;so the same rule&lt;br/&gt;re-enters unchallenged&quot;| SIM</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single-file MCP server — <code>server.py</code> is 3,805 lines —
+beside nine small modules: <code>ranking.py</code> (306) scores entries,
+<code>scope_rules.py</code> (176) owns scope semantics,
+<code>code_drift.py</code> (322) compares an entry's scope against git
+history, <code>mirror.py</code> (778) syncs with an optional remote,
+<code>quality_checks.py</code> (252) backs <code>verify_quality</code>,
+<code>semantic_index.py</code> (190) is the opt-in embedder arm,
+<code>store_paths.py</code> (197) resolves where the store lives,
+<code>work_focus.py</code> (187) tracks what is being worked on,
+<code>usage.py</code> (118) records which entries were injected, and
+<code>mojibake.py</code> (177) repairs encoding damage.</p>
+<p>The store is JSON files under <code>.context/</code> in the project
+directory. There is no database and <code>dependencies = []</code> in
+<code>pyproject.toml</code> — the zero-dependency posture is
+load-bearing rather than minimalist, because
+<code>hooks/scope_guard.py</code> runs on PreToolUse before every Edit
+and Write, and the project's own constraint <code>con-010-acde</code>
+caps what that path may import.</p>
+<p>Distribution is a Claude Code plugin, an <code>.mcpb</code> bundle
+built and validated in CI, and a PyPI package. Sharing works two ways:
+<code>export_snapshot</code> writes a gzipped store a team commits to
+git and <code>import_snapshot</code> reads it back non-destructively,
+auto-running when the local store is empty; and <code>mirror</code>
+pulls newest-wins from an optional remote or backfills local entries to
+it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>handle_record_*</code> →
+<code>_check_min_lengths(params, {...})</code>
+(<code>server.py:972-996</code>, called at <code>:1797</code>,
+<code>:1882</code>, <code>:1929</code>) → on failure return the
+rejection with <code>min_length</code> and <code>actual</code> →
+<code>_find_similar_entries</code> (<code>:1080-1125</code>) →
+<code>_classify_overlap</code> (<code>:1055-1077</code>) labels each
+pair → write the entry with <code>"status": "active"</code>
+(<code>:1824</code>, <code>:1910</code>, <code>:1954</code>).</li>
+<li><strong>Supersession.</strong> Recording with a predecessor id → the
+old entry's <code>status</code> is set to <code>superseded</code> in
+place (<code>:1851-1853</code>) unless it is already deprecated, and
+<code>superseded</code> is returned on the response
+(<code>:1870</code>).</li>
+<li><strong>Deprecation.</strong> <code>handle_deprecate_entry</code> →
+<code>dep["status"] = "deprecated"</code> (<code>:2927</code>) with a
+required reason, and an optional <code>merge_into</code> that folds the
+entry into a survivor.</li>
+<li><strong>Ranked read.</strong> <code>handle_get_context</code> → drop
+non-active entries (<code>:1261</code>) →
+<code>score_entry(e, tags, query, scope, now)</code> plus an optional
+semantic weight (<code>:2107</code>) → follow <code>related_to</code> →
+fill the token budget, set <code>budget_truncated</code>
+(<code>:2458</code>) → compute <code>_relevance_signal</code> on the top
+entry and set <code>no_confident_match</code> below the floor
+(<code>:2212-2229</code>).</li>
+<li><strong>Exact read.</strong> <code>handle_query_entries</code> →
+<code>_matches</code> (<code>:2285-2320</code>) applies every
+non-<code>None</code> predicate as a hard equality or set test;
+predicates over fields a type does not have never match, which the
+docstring names as intended.</li>
+<li><strong>Scope coverage.</strong> <code>scope_rules.normalize</code>
+/ <code>is_domain</code> / <code>components</code>, used by
+<code>hooks/scope_guard.py</code>, <code>work_focus.py</code>,
+<code>code_drift.py</code> and the ranking path so the four cannot drift
+apart again.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three types in three files. A <strong>decision</strong> carries
+<code>summary</code>, <code>problem</code>, <code>why_chosen</code>,
+alternatives considered, tags and scope. A <strong>pipeline</strong>
+carries a <code>name</code>, a <code>purpose</code> and ordered steps. A
+<strong>constraint</strong> carries a <code>rule</code>, a
+<code>reason</code> and a <code>hardness</code>. All three carry an id
+of the form <code>dec-021-b607</code>, a <code>status</code>, an
+<code>origin</code>, a <code>scope</code>, <code>related_to</code>
+links, and creation and verification timestamps.</p>
+<p><code>status</code> is <code>active</code>, <code>superseded</code>
+or <code>deprecated</code>, defaulting to <code>active</code> whenever
+the field is missing — a backward-compatibility choice that means an
+entry hand-edited without the field is trusted rather than quarantined.
+<code>origin</code> is <code>user</code>, <code>agent</code> or
+<code>import</code>, and <code>_normalize_origin</code>
+(<code>server.py:1003-1009</code>) coerces anything unrecognised to
+<code>agent</code>, which is the conservative direction: an unknown
+writer is treated as the machine, not the person.</p>
+<p>There is <strong>no validity time</strong>. Entries have a creation
+date and a last-verified date, both record-time facts. A constraint that
+applied only to a past release has no way to say so, and
+<code>prune_stale</code> and <code>code_drift</code> approximate the
+question from git activity instead — a good approximation of <em>has
+this gone stale</em> and no answer at all to <em>when was this
+true</em>.</p>
+<p>The store is deliberately human-editable, which is a real property
+here: the files are plain JSON, <code>DECISIONS.md</code> is a
+regenerable projection, and <code>mojibake.py</code> exists because
+hand-edited files acquire encoding damage.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>get_context</code> is the ranked path. <code>score_entry</code>
+combines tag overlap, text overlap, a scope coverage boost, recency,
+status and origin; an opt-in local embedder contributes a calibrated
+cosine blended by <code>sem_weight</code> (<code>server.py:2107</code>).
+Entries whose status is not <code>active</code> are dropped before
+scoring (<code>:1261</code>). <code>related_to</code> links are pulled
+by default. Results fill a 4,000-token budget with a per-entry cap of
+1,000, and the response reports <code>budget_truncated</code> when the
+budget bound the answer rather than the query.</p>
+<p>The abstention signal is the part worth copying.
+<code>_relevance_signal</code> is computed from tag and text overlap
+only — explicitly <em>not</em> the composite score, because, as
+<code>evals/abstention.py</code> puts it, <em>"the composite is inflated
+by recency/status/origin and cannot separate 'relevant' from 'merely
+present.'"</em> When the top entry's signal falls under 0.20 the
+response carries <code>no_confident_match</code> and
+<code>top_relevance</code>. <strong>The results are still
+returned</strong>; the flag annotates rather than withholds, which is a
+deliberate choice and also the limit — a caller that ignores the flag
+gets the confabulation the mechanism was built to catch.</p>
+<p><code>query_entries</code> is the exact path and does no ranking.
+Every predicate is a hard match: <code>status</code>,
+<code>origin</code> and <code>hardness</code> as lowercase set
+membership, <code>scope</code> as exact string equality, tags as any-of
+or all-of, <code>superseded_by</code> as an id match,
+<code>supersedes</code> resolved once from the target's back-reference,
+date bounds, and free text as an AND over substring matches on the same
+word blob the ranked path indexes.</p>
+<p>Scope behaves differently on the two paths, and it is worth being
+precise about: <code>query_entries</code> filters on exact equality,
+while the ranked path uses <code>scope_rules</code> coverage as a score
+boost. The mark in this report rests on the first.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous, local, and validated before anything touches
+disk. The floors are per kind and per field, and
+<code>_UPDATE_MIN_LENGTHS</code> (<code>server.py:2786-2790</code>)
+restates them for the update path so an entry cannot be edited down
+below the bar it was admitted at. A rejection is structured: the field,
+the actual length, the minimum, and a message naming the schema.</p>
+<p>After validation the server runs <code>_find_similar_entries</code>:
+Jaccard overlap of the new entry's words against every stored entry
+above a threshold, returning ids, types, summaries and similarities.
+<code>_classify_overlap</code> then labels each pair —
+<code>likely_contradiction</code> when the two texts hold opposite
+polarity, detected by negation and an antonym-pair check, otherwise
+<code>likely_restatement</code>. The comment above it is candid about
+the false-positive rate and why that is acceptable: <em>"an occasional
+false 'contradiction' just prompts a second look — cheap."</em></p>
+<p>Three things this write path does not do. It does not block on a
+contradiction — the caller decides. It does not record who resolved it.
+And it does not consult deprecated or superseded entries at all, which
+is the subject of section 9.</p>
+<p>There is <strong>no record of what an entry used to say</strong>.
+<code>update_entry</code> rewrites the JSON in place; the previous text
+is gone unless the project's own git history happens to hold it, and the
+store is normally gitignored in favour of the explicit snapshot. The
+tree's three append-mode writers log sync operations, compaction events
+and a <code>.gitattributes</code> line — none of them an entry
+mutation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fourteen MCP tools. <code>record_entry</code> is the unified write,
+dispatching on <code>kind</code> with the old
+<code>record_decision</code> / <code>record_pipeline</code> /
+<code>record_constraint</code> names kept dispatchable for
+compatibility. <code>get_context</code> and <code>query_entries</code>
+are the two reads; <code>get_project_summary</code> is the
+session-opener. <code>update_entry</code>, <code>deprecate_entry</code>,
+<code>prune_stale</code>, <code>verify_quality</code>,
+<code>get_compaction_report</code>, <code>reload_constraints</code>,
+<code>export_markdown</code>, <code>export_snapshot</code>,
+<code>import_snapshot</code> and <code>mirror</code> complete the
+surface.</p>
+<p>Seven hooks carry the integration, and <code>scope_guard</code> is
+the interesting one: it runs on PreToolUse before every Edit and Write,
+resolves which constraints cover the target file through
+<code>scope_rules</code>, and injects them — so a rule arrives when the
+file it governs is about to change, not at the start of a session. It
+injects each constraint at most once per session, which is what makes an
+over-eager scope match a silent failure rather than noise.
+<code>session_start</code> and <code>subagent_start</code> seed context,
+<code>pre_compact</code> runs <code>verify_quality</code> and
+<code>post_compact</code> produces a compaction report,
+<code>constraint_reinject</code> re-surfaces the rules mid-session, and
+<code>commit_capture_reminder</code> prompts for capture at commit
+time.</p>
+<p>The README is unusually clear about where this sits relative to the
+harness's own memory, and it does not overclaim: auto memory is
+<em>"good at picking up incidental preferences with zero effort"</em>
+and Context Keeper is for <em>"the decisions and rules you want
+structured, queryable, enforceable, and portable"</em>, with
+<code>rules_export</code> writing into <code>.claude/rules/</code>
+rather than around it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — awarded.</strong> A stored <code>scope</code> on
+every entry, one shared implementation of coverage in
+<code>scope_rules.py</code>, an exact equality filter on
+<code>query_entries</code>, and a coverage test in the pre-edit hook.
+The module docstring is the best argument for the mark: it names the
+four surfaces that disagreed, the two of ten cases they disagreed on,
+and the failure that disagreement produced.</p>
+<p><strong>Trust state — awarded.</strong> <code>status</code> is a
+stored, discrete, three-value field and it excludes:
+<code>get_context</code> drops anything not <code>active</code>, the
+projection path drops deprecated entries, <code>query_entries</code>
+matches it exactly. <code>origin</code> is a second discrete field
+recording whether a user, an agent or an import wrote the entry, with
+unknown values coerced to <code>agent</code>. Both are used to decide
+whether an entry may be returned, not to order what survives — the
+relevance score does the ordering, and the two are separate.</p>
+<p><strong>Negative evaluation — awarded.</strong>
+<code>test_since_excludes_older_entries</code> asserts the new id is
+present and the old id is absent in the same returned set, and
+<code>test_before_excludes_newer_entries</code> asserts the mirror
+image; neither can pass over an empty result.
+<code>test_golden_set_shape</code> requires the committed
+<code>retrieval_golden.json</code> to hold at least forty cases of which
+at least eight are typed <code>negative</code>, and
+<code>test_no_private_store_leaks_in</code> asserts the case stores are
+a subset of an allow-list. CI runs the suite on every push.</p>
+<p><strong>Tombstone — withheld, and the reason is one line of
+code.</strong> <code>_find_similar_entries</code> is the only write-path
+consultation of stored memory this system has, and
+<code>server.py:1110-1111</code> reads:</p>
+<pre class="python"><code>if e.get(&quot;status&quot;, &quot;active&quot;) in (&quot;deprecated&quot;, &quot;superseded&quot;):
+    continue</code></pre>
+<p>So the check that exists to stop two contradictory rules going live
+cannot see the rule you retired. Deprecation records the value, the
+reason, and the time — everything a tombstone stores — and then no later
+write reads it. The mark asks for a rejected value that later extraction
+cannot re-assert; here it can, in silence, and the machinery to prevent
+it is four lines away.</p>
+<p><strong>Audit log — withheld, and the search is worth stating
+precisely.</strong> Three append-mode writers do exist:
+<code>mirror.py:187</code> appends a timestamped line to
+<code>mirror.log</code> for each sync operation, the compaction hooks
+append to <code>.context/hook.log</code>, and
+<code>server.py:3334</code> appends a <code>merge=ours</code> line to
+<code>.gitattributes</code>. None of the three records a mutation of an
+entry. Both logs are one-line free text wrapped in a bare
+<code>except Exception: pass</code> — best-effort by design, and a
+record that may silently not be written is not an audit trail.
+<code>usage.py</code> records which entries were injected into a
+session, which is delivery rather than mutation. The gap that matters:
+<code>update_entry</code> rewrites an entry's JSON in place and nothing
+anywhere records what it said before.</p>
+<p><strong>Bitemporal — withheld.</strong> Creation and verification
+timestamps only; no validity interval.</p>
+<p><strong>Human review — withheld.</strong> <code>verify_quality</code>
+is an automated scan for thin rationale, missing tags and isolated arcs,
+and <code>deprecate_entry</code> is a tool an agent can call as readily
+as a person. No surface shows a person a pending entry and asks for a
+verdict before it becomes retrievable.</p>
+<p><strong>One safety property worth naming.</strong> The abstention
+flag annotates and does not withhold. That is defensible — a caller with
+no answer may still want the nearest thing — but it means the protection
+is advisory, and the response shape puts the burden on every consumer to
+check a field.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>511 test functions across fifteen files, 7,510 lines, run by
+<code>.github/workflows/tests.yml</code> as
+<code>python -m pytest tests/</code> on every push. The suite covers the
+MCP protocol surface, the hooks, the mirror, packaging, projections,
+quality checks, supersession, transport, work focus and the retrieval
+eval harness.</p>
+<p><code>tests/test_retrieval_eval.py</code> is the interesting one
+because it tests the <em>eval</em> rather than the system: it validates
+the golden set's shape, asserts a floor of eight negative cases, asserts
+the case stores are a subset of an allow-list so a private store cannot
+leak into the corpus, checks the lexical arm is deterministic across two
+runs, and asserts the eval does not write to real stores.
+<code>test_positive_recall_at_5_holds</code> pins recall@5 within a
+tolerance, so the positive arm is a gate rather than a report.</p>
+<p><code>evals/</code> holds more than CI runs.
+<code>abstention.py</code> measures the true-negative rate on no-answer
+queries against hard negatives that <em>"deliberately share vocabulary
+with a real entry but ask about something absent — the case most likely
+to bait a confident wrong answer out of a token-overlap ranker"</em>,
+and reports the false-abstention cost on answerable queries in the same
+sweep. It is the most thoughtful measurement in the repository and
+<strong>it is not a gate</strong>: it has no assertion, no threshold
+exit and no CI invocation, so it is a script someone runs. The 0.20
+floor in the config is the output of having run it.
+<code>mmr_check.py</code>, <code>semantic.py</code>,
+<code>token_reduction.py</code> and the synthetic corpus builders sit
+beside it on the same footing.</p>
+<p>No paper. A search of the README and <code>docs/</code> for
+<code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>@misc</code>, <code>Citation</code>, <code>CITATION.cff</code> and
+<code>doi</code> returns nothing, and the project makes no benchmark
+claim about itself beyond the eval numbers in its own
+<code>evals/runs/</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put a floor in the schema and reject below it.</strong>
+Forty characters of <code>problem</code> and sixty of
+<code>why_chosen</code> is a crude proxy for whether a decision was
+actually thought about, and it costs one function. A store that never
+admits a one-line rationale never has to rank one.</li>
+<li><strong>Two read tools, two contracts.</strong> A ranked search that
+may guess and an exact filter that may not are different products;
+giving them different names and different response shapes stops a caller
+silently depending on ranking.</li>
+<li><strong>Measure abstention, then set the floor from the
+measurement.</strong> The config comment naming 0.20 as <em>"the highest
+value with zero false-abstention on the eval set"</em> is a number with
+a provenance, which is rare.</li>
+<li><strong>One implementation of what a scope covers.</strong> Four
+functions each reimplementing a matcher disagreed on two of ten cases
+and produced a silent under-delivery. The fix was a module that imports
+nothing.</li>
+<li><strong>Test the eval, not just with it.</strong> Asserting the
+golden set has at least eight negative cases stops the corpus quietly
+losing its hard half.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A conflict check that skips what you retired.</strong>
+Excluding deprecated and superseded entries from the capture-time
+overlap scan makes the store unable to tell you that you are re-adopting
+something you already rejected — the one question a deprecation record
+exists to answer.</li>
+<li><strong>Editing in place with no history.</strong>
+<code>update_entry</code> rewrites the JSON; the previous rationale is
+gone. For a store whose whole premise is preserving the <em>why</em>,
+that is the one mutation worth logging.</li>
+<li><strong>An advisory signal in a required position.</strong>
+<code>no_confident_match</code> is correct and easy to ignore, and
+nothing in the response shape makes ignoring it hard.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a solo developer or a small team on one repository who has
+felt the specific failure it names — an agent rewriting a pipeline step
+because it does not remember the step exists — and who is willing to
+write a real rationale at capture time, because the schema will make
+them. The zero-dependency install and the JSON store mean there is
+nothing to operate, and the snapshot makes team sharing a commit rather
+than a service. It is a poor fit where memory must be correctable with
+an audit trail, where a retired rule must stay retired without a human
+noticing it come back, or where entries need to express when they were
+true rather than when they were written. It is also, unusually, a system
+whose own source comments cite its own entry ids —
+<code>con-011-76f8</code>, <code>dec-021-b607</code>,
+<code>con-010-acde</code> — which is the strongest evidence available
+that the authors run it on themselves.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should the capture-time check consult deprecated entries and label
+the pair <code>previously_rejected</code>? The scan already walks every
+store; the exclusion is two lines, and the label would make deprecation
+load-bearing.</li>
+<li>Should <code>update_entry</code> append the prior version anywhere?
+The store is JSON files and the snapshot is gzipped; a sibling history
+file would cost little.</li>
+<li>Is the abstention flag ever escalated to a refusal? The floor is
+measured and the signal is computed; nothing in the tree turns it into a
+withheld result.</li>
+<li>What resolves a <code>likely_contradiction</code>? The caller is
+told; no field records what it decided, so the same pair is re-labelled
+on the next similar write.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server.py</code></td>
+<td>3,805</td>
+<td>The fourteen tools; <code>_check_min_lengths</code> (972-996),
+<code>_normalize_origin</code> (1003-1009),
+<code>_classify_overlap</code> (1055-1077),
+<code>_find_similar_entries</code> (1080-1125), the ranked read
+(2100-2240), <code>_matches</code> (2285-2320), supersession
+(1851-1870), deprecation (2920-2945)</td>
+</tr>
+<tr>
+<td><code>scope_rules.py</code></td>
+<td>176</td>
+<td><code>normalize</code>, <code>is_domain</code>,
+<code>components</code>, and the docstring recording the four-way
+disagreement</td>
+</tr>
+<tr>
+<td><code>ranking.py</code></td>
+<td>306</td>
+<td><code>score_entry</code> — tag and text overlap, scope boost,
+recency, status, origin</td>
+</tr>
+<tr>
+<td><code>code_drift.py</code></td>
+<td>322</td>
+<td>Commits touching a scope since last verification;
+<code>orphaned_scope</code></td>
+</tr>
+<tr>
+<td><code>mirror.py</code></td>
+<td>778</td>
+<td>The optional remote store: <code>pull</code> newest-wins,
+<code>backfill</code> local to remote</td>
+</tr>
+<tr>
+<td><code>quality_checks.py</code>, <code>work_focus.py</code>,
+<code>usage.py</code></td>
+<td>252, 187, 118</td>
+<td><code>verify_quality</code>; what is being worked on; which entries
+were injected</td>
+</tr>
+<tr>
+<td><code>semantic_index.py</code>, <code>mojibake.py</code>,
+<code>store_paths.py</code></td>
+<td>190, 177, 197</td>
+<td>The opt-in embedder arm; encoding repair for hand-edited files;
+store resolution</td>
+</tr>
+<tr>
+<td><code>hooks/</code></td>
+<td>—</td>
+<td><code>scope_guard</code> (PreToolUse before Edit and Write),
+<code>session_start</code>, <code>subagent_start</code>,
+<code>pre_compact</code>, <code>post_compact</code>,
+<code>constraint_reinject</code>,
+<code>commit_capture_reminder</code></td>
+</tr>
+<tr>
+<td><code>evals/</code></td>
+<td>—</td>
+<td><code>abstention.py</code>, <code>run_retrieval_eval.py</code>,
+<code>retrieval_golden.json</code>, <code>mmr_check.py</code>,
+<code>semantic.py</code>, <code>token_reduction.py</code>, fixtures and
+runs</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>7,510</td>
+<td>Fifteen files, 511 cases</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;valid_from|valid_to|valid_time|as_of|effective_date|observed_at&#39; *.py   # none: no validity interval
+rg -n &#39;open\(.*[\x27&quot;]a[\x27&quot;]&#39; *.py hooks/*.py    # three: mirror.log, hook.log, .gitattributes — no entry mutation is logged
+rg -n &#39;deprecated|superseded&#39; server.py | rg -n &#39;continue&#39;                    # the capture-time skip at 1110-1111
+rg -n &#39;assert|sys.exit|threshold&#39; evals/abstention.py                          # none: the abstention harness reports, it does not gate
+rg -n &#39;evals&#39; .github/workflows/                                              # none: CI runs pytest tests/ only
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/jarmstrong158/context-keeper/commit/d08355a46548d5a20d9170d3271e2054c51a4db9"><code class="commit-id" title="d08355a46548d5a20d9170d3271e2054c51a4db9">d08355a4…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 6
+August 2026. Screened before reading: two auto-run surfaces — seven hook
+scripts a plugin manifest registers, and a <code>server.json</code>
+declaring a start command — one build-time execution path in
+<code>tests/conftest.py</code>, one unpinned dependency surface, and a
+<code>CLAUDE.md</code> treated as data; nothing was installed or run,
+and the read was made from a full clone. Three marks. The reading
+covered capture validation, the two read paths, the status and origin
+lifecycle, scope semantics and the eval harness; the mirror, the
+packaging and the compaction reporting were read as context rather than
+as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
