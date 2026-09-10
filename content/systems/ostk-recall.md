@@ -7,19 +7,19 @@ page_kind: system
 source_name: "os-tack/ostk-recall"
 source_url: https://github.com/os-tack/ostk-recall
 archive_name: "os-tack--ostk-recall"
-revision: 5f25e8444219e6bec5eb080112a1150abe78657f
-revision_url: https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f
-analyzed_at: 2026-08-08
+revision: 4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab
+revision_url: https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab
+analyzed_at: 2026-09-11
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review"
 stack_storage: "sqlite, lancedb"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
 capability_evidence:
-  trust_state: "claim store | crates/store/src/claims.rs | ClaimState active/disputed/superseded/suppressed/retracted/unsupported with is_current | crates/store/src/claims.rs::split_is_atomic_replayable_and_keep_false_suppresses_parent"
-  bitemporal: "claim store | crates/store/src/claims.rs | valid_from and valid_to beside created_at and updated_at on memory_claims | unknown"
+  trust_state: "claim store | crates/store/src/claims.rs:20-64 | seven ClaimState values with is_current() admitting only active and disputed, applied as `state IN ('active','disputed')` in eight queries | crates/store/src/claims.rs::split_is_atomic_replayable_and_keep_false_suppresses_parent"
+  bitemporal: "conflict detection | crates/store/src/claims.rs:2838-2848 | valid_from and valid_to sit beside created_at and updated_at, and intervals_overlap gates whether two same-key claims contradict at all | crates/store/src/claims.rs::same_key_different_value_opens_and_retraction_closes_conflict"
   scope_enforced: "hybrid retrieval | crates/query/src/hybrid.rs | project predicate compiled into the LanceDB filter with sql_escape | crates/query/src/hybrid.rs::build_filter_project_and_source"
   audit_log: "claim store | crates/store/src/claims.rs | memory_claim_events and memory_claim_link_events, documented append-only | crates/store/src/claims.rs::claim_link_lifecycle_is_idempotent_audited_and_scoped"
-  human_review: "conflict adjudication | crates/store/src/claims.rs | resolve_conflict_with_receipt carrying actor, reason and resolution_kind | unknown"
+  human_review: "conflict adjudication | crates/store/src/claims.rs:1568 | resolve_conflict_with_receipt carrying actor, reason and resolution_kind on a conflict the detector opened | crates/mcp/src/tests.rs — the resolve/replay pair at :1341-1374"
 matrix:
   memory_unit: "A claim — kind, `claim_key`, subject, predicate, `value_json`, text, polarity, confidence and a validity interval — beside a separately-ingested corpus chunk"
   storage: "SQLite for claims, the concept ledger, the audit tables and the access chain log; LanceDB (Arrow plus Tantivy) for chunk vectors and BM25"
@@ -29,7 +29,7 @@ matrix:
   scoping: "A `project` column on claims and chunks, compiled into the LanceDB filter predicate on the read path and indexed as `(project, claim_key, state)` in SQLite"
   integration: "An MCP stdio server or a shared local-socket daemon, plus an ambient memory-lens resource aligned to the current attention vector"
   background: "A turn observer, an auto-weaver linking new chunks to thread anchors, an idle curator that fades inactive threads with hysteresis, and a consolidation pass that promotes latent bridges"
-  trust: "A six-value `state` driven partly by an automatic conflict detector, plus a separate `confidence` float, a `polarity` flag and an `origin` on every concept edge"
+  trust: "A seven-value `state` — active, disputed, unsupported, superseded, retracted, suppressed, expired — driven partly by an automatic conflict detector, plus a separate `confidence` float, a `polarity` flag and an `origin` on every concept edge"
   strengths: "Edge conductance derived from confidence and recency rather than stored, promoted bridges that must earn their conductance or decay, and a conflict detector that moves claims to `disputed` and back without a human"
   risks: "The `forget` warning asserts an anti-resurrection property the code does not implement, and nothing committed asserts that a suppressed claim stays out of a recall result"
 ---
@@ -162,11 +162,17 @@ scan; there is nothing to operate beyond the daemon.
 `(project, claim_key, state)`.
 
 Two things there are worth naming. `valid_from`/`valid_to` beside
-`created_at`/`updated_at` is genuine bi-temporality: when the claim was true and
-when the system recorded it are separate columns, so correcting a fact does not
-destroy the ability to ask what was believed last March. And `polarity` lets a
-claim assert that something is *not* the case, which is rarer than it should be —
-most stores in this atlas can only record presence.
+`created_at`/`updated_at` is genuine bi-temporality, and the part that earns the
+mark is what the validity interval decides rather than that it exists.
+`recompute_conflict` pulls every current claim sharing a key and pairs them
+through `intervals_overlap(a.valid_from, a.valid_to, b.valid_from, b.valid_to)`;
+two claims with the same key and incompatible values are only a contradiction if
+their validity windows meet. "I lived in Berlin" and "I live in Lisbon" do not
+fight when the first one ended. Record time is untouched by that test and carries
+the revision history instead.
+
+And `polarity` lets a claim assert that something is *not* the case, which is
+rarer than it should be — most stores in this atlas can only record presence.
 
 The concept ledger is the other half: `concepts`, `concept_edges`,
 `concept_aliases`, `concept_evidence`, `concept_notes`. Every edge records an
@@ -206,6 +212,22 @@ Ingest is a different path entirely: scan, chunk, embed, upsert into LanceDB,
 with a manifest in SQLite. The orphan sweep tombstones ingest chunks by path —
 that is the ordinary record-keyed kind, and unrelated to the claim story above.
 
+**A claim can be decomposed rather than replaced, and the decomposition has a
+shape the store enforces.** `split_claim` creates bounded child claims and links
+each one back with a `part_of` edge carrying a `sequence_index` and a
+`sequence_total` in its evidence; the children are additionally chained to each
+other by `continues` links. The parent stays current by default, and when
+`keep_parent` is false it is moved to `suppressed` rather than superseded, under
+a comment giving the reason: *"no single child is misrepresented as its
+`superseded_by` successor."* That is a distinction most systems here collapse —
+a claim broken into parts has no single successor, and saying it does would make
+the supersession chain lie.
+
+`claim_continuity` reads the structure back and refuses anything malformed: more
+than one ordered `part_of` parent is an error, and so is a branching `continues`
+topology. A decomposition is a list, and the reader will not accept a graph
+pretending to be one.
+
 No background pass rewrites the claim store. The curator fades *threads*, and the
 docstring is explicit that this is not forgetting: *"the substrate doesn't forget,
 but the surfacer stops shouting about threads whose score has fallen below the
@@ -215,8 +237,9 @@ from flipping every tick.
 ## 8. Agent Integration
 
 Two tools — `recall` and `remember` — with historical names kept as hidden
-aliases for one transition cycle. `remember` carries the verbs: record,
-supersede, retract, forget, restore, resolve. Beside them is a resources surface
+aliases for one transition cycle. `remember` carries eleven verbs: record,
+supersede, retract, forget, restore, resolve, relate, split, focus, track and
+consolidate. Beside them is a resources surface
 including an ambient "memory lens" aligned to the current attention vector, which
 is an unusual thing to expose: a resource whose content tracks what the agent is
 attending to rather than what it asked for.
@@ -246,9 +269,9 @@ come back when it can, and the test suite will not tell them otherwise.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,028 `#[test]` and `#[tokio::test]` functions across the crates, plus a
-`tests/` directory with fixtures and a `queries.yaml`. Nothing was run for this
-review.
+1,054 `#[test]` and `#[tokio::test]` functions across the crates over 93,936
+lines of Rust, plus a `tests/` directory with fixtures and a `queries.yaml`.
+Nothing was run for this review.
 
 The suite is dense where the design is careful. `claim_link_lifecycle_is_idempotent_audited_and_scoped`
 exercises the three properties in its name at once. `build_filter_project_and_source`
@@ -259,8 +282,12 @@ are both the shape of assertion this atlas asks for.
 
 What is missing is the one the design most needs: no committed case asserts that
 a suppressed or retracted claim is absent from a recall result. The filter is
-`state IN ('active','disputed')` in four separate queries, each with an override
-flag, and a fifth query added without the predicate would pass every test here.
+`state IN ('active','disputed')`, repeated in eight separate queries in
+`claims.rs`, six of them behind an `(? OR ...)` override flag — and a ninth query
+written without the predicate would pass every test here. The number is the
+argument: a rule copied by hand into eight places, guarded by none of them, is
+one refactor away from a suppressed claim coming back through whichever copy was
+missed.
 
 ## 11. For Your Own Build
 
@@ -332,7 +359,23 @@ value returning under a new id on the next ingest.
 | `crates/pipeline/src/lib.rs` | Scan, chunk, embed, orphan sweep |
 | `crates/mcp/src/claims.rs` | `remember` verbs and the `soft_forget` warning |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Nothing consults the suppression before a write | read `record_claim` at `crates/store/src/claims.rs:772`, then `grep -n "claim_key" crates/store/src/claims.rs` | The only pre-insert lookup is the idempotency receipt keyed on the request; `claim_key` appears in the conflict path only, which filters to `state IN ('active','disputed')` |
+| The state filter is repeated, not centralised | `grep -rn "state IN ('active','disputed')" --include="*.rs" crates` | Eight occurrences, all in `claims.rs`, six behind an `(? OR ...)` override |
+| No test asserts a suppressed claim is absent from a recall | `grep -rn "fn .*suppress\|fn .*retract\|fn .*forget" --include="*.rs" crates` | Four test functions, none of them a recall-exclusion case |
+| Validity intervals decide contradiction | `grep -n "intervals_overlap" crates/store/src/claims.rs` | Used in `recompute_conflict` to pair same-key claims |
+| Seven claim states | `sed -n '/pub enum ClaimState/,/^}/p' crates/store/src/claims.rs` | Seven variants; `is_current()` admits two |
+| Test and tree size | `grep -rc "#\[test\]\|#\[tokio::test\]" --include="*.rs" crates` summed, and `find . -name "*.rs" \| xargs wc -l` | 1,054 test functions over 93,936 lines |
+
 ## History
+
+**2026-09-11** — [`4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab`](https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab) — re-read, 36 files and 4,672 insertions past the previous pin, most of it in `crates/store/src/claims.rs` and `crates/pipeline/src/lib.rs`. **The headline finding is unchanged and re-verified**: `record_claim` still inserts without consulting the suppression, `recompute_conflict` still filters to `state IN ('active','disputed')`, and no committed case asserts a suppressed claim is absent from a recall result. The criticism sharpened on one axis — the read filter is repeated in eight queries rather than the four the first reading counted, six of them behind an override flag, none of them guarded by a test. **One first-reading error, in the report's own favour to correct**: `ClaimState` has seven variants, not six; `Expired` was present at both pins and was missed. The `bitemporal` evidence was thin and is now specific: `intervals_overlap` gates whether two same-key claims contradict at all, so the validity window decides an outcome rather than merely being stored beside record time. **New since the first reading**: `split_claim` and `claim_continuity` — a claim decomposed into ordered children linked `part_of` with a sequence index and chained by `continues`, the parent suppressed rather than superseded because no single child is its successor, and a reader that refuses a branching topology; `lens_candidate_claims` and `claim_lens_generation` behind the memory-lens resource; and `backfill_transcript_projections` in the pipeline. `remember` now carries eleven verbs. Test count 1,028 to 1,054 over 93,936 lines of Rust. Marks unchanged at five. Screened before reading: one build-time exec path (`Makefile`), no auto-run surface, the lockfile unchanged for 29 days; nothing was built or run.
+
 
 **2026-08-08** — [`5f25e8444219e6bec5eb080112a1150abe78657f`](https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f) — first reading, at the `v0.9.3` release commit. Screened before reading: **0 auto-run surfaces**, 1 build-time exec path (`Makefile`), and 3 dependency surfaces changed inside the seven-day cooldown — `Cargo.lock`, `Cargo.toml` and `crates/pipeline/Cargo.toml`, all changed the same day, because the release landed the same day. **Nothing was executed**, and every claim here is established by reading.
 

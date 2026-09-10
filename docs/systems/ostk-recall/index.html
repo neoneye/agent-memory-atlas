@@ -118,14 +118,14 @@ again.</p>
               <strong>os-tack/ostk-recall</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f" title="5f25e8444219e6bec5eb080112a1150abe78657f">
+            <a class="meta-pill revision-pill" href="https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab" title="4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab">
               <span>Analyzed revision</span>
-              <code>5f25e844…</code>
+              <code>4c75f920…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-08</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/os-tack--ostk-recall" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -288,12 +288,18 @@ and <code>supersede_claim</code>, both guarded on the prior state being
 <p>Two things there are worth naming.
 <code>valid_from</code>/<code>valid_to</code> beside
 <code>created_at</code>/<code>updated_at</code> is genuine
-bi-temporality: when the claim was true and when the system recorded it
-are separate columns, so correcting a fact does not destroy the ability
-to ask what was believed last March. And <code>polarity</code> lets a
-claim assert that something is <em>not</em> the case, which is rarer
-than it should be — most stores in this atlas can only record
-presence.</p>
+bi-temporality, and the part that earns the mark is what the validity
+interval decides rather than that it exists.
+<code>recompute_conflict</code> pulls every current claim sharing a key
+and pairs them through
+<code>intervals_overlap(a.valid_from, a.valid_to, b.valid_from, b.valid_to)</code>;
+two claims with the same key and incompatible values are only a
+contradiction if their validity windows meet. "I lived in Berlin" and "I
+live in Lisbon" do not fight when the first one ended. Record time is
+untouched by that test and carries the revision history instead.</p>
+<p>And <code>polarity</code> lets a claim assert that something is
+<em>not</em> the case, which is rarer than it should be — most stores in
+this atlas can only record presence.</p>
 <p>The concept ledger is the other half: <code>concepts</code>,
 <code>concept_edges</code>, <code>concept_aliases</code>,
 <code>concept_evidence</code>, <code>concept_notes</code>. Every edge
@@ -332,6 +338,24 @@ whatever drives that call.</p>
 LanceDB, with a manifest in SQLite. The orphan sweep tombstones ingest
 chunks by path — that is the ordinary record-keyed kind, and unrelated
 to the claim story above.</p>
+<p><strong>A claim can be decomposed rather than replaced, and the
+decomposition has a shape the store enforces.</strong>
+<code>split_claim</code> creates bounded child claims and links each one
+back with a <code>part_of</code> edge carrying a
+<code>sequence_index</code> and a <code>sequence_total</code> in its
+evidence; the children are additionally chained to each other by
+<code>continues</code> links. The parent stays current by default, and
+when <code>keep_parent</code> is false it is moved to
+<code>suppressed</code> rather than superseded, under a comment giving
+the reason: <em>"no single child is misrepresented as its
+<code>superseded_by</code> successor."</em> That is a distinction most
+systems here collapse — a claim broken into parts has no single
+successor, and saying it does would make the supersession chain lie.</p>
+<p><code>claim_continuity</code> reads the structure back and refuses
+anything malformed: more than one ordered <code>part_of</code> parent is
+an error, and so is a branching <code>continues</code> topology. A
+decomposition is a list, and the reader will not accept a graph
+pretending to be one.</p>
 <p>No background pass rewrites the claim store. The curator fades
 <em>threads</em>, and the docstring is explicit that this is not
 forgetting: <em>"the substrate doesn't forget, but the surfacer stops
@@ -341,11 +365,12 @@ boundary from flipping every tick.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Two tools — <code>recall</code> and <code>remember</code> — with
 historical names kept as hidden aliases for one transition cycle.
-<code>remember</code> carries the verbs: record, supersede, retract,
-forget, restore, resolve. Beside them is a resources surface including
-an ambient "memory lens" aligned to the current attention vector, which
-is an unusual thing to expose: a resource whose content tracks what the
-agent is attending to rather than what it asked for.</p>
+<code>remember</code> carries eleven verbs: record, supersede, retract,
+forget, restore, resolve, relate, split, focus, track and consolidate.
+Beside them is a resources surface including an ambient "memory lens"
+aligned to the current attention vector, which is an unusual thing to
+expose: a resource whose content tracks what the agent is attending to
+rather than what it asked for.</p>
 <p>Served over stdio or a shared local-socket daemon, so several clients
 can share one index.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
@@ -372,9 +397,10 @@ face value will believe a value cannot come back when it can, and the
 test suite will not tell them otherwise.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,028 <code>#[test]</code> and <code>#[tokio::test]</code> functions
-across the crates, plus a <code>tests/</code> directory with fixtures
-and a <code>queries.yaml</code>. Nothing was run for this review.</p>
+<p>1,054 <code>#[test]</code> and <code>#[tokio::test]</code> functions
+across the crates over 93,936 lines of Rust, plus a <code>tests/</code>
+directory with fixtures and a <code>queries.yaml</code>. Nothing was run
+for this review.</p>
 <p>The suite is dense where the design is careful.
 <code>claim_link_lifecycle_is_idempotent_audited_and_scoped</code>
 exercises the three properties in its name at once.
@@ -387,9 +413,13 @@ that keeps free text out of the conflict detector.
 shape of assertion this atlas asks for.</p>
 <p>What is missing is the one the design most needs: no committed case
 asserts that a suppressed or retracted claim is absent from a recall
-result. The filter is <code>state IN ('active','disputed')</code> in
-four separate queries, each with an override flag, and a fifth query
-added without the predicate would pass every test here.</p>
+result. The filter is <code>state IN ('active','disputed')</code>,
+repeated in eight separate queries in <code>claims.rs</code>, six of
+them behind an <code>(? OR ...)</code> override flag — and a ninth query
+written without the predicate would pass every test here. The number is
+the argument: a rule copied by hand into eight places, guarded by none
+of them, is one refactor away from a suppressed claim coming back
+through whichever copy was missed.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -509,7 +539,89 @@ warning</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing consults the suppression before a write</td>
+<td>read <code>record_claim</code> at
+<code>crates/store/src/claims.rs:772</code>, then
+<code>grep -n "claim_key" crates/store/src/claims.rs</code></td>
+<td>The only pre-insert lookup is the idempotency receipt keyed on the
+request; <code>claim_key</code> appears in the conflict path only, which
+filters to <code>state IN ('active','disputed')</code></td>
+</tr>
+<tr>
+<td>The state filter is repeated, not centralised</td>
+<td><code>grep -rn "state IN ('active','disputed')" --include="*.rs" crates</code></td>
+<td>Eight occurrences, all in <code>claims.rs</code>, six behind an
+<code>(? OR ...)</code> override</td>
+</tr>
+<tr>
+<td>No test asserts a suppressed claim is absent from a recall</td>
+<td><code>grep -rn "fn .*suppress|fn .*retract|fn .*forget" --include="*.rs" crates</code></td>
+<td>Four test functions, none of them a recall-exclusion case</td>
+</tr>
+<tr>
+<td>Validity intervals decide contradiction</td>
+<td><code>grep -n "intervals_overlap" crates/store/src/claims.rs</code></td>
+<td>Used in <code>recompute_conflict</code> to pair same-key claims</td>
+</tr>
+<tr>
+<td>Seven claim states</td>
+<td><code>sed -n '/pub enum ClaimState/,/^}/p' crates/store/src/claims.rs</code></td>
+<td>Seven variants; <code>is_current()</code> admits two</td>
+</tr>
+<tr>
+<td>Test and tree size</td>
+<td><code>grep -rc "#\[test\]|#\[tokio::test\]" --include="*.rs" crates</code>
+summed, and <code>find . -name "*.rs" | xargs wc -l</code></td>
+<td>1,054 test functions over 93,936 lines</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab"><code class="commit-id" title="4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab">4c75f920…</code></a>
+— re-read, 36 files and 4,672 insertions past the previous pin, most of
+it in <code>crates/store/src/claims.rs</code> and
+<code>crates/pipeline/src/lib.rs</code>. <strong>The headline finding is
+unchanged and re-verified</strong>: <code>record_claim</code> still
+inserts without consulting the suppression,
+<code>recompute_conflict</code> still filters to
+<code>state IN ('active','disputed')</code>, and no committed case
+asserts a suppressed claim is absent from a recall result. The criticism
+sharpened on one axis — the read filter is repeated in eight queries
+rather than the four the first reading counted, six of them behind an
+override flag, none of them guarded by a test. <strong>One first-reading
+error, in the report's own favour to correct</strong>:
+<code>ClaimState</code> has seven variants, not six;
+<code>Expired</code> was present at both pins and was missed. The
+<code>bitemporal</code> evidence was thin and is now specific:
+<code>intervals_overlap</code> gates whether two same-key claims
+contradict at all, so the validity window decides an outcome rather than
+merely being stored beside record time. <strong>New since the first
+reading</strong>: <code>split_claim</code> and
+<code>claim_continuity</code> — a claim decomposed into ordered children
+linked <code>part_of</code> with a sequence index and chained by
+<code>continues</code>, the parent suppressed rather than superseded
+because no single child is its successor, and a reader that refuses a
+branching topology; <code>lens_candidate_claims</code> and
+<code>claim_lens_generation</code> behind the memory-lens resource; and
+<code>backfill_transcript_projections</code> in the pipeline.
+<code>remember</code> now carries eleven verbs. Test count 1,028 to
+1,054 over 93,936 lines of Rust. Marks unchanged at five. Screened
+before reading: one build-time exec path (<code>Makefile</code>), no
+auto-run surface, the lockfile unchanged for 29 days; nothing was built
+or run.</p>
 <p><strong>2026-08-08</strong> — <a
 href="https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f"><code class="commit-id" title="5f25e8444219e6bec5eb080112a1150abe78657f">5f25e844…</code></a>
 — first reading, at the <code>v0.9.3</code> release commit. Screened

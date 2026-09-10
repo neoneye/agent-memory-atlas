@@ -1521,8 +1521,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 - Best idea: edge conductance derived from confidence and recency rather than stored, so there is no weight to drift and no background pass whose failure freezes the graph.
 - Biggest risk: `forget` returns a warning asserting an anti-resurrection tombstone, while the suppression is keyed on the claim id, excluded from conflict detection, and never consulted when the same value is asserted again.
-- Most reusable component: the promoted-bridge rule — a latent similarity edge is reified as weak and must earn its conductance through use or decay away.
-- Maturity impression: 1,028 test functions over roughly 90,000 lines of Rust with a dense audit surface and receipts on every mutation, self-described pre-alpha, and no committed case asserting that a suppressed claim stays out of a recall result.
+- Most reusable component: the promoted-bridge rule — a latent similarity edge is reified as weak and must earn its conductance through use or decay away. Close behind it, `split_claim` suppressing a decomposed parent rather than superseding it, because no single child is its successor.
+- Maturity impression: 1,054 test functions over 93,936 lines of Rust with a dense audit surface and receipts on every mutation, self-described pre-alpha, and no committed case asserting that a suppressed claim stays out of a recall result — a filter hand-copied into eight queries and guarded by none of them.
 - Study when: you want one local binary over your own files and sessions, and the concept ledger rather than the claim table is the part you are shopping for.
 - Do not copy when: a correction has to hold against re-extraction — everything else here is careful enough that the gap is easy to miss.
 
