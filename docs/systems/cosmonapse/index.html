@@ -111,14 +111,14 @@ journal that lives in a process dictionary.</p>
               <strong>Cosmonapse/cosmonapse-core</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf" title="16997d577596750e139f3eb83fd5c4b1c3c740bf">
+            <a class="meta-pill revision-pill" href="https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3" title="4746260080c925bed78a5b2ec6fb099f70278bd3">
               <span>Analyzed revision</span>
-              <code>16997d57…</code>
+              <code>47462600…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Cosmonapse--cosmonapse-core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -146,7 +146,7 @@ journal that lives in a process dictionary.</p>
 are plain functions, coordination is messages, there is no
 orchestrator"</em> — with Python and TypeScript SDKs, a
 <code>cosmo</code> CLI, and in-memory, TCP, NATS and Kafka transports.
-Apache-2.0, about 42,000 lines. Memory is one package inside it:
+Apache-2.0, about 51,000 lines. Memory is one package inside it:
 <code>cosmonapse.engram</code>, 2,322 lines across an ABC, a client, and
 three backends.</p>
 <p><strong>Its contract is the only one in this atlas with a failure
@@ -258,7 +258,7 @@ clock at the interface level.</p>
 contract — those belong to whichever backend answered — and the atlas
 has no basis to judge retrieval quality here, because the interface
 deliberately declines to have any.</p>
-<p><strong>Scope is absent from the contract</strong>, which is now the
+<p><strong>Scope is absent from the contract</strong>, which is the
 fourth framework interface in this atlas with that property.
 <code>namespace</code> appears once, in a docstring about hosting more
 than one Engram, not as a parameter that travels with a query. A
@@ -284,6 +284,20 @@ its rollback does not cover is rarer than one that rolls back.</p>
 reached through a Dendrite that hosts it, so memory participates in the
 same message graph as everything else and a storage backend is, from the
 protocol's point of view, another node that may or may not answer.</p>
+<p>The observability surface makes that literal.
+<code>cosmo prism</code> serves a React single-page app — built from
+<code>packages/prism-ui</code> and shipped as a static bundle inside the
+Python wheel — that draws the bus as a constellation, and
+<code>engram</code> is one of four participant kinds beside
+<code>neuron</code>, <code>effector</code> and <code>receptor</code>,
+with request and response envelopes timed on the Axon-to-backend leg. It
+renders traffic rather than content: an Engram appears as a participant
+whose calls can be watched, and no stored value is displayed, approved
+or edited there. The role detection carries a compatibility path worth
+noting for anyone reading envelopes off this bus — a
+<code>REGISTER</code> from an SDK that predates the <code>role</code>
+field falls back to a legacy <code>engram</code> boolean and then to an
+<code>eng_</code> id prefix.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>No capability marks, and the shape of the absence is consistent: this
@@ -423,6 +437,26 @@ against the implementation here.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3"><code class="commit-id" title="4746260080c925bed78a5b2ec6fb099f70278bd3">47462600…</code></a>
+— read again, 26 commits and 222 files past the previous pin.
+<strong><code>cosmonapse/engram/</code> is byte-identical</strong>: the
+same six files at the same 2,322 lines, so every finding about the
+contract, the five typed errors, <code>can_serve</code>,
+<code>compensate</code> and the in-process saga journal is unchanged,
+and <code>_saga_journal</code> is still a <code>dict</code> on the
+Engram instance. What moved is around it — the project grew to about
+51,000 lines, the Python and TypeScript SDKs were substantially
+reworked, and two React packages arrived: <code>prism-ui</code>, a bus
+visualization served by <code>cosmo prism</code> and shipped inside the
+Python wheel, and <code>genesis-ui</code>. The three absence claims were
+re-run and hold: <code>namespace</code> still appears exactly once in
+the engram package, in a docstring about hosting; no test kills a
+process between <code>imprint</code> and <code>commit</code>; and there
+is no benchmark anywhere in the tree. No capability mark moves. Screened
+before reading: no auto-run surface, no manifest inside the seven-day
+cooldown, no build-time execution path, and three unpinned dependency
+surfaces against three lockfiles; nothing was installed or run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf"><code class="commit-id" title="16997d577596750e139f3eb83fd5c4b1c3c740bf">16997d57…</code></a>
 — first reading.</p>

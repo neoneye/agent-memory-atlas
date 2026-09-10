@@ -7201,7 +7201,7 @@ Privacy/deletion:
 - [gobii-ai/gobii-platform](https://github.com/gobii-ai/gobii-platform) at [`26844673ac9f134e2ad3851a12dd26762d94c3a9`](https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9)
 - [reescalder/agent-memory-supabase](https://github.com/reescalder/agent-memory-supabase) at [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53)
 - [showjihyun/livingfeed](https://github.com/showjihyun/livingfeed) at [`9bdd464d570a493ba9125636f4cf01b6cff78bae`](https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae)
-- [Cosmonapse/cosmonapse-core](https://github.com/Cosmonapse/cosmonapse-core) at [`16997d577596750e139f3eb83fd5c4b1c3c740bf`](https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf)
+- [Cosmonapse/cosmonapse-core](https://github.com/Cosmonapse/cosmonapse-core) at [`4746260080c925bed78a5b2ec6fb099f70278bd3`](https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3)
 - [npc-worldwide/npcpy](https://github.com/npc-worldwide/npcpy) at [`a31ba52203062f7a586a901f6870176bf3961707`](https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707)
 - [juggler-ai/juggler](https://github.com/juggler-ai/juggler) at [`bf81e61087a6e6af24e5ffd225d66c74135a4faa`](https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa)
 - [jihadkhawaja/magicore](https://github.com/jihadkhawaja/magicore) at [`ae8ba6bb1a8213066e7655581c5326fce93424c3`](https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3) — formerly jihadkhawaja/mem0sharp; read only

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Cosmonapse/cosmonapse-core"
 source_url: https://github.com/Cosmonapse/cosmonapse-core
 archive_name: "Cosmonapse--cosmonapse-core"
-revision: 16997d577596750e139f3eb83fd5c4b1c3c740bf
-revision_url: https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf
-analyzed_at: 2026-07-30
+revision: 4746260080c925bed78a5b2ec6fb099f70278bd3
+revision_url: https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3
+analyzed_at: 2026-09-10
 capabilities: ""
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
@@ -33,7 +33,7 @@ matrix:
 Cosmonapse is an event-driven agent-to-agent protocol — *"agents are plain
 functions, coordination is messages, there is no orchestrator"* — with Python
 and TypeScript SDKs, a `cosmo` CLI, and in-memory, TCP, NATS and Kafka
-transports. Apache-2.0, about 42,000 lines. Memory is one package inside it:
+transports. Apache-2.0, about 51,000 lines. Memory is one package inside it:
 `cosmonapse.engram`, 2,322 lines across an ABC, a client, and three backends.
 
 **Its contract is the only one in this atlas with a failure vocabulary.** Every
@@ -140,7 +140,7 @@ or reranking in the contract — those belong to whichever backend answered — 
 the atlas has no basis to judge retrieval quality here, because the interface
 deliberately declines to have any.
 
-**Scope is absent from the contract**, which is now the fourth framework
+**Scope is absent from the contract**, which is the fourth framework
 interface in this atlas with that property. `namespace` appears once, in a
 docstring about hosting more than one Engram, not as a parameter that travels
 with a query. A multi-tenant deployment therefore isolates by binding different
@@ -167,6 +167,17 @@ Agents are functions on a bus. An Engram is bound to an Axon and reached through
 a Dendrite that hosts it, so memory participates in the same message graph as
 everything else and a storage backend is, from the protocol's point of view,
 another node that may or may not answer.
+
+The observability surface makes that literal. `cosmo prism` serves a React
+single-page app — built from `packages/prism-ui` and shipped as a static bundle
+inside the Python wheel — that draws the bus as a constellation, and `engram` is
+one of four participant kinds beside `neuron`, `effector` and `receptor`, with
+request and response envelopes timed on the Axon-to-backend leg. It renders
+traffic rather than content: an Engram appears as a participant whose calls can
+be watched, and no stored value is displayed, approved or edited there. The role
+detection carries a compatibility path worth noting for anyone reading envelopes
+off this bus — a `REGISTER` from an SDK that predates the `role` field falls back
+to a legacy `engram` boolean and then to an `eng_` id prefix.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -272,5 +283,7 @@ is answered by whatever you bind underneath it.
 | `packages/python-sdk/cosmonapse/engram/client.py` | 297 | `EngramClient` |
 
 ## History
+
+**2026-09-10** — [`4746260080c925bed78a5b2ec6fb099f70278bd3`](https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3) — read again, 26 commits and 222 files past the previous pin. **`cosmonapse/engram/` is byte-identical**: the same six files at the same 2,322 lines, so every finding about the contract, the five typed errors, `can_serve`, `compensate` and the in-process saga journal is unchanged, and `_saga_journal` is still a `dict` on the Engram instance. What moved is around it — the project grew to about 51,000 lines, the Python and TypeScript SDKs were substantially reworked, and two React packages arrived: `prism-ui`, a bus visualization served by `cosmo prism` and shipped inside the Python wheel, and `genesis-ui`. The three absence claims were re-run and hold: `namespace` still appears exactly once in the engram package, in a docstring about hosting; no test kills a process between `imprint` and `commit`; and there is no benchmark anywhere in the tree. No capability mark moves. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, no build-time execution path, and three unpinned dependency surfaces against three lockfiles; nothing was installed or run.
 
 **2026-07-30** — [`16997d577596750e139f3eb83fd5c4b1c3c740bf`](https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf) — first reading.
