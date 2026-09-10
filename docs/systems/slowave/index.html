@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An AGPL local memory layer for
+coding agents whose whole core runs without an LLM call — raw events
+replayed into latent prototypes and symbolic schemas, a four-stage
+generalization ladder deciding what may cross a project boundary, and a
+forget that consolidation is written to respect: a schema a person
+suppressed is found again by embedding on the next pass and skipped
+rather than reinforced or recreated.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Slowave — Agent Memory Atlas">
+    <meta property="og:description" content="An AGPL local memory layer
+for coding agents whose whole core runs without an LLM call — raw events
+replayed into latent prototypes and symbolic schemas, a four-stage
+generalization ladder deciding what may cross a project boundary, and a
+forget that consolidation is written to respect: a schema a person
+suppressed is found again by embedding on the next pass and skipped
+rather than reinforced or recreated.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Slowave — Agent Memory Atlas">
+    <meta name="twitter:description" content="An AGPL local memory layer
+for coding agents whose whole core runs without an LLM call — raw events
+replayed into latent prototypes and symbolic schemas, a four-stage
+generalization ladder deciding what may cross a project boundary, and a
+forget that consolidation is written to respect: a schema a person
+suppressed is found again by embedding on the next pass and skipped
+rather than reinforced or recreated.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Slowave — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Slowave",
+      "description": "An AGPL local memory layer for coding agents whose whole core runs without an LLM call \u2014 raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a forget that consolidation is written to respect: a schema a person suppressed is found again by embedding on the next pass and skipped rather than reinforced or recreated.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A human forget that consolidation cannot
+undo</p>
+          <h1>Slowave</h1>
+          <p class="document-deck">An AGPL local memory layer for coding
+agents whose whole core runs without an LLM call — raw events replayed
+into latent prototypes and symbolic schemas, a four-stage generalization
+ladder deciding what may cross a project boundary, and a forget that
+consolidation is written to respect: a schema a person suppressed is
+found again by embedding on the next pass and skipped rather than
+reinforced or recreated.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/slowave-ai/slowave">
+              <span>Source</span>
+              <strong>slowave-ai/slowave</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/slowave-ai/slowave/commit/281d5cc7682680931ff8d4b3c46040cc6b57096d" title="281d5cc7682680931ff8d4b3c46040cc6b57096d">
+              <span>Analyzed revision</span>
+              <code>281d5cc7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/slowave-ai--slowave" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>slowave-ai--slowave</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Slowave is a local memory layer for coding agents built on a claim
+that most of this corpus does not make: the memory core performs no LLM
+call at all. Ingest, consolidation and recall are geometric — embeddings
+from a local ONNX encoder, clustering into latent prototypes, symbolic
+schemas formed over them, and retrieval by hybrid search with graph
+expansion. The agent supplies judgement; the store supplies memory.</p>
+<p>AGPL-3.0-or-later with a commercial licence offered separately, and a
+CLA. 505 commits between 8 June and 10 September 2026, the last on the
+day of this reading, from two human contributors and a release bot;
+32,305 lines of Python across 78 files, against 34,348 lines of test in
+134 files carrying 898 test functions. The screen found no auto-run
+surface, five build-time execution paths — an install-time client-setup
+module and three pytest <code>conftest.py</code> files — one unpinned
+dependency surface, and <strong>two manifests changed the same
+day</strong>, so nothing was installed, built or run.</p>
+<p><strong>Six of seven marks, and the tombstone is the one worth the
+trip.</strong> When a person forgets a schema, consolidation is written
+not to undo it, in two places. The prototype lookup is deliberately
+status-agnostic, so re-consolidating the same prototype finds the
+forgotten row and skips: <em>"a copy that was retired by explicit client
+feedback is the same engram and must not be recreated as a
+duplicate."</em> And because the ordinary embedding search excludes
+non-active rows, a second search runs with
+<code>include_inactive=True</code> — a nearest neighbour at or above
+0.92 cosine whose status is <code>forgotten</code> also skips, under a
+comment naming both failures it prevents: reinforcing it <em>"would
+silently undo the user's forget"</em>, and creating a duplicate
+<em>"would defeat it."</em> The key is the claim's embedding, so a
+re-derivation in different words inside that radius is caught too —
+which is more than a normalised-string key can do.</p>
+<p><strong>Cross-scope reach is earned, not granted.</strong> Every
+schema carries a scope, the candidate paths filter on it in SQL, and a
+four-stage generalization ladder decides what may travel: stage 0
+hard-blocked, stage 1 only within the same scope kind and above a score
+floor, stage 2 admitted with its score multiplied by 0.70 and the floor
+re-checked, stage 3 unrestricted. The gate is one function serving both
+the direct-candidate filter and the graph expansion, and the docstring
+says why — <em>"a single source of truth instead of two
+independently-drifting rules."</em> This atlas has found exactly that
+drift in three other stores; here it is designed against and
+commented.</p>
+<p><strong>The event store is the spine.</strong>
+<code>raw_events</code> is append-only and stamped with the
+<code>logic_version</code> under which it was ingested, so when the
+consolidation algorithm changes the fix is to replay the events
+processed under the old logic rather than to migrate derived state —
+with an optimistic-lease claim so the daemon, worker and CLI cannot all
+rebuild at once.</p>
+<p><strong>Forgetting is a person's act by construction.</strong> It is
+reachable from the CLI and the dashboard and deliberately absent from
+MCP, because <em>"forgetting requires a human looking at a specific
+schema id, not an agent inferring intent from conversational
+subtext."</em> The forget log records the status the schema held before,
+so unforget restores <code>superseded</code> rather than guessing
+<code>active</code>.</p>
+<p><strong>What it does not have is validity time.</strong> Every
+timestamp here is a record time — first formed, last updated, last
+touched. There is no world-state interval and no as-of query, so
+<code>bitemporal</code> is withheld on an absence rather than on an
+unwired mechanism.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three layers, and the arrow only points one way.</p>
+<p>At the bottom, <strong>raw events</strong>: what was said, appended,
+embedded, stamped with the version of the code that ingested it. Nothing
+is derived here and nothing is lost.</p>
+<p>In the middle, the <strong>latent layer</strong>: episodes grouped
+from events, clustered into semantic prototypes that are centroids
+rather than sentences. This is where similarity lives.</p>
+<p>At the top, the <strong>symbolic layer</strong>: schemas, which are
+the claims an agent actually reads. A schema has content text, a scope,
+a lifecycle status, evidence links back down to episodes and raw events,
+and a generalization stage recording how far its usefulness has been
+shown to travel.</p>
+<p>Everything above the event store is derived, and the project treats
+that as a feature: change the logic, bump the version, replay. That is
+why the version stamp is on the event rather than on the schema.</p>
+<p>Correction runs through feedback rather than editing. The agent
+reports that a retrieved memory helped, was irrelevant, or has gone
+stale — and a stale report can name the replacement. The store applies
+the lifecycle; it does not judge the claim. The source says so twice:
+contradiction and supersession are <em>"client-owned history and are
+never inferred by this store or by consolidation."</em></p>
+<p>Forgetting is the one thing an agent cannot ask for. A person opens
+the CLI or the dashboard, looks at a specific schema, and suppresses it
+— and from then on consolidation has to check whether the thing it is
+about to form is the thing somebody deleted.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas; consolidation checks both the primary prototype and an inactive-inclusive embedding search so a schema a person forgot is skipped rather than reinforced or duplicated; recall gathers candidates under a scope filter, admits statuses by mode, and expands along relation edges through the same status bar and the same cross-scope gate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas; consolidation checks both the primary prototype and an inactive-inclusive embedding search so a schema a person forgot is skipped rather than reinforced or duplicated; recall gathers candidates under a scope filter, admits statuses by mode, and expands along relation edges through the same status bar and the same cross-scope gate
+flowchart TB
+    S[&quot;agent: activate · remember ·&lt;br/&gt;recall · feedback · commit&quot;]
+    RE[(&quot;raw_events — append-only,&lt;br/&gt;stamped with logic_version&quot;)]
+    RP[&quot;replay engine — rebuilds only&lt;br/&gt;events under an old logic version,&lt;br/&gt;under an optimistic-lease claim&quot;]
+    EP[(&quot;episodic_memories&lt;br/&gt;+ episode_text provenance&quot;)]
+    PR[(&quot;semantic_prototypes&lt;br/&gt;— latent centroids&quot;)]
+    C{&quot;consolidation, zero-LLM&quot;}
+    G1{&quot;same primary prototype?&lt;br/&gt;lookup is status-agnostic&quot;}
+    G2{&quot;nearest neighbour ≥ 0.92 cosine&lt;br/&gt;with include_inactive?&quot;}
+    SKIP[&quot;skipped — a human forget is&lt;br/&gt;neither reinforced nor duplicated&quot;]
+    RF[&quot;reinforced in place&quot;]
+    SCH[(&quot;schemas — content, scope_id,&lt;br/&gt;status, stale_reason, confidence,&lt;br/&gt;salience, is_labile,&lt;br/&gt;generalization_stage 0-3&quot;)]
+    FL[(&quot;schema_forget_log — action,&lt;br/&gt;prior_status, reason, ts;&lt;br/&gt;CLI and dashboard only&quot;)]
+    Q[&quot;recall(query, scope, mode)&quot;]
+    CAND[&quot;candidates: embedding · FTS ·&lt;br/&gt;prototype scoring&lt;br/&gt;— scope-filtered in SQL&quot;]
+    ST[&quot;status set chosen by mode:&lt;br/&gt;active · +needs_review · +stale&quot;]
+    EXP[&quot;relation and co-activation expansion&lt;br/&gt;— same status bar,&lt;br/&gt;same cross-scope gate&quot;]
+    GATE{&quot;_cross_scope_gate&lt;br/&gt;stage 0 blocked · 1 same kind&lt;br/&gt;2 ×0.70 + floor · 3 free&quot;}
+    OUT[&quot;bounded working set&quot;]
+
+    S --&gt; RE --&gt; RP --&gt; EP --&gt; PR --&gt; C
+    C --&gt; G1
+    G1 --&gt;|&quot;forgotten&quot;| SKIP
+    G1 --&gt;|&quot;active&quot;| RF --&gt; SCH
+    G1 --&gt;|&quot;no match&quot;| G2
+    G2 --&gt;|&quot;forgotten&quot;| SKIP
+    G2 --&gt;|&quot;no&quot;| SCH
+    SCH -.-&gt;|&quot;person forgets&lt;br/&gt;via CLI or dashboard&quot;| FL
+    FL -.-&gt; SCH
+    Q --&gt; CAND --&gt; ST --&gt; EXP --&gt; GATE --&gt; OUT
+    SCH --&gt; CAND</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Five subsystems under one package. <code>storage</code> is a single
+<code>schema.sql</code> of 623 lines and a SQLite wrapper.
+<code>latent</code> holds the episodic and semantic stores, the graph
+manager, the replay engine, salience, temporal handling, a transition
+model and a VSA module. <code>symbolic</code> holds the encoder, the
+ONNX encoder, the 2,065-line schema store, procedural memory and the raw
+log. <code>core</code> holds the engine, the context and working-memory
+gate, consolidation, feedback, scope, continuity, graph health, and a
+<code>services/</code> layer splitting ingest, retrieval, retrieval
+access, feedback, feedback events, consolidation, pattern completion and
+rebuild. Above them, an MCP server with five tools, a CLI, and a
+dashboard.</p>
+<p>The database is the design document. <code>schema.sql</code> carries
+the arguments as well as the DDL: why <code>forgotten</code> is a
+distinct status from <code>archived</code>, why
+<code>schema_coactivation</code> is separate from
+<code>schema_relations</code> (usage-based versus content-based, with
+STDP-like directional plasticity so <code>src → dst</code> strengthens
+when src was recalled first), why the logic version is on the event
+rather than the schema, and why the facet blobs <em>"support topical
+relation diagnostics and replay inspection; they do not determine
+semantic truth."</em></p>
+<p>The proportions are worth stating plainly. Three months of work has
+produced 28 tables, a 4,239-line dashboard, a 2,330-line CLI and a
+2,124-line client-setup module that runs at install time and writes
+configuration for eight agent clients. That is a lot of surface per
+commit-month, and the setup module is the part most worth a reader's
+attention before installing, because it edits files outside the
+project.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest.</strong> the MCP tools append to
+<code>raw_events</code> with an embedding and the current
+<code>logic_version</code> → episodes are grouped with their provenance
+in <code>episode_text</code> → prototypes are formed or updated in the
+latent store.</li>
+<li><strong>Consolidate.</strong> <code>core/consolidation.py:278</code>
+looks up <code>find_by_primary_prototype</code> status-agnostically → a
+<code>forgotten</code> match returns <code>skipped</code>, an active one
+is reinforced in place → otherwise <code>:309</code> checks the ordinary
+nearest neighbour against the 0.92 near-duplicate cosine, and
+<code>:344</code> re-checks with <code>include_inactive=True</code>
+specifically for a <code>forgotten</code> match → only then is a new
+schema written, classified and related.</li>
+<li><strong>Recall.</strong> <code>core/services/retrieval.py:376</code>
+normalises the scope → candidates from embedding search, FTS and
+prototype scoring, each scope-filtered → <code>:474</code> computes the
+status set from the mode → <code>:485</code> drops anything outside it →
+<code>:492</code> applies <code>_cross_scope_gate</code> →
+<code>:539</code> expands along <code>schema_relations</code> under the
+same status bar and the same gate → the working-memory gate bounds the
+result.</li>
+<li><strong>Cross-scope.</strong> <code>_cross_scope_gate</code> at
+<code>:688</code> returns true immediately for a same-scope, unscoped,
+<code>global</code> or <code>user</code> schema; otherwise cross-scope
+is only reachable in <code>strict_scope</code> mode, and then by stage —
+3 free, 2 discounted by 0.70 and floored, 1 same-kind and floored, 0
+blocked.</li>
+<li><strong>Forget.</strong> <code>schema_store.forget()</code> writes
+<code>schema_forget_log</code> with the current status <em>before</em>
+overwriting it, and returns early if the schema is already forgotten so
+<code>prior_status</code> cannot be clobbered → <code>unforget()</code>
+reads the most recent <code>forget</code> row and restores that status,
+appending its own row.</li>
+<li><strong>Rebuild.</strong> <code>RebuildService.try_claim</code>
+takes an optimistic lease on a <code>logic_versions</code> row so
+exactly one of the daemon, worker or CLI replays; replay is scoped to
+events ingested under an older version.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Twenty-eight tables. The ones that carry the report:</p>
+<p><strong><code>schemas</code></strong> — the durable claim. Content
+text, facets and tags as JSON, a scope id and kind, a status defaulting
+to <code>active</code>, a <code>stale_reason</code> drawn from
+contradicted / superseded / outdated / unsupported / withdrawn, a
+confidence and a salience, an embedding with optional packed facet axes
+and strengths, the supporting episode ids, an <code>is_labile</code>
+flag, a <code>generalization_stage</code> from 0 to 3, first-formed and
+last-updated stamps, and the logic version it was formed under. Five
+indexes, including ones on status, scope, labile and stage — the fields
+the read path actually filters on.</p>
+<p><strong><code>schema_evidence</code></strong> — a normalised link
+from a schema to an episode or raw event with a quote and a weight, with
+the note that the legacy JSON arrays are kept for compatibility but
+<em>"new code should prefer this table."</em> Provenance is a join, not
+a blob.</p>
+<p><strong><code>schema_relations</code> and
+<code>schema_coactivation</code></strong> — content-based and
+usage-based edges, deliberately separate. Relations carry a confidence
+and a reason; co-activation carries a decaying weight and a last-touched
+stamp so decay can be applied per row. Note that the store writes only
+the symmetric <code>relates_to</code> relation itself: contradiction and
+supersession are client-owned.</p>
+<p><strong><code>schema_forget_log</code></strong> — action, prior
+status, reason, timestamp.</p>
+<p><strong><code>raw_events</code> and
+<code>logic_versions</code></strong> — the replay spine, with the
+version stamp on the event and the lease on the version.</p>
+<p><strong><code>feedback_events</code></strong> — an unusually complete
+feedback record: the retrieval it belongs to, the target kind and id, an
+optional replacement target, an assessment, a stale reason, an effect, a
+contribution, a reason, a coverage of partial or complete, a status of
+accepted or rejected with a rejection reason, the source contract, a
+<code>refines_event_id</code> so a correction to a feedback event is
+itself an event, and a <code>mutation_mode</code> of shadow or active so
+a signal can be recorded without being applied.</p>
+<p><strong>What is missing is validity time.</strong> Every temporal
+column here is about the record: when it was formed, updated, touched,
+ingested. There is no interval describing when a claim was true in the
+world, and no as-of parameter on any read.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Candidates come from three places — embedding search over schema
+vectors, FTS over content, and prototype scoring — and all three are
+scope-filtered as they are gathered rather than afterwards, which is the
+ordering that keeps a small scope from being starved out of a page.</p>
+<p>Status is then applied by mode. The default admits
+<code>active</code> only; a wider profile admits
+<code>needs_review</code>; a history-seeking mode admits
+<code>stale</code> as well. <code>archived</code> and
+<code>forgotten</code> are admitted by nothing. A labile schema that is
+otherwise active is handled specially at <code>:497</code>, so a trace
+the system has marked temporarily uncertain does not simply rank like a
+settled one.</p>
+<p>Graph expansion follows <code>schema_relations</code>, and it is held
+to the same two bars. The status check is repeated in the neighbour loop
+with a comment saying the filter exists <em>"so a stale edge can't
+leak"</em>, and the cross-scope gate is the same function object the
+direct path used. Two independent filters over the same rule is the
+shape that has failed elsewhere in this corpus; one function called
+twice is the fix.</p>
+<p>Beside the relation graph, <code>schema_coactivation</code> records
+that two schemas were recalled in the same session, with the edge
+strengthening in the direction of recall order and decaying on a roughly
+seven-day half-life. That is a usage signal kept deliberately apart from
+the content signal, so a pair that is often useful together does not
+become a pair the system believes is topically related.</p>
+<p>The whole path runs without an LLM call. The scoring is embeddings,
+BM25, salience, confidence and graph weight; the encoder is local
+ONNX.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes; the store maintains. <code>slowave_remember</code>
+is the explicit path, and the ordinary path is a session:
+<code>activate</code> opens it, <code>recall</code> asks, feedback
+reports what helped, <code>commit</code> closes it. Everything lands in
+<code>raw_events</code> first, so the derived layers can always be
+discarded and rebuilt.</p>
+<p>Consolidation is the interesting write path, because it has to decide
+whether the thing it is forming already exists. Three answers, in order:
+the same primary prototype means the same engram, so reinforce in place
+— <em>"one schema per primary prototype"</em> — unless it is forgotten,
+in which case skip; a near-duplicate above 0.92 cosine means reinforce
+or, if it is forgotten, skip; otherwise form a new schema, classify it,
+and relate it.</p>
+<p><code>dedup_exact</code> handles the other duplicate case: exact
+normalised duplicates are marked <code>archived</code> with their
+salience dropped to 0.05 and related to the canonical row, with the
+reason recorded on the relation. Keeping <code>archived</code> distinct
+from <code>forgotten</code> is what lets the duplicate-ratio statistics
+stay meaningful while a human forget stays a human forget.</p>
+<p>Reinforcement is bounded by a shared <code>SALIENCE_CEILING</code>,
+used by both <code>reinforce()</code> and
+<code>adjust_feedback_state()</code> <em>"so the two code paths stay
+bounded consistently instead of one capping and the other not"</em> —
+the same one-rule-two-callers discipline as the scope gate.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Five MCP tools — <code>slowave_activate</code>,
+<code>slowave_recall</code>, <code>slowave_remember</code>,
+<code>slowave_feedback</code>, <code>slowave_commit</code> — and a
+<code>slowave setup</code> that detects and configures Claude Code,
+Codex, Cursor, Cline, Windsurf, Devin Desktop, OpenCode and Claude
+Desktop, with a <code>--dry-run</code> first. Published on PyPI; no API
+key required for anything.</p>
+<p>The tool set encodes the intended rhythm rather than exposing the
+store. There is no MCP verb for forgetting, none for editing a schema's
+status directly, and none for the dashboard's lifecycle operations. What
+an agent can do is open a session, ask, report, and close — and the
+feedback report is where the lifecycle actually moves, which is a
+defensible place to put it.</p>
+<p>The dashboard is the human half: a local web application with a
+Cytoscape graph view over memories, retrievals, feedback, procedures and
+system activity, and the forget and unforget controls.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — awarded, and it is the strongest form in this
+reading.</strong> The key is an embedding rather than a normalised
+string, so the guard survives a paraphrase within the near-duplicate
+radius; the check runs on the write path of the process most likely to
+resurrect the claim; and the comment names both wrong answers it is
+avoiding. The bound worth stating: the radius is a 0.92 cosine, so a
+re-derivation <em>outside</em> it forms a new schema, and the forget is
+scoped to the schema that was forgotten rather than to the proposition
+in general.</p>
+<p><strong>Trust state — awarded.</strong> Five statuses, three of which
+withhold, gated per mode, applied identically on both retrieval paths,
+with <code>is_labile</code> kept explicitly distinct from
+<code>needs_review</code> in the schema comment — a distinction several
+systems in this corpus collapse.</p>
+<p><strong>Scope enforced — awarded, in the graduated form.</strong> The
+generalization ladder is the part to steal: a memory earns the right to
+cross a boundary by demonstrating it travels, rather than being marked
+global at write time by whoever wrote it.</p>
+<p><strong>Audit log — awarded, and narrow.</strong>
+<code>schema_forget_log</code> is a real mutation record with the prior
+status, and it exists so an undo is exact. It covers the forget
+lifecycle; other mutations are traceable through the append-only event
+store and the consolidation trace rather than through a general mutation
+journal.</p>
+<p><strong>Human review — awarded.</strong> The trust-boundary argument
+for keeping forget off MCP is the clearest statement of that idea in
+this corpus, and it is enforced by the tool list rather than by a
+flag.</p>
+<p><strong>Negative evaluation — awarded.</strong> The gold contract
+requires the required set and forbids the forbidden and history-only
+sets in the same evaluation, so neither half can pass alone.</p>
+<p><strong>Bitemporal — withheld, on an absence.</strong> No validity
+interval, no as-of parameter. For a store whose central case is <em>"the
+current refund window is 14 days, and it used to be 30"</em>, the
+lifecycle answers it through supersession rather than through time,
+which is a coherent choice and a different one.</p>
+<p><strong>Two things a reader should weigh.</strong> The install path
+executes: a 2,124-line setup module writes configuration into eight
+clients' files, and the dependency manifests changed the day of this
+reading, which is the standard reason to wait out a cooldown. And the
+licence is AGPL-3.0-or-later with a commercial licence offered
+separately and a CLA in the tree — open for use and study, and a
+deliberate constraint on building a closed product over it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>898 test functions across 134 files and 34,348 lines — more test code
+than source — split into four trees that mean different things:
+<code>unit</code> for the rules, <code>regression</code> for bugs that
+have happened, <code>acceptance</code> for end-to-end memory lifecycles
+against a harness, and <code>retrieval_quality</code> for the gold
+contracts.</p>
+<p><strong>The gold contract is the reusable artifact.</strong>
+<code>RetrievalGold</code> carries <code>required_contents</code>,
+<code>forbidden_contents</code>, <code>historical_only_contents</code>,
+<code>optional_contents</code>, an <code>expected_empty</code> flag and
+a <code>max_items</code> budget, and <code>evaluate</code> reports
+precision, strict precision, an intrusion character count and a boolean
+<code>passed</code> that requires all of: nothing required missing,
+nothing forbidden found, nothing history-only found, and the budget
+respected. A memory system that can express <em>"this must come back,
+that must not, and the answer must fit in eight items"</em> as data has
+made its retrieval requirements testable.</p>
+<p><strong>The regression tests document their own bugs.</strong>
+<code>test_scope_rejection_filter</code> opens with the date and the
+mechanism: an exact-match check against a bare
+<code>"scope_mismatch"</code> string that the gate never actually
+produces, because real reason strings are compound diagnostics ending in
+that token — <em>"the broken check let every scope-rejected candidate
+through, which is what fed the cross-scope co-activation leak."</em> It
+then includes a test whose only job is to demonstrate that the old check
+would have missed the real string. That is the shape a regression test
+should have.</p>
+<p><strong>The benchmark page is careful about what it
+measured.</strong> The headline is binary LLM-judge evidence containment
+— 71.84% on LoCoMo across 1,534 answerable questions in categories one
+to four, 65.20% on a LongMemEval oracle configuration over all 500
+questions — with the judge model and temperature named and described as
+evaluation infrastructure rather than part of the system. Three
+disclosures matter more than the numbers. The LongMemEval run is an
+oracle setup and the page says outright <em>"this is not a
+distractor-retrieval test."</em> The lower-scoring categories are
+analysed rather than buried, with the argument that commonsense at
+35.79% <em>"is not a pure memory-recall task and should not be used
+alone to judge the memory layer."</em> And the raw evaluation records
+are stated to be absent from the public repository, with the commands to
+reproduce a run given instead — an honest limitation, and one that means
+the published figures cannot be checked from the tree.</p>
+<p>No paper: a search of the README and <code>docs/</code> for
+<code>arxiv</code>, <code>bibtex</code>, <code>CITATION.cff</code> and a
+DOI returns nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the forget survive the pass that would recreate
+it.</strong> A deletion that only changes a status is undone by the next
+consolidation. Look the claim up by embedding with the inactive rows
+included, and skip — neither reinforcing (which undoes the person's
+decision) nor writing a duplicate (which defeats it).</li>
+<li><strong>Record the prior status before you overwrite it.</strong>
+<code>unforget</code> restoring <code>superseded</code> rather than
+guessing <code>active</code> costs one column, and the idempotence guard
+that stops a repeated forget from clobbering it costs one early
+return.</li>
+<li><strong>Keep the forget off the agent's tool surface.</strong>
+<em>"Forgetting requires a human looking at a specific schema id, not an
+agent inferring intent from conversational subtext"</em> is the right
+reason, and enforcing it by omission from the tool list is the right
+mechanism.</li>
+<li><strong>Let a memory earn its way out of its scope.</strong> Four
+stages with a hard block at the bottom, a same-kind restriction and a
+score floor in the middle, and a discount before admission at stage two,
+beats a global flag somebody set at write time.</li>
+<li><strong>Write the shared rule once and call it twice.</strong> The
+cross-scope gate and the salience ceiling are both single functions used
+by two paths, each with a comment saying that two copies would drift.
+This corpus has repeatedly found the version where they did.</li>
+<li><strong>Stamp the event with the logic version that processed
+it.</strong> Then an algorithm change is a scoped replay rather than a
+migration, and a lease on the version row stops three processes doing it
+at once.</li>
+<li><strong>Express retrieval requirements as data.</strong> Required,
+forbidden, history-only, optional, a budget and an expected-empty flag —
+with <code>passed</code> requiring all of them — turns "it should not
+surface the old policy" into a case that fails.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A status field with no reason field.</strong>
+<code>stale_reason</code> distinguishing contradicted from outdated from
+withdrawn is what lets a later reader tell a correction from an
+expiry.</li>
+<li><strong>Inferring supersession geometrically.</strong> The store
+writes only the symmetric association and leaves contradiction and
+supersession to the client, which is the conservative call for a system
+with no LLM in the loop.</li>
+<li><strong>Publishing judged numbers whose records are not in the
+tree.</strong> The reproduction commands are given and the raw
+evaluation records are not, so the figures have to be taken on trust or
+re-run.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Slowave suits someone running several coding agents against the same
+projects who wants one local store, no API key for memory operations,
+and a per-project boundary that holds by default. Read it for the forget
+guard, the generalization ladder and the retrieval-gold contract
+whatever you end up building. Weigh three things before adopting: the
+AGPL with its commercial-licence path, an install that writes
+configuration into eight clients through a module that executes at
+install time, and three months of very fast growth across a wide surface
+— wait out the dependency cooldown, and read
+<code>slowave/cli/setup.py</code> before running it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a validity interval planned? The lifecycle answers "what is true
+now" by supersession, and cannot answer "what did we believe in
+July".</li>
+<li>What happens to a forgotten schema's evidence? The rows cascade on
+delete, but a forget is a status change, so the episodes that supported
+it stay and could in principle re-derive the claim outside the 0.92
+radius.</li>
+<li>How is the generalization stage advanced? The sweep exists and
+corrects stale high stages; the promotion criteria are the interesting
+half.</li>
+<li>Will the raw evaluation records be published? The benchmark page is
+careful enough that the missing records are the only thing standing
+between it and full reproducibility.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>slowave/storage/schema.sql</code></td>
+<td>623</td>
+<td>Twenty-eight tables with their design commentary:
+<code>schemas</code> (167-206), <code>schema_evidence</code> (208),
+<code>schema_relations</code> and <code>schema_coactivation</code>
+(236-277), <code>schema_forget_log</code> (278-292),
+<code>raw_events</code> and <code>logic_versions</code> (115-151),
+<code>feedback_events</code> (481-510), <code>scope_registry</code>
+(566)</td>
+</tr>
+<tr>
+<td><code>slowave/symbolic/schema_store.py</code></td>
+<td>2065</td>
+<td><code>VALID_STATUS</code> and the forgotten-versus-archived argument
+(29-45), the salience ceiling, <code>forget</code> and
+<code>unforget</code> (728-780), <code>dedup_exact</code>
+(1677-1755)</td>
+</tr>
+<tr>
+<td><code>slowave/core/consolidation.py</code></td>
+<td>—</td>
+<td>The status-agnostic prototype lookup and its forgotten skip
+(278-292), the near-duplicate guard and the inactive-inclusive forgotten
+check (309-355)</td>
+</tr>
+<tr>
+<td><code>slowave/core/services/retrieval.py</code></td>
+<td>999</td>
+<td>Scope normalisation and candidate filtering (376-447), the
+mode-gated status sets (474-497), the neighbour walk under the same bar
+(539-543), <code>_cross_scope_gate</code> (688-735)</td>
+</tr>
+<tr>
+<td><code>slowave/core/services/feedback.py</code></td>
+<td>859</td>
+<td>The lifecycle transitions feedback drives, including the forgotten
+guards</td>
+</tr>
+<tr>
+<td><code>slowave/dashboard/app.py</code></td>
+<td>4239</td>
+<td>The local review surface and the forget/unforget paths
+(1693-1740)</td>
+</tr>
+<tr>
+<td><code>slowave/cli/setup.py</code></td>
+<td>2124</td>
+<td>Client detection and configuration; executes at install time</td>
+</tr>
+<tr>
+<td><code>slowave/mcp/tools.py</code></td>
+<td>1689</td>
+<td>The five tools — activate, recall, remember, feedback, commit</td>
+</tr>
+<tr>
+<td><code>tests/retrieval_quality/contracts.py</code></td>
+<td>—</td>
+<td><code>RetrievalGold</code> (24-26) and <code>evaluate</code> with
+its <code>passed</code> conjunction (94-120)</td>
+</tr>
+<tr>
+<td><code>tests/acceptance/test_memory_lifecycle.py</code></td>
+<td>—</td>
+<td>The stale-replacement case (295-337), the present-versus-absent
+case, and six cases using <code>forbidden_contents</code></td>
+</tr>
+<tr>
+<td><code>tests/unit/test_scope_rejection_filter.py</code></td>
+<td>—</td>
+<td>The regression test that documents the bug it prevents</td>
+</tr>
+<tr>
+<td><code>docs/benchmarks.md</code></td>
+<td>—</td>
+<td>LoCoMo and LongMemEval oracle figures with the judge named and the
+oracle caveat stated</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;valid_from\|valid_to\|valid_until\|effective_&#39; slowave/storage/schema.sql slowave --include=&#39;*.py&#39;  # no validity time anywhere; the hits are ports and query strings
+grep -rn -i &#39;arxiv\|bibtex\|CITATION\.cff\|doi\.org&#39; README.md docs   # nothing: no paper
+grep -rn &quot;&#39;forgotten&#39;&quot; slowave --include=&#39;*.py&#39;                        # the consolidation guards, the feedback guards, the store, the CLI and the dashboard — no MCP path</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/slowave-ai/slowave/commit/281d5cc7682680931ff8d4b3c46040cc6b57096d"><code class="commit-id" title="281d5cc7682680931ff8d4b3c46040cc6b57096d">281d5cc7…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the day
+of the reading. Screened before reading: no auto-run surface, two
+dependency manifests changed the same day and so inside the seven-day
+cooldown, five build-time execution paths — the install-time
+client-setup module and three pytest collection hooks — and one unpinned
+dependency surface; nothing was installed, built or run, and the read
+was made from a full clone. Six marks. The reading covered the SQL
+schema and its commentary, the schema store's lifecycle and forget
+paths, consolidation's duplicate and forgotten guards, the retrieval
+service's status and scope gating, the feedback event model, the MCP
+tool surface, and the acceptance and retrieval-quality test contracts;
+the latent subsystem's replay, salience and transition modules, the
+procedural memory, the dashboard implementation and the benchmark
+harnesses were read as context rather than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
