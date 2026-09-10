@@ -29,6 +29,13 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report no longer exists.** `Renkasha/Sovereign` returns 404,
+and so does the pinned commit `86018d65`. Nothing below can be re-verified by a
+reader, and the atlas holds no copy: the repository was already gone when the
+archive organisation was created on 2026-09-09, so it is the one system in the
+corpus with no fork behind it. What follows is a record of a reading, not a
+description a reader can check.
+
 AMITY is a 634-line Python module — Apache-2.0, nineteen commits — presenting
 itself as *"Full Sensory AI with Persistent Episodic Memory"*. It models a
 runtime as a circulatory system: packets are contracted by an `Orchestrator8`
@@ -405,5 +412,7 @@ like when the unit cannot be named.
 - Licence: `LICENSE` (Apache-2.0).
 
 ## History
+
+**2026-09-10** — the upstream repository is gone. `Renkasha/Sovereign` and the pinned commit `86018d651acb6500ea4d3c79acf5acbbaf547a76` both return 404, with no rename redirect. The drift register found this on 2026-09-09 and the fork run confirmed it: of the 397 repositories the atlas cites, this is the only one that could not be archived, because it had already been deleted. No re-reading is possible and the report is left as the record of what was read, with section 1 saying so rather than presenting a dead link as a live one.
 
 **2026-08-04** — [`86018d651acb6500ea4d3c79acf5acbbaf547a76`](https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76) — first reading. The demo was executed and its refusal path observed; the persisted `session_state_v131.json` was read back to confirm the stored shape. `pyproject.toml` was confirmed invalid by `tomllib`, and the test suite was run successfully only from outside the repository root with `PYTHONPATH` pointing at `src` — three tests, 0.03 s — after establishing that both the TOML error and the root `amity.py` shadow independently prevent it running from inside.

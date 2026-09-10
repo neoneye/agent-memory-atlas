@@ -28,8 +28,17 @@ the commits most in need of archiving.
 
 Usage:
     python3 scripts/archive_fork.py --dry-run          # what would be forked
-    python3 scripts/archive_fork.py                    # do it, resumable
+    python3 scripts/archive_fork.py                    # one pass, resumable
+    python3 scripts/archive_fork.py --until-done       # keep going through the walls
     python3 scripts/archive_fork.py --suggest-helpers  # repos the reports cite
+
+Exit codes, because wrapping this in a retry loop is the obvious thing to do and
+getting them backwards wastes hours: **0** nothing left to fork; **1** some
+repositories failed for their own reasons and retrying will not change that;
+**2** the secondary rate limit is still refusing, and re-running later will make
+progress. A wrapper that retries on any non-zero exit sleeps pointlessly after a
+run whose only failure was a deleted repository — which is what happened here, and
+is why `--until-done` exists rather than a shell loop.
 
 Set GITHUB_TOKEN with `repo` scope and admin on the target organisation.
 Idempotent: a fork that already exists is skipped, so a failed run resumes by
@@ -262,6 +271,10 @@ def main() -> int:
     ap.add_argument("--only", action="append", default=[], metavar="OWNER/REPO")
     ap.add_argument("--sleep", type=float, default=SLEEP_SECONDS,
                     help=f"seconds between fork requests (default {SLEEP_SECONDS})")
+    ap.add_argument("--until-done", action="store_true",
+                    help="on a rate-limit stop, wait and resume until nothing is left")
+    ap.add_argument("--wait", type=int, default=1200,
+                    help="seconds to wait before resuming after a rate-limit stop (default 1200)")
     args = ap.parse_args()
 
     if args.suggest_helpers:
@@ -327,5 +340,26 @@ def main() -> int:
     return 1 if failed else 0
 
 
+def run_until_done(argv_wait: int) -> int:
+    """Re-enter main() after each rate-limit stop, and only after that stop.
+
+    Exit 1 means repositories failed on their own merits — a deleted upstream
+    does not become forkable in twenty minutes — so this returns rather than
+    sleeping. Only exit 2 is worth waiting on.
+    """
+    for attempt in range(1, 25):
+        code = main()
+        if code != 2:
+            return code
+        print(f"waiting {argv_wait}s before resuming (pass {attempt})", file=sys.stderr)
+        time.sleep(argv_wait)
+    return 2
+
+
 if __name__ == "__main__":
+    if "--until-done" in sys.argv:
+        wait = 1200
+        if "--wait" in sys.argv:
+            wait = int(sys.argv[sys.argv.index("--wait") + 1])
+        raise SystemExit(run_until_done(wait))
     raise SystemExit(main())
