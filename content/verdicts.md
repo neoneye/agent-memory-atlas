@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 399 reports.**
+**This page covers all 400 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3535,3 +3535,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 1,199 commits between 26 April and 10 September 2026 by eighteen authors, version 3.7.0, 66,323 lines in `core-api` and 36,570 in `core-storage-api` over PostgreSQL with pgvector, beside 143,878 lines of tests holding 5,729 functions, a migration chain past forty, four services and a plugin; seven of seven capability marks.
 - Study when: you run many agents for one organisation and need the memory governed rather than merely persistent — who approved a shared skill, what an agent was allowed to see, and whether the record of either has been tampered with, all answered in the schema.
 - Do not copy when: you want a library rather than a platform — this is four services, a Postgres and a migration chain — or when you need the rejection record and the review queue without enabling the skills factory, since both live there.
+
+### [`shisad`](../systems/shisad/)
+- Best idea: **the trust band is a lookup on a validated triple the runtime derives, never a field a caller sets.** `_VALID_TRUST_MATRIX` enumerates the legal `(source_origin, channel_trust, confirmation_status)` combinations and raises `TrustGateViolation` on anything else, so an unrecognised provenance is an exception rather than a quiet default — and the one legacy compatibility row resolves to `untrusted` rather than being grandfathered upward.
+- Biggest risk: **it refuses without remembering.** Poisoned content, unconfirmed external assertions and suspicious entries are all rejected at admission, and none of those refusals is written down keyed on the value. The attacker's second attempt is judged as freshly as the first — in a system whose security document cites MINJA and AgentPoison by name.
+- Most reusable component: the owner-scope contract in `memory/manager.py` — a request naming a user without a workspace is rejected rather than narrowed, `_entry_matches_owner` gates every surface, and an out-of-scope supersession returns `supersedes_target_not_found` so the check cannot be used as an oracle for what exists elsewhere.
+- Maturity impression: Apache-2.0, 2,114 commits between 28 January and 27 August 2026 by five authors, version 0.8.2.1, 141,275 lines under `src/` with 13,963 in the memory package, beside 212,716 lines of tests holding 4,974 functions and a twenty-six-file adversarial suite; four of seven capability marks.
+- Study when: you are building an agent with real capability and have concluded that prompt injection is answered by enforcement rather than by restriction, and you want the memory to carry provenance into that argument rather than sit outside it.
+- Do not copy when: you want a memory library — this is a daemon and the memory is not addressable without it — or when you need a validity interval, a queue where a person adjudicates a pending memory, or a record of what the system has already refused.

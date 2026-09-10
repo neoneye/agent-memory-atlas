@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **399 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **400 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -455,6 +455,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/second-me/"><span class="az-id">Second Me</span><span class="az-what">The atlas&#x27;s only memory that is weights</span><code class="az-repo">mindverse/Second-Me</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/serena/"><span class="az-id">Serena</span><span class="az-what">Memory as a link graph, with an integrity checker</span><code class="az-repo">oraios/serena</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/sesa/"><span class="az-id">SESA</span><span class="az-what">Failure-distilled skill memory</span><code class="az-repo">Zenghuang-Fu/SESA-Self-Evolving-Search-Agents</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/shisad/"><span class="az-id">ShisaD</span><span class="az-what">Trust is a triple the runtime derives, never a field a caller sets</span><code class="az-repo">shisa-ai/shisad</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/shodh-memory/"><span class="az-id">Shodh-Memory</span><span class="az-what">A cognitive substrate with no LLM</span><code class="az-repo">varun29ankuS/shodh-memory</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/sibyl-memory/"><span class="az-id">Sibyl Memory</span><span class="az-what">Five tiers, one SQLite file, no vectors</span><code class="az-repo">Sibyl-Labs/Sibyl-Memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/sift-kg/"><span class="az-id">sift-kg</span><span class="az-what">Documents to a browsable graph</span><code class="az-repo">juanceresa/sift-kg</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 399 reports.</strong></p>
+<p><strong>This page covers all 400 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -13948,6 +13948,44 @@ either has been tampered with, all answered in the schema.</li>
 is four services, a Postgres and a migration chain — or when you need
 the rejection record and the review queue without enabling the skills
 factory, since both live there.</li>
+</ul>
+<h3 id="shisad"><a
+href="../systems/shisad/"><code>shisad</code></a></h3>
+<ul>
+<li>Best idea: <strong>the trust band is a lookup on a validated triple
+the runtime derives, never a field a caller sets.</strong>
+<code>_VALID_TRUST_MATRIX</code> enumerates the legal
+<code>(source_origin, channel_trust, confirmation_status)</code>
+combinations and raises <code>TrustGateViolation</code> on anything
+else, so an unrecognised provenance is an exception rather than a quiet
+default — and the one legacy compatibility row resolves to
+<code>untrusted</code> rather than being grandfathered upward.</li>
+<li>Biggest risk: <strong>it refuses without remembering.</strong>
+Poisoned content, unconfirmed external assertions and suspicious entries
+are all rejected at admission, and none of those refusals is written
+down keyed on the value. The attacker's second attempt is judged as
+freshly as the first — in a system whose security document cites MINJA
+and AgentPoison by name.</li>
+<li>Most reusable component: the owner-scope contract in
+<code>memory/manager.py</code> — a request naming a user without a
+workspace is rejected rather than narrowed,
+<code>_entry_matches_owner</code> gates every surface, and an
+out-of-scope supersession returns
+<code>supersedes_target_not_found</code> so the check cannot be used as
+an oracle for what exists elsewhere.</li>
+<li>Maturity impression: Apache-2.0, 2,114 commits between 28 January
+and 27 August 2026 by five authors, version 0.8.2.1, 141,275 lines under
+<code>src/</code> with 13,963 in the memory package, beside 212,716
+lines of tests holding 4,974 functions and a twenty-six-file adversarial
+suite; four of seven capability marks.</li>
+<li>Study when: you are building an agent with real capability and have
+concluded that prompt injection is answered by enforcement rather than
+by restriction, and you want the memory to carry provenance into that
+argument rather than sit outside it.</li>
+<li>Do not copy when: you want a memory library — this is a daemon and
+the memory is not addressable without it — or when you need a validity
+interval, a queue where a person adjudicates a pending memory, or a
+record of what the system has already refused.</li>
 </ul>
         </article>
       </div>
