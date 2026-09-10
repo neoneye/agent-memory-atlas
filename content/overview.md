@@ -7265,7 +7265,7 @@ Privacy/deletion:
 - [yoloshii/clawmem](https://github.com/yoloshii/clawmem) at [`264cea726748ce975f6ae566409996e8146b7438`](https://github.com/yoloshii/clawmem/commit/264cea726748ce975f6ae566409996e8146b7438)
 - [agi-is-going-to-arrive/memory-palace](https://github.com/agi-is-going-to-arrive/memory-palace) at [`56c9bed39957f615da0b66b5e1459281d8fd1fef`](https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef)
 - [vornicx/Midas](https://github.com/vornicx/Midas) at [`ee9953c15a977343eb783de0b9f217aaf46e5b4e`](https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e)
-- [carsteneu/yesmem](https://github.com/carsteneu/yesmem) at [`b1ad72ef9fd508180afaef1ca46c87a17a3c675c`](https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c)
+- [carsteneu/yesmem](https://github.com/carsteneu/yesmem) at [`d9e028735a04abaa236d14b7ae33efc413a330d4`](https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4)
 - [CortexReach/memory-lancedb-pro](https://github.com/CortexReach/memory-lancedb-pro) at [`f6e63af3450be7fb3bb8cdb4898e5010afcb87a7`](https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7) — MIT declared in `package.json`, no LICENSE file in the tree
 - [7xuanlu/origin](https://github.com/7xuanlu/origin) at [`82d30581723cc59f806f4c5364fc1e4c225b57b2`](https://github.com/7xuanlu/origin/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2) — the product is named Wenlan
 - [kage-core/kage](https://github.com/kage-core/kage) at [`e7cc087666fd3d01a5727f8a67e7b9e745fca904`](https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904) — GPL-3.0

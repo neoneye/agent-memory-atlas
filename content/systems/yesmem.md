@@ -7,10 +7,12 @@ page_kind: system
 source_name: "carsteneu/yesmem"
 source_url: https://github.com/carsteneu/yesmem
 archive_name: "carsteneu--yesmem"
-revision: b1ad72ef9fd508180afaef1ca46c87a17a3c675c
-revision_url: https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c
-analyzed_at: 2026-08-09
+revision: d9e028735a04abaa236d14b7ae33efc413a330d4
+revision_url: https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4
+analyzed_at: 2026-09-10
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "a stored project column applied as a WHERE predicate on the learning read paths, with an OR clause that admits every unscoped row | internal/storage/learnings.go:378, :405, :427, :63, :531 | `canonical_project` is a column on `learnings`, and the read paths carry it into the statement — `AND canonical_project = ?` on the narrow ones, `AND (canonical_project = ? OR canonical_project = '')` on the one that also admits unfiled rows, and a join predicate coalescing the canonical name over the raw one. So the key reaches the query rather than trimming its result. Two limits belong with the mark. The empty-string disjunct means anything never attributed is visible from every project, so the boundary is *this project plus the unfiled pile* rather than this project alone. And the mark certifies the predicate, not the value it is given: an August fix guards `repo.Root` coalescing behind `strings.HasPrefix(base, \"/\")` because a bare project name resolved to whatever repository hosts the running daemon, so learnings captured under a short name were attributed to the daemon's own repo | internal/daemon/handler_learnings_test.go `TestAttributeLearningProjectShortNameSession`"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -78,6 +80,19 @@ are called from nothing but their own test file. Meanwhile
 `GetStalenessScores` **is** consumed by the hybrid ranking handler
 (`internal/daemon/handler_hybrid.go:681`), so the read path applies a demotion
 signal that nothing in production ever writes.
+
+**And the scope key is only as good as what stamps it.** The predicate is real —
+`canonical_project` reaches the `WHERE` on every learning read — but a learning
+has to be attributed before the filter means anything, and that attribution had a
+bug worth naming for its shape rather than its size. `attributeLearningProject`
+coalesced a session's project through `repo.Root`, which resolves a bare name
+against the repository hosting the *running daemon* rather than the named
+project, so a learning captured under a short project name was filed under the
+daemon's own repo. The fix is one condition — coalesce only when the value looks
+like an absolute path — with a regression test that pins a short name passing
+through uncoalesced. A correct filter over a wrongly stamped key returns the
+wrong rows just as reliably as a missing filter, and only the second of those is
+something a capability mark can see.
 
 ## 2. Mental Model
 
@@ -424,5 +439,7 @@ migrations from `:12`), `internal/models/models.go`
 `internal/benchmark/`
 
 ## History
+
+**2026-09-10** — [`d9e028735a04abaa236d14b7ae33efc413a330d4`](https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4) — read again, 50 commits past the previous pin, almost all of them on the orchestration surface: managed terminal windows, a bundled headless-Chrome capability, session resume and bootstrap, a stagnation monitor, and a `get_caps` summary mode. The memory findings are unchanged and each was re-run rather than carried forward. `SupersedeStatus` still has no reader: the only predicate mentioning it anywhere is the setter's own `WHERE id = ?`, so the highest-trust learnings still have their corrections dropped into a column nothing consults. `SetStalenessScore` still has no caller outside `learnings_staleness_test.go`, while `GetStalenessScores` is still consumed at `handler_hybrid.go:681` — a demotion the ranking applies and production never writes. `scope_enforced` holds and gains an evidence record; `canonical_project` reaches the `WHERE` on the learning reads, with the empty-string disjunct still admitting every unattributed row. One thing did move and it belongs to the other half of that mark: `attributeLearningProject` coalesced a bare project name through `repo.Root`, which resolves against the repository hosting the running daemon, so learnings captured under a short name were attributed to the daemon's own repo; the guard is now an absolute-path check with a regression test. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, one build-time execution path and one unpinned dependency surface against a `go.sum` 91 days old; nothing was installed, built or run.
 
 **2026-08-09** — [`b1ad72ef9fd508180afaef1ca46c87a17a3c675c`](https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c) — first reading. Screened before reading: no auto-run surface, build-time execution via the `Makefile` default target, one unpinned dependency surface in the OpenCode plugin, `go.sum` unchanged for 17 days. The tree was read, never built, and no test or benchmark was run.

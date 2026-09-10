@@ -106,14 +106,14 @@ confirmation it demands unimplemented.</p>
               <strong>carsteneu/yesmem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c" title="b1ad72ef9fd508180afaef1ca46c87a17a3c675c">
+            <a class="meta-pill revision-pill" href="https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4" title="d9e028735a04abaa236d14b7ae33efc413a330d4">
               <span>Analyzed revision</span>
-              <code>b1ad72ef…</code>
+              <code>d9e02873…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/carsteneu--yesmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -188,6 +188,21 @@ vocabulary of
 hybrid ranking handler
 (<code>internal/daemon/handler_hybrid.go:681</code>), so the read path
 applies a demotion signal that nothing in production ever writes.</p>
+<p><strong>And the scope key is only as good as what stamps it.</strong>
+The predicate is real — <code>canonical_project</code> reaches the
+<code>WHERE</code> on every learning read — but a learning has to be
+attributed before the filter means anything, and that attribution had a
+bug worth naming for its shape rather than its size.
+<code>attributeLearningProject</code> coalesced a session's project
+through <code>repo.Root</code>, which resolves a bare name against the
+repository hosting the <em>running daemon</em> rather than the named
+project, so a learning captured under a short project name was filed
+under the daemon's own repo. The fix is one condition — coalesce only
+when the value looks like an absolute path — with a regression test that
+pins a short name passing through uncoalesced. A correct filter over a
+wrongly stamped key returns the wrong rows just as reliably as a missing
+filter, and only the second of those is something a capability mark can
+see.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A learning is a statement with a category, a project, a source, an
 importance and a confidence, extracted from a session by an LLM after
@@ -599,6 +614,34 @@ consumer), <code>internal/storage/learnings_staleness_test.go</code></p>
 <code>testdata/locomo/</code>, <code>cmd_locomo.go</code>,
 <code>internal/benchmark/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4"><code class="commit-id" title="d9e028735a04abaa236d14b7ae33efc413a330d4">d9e02873…</code></a>
+— read again, 50 commits past the previous pin, almost all of them on
+the orchestration surface: managed terminal windows, a bundled
+headless-Chrome capability, session resume and bootstrap, a stagnation
+monitor, and a <code>get_caps</code> summary mode. The memory findings
+are unchanged and each was re-run rather than carried forward.
+<code>SupersedeStatus</code> still has no reader: the only predicate
+mentioning it anywhere is the setter's own <code>WHERE id = ?</code>, so
+the highest-trust learnings still have their corrections dropped into a
+column nothing consults. <code>SetStalenessScore</code> still has no
+caller outside <code>learnings_staleness_test.go</code>, while
+<code>GetStalenessScores</code> is still consumed at
+<code>handler_hybrid.go:681</code> — a demotion the ranking applies and
+production never writes. <code>scope_enforced</code> holds and gains an
+evidence record; <code>canonical_project</code> reaches the
+<code>WHERE</code> on the learning reads, with the empty-string disjunct
+still admitting every unattributed row. One thing did move and it
+belongs to the other half of that mark:
+<code>attributeLearningProject</code> coalesced a bare project name
+through <code>repo.Root</code>, which resolves against the repository
+hosting the running daemon, so learnings captured under a short name
+were attributed to the daemon's own repo; the guard is now an
+absolute-path check with a regression test. Screened before reading: no
+auto-run surface, no manifest inside the seven-day cooldown, one
+build-time execution path and one unpinned dependency surface against a
+<code>go.sum</code> 91 days old; nothing was installed, built or
+run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c"><code class="commit-id" title="b1ad72ef9fd508180afaef1ca46c87a17a3c675c">b1ad72ef…</code></a>
 — first reading. Screened before reading: no auto-run surface,
