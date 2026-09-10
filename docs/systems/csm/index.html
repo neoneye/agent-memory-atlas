@@ -110,14 +110,14 @@ own edits survived.</p>
               <strong>NovasPlace/CSM</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e" title="21d00969c25ca170ef40bc07e6811beb5e78c99e">
+            <a class="meta-pill revision-pill" href="https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b" title="4361d38de8672cffe06086e32b91ed41e73e100b">
               <span>Analyzed revision</span>
-              <code>21d00969…</code>
+              <code>4361d38d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NovasPlace--CSM" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -316,6 +316,23 @@ which is better than most.</p>
 per-project, dry-run unless <code>apply: true</code>, capped at 1,000
 rows by default and 10,000 absolute, transactional, and it emits a
 <code>memory.retention_cleanup</code> event.</p>
+<p><em>Promote.</em> <code>lesson-auto-promotion.ts</code> is the newest
+exit and the best-gated one. A memory candidate becomes a durable lesson
+only if it passes four conditions stated in the module docstring — at
+least <code>minRecall</code> recall events, recall in at least
+<code>minSessions</code> <em>distinct</em> sessions, a content-quality
+heuristic, and no existing lesson with the same content hash — and a
+regex list refuses the noise classes by shape before any of that:
+<code>^\[modified\]</code>, <code>^Tool used:</code>,
+<code>^Command executed:</code>, <code>^\[git\]</code> and the rest.
+What survives is tagged <code>auto-promoted</code> and stamped
+<code>metadata.auto_promoted = true</code> <em>"so they can be audited
+and reverted"</em>, and the source candidate is marked
+<code>applied</code>. Cross-session recall as the promotion signal is
+the good idea here: a lesson earns durability from having been useful
+more than once, in more than one session, rather than from a score
+assigned when it was written. It is wired from
+<code>lifecycle-orchestrator.ts:171</code>.</p>
 <p><em>Reject.</em> On paper, a human rejecting a candidate through the
 Codex bridge sets <code>status = 'rejected'</code> with
 <code>reviewed_by</code>, and <code>cleanupExpiredCandidates</code>
@@ -329,15 +346,22 @@ it operates on is never filled, so in practice this exit is
 unreachable.</p>
 <p>The consequential gap is elsewhere. Supersede and archive change what
 the <em>governance reports</em> say. They do not change what
-<em>search</em> returns: <code>buildWhereClause</code>
-(<code>src/hybrid-search-sources.ts:12</code>) composes project, type,
-tag and importance predicates and never mentions
-<code>archived_at</code> or <code>superseded_by</code>, and neither does
-the vector-only fallback (<code>src/memory-manager.ts:585</code>) or the
-text fallback (<code>src/memory-manager.ts:795</code>). The re-entry
-path is stricter — <code>agent-onboarding.ts:364</code> does filter
+<em>search</em> returns. <code>buildWhereClause</code>
+(<code>src/hybrid-search-sources.ts:13</code>) is the single WHERE
+builder all three search lanes share — FTS, vector and entity-boost each
+call it — and its whole body is four appends: project scope,
+<code>memory_type</code>, tags, <code>importance</code>. It never
+mentions <code>archived_at</code> or <code>superseded_by</code>, and
+neither does the vector-only fallback
+(<code>src/memory-manager.ts:585</code>) or the text fallback
+(<code>:795</code>). The re-entry path is stricter —
+<code>agent-onboarding.ts:364</code> and <code>:717</code> both filter
 <code>archived_at IS NULL</code> — so the same store answers two
-different questions depending on which door you knock on.</p>
+different questions depending on which door you knock on, and the door
+with the archive filter is the one the agent does not drive.</p>
+<p>The fix is one line in one function, which is the reason to say it
+plainly: the builder every lane shares is exactly where the predicate
+belongs.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — two disconnects in one lifecycle: supersession and archival set fields no read path filters on, and the promoted status the beliefs layer requires has no code path that writes it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two disconnects in one lifecycle: supersession and archival set fields no read path filters on, and the promoted status the beliefs layer requires has no code path that writes it
 stateDiagram-v2
     [*] --&gt; Packet: tool.execute.after hook
@@ -731,17 +755,47 @@ memory.</strong> The <code>memories</code> table has a
 candidate, no verified, no rejected — so a promoted belief and a
 directly observed fact differ only in their provenance metadata, not in
 anything the read path can filter on. The two places a discrete status
-<em>does</em> exist both fail to close:
-<code>belief_knowledge_store.status</code> can be <code>candidate</code>
-or <code>stale</code> and its only consumer admits
-<code>promoted</code>, and <code>memory_candidates.status</code> has a
-full
+<em>does</em> exist both fail to close, and both are worth stating
+exactly, because each looks closed from one end.</p>
+<p><strong>The belief status has two writers and neither writes the
+value four readers want.</strong>
+<code>belief_knowledge_store.status</code> is
+<code>CHECK (status IN ('candidate', 'promoted', 'rejected', 'stale'))</code>.
+Three statements in <code>src/</code> touch the table: one
+<code>INSERT</code> that writes <code>'candidate'</code>, and two
+<code>UPDATE</code>s that write <code>'stale'</code>. Nothing anywhere
+writes <code>'promoted'</code> or <code>'rejected'</code>. Four read
+paths filter on <code>'promoted'</code> —
+<code>reentry-layers-secondary.ts:42</code> and
+<code>reentry-layers-state.ts:51</code> building the re-entry brief,
+<code>agent-onboarding.ts:430</code>, and
+<code>continuity-resilience-report.ts:438</code> counting them for the
+health report — so the belief section of a re-entry brief is empty by
+construction and the health report reports zero as a fact about the
+system rather than about the data.</p>
+<p>The trap for a reader is the filename.
+<code>src/belief-promotion.ts</code> exists, is 400 lines, is wired, and
+logs <code>Belief promotion: N promoted</code> — and what it promotes is
+rows of <code>memory_candidate_queue</code> into <code>memories</code>.
+It never touches <code>belief_knowledge_store</code>. A grep for
+"promotion" finds a live module; a grep for what writes the column finds
+nothing.</p>
+<p><strong>And <code>memory_candidates</code> is a table with no
+<code>INSERT</code>.</strong> Its
 <code>pending | approved | rejected | auto-approved | archived</code>
-machine over a table with no writer. The atlas therefore withholds
-<code>trust_state</code> here, and the withholding is the useful
-sentence: CSM has more trust <em>machinery</em> than most systems that
-carry the mark, and none of it terminates in a field a query can act
-on.</p>
+machine is declared in <code>schema/core-schema.ts:52</code>, given four
+indexes, and then selected from (<code>memory-extractor.ts:499</code>,
+<code>:574</code>), updated (<code>:531</code>, <code>:599</code>) and
+swept (<code>:593</code>, <code>memory-manager.ts:1009</code>) — five
+statements and a TTL delete over rows nothing creates. It is a different
+table from the live <code>memory_candidate_queue</code>, which
+<code>candidate-generator.ts:145</code> and
+<code>belief-promotion-scanner.ts:468</code> do fill; the two names
+differ by one word and only one of them is connected.</p>
+<p>The atlas therefore withholds <code>trust_state</code> here, and the
+withholding is the useful sentence: CSM has more trust
+<em>machinery</em> than most systems that carry the mark, and none of it
+terminates in a field a query can act on.</p>
 <p><strong>Audit</strong> is broad: <code>memory_events</code> records
 every mutation channel; <code>memory_merges</code> records each merge
 with its normalized hash; <code>context_injection_events</code> and
@@ -789,15 +843,18 @@ guards against the <em>number</em> being too high; they do not address
 the observable being the wrong one.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>The suite is large and real: <strong>1,686
-<code>test(</code>/<code>it(</code> call sites across 189 test
-files</strong>. The committed <code>full-test-output.txt</code> at this
-commit records <strong>808 passing tests across 172 suites, zero
-failures</strong> — a narrower run than the call-site count, presumably
-one where Postgres-gated suites did not execute. The README's claim of
-"more than 1,500 automated tests" is supportable at the call-site level
-and not by that artifact; both numbers are in the repository and neither
-is wrong, they just measure different things. I inspected these
+<p>The suite is large and real: <strong>1,758
+<code>test(</code>/<code>it(</code> call sites across 202 test
+files</strong>, over 57,122 lines of TypeScript in <code>src/</code>.
+The committed <code>full-test-output.txt</code> records <strong>808
+passing tests across 172 suites, zero failures</strong> — a narrower run
+than the call-site count, presumably one where Postgres-gated suites did
+not execute. The README's claim of "more than 1,500 automated tests" is
+supportable at the call-site level and not by that artifact; both
+numbers are in the repository and neither is wrong, they just measure
+different things. The artifact is a snapshot rather than a check, so the
+distance between the two grows on its own: thirteen test files and
+seventy-two call sites were added without it moving. I inspected these
 artifacts; I did not run the suite.</p>
 <p>What is well covered: schema migration and idempotent replay,
 redaction across every persistence boundary, project isolation for tools
@@ -1030,7 +1087,101 @@ is consumed here but the service is not in this repository.</li>
 <code>docs/FEATURES.md</code>, <code>SECURITY.md</code>,
 <code>scripts/backup-restore-drill.ts</code>,
 <code>src/doctor.ts</code>.</p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Search filters on neither supersession nor archival</td>
+<td>read <code>buildWhereClause</code> at
+<code>src/hybrid-search-sources.ts:13-34</code></td>
+<td>Four appends — project scope, <code>memory_type</code>, tags,
+<code>importance</code> — and nothing else</td>
+</tr>
+<tr>
+<td>Nothing writes a promoted belief</td>
+<td><code>grep -rn "belief_knowledge_store" --include="*.ts" src | grep -iE "UPDATE|INSERT"</code></td>
+<td>Three statements: one INSERT writing <code>'candidate'</code>, two
+UPDATEs writing <code>'stale'</code></td>
+</tr>
+<tr>
+<td>Four read paths want one</td>
+<td><code>grep -rn "'promoted'" --include="*.ts" src</code></td>
+<td><code>reentry-layers-secondary.ts:42</code>,
+<code>reentry-layers-state.ts:51</code>,
+<code>agent-onboarding.ts:430</code>,
+<code>continuity-resilience-report.ts:438</code></td>
+</tr>
+<tr>
+<td><code>memory_candidates</code> has no INSERT</td>
+<td><code>grep -rn "memory_candidates\b" --include="*.ts" src</code></td>
+<td>A CREATE TABLE, four indexes, two SELECTs, two UPDATEs and two
+DELETEs; no INSERT</td>
+</tr>
+<tr>
+<td>No human approves a memory</td>
+<td><code>grep -rniE "approve|reviewed_by|human" --include="*.ts" src</code></td>
+<td>Only the extractor's <code>autoApproveThreshold</code> and the
+statuses it derives from a score</td>
+</tr>
+<tr>
+<td>No validity time separate from record time</td>
+<td><code>grep -rniE "valid_from|valid_to|as_of|observed_at|effective_" --include="*.ts" src/schema/*.ts</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find src -name "*.ts" | xargs wc -l | tail -1</code>;
+<code>ls test/*.test.ts | wc -l</code></td>
+<td>57,122 lines; 202 test files, 1,758 call sites</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b"><code class="commit-id" title="4361d38de8672cffe06086e32b91ed41e73e100b">4361d38d…</code></a>
+— re-read, 189 files, 10,344 insertions and 4,568 deletions past the
+previous pin, arriving in one commit. <strong>Both central criticisms
+hold, and both are sharper.</strong> <code>buildWhereClause</code> is
+the one WHERE builder all three search lanes share and its whole body is
+still project, type, tags and importance — so supersession and archival
+remain invisible to search while <code>agent-onboarding.ts</code>
+filters <code>archived_at IS NULL</code> at two places, which is why the
+same store answers differently depending on the door. The belief tier's
+producer gap was described as three read paths; it is four, and the trap
+has a name: <code>src/belief-promotion.ts</code> is 400 lines, is wired,
+logs <em>"Belief promotion: N promoted"</em>, and promotes
+<code>memory_candidate_queue</code> rows into <code>memories</code>
+without touching <code>belief_knowledge_store</code>. The
+<code>memory_candidates</code> finding is restated precisely — no
+<code>INSERT</code> exists anywhere in <code>src/</code> against that
+table, and it is a different table from the live
+<code>memory_candidate_queue</code>, which two modules do fill.
+<strong>One substantial addition</strong>:
+<code>lesson-auto-promotion.ts</code>, a promoter gated on recall count,
+distinct-session count, a content-quality heuristic and a content-hash
+dedup, refusing named noise shapes by regex, tagging what it promotes
+<code>auto_promoted</code> <em>"so they can be audited and
+reverted"</em> — cross-session usefulness as the durability signal,
+which is a better rule than a score assigned at write time. Marks
+unchanged at three, each re-verified, and
+<code>capability_evidence</code> records added where the report had
+none. <code>classifyValueClaim</code> moved from
+<code>value-source-guard.ts:44</code> to <code>:45</code>; the search
+and fallback line numbers still resolve. Suite 1,686 call sites across
+189 files to 1,758 across 202, with the committed
+<code>full-test-output.txt</code> unchanged at 808. Screened before
+reading: three auto-run surfaces (<code>.mcp.json</code>,
+<code>hooks/</code>, <code>hooks/hooks.json</code>), eleven floating
+ranges behind a lockfile 31 days old, and an <code>AGENTS.md</code> read
+as data; nothing was installed or run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e"><code class="commit-id" title="21d00969c25ca170ef40bc07e6811beb5e78c99e">21d00969…</code></a>
 — first reading.</p>

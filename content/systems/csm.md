@@ -7,10 +7,14 @@ page_kind: system
 source_name: "NovasPlace/CSM"
 source_url: https://github.com/NovasPlace/CSM
 archive_name: "NovasPlace--CSM"
-revision: 21d00969c25ca170ef40bc07e6811beb5e78c99e
-revision_url: https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e
-analyzed_at: 2026-07-30
+revision: 4361d38de8672cffe06086e32b91ed41e73e100b
+revision_url: https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "hybrid search | src/hybrid-search-sources.ts:36-53 | appendProjectScope pushes `1=0` when the default mode has no project id, so an unscoped search returns nothing rather than everything | test/privacy-persistence-boundaries.test.ts"
+  audit_log: "mutation and injection channels | src/memory-manager.ts:1052 and src/context-injection-logger.ts:75 | memory_events per mutation, memory_merges with the normalized hash, context_injection_events and _items recording what was injected, trimmed and omitted with an idempotency key and a block hash | test/privacy-persistence-boundaries.test.ts:167"
+  negative_eval: "the file-read cache | test/privacy-persistence-boundaries.test.ts:254-265 | two external file reads are fetched and asserted present by display id, then the raw paths are asserted absent from the serialized context_cache metadata | privacy-persistence-boundaries"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -19,13 +23,13 @@ matrix:
   storage: "PostgreSQL with pgvector HNSW across 46 tables; a deliberately narrower SQLite core"
   retrieval: "RRF over vector, Postgres FTS, and entity boost, weighted 0.35/0.25/0.35 with a 0.05 recency term and a 168-hour half-life"
   write: "Fully deterministic — no LLM on the write path; synchronous on the embedding call"
-  update_delete: "Exact-content supersede, flag-based archive, and a capped per-project TTL delete — none of which the read path filters on"
+  update_delete: "Exact-content supersede, flag-based archive, a capped per-project TTL delete, and a lesson promoter that marks its source candidate `applied` — and the search path filters on none of them"
   scoping: "project_id bound at tool registration and applied on the read path, failing closed to `1=0` when absent"
   integration: "OpenCode plugin over eleven hooks, four of them experimental; plus a stdio Codex MCP bridge"
   background: "In-process timers — distiller flush, belief consolidation, self-model replay, doc flush; no queue or worker"
   trust: "Provenance fields on every row and a known-versus-inferred claim classifier; no status on a memory, and the belief store's only admitting state is one no code path writes"
   strengths: "Per-item injection provenance recording what was trimmed and why; a work ledger that re-reads the file to decide whether an edit survived"
-  risks: "Superseded and archived memories still answer searches; three read paths filter on states no writer produces, so the whole belief tier renders empty"
+  risks: "Superseded and archived memories answer searches, because the only WHERE builder the three search lanes share adds project, type, tag and importance clauses and nothing else; four read paths filter beliefs on a `promoted` status no writer produces; and `memory_candidates` is selected, updated and swept by five statements and inserted into by none"
 ---
 
 ## 1. Executive Summary
@@ -182,6 +186,20 @@ hard delete: per-project, dry-run unless `apply: true`, capped at 1,000 rows by
 default and 10,000 absolute, transactional, and it emits a
 `memory.retention_cleanup` event.
 
+*Promote.* `lesson-auto-promotion.ts` is the newest exit and the best-gated one.
+A memory candidate becomes a durable lesson only if it passes four conditions
+stated in the module docstring — at least `minRecall` recall events, recall in at
+least `minSessions` *distinct* sessions, a content-quality heuristic, and no
+existing lesson with the same content hash — and a regex list refuses the noise
+classes by shape before any of that: `^\[modified\]`, `^Tool used:`,
+`^Command executed:`, `^\[git\]` and the rest. What survives is tagged
+`auto-promoted` and stamped `metadata.auto_promoted = true` *"so they can be
+audited and reverted"*, and the source candidate is marked `applied`. Cross-session
+recall as the promotion signal is the good idea here: a lesson earns durability
+from having been useful more than once, in more than one session, rather than
+from a score assigned when it was written. It is wired from
+`lifecycle-orchestrator.ts:171`.
+
 *Reject.* On paper, a human rejecting a candidate through the Codex bridge sets
 `status = 'rejected'` with `reviewed_by`, and `cleanupExpiredCandidates`
 (`src/memory-extractor.ts:591`) **deletes rejected candidates after seven days**.
@@ -192,14 +210,19 @@ deliberately temporary storage rather than a durable veto. And the queue it
 operates on is never filled, so in practice this exit is unreachable.
 
 The consequential gap is elsewhere. Supersede and archive change what the
-*governance reports* say. They do not change what *search* returns:
-`buildWhereClause` (`src/hybrid-search-sources.ts:12`) composes project, type,
-tag and importance predicates and never mentions `archived_at` or
-`superseded_by`, and neither does the vector-only fallback
-(`src/memory-manager.ts:585`) or the text fallback (`src/memory-manager.ts:795`).
-The re-entry path is stricter — `agent-onboarding.ts:364` does filter
-`archived_at IS NULL` — so the same store answers two different questions
-depending on which door you knock on.
+*governance reports* say. They do not change what *search* returns.
+`buildWhereClause` (`src/hybrid-search-sources.ts:13`) is the single WHERE
+builder all three search lanes share — FTS, vector and entity-boost each call it
+— and its whole body is four appends: project scope, `memory_type`, tags,
+`importance`. It never mentions `archived_at` or `superseded_by`, and neither
+does the vector-only fallback (`src/memory-manager.ts:585`) or the text fallback
+(`:795`). The re-entry path is stricter — `agent-onboarding.ts:364` and `:717`
+both filter `archived_at IS NULL` — so the same store answers two different
+questions depending on which door you knock on, and the door with the archive
+filter is the one the agent does not drive.
+
+The fix is one line in one function, which is the reason to say it plainly: the
+builder every lane shares is exactly where the predicate belongs.
 
 ```mermaid
 %% caption: two disconnects in one lifecycle: supersession and archival set fields no read path filters on, and the promoted status the beliefs layer requires has no code path that writes it
@@ -549,14 +572,38 @@ inference. That is a memory layer that can represent uncertainty and says so.
 table has a `confidence` float and no status column at all — no candidate, no
 verified, no rejected — so a promoted belief and a directly observed fact differ
 only in their provenance metadata, not in anything the read path can filter on.
-The two places a discrete status *does* exist both fail to close:
-`belief_knowledge_store.status` can be `candidate` or `stale` and its only
-consumer admits `promoted`, and `memory_candidates.status` has a full
-`pending | approved | rejected | auto-approved | archived` machine over a table
-with no writer. The atlas therefore withholds `trust_state` here, and the
-withholding is the useful sentence: CSM has more trust *machinery* than most
-systems that carry the mark, and none of it terminates in a field a query can
-act on.
+The two places a discrete status *does* exist both fail to close, and both are
+worth stating exactly, because each looks closed from one end.
+
+**The belief status has two writers and neither writes the value four readers
+want.** `belief_knowledge_store.status` is `CHECK (status IN ('candidate',
+'promoted', 'rejected', 'stale'))`. Three statements in `src/` touch the table:
+one `INSERT` that writes `'candidate'`, and two `UPDATE`s that write `'stale'`.
+Nothing anywhere writes `'promoted'` or `'rejected'`. Four read paths filter on
+`'promoted'` — `reentry-layers-secondary.ts:42` and `reentry-layers-state.ts:51`
+building the re-entry brief, `agent-onboarding.ts:430`, and
+`continuity-resilience-report.ts:438` counting them for the health report — so
+the belief section of a re-entry brief is empty by construction and the health
+report reports zero as a fact about the system rather than about the data.
+
+The trap for a reader is the filename. `src/belief-promotion.ts` exists, is 400
+lines, is wired, and logs `Belief promotion: N promoted` — and what it promotes
+is rows of `memory_candidate_queue` into `memories`. It never touches
+`belief_knowledge_store`. A grep for "promotion" finds a live module; a grep for
+what writes the column finds nothing.
+
+**And `memory_candidates` is a table with no `INSERT`.** Its
+`pending | approved | rejected | auto-approved | archived` machine is declared in
+`schema/core-schema.ts:52`, given four indexes, and then selected from
+(`memory-extractor.ts:499`, `:574`), updated (`:531`, `:599`) and swept
+(`:593`, `memory-manager.ts:1009`) — five statements and a TTL delete over rows
+nothing creates. It is a different table from the live `memory_candidate_queue`,
+which `candidate-generator.ts:145` and `belief-promotion-scanner.ts:468` do fill;
+the two names differ by one word and only one of them is connected.
+
+The atlas therefore withholds `trust_state` here, and the withholding is the
+useful sentence: CSM has more trust *machinery* than most systems that carry the
+mark, and none of it terminates in a field a query can act on.
 
 **Audit** is broad: `memory_events` records every mutation channel;
 `memory_merges` records each merge with its normalized hash;
@@ -600,14 +647,17 @@ not address the observable being the wrong one.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The suite is large and real: **1,686 `test(`/`it(` call sites across 189 test
-files**. The committed `full-test-output.txt` at this commit records **808
-passing tests across 172 suites, zero failures** — a narrower run than the
-call-site count, presumably one where Postgres-gated suites did not execute. The
-README's claim of "more than 1,500 automated tests" is supportable at the
-call-site level and not by that artifact; both numbers are in the repository and
-neither is wrong, they just measure different things. I inspected these
-artifacts; I did not run the suite.
+The suite is large and real: **1,758 `test(`/`it(` call sites across 202 test
+files**, over 57,122 lines of TypeScript in `src/`. The committed
+`full-test-output.txt` records **808 passing tests across 172 suites, zero
+failures** — a narrower run than the call-site count, presumably one where
+Postgres-gated suites did not execute. The README's claim of "more than 1,500
+automated tests" is supportable at the call-site level and not by that artifact;
+both numbers are in the repository and neither is wrong, they just measure
+different things. The artifact is a snapshot rather than a check, so the distance
+between the two grows on its own: thirteen test files and seventy-two call sites
+were added without it moving. I inspected these artifacts; I did not run the
+suite.
 
 What is well covered: schema migration and idempotent replay, redaction across
 every persistence boundary, project isolation for tools and candidates, the
@@ -817,6 +867,22 @@ have a seam where one would go.
 `docs/FEATURES.md`, `SECURITY.md`, `scripts/backup-restore-drill.ts`,
 `src/doctor.ts`.
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Search filters on neither supersession nor archival | read `buildWhereClause` at `src/hybrid-search-sources.ts:13-34` | Four appends — project scope, `memory_type`, tags, `importance` — and nothing else |
+| Nothing writes a promoted belief | `grep -rn "belief_knowledge_store" --include="*.ts" src \| grep -iE "UPDATE\|INSERT"` | Three statements: one INSERT writing `'candidate'`, two UPDATEs writing `'stale'` |
+| Four read paths want one | `grep -rn "'promoted'" --include="*.ts" src` | `reentry-layers-secondary.ts:42`, `reentry-layers-state.ts:51`, `agent-onboarding.ts:430`, `continuity-resilience-report.ts:438` |
+| `memory_candidates` has no INSERT | `grep -rn "memory_candidates\b" --include="*.ts" src` | A CREATE TABLE, four indexes, two SELECTs, two UPDATEs and two DELETEs; no INSERT |
+| No human approves a memory | `grep -rniE "approve\|reviewed_by\|human" --include="*.ts" src` | Only the extractor's `autoApproveThreshold` and the statuses it derives from a score |
+| No validity time separate from record time | `grep -rniE "valid_from\|valid_to\|as_of\|observed_at\|effective_" --include="*.ts" src/schema/*.ts` | Nothing |
+| Tree and suite size | `find src -name "*.ts" \| xargs wc -l \| tail -1`; `ls test/*.test.ts \| wc -l` | 57,122 lines; 202 test files, 1,758 call sites |
+
 ## History
+
+**2026-09-11** — [`4361d38de8672cffe06086e32b91ed41e73e100b`](https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b) — re-read, 189 files, 10,344 insertions and 4,568 deletions past the previous pin, arriving in one commit. **Both central criticisms hold, and both are sharper.** `buildWhereClause` is the one WHERE builder all three search lanes share and its whole body is still project, type, tags and importance — so supersession and archival remain invisible to search while `agent-onboarding.ts` filters `archived_at IS NULL` at two places, which is why the same store answers differently depending on the door. The belief tier's producer gap was described as three read paths; it is four, and the trap has a name: `src/belief-promotion.ts` is 400 lines, is wired, logs *"Belief promotion: N promoted"*, and promotes `memory_candidate_queue` rows into `memories` without touching `belief_knowledge_store`. The `memory_candidates` finding is restated precisely — no `INSERT` exists anywhere in `src/` against that table, and it is a different table from the live `memory_candidate_queue`, which two modules do fill. **One substantial addition**: `lesson-auto-promotion.ts`, a promoter gated on recall count, distinct-session count, a content-quality heuristic and a content-hash dedup, refusing named noise shapes by regex, tagging what it promotes `auto_promoted` *"so they can be audited and reverted"* — cross-session usefulness as the durability signal, which is a better rule than a score assigned at write time. Marks unchanged at three, each re-verified, and `capability_evidence` records added where the report had none. `classifyValueClaim` moved from `value-source-guard.ts:44` to `:45`; the search and fallback line numbers still resolve. Suite 1,686 call sites across 189 files to 1,758 across 202, with the committed `full-test-output.txt` unchanged at 808. Screened before reading: three auto-run surfaces (`.mcp.json`, `hooks/`, `hooks/hooks.json`), eleven floating ranges behind a lockfile 31 days old, and an `AGENTS.md` read as data; nothing was installed or run.
 
 **2026-07-30** — [`21d00969c25ca170ef40bc07e6811beb5e78c99e`](https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e) — first reading.
