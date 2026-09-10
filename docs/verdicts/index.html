@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 411 reports.</strong></p>
+<p><strong>This page covers all 412 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14431,6 +14431,52 @@ old policy" becomes a case that fails.</li>
 every timestamp here is a record time and the lifecycle answers by
 supersession instead — or when you need to build a closed product over
 it.</li>
+</ul>
+<h3 id="ultracontext"><a
+href="../systems/ultracontext/"><code>ultracontext</code></a></h3>
+<ul>
+<li>Best idea: <strong>ship writers, not just parsers.</strong> Because
+the package can emit a session in Claude Code's or Codex's own on-disk
+format, continuity means handing the next agent a file it opens natively
+rather than a summary it reads. Beside it, versioning that <em>is</em>
+the data model: a context is a chain of heads, each recording the
+<code>operation</code> that created it and the ids it
+<code>affected</code>, so history, time-travel and fork-at-version fall
+out of one structure with no revision counter to keep in sync.</li>
+<li>Biggest risk: <strong>two resolvers for the same object, one scoped
+and one not — and the fork path calls the wrong one.</strong>
+<code>findRootContext(projectId, publicId)</code> and
+<code>findRootContextByPublicId(publicId)</code> sit one line apart in
+the same interface; <code>getContext</code> uses the first and a
+committed test pins it, while <code>createContext</code> resolves its
+<code>from</code> source with the second and uses <code>projectId</code>
+only to stamp the new rows. A caller holding one project's key can copy
+another project's context. The ids are twelve random bytes so nobody
+enumerates them — but an id is not a credential, and this product exists
+to circulate ids between agents, dashboards and teammates.</li>
+<li>Most reusable component:
+<code>packages/core/src/context-chain.ts</code> —
+<code>orderNodes</code> reconstructing order from <code>prev_id</code>
+rather than timestamps (so two writes in the same millisecond stay
+ordered), and <code>getVersions</code> splitting the reserved
+<code>operation</code>/<code>affected</code> keys out of a head's
+metadata from the user's own.</li>
+<li>Maturity impression: Apache-2.0, 148 commits between 7 January and 1
+June 2026 with 144 from one author, 7,705 lines of TypeScript and Python
+against 383 test cases in 34 files; one Postgres table behind an adapter
+interface implemented three times, an API that runs on Cloudflare
+Workers or Node, parsers for five agents and writers for two, MCP plus
+npm and PyPI SDKs; three long-lived side branches suggest a rewrite in
+progress; three of seven capability marks.</li>
+<li>Study when: you switch coding agents often and want the last session
+available in the next one as a file rather than a paraphrase — and read
+the compatibility matrix, which declares in code which CLI versions each
+parser was verified against, whatever you build.</li>
+<li>Do not copy when: you need memory rather than storage — nothing here
+ranks, decays or knows a stored claim went stale — or when secrets pass
+through the sessions you capture: the redactor masks the archival
+<code>raw</code> copy and ships the <code>message</code> text derived
+from the same bytes untouched, and no test covers it.</li>
 </ul>
         </article>
       </div>

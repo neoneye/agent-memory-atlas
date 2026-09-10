@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 context layer that
+tails the session transcripts of five coding agents into one git-like
+store of linked nodes — every change a new version head recording its
+operation and the ids it touched — and can write a session back out in
+another agent's own format so work started in Claude Code continues in
+Codex.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="UltraContext — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 context layer
+that tails the session transcripts of five coding agents into one
+git-like store of linked nodes — every change a new version head
+recording its operation and the ids it touched — and can write a session
+back out in another agent's own format so work started in Claude Code
+continues in Codex.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="UltraContext — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 context
+layer that tails the session transcripts of five coding agents into one
+git-like store of linked nodes — every change a new version head
+recording its operation and the ids it touched — and can write a session
+back out in another agent's own format so work started in Claude Code
+continues in Codex.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>UltraContext — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "UltraContext",
+      "description": "An Apache-2.0 context layer that tails the session transcripts of five coding agents into one git-like store of linked nodes \u2014 every change a new version head recording its operation and the ids it touched \u2014 and can write a session back out in another agent's own format so work started in Claude Code continues in Codex.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every read carries the project key except
+the one that forks</p>
+          <h1>UltraContext</h1>
+          <p class="document-deck">An Apache-2.0 context layer that
+tails the session transcripts of five coding agents into one git-like
+store of linked nodes — every change a new version head recording its
+operation and the ids it touched — and can write a session back out in
+another agent's own format so work started in Claude Code continues in
+Codex.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ultracontext/ultracontext">
+              <span>Source</span>
+              <strong>ultracontext/ultracontext</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ultracontext/ultracontext/commit/736b471125b727a9b6473688b18ef5a22727d48c" title="736b471125b727a9b6473688b18ef5a22727d48c">
+              <span>Analyzed revision</span>
+              <code>736b4711…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ultracontext--ultracontext" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ultracontext--ultracontext</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>UltraContext is the fourth project in this corpus to notice that
+coding agents already write their sessions to disk, and the first to try
+writing them back. A local daemon tails the session files of Claude
+Code, Codex, Cursor, Gemini and OpenClaw, normalises each line, and
+appends it to a shared store; an MCP server hands any agent another
+agent's context; and a pair of <em>writers</em> can emit a session in
+Claude Code's or Codex's own on-disk format, so the pitch — <em>"start
+on Claude Code, continue on Codex"</em> — is a file the second agent
+opens rather than a summary it reads.</p>
+<p>Apache-2.0; 148 commits between 7 January and 1 June 2026, 144 of
+them from one author; 7,705 lines of TypeScript and Python across 74
+files, with 383 test cases in 34 files. The screen found no auto-run
+surface, one build-time execution path (an npm <code>postinstall</code>
+in the JS SDK), eight unpinned dependency surfaces, a
+<code>pnpm-lock.yaml</code> 100 days old, and two agent instruction
+files treated as data; nothing was installed, built or run.</p>
+<p><strong>The store is git-shaped and that is the good idea.</strong>
+One <code>nodes</code> table, three link columns, and a context that is
+a chain of version heads each owning a chain of messages. An update or a
+message delete appends a new head carrying <code>operation</code> and
+the <code>affected</code> ids rather than rewriting anything, so
+history, time-travel and fork-from-version are the same mechanism rather
+than three features. That earns <code>audit_log</code>.</p>
+<p><strong>The project key reaches every ordinary read, and one resolver
+is missing it.</strong> <code>getContext</code> resolves through
+<code>findRootContext(projectId, publicId)</code>, and a committed test
+asserts a foreign project gets <code>not_found</code>. One line below it
+in the same interface sits
+<code>findRootContextByPublicId(publicId)</code>, which takes no project
+— and its only caller is the fork source resolution in
+<code>createContext</code>, where <code>projectId</code> is used solely
+to stamp the new rows. <strong>A caller holding a key for one project
+can pass <code>from:</code> a context id belonging to another and
+receive a copy of it</strong>, walked out by <code>getVersions</code>,
+<code>findHead</code> and <code>getOrderedNodes</code>, none of which
+take the key either. The ids are twelve random bytes, so this is not
+brute-forceable; it means the boundary on that path is possession of an
+id rather than the key — in a product whose entire purpose is
+circulating those ids between agents, teammates and dashboards.</p>
+<p><strong>The redactor covers one of the two copies of the same
+text.</strong> The sync daemon builds each payload as
+<code>content: { message: normalized.message, …, raw: safeRaw }</code>
+where <code>safeRaw = redact(normalized.raw)</code>. The raw transcript
+entry is masked against four secret patterns and a sensitive-key-name
+test; <code>normalized.message</code> — the conversation text extracted
+from that same raw entry, and the field a reader actually gets back — is
+not passed through <code>redact</code> at all. A key pasted into a
+prompt is <code>sk-***</code> in <code>raw</code> and intact in
+<code>message</code>. No test in the tree mentions the redactor.</p>
+<p><strong>One declared gate has no runtime consumer.</strong>
+<code>AGENT_COMPAT</code> records which CLI versions each parser was
+verified against and which cross-agent resume pairs have fixture
+coverage, and <code>isResumePairTested(source, target)</code> is
+exported from the package. Its only callers are the tests — one of which
+asserts <code>isResumePairTested("openclaw", "codex") === false</code>.
+<code>switchSession</code> never asks, and picks its writer with
+<code>target === "codex" ? writeCodexSession : writeClaudeSession</code>,
+so an untested pair proceeds silently and any target that is not
+<code>codex</code> — <code>gemini</code>, <code>cursor</code>, a typo —
+gets the Claude writer.</p>
+<p><strong>What it is not is a memory system.</strong> There is no
+ranking, no embedding, no search index, no status, no confidence, no
+decay and no supersession. It stores contexts and hands them back whole.
+That is a coherent product and it is why four of the seven marks are
+absent rather than withheld on a technicality.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of a context as a git branch made of messages.</p>
+<p>The root node is the context's identity. Hanging off it is a chain of
+<em>heads</em>, each one a version, linked backwards by
+<code>prev_id</code>. Hanging off each head is a chain of messages,
+linked the same way. Appending a message extends the current head's
+chain. Updating or deleting messages creates a <em>new</em> head whose
+metadata records what operation produced it and which node ids it
+touched, leaving the previous head and its messages exactly where they
+were.</p>
+<p>That single shape does a lot of work. History is the chain of heads.
+Time-travel is picking a head by index or by timestamp. Forking is
+creating a new root whose <code>parent_id</code> points at the source
+and copying the source's messages up to a chosen version, timestamp or
+index. There is no separate versions table, no soft-delete flag and no
+revision counter.</p>
+<p>Capture is a second, unrelated path. The daemon watches five agents'
+session directories, parses each new line into a normalised event,
+deduplicates it by hash, and appends it to a context named for that
+session. Reading it back is either the MCP server handing an agent a
+whole context, or the CLI writing the session out as a file the target
+agent will open.</p>
+<p>What is deliberately missing is judgement. Nothing here decides that
+one context matters more, that a claim went stale, or that two sessions
+say the same thing. The word <em>memory</em> does not appear in the
+schema; the word <em>context</em> does.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a local daemon tails five agents' session files, normalises each line and appends it to a session context, redacting the raw entry but not the message text derived from it; the store is a chain of version heads each owning a chain of messages, where an update or delete appends a new head recording its operation and affected ids; reads resolve under the project key, except the fork path which resolves its source by id alone</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a local daemon tails five agents&#39; session files, normalises each line and appends it to a session context, redacting the raw entry but not the message text derived from it; the store is a chain of version heads each owning a chain of messages, where an update or delete appends a new head recording its operation and affected ids; reads resolve under the project key, except the fork path which resolves its source by id alone
+flowchart TB
+    A[&quot;session files: Claude Code · Codex&lt;br/&gt;· Cursor · Gemini · OpenClaw&quot;]
+    D[&quot;sync daemon — per-file offsets,&lt;br/&gt;dedup by event hash with a TTL&quot;]
+    N[&quot;parser → normalized&lt;br/&gt;{sessionId, kind, timestamp,&lt;br/&gt;message, raw}&quot;]
+    R{&quot;redact()&quot;}
+    P[&quot;payload content:&lt;br/&gt;raw = redacted&lt;br/&gt;message = NOT redacted&quot;]
+    API[&quot;API — bearer key hashes to&lt;br/&gt;{apiKeyId, projectId}&quot;]
+    ROOT[(&quot;root node — project_id,&lt;br/&gt;parent_id = forked-from&quot;)]
+    H[(&quot;version heads, linked by prev_id&lt;br/&gt;metadata: operation · affected&quot;)]
+    M[(&quot;message nodes, linked by prev_id&quot;)]
+    GET[&quot;get / list / append / update /&lt;br/&gt;delete-messages&quot;]
+    SC[&quot;findRootContext(projectId, id)&lt;br/&gt;— scoped&quot;]
+    FORK[&quot;create with from:&quot;]
+    UNSC[&quot;findRootContextByPublicId(id)&lt;br/&gt;— no project key&quot;]
+    OUT[&quot;whole context returned&lt;br/&gt;at a version, timestamp or index&quot;]
+    SW[&quot;switch — writers for&lt;br/&gt;claude and codex&quot;]
+    COMPAT[&quot;AGENT_COMPAT / isResumePairTested&lt;br/&gt;— exported, called only by tests&quot;]
+
+    A --&gt; D --&gt; N --&gt; R --&gt; P --&gt; API
+    API --&gt; ROOT --&gt; H --&gt; M
+    GET --&gt; SC --&gt; OUT
+    FORK --&gt; UNSC --&gt; OUT
+    H --&gt; OUT
+    OUT --&gt; SW
+    COMPAT -.-&gt;|&quot;never consulted&quot;| SW</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A pnpm workspace of three packages and seven apps.
+<code>packages/core</code> is the domain: the storage interface, the
+context-chain algebra, the five operations and their tests, api-key
+hashing, and a <code>Result</code> type the routes map to HTTP codes.
+<code>packages/storage</code> implements that interface three times —
+Drizzle over Postgres, Supabase, and SQLite — and
+<code>packages/parsers</code> holds the per-agent parsers, the two
+writers, the compatibility matrix and the switch path.</p>
+<p><code>apps/api</code> is the server, built to run either on
+Cloudflare Workers through <code>wrangler.jsonc</code> or as a Node
+process, with a KV-backed API-key cache in front of the storage lookup.
+<code>apps/postgres</code> ships an <code>init.sql</code> and a compose
+file, so self-hosting is a real path and not an afterthought.
+<code>apps/sync</code> is the daemon and its terminal dashboard;
+<code>apps/mcp-server</code> exposes the store over stdio or HTTP;
+<code>apps/js-sdk</code> and <code>apps/python-sdk</code> are the client
+libraries.</p>
+<p>The layering is disciplined for a project this young: the core has no
+knowledge of HTTP, the routes contain no SQL, and
+<code>packages/core/src/testing/memory-adapter.ts</code> is an in-memory
+implementation of the same interface, which is why every operation has a
+fast unit test. <code>context-chain.ts</code> is explicit about which of
+its functions are pure and which touch storage, with a comment
+separating the two halves.</p>
+<p>The default deployment, though, is the hosted one. The README's SDK
+examples open with
+<code>new UltraContext({ apiKey: 'uc_live_...' })</code>, and the CLI's
+onboarding wizard is written around that. Self-hosting is supported; it
+is not the path of least resistance.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>apps/sync/src/daemon.mjs</code>
+watches a session directory → a per-agent parser normalises the line
+into <code>{sessionId, eventType, kind, timestamp, message, raw}</code>
+→ the event hash is checked against a local <code>seen_events</code>
+table with an expiry → <code>safeRaw = redact(normalized.raw)</code> →
+<code>uc.append(sessionContextId, { role, content: { message, event_type, timestamp, raw: safeRaw }, metadata })</code>.</li>
+<li><strong>Authenticate.</strong>
+<code>apps/api/src/middleware/auth.ts:46</code> hashes the bearer token
+once into <code>{prefix, hash}</code>, checks a KV cache, falls back to
+<code>verifyKeyHash(storage, prefix, hash)</code>, sets
+<code>{apiKeyId, projectId}</code> on the request, and records
+<code>last_used_at</code> in a try/catch that logs rather than failing
+the request.</li>
+<li><strong>Read.</strong>
+<code>getContext(storage, projectId, contextId, opts)</code> →
+<code>storage.findRootContext(projectId, contextId)</code> →
+<code>findHead</code> walks the head chain →
+<code>getOrderedNodes</code> walks the message chain →
+<code>orderNodes</code> reconstructs order from <code>prev_id</code>,
+and on a broken chain logs an error and falls back to
+<code>created_at</code> order.</li>
+<li><strong>Fork.</strong>
+<code>createContext(storage, projectId, input)</code> →
+<code>storage.findRootContextByPublicId(from)</code> — <strong>no
+project key</strong> → <code>getVersions(storage, from)</code> → a head
+chosen by <code>version</code> index, by <code>before</code> timestamp,
+or the latest → <code>getOrderedNodes</code> → optionally sliced at
+<code>at</code> → the copied nodes inserted under <code>projectId</code>
+with <code>parent_id = from</code>.</li>
+<li><strong>Version.</strong> any update or message delete inserts a new
+head whose metadata carries <code>operation</code> and
+<code>affected</code>; <code>getVersions</code> reads the chain back,
+indexing by position and splitting the user's own metadata out from the
+two reserved keys.</li>
+<li><strong>Switch.</strong>
+<code>switchSession({source, target, sessionPath, …})</code> reads the
+local session, then
+<code>const writer = target === "codex" ? writeCodexSession : writeClaudeSession</code>
+and writes the file into the target agent's session directory.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table, and the discipline is in the link columns.</p>
+<p><code>nodes</code> carries <code>public_id</code> (unique,
+<code>ctx_</code> or <code>msg_</code> plus twelve random bytes in hex),
+<code>project_id</code>, <code>type</code>, JSONB <code>content</code>
+and <code>metadata</code>, <code>created_at</code>, and
+<code>parent_id</code>, <code>prev_id</code>, <code>context_id</code>. A
+root context has <code>context_id = NULL</code> and
+<code>parent_id</code> set when it was forked. A head has
+<code>context_id</code> pointing at its root. A message has
+<code>context_id</code> pointing at its head. Order within any chain is
+<code>prev_id</code>, not <code>created_at</code> — which matters,
+because two messages appended in the same millisecond still have an
+unambiguous order.</p>
+<p>The index set matches the queries rather than the columns:
+<code>(project_id, type, context_id)</code> composite for the scoped
+list, <code>context_id</code> for the chain walk, <code>prev_id</code>
+for the ordering, <code>created_at</code> for recency, and a GIN index
+on <code>metadata</code> for the filters the list endpoint exposes.</p>
+<p><code>api_keys</code> stores a <code>key_prefix</code> (unique) and a
+<code>key_hash</code> per project, with <code>last_used_at</code>. Two
+reporting views aggregate node counts per project per day and per week,
+split by the <code>metadata-&gt;&gt;'source'</code> that recorded them,
+both declared <code>security_invoker = on</code>.</p>
+<p><strong>There is no epistemic column anywhere.</strong> No status, no
+confidence, no validity interval, no supersession pointer beyond
+<code>parent_id</code>'s fork lineage. The metadata a captured event
+carries — source, host, user id, session id, file path and offset — is
+provenance for reconstruction, not for belief.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranking to describe, and that is the honest summary. A
+caller either names a context and gets it whole, or lists a project's
+contexts with metadata filters and a limit. There is no embedding
+column, no FTS table, and no scoring function in the tree.</p>
+<p>What the read path does have is precision about <em>which</em> whole.
+<code>get</code> accepts a version index, a <code>before</code>
+timestamp, or an <code>at</code> message index, and each resolves
+through the same chain walk — so "the context as it stood at version 3"
+and "the first six messages of the state it was in on Tuesday" are the
+same query with different arguments.</p>
+<p><code>orderNodes</code> is worth reading. It builds a map from
+<code>prev_id</code> to node, walks from the node whose
+<code>prev_id</code> is null, and — if the walk does not consume every
+node — logs <em>"Broken linked list in context"</em> and falls back to
+sorting by <code>created_at</code>. That is a reasonable degradation and
+it is silent to the caller: a context with a severed chain returns
+successfully, in a plausible order, with the problem visible only in the
+server's stderr.</p>
+<p><strong>The scope predicate reaches five of six resolvers.</strong>
+<code>findRootContext</code>, <code>listRootContexts</code>,
+<code>deleteNodesByContextId</code>, <code>deleteNodeByPublicId</code>
+and <code>clearParentReferences</code> all take <code>projectId</code>.
+<code>findRootContextByPublicId</code>,
+<code>findNodesByContextId</code>, <code>findContextBranches</code>,
+<code>findVersions</code> and <code>findNonContextNodes</code> do not —
+which is defensible for the four chain walkers, because they are only
+reached after a scoped resolve, and is the bug for the fifth, because
+the fork path reaches it directly with a caller-supplied id.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Appending is the common case and it is cheap: find the tail of the
+current head's chain, build the insert records with <code>prev_id</code>
+threaded through them, insert. Bulk ingest batches those and runs
+sessions in parallel with a concurrency cap.</p>
+<p>Mutation is where the design pays off. <code>update</code> and
+message-<code>delete</code> do not touch existing rows; they create a
+head, copy forward what survives, and record
+<code>{operation, affected}</code> in the head's metadata. The previous
+version is still there and still readable, which is what makes
+<code>create</code> with <code>from</code> and <code>version</code>
+meaningful.</p>
+<p><strong>Permanent delete is the exception and it is handled carefully
+at the edge and carelessly in the record.</strong> The route
+disambiguates by body shape and refuses to guess: an empty body or
+<code>{permanent: true}</code> wipes the context; a body containing
+<code>ids</code> deletes those messages; a body containing both is a 400
+with the reason; and the comment states the case it is defending against
+— a typo like <code>{IDs:[...]}</code> must not <em>"silently wipe the
+context."</em> Requiring the destructive reading to be the explicit one,
+rather than the fallback, is the right way round. What follows is
+thinner: the wipe removes the rows, and the only trace is a
+<code>console.info</code> JSON line emitted <strong>only if</strong> the
+caller passed optional metadata. The one operation that destroys history
+is the one the store keeps no record of.</p>
+<p><strong>Capture-side redaction is applied to the wrong half.</strong>
+<code>redact()</code> masks four secret shapes — the project's own
+<code>uc_live_</code>/<code>uc_test_</code> keys, <code>sk-</code> keys,
+bearer tokens, Google <code>AIza</code> keys — and replaces any value
+under a key matching
+<code>token|secret|password|api_key|authorization|cookie|session_key</code>.
+It is applied to <code>normalized.raw</code>. The sibling field
+<code>normalized.message</code> is produced by the same parser from the
+same content — <code>extractClaudeTextContent</code> walking the text
+and thinking blocks — and goes into the payload untouched. Both fields
+land in the same <code>content</code> object on the same node.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, stdio or HTTP, so any agent can read any other agent's
+contexts; SDKs on npm and PyPI with five methods each; and a CLI whose
+default invocation starts the daemon and a terminal dashboard.</p>
+<p>The distinctive surface is <code>switch</code>. Because the package
+has writers as well as parsers, a session can be materialised as a file
+in the target agent's own session directory and resumed there natively —
+which is a stronger claim than the search-and-paste continuity the rest
+of this family offers, and it is tested by fixtures in both directions
+for the <code>codex ↔︎ claude</code> pair.</p>
+<p>It is also where the compatibility matrix should have been consulted
+and is not. <code>AGENT_COMPAT</code> names the CLI versions each parser
+was verified against and the resume pairs with fixture coverage;
+<code>isResumePairTested</code> is exported from the package index;
+nothing in <code>switch.mjs</code> calls it, and the writer is selected
+by a ternary whose false branch is the Claude writer. The tests know the
+gap exists — one asserts
+<code>isResumePairTested("openclaw", "codex")</code> is
+<code>false</code> — and the runtime does not ask.</p>
+<p>The JS SDK's <code>postinstall</code> registers skills into the
+user's environment, which is worth knowing before a global install.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded, with the gap named.</strong> The
+key reaches the query on every ordinary read, the composite index is
+built for it, and a committed test pins it. The fork path is the
+exception and the report is required to say so: the mark certifies that
+the key reaches the query, not that no path bypasses it, and here one
+does.</p>
+<p>The shape of the exposure is worth stating exactly, because it is
+neither nothing nor a trivially exploitable hole. Ids are twelve
+<code>crypto.getRandomValues</code> bytes, so nobody enumerates them.
+But an id is not a credential: it appears in API responses, in the
+dashboard, in <code>parent_id</code> on any fork, in log lines, and — by
+design — in messages between the teammates this product exists to
+connect. The system's own pitch is <em>"what is Alex working on in Codex
+right now?"</em> Once an id circulates, the fork path turns it into a
+read grant that the project key does not gate. One line — passing
+<code>projectId</code> and calling the resolver that takes it — closes
+it.</p>
+<p><strong>Audit log — awarded, with two limits.</strong> The version
+chain is a genuine append-only record of what changed and which nodes it
+touched, and it is the data model rather than a bolt-on. It covers
+context mutations only, and the permanent delete escapes it
+entirely.</p>
+<p><strong>Negative evaluation — awarded.</strong> The cross-project
+read case cannot pass on a leak. Its absence for the fork path is the
+reason that path is broken, and the pairing is the lesson: the project
+wrote the right test for one resolver and not for the other, and the
+untested one is the one that is wrong.</p>
+<p><strong>Tombstone, trust state, bitemporal, human review — all absent
+rather than withheld.</strong> There is no rejected-value record, no
+epistemic status, no validity interval, and no approval surface, and the
+design does not ask for any of them. A search of the core, storage and
+API sources for a status, confidence, verified or stale vocabulary
+returns HTTP status codes and key verification.</p>
+<p><strong>Two smaller notes.</strong> The admin key is compared with
+<code>token === expected</code>, a non-constant-time comparison on a
+static secret; over HTTP the timing signal is poor, but the fix is a
+constant-time compare. And <code>recordApiKeyUse</code> swallows its
+error to a <code>console.error</code>, which is correct — a failed
+<code>last_used_at</code> write should not fail the request — and means
+the key-usage view can under-report.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>383 cases across 34 files on <code>node:test</code> with
+<code>node:assert/strict</code>, and the distribution is sensible: every
+core operation has a unit test against an in-memory storage adapter,
+every parser has a fixture test, the writers have round-trip tests, and
+the API has a test for the delete-route disambiguation.</p>
+<p>The round-trip suite is the good one. It parses committed fixtures
+for each agent, asserts every event carries a session id, event type,
+kind, timestamp and message, checks the role distribution includes user,
+assistant and system, and then validates the compatibility matrix itself
+— that each agent declares a format version and a tested-against list,
+and that each declared resume pair has at least one tested combination.
+A system that reads five other tools' private formats needs exactly
+this, and having it is a better signal than the count.</p>
+<p><strong>Two absences matter more than the total.</strong> No test
+mentions <code>redact</code> — the module has no coverage at all, which
+is consistent with a defect that lives in which of two fields it was
+applied to. And there is no cross-project case for <code>create</code>
+with <code>from</code>, while there is one for <code>get</code>; the
+tested resolver is correct and the untested one is not.</p>
+<p>No benchmark, and none claimed — reasonable, since there is no
+retrieval quality to measure. No paper: a search of the README for
+<code>arxiv</code>, <code>bibtex</code> and <code>CITATION</code>
+returns nothing.</p>
+<p>Maturity signals: Apache-2.0, five months, 148 commits, 144 from one
+author, three long-lived side branches (<code>feat/v2</code>,
+<code>feat/uc-cli</code>, <code>rust-sync</code>) suggesting a rewrite
+in progress, eight unpinned dependency surfaces across seven manifests,
+and a lockfile that covers the root workspace only.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make versioning the data model, not a side table.</strong> A
+chain of heads, each carrying the operation that created it and the ids
+it affected, gives you history, time-travel, fork-at-version and an
+audit record from one structure with no revision counter to keep in
+sync.</li>
+<li><strong>Order a chain by pointer, not by timestamp.</strong>
+<code>prev_id</code> survives two writes in the same millisecond, and a
+clock that moves backwards.</li>
+<li><strong>Make the destructive reading the explicit one.</strong> A
+delete route where an ambiguous body is a 400 and a wipe requires
+<code>{permanent: true}</code> cannot be triggered by a typo in a field
+name — the inverse of the usual default.</li>
+<li><strong>Ship writers, not just parsers.</strong> Continuity that
+hands the next tool a file it opens natively is a different product from
+continuity that hands a model a summary.</li>
+<li><strong>Declare which versions you were tested against, in
+code.</strong> <code>AGENT_COMPAT</code> is the right artifact for
+anything that reads another tool's private format — then actually call
+it, which is the half this one is missing.</li>
+<li><strong>Give the core an in-memory adapter.</strong> Every operation
+here has a fast unit test because the storage interface has a third
+implementation that exists only for tests.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two resolvers for the same object, one scoped and one
+not.</strong> They sit one line apart in the interface, they read
+identically at the call site, and the compiler cannot tell you which one
+the fork path should have used. Delete the unscoped one, or make the
+project key a non-optional parameter of every resolver.</li>
+<li><strong>Redacting one copy of the same text.</strong>
+<code>raw</code> and <code>message</code> are derived from the same
+bytes; masking the archival one and shipping the readable one is worse
+than not redacting at all, because it reads as protection. Redact at the
+boundary the payload crosses, not per field.</li>
+<li><strong>A gate nothing calls.</strong>
+<code>isResumePairTested</code> is exported, tested, and never consulted
+by the path it describes; the writer selection is a ternary with no
+default, so an unsupported target silently gets the wrong format.</li>
+<li><strong>Destroying history with no record of the
+destruction.</strong> A <code>console.info</code> emitted only when the
+caller opted into metadata is not an audit of a permanent delete.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>UltraContext suits somebody who switches between coding agents often
+and wants the previous session available in the next one as a file
+rather than a summary — that is the part of this that nothing else in
+the corpus does. Read the context-chain algebra and the compat matrix
+whatever you build. Before adopting: the fork path crosses the project
+boundary, the capture path ships unredacted message text to whatever
+backend you point it at, self-hosting is supported but the default is
+the hosted service, and three side branches suggest the shape may still
+move. It is a context store, not a memory system — nothing here ranks,
+forgets, or knows that something it holds is no longer true.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was the unscoped resolver deliberate — a fork-from-anywhere feature
+— or a slip? Nothing in the tree documents it either way, and the test
+suite implies the scoped behaviour was the intent.</li>
+<li>Should <code>redact</code> move to the SDK's append boundary rather
+than the daemon's field assembly? That would cover both copies and every
+future field.</li>
+<li>Will <code>switch</code> consult <code>isResumePairTested</code>
+before writing, or warn? The matrix already knows the answer.</li>
+<li>What happens to a fork whose source is later permanently deleted?
+<code>parent_id</code> becomes a dangling reference, and
+<code>clearParentReferences</code> exists — but only on the
+project-scoped path.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/context-chain.ts</code></td>
+<td>110</td>
+<td><code>orderNodes</code> and its broken-chain fallback,
+<code>buildNodeInsertRecords</code>, <code>findTail</code>,
+<code>findHead</code>, <code>getOrderedNodes</code>,
+<code>getVersions</code> with the <code>{operation, affected}</code>
+split</td>
+</tr>
+<tr>
+<td><code>packages/core/src/storage.ts</code></td>
+<td>90</td>
+<td>The adapter interface — the scoped resolvers at 61 and 63, the
+unscoped one at 62</td>
+</tr>
+<tr>
+<td><code>packages/core/src/ops/create-context.ts</code></td>
+<td>181</td>
+<td>The fork path: the unscoped source resolve (82),
+version/timestamp/index selection, the insert under
+<code>projectId</code></td>
+</tr>
+<tr>
+<td><code>packages/core/src/ops/get-context.ts</code></td>
+<td>—</td>
+<td>The scoped resolve (51)</td>
+</tr>
+<tr>
+<td><code>apps/api/src/routes/contexts.ts</code></td>
+<td>196</td>
+<td>The five routes; the delete disambiguation and its ambiguous-body
+refusal (156-176)</td>
+</tr>
+<tr>
+<td><code>apps/api/src/middleware/auth.ts</code></td>
+<td>100</td>
+<td>Bearer parsing, one-shot token hashing, the KV key cache,
+<code>last_used_at</code> recording, the admin-key comparison
+(79-83)</td>
+</tr>
+<tr>
+<td><code>apps/sync/src/daemon.mjs</code></td>
+<td>—</td>
+<td>Session watching, dedup, the payload assembly where <code>raw</code>
+is redacted and <code>message</code> is not (810, 902)</td>
+</tr>
+<tr>
+<td><code>apps/sync/src/redact.mjs</code></td>
+<td>49</td>
+<td>Four secret patterns and the sensitive-key-name test</td>
+</tr>
+<tr>
+<td><code>packages/parsers/src/agents/</code></td>
+<td>—</td>
+<td>Parsers for claude, codex, cursor, gemini, openclaw; the
+user/assistant branch at <code>claude.mjs:427-453</code></td>
+</tr>
+<tr>
+<td><code>packages/parsers/src/writers/</code></td>
+<td>325</td>
+<td>The claude and codex session writers</td>
+</tr>
+<tr>
+<td><code>packages/parsers/src/compat.mjs</code></td>
+<td>68</td>
+<td><code>AGENT_COMPAT</code>, <code>isResumePairTested</code>,
+<code>getTestedVersions</code></td>
+</tr>
+<tr>
+<td><code>packages/parsers/src/switch.mjs</code></td>
+<td>177</td>
+<td><code>readLocalSession</code> and <code>switchSession</code>, with
+the writer ternary at 147</td>
+</tr>
+<tr>
+<td><code>apps/postgres/init.sql</code></td>
+<td>119</td>
+<td>The four tables, six indexes, and two activity views</td>
+</tr>
+<tr>
+<td><code>packages/core/src/ops/get-context.test.ts</code></td>
+<td>—</td>
+<td>The cross-project refusal case (76-87)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;findRootContextByPublicId&#39; --include=&#39;*.ts&#39; . | grep -v node_modules   # one caller: the fork source resolve in create-context.ts
+grep -rn &#39;redact&#39; --include=&#39;*.mjs&#39; --include=&#39;*.ts&#39; . | grep -v node_modules    # defined once, called twice, both on normalized.raw
+grep -rln &#39;redact&#39; --include=&#39;*.test.*&#39; . | grep -v node_modules                 # nothing: the redactor has no test
+grep -rn &#39;isResumePairTested&#39; --include=&#39;*.mjs&#39; . | grep -v node_modules         # exported and asserted in tests; no runtime caller
+grep -rn -i &#39;status|confidence|verified|superseded|stale&#39; packages/core/src packages/storage/src apps/api/src  # HTTP status codes and key verification only
+grep -rn -i &#39;arxiv|bibtex|CITATION&#39; README.md                                    # nothing: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/ultracontext/ultracontext/commit/736b471125b727a9b6473688b18ef5a22727d48c"><code class="commit-id" title="736b471125b727a9b6473688b18ef5a22727d48c">736b4711…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 1
+June 2026; three side branches (<code>feat/v2</code>,
+<code>feat/uc-cli</code>, <code>rust-sync</code>) were left unread.
+Screened before reading: no auto-run surface, no manifest inside the
+seven-day cooldown, one build-time execution path in the JS SDK's
+<code>postinstall</code>, eight unpinned dependency surfaces across
+seven manifests, a root lockfile 100 days old, and two agent instruction
+files treated as data; nothing was installed, built or run, and the read
+was made from a full clone. Three marks. The reading covered the storage
+interface and its three implementations, the context-chain algebra, the
+five operations and their tests, the API routes and auth middleware, the
+sync daemon's capture and redaction path, the per-agent parsers and the
+two writers, and the compatibility matrix; the terminal dashboard, the
+onboarding wizard, the Python SDK and the docs app were read as context
+rather than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
