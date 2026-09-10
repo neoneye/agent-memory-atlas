@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "infiniflow/ragflow"
 source_url: https://github.com/infiniflow/ragflow
+archive_name: "infiniflow--ragflow"
 revision: 880876f60ff8c30e023e42360d13688a0a021fdf
 revision_url: https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf
 analyzed_at: 2026-09-01

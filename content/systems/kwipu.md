@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "benmaster82/Kwipu"
 source_url: https://github.com/benmaster82/Kwipu
+archive_name: "benmaster82--Kwipu"
 revision: 908f0e4e300578a22c5fadd4538f75ff7ccfc0b6
 revision_url: https://github.com/benmaster82/Kwipu/commit/908f0e4e300578a22c5fadd4538f75ff7ccfc0b6
 analyzed_at: 2026-09-07

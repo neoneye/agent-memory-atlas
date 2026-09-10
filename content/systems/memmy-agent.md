@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MemTensor/memmy-agent"
 source_url: https://github.com/MemTensor/memmy-agent
+archive_name: "MemTensor--memmy-agent"
 revision: c6cdbf9a126cc297253783c5594ac5ee8acb7c1a
 revision_url: https://github.com/MemTensor/memmy-agent/commit/c6cdbf9a126cc297253783c5594ac5ee8acb7c1a
 analyzed_at: 2026-08-15

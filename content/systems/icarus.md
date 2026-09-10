@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "esaradev/icarus-memory-infra"
 source_url: https://github.com/esaradev/icarus-memory-infra
+archive_name: "esaradev--icarus-memory-infra"
 revision: 6e348708dcddb7cf1ad47726cb287cd4c9183c40
 revision_url: https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40
 analyzed_at: 2026-08-09

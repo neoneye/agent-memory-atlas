@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Alby2007/PLTM-Claude"
 source_url: https://github.com/Alby2007/PLTM-Claude
+archive_name: "Alby2007--PLTM-Claude"
 revision: 5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 revision_url: https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 analyzed_at: 2026-08-09

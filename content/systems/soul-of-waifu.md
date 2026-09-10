@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jofizcd/Soul-of-Waifu"
 source_url: https://github.com/jofizcd/Soul-of-Waifu
+archive_name: "jofizcd--Soul-of-Waifu"
 revision: 3d032badc07335012ae6917e29ea16b8203252f5
 revision_url: https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5
 analyzed_at: 2026-07-29

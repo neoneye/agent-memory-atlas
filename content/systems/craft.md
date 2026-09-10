@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "drobins25/craft"
 source_url: https://github.com/drobins25/craft
+archive_name: "drobins25--craft"
 revision: 7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0
 revision_url: https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0
 analyzed_at: 2026-09-07

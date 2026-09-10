@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Open-Finance-Lab/AgenticTrading"
 source_url: https://github.com/Open-Finance-Lab/AgenticTrading
+archive_name: "Open-Finance-Lab--AgenticTrading"
 revision: 9966c3dfc0f4fd41978f63a36caeb111ac807601
 revision_url: https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601
 analyzed_at: 2026-08-25

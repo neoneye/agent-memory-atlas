@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RyjoxTechnologies/Octopoda-OS"
 source_url: https://github.com/RyjoxTechnologies/Octopoda-OS
+archive_name: "RyjoxTechnologies--Octopoda-OS"
 revision: 583ddf190df809d7380afd6d07ee4095086773c2
 revision_url: https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2
 analyzed_at: 2026-08-09

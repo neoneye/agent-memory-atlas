@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "scottrbk/forgetful"
 source_url: https://github.com/scottrbk/forgetful
+archive_name: "scottrbk--forgetful"
 revision: 35764a88514f2c70b53d91a85d1cd5760e001d0f
 revision_url: https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f
 analyzed_at: 2026-09-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "camel-ai/camel"
 source_url: https://github.com/camel-ai/camel
+archive_name: "camel-ai--camel"
 revision: ec48f997f3c2a700ae5a4cf0280792838fea81f8
 revision_url: https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8
 analyzed_at: 2026-07-30

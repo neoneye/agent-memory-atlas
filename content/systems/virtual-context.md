@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "virtual-context/virtual-context"
 source_url: https://github.com/virtual-context/virtual-context
+archive_name: "virtual-context--virtual-context"
 revision: 6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d
 revision_url: https://github.com/virtual-context/virtual-context/commit/6566ec7d6c43d95688b5bc870eb2ba78fbb6fb1d
 analyzed_at: 2026-08-09

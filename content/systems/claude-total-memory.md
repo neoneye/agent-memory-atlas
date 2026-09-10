@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vbcherepanov/claude-total-memory"
 source_url: https://github.com/vbcherepanov/claude-total-memory
+archive_name: "vbcherepanov--claude-total-memory"
 revision: 616d9a6f8b507c16b4cdfef4e823af59d949cc09
 revision_url: https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09
 analyzed_at: 2026-08-09

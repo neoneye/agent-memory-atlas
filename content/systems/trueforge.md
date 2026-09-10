@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "truefoundry/trueforge"
 source_url: https://github.com/truefoundry/trueforge
+archive_name: "truefoundry--trueforge"
 revision: bd156190ac0c6ab865a5cc549535a14a805f06e8
 revision_url: https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8
 analyzed_at: 2026-08-19

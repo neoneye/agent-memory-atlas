@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/Helix-AGI"
 source_url: https://github.com/munch2u-a11y/Helix-AGI
+archive_name: "munch2u-a11y--Helix-AGI"
 revision: 280bb0447a48cdcef8a557fc08f70551e47d1891
 revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891
 analyzed_at: 2026-08-20

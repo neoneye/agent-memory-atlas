@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "memorax-ai/memorax-code"
 source_url: https://github.com/memorax-ai/memorax-code
+archive_name: "memorax-ai--memorax-code"
 revision: b98cb8c78956a1cd5b6b364549217fb2b6db601b
 revision_url: https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b
 analyzed_at: 2026-08-20

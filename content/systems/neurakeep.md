@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "dominiclachance/neurakeep"
 source_url: https://github.com/dominiclachance/neurakeep
+archive_name: "dominiclachance--neurakeep"
 revision: 1ed0d84c83cede37e81593cb6529d3ce68069c78
 revision_url: https://github.com/dominiclachance/neurakeep/commit/1ed0d84c83cede37e81593cb6529d3ce68069c78
 analyzed_at: 2026-08-12

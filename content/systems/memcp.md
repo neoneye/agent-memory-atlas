@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "maydali28/memcp"
 source_url: https://github.com/maydali28/memcp
+archive_name: "maydali28--memcp"
 revision: 81c7177d4374cd7aecca8f6a8da43e229cadefee
 revision_url: https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "oceanbase/powermem"
 source_url: https://github.com/oceanbase/powermem
+archive_name: "oceanbase--powermem"
 revision: 9d1b48449345b1ec7af1144aa1b81bb776478851
 revision_url: https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851
 analyzed_at: 2026-07-29

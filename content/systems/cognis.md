@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fpytloun/cognis"
 source_url: https://github.com/fpytloun/cognis
+archive_name: "fpytloun--cognis"
 revision: b918c94563608e379e4fd2fd28e863371fc86d37
 revision_url: https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37
 analyzed_at: 2026-08-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "GoogleCloudPlatform/open-knowledge-format"
 source_url: https://github.com/GoogleCloudPlatform/open-knowledge-format
+archive_name: "GoogleCloudPlatform--open-knowledge-format"
 revision: ad30107c31c06aec8a7d5636e0d1058118604e6f
 revision_url: https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f
 analyzed_at: 2026-09-05

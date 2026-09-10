@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Project-N-E-K-O/N.E.K.O"
 source_url: https://github.com/Project-N-E-K-O/N.E.K.O
+archive_name: "Project-N-E-K-O--N.E.K.O"
 revision: 6a3d4beb7425261d01eb08034139d87bec03b8b5
 revision_url: https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb08034139d87bec03b8b5
 analyzed_at: 2026-07-29

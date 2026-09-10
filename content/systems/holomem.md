@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "polmanas1998-star/holomem"
 source_url: https://github.com/polmanas1998-star/holomem
+archive_name: "polmanas1998-star--holomem"
 revision: 4a96a08e35541da558a2f19a2dd27f09f5b74efd
 revision_url: https://github.com/polmanas1998-star/holomem/commit/4a96a08e35541da558a2f19a2dd27f09f5b74efd
 analyzed_at: 2026-09-07

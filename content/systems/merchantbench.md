@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "KhanCold/merchantbench"
 source_url: https://github.com/KhanCold/merchantbench
+archive_name: "KhanCold--merchantbench"
 revision: f44ce969aeccfd65d1eef6afe50f69868e510946
 revision_url: https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946
 analyzed_at: 2026-08-30

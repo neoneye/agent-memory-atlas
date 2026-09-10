@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "crlome/runar-forge"
 source_url: https://github.com/crlome/runar-forge
+archive_name: "crlome--runar-forge"
 revision: 682248790ee1a6d916bd70a910d765be975270aa
 revision_url: https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa
 analyzed_at: 2026-08-14

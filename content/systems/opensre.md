@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Tracer-Cloud/opensre"
 source_url: https://github.com/Tracer-Cloud/opensre
+archive_name: "Tracer-Cloud--opensre"
 revision: c81d6c36d69bd6b39c1e18b0205f28422c3d2544
 revision_url: https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jerber/arc-code"
 source_url: https://github.com/jerber/arc-code
+archive_name: "jerber--arc-code"
 revision: 6b33c1f7c2ad45997663c69157f5559d1be61bd9
 revision_url: https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9
 analyzed_at: 2026-08-12

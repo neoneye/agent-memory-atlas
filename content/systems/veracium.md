@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "veracium-ai/Veracium"
 source_url: https://github.com/veracium-ai/Veracium
+archive_name: "veracium-ai--Veracium"
 revision: b4da91e3fca1b4507926bb83c592ee3b2989ce8f
 revision_url: https://github.com/veracium-ai/Veracium/commit/b4da91e3fca1b4507926bb83c592ee3b2989ce8f
 analyzed_at: 2026-08-30

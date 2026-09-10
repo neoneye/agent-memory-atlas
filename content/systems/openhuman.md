@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "tinyhumansai/openhuman"
 source_url: https://github.com/tinyhumansai/openhuman
+archive_name: "tinyhumansai--openhuman"
 revision: e213bc5fc4000e9ad599c977a560113cc018c554
 revision_url: https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554
 analyzed_at: 2026-07-29

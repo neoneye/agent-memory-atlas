@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "l33tdawg/sage"
 source_url: https://github.com/l33tdawg/sage
+archive_name: "l33tdawg--sage"
 revision: 5c6b32e51586a9e8b9153e827dffa4491916e8c1
 revision_url: https://github.com/l33tdawg/sage/commit/5c6b32e51586a9e8b9153e827dffa4491916e8c1
 analyzed_at: 2026-09-08

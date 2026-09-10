@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "cognicore-dev/cognicore-my-openenv"
 source_url: https://github.com/cognicore-dev/cognicore-my-openenv
+archive_name: "cognicore-dev--cognicore-my-openenv"
 revision: 4f6bd9d0c8e4c6050504a47eb027791875043d46
 revision_url: https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46
 analyzed_at: 2026-08-21

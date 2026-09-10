@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "gitmem-dev/gitmem"
 source_url: https://github.com/gitmem-dev/gitmem
+archive_name: "gitmem-dev--gitmem"
 revision: c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5
 revision_url: https://github.com/gitmem-dev/gitmem/commit/c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "memodb-io/memobase"
 source_url: https://github.com/memodb-io/memobase
+archive_name: "memodb-io--memobase"
 revision: 358c16bbc6d687937d79bc2f984a11c3be8da901
 revision_url: https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901
 analyzed_at: 2026-07-29

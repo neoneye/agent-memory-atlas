@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: neoneye/RainBox
 source_url: https://github.com/neoneye/RainBox
+archive_name: "neoneye--RainBox"
 revision: 2e22c8e59937c4f1765354343c297c42f1ec5b9c
 revision_url: https://github.com/neoneye/RainBox/commit/2e22c8e59937c4f1765354343c297c42f1ec5b9c
 analyzed_at: 2026-09-09

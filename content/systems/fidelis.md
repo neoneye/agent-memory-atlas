@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "hermes-labs-ai/fidelis"
 source_url: https://github.com/hermes-labs-ai/fidelis
+archive_name: "hermes-labs-ai--fidelis"
 revision: 804e521f86e3c0056d3c89b4c7babd1eb086a6a7
 revision_url: https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7
 analyzed_at: 2026-08-09

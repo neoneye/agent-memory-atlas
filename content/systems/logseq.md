@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "logseq/logseq"
 source_url: https://github.com/logseq/logseq
+archive_name: "logseq--logseq"
 revision: d2ab7726ab74402c14fdbc33041a89ac55c899ae
 revision_url: https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae
 analyzed_at: 2026-09-07

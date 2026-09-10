@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "alibaizhanov/mengram"
 source_url: https://github.com/alibaizhanov/mengram
+archive_name: "alibaizhanov--mengram"
 revision: 99bfd824c374d85f021290f6f78de357243ebf9a
 revision_url: https://github.com/alibaizhanov/mengram/commit/99bfd824c374d85f021290f6f78de357243ebf9a
 analyzed_at: 2026-08-09

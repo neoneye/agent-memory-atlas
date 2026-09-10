@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kovartravis/neuron"
 source_url: https://github.com/kovartravis/neuron
+archive_name: "kovartravis--neuron"
 revision: 79ab049d019994cea114f533fcd0f5c3700e4abf
 revision_url: https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf
 analyzed_at: 2026-09-07

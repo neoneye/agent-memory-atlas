@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jordanmccann/agentmemory"
 source_url: https://github.com/jordanmccann/agentmemory
+archive_name: "jordanmccann--agentmemory"
 revision: 3aa3b8389896f81dd813fdf9176ef3ca122d809e
 revision_url: https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf9176ef3ca122d809e
 analyzed_at: 2026-08-09

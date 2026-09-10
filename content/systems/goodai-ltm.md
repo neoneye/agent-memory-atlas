@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "GoodAI/goodai-ltm"
 source_url: https://github.com/GoodAI/goodai-ltm
+archive_name: "GoodAI--goodai-ltm"
 revision: 22ca10c21771d0192d550517cb06c3aab6e602aa
 revision_url: https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa
 analyzed_at: 2026-07-29

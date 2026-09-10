@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: zhayujie/CowAgent
 source_url: https://github.com/zhayujie/CowAgent
+archive_name: "zhayujie--CowAgent"
 revision: fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 revision_url: https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761
 analyzed_at: 2026-07-27

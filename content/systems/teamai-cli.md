@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Tencent/teamai-cli"
 source_url: https://github.com/Tencent/teamai-cli
+archive_name: "Tencent--teamai-cli"
 revision: 24260bd5f7039a0dbd8b82577667b78b744a5529
 revision_url: https://github.com/Tencent/teamai-cli/commit/24260bd5f7039a0dbd8b82577667b78b744a5529
 analyzed_at: 2026-09-08

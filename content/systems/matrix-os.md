@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "HamedMP/matrix-os"
 source_url: https://github.com/HamedMP/matrix-os
+archive_name: "HamedMP--matrix-os"
 revision: 44fc2c688be8c640d6e20f0cc54cb45151c472fa
 revision_url: https://github.com/HamedMP/matrix-os/commit/44fc2c688be8c640d6e20f0cc54cb45151c472fa
 analyzed_at: 2026-09-01

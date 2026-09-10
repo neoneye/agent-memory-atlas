@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kage-core/kage"
 source_url: https://github.com/kage-core/kage
+archive_name: "kage-core--kage"
 revision: e7cc087666fd3d01a5727f8a67e7b9e745fca904
 revision_url: https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904
 analyzed_at: 2026-09-09

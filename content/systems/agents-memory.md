@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Lolaplex/agents-memory"
 source_url: https://github.com/Lolaplex/agents-memory
+archive_name: "Lolaplex--agents-memory"
 revision: a60babbb713f1c3818a3fdc85144a8bd1d5884d3
 revision_url: https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3
 analyzed_at: 2026-09-09

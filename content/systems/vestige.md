@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "samvallad33/vestige"
 source_url: https://github.com/samvallad33/vestige
+archive_name: "samvallad33--vestige"
 revision: a8b0a75661faaa396fa4519c82fcc369f0ddef8e
 revision_url: https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e
 analyzed_at: 2026-08-09

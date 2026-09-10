@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "deeplethe/lethe"
 source_url: https://github.com/deeplethe/lethe
+archive_name: "deeplethe--lethe"
 revision: b6053b7bdacc78a91b9ea4bb25f32edad278c495
 revision_url: https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495
 analyzed_at: 2026-07-30

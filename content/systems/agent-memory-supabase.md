@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "reescalder/agent-memory-supabase"
 source_url: https://github.com/reescalder/agent-memory-supabase
+archive_name: "reescalder--agent-memory-supabase"
 revision: b711e6d76009d0713c5d5c211c2ab5c83d01ca53
 revision_url: https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53
 analyzed_at: 2026-07-30

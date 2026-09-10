@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: Open-Curiosity/gini-agent
 source_url: https://github.com/Open-Curiosity/gini-agent
+archive_name: "Open-Curiosity--gini-agent"
 revision: 6c5d85ed0ecd7fe8567124bd4890b16c329970d8
 revision_url: https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8
 analyzed_at: 2026-07-27

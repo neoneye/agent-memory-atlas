@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kayba-ai/agentic-context-engine"
 source_url: https://github.com/kayba-ai/agentic-context-engine
+archive_name: "kayba-ai--agentic-context-engine"
 revision: 96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
 revision_url: https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
 analyzed_at: 2026-08-02

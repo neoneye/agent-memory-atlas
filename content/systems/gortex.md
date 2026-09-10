@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "zzet/gortex"
 source_url: https://github.com/zzet/gortex
+archive_name: "zzet--gortex"
 revision: 1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36
 revision_url: https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36
 analyzed_at: 2026-08-19

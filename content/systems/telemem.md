@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "TeleAI-UAGI/telemem"
 source_url: https://github.com/TeleAI-UAGI/telemem
+archive_name: "TeleAI-UAGI--telemem"
 revision: 8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
 revision_url: https://github.com/TeleAI-UAGI/telemem/commit/8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
 analyzed_at: 2026-08-09

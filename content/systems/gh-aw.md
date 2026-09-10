@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "github/gh-aw"
 source_url: https://github.com/github/gh-aw
+archive_name: "github--gh-aw"
 revision: c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d
 revision_url: https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "richarvey/OmniMem"
 source_url: https://github.com/richarvey/OmniMem
+archive_name: "richarvey--OmniMem"
 revision: 50fde316a1fcdd53a75a66d982b7bdee987ba364
 revision_url: https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364
 analyzed_at: 2026-09-05

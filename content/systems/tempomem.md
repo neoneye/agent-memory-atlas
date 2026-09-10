@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "wikieden/tempomem"
 source_url: https://github.com/wikieden/tempomem
+archive_name: "wikieden--tempomem"
 revision: 92181fbbae7f5e66714aa5e91f61ba9558b1f1aa
 revision_url: https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa
 analyzed_at: 2026-09-05

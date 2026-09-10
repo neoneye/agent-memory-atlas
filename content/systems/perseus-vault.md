@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Perseus-Computing-LLC/perseus-vault"
 source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
+archive_name: "Perseus-Computing-LLC--perseus-vault"
 revision: 9c829207a4b44a8e679ba912b4c1c5608c8f1e36
 revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36
 analyzed_at: 2026-08-27

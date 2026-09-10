@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "TencentCloud/tencentdb-agent-memory"
 source_url: https://github.com/TencentCloud/tencentdb-agent-memory
+archive_name: "TencentCloud--tencentdb-agent-memory"
 revision: c387ea4534d08f3204d50a137ef55206d7c50301
 revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/c387ea4534d08f3204d50a137ef55206d7c50301
 analyzed_at: 2026-09-09

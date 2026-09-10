@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "showjihyun/livingfeed"
 source_url: https://github.com/showjihyun/livingfeed
+archive_name: "showjihyun--livingfeed"
 revision: 9bdd464d570a493ba9125636f4cf01b6cff78bae
 revision_url: https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae
 analyzed_at: 2026-07-30

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: kunal12203/swafra
 source_url: https://github.com/kunal12203/swafra
+archive_name: "kunal12203--swafra"
 revision: 669e7bdbcbcd421deb172a05f8fe52b741c0e915
 revision_url: https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915
 analyzed_at: 2026-07-29

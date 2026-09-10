@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "plur-ai/plur"
 source_url: https://github.com/plur-ai/plur
+archive_name: "plur-ai--plur"
 revision: d005139ee82eb124466472190302a9bc1770693b
 revision_url: https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b
 analyzed_at: 2026-09-08

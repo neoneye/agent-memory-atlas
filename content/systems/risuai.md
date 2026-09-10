@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kwaroran/RisuAI"
 source_url: https://github.com/kwaroran/RisuAI
+archive_name: "kwaroran--RisuAI"
 revision: 316e430bedbe68c80060ce74c5a1fff88f3bdf97
 revision_url: https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97
 analyzed_at: 2026-07-29

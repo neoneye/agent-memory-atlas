@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CortexPrism/cortex"
 source_url: https://github.com/CortexPrism/cortex
+archive_name: "CortexPrism--cortex"
 revision: 0c446572ddaad588164af939f2e093441b06921f
 revision_url: https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f
 analyzed_at: 2026-07-30

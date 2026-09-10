@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RakuenSoftware/aimee"
 source_url: https://github.com/RakuenSoftware/aimee
+archive_name: "RakuenSoftware--aimee"
 revision: 6083b85e4664f06abd5275ee5e893388734a6181
 revision_url: https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181
 analyzed_at: 2026-09-07

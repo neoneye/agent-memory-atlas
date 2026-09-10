@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "nubaeon/empirica"
 source_url: https://github.com/nubaeon/empirica
+archive_name: "nubaeon--empirica"
 revision: d64b6416e8850e867bff3ee5ed0402dc842128d2
 revision_url: https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2
 analyzed_at: 2026-08-09

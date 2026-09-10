@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "velantrian/velantrim-exocortex-crystal"
 source_url: https://github.com/velantrian/velantrim-exocortex-crystal
+archive_name: "velantrian--velantrim-exocortex-crystal"
 revision: df4a651a2b4dd06df486e65cdbdcfe1090743135
 revision_url: https://github.com/velantrian/velantrim-exocortex-crystal/commit/df4a651a2b4dd06df486e65cdbdcfe1090743135
 analyzed_at: 2026-09-08

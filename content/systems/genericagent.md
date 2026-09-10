@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: lsdefine/GenericAgent
 source_url: https://github.com/lsdefine/GenericAgent
+archive_name: "lsdefine--GenericAgent"
 revision: 7ffc95823b6e40ca4e10acf9fb285d923485cacc
 revision_url: https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc
 analyzed_at: 2026-07-27

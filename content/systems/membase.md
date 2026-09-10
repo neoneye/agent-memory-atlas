@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "unibaseio/membase"
 source_url: https://github.com/unibaseio/membase
+archive_name: "unibaseio--membase"
 revision: 9e03b75a453118f4faf4ed3539279435e03bd603
 revision_url: https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603
 analyzed_at: 2026-07-31

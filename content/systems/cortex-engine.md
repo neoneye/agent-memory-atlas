@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fozikio/cortex-engine"
 source_url: https://github.com/fozikio/cortex-engine
+archive_name: "fozikio--cortex-engine"
 revision: 6045c41933b1d496d43ac10bad67560c87cf1445
 revision_url: https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445
 analyzed_at: 2026-08-09

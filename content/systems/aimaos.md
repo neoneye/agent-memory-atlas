@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/AIMAOS"
 source_url: https://github.com/munch2u-a11y/AIMAOS
+archive_name: "munch2u-a11y--AIMAOS"
 revision: 65f68450450c8ba6190197b23993d74a3ab8b020
 revision_url: https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020
 analyzed_at: 2026-08-07

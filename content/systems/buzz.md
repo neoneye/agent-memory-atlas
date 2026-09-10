@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "block/buzz"
 source_url: https://github.com/block/buzz
+archive_name: "block--buzz"
 revision: 24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
 revision_url: https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
 analyzed_at: 2026-07-29

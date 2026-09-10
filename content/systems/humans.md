@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/HUMANs"
 source_url: https://github.com/munch2u-a11y/HUMANs
+archive_name: "munch2u-a11y--HUMANs"
 revision: a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9
 revision_url: https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9
 analyzed_at: 2026-09-08

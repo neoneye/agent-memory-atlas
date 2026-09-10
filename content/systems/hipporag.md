@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: OSU-NLP-Group/HippoRAG
 source_url: https://github.com/OSU-NLP-Group/HippoRAG
+archive_name: "OSU-NLP-Group--HippoRAG"
 revision: e37fba2af1a951ac340d837a7c02efb9d8c9544a
 revision_url: https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a
 analyzed_at: 2026-07-27

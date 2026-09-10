@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "zeenie-ai/OpenCompany"
 source_url: https://github.com/zeenie-ai/OpenCompany
+archive_name: "zeenie-ai--OpenCompany"
 revision: 49d667e2ea705d34cd4676e2f812acad7007e663
 revision_url: https://github.com/zeenie-ai/OpenCompany/commit/49d667e2ea705d34cd4676e2f812acad7007e663
 analyzed_at: 2026-08-25

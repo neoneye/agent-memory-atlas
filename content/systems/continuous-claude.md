@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "parcadei/Continuous-Claude-v3"
 source_url: https://github.com/parcadei/Continuous-Claude-v3
+archive_name: "parcadei--Continuous-Claude-v3"
 revision: d07ff4b06b62f43771bc0c927d0211b734d6149e
 revision_url: https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e
 analyzed_at: 2026-08-15

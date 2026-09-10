@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: aiming-lab/MetaClaw
 source_url: https://github.com/aiming-lab/MetaClaw
+archive_name: "aiming-lab--MetaClaw"
 revision: 922caf3a1cd093fb316e95183a8acc8aa47b3b21
 revision_url: https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21
 analyzed_at: 2026-07-27

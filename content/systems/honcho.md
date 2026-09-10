@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: plastic-labs/honcho
 source_url: https://github.com/plastic-labs/honcho
+archive_name: "plastic-labs--honcho"
 revision: be54355545b64ddb10203829d323861f52423685
 revision_url: https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685
 analyzed_at: 2026-09-05

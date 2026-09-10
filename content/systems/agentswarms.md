@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "AgentSwarms-fyi/agentswarms"
 source_url: https://github.com/AgentSwarms-fyi/agentswarms
+archive_name: "AgentSwarms-fyi--agentswarms"
 revision: cfde9169ede6128f3cf149e0b3748859e1a2f4e4
 revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4
 analyzed_at: 2026-07-31

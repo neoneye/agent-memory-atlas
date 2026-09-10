@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "calibrae/palazzo"
 source_url: https://github.com/calibrae/palazzo
+archive_name: "calibrae--palazzo"
 revision: 9dd7228b8a502099522a900d647c57c99f127359
 revision_url: https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359
 analyzed_at: 2026-07-31

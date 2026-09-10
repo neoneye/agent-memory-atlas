@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "zhongwanjun/MemoryBank-SiliconFriend"
 source_url: https://github.com/zhongwanjun/MemoryBank-SiliconFriend
+archive_name: "zhongwanjun--MemoryBank-SiliconFriend"
 revision: cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9
 revision_url: https://github.com/zhongwanjun/MemoryBank-SiliconFriend/commit/cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9
 analyzed_at: 2026-08-13

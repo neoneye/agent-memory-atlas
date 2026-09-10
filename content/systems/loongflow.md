@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: baidu-baige/LoongFlow
 source_url: https://github.com/baidu-baige/LoongFlow
+archive_name: "baidu-baige--LoongFlow"
 revision: 945c78bc1554f8281aac40320b3599bd68d528d7
 revision_url: https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7
 analyzed_at: 2026-07-27

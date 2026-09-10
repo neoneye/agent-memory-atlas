@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "juggler-ai/juggler"
 source_url: https://github.com/juggler-ai/juggler
+archive_name: "juggler-ai--juggler"
 revision: bf81e61087a6e6af24e5ffd225d66c74135a4faa
 revision_url: https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa
 analyzed_at: 2026-07-30

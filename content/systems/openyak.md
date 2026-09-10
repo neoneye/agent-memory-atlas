@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "openyak/openyak"
 source_url: https://github.com/openyak/openyak
+archive_name: "openyak--openyak"
 revision: bd88bff824c29fc48024eb19b7435cb2c065e432
 revision_url: https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432
 analyzed_at: 2026-07-31

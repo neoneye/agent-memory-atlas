@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CodeAbra/iai-personal-memory-engine"
 source_url: https://github.com/CodeAbra/iai-personal-memory-engine
+archive_name: "CodeAbra--iai-personal-memory-engine"
 revision: 1043a41f025b64a2fea51634a56c1ee5bdf95edd
 revision_url: https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd
 analyzed_at: 2026-09-03

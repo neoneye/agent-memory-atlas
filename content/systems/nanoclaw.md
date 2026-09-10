@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "nanocoai/nanoclaw"
 source_url: https://github.com/nanocoai/nanoclaw
+archive_name: "nanocoai--nanoclaw"
 revision: dce271c6ae3916036ab2b4edc8ecd552c99c9e52
 revision_url: https://github.com/nanocoai/nanoclaw/commit/dce271c6ae3916036ab2b4edc8ecd552c99c9e52
 analyzed_at: 2026-08-20

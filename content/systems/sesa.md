@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Zenghuang-Fu/SESA-Self-Evolving-Search-Agents"
 source_url: https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents
+archive_name: "Zenghuang-Fu--SESA-Self-Evolving-Search-Agents"
 revision: 74de5d77a19774cfba53d6950d47633a2d632430
 revision_url: https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430
 analyzed_at: 2026-08-09

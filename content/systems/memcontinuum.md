@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "krakozavr/MemContinuum"
 source_url: https://github.com/krakozavr/MemContinuum
+archive_name: "krakozavr--MemContinuum"
 revision: 161f555d74d81532362a38e8f10657eac0c29e23
 revision_url: https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23
 analyzed_at: 2026-09-08

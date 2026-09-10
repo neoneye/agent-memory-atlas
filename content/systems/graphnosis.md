@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "nehloo-interactive/graphnosis-app"
 source_url: https://github.com/nehloo-interactive/graphnosis-app
+archive_name: "nehloo-interactive--graphnosis-app"
 revision: b79be25df98d1dd47eb9a01d0da37f9881ab7b85
 revision_url: https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85
 analyzed_at: 2026-08-23

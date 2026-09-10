@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "agentscope-ai/ReMe"
 source_url: https://github.com/agentscope-ai/ReMe
+archive_name: "agentscope-ai--ReMe"
 revision: 550317c3bfb755d985a0401194827eaa9676a5bc
 revision_url: https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc
 analyzed_at: 2026-07-29

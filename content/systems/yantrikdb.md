@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "yantrikos/yantrikdb-server"
 source_url: https://github.com/yantrikos/yantrikdb-server
+archive_name: "yantrikos--yantrikdb-server"
 revision: f8378f98bb0d25128f473ab4e7c5cac829c22773
 revision_url: https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "FareedKhan-dev/all-agentic-architectures"
 source_url: https://github.com/FareedKhan-dev/all-agentic-architectures
+archive_name: "FareedKhan-dev--all-agentic-architectures"
 revision: cf9d620a8cc55d59589399c30f305e6dfaa428ec
 revision_url: https://github.com/FareedKhan-dev/all-agentic-architectures/commit/cf9d620a8cc55d59589399c30f305e6dfaa428ec
 analyzed_at: 2026-08-30

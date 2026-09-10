@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "BernhardJackiewicz/provem"
 source_url: https://github.com/BernhardJackiewicz/provem
+archive_name: "BernhardJackiewicz--provem"
 revision: f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
 revision_url: https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
 analyzed_at: 2026-09-09

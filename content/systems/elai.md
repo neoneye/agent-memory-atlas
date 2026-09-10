@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "DITlieD/ELAI-archive"
 source_url: https://github.com/DITlieD/ELAI-archive
+archive_name: "DITlieD--ELAI-archive"
 revision: 26bf2bc72d030a2d5ec022f04e1f9603bb285ae1
 revision_url: https://github.com/DITlieD/ELAI-archive/commit/26bf2bc72d030a2d5ec022f04e1f9603bb285ae1
 analyzed_at: 2026-09-06

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "aiming-lab/AutoResearchClaw"
 source_url: https://github.com/aiming-lab/AutoResearchClaw
+archive_name: "aiming-lab--AutoResearchClaw"
 revision: be4ba4755bf1b52220f25e13b2293b5956590070
 revision_url: https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070
 analyzed_at: 2026-08-24

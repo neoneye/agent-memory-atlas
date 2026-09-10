@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "xD4O/memento"
 source_url: https://github.com/xD4O/memento
+archive_name: "xD4O--memento"
 revision: f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b
 revision_url: https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b
 analyzed_at: 2026-07-31

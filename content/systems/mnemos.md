@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "arhuman/mnemos"
 source_url: https://github.com/arhuman/mnemos
+archive_name: "arhuman--mnemos"
 revision: 27df4b569cc26b25e75356322db72f6461939a66
 revision_url: https://github.com/arhuman/mnemos/commit/27df4b569cc26b25e75356322db72f6461939a66
 analyzed_at: 2026-08-09

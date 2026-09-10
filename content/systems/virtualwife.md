@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "yakami129/VirtualWife"
 source_url: https://github.com/yakami129/VirtualWife
+archive_name: "yakami129--VirtualWife"
 revision: c8afd6d3ce6bb6f58988c649c50299d36b63e08f
 revision_url: https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f
 analyzed_at: 2026-07-29

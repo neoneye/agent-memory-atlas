@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "cytostack/openwolf"
 source_url: https://github.com/cytostack/openwolf
+archive_name: "cytostack--openwolf"
 revision: 7defd81b9faacea0134965e539118efb2a890cba
 revision_url: https://github.com/cytostack/openwolf/commit/7defd81b9faacea0134965e539118efb2a890cba
 analyzed_at: 2026-08-20

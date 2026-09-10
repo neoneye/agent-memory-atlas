@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "sweetsophia/noosphere"
 source_url: https://github.com/sweetsophia/noosphere
+archive_name: "sweetsophia--noosphere"
 revision: feb04e0d07a48ae988095bd9631307f6fcfd47bc
 revision_url: https://github.com/sweetsophia/noosphere/commit/feb04e0d07a48ae988095bd9631307f6fcfd47bc
 analyzed_at: 2026-09-05

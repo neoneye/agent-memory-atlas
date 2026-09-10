@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "buiilding/WindieOS"
 source_url: https://github.com/buiilding/WindieOS
+archive_name: "buiilding--WindieOS"
 revision: da2deadc9e5ebd5b45bb61e73b80417156b2b3a9
 revision_url: https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9
 analyzed_at: 2026-08-14

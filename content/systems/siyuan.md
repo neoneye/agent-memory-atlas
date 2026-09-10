@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "siyuan-note/siyuan"
 source_url: https://github.com/siyuan-note/siyuan
+archive_name: "siyuan-note--siyuan"
 revision: 44a6c212a994c7ba8129fc38b001a9ab58957c6f
 revision_url: https://github.com/siyuan-note/siyuan/commit/44a6c212a994c7ba8129fc38b001a9ab58957c6f
 analyzed_at: 2026-09-07

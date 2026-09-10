@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "sebastianbrzustowicz/Agentic-GraphRAG-Blueprint"
 source_url: https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint
+archive_name: "sebastianbrzustowicz--Agentic-GraphRAG-Blueprint"
 revision: e33f5f690e3b22efbf4f89d5c273a575699dd6ec
 revision_url: https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint/commit/e33f5f690e3b22efbf4f89d5c273a575699dd6ec
 analyzed_at: 2026-08-30

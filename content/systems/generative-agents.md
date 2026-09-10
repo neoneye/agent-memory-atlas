@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: joonspk-research/generative_agents
 source_url: https://github.com/joonspk-research/generative_agents
+archive_name: "joonspk-research--generative_agents"
 revision: fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 revision_url: https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 analyzed_at: 2026-07-27

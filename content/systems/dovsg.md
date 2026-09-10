@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "BJHYZJ/DovSG"
 source_url: https://github.com/BJHYZJ/DovSG
+archive_name: "BJHYZJ--DovSG"
 revision: b355987a1ca586f7756f025820fddc24166d75af
 revision_url: https://github.com/BJHYZJ/DovSG/commit/b355987a1ca586f7756f025820fddc24166d75af
 analyzed_at: 2026-09-05

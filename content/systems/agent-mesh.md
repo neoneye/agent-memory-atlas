@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "cbalgeman/agent-mesh"
 source_url: https://github.com/cbalgeman/agent-mesh
+archive_name: "cbalgeman--agent-mesh"
 revision: 43bfe5cc376c71754c4a627286401825f4599062
 revision_url: https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062
 analyzed_at: 2026-08-17

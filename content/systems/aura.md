@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "youngbryan97/aura"
 source_url: https://github.com/youngbryan97/aura
+archive_name: "youngbryan97--aura"
 revision: e8866f43c54677d3f2877820cd74cf915af6fbb7
 revision_url: https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7
 analyzed_at: 2026-07-31

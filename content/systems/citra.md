@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Trustedwear-Tech/citra-decision-system"
 source_url: https://github.com/Trustedwear-Tech/citra-decision-system
+archive_name: "Trustedwear-Tech--citra-decision-system"
 revision: 3106ce5f122d00fe63b8ec9d445da771170fdcd6
 revision_url: https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6
 analyzed_at: 2026-08-31

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CompleteIdeas/agent-working-memory"
 source_url: https://github.com/CompleteIdeas/agent-working-memory
+archive_name: "CompleteIdeas--agent-working-memory"
 revision: ed854014eae66d2960f50083f92dc9e04d2c93da
 revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da
 analyzed_at: 2026-09-09

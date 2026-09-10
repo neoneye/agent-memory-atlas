@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/Cognitive-Spatial-Memory"
 source_url: https://github.com/munch2u-a11y/Cognitive-Spatial-Memory
+archive_name: "munch2u-a11y--Cognitive-Spatial-Memory"
 revision: 39df03a18d202a25f4c066d662109f85128886ef
 revision_url: https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d202a25f4c066d662109f85128886ef
 analyzed_at: 2026-08-16

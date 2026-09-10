@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fpytloun/intaris"
 source_url: https://github.com/fpytloun/intaris
+archive_name: "fpytloun--intaris"
 revision: d07ea183ff637c0208e87357d51aa097dd3fced0
 revision_url: https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0
 analyzed_at: 2026-08-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "yoloshii/clawmem"
 source_url: https://github.com/yoloshii/clawmem
+archive_name: "yoloshii--clawmem"
 revision: 264cea726748ce975f6ae566409996e8146b7438
 revision_url: https://github.com/yoloshii/clawmem/commit/264cea726748ce975f6ae566409996e8146b7438
 analyzed_at: 2026-08-09

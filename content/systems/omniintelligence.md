@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omniintelligence"
 source_url: https://github.com/OmniNode-ai/omniintelligence
+archive_name: "OmniNode-ai--omniintelligence"
 revision: ce104631eab515b58fd984b748c5157337ea0176
 revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176
 analyzed_at: 2026-09-09

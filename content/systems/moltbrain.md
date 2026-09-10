@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "nhevers/moltbrain"
 source_url: https://github.com/nhevers/moltbrain
+archive_name: "nhevers--moltbrain"
 revision: 1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
 revision_url: https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
 analyzed_at: 2026-08-09

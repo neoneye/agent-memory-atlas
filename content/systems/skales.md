@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "skalesapp/skales"
 source_url: https://github.com/skalesapp/skales
+archive_name: "skalesapp--skales"
 revision: 522a16ea3d90c2e7688368ab320615d1a9d96563
 revision_url: https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563
 analyzed_at: 2026-09-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "qualixar/superlocalmemory"
 source_url: https://github.com/qualixar/superlocalmemory
+archive_name: "qualixar--superlocalmemory"
 revision: f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
 revision_url: https://github.com/qualixar/superlocalmemory/commit/f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
 analyzed_at: 2026-08-09

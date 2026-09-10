@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omnimemory"
 source_url: https://github.com/OmniNode-ai/omnimemory
+archive_name: "OmniNode-ai--omnimemory"
 revision: 6d340f89715abea95021f8eeef4280adef0d2dee
 revision_url: https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee
 analyzed_at: 2026-09-09

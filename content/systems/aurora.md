@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "hamr0/aurora"
 source_url: https://github.com/hamr0/aurora
+archive_name: "hamr0--aurora"
 revision: 750a39da51ed947aab851e9fd5c06a2587402e2b
 revision_url: https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b
 analyzed_at: 2026-08-09

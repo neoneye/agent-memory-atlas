@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "can1357/oh-my-pi"
 source_url: https://github.com/can1357/oh-my-pi
+archive_name: "can1357--oh-my-pi"
 revision: b8e8c213c1ce970f0f008edfe471bf7858fd747a
 revision_url: https://github.com/can1357/oh-my-pi/commit/b8e8c213c1ce970f0f008edfe471bf7858fd747a
 analyzed_at: 2026-08-23

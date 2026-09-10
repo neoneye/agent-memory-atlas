@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Q00/ouroboros"
 source_url: https://github.com/Q00/ouroboros
+archive_name: "Q00--ouroboros"
 revision: 6deb72d37da119bd6419be4d0508b71bfc3b5b59
 revision_url: https://github.com/Q00/ouroboros/commit/6deb72d37da119bd6419be4d0508b71bfc3b5b59
 analyzed_at: 2026-08-13

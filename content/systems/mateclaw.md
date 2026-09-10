@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: mateaix/mateclaw
 source_url: https://github.com/mateaix/mateclaw
+archive_name: "mateaix--mateclaw"
 revision: 3643aed7564390f57906954286a443d5913b97a7
 revision_url: https://github.com/mateaix/mateclaw/commit/3643aed7564390f57906954286a443d5913b97a7
 analyzed_at: 2026-07-27

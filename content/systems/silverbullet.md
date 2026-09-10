@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "silverbulletmd/silverbullet"
 source_url: https://github.com/silverbulletmd/silverbullet
+archive_name: "silverbulletmd--silverbullet"
 revision: 6331add131438431da8ee384949964828c791b2c
 revision_url: https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c
 analyzed_at: 2026-09-07

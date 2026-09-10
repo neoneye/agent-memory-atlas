@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
+archive_name: "Daily-Nerd--daimon"
 revision: 8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
 revision_url: https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
 analyzed_at: 2026-09-08

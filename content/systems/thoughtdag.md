@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "chenxiachan/thoughtdag"
 source_url: https://github.com/chenxiachan/thoughtdag
+archive_name: "chenxiachan--thoughtdag"
 revision: 0c6d961c84024beeda8fb7236fd66e470a40a5f5
 revision_url: https://github.com/chenxiachan/thoughtdag/commit/0c6d961c84024beeda8fb7236fd66e470a40a5f5
 analyzed_at: 2026-09-07

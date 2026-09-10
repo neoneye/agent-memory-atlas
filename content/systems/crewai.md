@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "crewAIInc/crewAI"
 source_url: https://github.com/crewAIInc/crewAI
+archive_name: "crewAIInc--crewAI"
 revision: ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
 revision_url: https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
 analyzed_at: 2026-07-30

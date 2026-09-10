@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RAZZULLIX/KAISEN"
 source_url: https://github.com/RAZZULLIX/KAISEN
+archive_name: "RAZZULLIX--KAISEN"
 revision: f56a980bdd9daa8395e56a91eeb50bdbc625cd78
 revision_url: https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78
 analyzed_at: 2026-08-19

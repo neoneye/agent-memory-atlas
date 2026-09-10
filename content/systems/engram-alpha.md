@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
+archive_name: "techtheist--engram"
 revision: 9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
 revision_url: https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
 analyzed_at: 2026-09-04

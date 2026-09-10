@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "npc-worldwide/npcpy"
 source_url: https://github.com/npc-worldwide/npcpy
+archive_name: "npc-worldwide--npcpy"
 revision: a31ba52203062f7a586a901f6870176bf3961707
 revision_url: https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707
 analyzed_at: 2026-07-30

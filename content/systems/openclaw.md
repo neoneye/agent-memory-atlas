@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: openclaw/openclaw
 source_url: https://github.com/openclaw/openclaw
+archive_name: "openclaw--openclaw"
 revision: 6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8
 revision_url: https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8
 analyzed_at: 2026-08-31

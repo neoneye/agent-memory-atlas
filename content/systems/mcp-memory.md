@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fellowgeek/mcp-memory"
 source_url: https://github.com/fellowgeek/mcp-memory
+archive_name: "fellowgeek--mcp-memory"
 revision: 4514d1fd162598e65280c15ea2df017698fcbf16
 revision_url: https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16
 analyzed_at: 2026-08-15

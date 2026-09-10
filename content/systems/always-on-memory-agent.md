@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "GoogleCloudPlatform/generative-ai (always-on-memory-agent)"
 source_url: https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent
+archive_name: "GoogleCloudPlatform--generative-ai"
 revision: 97597c46d0c2fe9a3c187b970d32d93100f738fd
 revision_url: https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd
 analyzed_at: 2026-08-15

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: NousResearch/hermes-agent
 source_url: https://github.com/NousResearch/hermes-agent
+archive_name: "NousResearch--hermes-agent"
 revision: 9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
 revision_url: https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
 analyzed_at: 2026-09-09

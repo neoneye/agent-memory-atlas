@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Mintplex-Labs/anything-llm"
 source_url: https://github.com/Mintplex-Labs/anything-llm
+archive_name: "Mintplex-Labs--anything-llm"
 revision: eb7df1e81c284236e1759ec7897904dc22a6704d
 revision_url: https://github.com/Mintplex-Labs/anything-llm/commit/eb7df1e81c284236e1759ec7897904dc22a6704d
 analyzed_at: 2026-09-07

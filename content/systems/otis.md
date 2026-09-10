@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "TrianglLabs/otis"
 source_url: https://github.com/TrianglLabs/otis
+archive_name: "TrianglLabs--otis"
 revision: 0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
 revision_url: https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
 analyzed_at: 2026-09-09

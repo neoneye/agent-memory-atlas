@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: HKUDS/nanobot
 source_url: https://github.com/HKUDS/nanobot
+archive_name: "HKUDS--nanobot"
 revision: b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 revision_url: https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2
 analyzed_at: 2026-07-27

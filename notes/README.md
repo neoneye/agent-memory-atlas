@@ -8,6 +8,15 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-10-archive-what-is-outstanding.md](2026-09-10-archive-what-is-outstanding.md) —
+  396 of 397 cited repositories are forked into the archive org and every report
+  carries an `archive_name`. What is missing: the pinned commits are reachable
+  through GitHub's fork network but referenced by nothing, which is the gap the
+  archive was built to close and is one API call per report to fix; a scheduled
+  sync needs a credential that can write to another org; and a rename breaks the
+  `archive_name` derivation, which twelve already-renamed repositories make a
+  question of when, not whether.
+
 - [2026-09-09-hermes-agent-two-pins-one-repo.md](2026-09-09-hermes-agent-two-pins-one-repo.md) —
   the drift register found the only repository carrying two reports had them
   pinned 7,068 commits apart, so the atlas described one tree in two states while

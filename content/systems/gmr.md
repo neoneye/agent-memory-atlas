@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Anchorstate-Lab/GMR"
 source_url: https://github.com/Anchorstate-Lab/GMR
+archive_name: "Anchorstate-Lab--GMR"
 revision: 8c4bc230c501a344b6d52d4f51f08e0d7b51c981
 revision_url: https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981
 analyzed_at: 2026-08-14

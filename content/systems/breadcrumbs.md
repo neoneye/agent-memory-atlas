@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
+archive_name: "The-825--breadcrumbs"
 revision: ec38f156aac78174901c6aae2e63e0aa7be3878b
 revision_url: https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b
 analyzed_at: 2026-08-27

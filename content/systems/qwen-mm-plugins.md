@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "QwenLM/Qwen-MM-Plugins"
 source_url: https://github.com/QwenLM/Qwen-MM-Plugins
+archive_name: "QwenLM--Qwen-MM-Plugins"
 revision: f4e02952a059f3a0a23081f72e5faa7956d1b3af
 revision_url: https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af
 analyzed_at: 2026-08-10

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "lucasrosati/claude-code-memory-setup"
 source_url: https://github.com/lucasrosati/claude-code-memory-setup
+archive_name: "lucasrosati--claude-code-memory-setup"
 revision: c5f2e0b5465b66699f4ffcb108afee70d2cdf87b
 revision_url: https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "microsoft/agent-framework"
 source_url: https://github.com/microsoft/agent-framework
+archive_name: "microsoft--agent-framework"
 revision: 6d532cf77e26988fe2d822f13ddea021faa9d735
 revision_url: https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735
 analyzed_at: 2026-08-28

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vmDeshpande/Arcon"
 source_url: https://github.com/vmDeshpande/Arcon
+archive_name: "vmDeshpande--Arcon"
 revision: ef74011fe6d74959d901a593d42696fe4929aa30
 revision_url: https://github.com/vmDeshpande/Arcon/commit/ef74011fe6d74959d901a593d42696fe4929aa30
 analyzed_at: 2026-08-24

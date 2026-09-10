@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RuneLind/muninn"
 source_url: https://github.com/RuneLind/muninn
+archive_name: "RuneLind--muninn"
 revision: 6cc58ebdf2f82707488a8ed7f021b20987bef925
 revision_url: https://github.com/RuneLind/muninn/commit/6cc58ebdf2f82707488a8ed7f021b20987bef925
 analyzed_at: 2026-08-20

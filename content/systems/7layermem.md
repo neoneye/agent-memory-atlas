@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Prateek816/7layermem"
 source_url: https://github.com/Prateek816/7layermem
+archive_name: "Prateek816--7layermem"
 revision: d3500bfd74b380585e8220f6c6f235c825bc803e
 revision_url: https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e
 analyzed_at: 2026-08-04

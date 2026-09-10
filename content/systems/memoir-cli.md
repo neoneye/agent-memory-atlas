@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "camgitt/memoir"
 source_url: https://github.com/camgitt/memoir
+archive_name: "camgitt--memoir"
 revision: fb24c9b2e4a39bfd058d27d5757bfa781de58b51
 revision_url: https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51
 analyzed_at: 2026-09-07

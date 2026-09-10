@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "acdesigntech/memory-project"
 source_url: https://github.com/acdesigntech/memory-project
+archive_name: "acdesigntech--memory-project"
 revision: 992dc090b347f31976316cfac885b097a26bb298
 revision_url: https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298
 analyzed_at: 2026-08-03

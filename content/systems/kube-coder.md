@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "imran31415/kube-coder"
 source_url: https://github.com/imran31415/kube-coder
+archive_name: "imran31415--kube-coder"
 revision: 1a9008facf0776165c26ff8ba80ceff999b4504c
 revision_url: https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c
 analyzed_at: 2026-08-16

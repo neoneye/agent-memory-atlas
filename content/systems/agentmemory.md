@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "rohitg00/agentmemory"
 source_url: https://github.com/rohitg00/agentmemory
+archive_name: "rohitg00--agentmemory"
 revision: d60652a7058773fa9428fa720eda38942f12f014
 revision_url: https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014
 analyzed_at: 2026-08-06

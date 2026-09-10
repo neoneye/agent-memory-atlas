@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "dataojitori/nocturne_memory"
 source_url: https://github.com/dataojitori/nocturne_memory
+archive_name: "dataojitori--nocturne_memory"
 revision: 7cd214ff9107ae722555ed8c2688a6922d719e9e
 revision_url: https://github.com/dataojitori/nocturne_memory/commit/7cd214ff9107ae722555ed8c2688a6922d719e9e
 analyzed_at: 2026-08-09

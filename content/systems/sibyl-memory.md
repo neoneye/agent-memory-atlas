@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Sibyl-Labs/Sibyl-Memory"
 source_url: https://github.com/Sibyl-Labs/Sibyl-Memory
+archive_name: "Sibyl-Labs--Sibyl-Memory"
 revision: 761bfc64799f637dd1ff70fbd07bdb997c2fd806
 revision_url: https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806
 analyzed_at: 2026-09-08

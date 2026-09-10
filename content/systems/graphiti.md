@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "getzep/graphiti"
 source_url: https://github.com/getzep/graphiti
+archive_name: "getzep--graphiti"
 revision: 425bf2481b51437e43455e09d241c5f46e3d95f3
 revision_url: https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3
 analyzed_at: 2026-08-06

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "scrypster/muninndb"
 source_url: https://github.com/scrypster/muninndb
+archive_name: "scrypster--muninndb"
 revision: fc16e786970c7ef31a6e5244cfdca7980a341551
 revision_url: https://github.com/scrypster/muninndb/commit/fc16e786970c7ef31a6e5244cfdca7980a341551
 analyzed_at: 2026-08-07

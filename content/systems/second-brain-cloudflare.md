@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "rahilp/second-brain-cloudflare"
 source_url: https://github.com/rahilp/second-brain-cloudflare
+archive_name: "rahilp--second-brain-cloudflare"
 revision: 6a7766d4ab957c52ca642ce672f293420ce8ef46
 revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/6a7766d4ab957c52ca642ce672f293420ce8ef46
 analyzed_at: 2026-08-09

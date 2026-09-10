@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CaviraOSS/OpenMemory"
 source_url: https://github.com/CaviraOSS/OpenMemory
+archive_name: "CaviraOSS--OpenMemory"
 revision: 9fdfc2ac09317881d0cdad6efd8b4859fc886323
 revision_url: https://github.com/CaviraOSS/OpenMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323
 analyzed_at: 2026-08-09

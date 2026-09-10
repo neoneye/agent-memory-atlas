@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Mibayy/token-savior"
 source_url: https://github.com/Mibayy/token-savior
+archive_name: "Mibayy--token-savior"
 revision: e41825f624d3513be7fdfb9146e35d265dbb1b06
 revision_url: https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "rlabs-inc/memory-ts"
 source_url: https://github.com/rlabs-inc/memory-ts
+archive_name: "rlabs-inc--memory-ts"
 revision: 8fcadf6d8783869878a64d42aec3ed88f7f91a70
 revision_url: https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70
 analyzed_at: 2026-08-09

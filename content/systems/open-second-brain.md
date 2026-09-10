@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "itechmeat/open-second-brain"
 source_url: https://github.com/itechmeat/open-second-brain
+archive_name: "itechmeat--open-second-brain"
 revision: 8d05a62a329dc650113f6c45ca2108727a3b07a9
 revision_url: https://github.com/itechmeat/open-second-brain/commit/8d05a62a329dc650113f6c45ca2108727a3b07a9
 analyzed_at: 2026-08-13

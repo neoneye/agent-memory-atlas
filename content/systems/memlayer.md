@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "divagr18/memlayer"
 source_url: https://github.com/divagr18/memlayer
+archive_name: "divagr18--memlayer"
 revision: 5e95f44061a867a5ac0caf53434240713d58b86a
 revision_url: https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a
 analyzed_at: 2026-08-09

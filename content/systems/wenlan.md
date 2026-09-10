@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "7xuanlu/origin"
 source_url: https://github.com/7xuanlu/origin
+archive_name: "7xuanlu--origin"
 revision: 87ee2831a8b9445026c33139adfd8d87bf60ad45
 revision_url: https://github.com/7xuanlu/origin/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45
 analyzed_at: 2026-08-09

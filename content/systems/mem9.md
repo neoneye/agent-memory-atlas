@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mem9-ai/mem9"
 source_url: https://github.com/mem9-ai/mem9
+archive_name: "mem9-ai--mem9"
 revision: ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
 revision_url: https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
 analyzed_at: 2026-08-09

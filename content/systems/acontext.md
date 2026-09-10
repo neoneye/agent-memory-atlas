@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "memodb-io/Acontext"
 source_url: https://github.com/memodb-io/Acontext
+archive_name: "memodb-io--Acontext"
 revision: 259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 revision_url: https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 analyzed_at: 2026-07-29

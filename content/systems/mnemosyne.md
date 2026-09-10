@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mnemosyne-oss/mnemosyne"
 source_url: https://github.com/mnemosyne-oss/mnemosyne
+archive_name: "mnemosyne-oss--mnemosyne"
 revision: b922da1f72777eeb57723ec64e5e6db615348858
 revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858
 analyzed_at: 2026-08-27

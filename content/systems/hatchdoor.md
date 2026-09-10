@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "BatterWorks/Hatchdoor"
 source_url: https://github.com/BatterWorks/Hatchdoor
+archive_name: "BatterWorks--Hatchdoor"
 revision: e631857685380bb9a7b70840f49606411cdc0bfc
 revision_url: https://github.com/BatterWorks/Hatchdoor/commit/e631857685380bb9a7b70840f49606411cdc0bfc
 analyzed_at: 2026-09-01

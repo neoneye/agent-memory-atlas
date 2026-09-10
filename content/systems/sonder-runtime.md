@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Krilliac/Sonder-runtime"
 source_url: https://github.com/Krilliac/Sonder-runtime
+archive_name: "Krilliac--Sonder-runtime"
 revision: eb93f60d8380b096a6fefbf34c053fb20dccde4f
 revision_url: https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f
 analyzed_at: 2026-08-22

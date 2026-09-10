@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "langchain-ai/langgraph"
 source_url: https://github.com/langchain-ai/langgraph
+archive_name: "langchain-ai--langgraph"
 revision: 644815f9e5bc52ad8f7a5227a456227e9c3e639b
 revision_url: https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b
 analyzed_at: 2026-08-14

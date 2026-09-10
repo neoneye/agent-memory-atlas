@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "growth-kinetics/diffmem"
 source_url: https://github.com/growth-kinetics/diffmem
+archive_name: "growth-kinetics--diffmem"
 revision: 5f00e8d22dc05fb1fc505f5322cb717de61bed3f
 revision_url: https://github.com/growth-kinetics/diffmem/commit/5f00e8d22dc05fb1fc505f5322cb717de61bed3f
 analyzed_at: 2026-08-09

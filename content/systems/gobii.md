@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "gobii-ai/gobii-platform"
 source_url: https://github.com/gobii-ai/gobii-platform
+archive_name: "gobii-ai--gobii-platform"
 revision: 26844673ac9f134e2ad3851a12dd26762d94c3a9
 revision_url: https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9
 analyzed_at: 2026-07-30

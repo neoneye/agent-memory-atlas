@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "KimGLee/Cambium"
 source_url: https://github.com/KimGLee/Cambium
+archive_name: "KimGLee--Cambium"
 revision: 48dcf34c7e5f2ede1acc7dc7f233efb19d088692
 revision_url: https://github.com/KimGLee/Cambium/commit/48dcf34c7e5f2ede1acc7dc7f233efb19d088692
 analyzed_at: 2026-08-22

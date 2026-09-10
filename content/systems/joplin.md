@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "laurent22/joplin"
 source_url: https://github.com/laurent22/joplin
+archive_name: "laurent22--joplin"
 revision: 7e73a2a271a1f71a7877a972677b5d588241e552
 revision_url: https://github.com/laurent22/joplin/commit/7e73a2a271a1f71a7877a972677b5d588241e552
 analyzed_at: 2026-09-07

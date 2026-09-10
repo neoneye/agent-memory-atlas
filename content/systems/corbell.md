@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Corbell-AI/Corbell"
 source_url: https://github.com/Corbell-AI/Corbell
+archive_name: "Corbell-AI--Corbell"
 revision: 75c7b20ac95292185b5fef6a4680e3e10de9da66
 revision_url: https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66
 analyzed_at: 2026-08-20

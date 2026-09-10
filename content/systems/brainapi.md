@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Lumen-Labs/brainapi2"
 source_url: https://github.com/Lumen-Labs/brainapi2
+archive_name: "Lumen-Labs--brainapi2"
 revision: b434f92a10d5b95aceab3f845d54472212672a10
 revision_url: https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10
 analyzed_at: 2026-08-30

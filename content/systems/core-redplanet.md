@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RedPlanetHQ/core"
 source_url: https://github.com/RedPlanetHQ/core
+archive_name: "RedPlanetHQ--core"
 revision: c91ca5765598bbbfe18277eb933e94430273b3eb
 revision_url: https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb
 analyzed_at: 2026-08-09

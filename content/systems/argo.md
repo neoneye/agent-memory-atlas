@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "derekhu0002/Argo"
 source_url: https://github.com/derekhu0002/Argo
+archive_name: "derekhu0002--Argo"
 revision: 607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
 revision_url: https://github.com/derekhu0002/Argo/commit/607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
 analyzed_at: 2026-09-09

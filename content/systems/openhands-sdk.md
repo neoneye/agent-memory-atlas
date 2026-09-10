@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "OpenHands/software-agent-sdk"
 source_url: https://github.com/OpenHands/software-agent-sdk
+archive_name: "OpenHands--software-agent-sdk"
 revision: 9a24f6c8866f353042a57df0514ccc900e3a0691
 revision_url: https://github.com/OpenHands/software-agent-sdk/commit/9a24f6c8866f353042a57df0514ccc900e3a0691
 analyzed_at: 2026-08-29

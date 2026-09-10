@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SillyTavern/SillyTavern"
 source_url: https://github.com/SillyTavern/SillyTavern
+archive_name: "SillyTavern--SillyTavern"
 revision: 8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
 revision_url: https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
 analyzed_at: 2026-07-29

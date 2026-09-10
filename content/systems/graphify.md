@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Graphify-Labs/graphify"
 source_url: https://github.com/Graphify-Labs/graphify
+archive_name: "Graphify-Labs--graphify"
 revision: 4fe11092ccbe9f543608f140c790f68d5d83cae4
 revision_url: https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4
 analyzed_at: 2026-07-31

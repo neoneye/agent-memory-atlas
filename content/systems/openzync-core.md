@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "openzync/openzync-core"
 source_url: https://github.com/openzync/openzync-core
+archive_name: "openzync--openzync-core"
 revision: cf05de752d903d84c2a56802418bda1e311bb7f2
 revision_url: https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2
 analyzed_at: 2026-09-08

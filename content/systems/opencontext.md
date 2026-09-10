@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "0xranx/OpenContext"
 source_url: https://github.com/0xranx/OpenContext
+archive_name: "0xranx--OpenContext"
 revision: 0649e7134346f6f5038a9b29cc5c824ae6a54f3f
 revision_url: https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f
 analyzed_at: 2026-09-09

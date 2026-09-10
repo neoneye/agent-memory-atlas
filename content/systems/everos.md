@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "EverMind-AI/EverOS"
 source_url: https://github.com/EverMind-AI/EverOS
+archive_name: "EverMind-AI--EverOS"
 revision: 4256419595f63fe307147dc19e379477cecdc44f
 revision_url: https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f
 analyzed_at: 2026-07-29

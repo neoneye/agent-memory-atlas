@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "openvurp/openvurp"
 source_url: https://github.com/openvurp/openvurp
+archive_name: "openvurp--openvurp"
 revision: e3fbf01d28b2e7a293a431c45cd96d45e609985c
 revision_url: https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c
 analyzed_at: 2026-09-03

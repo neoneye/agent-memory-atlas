@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MemoriLabs/Memori"
 source_url: https://github.com/MemoriLabs/Memori
+archive_name: "MemoriLabs--Memori"
 revision: 538b61f245295aa1a43df8033879f8293627f74d
 revision_url: https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d
 analyzed_at: 2026-07-29

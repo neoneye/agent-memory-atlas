@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CloudLLM-ai/mentisdb"
 source_url: https://github.com/CloudLLM-ai/mentisdb
+archive_name: "CloudLLM-ai--mentisdb"
 revision: ec020f7c1f67fd6c03409c98453b217d74add475
 revision_url: https://github.com/CloudLLM-ai/mentisdb/commit/ec020f7c1f67fd6c03409c98453b217d74add475
 analyzed_at: 2026-08-15

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "usememos/memos"
 source_url: https://github.com/usememos/memos
+archive_name: "usememos--memos"
 revision: 3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f
 revision_url: https://github.com/usememos/memos/commit/3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f
 analyzed_at: 2026-09-07

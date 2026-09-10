@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "swang1024/SAGE"
 source_url: https://github.com/swang1024/SAGE
+archive_name: "swang1024--SAGE"
 revision: be5893e170278dc739235d109a4fb1259c8f00e9
 revision_url: https://github.com/swang1024/SAGE/commit/be5893e170278dc739235d109a4fb1259c8f00e9
 analyzed_at: 2026-09-09

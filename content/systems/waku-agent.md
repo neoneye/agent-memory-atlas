@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: ShenSeanChen/waku-agent
 source_url: https://github.com/ShenSeanChen/waku-agent
+archive_name: "ShenSeanChen--waku-agent"
 revision: 4e59ab575827081b0986ed61afde5d6f21be64f8
 revision_url: https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8
 analyzed_at: 2026-08-15

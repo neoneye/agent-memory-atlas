@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "szara7678/OpenAkashic"
 source_url: https://github.com/szara7678/OpenAkashic
+archive_name: "szara7678--OpenAkashic"
 revision: 6c916d9aac6198de0912a97739ff95d439a9b382
 revision_url: https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382
 analyzed_at: 2026-08-13

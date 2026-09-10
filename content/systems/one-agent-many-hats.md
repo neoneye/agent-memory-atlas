@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "klairtech/one-agent-many-hats"
 source_url: https://github.com/klairtech/one-agent-many-hats
+archive_name: "klairtech--one-agent-many-hats"
 revision: a90396cff12b1e2fbb8a14f74eef6c6c89105b4f
 revision_url: https://github.com/klairtech/one-agent-many-hats/commit/a90396cff12b1e2fbb8a14f74eef6c6c89105b4f
 analyzed_at: 2026-08-17

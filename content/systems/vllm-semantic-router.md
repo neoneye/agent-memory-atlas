@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vllm-project/semantic-router"
 source_url: https://github.com/vllm-project/semantic-router
+archive_name: "vllm-project--semantic-router"
 revision: 6ae15901163cb9790d1b7c9d72b5caefad21ee78
 revision_url: https://github.com/vllm-project/semantic-router/commit/6ae15901163cb9790d1b7c9d72b5caefad21ee78
 analyzed_at: 2026-08-09

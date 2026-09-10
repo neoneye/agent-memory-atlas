@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "KTVSUN/memory-compiler"
 source_url: https://github.com/KTVSUN/memory-compiler
+archive_name: "KTVSUN--memory-compiler"
 revision: e79ee179a70688b349fc4f1bd957aafc54d0c224
 revision_url: https://github.com/KTVSUN/memory-compiler/commit/e79ee179a70688b349fc4f1bd957aafc54d0c224
 analyzed_at: 2026-08-11

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Cyb3rb1ade/openclaw-plur1bus-memory"
 source_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory
+archive_name: "Cyb3rb1ade--openclaw-plur1bus-memory"
 revision: 6317fd99e253889fc25976fc20624dd5597381a4
 revision_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/6317fd99e253889fc25976fc20624dd5597381a4
 analyzed_at: 2026-09-07

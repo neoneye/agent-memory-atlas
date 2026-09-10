@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "agno-agi/agno"
 source_url: https://github.com/agno-agi/agno
+archive_name: "agno-agi--agno"
 revision: 7c68873c1357321a5152397c8ab4fb8b3f587bba
 revision_url: https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba
 analyzed_at: 2026-07-30

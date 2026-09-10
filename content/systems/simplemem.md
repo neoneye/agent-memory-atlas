@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "aiming-lab/SimpleMem"
 source_url: https://github.com/aiming-lab/SimpleMem
+archive_name: "aiming-lab--SimpleMem"
 revision: db80b6a7c591e0ea730a058e9f5fc4eb06572299
 revision_url: https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299
 analyzed_at: 2026-07-30

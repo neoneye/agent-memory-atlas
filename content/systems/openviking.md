@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: volcengine/OpenViking
 source_url: https://github.com/volcengine/OpenViking
+archive_name: "volcengine--OpenViking"
 revision: c67222c3d46de4874eed65af8918fc55513812ef
 revision_url: https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef
 analyzed_at: 2026-07-27

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "quixiai/hexis"
 source_url: https://github.com/quixiai/hexis
+archive_name: "quixiai--hexis"
 revision: fdf24f317ad81db7be2315c23e711a95386175c9
 revision_url: https://github.com/quixiai/hexis/commit/fdf24f317ad81db7be2315c23e711a95386175c9
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "dasblueyeddevil/daem0n-mcp"
 source_url: https://github.com/dasblueyeddevil/daem0n-mcp
+archive_name: "dasblueyeddevil--daem0n-mcp"
 revision: 00809c67c03938014ac3ea470ef3600f7ccebabc
 revision_url: https://github.com/dasblueyeddevil/daem0n-mcp/commit/00809c67c03938014ac3ea470ef3600f7ccebabc
 analyzed_at: 2026-08-09

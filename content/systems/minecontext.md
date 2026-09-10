@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "volcengine/MineContext"
 source_url: https://github.com/volcengine/MineContext
+archive_name: "volcengine--MineContext"
 revision: 171c7a9ea8091e326ddcf0f10718aa1b58c83c65
 revision_url: https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65
 analyzed_at: 2026-07-29

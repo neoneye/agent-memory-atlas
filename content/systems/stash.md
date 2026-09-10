@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "alash3al/stash"
 source_url: https://github.com/alash3al/stash
+archive_name: "alash3al--stash"
 revision: d34ed430c4348ef741ef95146b488aea8616f4fb
 revision_url: https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb
 analyzed_at: 2026-08-09

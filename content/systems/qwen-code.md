@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: QwenLM/qwen-code
 source_url: https://github.com/QwenLM/qwen-code
+archive_name: "QwenLM--qwen-code"
 revision: 8c90697aced835c8fa027861febcce7de02a9bc2
 revision_url: https://github.com/QwenLM/qwen-code/commit/8c90697aced835c8fa027861febcce7de02a9bc2
 analyzed_at: 2026-08-10

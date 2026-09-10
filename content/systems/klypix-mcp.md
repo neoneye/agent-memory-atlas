@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "dahshanlabs/klypix-mcp"
 source_url: https://github.com/dahshanlabs/klypix-mcp
+archive_name: "dahshanlabs--klypix-mcp"
 revision: ea6beaadb75f2d4b447f7d7105a8e02da1c19657
 revision_url: https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657
 analyzed_at: 2026-09-09

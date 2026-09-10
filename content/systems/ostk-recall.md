@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "os-tack/ostk-recall"
 source_url: https://github.com/os-tack/ostk-recall
+archive_name: "os-tack--ostk-recall"
 revision: 5f25e8444219e6bec5eb080112a1150abe78657f
 revision_url: https://github.com/os-tack/ostk-recall/commit/5f25e8444219e6bec5eb080112a1150abe78657f
 analyzed_at: 2026-08-08

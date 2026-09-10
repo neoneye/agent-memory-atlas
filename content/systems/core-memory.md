@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: JohnnyFiv3r/Core-Memory
 source_url: https://github.com/JohnnyFiv3r/Core-Memory
+archive_name: "JohnnyFiv3r--Core-Memory"
 revision: 1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
 revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
 analyzed_at: 2026-08-06

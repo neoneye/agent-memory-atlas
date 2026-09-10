@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "khoj-ai/khoj"
 source_url: https://github.com/khoj-ai/khoj
+archive_name: "khoj-ai--khoj"
 revision: ae229ca894c0b80ad84664afcfdde523b5e87057
 revision_url: https://github.com/khoj-ai/khoj/commit/ae229ca894c0b80ad84664afcfdde523b5e87057
 analyzed_at: 2026-09-07

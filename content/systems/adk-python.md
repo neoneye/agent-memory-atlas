@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "google/adk-python"
 source_url: https://github.com/google/adk-python
+archive_name: "google--adk-python"
 revision: 6bab08fc803d26853417c4d6e71704b1a72e035e
 revision_url: https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e
 analyzed_at: 2026-07-29

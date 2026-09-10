@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "eshaan-nair/arcrift"
 source_url: https://github.com/eshaan-nair/arcrift
+archive_name: "eshaan-nair--arcrift"
 revision: 5424ea14dd9a848dcbcfb49586f348324999af88
 revision_url: https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88
 analyzed_at: 2026-08-09

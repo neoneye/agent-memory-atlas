@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "tickernelz/opencode-mem"
 source_url: https://github.com/tickernelz/opencode-mem
+archive_name: "tickernelz--opencode-mem"
 revision: d1d0eb01b5efed517da4ae31baa7666768e86cfe
 revision_url: https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe
 analyzed_at: 2026-08-26

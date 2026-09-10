@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: moltis-org/moltis
 source_url: https://github.com/moltis-org/moltis
+archive_name: "moltis-org--moltis"
 revision: 1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 revision_url: https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
 analyzed_at: 2026-07-27

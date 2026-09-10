@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NORTHTEKDevs/genome"
 source_url: https://github.com/NORTHTEKDevs/genome
+archive_name: "NORTHTEKDevs--genome"
 revision: 9358910aaf7ec8336e12a63a7b17a7269554e330
 revision_url: https://github.com/NORTHTEKDevs/genome/commit/9358910aaf7ec8336e12a63a7b17a7269554e330
 analyzed_at: 2026-08-23

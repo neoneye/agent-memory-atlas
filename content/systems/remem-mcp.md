@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "tinhien11/remem-mcp"
 source_url: https://github.com/tinhien11/remem-mcp
+archive_name: "tinhien11--remem-mcp"
 revision: 53a8612dea423db1255817ce0cfdb13086462129
 revision_url: https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129
 analyzed_at: 2026-08-16

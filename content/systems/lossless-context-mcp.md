@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NORTHTEKDevs/lossless-context-mcp"
 source_url: https://github.com/NORTHTEKDevs/lossless-context-mcp
+archive_name: "NORTHTEKDevs--lossless-context-mcp"
 revision: 47440a012e701fd8eddd4167fb5c3fa7faa44fdb
 revision_url: https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/47440a012e701fd8eddd4167fb5c3fa7faa44fdb
 analyzed_at: 2026-08-19

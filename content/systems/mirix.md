@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Mirix-AI/MIRIX"
 source_url: https://github.com/Mirix-AI/MIRIX
+archive_name: "Mirix-AI--MIRIX"
 revision: 51f3342d5366b0e215439581f92e0323227146af
 revision_url: https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af
 analyzed_at: 2026-07-29

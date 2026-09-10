@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "ArihantDeva/heimdall"
 source_url: https://github.com/ArihantDeva/heimdall
+archive_name: "ArihantDeva--heimdall"
 revision: 70ad71d06328d94331041da6aa10ab9c54b96be5
 revision_url: https://github.com/ArihantDeva/heimdall/commit/70ad71d06328d94331041da6aa10ab9c54b96be5
 analyzed_at: 2026-08-22

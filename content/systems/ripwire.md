@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "redhat-et/ripwire"
 source_url: https://github.com/redhat-et/ripwire
+archive_name: "redhat-et--ripwire"
 revision: 8c20e10856d347206ccbd52fd1b83d90c5cbb5e3
 revision_url: https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3
 analyzed_at: 2026-09-08

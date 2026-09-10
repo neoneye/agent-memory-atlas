@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: memvid/memvid
 source_url: https://github.com/memvid/memvid
+archive_name: "memvid--memvid"
 revision: e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 revision_url: https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 analyzed_at: 2026-07-28

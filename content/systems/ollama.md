@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "ollama/ollama"
 source_url: https://github.com/ollama/ollama
+archive_name: "ollama--ollama"
 revision: acdf81510d58d993de6175f8565b504d9777940a
 revision_url: https://github.com/ollama/ollama/commit/acdf81510d58d993de6175f8565b504d9777940a
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: MemPalace/mempalace
 source_url: https://github.com/MemPalace/mempalace
+archive_name: "MemPalace--mempalace"
 revision: a9f345cc63254eb4dea7abad36963b85c9f8453a
 revision_url: https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a
 analyzed_at: 2026-08-30

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vercel-labs/fx"
 source_url: https://github.com/vercel-labs/fx
+archive_name: "vercel-labs--fx"
 revision: a0f73b4db3b367662728639263f4c7983725e8f9
 revision_url: https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9
 analyzed_at: 2026-08-19

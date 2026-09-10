@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "outworked/outworked"
 source_url: https://github.com/outworked/outworked
+archive_name: "outworked--outworked"
 revision: 89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f
 revision_url: https://github.com/outworked/outworked/commit/89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f
 analyzed_at: 2026-08-20

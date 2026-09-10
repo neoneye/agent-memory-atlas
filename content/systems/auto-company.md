@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MaxMiksa/Auto-Company"
 source_url: https://github.com/MaxMiksa/Auto-Company
+archive_name: "MaxMiksa--Auto-Company"
 revision: ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd
 revision_url: https://github.com/MaxMiksa/Auto-Company/commit/ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd
 analyzed_at: 2026-09-08

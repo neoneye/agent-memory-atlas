@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SyntheticAutonomicMind/CLIO"
 source_url: https://github.com/SyntheticAutonomicMind/CLIO
+archive_name: "SyntheticAutonomicMind--CLIO"
 revision: 6f462b8a5a5d8c33c1d624824668aff8ab67ebca
 revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca
 analyzed_at: 2026-07-31

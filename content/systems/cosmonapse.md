@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Cosmonapse/cosmonapse-core"
 source_url: https://github.com/Cosmonapse/cosmonapse-core
+archive_name: "Cosmonapse--cosmonapse-core"
 revision: 16997d577596750e139f3eb83fd5c4b1c3c740bf
 revision_url: https://github.com/Cosmonapse/cosmonapse-core/commit/16997d577596750e139f3eb83fd5c4b1c3c740bf
 analyzed_at: 2026-07-30

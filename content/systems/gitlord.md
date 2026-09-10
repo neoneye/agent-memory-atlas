@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "yashneil75/gitlord"
 source_url: https://github.com/yashneil75/gitlord
+archive_name: "yashneil75--gitlord"
 revision: 42b0bab151777c1ee38ced7ab2805b0699e7a8a1
 revision_url: https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1
 analyzed_at: 2026-07-30

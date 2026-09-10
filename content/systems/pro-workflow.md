@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "rohitg00/pro-workflow"
 source_url: https://github.com/rohitg00/pro-workflow
+archive_name: "rohitg00--pro-workflow"
 revision: 7f7209d7215bced7d651209ef050c77953c298d6
 revision_url: https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6
 analyzed_at: 2026-09-08

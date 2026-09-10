@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "JPeetz/MeMex-Zero-RAG"
 source_url: https://github.com/JPeetz/MeMex-Zero-RAG
+archive_name: "JPeetz--MeMex-Zero-RAG"
 revision: f955d993d06cdf621d8ca7e004a27850eb9b6d34
 revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34
 analyzed_at: 2026-09-07

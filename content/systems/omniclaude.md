@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/omniclaude"
 source_url: https://github.com/OmniNode-ai/omniclaude
+archive_name: "OmniNode-ai--omniclaude"
 revision: 59b3c0ec3524b029abd4bc9f89e7d43d89be4abe
 revision_url: https://github.com/OmniNode-ai/omniclaude/commit/59b3c0ec3524b029abd4bc9f89e7d43d89be4abe
 analyzed_at: 2026-09-09

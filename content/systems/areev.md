@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "AreevAI/areev"
 source_url: https://github.com/AreevAI/areev
+archive_name: "AreevAI--areev"
 revision: 8b0f012671c1792204182fa2589426176a627ccf
 revision_url: https://github.com/AreevAI/areev/commit/8b0f012671c1792204182fa2589426176a627ccf
 analyzed_at: 2026-09-02

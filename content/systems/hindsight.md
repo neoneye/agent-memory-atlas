@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vectorize-io/hindsight"
 source_url: https://github.com/vectorize-io/hindsight
+archive_name: "vectorize-io--hindsight"
 revision: f9fb3e934a459f814ac00fefb1819e675d2b5bce
 revision_url: https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce
 analyzed_at: 2026-08-06

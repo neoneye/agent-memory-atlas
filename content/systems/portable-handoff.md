@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "legoambarish/portable-handoff"
 source_url: https://github.com/legoambarish/portable-handoff
+archive_name: "legoambarish--portable-handoff"
 revision: 4c9b7f7309803d009ce795af9f397875f23d567e
 revision_url: https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e
 analyzed_at: 2026-08-20

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "langchain-ai/langchain"
 source_url: https://github.com/langchain-ai/langchain
+archive_name: "langchain-ai--langchain"
 revision: f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5
 revision_url: https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5
 analyzed_at: 2026-08-14

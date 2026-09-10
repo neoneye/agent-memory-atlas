@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "alexgreensh/token-optimizer"
 source_url: https://github.com/alexgreensh/token-optimizer
+archive_name: "alexgreensh--token-optimizer"
 revision: 8ef7257490025646114b29f0c37ebaed826524de
 revision_url: https://github.com/alexgreensh/token-optimizer/commit/8ef7257490025646114b29f0c37ebaed826524de
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
+archive_name: "amitpatole--verel"
 revision: 6cf33f654437f457dc941c46e55bd3cd05b4da36
 revision_url: https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36
 analyzed_at: 2026-08-26

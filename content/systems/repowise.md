@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "repowise-dev/repowise"
 source_url: https://github.com/repowise-dev/repowise
+archive_name: "repowise-dev--repowise"
 revision: e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
 revision_url: https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
 analyzed_at: 2026-08-21

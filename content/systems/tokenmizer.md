@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Shweta-Mishra-ai/tokenmizer"
 source_url: https://github.com/Shweta-Mishra-ai/tokenmizer
+archive_name: "Shweta-Mishra-ai--tokenmizer"
 revision: 8495e2598b8c11547c64e5dc1f19cd198d5e363d
 revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d
 analyzed_at: 2026-08-19

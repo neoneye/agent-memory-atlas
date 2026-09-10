@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: earendil-works/pi
 source_url: https://github.com/earendil-works/pi
+archive_name: "earendil-works--pi"
 revision: a597371bda2af70372d1323d550483b5f4a0ae36
 revision_url: https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36
 analyzed_at: 2026-07-27

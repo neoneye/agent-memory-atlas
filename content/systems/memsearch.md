@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "zilliztech/memsearch"
 source_url: https://github.com/zilliztech/memsearch
+archive_name: "zilliztech--memsearch"
 revision: b734a142ea017657959dfe918ecfe9e1a16c6654
 revision_url: https://github.com/zilliztech/memsearch/commit/b734a142ea017657959dfe918ecfe9e1a16c6654
 analyzed_at: 2026-08-09

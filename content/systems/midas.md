@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vornicx/Midas"
 source_url: https://github.com/vornicx/Midas
+archive_name: "vornicx--Midas"
 revision: ee9953c15a977343eb783de0b9f217aaf46e5b4e
 revision_url: https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e
 analyzed_at: 2026-08-09

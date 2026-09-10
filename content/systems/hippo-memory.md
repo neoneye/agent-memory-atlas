@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kitfunso/hippo-memory"
 source_url: https://github.com/kitfunso/hippo-memory
+archive_name: "kitfunso--hippo-memory"
 revision: e928179a3b35e8fe5837878aed071d6025ced45c
 revision_url: https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c
 analyzed_at: 2026-08-19

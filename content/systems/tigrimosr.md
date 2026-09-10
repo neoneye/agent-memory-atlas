@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Sompote/TigrimOSR"
 source_url: https://github.com/Sompote/TigrimOSR
+archive_name: "Sompote--TigrimOSR"
 revision: 0813f2eb9f28a07e9adb6231f3de4f09803b66b4
 revision_url: https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4
 analyzed_at: 2026-07-31

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "prefrontal-systems/cortexgraph"
 source_url: https://github.com/prefrontal-systems/cortexgraph
+archive_name: "prefrontal-systems--cortexgraph"
 revision: 81a2daa3436f0923650eda9d84579cab54710408
 revision_url: https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408
 analyzed_at: 2026-08-09

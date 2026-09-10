@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "agi-is-going-to-arrive/memory-palace"
 source_url: https://github.com/agi-is-going-to-arrive/memory-palace
+archive_name: "agi-is-going-to-arrive--memory-palace"
 revision: 56c9bed39957f615da0b66b5e1459281d8fd1fef
 revision_url: https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef
 analyzed_at: 2026-08-09

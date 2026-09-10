@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "nutshellai-tech/mobius"
 source_url: https://github.com/nutshellai-tech/mobius
+archive_name: "nutshellai-tech--mobius"
 revision: fe744d5b65c1d8d1665c820753a9404837e983bd
 revision_url: https://github.com/nutshellai-tech/mobius/commit/fe744d5b65c1d8d1665c820753a9404837e983bd
 analyzed_at: 2026-08-13

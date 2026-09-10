@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vmDeshpande/ai-agent-automation"
 source_url: https://github.com/vmDeshpande/ai-agent-automation
+archive_name: "vmDeshpande--ai-agent-automation"
 revision: 984893ca0645b885717157eb8815c4caaa648bee
 revision_url: https://github.com/vmDeshpande/ai-agent-automation/commit/984893ca0645b885717157eb8815c4caaa648bee
 analyzed_at: 2026-08-23

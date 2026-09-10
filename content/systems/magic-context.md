@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: cortexkit/magic-context
 source_url: https://github.com/cortexkit/magic-context
+archive_name: "cortexkit--magic-context"
 revision: 113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 revision_url: https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
 analyzed_at: 2026-07-27

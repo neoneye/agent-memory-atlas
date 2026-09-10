@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kevin-hs-sohn/hipocampus"
 source_url: https://github.com/kevin-hs-sohn/hipocampus
+archive_name: "kevin-hs-sohn--hipocampus"
 revision: df88ca19d42a3aba4caeaba4512da46cae7827da
 revision_url: https://github.com/kevin-hs-sohn/hipocampus/commit/df88ca19d42a3aba4caeaba4512da46cae7827da
 analyzed_at: 2026-08-17

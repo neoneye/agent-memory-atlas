@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "potpie-ai/potpie"
 source_url: https://github.com/potpie-ai/potpie
+archive_name: "potpie-ai--potpie"
 revision: a341978880b9d4c1b403831931279ccedf6184ae
 revision_url: https://github.com/potpie-ai/potpie/commit/a341978880b9d4c1b403831931279ccedf6184ae
 analyzed_at: 2026-08-19

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NovasPlace/CSM"
 source_url: https://github.com/NovasPlace/CSM
+archive_name: "NovasPlace--CSM"
 revision: 21d00969c25ca170ef40bc07e6811beb5e78c99e
 revision_url: https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e
 analyzed_at: 2026-07-30

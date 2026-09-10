@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "terse-lang/terse"
 source_url: https://github.com/terse-lang/terse
+archive_name: "terse-lang--terse"
 revision: 637140a3a749f56a981cdb58d943f4fc1515c53b
 revision_url: https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b
 analyzed_at: 2026-07-31

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "marsmanleo/marsnme"
 source_url: https://github.com/marsmanleo/marsnme
+archive_name: "marsmanleo--marsnme"
 revision: 3ed1b0bc7bbccfd40efd13df366d0f538d155316
 revision_url: https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316
 analyzed_at: 2026-08-09

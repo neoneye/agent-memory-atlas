@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SenteLabsAI/OpenExecutive"
 source_url: https://github.com/SenteLabsAI/OpenExecutive
+archive_name: "SenteLabsAI--OpenExecutive"
 revision: 4e95559464331fc4a82ef7a0945d59e35af66120
 revision_url: https://github.com/SenteLabsAI/OpenExecutive/commit/4e95559464331fc4a82ef7a0945d59e35af66120
 analyzed_at: 2026-08-26

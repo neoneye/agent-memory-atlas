@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "xai-org/grok-build"
 source_url: https://github.com/xai-org/grok-build
+archive_name: "xai-org--grok-build"
 revision: eb267feff13129e568df38fb6fdf0ceb65f735d6
 revision_url: https://github.com/xai-org/grok-build/commit/eb267feff13129e568df38fb6fdf0ceb65f735d6
 analyzed_at: 2026-08-14

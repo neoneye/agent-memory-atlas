@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "yaminbkk/NexusMem"
 source_url: https://github.com/yaminbkk/NexusMem
+archive_name: "yaminbkk--NexusMem"
 revision: f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
 revision_url: https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
 analyzed_at: 2026-09-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "railstracks/animus"
 source_url: https://github.com/railstracks/animus
+archive_name: "railstracks--animus"
 revision: 63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa
 revision_url: https://github.com/railstracks/animus/commit/63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa
 analyzed_at: 2026-09-01

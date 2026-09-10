@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "VectifyAI/OpenKB"
 source_url: https://github.com/VectifyAI/OpenKB
+archive_name: "VectifyAI--OpenKB"
 revision: ff54396e575ee6feb0113b631a34caa082b441cc
 revision_url: https://github.com/VectifyAI/OpenKB/commit/ff54396e575ee6feb0113b631a34caa082b441cc
 analyzed_at: 2026-08-29

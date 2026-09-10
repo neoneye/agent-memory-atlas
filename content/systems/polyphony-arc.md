@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Mininglamp-AI/polyphony-arc-3"
 source_url: https://github.com/Mininglamp-AI/polyphony-arc-3
+archive_name: "Mininglamp-AI--polyphony-arc-3"
 revision: 9bb384c25d1bc95501cb08a124af7871c9ea24eb
 revision_url: https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb
 analyzed_at: 2026-08-27

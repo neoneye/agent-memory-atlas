@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: langchain-ai/langmem
 source_url: https://github.com/langchain-ai/langmem
+archive_name: "langchain-ai--langmem"
 revision: 7c7ebf36b5e1697001f92eed77c43e3d541decd7
 revision_url: https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7
 analyzed_at: 2026-08-06

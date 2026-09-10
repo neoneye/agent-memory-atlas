@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NIMI-research/Tycho"
 source_url: https://github.com/NIMI-research/Tycho
+archive_name: "NIMI-research--Tycho"
 revision: f68912a764372ead0a610db2e1c011d41ce5197e
 revision_url: https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e
 analyzed_at: 2026-08-27

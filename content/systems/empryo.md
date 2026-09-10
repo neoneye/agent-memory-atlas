@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "proxysoul/Empryo"
 source_url: https://github.com/proxysoul/Empryo
+archive_name: "proxysoul--Empryo"
 revision: e6b5885db1232f35a52eb9faeae1023ab46d5685
 revision_url: https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685
 analyzed_at: 2026-07-31

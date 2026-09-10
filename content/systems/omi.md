@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "BasedHardware/omi"
 source_url: https://github.com/BasedHardware/omi
+archive_name: "BasedHardware--omi"
 revision: bacd4cf2985bdab6098994345bd52ed91bcf3332
 revision_url: https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52ed91bcf3332
 analyzed_at: 2026-08-20

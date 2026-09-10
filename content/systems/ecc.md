@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "affaan-m/ECC"
 source_url: https://github.com/affaan-m/ECC
+archive_name: "affaan-m--ECC"
 revision: 591ab5cbd3f2f65860ea91c226e410b1502c8e2e
 revision_url: https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e
 analyzed_at: 2026-07-29

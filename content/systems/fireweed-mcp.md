@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Starksood/fireweed-mcp"
 source_url: https://github.com/Starksood/fireweed-mcp
+archive_name: "Starksood--fireweed-mcp"
 revision: a9bca09cd224500dcfff65e29f46354f0c93ef21
 revision_url: https://github.com/Starksood/fireweed-mcp/commit/a9bca09cd224500dcfff65e29f46354f0c93ef21
 analyzed_at: 2026-08-25

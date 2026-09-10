@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "garrytan/gbrain"
 source_url: https://github.com/garrytan/gbrain
+archive_name: "garrytan--gbrain"
 revision: ede85e2e8c510077e6505f1c30257dc64176361b
 revision_url: https://github.com/garrytan/gbrain/commit/ede85e2e8c510077e6505f1c30257dc64176361b
 analyzed_at: 2026-09-07

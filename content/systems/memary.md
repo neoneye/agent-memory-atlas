@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kingjulio8238/Memary"
 source_url: https://github.com/kingjulio8238/Memary
+archive_name: "kingjulio8238--Memary"
 revision: b2331a2c0844d66f69acd607b9e4dbaba56552c1
 revision_url: https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1
 analyzed_at: 2026-07-29

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "oraios/serena"
 source_url: https://github.com/oraios/serena
+archive_name: "oraios--serena"
 revision: 946ad9817875cbf46b308423296c33eb65e3e728
 revision_url: https://github.com/oraios/serena/commit/946ad9817875cbf46b308423296c33eb65e3e728
 analyzed_at: 2026-08-09

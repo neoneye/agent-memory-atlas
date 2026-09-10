@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "chaitanyagiri/munder-difflin"
 source_url: https://github.com/chaitanyagiri/munder-difflin
+archive_name: "chaitanyagiri--munder-difflin"
 revision: 5f7de6e464fda1345ceb6d41548ec72178e7e6d8
 revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8
 analyzed_at: 2026-08-22

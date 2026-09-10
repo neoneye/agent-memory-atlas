@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "deepractice/promptx"
 source_url: https://github.com/deepractice/promptx
+archive_name: "deepractice--promptx"
 revision: 93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 revision_url: https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 analyzed_at: 2026-08-04

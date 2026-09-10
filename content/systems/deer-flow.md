@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "bytedance/deer-flow"
 source_url: https://github.com/bytedance/deer-flow
+archive_name: "bytedance--deer-flow"
 revision: 5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
 revision_url: https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
 analyzed_at: 2026-08-02

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Arvincreator/project-golem"
 source_url: https://github.com/Arvincreator/project-golem
+archive_name: "Arvincreator--project-golem"
 revision: 210658a11bee669df875cc6edc0511fac239d1ba
 revision_url: https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba
 analyzed_at: 2026-07-31

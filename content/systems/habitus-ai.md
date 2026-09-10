@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "munch2u-a11y/Habitus-AI"
 source_url: https://github.com/munch2u-a11y/Habitus-AI
+archive_name: "munch2u-a11y--Habitus-AI"
 revision: f93b770e4b3c1875151dc13eb90421598c3efa5f
 revision_url: https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f
 analyzed_at: 2026-08-29

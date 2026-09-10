@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "CortexReach/memory-lancedb-pro"
 source_url: https://github.com/CortexReach/memory-lancedb-pro
+archive_name: "CortexReach--memory-lancedb-pro"
 revision: f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
 revision_url: https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
 analyzed_at: 2026-08-09

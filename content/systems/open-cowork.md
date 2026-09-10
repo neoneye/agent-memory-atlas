@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: OpenCoworkAI/open-cowork
 source_url: https://github.com/OpenCoworkAI/open-cowork
+archive_name: "OpenCoworkAI--open-cowork"
 revision: 6f0c04741386b8600aa977f14ac0679d2203bd1b
 revision_url: https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b
 analyzed_at: 2026-07-27

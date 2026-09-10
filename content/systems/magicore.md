@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jihadkhawaja/magicore"
 source_url: https://github.com/jihadkhawaja/magicore
+archive_name: "jihadkhawaja--magicore"
 revision: ae8ba6bb1a8213066e7655581c5326fce93424c3
 revision_url: https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3
 analyzed_at: 2026-09-06

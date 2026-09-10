@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SmythOS/sre"
 source_url: https://github.com/SmythOS/sre
+archive_name: "SmythOS--sre"
 revision: 5c382a1ec07accc75947c3e4fa24841532ae7c88
 revision_url: https://github.com/SmythOS/sre/commit/5c382a1ec07accc75947c3e4fa24841532ae7c88
 analyzed_at: 2026-08-10

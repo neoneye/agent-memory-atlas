@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mthines/lorekit"
 source_url: https://github.com/mthines/lorekit
+archive_name: "mthines--lorekit"
 revision: 08e3065b3f77dffa8ec313c25e6b38cbab77b67f
 revision_url: https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f
 analyzed_at: 2026-07-31

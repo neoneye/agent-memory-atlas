@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "ScPlaceholder/MOTH-agent-memory-template"
 source_url: https://github.com/ScPlaceholder/MOTH-agent-memory-template
+archive_name: "ScPlaceholder--MOTH-agent-memory-template"
 revision: 9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd
 revision_url: https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd
 analyzed_at: 2026-08-30

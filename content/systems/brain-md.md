@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mindmuxai/brain.md"
 source_url: https://github.com/mindmuxai/brain.md
+archive_name: "mindmuxai--brain.md"
 revision: 5cecfdd4154687751f80e2d40f3a70a4fdca4543
 revision_url: https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543
 analyzed_at: 2026-08-07

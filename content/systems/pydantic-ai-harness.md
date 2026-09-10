@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "pydantic/pydantic-ai-harness"
 source_url: https://github.com/pydantic/pydantic-ai-harness
+archive_name: "pydantic--pydantic-ai-harness"
 revision: 39ee7e08101c54b1ddf9c1e3a7f603f09ae34555
 revision_url: https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555
 analyzed_at: 2026-07-30

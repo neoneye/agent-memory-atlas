@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "alexisfox7/PRO-LONG"
 source_url: https://github.com/alexisfox7/PRO-LONG
+archive_name: "alexisfox7--PRO-LONG"
 revision: e30ac528c68b66abd68c802424d3724a85e927a8
 revision_url: https://github.com/alexisfox7/PRO-LONG/commit/e30ac528c68b66abd68c802424d3724a85e927a8
 analyzed_at: 2026-08-12

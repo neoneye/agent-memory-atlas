@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "codician-team/growmos"
 source_url: https://github.com/codician-team/growmos
+archive_name: "codician-team--growmos"
 revision: 510deb2dfee151fb79402b0a3274025f9c1c2c71
 revision_url: https://github.com/codician-team/growmos/commit/510deb2dfee151fb79402b0a3274025f9c1c2c71
 analyzed_at: 2026-08-17

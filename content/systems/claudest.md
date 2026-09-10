@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "gupsammy/claudest"
 source_url: https://github.com/gupsammy/claudest
+archive_name: "gupsammy--claudest"
 revision: 1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9
 revision_url: https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9
 analyzed_at: 2026-08-09

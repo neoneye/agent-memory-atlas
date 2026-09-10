@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mastra-ai/mastra"
 source_url: https://github.com/mastra-ai/mastra
+archive_name: "mastra-ai--mastra"
 revision: 4a41ea611732860395104e5af5ebe279ff9a796e
 revision_url: https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e
 analyzed_at: 2026-08-29

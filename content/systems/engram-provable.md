@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Harshitk-cp/engram"
 source_url: https://github.com/Harshitk-cp/engram
+archive_name: "Harshitk-cp--engram"
 revision: 4a3d20487a370d0cca6eaaf97861a6d5d0bcbe37
 revision_url: https://github.com/Harshitk-cp/engram/commit/4a3d20487a370d0cca6eaaf97861a6d5d0bcbe37
 analyzed_at: 2026-08-09

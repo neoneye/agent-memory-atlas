@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "riktar/memledger"
 source_url: https://github.com/riktar/memledger
+archive_name: "riktar--memledger"
 revision: 27f67e436ec0910e50c4b1c41cdf96f7afb6b341
 revision_url: https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341
 analyzed_at: 2026-07-31

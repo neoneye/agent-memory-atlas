@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Taki7980/Ai-workflow"
 source_url: https://github.com/Taki7980/Ai-workflow
+archive_name: "Taki7980--Ai-workflow"
 revision: c1686a372398fd58d2abd77372d8638af8212ab2
 revision_url: https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2
 analyzed_at: 2026-08-30

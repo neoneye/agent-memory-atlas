@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "TriliumNext/Trilium"
 source_url: https://github.com/TriliumNext/Trilium
+archive_name: "TriliumNext--Trilium"
 revision: 2d2c2108ed464d241c8b0e9438d8e19a35cf62be
 revision_url: https://github.com/TriliumNext/Trilium/commit/2d2c2108ed464d241c8b0e9438d8e19a35cf62be
 analyzed_at: 2026-09-07

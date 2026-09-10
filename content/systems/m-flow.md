@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "FlowElement-ai/m_flow"
 source_url: https://github.com/FlowElement-ai/m_flow
+archive_name: "FlowElement-ai--m_flow"
 revision: da2766c5ebf45ff10440b419465c8ec0df674022
 revision_url: https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022
 analyzed_at: 2026-08-02

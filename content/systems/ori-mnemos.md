@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "aayoawoyemi/ori-mnemos"
 source_url: https://github.com/aayoawoyemi/ori-mnemos
+archive_name: "aayoawoyemi--ori-mnemos"
 revision: 56c04fa547cf11e2dad8fc503aa049d9ed024f8f
 revision_url: https://github.com/aayoawoyemi/ori-mnemos/commit/56c04fa547cf11e2dad8fc503aa049d9ed024f8f
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "joshhhhhan/VISTA"
 source_url: https://github.com/joshhhhhan/VISTA
+archive_name: "joshhhhhan--VISTA"
 revision: 900aa3380e4f1120436d83b2ce1115a38ac29bf9
 revision_url: https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9
 analyzed_at: 2026-09-07

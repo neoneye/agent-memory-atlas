@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "patibandlavenkatamanideep/memoryops-ai"
 source_url: https://github.com/patibandlavenkatamanideep/memoryops-ai
+archive_name: "patibandlavenkatamanideep--memoryops-ai"
 revision: df73ad4c37f6e6d55d0e66596b90ad0b95294e97
 revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/df73ad4c37f6e6d55d0e66596b90ad0b95294e97
 analyzed_at: 2026-08-18

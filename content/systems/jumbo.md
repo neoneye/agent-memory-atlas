@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jumbocontext/jumbo.cli"
 source_url: https://github.com/jumbocontext/jumbo.cli
+archive_name: "jumbocontext--jumbo.cli"
 revision: 6800f0530068168522d6cf3d854b2d0bc5fa4bb6
 revision_url: https://github.com/jumbocontext/jumbo.cli/commit/6800f0530068168522d6cf3d854b2d0bc5fa4bb6
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "openmake/openmake_llm"
 source_url: https://github.com/openmake/openmake_llm
+archive_name: "openmake--openmake_llm"
 revision: 9ffeca8c4c2bbad08864257ebb40b9998270ec52
 revision_url: https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52
 analyzed_at: 2026-09-07

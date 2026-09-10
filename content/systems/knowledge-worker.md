@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "rahulmranga/knowledge-worker"
 source_url: https://github.com/rahulmranga/knowledge-worker
+archive_name: "rahulmranga--knowledge-worker"
 revision: 1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
 revision_url: https://github.com/rahulmranga/knowledge-worker/commit/1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
 analyzed_at: 2026-08-09

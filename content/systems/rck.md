@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NORTHTEKDevs/rck"
 source_url: https://github.com/NORTHTEKDevs/rck
+archive_name: "NORTHTEKDevs--rck"
 revision: 440f6259266ffd69073b676caf0f78d9a343e111
 revision_url: https://github.com/NORTHTEKDevs/rck/commit/440f6259266ffd69073b676caf0f78d9a343e111
 analyzed_at: 2026-08-23

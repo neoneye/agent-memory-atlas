@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "memseekai/membukkit"
 source_url: https://github.com/memseekai/membukkit
+archive_name: "memseekai--membukkit"
 revision: af1bf323a80901f58928189c16caa372191a1219
 revision_url: https://github.com/memseekai/membukkit/commit/af1bf323a80901f58928189c16caa372191a1219
 analyzed_at: 2026-08-29

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: ActiveMemory/ctx
 source_url: https://github.com/ActiveMemory/ctx
+archive_name: "ActiveMemory--ctx"
 revision: ce5a832885d66ba3608e02d2db85e5e90a455559
 revision_url: https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559
 analyzed_at: 2026-07-28

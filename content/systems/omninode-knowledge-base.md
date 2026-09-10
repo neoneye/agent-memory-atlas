@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "OmniNode-ai/knowledge-base"
 source_url: https://github.com/OmniNode-ai/knowledge-base
+archive_name: "OmniNode-ai--knowledge-base"
 revision: 5e32bc35dc5aec727799199c0991f3cb412cf7b4
 revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4
 analyzed_at: 2026-09-09

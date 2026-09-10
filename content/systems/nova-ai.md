@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
+archive_name: "Whooptie--NOVA_AI"
 revision: 5d9892522d1a275f70db5c2f7d6ec4c59487029d
 revision_url: https://github.com/Whooptie/NOVA_AI/commit/5d9892522d1a275f70db5c2f7d6ec4c59487029d
 analyzed_at: 2026-09-07

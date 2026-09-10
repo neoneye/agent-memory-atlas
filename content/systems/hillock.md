@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
+archive_name: "roandejager--Hillock"
 revision: 5fdaeffe7dadee52a15cf1772b46013cc1af256a
 revision_url: https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a
 analyzed_at: 2026-08-30

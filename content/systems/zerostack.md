@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "gi-dellav/zerostack"
 source_url: https://github.com/gi-dellav/zerostack
+archive_name: "gi-dellav--zerostack"
 revision: 90986c5c55631e0a372694e77fa69880ba39b31b
 revision_url: https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b
 analyzed_at: 2026-07-30

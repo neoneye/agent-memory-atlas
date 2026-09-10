@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "eanai-ro/ean-agentos"
 source_url: https://github.com/eanai-ro/ean-agentos
+archive_name: "eanai-ro--ean-agentos"
 revision: 0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
 revision_url: https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
 analyzed_at: 2026-08-02

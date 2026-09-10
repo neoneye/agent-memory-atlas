@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Sidharth-Singh10/weave"
 source_url: https://github.com/Sidharth-Singh10/weave
+archive_name: "Sidharth-Singh10--weave"
 revision: ff8a6afa107947dd00f15c67db6a0aa7f90ca456
 revision_url: https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456
 analyzed_at: 2026-08-24

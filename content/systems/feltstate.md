@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Morephine/feltstate"
 source_url: https://github.com/Morephine/feltstate
+archive_name: "Morephine--feltstate"
 revision: 45b1c9824326669f7e1855097a3bfe01192084ed
 revision_url: https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed
 analyzed_at: 2026-08-16

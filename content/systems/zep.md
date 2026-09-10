@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "getzep/zep"
 source_url: https://github.com/getzep/zep
+archive_name: "getzep--zep"
 revision: be263ee23085410185835e0d8508b47fd35e9abb
 revision_url: https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb
 analyzed_at: 2026-08-13

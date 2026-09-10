@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "martian56/redcell"
 source_url: https://github.com/martian56/redcell
+archive_name: "martian56--redcell"
 revision: 323a3e11d8a2b50de4a8193c5ac356f4aa4d27e5
 revision_url: https://github.com/martian56/redcell/commit/323a3e11d8a2b50de4a8193c5ac356f4aa4d27e5
 analyzed_at: 2026-08-14

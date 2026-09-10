@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "orneryd/NornicDB"
 source_url: https://github.com/orneryd/NornicDB
+archive_name: "orneryd--NornicDB"
 revision: a5f623399830d76e3e22e56264548c613ba897aa
 revision_url: https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa
 analyzed_at: 2026-08-09

@@ -244,6 +244,15 @@ fi
 # YAML keeps the last of a duplicate key and drops the first without failing, so
 # a second `capability_evidence:` or `matrix:` block loses the one above it with
 # nothing in the rendered page to say so. Pandoc downgrades that to a warning.
+if ! python3 "$project_dir/scripts/check_archive_names.py" --self-test; then
+  echo "check_archive_names.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_archive_names.py" "$project_dir"; then
+  echo "A report's archive_name disagrees with the fork its source_url implies." >&2
+  exit 1
+fi
+
 if ! python3 "$project_dir/scripts/check_frontmatter_keys.py" --self-test; then
   echo "check_frontmatter_keys.py cannot demonstrate that it still fails." >&2
   exit 1

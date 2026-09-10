@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kirodotdev/KiroCrew"
 source_url: https://github.com/kirodotdev/KiroCrew
+archive_name: "kirodotdev--KiroCrew"
 revision: 429cbad8cdb7bfbf4c10f6343374565832b176d2
 revision_url: https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2
 analyzed_at: 2026-08-06

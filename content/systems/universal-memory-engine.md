@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "12ziyad/universal-memory-engine"
 source_url: https://github.com/12ziyad/universal-memory-engine
+archive_name: "12ziyad--universal-memory-engine"
 revision: b17c5486553634b66b3aa70777a007928dab54d7
 revision_url: https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7
 analyzed_at: 2026-09-09

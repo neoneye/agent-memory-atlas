@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "microsoft/autogen"
 source_url: https://github.com/microsoft/autogen
+archive_name: "microsoft--autogen"
 revision: 027ecf0a379bcc1d09956d46d12d44a3ad9cee14
 revision_url: https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14
 analyzed_at: 2026-07-29

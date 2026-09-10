@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "bytechefhq/bytechef"
 source_url: https://github.com/bytechefhq/bytechef
+archive_name: "bytechefhq--bytechef"
 revision: ee145ac61fc2bb816c1f883c5adc721f60b32879
 revision_url: https://github.com/bytechefhq/bytechef/commit/ee145ac61fc2bb816c1f883c5adc721f60b32879
 analyzed_at: 2026-08-17

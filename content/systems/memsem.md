@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "WindSeries83/memsem"
 source_url: https://github.com/WindSeries83/memsem
+archive_name: "WindSeries83--memsem"
 revision: 8332a23620d88dd9755dba2b9ac954d34598d67e
 revision_url: https://github.com/WindSeries83/memsem/commit/8332a23620d88dd9755dba2b9ac954d34598d67e
 analyzed_at: 2026-09-07

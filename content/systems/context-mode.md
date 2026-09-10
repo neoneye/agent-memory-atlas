@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mksglu/context-mode"
 source_url: https://github.com/mksglu/context-mode
+archive_name: "mksglu--context-mode"
 revision: ff5f911d5732a036336c59684c27f4514f211edf
 revision_url: https://github.com/mksglu/context-mode/commit/ff5f911d5732a036336c59684c27f4514f211edf
 analyzed_at: 2026-08-09

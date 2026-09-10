@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "esengine/DeepSeek-Reasonix"
 source_url: https://github.com/esengine/DeepSeek-Reasonix
+archive_name: "esengine--DeepSeek-Reasonix"
 revision: d95e2510cfb3088fb51787668b61a7982b94849b
 revision_url: https://github.com/esengine/DeepSeek-Reasonix/commit/d95e2510cfb3088fb51787668b61a7982b94849b
 analyzed_at: 2026-08-16

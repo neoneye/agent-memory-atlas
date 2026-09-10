@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "buildingjoshbetter/TrueMemory"
 source_url: https://github.com/buildingjoshbetter/TrueMemory
+archive_name: "buildingjoshbetter--TrueMemory"
 revision: e7f1fd79e4188637f9b168337c5a219af890a613
 revision_url: https://github.com/buildingjoshbetter/TrueMemory/commit/e7f1fd79e4188637f9b168337c5a219af890a613
 analyzed_at: 2026-08-09

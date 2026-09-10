@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "basicmachines-co/basic-memory"
 source_url: https://github.com/basicmachines-co/basic-memory
+archive_name: "basicmachines-co--basic-memory"
 revision: 816accaa9befe8281668ba8819eaf74d11ce2385
 revision_url: https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385
 analyzed_at: 2026-08-06

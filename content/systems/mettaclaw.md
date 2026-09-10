@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "patham9/mettaclaw"
 source_url: https://github.com/patham9/mettaclaw
+archive_name: "patham9--mettaclaw"
 revision: 7b30527b0896cf0b9377ed2b37aef93711b0aab0
 revision_url: https://github.com/patham9/mettaclaw/commit/7b30527b0896cf0b9377ed2b37aef93711b0aab0
 analyzed_at: 2026-08-21

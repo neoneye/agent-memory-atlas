@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Osmantic/ODS"
 source_url: https://github.com/Osmantic/ODS
+archive_name: "Osmantic--ODS"
 revision: 5a4450765976e2ad2792b9ac8927f4873dac60f6
 revision_url: https://github.com/Osmantic/ODS/commit/5a4450765976e2ad2792b9ac8927f4873dac60f6
 analyzed_at: 2026-08-11

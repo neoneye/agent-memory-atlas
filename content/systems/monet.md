@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "team-monet/monet"
 source_url: https://github.com/team-monet/monet
+archive_name: "team-monet--monet"
 revision: 1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
 revision_url: https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
 analyzed_at: 2026-09-09

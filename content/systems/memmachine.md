@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MemMachine/MemMachine"
 source_url: https://github.com/MemMachine/MemMachine
+archive_name: "MemMachine--MemMachine"
 revision: 2d28c1c1e57d1026335c4a829b1a9b0a918c114f
 revision_url: https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f
 analyzed_at: 2026-08-19

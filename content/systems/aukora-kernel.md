@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "aumara-xyz/aukora-kernel"
 source_url: https://github.com/aumara-xyz/aukora-kernel
+archive_name: "aumara-xyz--aukora-kernel"
 revision: b441edc4d17de778d30ae955f46408edae39bffe
 revision_url: https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe
 analyzed_at: 2026-07-29

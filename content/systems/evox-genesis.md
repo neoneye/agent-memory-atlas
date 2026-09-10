@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "EMI-Group/genesis"
 source_url: https://github.com/EMI-Group/genesis
+archive_name: "EMI-Group--genesis"
 revision: 3b84f87a5455340dd7f09d405a42f19dc992600c
 revision_url: https://github.com/EMI-Group/genesis/commit/3b84f87a5455340dd7f09d405a42f19dc992600c
 analyzed_at: 2026-09-08

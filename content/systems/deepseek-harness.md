@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "deepseek-ai/deepseek-harness"
 source_url: https://github.com/deepseek-ai/deepseek-harness
+archive_name: "deepseek-ai--deepseek-harness"
 revision: 47f943859bef60e4160492346772ded9b24f765a
 revision_url: https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a
 analyzed_at: 2026-08-14

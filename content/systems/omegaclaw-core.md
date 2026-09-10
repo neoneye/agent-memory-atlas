@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "asi-alliance/OmegaClaw-Core"
 source_url: https://github.com/asi-alliance/OmegaClaw-Core
+archive_name: "asi-alliance--OmegaClaw-Core"
 revision: b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
 revision_url: https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
 analyzed_at: 2026-08-21

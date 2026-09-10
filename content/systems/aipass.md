@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "AIOSAI/AIPass"
 source_url: https://github.com/AIOSAI/AIPass
+archive_name: "AIOSAI--AIPass"
 revision: 088957d702a277d34e931b581469b2ca9fbc4619
 revision_url: https://github.com/AIOSAI/AIPass/commit/088957d702a277d34e931b581469b2ca9fbc4619
 analyzed_at: 2026-09-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MythologIQ-Labs-LLC/agent-memory"
 source_url: https://github.com/MythologIQ-Labs-LLC/agent-memory
+archive_name: "MythologIQ-Labs-LLC--agent-memory"
 revision: 4b0ed7546fd8220a89eb9de8b800317f77bac823
 revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220a89eb9de8b800317f77bac823
 analyzed_at: 2026-09-07

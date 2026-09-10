@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "christopherkarani/Wax"
 source_url: https://github.com/christopherkarani/Wax
+archive_name: "christopherkarani--Wax"
 revision: 93cbf51f76f7db4f837c744f84d26554f7fc9f66
 revision_url: https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66
 analyzed_at: 2026-08-09

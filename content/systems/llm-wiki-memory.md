@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: ctxr-dev/llm-wiki-memory
 source_url: https://github.com/ctxr-dev/llm-wiki-memory
+archive_name: "ctxr-dev--llm-wiki-memory"
 revision: 1e315b196212e0130117817512affac2fa95ae1c
 revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/1e315b196212e0130117817512affac2fa95ae1c
 analyzed_at: 2026-08-20

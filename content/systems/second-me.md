@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "mindverse/Second-Me"
 source_url: https://github.com/mindverse/Second-Me
+archive_name: "mindverse--Second-Me"
 revision: d0e40251d9de61b3340b8d0d7d83150669f1885a
 revision_url: https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a
 analyzed_at: 2026-07-29

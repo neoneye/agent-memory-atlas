@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: NevaMind-AI/memU
 source_url: https://github.com/NevaMind-AI/memU
+archive_name: "NevaMind-AI--memU"
 revision: c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
 revision_url: https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
 analyzed_at: 2026-08-04

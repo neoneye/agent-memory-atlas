@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "KnowledgeXLab/MemHarness"
 source_url: https://github.com/KnowledgeXLab/MemHarness
+archive_name: "KnowledgeXLab--MemHarness"
 revision: 31329e8e084c7fdf20556874950f6c2100b8b28e
 revision_url: https://github.com/KnowledgeXLab/MemHarness/commit/31329e8e084c7fdf20556874950f6c2100b8b28e
 analyzed_at: 2026-08-17

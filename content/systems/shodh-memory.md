@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "varun29ankuS/shodh-memory"
 source_url: https://github.com/varun29ankuS/shodh-memory
+archive_name: "varun29ankuS--shodh-memory"
 revision: cac4c0b387d55e0549636e031811fd3a7eec4d5f
 revision_url: https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f
 analyzed_at: 2026-08-09

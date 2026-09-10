@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "noahshinn/reflexion"
 source_url: https://github.com/noahshinn/reflexion
+archive_name: "noahshinn--reflexion"
 revision: 218cf0ef1df84b05ce379dd4a8e47f17766733a0
 revision_url: https://github.com/noahshinn/reflexion/commit/218cf0ef1df84b05ce379dd4a8e47f17766733a0
 analyzed_at: 2026-08-14

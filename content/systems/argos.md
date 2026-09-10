@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "bobaba76/Argos"
 source_url: https://github.com/bobaba76/Argos
+archive_name: "bobaba76--Argos"
 revision: 755f652a5d1cff21b1a38c371f5790f79feb87af
 revision_url: https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af
 analyzed_at: 2026-09-07

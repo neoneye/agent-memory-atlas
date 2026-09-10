@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fuyuxiang/echo-agent"
 source_url: https://github.com/fuyuxiang/echo-agent
+archive_name: "fuyuxiang--echo-agent"
 revision: 29a19f4dd86ae2aeabab97df2b9bea3ae718460e
 revision_url: https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e
 analyzed_at: 2026-08-04

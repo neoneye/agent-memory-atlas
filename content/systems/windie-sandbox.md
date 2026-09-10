@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "buiilding/Windie-Sandbox"
 source_url: https://github.com/buiilding/Windie-Sandbox
+archive_name: "buiilding--Windie-Sandbox"
 revision: b8e9cc9283bb45ec5d151491440e02b25addc256
 revision_url: https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256
 analyzed_at: 2026-09-09

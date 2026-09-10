@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "GOODMAN-PRO/helm"
 source_url: https://github.com/GOODMAN-PRO/helm
+archive_name: "GOODMAN-PRO--helm"
 revision: f453eaa9683ea0a66b45c76275cb6576bcf14f73
 revision_url: https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73
 analyzed_at: 2026-07-30

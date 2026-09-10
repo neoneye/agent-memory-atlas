@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "truffle-ai/dexto"
 source_url: https://github.com/truffle-ai/dexto
+archive_name: "truffle-ai--dexto"
 revision: 4108a9c730425f43602bce6c8720e2fe44b4b9d5
 revision_url: https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2fe44b4b9d5
 analyzed_at: 2026-07-31

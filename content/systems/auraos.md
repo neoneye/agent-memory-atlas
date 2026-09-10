@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "AdultSwimmer/AuraOS"
 source_url: https://github.com/AdultSwimmer/AuraOS
+archive_name: "AdultSwimmer--AuraOS"
 revision: c7d6651a98b8581e372864a4976c5a8a4c8290e4
 revision_url: https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4
 analyzed_at: 2026-08-21

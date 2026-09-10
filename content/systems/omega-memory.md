@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "omega-memory/omega-memory"
 source_url: https://github.com/omega-memory/omega-memory
+archive_name: "omega-memory--omega-memory"
 revision: d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
 revision_url: https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
 analyzed_at: 2026-08-09

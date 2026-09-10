@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "H-XX-D/recall-memory-substrate"
 source_url: https://github.com/H-XX-D/recall-memory-substrate
+archive_name: "H-XX-D--recall-memory-substrate"
 revision: b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 revision_url: https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 analyzed_at: 2026-08-21

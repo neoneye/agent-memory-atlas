@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: letta-ai/letta
 source_url: https://github.com/letta-ai/letta
+archive_name: "letta-ai--letta"
 revision: ff19ffeafeb54bd2a7dc5d4a552f10191732a235
 revision_url: https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235
 analyzed_at: 2026-08-06

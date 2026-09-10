@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "El-AI-Intelligence/engram-format"
 source_url: https://github.com/El-AI-Intelligence/engram-format
+archive_name: "El-AI-Intelligence--engram-format"
 revision: 5bb55f2c50e9de01852349930915e547b4dced17
 revision_url: https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17
 analyzed_at: 2026-09-06

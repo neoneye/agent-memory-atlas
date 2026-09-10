@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: andrewyng/openworker
 source_url: https://github.com/andrewyng/openworker
+archive_name: "andrewyng--openworker"
 revision: 7fc3ee68e61b7e6610959a4068f15a2eda1e2630
 revision_url: https://github.com/andrewyng/openworker/commit/7fc3ee68e61b7e6610959a4068f15a2eda1e2630
 analyzed_at: 2026-08-25

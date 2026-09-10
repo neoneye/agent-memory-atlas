@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "carsteneu/yesmem"
 source_url: https://github.com/carsteneu/yesmem
+archive_name: "carsteneu--yesmem"
 revision: b1ad72ef9fd508180afaef1ca46c87a17a3c675c
 revision_url: https://github.com/carsteneu/yesmem/commit/b1ad72ef9fd508180afaef1ca46c87a17a3c675c
 analyzed_at: 2026-08-09

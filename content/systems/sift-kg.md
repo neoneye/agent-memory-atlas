@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "juanceresa/sift-kg"
 source_url: https://github.com/juanceresa/sift-kg
+archive_name: "juanceresa--sift-kg"
 revision: d786991c024f5401f113fc0cb70aee96dd1bd3bf
 revision_url: https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf
 analyzed_at: 2026-08-20

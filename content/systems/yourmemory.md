@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "sachitrafa/yourmemory"
 source_url: https://github.com/sachitrafa/yourmemory
+archive_name: "sachitrafa--yourmemory"
 revision: 0bda3e0331e67b357832735f6beec3d3f7fb022e
 revision_url: https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e
 analyzed_at: 2026-08-09

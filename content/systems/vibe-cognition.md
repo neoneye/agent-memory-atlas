@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "haagndaazer/vibe-cognition"
 source_url: https://github.com/haagndaazer/vibe-cognition
+archive_name: "haagndaazer--vibe-cognition"
 revision: 09126b69a91f1a3f5691159a4785b35691b70658
 revision_url: https://github.com/haagndaazer/vibe-cognition/commit/09126b69a91f1a3f5691159a4785b35691b70658
 analyzed_at: 2026-09-09

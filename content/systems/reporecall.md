@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "jags111/reporecall"
 source_url: https://github.com/jags111/reporecall
+archive_name: "jags111--reporecall"
 revision: 0c0a9ff61a99ac428927f99c1c449c04cadd0702
 revision_url: https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702
 analyzed_at: 2026-09-06

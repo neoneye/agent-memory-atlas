@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "thefullnacho/hestia"
 source_url: https://github.com/thefullnacho/hestia
+archive_name: "thefullnacho--hestia"
 revision: e6841239a9644035df88bb49f429385382238351
 revision_url: https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351
 analyzed_at: 2026-08-20

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "24kchengYe/MemoMind"
 source_url: https://github.com/24kchengYe/MemoMind
+archive_name: "24kchengYe--MemoMind"
 revision: d45a7a08dfec155f38c0bed41d1159f7c6234fc1
 revision_url: https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1
 analyzed_at: 2026-08-09

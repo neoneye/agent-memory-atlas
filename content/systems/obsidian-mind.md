@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "breferrari/obsidian-mind"
 source_url: https://github.com/breferrari/obsidian-mind
+archive_name: "breferrari--obsidian-mind"
 revision: b84464b983d7b25e811d52986f8b61dbcbad961d
 revision_url: https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d
 analyzed_at: 2026-08-09

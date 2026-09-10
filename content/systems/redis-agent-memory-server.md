@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: redis/agent-memory-server
 source_url: https://github.com/redis/agent-memory-server
+archive_name: "redis--agent-memory-server"
 revision: 886437963dc02289e828872f0ae21fdaa734c337
 revision_url: https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337
 analyzed_at: 2026-07-27

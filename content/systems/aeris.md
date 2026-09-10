@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Cedrick-Coto/Aeris"
 source_url: https://github.com/Cedrick-Coto/Aeris
+archive_name: "Cedrick-Coto--Aeris"
 revision: 68a2bd6d11a12beab705ce400e5c3a052d7f71db
 revision_url: https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db
 analyzed_at: 2026-08-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "zhangfengcdt/memoir"
 source_url: https://github.com/zhangfengcdt/memoir
+archive_name: "zhangfengcdt--memoir"
 revision: 868703a96fae8c9e058db3b04790229addeb7e93
 revision_url: https://github.com/zhangfengcdt/memoir/commit/868703a96fae8c9e058db3b04790229addeb7e93
 analyzed_at: 2026-08-09

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "kiycoh/silica-harness"
 source_url: https://github.com/kiycoh/silica-harness
+archive_name: "kiycoh--silica-harness"
 revision: 300fab2e1686e6401a059ec62161ba5a46fce356
 revision_url: https://github.com/kiycoh/silica-harness/commit/300fab2e1686e6401a059ec62161ba5a46fce356
 analyzed_at: 2026-08-23

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "HKUDS/DeepCode"
 source_url: https://github.com/HKUDS/DeepCode
+archive_name: "HKUDS--DeepCode"
 revision: 69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 revision_url: https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
 analyzed_at: 2026-08-05

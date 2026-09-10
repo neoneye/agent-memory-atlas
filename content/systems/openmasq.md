@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "openmasq/openmasq"
 source_url: https://github.com/openmasq/openmasq
+archive_name: "openmasq--openmasq"
 revision: 874608ec6835787a73176723812b29eb41bc1088
 revision_url: https://github.com/openmasq/openmasq/commit/874608ec6835787a73176723812b29eb41bc1088
 analyzed_at: 2026-09-06

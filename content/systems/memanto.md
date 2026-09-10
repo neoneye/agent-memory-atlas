@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: moorcheh-ai/memanto
 source_url: https://github.com/moorcheh-ai/memanto
+archive_name: "moorcheh-ai--memanto"
 revision: 06615f09c536336e629e34589dc125495cba3109
 revision_url: https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109
 analyzed_at: 2026-09-07

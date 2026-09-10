@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: akitaonrails/ai-memory
 source_url: https://github.com/akitaonrails/ai-memory
+archive_name: "akitaonrails--ai-memory"
 revision: 5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
 revision_url: https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
 analyzed_at: 2026-07-28

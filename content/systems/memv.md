@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "vstorm-co/memv"
 source_url: https://github.com/vstorm-co/memv
+archive_name: "vstorm-co--memv"
 revision: fd314bac28247df1149edfbf0d1f7881690ef448
 revision_url: https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448
 analyzed_at: 2026-08-09

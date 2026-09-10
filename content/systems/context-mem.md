@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "JubaKitiashvili/context-mem"
 source_url: https://github.com/JubaKitiashvili/context-mem
+archive_name: "JubaKitiashvili--context-mem"
 revision: 2a55af0a4bf3467df89f1315a74bb2e15ad903f7
 revision_url: https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7
 analyzed_at: 2026-08-09

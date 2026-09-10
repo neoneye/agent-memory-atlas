@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "NirDiamant/Agent_Memory_Techniques"
 source_url: https://github.com/NirDiamant/Agent_Memory_Techniques
+archive_name: "NirDiamant--Agent_Memory_Techniques"
 revision: b4b277097cf83ae56021c14eab6f7a3d63dc905f
 revision_url: https://github.com/NirDiamant/Agent_Memory_Techniques/commit/b4b277097cf83ae56021c14eab6f7a3d63dc905f
 analyzed_at: 2026-08-14

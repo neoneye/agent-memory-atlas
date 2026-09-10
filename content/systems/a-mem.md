@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "agiresearch/A-mem"
 source_url: https://github.com/agiresearch/A-mem
+archive_name: "agiresearch--A-mem"
 revision: ceffb860f0712bbae97b184d440df62bc910ca8d
 revision_url: https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d
 analyzed_at: 2026-07-27

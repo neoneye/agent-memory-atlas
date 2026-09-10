@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: agentic-box/memora
 source_url: https://github.com/agentic-box/memora
+archive_name: "agentic-box--memora"
 revision: e3621fda42d07e95b854f1a7e3392442116212fb
 revision_url: https://github.com/agentic-box/memora/commit/e3621fda42d07e95b854f1a7e3392442116212fb
 analyzed_at: 2026-08-11

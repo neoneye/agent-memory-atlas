@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "fpytloun/mnemory"
 source_url: https://github.com/fpytloun/mnemory
+archive_name: "fpytloun--mnemory"
 revision: c67b9167e18f1730786c07c48f883674425dd681
 revision_url: https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681
 analyzed_at: 2026-09-07

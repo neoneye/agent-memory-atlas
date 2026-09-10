@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "griffinwork40/agent-afk"
 source_url: https://github.com/griffinwork40/agent-afk
+archive_name: "griffinwork40--agent-afk"
 revision: e3d15fe2389602c2761954baadd495d8ebe7a6a2
 revision_url: https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2
 analyzed_at: 2026-07-30

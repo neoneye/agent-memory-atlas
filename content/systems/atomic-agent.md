@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: AtomicBot-ai/atomic-agent
 source_url: https://github.com/AtomicBot-ai/atomic-agent
+archive_name: "AtomicBot-ai--atomic-agent"
 revision: d69332c589733e38ae7393dd81fcbc5a375d02fb
 revision_url: https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb
 analyzed_at: 2026-07-27

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SugarcaneDefender/z-waif"
 source_url: https://github.com/SugarcaneDefender/z-waif
+archive_name: "SugarcaneDefender--z-waif"
 revision: aaf905c12efcbd2a709a3b2285f55e554d47484f
 revision_url: https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f
 analyzed_at: 2026-07-29

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "djolex999/vir"
 source_url: https://github.com/djolex999/vir
+archive_name: "djolex999--vir"
 revision: 49451ee8edf3747f81df6548411f0439c4378c6c
 revision_url: https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c
 analyzed_at: 2026-08-09

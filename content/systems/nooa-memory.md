@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
+archive_name: "NVIDIA-NeMo--labs-OO-Agents"
 revision: fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
 revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
 analyzed_at: 2026-09-08

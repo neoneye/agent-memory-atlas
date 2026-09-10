@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "faisalhussain-devs/MindCache"
 source_url: https://github.com/faisalhussain-devs/MindCache
+archive_name: "faisalhussain-devs--MindCache"
 revision: 45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
 revision_url: https://github.com/faisalhussain-devs/MindCache/commit/45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
 analyzed_at: 2026-08-18

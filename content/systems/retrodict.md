@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "ryanbbrown/Retrodict"
 source_url: https://github.com/ryanbbrown/Retrodict
+archive_name: "ryanbbrown--Retrodict"
 revision: 71672e8e5adb008360f52a61ef9e2adf91a62d89
 revision_url: https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89
 analyzed_at: 2026-08-27

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "ruvnet/ruflo"
 source_url: https://github.com/ruvnet/ruflo
+archive_name: "ruvnet--ruflo"
 revision: 913f9eaedee92627950544424e50339feaf98271
 revision_url: https://github.com/ruvnet/ruflo/commit/913f9eaedee92627950544424e50339feaf98271
 analyzed_at: 2026-08-09

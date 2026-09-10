@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Renkasha/Sovereign"
 source_url: https://github.com/Renkasha/Sovereign
+archive_name: ""
 revision: 86018d651acb6500ea4d3c79acf5acbbaf547a76
 revision_url: https://github.com/Renkasha/Sovereign/commit/86018d651acb6500ea4d3c79acf5acbbaf547a76
 analyzed_at: 2026-08-04

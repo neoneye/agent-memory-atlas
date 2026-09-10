@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "MakerViking/mimir"
 source_url: https://github.com/MakerViking/mimir
+archive_name: "MakerViking--mimir"
 revision: ff5b3688da694be0edb38232a1d90843d00a5fa7
 revision_url: https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7
 analyzed_at: 2026-09-07

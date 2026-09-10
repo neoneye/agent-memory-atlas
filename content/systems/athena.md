@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "winstonkoh87/Athena-Public"
 source_url: https://github.com/winstonkoh87/Athena-Public
+archive_name: "winstonkoh87--Athena-Public"
 revision: 2e4898e3bd28a79a58dc1b17437ace050bea2479
 revision_url: https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479
 analyzed_at: 2026-08-09

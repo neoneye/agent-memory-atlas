@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "SuanmoSuanyangTechnology/MemoryBear"
 source_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear
+archive_name: "SuanmoSuanyangTechnology--MemoryBear"
 revision: 857bb5b4022fec641b0a511b82b0968a761a0d62
 revision_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62
 analyzed_at: 2026-08-09

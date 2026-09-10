@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "Goldentrii/AgentRecall-X"
 source_url: https://github.com/Goldentrii/AgentRecall-X
+archive_name: "Goldentrii--AgentRecall-X"
 revision: a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd
 revision_url: https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd
 analyzed_at: 2026-07-31

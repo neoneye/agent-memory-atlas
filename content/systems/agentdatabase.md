@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "LinzeColin/AgentDatabase"
 source_url: https://github.com/LinzeColin/AgentDatabase
+archive_name: "LinzeColin--AgentDatabase"
 revision: 85d54d9a1da37e1819ffd085808f94bf278a122b
 revision_url: https://github.com/LinzeColin/AgentDatabase/commit/85d54d9a1da37e1819ffd085808f94bf278a122b
 analyzed_at: 2026-09-07

@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "RBKunnela/ALMA-memory"
 source_url: https://github.com/RBKunnela/ALMA-memory
+archive_name: "RBKunnela--ALMA-memory"
 revision: 91a352f25fa1060c25c414770ecdfc57fb49f52d
 revision_url: https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d
 analyzed_at: 2026-09-04

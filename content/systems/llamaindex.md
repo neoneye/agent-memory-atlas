@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: run-llama/llama_index
 source_url: https://github.com/run-llama/llama_index
+archive_name: "run-llama--llama_index"
 revision: 199e9b5b130bbde72639358a08935b913e7132c0
 revision_url: https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0
 analyzed_at: 2026-07-27

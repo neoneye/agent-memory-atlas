@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "no-human-ai/no_human"
 source_url: https://github.com/no-human-ai/no_human
+archive_name: "no-human-ai--no_human"
 revision: aab935b6df7c7c350773c7712ed7daeb8c572e68
 revision_url: https://github.com/no-human-ai/no_human/commit/aab935b6df7c7c350773c7712ed7daeb8c572e68
 analyzed_at: 2026-09-06

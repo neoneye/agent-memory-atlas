@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "PrimeIntellect-ai/prime-agent"
 source_url: https://github.com/PrimeIntellect-ai/prime-agent
+archive_name: "PrimeIntellect-ai--prime-agent"
 revision: 9bc00557489020e4dc981bef3111cb651c5955e7
 revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7
 analyzed_at: 2026-08-25

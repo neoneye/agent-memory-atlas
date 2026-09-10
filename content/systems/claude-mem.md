@@ -6,6 +6,7 @@ root: ../..
 page_kind: system
 source_name: "thedotmack/claude-mem"
 source_url: https://github.com/thedotmack/claude-mem
+archive_name: "thedotmack--claude-mem"
 revision: 132b46343e60ecf4057c427736c57b08f7615dfe
 revision_url: https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe
 analyzed_at: 2026-07-27
