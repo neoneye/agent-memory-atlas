@@ -110,14 +110,14 @@ old citation forward with a staleness warning.</p>
               <strong>griffinwork40/agent-afk</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2" title="e3d15fe2389602c2761954baadd495d8ebe7a6a2">
+            <a class="meta-pill revision-pill" href="https://github.com/griffinwork40/agent-afk/commit/9d8961035d6e4298db9bb37c9ffe03566dd594b6" title="9d8961035d6e4298db9bb37c9ffe03566dd594b6">
               <span>Analyzed revision</span>
-              <code>e3d15fe2…</code>
+              <code>9d896103…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/griffinwork40--agent-afk" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -176,12 +176,27 @@ citation forward <em>and warns it may be stale</em>; supplying fresh
 evidence replaces it silently; supplying empty or whitespace evidence
 clears it and drops back to <code>[unverified]</code>. Four distinct
 outcomes, each with a test.</p>
-<p><strong>The caveat is the flag.</strong> All of this sits behind
-<code>AFK_MEMORY_EVIDENCE_GATE=1</code>. The schema migration is
-unconditional — v3→v4 adds the nullable column to every database — but
-the population and consultation of it happen only when the gate is on.
-The default build is a memory system with an unused provenance
-column.</p>
+<p><strong>The gate is the default.</strong>
+<code>evidenceGateEnabled()</code> returns true when
+<code>AFK_MEMORY_EVIDENCE_GATE</code> is unset and reads the variable
+only to be turned <em>off</em> — <code>0</code>, <code>false</code>,
+<code>no</code> or <code>off</code> — and it is the single env
+read-point for the subsystem, so there is one place the default lives.
+The env registry says the same thing to a user: <em>"On by default. Set
+to 0 to disable."</em> The schema migration is unconditional too, so an
+ordinary install has the column, populates it, and consults it.</p>
+<p><strong>What the gate does not do is withhold.</strong> The comment
+on <code>requiresEvidence</code> is explicit that a missing citation
+<em>"does NOT block the write — it downgrades the recall verdict to
+'unverified' and surfaces a warning. Never a hard reject."</em>
+<code>verificationStatus</code> is three-valued —
+<code>not-applicable</code> for a non-codebase category,
+<code>verified</code> for a cited codebase fact, <code>unverified</code>
+for an uncited one — and <code>applyUnverifiedTag</code> prefixes the
+recalled content rather than dropping it or ranking it down. So an
+uncited convention is returned beside a cited one, distinguished only by
+a marker the reader has to act on, which is why the distinction does not
+reach <code>trust_state</code>.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two tiers with different rules. <code>HOT.md</code> is the working
 file, capped at roughly 1,500 tokens; the durable archive is a
@@ -246,10 +261,13 @@ migrations, search, supersession, hot-file truncation.</li>
 <li><code>src/agent/memory/memory-tools.ts</code> (558) —
 <code>memory_search</code>, <code>memory_update</code>,
 <code>procedure_write</code>.</li>
+<li><code>src/agent/memory/memory-evidence.ts</code> (97) — the gate:
+<code>evidenceGateEnabled</code>, <code>requiresEvidence</code>,
+<code>verificationStatus</code>, <code>applyUnverifiedTag</code>.</li>
 <li><code>src/agent/memory/types.ts</code> (122).</li>
-<li><code>src/agent/memory/memory-evidence-gate.test.ts</code> (333) —
-twelve cases.</li>
-<li><code>src/agent/memory/memory-store.test.ts</code> (557), plus a
+<li><code>src/agent/memory/memory-evidence-gate.test.ts</code> (354) —
+seventeen cases.</li>
+<li><code>src/agent/memory/memory-store.test.ts</code> (603), plus a
 second suite under <code>tests/agent/memory/</code>.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
@@ -295,6 +313,20 @@ anyone reading the file and the agent is told what to do about it. A
 soft warning fires at 80% of the cap before that. Compaction that leaves
 a note saying it happened is rare; compaction that tells the reader
 where the detail should have gone is rarer.</p>
+<p><strong>Every mutation is written to a sidecar journal first, and the
+journal is deleted once it has been drained.</strong>
+<code>storeFact</code>, <code>supersedeFact</code>,
+<code>startSession</code> and <code>endSession</code> all
+<code>appendWAL</code> a JSONL entry before touching SQLite; the
+constructor calls <code>replayWAL</code> and, at the end,
+<code>unlinkSync(walPath)</code>. Replay is idempotent by fingerprint
+rather than by rowid — a fact is matched on content,
+<code>created_at</code>, <code>session_id</code> and category, the four
+columns the v2 UNIQUE index covers, with a two-field fallback for
+entries written by an older version and a raw-rowid fallback below that.
+It is a crash-recovery device, not a record: the file exists only
+between a write and the next successful open, so it cannot be read back
+to reconstruct what a memory used to say.</p>
 <p>Nothing runs in the background.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Three tools and a hot file loaded into context. The
@@ -306,11 +338,13 @@ time.</p>
 Trust</h2>
 <p><strong><code>negative_eval</code> is earned</strong> on
 <code>it('excludes superseded facts from search')</code> — a committed
-assertion that a replaced value must not be retrieved. That is the same
-basis as <a href="../helm/">Helm</a> and <a href="../agno/">Agno</a>:
-the cheap version, since the row is still present to be filtered on,
-rather than the expensive assertion that a destroyed value does not
-return.</p>
+assertion that a replaced value must not be retrieved, on the same basis
+as <a href="../helm/">Helm</a> and <a href="../agno/">Agno</a>: the
+cheap kind, since the row is present to be filtered rather than
+destroyed. It is paired correctly, which is the part that matters:
+<code>results.every((r) =&gt; r.superseded_by === null)</code> would
+pass vacuously against a search that returned nothing, and the next line
+asserts the replacement <em>is</em> in the same result set.</p>
 <p><strong>No tombstone.</strong> Supersession is record-keyed; nothing
 prevents the same content being written again as a new fact. In a system
 where writes are the agent's own tool calls rather than a background
@@ -321,15 +355,19 @@ again.</p>
 <code>confidence</code> is a float that is never moved, and
 <code>[unverified]</code> is computed at render.</p>
 <p><strong>No audit log, no bi-temporality, no human review
-surface.</strong> The hot file is Markdown a person can open, which this
-atlas does not count on its own.</p>
+surface.</strong> The write-ahead journal in §7 is the nearest thing and
+is disqualified by its own lifecycle — <code>replayWAL</code> ends in
+<code>unlinkSync</code>, so the record of a mutation survives exactly
+until the next successful open. The hot file is Markdown a person can
+open, which this atlas does not count on its own.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>129 test cases, none run here. The distribution is unusually well
-aimed: a dedicated 333-line suite for the evidence gate covering all
-four supersession outcomes and all four categories, a store suite
-covering the UNIQUE-collision duplicate path and the
-<code>supersedeFact</code> not-found throw, and a renderer suite.</p>
+<p>128 test cases on the memory path across eight files, none run here.
+The distribution is unusually well aimed: a dedicated 354-line suite for
+the evidence gate covering all four supersession outcomes and all four
+categories, a store suite covering the UNIQUE-collision duplicate path
+and the <code>supersedeFact</code> not-found throw, and a renderer
+suite.</p>
 <p>The tests are also where the design is <em>specified</em> — the
 gate's category rules exist as assertions before they exist as
 documentation, which is why the four outcomes above can be stated
@@ -381,10 +419,9 @@ with no scope filter, which is correct for one developer on one machine
 and wrong the moment two of them share a database.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>Why is the gate off by default?</strong> It is the system's
-distinguishing mechanism and the flag name
-(<code>AFK_MEMORY_EVIDENCE_GATE</code>) plus the migration comment
-calling it a prototype suggest it is still being trialled.</li>
+<li><strong>Will the verdict ever gate a read rather than tag
+one?</strong> The value is computed at recall and the three states are
+already distinct; nothing consults them to withhold or reorder.</li>
 <li><strong>Does <code>[unverified]</code> change model
 behaviour?</strong> Measurable — same archive, same queries, marker on
 and off — and not measured.</li>
@@ -418,13 +455,19 @@ appear in the ranking, which is FTS rank only.</li>
 </tr>
 <tr>
 <td><code>src/agent/memory/memory-store.test.ts</code></td>
-<td>557</td>
+<td>603</td>
 <td>Store behaviour, duplicate and not-found paths</td>
 </tr>
 <tr>
 <td><code>src/agent/memory/memory-evidence-gate.test.ts</code></td>
-<td>333</td>
-<td>Twelve cases: categories and the four supersede outcomes</td>
+<td>354</td>
+<td>Seventeen cases: categories, disable aliases, the migration, and the
+four supersede outcomes</td>
+</tr>
+<tr>
+<td><code>src/agent/memory/memory-evidence.ts</code></td>
+<td>97</td>
+<td>The gate itself: default, requirement, verdict, tag</td>
 </tr>
 <tr>
 <td><code>src/agent/memory/memory-tool-renderers.test.ts</code></td>
@@ -439,6 +482,37 @@ appear in the ranking, which is FTS rank only.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/griffinwork40/agent-afk/commit/9d8961035d6e4298db9bb37c9ffe03566dd594b6"><code class="commit-id" title="9d8961035d6e4298db9bb37c9ffe03566dd594b6">9d896103…</code></a>
+— read again, 953 commits and 1,625 files past the previous pin, most of
+it product surface rather than memory. <strong>The report's central
+caveat is stale</strong>: the evidence gate was opt-in at the previous
+pin, where <code>evidenceGateEnabled()</code> was
+<code>env.AFK_MEMORY_EVIDENCE_GATE === '1'</code>, and it is on by
+default here — the function returns true when the variable is unset and
+reads it only to be switched off, with the env registry documenting the
+same to a user. The section describing the default build as <em>a memory
+system with an unused provenance column</em> is replaced by what the
+gate does and does not do: it tags, never blocks, and
+<code>applyUnverifiedTag</code> prefixes recalled content rather than
+withholding or demoting it, which is why the three-valued verdict does
+not reach <code>trust_state</code>. The open question asking why the
+gate was off by default is answered and replaced.
+<code>negative_eval</code> holds, and the report's description of it is
+corrected in the system's favour: the test pairs
+<code>every((r) =&gt; r.superseded_by === null)</code> with a
+<code>some(...)</code> assertion that the replacement is in the same
+result set, so it cannot pass vacuously — both lines were present at the
+previous pin. Two first-reading omissions are filled: the sidecar
+write-ahead journal that fronts every fact, supersede and session
+mutation and is unlinked once drained, and the file that holds the gate
+itself. <code>git diff --stat</code> across the two pins restricted to
+<code>src/agent/memory</code> and <code>tests/agent/memory</code> is 103
+insertions and 30 deletions over five files, eighteen of them in the
+store — the 1,625 changed files are elsewhere. Line counts re-verified:
+the gate suite is 354 lines and seventeen cases, the store suite 603.
+Screened before reading: a dependency surface changed inside the
+seven-day cooldown; nothing was installed, built or run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2"><code class="commit-id" title="e3d15fe2389602c2761954baadd495d8ebe7a6a2">e3d15fe2…</code></a>
 — first reading.</p>

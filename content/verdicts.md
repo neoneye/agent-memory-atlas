@@ -779,9 +779,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`agent-afk`](../systems/agent-afk/)
 - Best idea: the verification status is in the string the model reads. A fact arrives either with a citation or tagged `[unverified]`, and a supersession carries the old citation forward with a warning that it may be stale.
-- Biggest risk: the gate is behind `AFK_MEMORY_EVIDENCE_GATE=1`, so the default build stores codebase facts with no citation and marks nothing. The best mechanism in the system is off unless you find the flag.
+- Biggest risk: the gate tags, it does not withhold. A codebase fact that arrives with no citation is stored anyway and comes back prefixed `[unverified]`, so the whole mechanism rests on the model reading its own context carefully enough to discount the prefix.
 - Most reusable component: about two hundred lines of evidence gate that fits in SQLite, with the category taxonomy that makes it tolerable in daily use.
-- Maturity impression: 129 test cases unusually well aimed — a 333-line suite covering all four supersession outcomes across all four categories, plus the UNIQUE-collision duplicate path and the not-found throw.
+- Maturity impression: 128 test cases unusually well aimed — a 354-line gate suite covering all four supersession outcomes across all four categories, plus the UNIQUE-collision duplicate path and the not-found throw.
 - Study when: you are building a coding agent and want provenance without a graph.
 - Do not copy when: two people share the database — the archive is cross-session with no scope filter, which is right for one developer and wrong immediately after that.
 

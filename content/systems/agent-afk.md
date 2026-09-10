@@ -7,10 +7,12 @@ page_kind: system
 source_name: "griffinwork40/agent-afk"
 source_url: https://github.com/griffinwork40/agent-afk
 archive_name: "griffinwork40--agent-afk"
-revision: e3d15fe2389602c2761954baadd495d8ebe7a6a2
-revision_url: https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2
-analyzed_at: 2026-07-30
+revision: 9d8961035d6e4298db9bb37c9ffe03566dd594b6
+revision_url: https://github.com/griffinwork40/agent-afk/commit/9d8961035d6e4298db9bb37c9ffe03566dd594b6
+analyzed_at: 2026-09-10
 capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "a committed case asserting a superseded value is absent from a populated search, with its replacement asserted present in the same result | tests/agent/memory/memory-store.test.ts:129-136 | `excludes superseded facts from search` stores a `convention` fact, supersedes it, runs one query matching both wordings, and asserts `results.every((r) => r.superseded_by === null)` — then, on the same result set, `results.some((r) => r.content === \"use pnpm\")`. The second assertion is what makes the first mean something: an `every` over an empty array is vacuously true, and the `some` control rules that out. It is the cheaper kind of exclusion — the row is present to be filtered rather than destroyed — and it is correctly paired | 128 test cases across the memory path"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -25,7 +27,7 @@ matrix:
   background: "None; truncation of the hot file happens on write"
   trust: "A `confidence` float, and a derived `[unverified]` marker applied at render time when a codebase fact has no citation"
   strengths: "An evidence gate that reaches the prompt text rather than being dropped before it, with a stale-citation warning on supersession and twelve committed cases"
-  risks: "The gate is behind `AFK_MEMORY_EVIDENCE_GATE=1`, so the default build stores codebase facts with no citation and marks nothing"
+  risks: "The verdict tags rather than withholds — an uncited codebase fact is recalled with an `[unverified]` prefix and ranks like any other, so a reader who skims past the tag gets the claim anyway"
 ---
 
 ## 1. Executive Summary
@@ -63,11 +65,23 @@ supplying fresh evidence replaces it silently; supplying empty or whitespace
 evidence clears it and drops back to `[unverified]`. Four distinct outcomes,
 each with a test.
 
-**The caveat is the flag.** All of this sits behind
-`AFK_MEMORY_EVIDENCE_GATE=1`. The schema migration is unconditional — v3→v4 adds
-the nullable column to every database — but the population and consultation of
-it happen only when the gate is on. The default build is a memory system with an
-unused provenance column.
+**The gate is the default.** `evidenceGateEnabled()` returns true when
+`AFK_MEMORY_EVIDENCE_GATE` is unset and reads the variable only to be turned
+*off* — `0`, `false`, `no` or `off` — and it is the single env read-point for the
+subsystem, so there is one place the default lives. The env registry says the
+same thing to a user: *"On by default. Set to 0 to disable."* The schema
+migration is unconditional too, so an ordinary install has the column, populates
+it, and consults it.
+
+**What the gate does not do is withhold.** The comment on `requiresEvidence` is
+explicit that a missing citation *"does NOT block the write — it downgrades the
+recall verdict to 'unverified' and surfaces a warning. Never a hard reject."*
+`verificationStatus` is three-valued — `not-applicable` for a non-codebase
+category, `verified` for a cited codebase fact, `unverified` for an uncited one —
+and `applyUnverifiedTag` prefixes the recalled content rather than dropping it or
+ranking it down. So an uncited convention is returned beside a cited one,
+distinguished only by a marker the reader has to act on, which is why the
+distinction does not reach `trust_state`.
 
 ## 2. Mental Model
 
@@ -132,9 +146,11 @@ tokenizer, kept in sync by triggers.
   supersession, hot-file truncation.
 - `src/agent/memory/memory-tools.ts` (558) — `memory_search`, `memory_update`,
   `procedure_write`.
+- `src/agent/memory/memory-evidence.ts` (97) — the gate: `evidenceGateEnabled`,
+  `requiresEvidence`, `verificationStatus`, `applyUnverifiedTag`.
 - `src/agent/memory/types.ts` (122).
-- `src/agent/memory/memory-evidence-gate.test.ts` (333) — twelve cases.
-- `src/agent/memory/memory-store.test.ts` (557), plus a second suite under
+- `src/agent/memory/memory-evidence-gate.test.ts` (354) — seventeen cases.
+- `src/agent/memory/memory-store.test.ts` (603), plus a second suite under
   `tests/agent/memory/`.
 
 ## 5. Memory Data Model
@@ -179,6 +195,17 @@ A soft warning fires at 80% of the cap before that. Compaction that leaves a
 note saying it happened is rare; compaction that tells the reader where the
 detail should have gone is rarer.
 
+**Every mutation is written to a sidecar journal first, and the journal is
+deleted once it has been drained.** `storeFact`, `supersedeFact`, `startSession`
+and `endSession` all `appendWAL` a JSONL entry before touching SQLite; the
+constructor calls `replayWAL` and, at the end, `unlinkSync(walPath)`. Replay is
+idempotent by fingerprint rather than by rowid — a fact is matched on content,
+`created_at`, `session_id` and category, the four columns the v2 UNIQUE index
+covers, with a two-field fallback for entries written by an older version and a
+raw-rowid fallback below that. It is a crash-recovery device, not a record: the
+file exists only between a write and the next successful open, so it cannot be
+read back to reconstruct what a memory used to say.
+
 Nothing runs in the background.
 
 ## 8. Agent Integration
@@ -190,10 +217,12 @@ execution role that produced them, though nothing filters on it at read time.
 ## 9. Reliability, Safety, and Trust
 
 **`negative_eval` is earned** on `it('excludes superseded facts from search')` —
-a committed assertion that a replaced value must not be retrieved. That is the
-same basis as [Helm](../helm/) and [Agno](../agno/): the cheap version, since the
-row is still present to be filtered on, rather than the expensive assertion that
-a destroyed value does not return.
+a committed assertion that a replaced value must not be retrieved, on the same
+basis as [Helm](../helm/) and [Agno](../agno/): the cheap kind, since the row is
+present to be filtered rather than destroyed. It is paired correctly, which is
+the part that matters: `results.every((r) => r.superseded_by === null)` would
+pass vacuously against a search that returned nothing, and the next line asserts
+the replacement *is* in the same result set.
 
 **No tombstone.** Supersession is record-keyed; nothing prevents the same content
 being written again as a new fact. In a system where writes are the agent's own
@@ -204,13 +233,16 @@ conclude it again.
 **No trust state**, for the reason in §2: `confidence` is a float that is never
 moved, and `[unverified]` is computed at render.
 
-**No audit log, no bi-temporality, no human review surface.** The hot file is
-Markdown a person can open, which this atlas does not count on its own.
+**No audit log, no bi-temporality, no human review surface.** The write-ahead
+journal in §7 is the nearest thing and is disqualified by its own lifecycle —
+`replayWAL` ends in `unlinkSync`, so the record of a mutation survives exactly
+until the next successful open. The hot file is Markdown a person can open,
+which this atlas does not count on its own.
 
 ## 10. Tests, Evals, and Benchmarks
 
-129 test cases, none run here. The distribution is unusually well aimed: a
-dedicated 333-line suite for the evidence gate covering all four supersession
+128 test cases on the memory path across eight files, none run here. The distribution is unusually well aimed: a
+dedicated 354-line suite for the evidence gate covering all four supersession
 outcomes and all four categories, a store suite covering the UNIQUE-collision
 duplicate path and the `supersedeFact` not-found throw, and a renderer suite.
 
@@ -264,9 +296,9 @@ two of them share a database.
 
 ## 12. Open Questions
 
-- **Why is the gate off by default?** It is the system's distinguishing
-  mechanism and the flag name (`AFK_MEMORY_EVIDENCE_GATE`) plus the migration
-  comment calling it a prototype suggest it is still being trialled.
+- **Will the verdict ever gate a read rather than tag one?** The value is
+  computed at recall and the three states are already distinct; nothing consults
+  them to withhold or reorder.
 - **Does `[unverified]` change model behaviour?** Measurable — same archive,
   same queries, marker on and off — and not measured.
 - **Is `confidence` ever written below 1.0?** It is declared with a default and
@@ -280,11 +312,14 @@ two of them share a database.
 | --- | --- | --- |
 | `src/agent/memory/memory-store.ts` | 945 | Schema v4, migrations, FTS search, supersession, hot truncation |
 | `src/agent/memory/memory-tools.ts` | 558 | `memory_search`, `memory_update`, `procedure_write` |
-| `src/agent/memory/memory-store.test.ts` | 557 | Store behaviour, duplicate and not-found paths |
-| `src/agent/memory/memory-evidence-gate.test.ts` | 333 | Twelve cases: categories and the four supersede outcomes |
+| `src/agent/memory/memory-store.test.ts` | 603 | Store behaviour, duplicate and not-found paths |
+| `src/agent/memory/memory-evidence-gate.test.ts` | 354 | Seventeen cases: categories, disable aliases, the migration, and the four supersede outcomes |
+| `src/agent/memory/memory-evidence.ts` | 97 | The gate itself: default, requirement, verdict, tag |
 | `src/agent/memory/memory-tool-renderers.test.ts` | 157 | Where `[unverified]` is applied |
 | `src/agent/memory/types.ts` | 122 | The types |
 
 ## History
+
+**2026-09-10** — [`9d8961035d6e4298db9bb37c9ffe03566dd594b6`](https://github.com/griffinwork40/agent-afk/commit/9d8961035d6e4298db9bb37c9ffe03566dd594b6) — read again, 953 commits and 1,625 files past the previous pin, most of it product surface rather than memory. **The report's central caveat is stale**: the evidence gate was opt-in at the previous pin, where `evidenceGateEnabled()` was `env.AFK_MEMORY_EVIDENCE_GATE === '1'`, and it is on by default here — the function returns true when the variable is unset and reads it only to be switched off, with the env registry documenting the same to a user. The section describing the default build as *a memory system with an unused provenance column* is replaced by what the gate does and does not do: it tags, never blocks, and `applyUnverifiedTag` prefixes recalled content rather than withholding or demoting it, which is why the three-valued verdict does not reach `trust_state`. The open question asking why the gate was off by default is answered and replaced. `negative_eval` holds, and the report's description of it is corrected in the system's favour: the test pairs `every((r) => r.superseded_by === null)` with a `some(...)` assertion that the replacement is in the same result set, so it cannot pass vacuously — both lines were present at the previous pin. Two first-reading omissions are filled: the sidecar write-ahead journal that fronts every fact, supersede and session mutation and is unlinked once drained, and the file that holds the gate itself. `git diff --stat` across the two pins restricted to `src/agent/memory` and `tests/agent/memory` is 103 insertions and 30 deletions over five files, eighteen of them in the store — the 1,625 changed files are elsewhere. Line counts re-verified: the gate suite is 354 lines and seventeen cases, the store suite 603. Screened before reading: a dependency surface changed inside the seven-day cooldown; nothing was installed, built or run.
 
 **2026-07-30** — [`e3d15fe2389602c2761954baadd495d8ebe7a6a2`](https://github.com/griffinwork40/agent-afk/commit/e3d15fe2389602c2761954baadd495d8ebe7a6a2) — first reading.
