@@ -162,7 +162,7 @@ path</strong>, and the rest keep material out of a projection, a
 preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 95 of 412
+<li><strong>Trust is usually a number, not a state.</strong> 96 of 412
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -20548,20 +20548,33 @@ Obsidian vault</td>
 <td>Plain markdown on disk plus a state database; embeddings in Ollama
 or a TF-IDF fallback</td>
 <td>Vector search over one space spanning sessions, clipped articles and
-PDFs</td>
+PDFs, MMR-reranked for facet diversity, with a
+<code>verified: true</code> note taking a 0.2 score boost and
+<code>.rejected/</code> skipped outright; the MCP tool takes a
+<code>verified_only</code> flag that over-fetches five times the page so
+the filter can still fill it</td>
 <td>Transcripts filtered, classified with Haiku, distilled with Sonnet,
 written as notes</td>
 <td>Dedupe detection and merging; notes are files the user can edit or
-delete</td>
+delete. <code>vir review</code> approves, edits or rejects a note — a
+rejection stamps <code>rejected_at</code> and moves the file to
+<code>.rejected/</code>, recoverable and never deleted</td>
 <td>One vault; transcripts are categorised by on-disk layout rather than
 scoped by key</td>
 <td>A CLI, a scheduled daemon, an MCP server, and a CLAUDE.md writer
 with markers</td>
 <td>A scheduled pass over new transcripts; an embedding sweep</td>
-<td>A confidence float per distilled entry, used to pick the top five
-per category</td>
+<td>Two things, and only one of them reaches a read. A
+<code>confidence</code> float per distilled entry selects the top five
+per category at write time and gates a notification at 0.8; nothing
+consults it at query time. Beside it a human-set status:
+<code>verified: true</code> with a <code>reviewed_at</code>, or
+<code>rejected_at</code> with the file moved to a directory the
+retriever skips</td>
 <td>Three independent detectors for agent-internal transcripts, with a
-named trap</td>
+named trap; a review pass whose rejection is recoverable rather than a
+delete; a retriever that reports the rows it refused for a stale
+embedding model instead of dropping them silently</td>
 <td>Distillation is two LLM passes with no committed evaluation of what
 survives them</td>
 </tr>
@@ -21168,7 +21181,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>95 of 412:</em> <a
+<p><em>96 of 412:</em> <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -21267,6 +21280,7 @@ href="../systems/universal-memory-engine/"><code>universal-memory-engine</code><
 href="../systems/velantrim-exocortex-crystal/"><code>velantrim-exocortex-crystal</code></a>,
 <a href="../systems/veracium/"><code>veracium</code></a>, <a
 href="../systems/verel/"><code>verel</code></a>, <a
+href="../systems/vir/"><code>vir</code></a>, <a
 href="../systems/weave/"><code>weave</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
@@ -27406,7 +27420,7 @@ href="https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d529
 — a vault template; QMD is an external dependency and was not
 examined</li>
 <li><a href="https://github.com/djolex999/vir">djolex999/vir</a> at <a
-href="https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c"><code class="commit-id" title="49451ee8edf3747f81df6548411f0439c4378c6c">49451ee8…</code></a></li>
+href="https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e"><code class="commit-id" title="ab867c022d90fa73d19dbf999ce22089653b9c2e">ab867c02…</code></a></li>
 <li><a
 href="https://github.com/growth-kinetics/diffmem">growth-kinetics/diffmem</a>
 at <a
@@ -31718,7 +31732,7 @@ each reference the analyzer could not resolve, so the index ships its
 own coverage gaps. Read against the corpus this atlas holds, that is a
 discrete ordered status that withholds, kept apart from where a claim
 came from, and applied on the read path — the combination <a
-href="../capabilities/">ninety-five systems</a> here express as a single
+href="../capabilities/">ninety-six systems</a> here express as a single
 float, and the reason <code>trust_state</code> is the mark most often
 refused. <strong>And the README states the retrieval consequence better
 than most memory systems state it about themselves</strong>: because the

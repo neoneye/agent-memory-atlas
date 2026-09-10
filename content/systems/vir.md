@@ -7,24 +7,27 @@ page_kind: system
 source_name: "djolex999/vir"
 source_url: https://github.com/djolex999/vir
 archive_name: "djolex999--vir"
-revision: 49451ee8edf3747f81df6548411f0439c4378c6c
-revision_url: https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c
-analyzed_at: 2026-08-09
-capabilities: "human_review"
+revision: ab867c022d90fa73d19dbf999ce22089653b9c2e
+revision_url: https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e
+analyzed_at: 2026-09-10
+capabilities: "trust_state, human_review"
+capability_evidence:
+  trust_state: "a person's verdict on a note is stamped in its frontmatter and one value withholds the note from every read | src/cli/review.ts:95-122, :129-133, src/search/retriever.ts:18, :60, :229, src/mcp/server.ts:256-287 | `vir review` walks the new distilled notes and takes approve, edit or reject. Approving writes `verified: true` with a `reviewed_at`; rejecting writes `rejected_at` and moves the file into `.rejected/` — recoverable rather than deleted, as its own comment says. The retriever's `SKIP_DIRS` holds `summaries`, `.rejected` and `archived`, so a rejected note is absent from search rather than ranked down, and `writer.ts` keeps `verified`, `reviewed_at` and `rejected_at` across a rewrite so a later pipeline pass cannot erase the verdict. A verified note takes a `VERIFIED_BOOST` of 0.2 in both the embedding and TF-IDF paths, and the MCP `search` tool exposes `verified_only`, which drops every unverified hit and over-fetches five times the page so the filter can still fill it. The precision worth keeping: the durable record is the frontmatter field and the exclusion is carried by the file's placement, both written by the same function | src/cli/review.test.ts, src/mcp/server.test.ts"
+  human_review: "two adjudication surfaces, one per note and one per instruction-file edit | src/cli/review.ts, src/cli.ts:1662-1665, the sync-claude path | `vir review` is a per-note walk — approve, edit or reject — that hides already-verified notes by default and takes `--all` to re-review them. Beside it `sync-claude` shows a diff of the additions and removals and waits for confirmation before distilled notes enter the agent's standing instructions, writing between markers into a file the user owns. A rejection is a move rather than a delete, so the person's verdict is reversible by hand | src/cli/review.test.ts"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "A typed markdown note — pattern, gotcha, decision or tool — in an Obsidian vault"
   storage: "Plain markdown on disk plus a state database; embeddings in Ollama or a TF-IDF fallback"
-  retrieval: "Vector search over one space spanning sessions, clipped articles and PDFs"
+  retrieval: "Vector search over one space spanning sessions, clipped articles and PDFs, MMR-reranked for facet diversity, with a `verified: true` note taking a 0.2 score boost and `.rejected/` skipped outright; the MCP tool takes a `verified_only` flag that over-fetches five times the page so the filter can still fill it"
   write: "Transcripts filtered, classified with Haiku, distilled with Sonnet, written as notes"
-  update_delete: "Dedupe detection and merging; notes are files the user can edit or delete"
+  update_delete: "Dedupe detection and merging; notes are files the user can edit or delete. `vir review` approves, edits or rejects a note — a rejection stamps `rejected_at` and moves the file to `.rejected/`, recoverable and never deleted"
   scoping: "One vault; transcripts are categorised by on-disk layout rather than scoped by key"
   integration: "A CLI, a scheduled daemon, an MCP server, and a CLAUDE.md writer with markers"
   background: "A scheduled pass over new transcripts; an embedding sweep"
-  trust: "A confidence float per distilled entry, used to pick the top five per category"
-  strengths: "Three independent detectors for agent-internal transcripts, with a named trap"
+  trust: "Two things, and only one of them reaches a read. A `confidence` float per distilled entry selects the top five per category at write time and gates a notification at 0.8; nothing consults it at query time. Beside it a human-set status: `verified: true` with a `reviewed_at`, or `rejected_at` with the file moved to a directory the retriever skips"
+  strengths: "Three independent detectors for agent-internal transcripts, with a named trap; a review pass whose rejection is recoverable rather than a delete; a retriever that reports the rows it refused for a stale embedding model instead of dropping them silently"
   risks: "Distillation is two LLM passes with no committed evaluation of what survives them"
 ---
 
@@ -168,6 +171,32 @@ query` searches and synthesises; an MCP server exposes the same vault to Claude
 Code mid-session "so the agent consults past decisions instead of rediscovering
 them".
 
+Three things happen between the raw score and the page. A note carrying
+`verified: true` takes a `VERIFIED_BOOST` of 0.2 — applied before the top-K slice
+in both the embedding and TF-IDF paths, which is the ordering that lets the boost
+actually change what is returned. The pool is then MMR-reranked so the page
+covers different facets of the query rather than five near-duplicates, with the
+user-facing `retrievalDiversity` config inverted at the call site because the
+knob reads as "how much diversity" and MMR's lambda is the relevance weight. And
+three directories never enter the walk at all: `summaries`, `archived`, and
+`.rejected`.
+
+Two refusals are reported rather than swallowed, which is the habit worth
+copying. `degraded` distinguishes *the embedder failed* from *every cosine fell
+below the floor* — a clean miss and a broken model server look identical in a
+result set and mean opposite things. And `excludedMismatched` counts rows refused
+because their stored vector came from a different embedding model than the active
+one, so an unfinished re-embed is visible instead of quietly shrinking the
+corpus.
+
+Retrieval is logged. `~/.vir/queries.jsonl` records the query, the type filter,
+the hits with their ranks and per-hit verified status, the search method and the
+latency, for both the CLI and the MCP path, and `vir queries` reads it back. It
+rotates at five megabytes into a single `.1` generation, and when an append fails
+it writes a `queries.failed` marker — because *"a silent best-effort is a blind
+spot"* and a stderr line scrolls away. It is a record of what was asked, not of
+what changed, so it is the retrieval half of the audit pattern and earns no mark.
+
 Scope is the vault. Transcript *categorisation* is not scoping — it decides what
 enters the store, not who may read it — so `scope_enforced` is not earned.
 
@@ -201,14 +230,30 @@ ones not yet pruned.
 
 ## 9. Reliability, Safety, and Trust
 
-**One mark: human review.** `sync-claude` is a genuine adjudication surface — the
-distilled notes do not enter the agent's standing instructions until a person
-sees a diff of the additions and removals and confirms. Combined with the marker
-delimiters, it is the most careful implementation in this atlas of writing into a
-file the user owns.
+**Two marks, and they are the same mechanism seen from either end.** `vir review`
+walks the new notes and takes approve, edit or reject; `sync-claude` shows a diff
+of the additions and removals and waits before anything enters the agent's
+standing instructions. Combined with the marker delimiters, the second is the
+most careful implementation in this atlas of writing into a file the user owns.
 
-**Trust state, tombstone, bitemporal, audit log, scope, negative eval — no.**
-`confidence` selects rather than withholds.
+**Trust state is earned on the rejection, not on the approval.** A rejected note
+is stamped `rejected_at` and moved into `.rejected/`, which the retriever's
+`SKIP_DIRS` excludes — so a person's *no* removes the note from every search
+while leaving the file on disk to be recovered by hand. Approval is the softer
+half: `verified: true` buys a 0.2 score boost by default and becomes a hard
+filter only when a caller passes `verified_only`. The durable record is the
+frontmatter field and the exclusion is carried by where the file sits; one
+function writes both.
+
+**Tombstone — withheld, and the gap is one lookup wide.** The rejection is
+durable, dated and keyed to the note, and nothing on the write path consults
+`.rejected/`. Re-run the pipeline over the same transcript and the same note is
+distilled again and written back into its category directory, with the earlier
+`rejected_at` sitting in a file the writer never reads. The state the mechanism
+would need is already on disk.
+
+**Bitemporal, audit log, scope, negative eval — no.** `confidence` selects at
+write time and is consulted by no read.
 
 **The transcript filter is the safety mechanism**, and its default direction is
 right: anything not clearly agent-internal is treated as a session, because a
@@ -331,5 +376,7 @@ counterexample `:6-13`, the OpenAI pattern `:14-17`), `scrubber.test.ts`
 `src/search/`, `src/state/`, `src/lint/`, `src/diagnostics/`
 
 ## History
+
+**2026-09-10** — [`ab867c022d90fa73d19dbf999ce22089653b9c2e`](https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e) — read again, 75 commits past the previous pin. `trust_state` is earned where it was not: `vir review` takes approve, edit or reject per note, a rejection stamps `rejected_at` and moves the file into `.rejected/`, and the retriever's `SKIP_DIRS` excludes that directory — so a person's refusal removes a note from every search while leaving it recoverable on disk. Approval stamps `verified: true`, which buys a 0.2 score boost applied before the top-K slice and becomes a hard filter under the MCP tool's `verified_only`. `tombstone` is withheld on a single missing lookup: nothing on the write path reads `.rejected/`, so re-running the pipeline over the same transcript re-derives the note. Retrieval gained MMR reranking, an `excludedMismatched` count for rows whose stored vector came from a superseded embedding model, a `degraded` flag separating an embedder failure from a clean miss, and a rotating query log with a failure marker. The absence claims were re-run and hold: no paper, no benchmark — the project has made that a stated position rather than an omission — no committed evaluation of distillation faithfulness, and `confidence` is still consulted by no read path. Test files went from 46 to 50. Screened before reading: no auto-run surface, three dependency manifests inside the seven-day cooldown, one build-time execution path and two unpinned surfaces; nothing was installed or run.
 
 **2026-08-09** — [`49451ee8edf3747f81df6548411f0439c4378c6c`](https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c) — first reading. Screened before reading; the tree was read, never installed, and no pass was run. The 243-and-20 figures are the author's, reported from one machine.

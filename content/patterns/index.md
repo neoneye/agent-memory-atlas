@@ -176,7 +176,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Negative retrieval assertion | 159 of 412 |
 | Append-only mutation audit | 137 of 412 |
 | Human review surface | 117 of 412 |
-| Explicit trust state | 95 of 412 |
+| Explicit trust state | 96 of 412 |
 | Bi-temporal validity | 58 of 412 |
 | Rejected-value tombstone | 34 of 412 |
 <!-- END GENERATED SPREAD -->
