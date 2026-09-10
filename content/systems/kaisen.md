@@ -1,15 +1,15 @@
 ---
 title: "KAISEN"
 eyebrow: "The block outlives the reason for it"
-description: "An evolutionary coding harness whose project memory is four plain files — and whose durable visited-set of code hashes grows without bound while the history explaining why anything was skipped is a 500-entry ring."
+description: "An evolutionary coding harness whose project memory is four plain files — and whose durable visited-set of code hashes grows without bound, survives a full revert by design, and outlives the 500-entry ring that explains why anything was skipped."
 root: ../..
 page_kind: system
 source_name: "RAZZULLIX/KAISEN"
 source_url: https://github.com/RAZZULLIX/KAISEN
 archive_name: "RAZZULLIX--KAISEN"
-revision: f56a980bdd9daa8395e56a91eeb50bdbc625cd78
-revision_url: https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78
-analyzed_at: 2026-08-19
+revision: d961bc5ddb0a8cbe2d66c0f7146084c737ea1246
+revision_url: https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246
+analyzed_at: 2026-09-11
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -17,7 +17,7 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "Four kinds, all plain files in the project directory — a single overwritten `lessons.txt`, one `memos/gen_NNNNNN.md` per deep-work generation, a bounded `history` list inside `state.json`, and a set of semantic code hashes in `seen_hashes.json`"
   storage: "Files on disk under the project directory, plus `.kaisen_snapshots/` holding up to 25 full project copies, each with a `meta.json` carrying `{created, reason, kind}`"
-  retrieval: "None. The prompt builder concatenates the lesson, the latest memo, a keyword-frequency line and the last eight history entries into one blob; nothing is queried, ranked or selected by relevance"
+  retrieval: "None. The prompt builder concatenates the lesson, the latest memo, a keyword-frequency line filtered by a stopword list or a user allowlist, and the last eight history entries into one blob; nothing is queried, ranked or selected by relevance"
   write: "Synchronous and mostly wholesale. `save_lesson` overwrites the file, a memo is written once per generation under its own name, history is appended, and a candidate's semantic hash is added to the visited set before it is scored"
   update_delete: "A lesson is corrected by overwriting it, with no prior version kept outside the snapshot system. History is a ring truncated to the newest 500 entries. The visited hash set only ever grows"
   scoping: "Per project by construction — every path is derived from `project.path` — with no scope key inside any record and no cross-project read"
@@ -25,7 +25,7 @@ matrix:
   background: "The evolution engine runs generations continuously, with periodic deep-work and lesson passes driven by the project spec"
   trust: "No epistemic state. The nearest thing is a failure vocabulary of ten substrings used to hoist failing outcomes to the top of the history blob under an EXPLICIT FAILURE FEEDBACK banner"
   strengths: "Separating failure feedback from ordinary history in the prompt, so a repeated mistake is the first thing the model reads rather than the eighth"
-  risks: "The dedup that blocks a re-proposed candidate is keyed on a hash computed with the wrong language normalizer for every non-C project, and the record explaining why a candidate was skipped ages out of a 500-entry ring while the block itself is permanent"
+  risks: "The record explaining why a candidate was skipped ages out of a 500-entry ring while the block itself is permanent and, by an explicit design note, survives a snapshot revert of everything else"
 ---
 
 ## 1. Executive Summary
@@ -55,28 +55,27 @@ exactly that distinction.
 
 The asymmetry underneath it is worse than the ambiguity. **`seen_hashes.json`
 grows without bound, and `history` is truncated to the newest 500 entries.** The
-`duplicate_skip` record naming which hash was refused ages out; the refusal
-itself is permanent. After enough generations the system is declining candidates
-for reasons no longer written down anywhere, and the only durable artifact is a
+`duplicate_skip` record naming which hash was refused — `{"generation": gen,
+"outcome": "duplicate_skip", "detail": h[:16]}` — ages out; the refusal itself is
+permanent. After enough generations the system is declining candidates for
+reasons no longer written down anywhere, and the only durable artifact is a
 sorted list of hex strings.
 
-Two smaller defects are checkable and both sit on the same path. `_dedup_check`
-calls `semantic_hash(code)` with no language argument, so `normalize_code`
-defaults to `language="c"` — and its C-family branch strips `//` to end of line
-as a comment. On a Python project that is the floor-division operator, so `x = a
-// b` normalizes to `x = a` before hashing, and two genuinely different
-candidates can collide into a false duplicate that is silently skipped. The
-engine has `self._code_lang` in scope at the call site.
+**One half of that asymmetry is a stated design decision, and the docstring
+saying so makes the other half sharper.** `snapshots.py` opens with a note that
+`seen_hashes.json` is *deliberately* excluded from a snapshot, because *"reverting
+a project to an earlier state does NOT reset the visited set, so the engine never
+re-evaluates code it has already scored (the memory that a candidate was tried
+survives the undo of everything else)."* That is a defensible rule for the block —
+re-scoring is the expensive thing, and not paying for it twice is the point. It
+is not a rule about the *reason*, and nothing extends the same durability to the
+history entry. So the design that keeps the refusal alive through a full revert
+leaves its justification in a ring buffer that a busy afternoon empties.
 
-And the keyword counter, which the prompt presents to the model as `KEYWORD
-FREQUENCIES (lessons/memos)`, filters by nothing. Its docstring says it *"lets
-the model see how often a technique failed without reading everything"*, but the
-implementation counts every token of three or more characters and returns the top
-ten by raw frequency, so on English prose the model receives function words. The
-module defines a ten-entry `FAILURE_KEYWORDS` tuple used elsewhere, and a
-`load_keywords` reader for a user-supplied `keywords.txt` — which **has no caller
-anywhere in the repository**. Both of the things that would have made the counter
-mean what its docstring says are present and unused.
+The gap this leaves is one file. A `seen_hashes.json` that stored
+`{hash: {gen, reason}}` rather than a sorted list of strings would cost nothing
+in either the write path or the snapshot policy, and would make a
+`duplicate_skip` answerable months later.
 
 ## 2. Mental Model
 
@@ -166,7 +165,12 @@ searched.
 For a loop that works on one program with one champion, that is a defensible
 choice: the corpus is small and the relevant material is recent by construction.
 It also means the keyword counter is the only mechanism that compresses anything,
-which makes its being unfiltered the more costly.
+and it does filter: a hardcoded stopword set removes English function words and
+generic code tokens, and a user-supplied `keywords.txt` overrides it as an
+explicit allowlist, so the line reads as technique frequency rather than prose
+word count. The docstring gives the constraint that shapes it — *"the counter
+must never cost an LLM call"* — which is why the vocabulary is a literal in the
+module rather than something learned.
 
 ## 7. Write Mechanics
 
@@ -207,9 +211,11 @@ whatever prose the last pass wrote.
 
 The nearest thing to a trust signal is the failure vocabulary, and it is applied
 in one place only. `FAILURE_KEYWORDS` drives the banner in `build_history_blob`
-and is not consulted by `keyword_counts`, which is the function whose docstring
-claims to report how often a technique failed. The two halves of the "how many
-times did X fail" idea are in the same 110-line file and are not connected.
+and is not consulted by `keyword_counts`, whose own vocabulary is a separate
+stopword set. The two halves of the "how many times did X fail" idea are in the
+same file and are not connected — the counter reports how often a technique
+*came up*, which is what its docstring claims, and no function reports how often
+one failed.
 
 Guardrails do real work on the write path: an edit-scope check refuses a
 candidate that changes functions outside an allowed set, with the message naming
@@ -219,25 +225,46 @@ against the wrong reference."* That second one is a genuine staleness check on a
 stored artifact, and it is the sort of thing most harnesses discover the hard way.
 
 No capability mark is carried. That is a real answer rather than an omission:
-history is a ring rather than an audit log, the visited set is a visited set
-rather than a tombstone, there is no status field, no scope key inside any
-record, no human gate on memory content, and the 206 committed test functions
-assert things about autofix, routing, gates and the KAI protocol rather than
-about what memory must not return.
+history is a ring rather than an audit log; the visited set is a visited set
+rather than a tombstone, because it stores the hash of a candidate that was
+*tried* rather than of a value that was *rejected*, and it is consulted to avoid
+re-scoring rather than to refuse a claim; there is no status field; every path is
+derived from `project.path`, which is a partition rather than a scope key on a
+record; and there is no human gate on memory content.
+
+**`negative_eval` is the near-miss and is worth naming, because a reader may well
+reach the other conclusion.** `test_keyword_counts_filters_stopwords` writes a
+lesson reading `"the and simd unroll the cache_line simd"`, calls
+`keyword_counts`, and asserts `counts["simd"] == 2` alongside `"the" not in
+counts and "and" not in counts` — a paired exclusion on a populated result, in
+the correct shape. What it excludes is a token from a frequency line rather than
+a record from a result: no lesson, memo or history entry is asserted to stay out
+of anything. The mark tracks what the memory must not hand back, and this tracks
+what the counter must not count.
 
 ## 10. Tests, Evals, and Benchmarks
 
-206 test functions across ten files — autofix, KAI, LLM repair, routing, safe
-flight, the server API, skill stats, suggest gates, and two release-specific
+489 test functions across 28 files — autofix, budget, campaigns, capability
+checks, deep work, the KAI protocol, LLM resilience, resource controls, routing,
+the server API, Windows compatibility, worker resizing, and two release-specific
 suites. The autofix tests are the most detailed, asserting both directions of
 mechanical repairs, including that an include is not added twice.
 
-`test_failure_feedback_includes_constraint_violations` is the only test touching
-the memory path, and it asserts the positive: a constraint violation *does* reach
-the failure feedback. Nothing asserts a negative — that a duplicate is skipped,
-that a lesson does not leak between projects, that the keyword line contains
-anything useful. The dedup path, which is the one mechanism with permanent
-consequences, has no test at all.
+**The dedup path is tested, and the tests are written against the failure mode
+rather than the happy path.** `test_semantic_hash_language_aware` asserts
+that `semantic_hash("x = a // b", "python")` differs from
+`semantic_hash("x = a", "python")` while the same pair *collides* under `"c"` —
+one assertion pinning each side of the language branch.
+`test_engine_dedup_uses_project_language` goes through the engine, under a
+docstring reading *"Engine dedup must hash with the project language, not the C
+default"*, and asserts both Python candidates pass `_dedup_check`.
+`test_semantic_hash_file_infers_language` pins the extension inference.
+`test_keyword_counts_filters_stopwords` and `test_keyword_counts_user_allowlist`
+cover the counter's two modes.
+
+What still has no test is the asymmetry: nothing asserts that a `duplicate_skip`
+history entry survives long enough to explain the block it records, and nothing
+could, because it does not.
 
 There is no benchmark and no measurement of whether the memory helps. For a
 system whose premise is measurable improvement — every candidate is scored by a
@@ -259,22 +286,37 @@ score.
 
 **Do not let a permanent block outlive its explanation.** If a decision is
 enforced forever, the record of why belongs in a store with the same lifetime —
-otherwise the system accumulates refusals it cannot justify.
+otherwise the system accumulates refusals it cannot justify. KAISEN is the clean
+case: the block is excluded from snapshots on purpose so a revert cannot undo it,
+and the explanation sits in a 500-entry ring that nothing protects.
+
+**Pass the language to your normalizer, and say why in the docstring.** A
+content hash that folds comments has to know which token starts one; the same
+`//` is a comment in C and floor division in Python, and the default is where
+the bug lives. The docstring on `semantic_hash` names the failure — *"floor
+division would be stripped before hashing and distinct candidates could
+collide"* — which is the version of this warning that survives a refactor,
+because it travels with the function rather than with the caller.
+
+**Give a token-frequency line a vocabulary.** Counting every token of three or
+more characters returns function words; a stopword set makes the same line read
+as technique frequency, and letting the user name the tokens outright makes it
+read as *their* techniques. Both are literals, so neither costs a model call.
 
 ## 12. Open Questions
 
-- How often does the C normalizer produce a false duplicate on Python projects?
-  The mechanism is deterministic and the collision is easy to construct, but
-  nothing logs a near-miss, so the rate on a real run is unknown and the symptom
-  — a silently discarded candidate — is indistinguishable from a genuine repeat.
-- Was `keywords.txt` meant to filter the counter? A reader exists, no caller
-  does, and the file name suggests exactly the missing argument to
-  `keyword_counts`. Reading the tree cannot tell a dropped intention from an
-  unfinished one.
-- What happens to the visited set across a snapshot restore? `seen_hashes.json`
-  is in the snapshot ignore list, so reverting a project to an earlier snapshot
-  keeps every hash learned since — deliberate if the intent is never to
-  re-evaluate, surprising if the intent is to return to an earlier state.
+- How many hashes are in a mature `seen_hashes.json`, and how many of them
+  still have a history entry? The two numbers are both cheap to print and
+  neither is, so the size of the gap the design creates is unmeasured on any
+  real run.
+- Would a `{hash: {gen, reason}}` map break the snapshot policy? The note says
+  the visited set is excluded so a revert cannot make the engine re-score; a map
+  carrying the reason has the same property and answers the question the list
+  cannot.
+- Does a user reverting a project expect the visited set to come back with it?
+  The module note settles the intent — never re-score — but a person clicking
+  "revert to this snapshot" is asking for an earlier state, and the one thing
+  they do not get back is the record of what has already been tried.
 - Does anything ever shrink `seen_hashes.json`? For a system designed to run
   *"forever by default"*, an unbounded set read and rewritten every generation
   is the one structure whose cost grows without a stated bound.
@@ -292,7 +334,24 @@ otherwise the system accumulates refusals it cannot justify.
 | `kaisen/kai.py` | The line-oriented sidecar protocol and the ACCEPT gate |
 | `docs/KAI.md` | The LLM-facing protocol reference |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The dedup hash is language-aware and wired | `grep -rn "normalize_code(\|semantic_hash(" --include="*.py" kaisen tools` | Four hits; `engine.py:848` passes `self._code_lang` |
+| The visited set has no bound | `grep -n "seen_hashes" kaisen/engine.py` and read `_dedup_check` | `seen.add(h)` then `save_json(seen_file, sorted(seen))`; no cap, no eviction, no expiry |
+| History is a ring | `grep -rn "MAX_HISTORY" kaisen` | Defined at `state.py:15`, applied at `:73-74` as a tail slice |
+| The visited set survives a revert by design | `sed -n '1,15p' kaisen/snapshots.py` | The exclusion note, and `seen_hashes.json` in `_IGNORE` at `:29` |
+| The keyword allowlist is wired | `grep -rn "load_keywords\|keywords.txt" --include="*.py" kaisen` | Read at `memory.py:134` into `keyword_counts`, with `_STOPWORDS` as the fallback |
+| No capability mark applies | `grep -rniE "status\|append.*log\|audit\|approve\|reject" --include="*.py" kaisen/memory.py kaisen/state.py` | One hit, the `FAILURE_KEYWORDS` tuple |
+| Test tree size | `grep -rc "def test_" tests/*.py` summed, and `ls tests/*.py \| wc -l` | 489 functions across 28 files |
+
 ## History
+
+**2026-09-11** — [`d961bc5ddb0a8cbe2d66c0f7146084c737ea1246`](https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246) — re-read, 86 files and 18,697 insertions past the previous pin, 1,516 of them in the memory paths, **arriving in a single commit** whose message describes a worker-telemetry fix — the log is no guide to what moved here, and the diff has to be read directly. The package went from 15,315 lines across 41 files to 23,230 across 58. **Three of the four defects the first reading named are closed upstream, and the fixes name the failures they close.** `normalize_code` takes a `language` argument and branches — hash-comment languages get a whitespace-and-comment pass, C-family keeps the brace-aware normalizer — and `semantic_hash`'s docstring states the collision it prevents: *"floor division would be stripped before hashing and distinct candidates could collide."* `_dedup_check` passes `self._code_lang`, the argument the report noted was already in scope, under a comment at the call site saying the same thing. `keywords.txt` has a caller: `keyword_counts` reads it as an explicit allowlist and falls back to a hardcoded stopword set, so the frequency line is no longer prose word count. Four committed tests cover the three fixes, including one asserting that the C path still folds `// comment` while the Python path does not. **The asymmetry the eyebrow names is unchanged and is now explicit**: `snapshots.py` gained a note that `seen_hashes.json` is deliberately excluded from a snapshot so a revert cannot make the engine re-score — a defensible rule for the block, extended to nothing that explains it, while `MAX_HISTORY` stays at 500. Marks remain none, and `negative_eval` is named as the near-miss: `test_keyword_counts_filters_stopwords` has the right shape over the wrong object, excluding a token from a frequency line rather than a record from a result. Test tree 206 functions across ten files to 489 across 28. Screened before reading: one dependency manifest inside the cooldown, five unpinned ranges, a `tests/conftest.py` executing on collection; nothing was installed or run.
+
 
 **2026-08-19** — [`f56a980bdd9daa8395e56a91eeb50bdbc625cd78`](https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78)
 — first reading. Screened before reading: no auto-run surface, one dependency

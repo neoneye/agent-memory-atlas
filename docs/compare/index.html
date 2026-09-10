@@ -12002,8 +12002,9 @@ semantic code hashes in <code>seen_hashes.json</code></td>
 each with a <code>meta.json</code> carrying
 <code>{created, reason, kind}</code></td>
 <td>None. The prompt builder concatenates the lesson, the latest memo, a
-keyword-frequency line and the last eight history entries into one blob;
-nothing is queried, ranked or selected by relevance</td>
+keyword-frequency line filtered by a stopword list or a user allowlist,
+and the last eight history entries into one blob; nothing is queried,
+ranked or selected by relevance</td>
 <td>Synchronous and mostly wholesale. <code>save_lesson</code>
 overwrites the file, a memo is written once per generation under its own
 name, history is appended, and a candidate's semantic hash is added to
@@ -12025,10 +12026,9 @@ under an EXPLICIT FAILURE FEEDBACK banner</td>
 <td>Separating failure feedback from ordinary history in the prompt, so
 a repeated mistake is the first thing the model reads rather than the
 eighth</td>
-<td>The dedup that blocks a re-proposed candidate is keyed on a hash
-computed with the wrong language normalizer for every non-C project, and
-the record explaining why a candidate was skipped ages out of a
-500-entry ring while the block itself is permanent</td>
+<td>The record explaining why a candidate was skipped ages out of a
+500-entry ring while the block itself is permanent and, by an explicit
+design note, survives a snapshot revert of everything else</td>
 </tr>
 <tr>
 <td><code>khoj</code></td>
@@ -28100,7 +28100,7 @@ than reproduced, and the corpus behind them is the author's own
 transcript history and is not published</li>
 <li><a href="https://github.com/RAZZULLIX/KAISEN">RAZZULLIX/KAISEN</a>
 at <a
-href="https://github.com/RAZZULLIX/KAISEN/commit/f56a980bdd9daa8395e56a91eeb50bdbc625cd78"><code class="commit-id" title="f56a980bdd9daa8395e56a91eeb50bdbc625cd78">f56a980b…</code></a>
+href="https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246"><code class="commit-id" title="d961bc5ddb0a8cbe2d66c0f7146084c737ea1246">d961bc5d…</code></a>
 — read only; no auto-run surface, one dependency manifest inside the
 seven-day cooldown, one unpinned range, and a
 <code>tests/conftest.py</code> that executes on collection; nothing was

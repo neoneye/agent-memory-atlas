@@ -8838,45 +8838,40 @@ ever scored and grows without bound — <code>_dedup_check</code> refuses
 any repeat outright — while <code>state.py</code> truncates
 <code>history</code> to the newest 500 entries, so the
 <code>duplicate_skip</code> record naming what was refused ages out and
-the refusal is permanent. After enough generations the system declines
-candidates for reasons written down nowhere. The visited set is also not
-a tombstone in the atlas's sense: it contains accepted candidates
-including the champion, so it says "already tried", not "rejected".</li>
+the refusal is permanent. <code>snapshots.py</code> states that the
+visited set is deliberately excluded from a snapshot so a revert cannot
+make the engine re-score, which protects the block through a full undo
+and extends nothing to its justification. After enough generations the
+system declines candidates for reasons written down nowhere. The visited
+set is also not a tombstone in the atlas's sense: it contains accepted
+candidates including the champion, so it says "already tried", not
+"rejected".</li>
 <li>Most reusable component: <code>snapshots.py</code>'s
 <code>meta.json</code> carrying <code>{created, reason, kind}</code> on
 each of up to 25 full project copies. A snapshot with a reason is
 navigable six weeks later; a directory of timestamps is not. It is also
 the only version history <code>lessons.txt</code> has, since
 <code>save_lesson</code> overwrites the file wholesale.</li>
-<li>Maturity impression: MIT, 15,315 lines of Python across 41 files, 9
-commits since 4 August 2026, 206 test functions — none of them touching
-the dedup path, which is the one mechanism with permanent consequences.
-Two checkable defects sit on that path: <code>_dedup_check</code> calls
-<code>semantic_hash(code)</code> without a language, so
-<code>normalize_code</code> defaults to C and its
-<code>//</code>-to-end-of-line comment strip eats Python's
-floor-division operator before hashing, and the engine has
-<code>self._code_lang</code> in scope at the call site. Separately,
-<code>keyword_counts</code> is presented to the model as "KEYWORD
-FREQUENCIES" and its docstring claims it shows "how often a technique
-failed", but it counts every token of three or more characters
-unfiltered — while the ten-entry <code>FAILURE_KEYWORDS</code> tuple
-used elsewhere in the same 110-line file, and a
-<code>load_keywords</code> reader for a user-supplied
-<code>keywords.txt</code> that has no caller anywhere, both sit
-unused.</li>
+<li>Maturity impression: MIT, 23,230 lines of Python across 58 files
+with 489 test functions across 28 files, and a dedup path that is tested
+against its failure mode — one case asserts
+<code>semantic_hash("x = a // b", "python")</code> differs from
+<code>semantic_hash("x = a", "python")</code> while the same pair
+collides under <code>"c"</code>. The counterweight is the commit
+discipline: the whole of that growth arrived in a single commit whose
+message describes a worker-telemetry fix, so the log is no guide to what
+moved.</li>
 <li>Study when: you are building an optimization loop that must not
 repeat itself, and want to see the smallest thing that works — four
 plain files, no schema, no index — together with what that costs once
 the run is long.</li>
 <li>Do not copy when: you need a memory whose <em>contents</em> can be
-judged. It carries <code>audit_log</code> and <code>negative_eval</code>
-— a per-writer append-only event log over a content-addressed blob
-store, and committed cases that particular content must not be archived
-— and neither of the two marks is about belief. There is no status
-field, no scope key inside any record, and no human gate on memory
-content, so the archive can prove what happened to a blob and cannot say
-whether the blob is true.</li>
+judged. It carries no capability mark and that is the honest answer:
+history is a ring rather than an audit log, the visited set records that
+a candidate was tried rather than that a value was rejected, there is no
+status field, every path is derived from <code>project.path</code> so
+the boundary is a partition rather than a key on a record, and no person
+gates memory content.</li>
 </ul>
 <h3 id="trueforge"><a
 href="../systems/trueforge/"><code>TrueForge</code></a></h3>
