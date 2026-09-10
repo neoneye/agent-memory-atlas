@@ -7,20 +7,22 @@ page_kind: system
 source_name: "hermes-labs-ai/fidelis"
 source_url: https://github.com/hermes-labs-ai/fidelis
 archive_name: "hermes-labs-ai--fidelis"
-revision: 804e521f86e3c0056d3c89b4c7babd1eb086a6a7
-revision_url: https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7
-analyzed_at: 2026-08-09
-capabilities: ""
+revision: a1b9093c19f3086fb068386b6c86814b2952cb06
+revision_url: https://github.com/hermes-labs-ai/fidelis/commit/a1b9093c19f3086fb068386b6c86814b2952cb06
+analyzed_at: 2026-09-11
+capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "every read path | src/fidelis/degrade.py:125 and src/fidelis/server.py:182 | `user_id` is written into the record payload and passed as `filters={\"user_id\": user_id}` by all six readers — the two server lanes, recall_b, recall_hybrid, calibrate and snapshot | unknown"
 stack_storage: "chroma, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "An original passage — an atomic fact on one path, a multi-turn session on the other"
   storage: "Local Chroma plus BM25 under ~/.cogito, with a JSONL dead-letter queue for failed writes"
-  retrieval: "BM25 + nomic dense + RRF fusion, no LLM in the default path; an optional filter tier"
+  retrieval: "BM25 + nomic dense + RRF fusion, no LLM in the default path, an optional filter tier, and a deterministic planner that decides before any search whether to retrieve at all and which of eight evidence lanes to use"
   write: "Markdown watched and auto-ingested; a failed write is queued locally rather than lost"
   update_delete: "None — passages are returned verbatim and never rephrased, superseded or retracted"
-  scoping: "None on the read path; multi-namespace isolation is named as a team-tier ask"
+  scoping: "`user_id` written into the record payload and applied as a filter by all six read paths — uniformly, with no lane exempt — over a config default of the literal `agent`, so the key is enforced and the deployment has one value for it"
   integration: "MCP for Claude Code, a CLI, a launchd/systemd service, Docker"
   background: "A watcher over a notes directory and a sync job replaying the dead-letter queue"
   trust: "A retrieval-confidence score parameterises the QA scaffold's hedge instruction"
@@ -174,9 +176,35 @@ Treating a prompt as a versioned artifact with markers, an idempotent wrapper, a
 detector, a stripper and a static validator is prompt engineering done as
 software engineering, and it is rare.
 
-**No scope key reaches the read path.** The README places "multi-namespace
-isolation" among the things a team should email about, so the omission is
-deliberate and disclosed.
+**A deterministic planner decides whether to retrieve at all, before any search
+runs.** `src/fidelis/context.py` is a regex classifier over the incoming
+utterance and the last four turns. It resolves a referent — five known project
+names, or an unknown proper noun accepted only when a recall, past-work,
+comparison, decision, historical, current-state or identity cue is present in the
+same turn — and if it finds neither a referent nor a cue it returns
+`disposition: "abstain"` with `retrieval_query: None` and the reason *"no known
+referent or historical-context cue"*. Otherwise it picks one of eight evidence
+lanes (`comparison`, `maintenance`, `conceptual`, `decision`, `historical`,
+`current`, `identity`, `context`) and builds the query by appending that lane's
+fixed vocabulary to the subject.
+
+Two things make it worth copying. The abstain path is the one most retrieval
+layers do not have: a search that should not happen costs nothing here, and the
+decision is a regex rather than a model call. And the guard against the obvious
+failure is written down at the point it bites — capitalisation alone does not
+make a proper noun a project, because *"sentence starters such as 'Can',
+'Please', and 'How' otherwise become false project entities"*, and
+`test_sentence_starters_do_not_become_project_entities` holds a table of them.
+
+`context_packet` then binds a plan to the records without touching them, stamping
+`authority: "derived index; records remain verbatim evidence"` and an
+`evidence_status` of `available` or `insufficient`. The docstring is the house
+position restated: *"never synthesize a summary."*
+
+**The scope key is `user_id`, and the deployment default gives it one value.**
+Section 9 has the mechanism; the README places "multi-namespace isolation" among
+the things a team should email about, which is consistent — what exists is the
+predicate, not a tenancy model.
 
 ## 7. Write Mechanics
 
@@ -209,10 +237,22 @@ with its own limits attached.
 
 ## 9. Reliability, Safety, and Trust
 
-**No marks**, and the reason is structural rather than a shortfall: this is a
-faithful retrieval index, not a belief store. No trust state, no tombstone, no
-bitemporality, no scope key, no audit log, no review surface, and no committed
+**One mark, and the rest of the absence is structural rather than a shortfall:**
+this is a faithful retrieval index, not a belief store. No trust state, no
+tombstone, no bitemporality, no audit log, no review surface, and no committed
 case asserting that particular material must not be retrieved.
+
+**`scope_enforced` is earned, uniformly and unglamorously.** `safe_add` writes
+`payloads=[{"data": text, "user_id": user_id}]`, and every reader passes the key
+back as a filter: both vector lanes in `server.py:182` and `:222`, the sub-query
+fan-out in `recall_b.py:317`, the hybrid path in `recall_hybrid.py:239`, and the
+two bulk readers in `calibrate.py:53` and `snapshot.py:53`. There is no lane that
+forgets it, which is the failure this corpus finds most often. The limit is that
+`config.py:46` defaults `user_id` to the literal string `agent` and
+`COGITO_USER_ID` is the only way to change it, so a default install has exactly
+one value for a key that is checked everywhere. The mark certifies that the key
+reaches the query, not that a deployment uses more than one — but a reader should
+know which of those they are getting.
 
 **What it has instead is calibration.** The scaffold takes a
 retrieval-confidence score and a question type and adjusts the instruction, with
@@ -388,7 +428,7 @@ by a project that had a 96.4% number and declined to spend it.
 **The writeup** — `WRITEUP-LONGMEMEVAL-20260423.md` (the two paths `:11-17`,
 the ablation history `:21-34`, the reproduce commands `:36-50`, "Why this is NOT
 a leaderboard submission" `:54-68`, per-category R@1 `:70-84`, the three findings
-`:86-104`, the compute and cost notes `:145-150`)
+`:85-99`, the compute and cost notes `:145-150`)
 
 **Evidence** — `experiments/zeroLLM-FLAGSHIP-evidence/SUMMARY.json` (the four
 runs with Wilson intervals, the `_note` on the graded subset and the reader/grader
@@ -399,7 +439,7 @@ runs with Wilson intervals, the `_note` on the graded subset and the reader/grad
 `bench/BENCHMARK_INTEGRITY_AUDIT.md`, `bench/RESULTS-SUMMARY.md`
 
 **Durability** — `src/fidelis/degrade.py` (the incident `:1-9`, `MAX_ATTEMPTS`
-`:22`, `_queue_dir` `:25-30`), `tests/test_graceful_degrade.py`,
+`:21`, `_queue_dir` `:24-33`, the scope key written into the payload `:125`), `tests/test_graceful_degrade.py`,
 `test_graceful_degrade_corruption.py`, `test_dead_letter.py`,
 `test_write_fallback_contract.py`, `test_broken_pipe_recovery.py`,
 `test_watch_backpressure.py`, `test_graceful_shutdown.py`
@@ -407,8 +447,15 @@ runs with Wilson intervals, the `_note` on the graded subset and the reader/grad
 **Scaffold** — `src/fidelis/scaffold/_core.py`, `preflight.py`,
 `docs/scaffold.md` (the module surface, the calibrated hedge invitation `:35`)
 
-**Retrieval** — `src/fidelis/recall.py`, `recall_hybrid.py`, `recall_b.py`,
-`recall_sessions.py`, `src/fidelis/calibrate.py`
+**Retrieval** — `src/fidelis/recall.py`, `recall_hybrid.py` (the scope filter
+`:239`), `recall_b.py` (`:317`), `recall_sessions.py`, `src/fidelis/calibrate.py`
+(`:53`), `src/fidelis/snapshot.py` (`:53`)
+
+**Context planning** — `src/fidelis/context.py` (the cue patterns `:17-58`, the
+`ContextPlan` dataclass `:62-75`, referent resolution and the capitalisation
+guard `:78-135`, the lane vocabulary `:140-152`, `plan_context` `:155-202`,
+`context_packet` `:205-227`), `tests/test_context.py`, `src/fidelis/mcp_server.py`
+(`:159-177`)
 
 **Claim tests** — `tests/test_public_install_truth.py`,
 `test_telemetry_kill_actually_kills.py`, `test_zero_llm_regression.py`,
@@ -417,6 +464,21 @@ runs with Wilson intervals, the `_note` on the graded subset and the reader/grad
 **Claims** — `README.md` (the headline `:8`, the benchmark table `:122-136`, the
 zero-LLM verification recipe `:138-150`, known limitations `:225-240`)
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Every read path filters on the scope key | `grep -rn "\.search(\|get_all(" --include="*.py" src` | Six store reads, all passing `filters={"user_id": user_id}` |
+| The key is written onto the record | `grep -n "payloads=" src/fidelis/degrade.py` | `:125` and `:246`, both `{"data": text, "user_id": user_id}` |
+| Nothing corrects a stored passage | `grep -rniE "supersede\|retract\|def delete\|def forget\|correct" --include="*.py" src` | One hit, a prompt string in `scaffold/_core.py:85` telling the reader to prefer the most recent quote |
+| No audit or review surface | `grep -rniE "audit\|approve\|review" --include="*.py" src` | The telemetry escalation log, a config prompt string, and a lane label; no mutation log and no approval path |
+| The planner is wired | `grep -rn "plan_context\|context_packet" --include="*.py" src` | Four call sites in `mcp_server.py:159-177` |
+| Tree and suite size | `find . -name "*.py" \| xargs wc -l \| tail -1`; `grep -rc "def test_" tests/*.py tests/*/*.py` summed | 39,279 lines; 312 test functions |
+
 ## History
+
+**2026-09-11** — [`a1b9093c19f3086fb068386b6c86814b2952cb06`](https://github.com/hermes-labs-ai/fidelis/commit/a1b9093c19f3086fb068386b6c86814b2952cb06) — re-read, 21 files and 1,665 insertions past the previous pin in a single commit. **One mark added, and it is a first-reading miss rather than an upstream change.** The report asserted *"no scope key"* in section 9 and *"No scope key reaches the read path"* in section 6. `safe_add` writes `user_id` into the record payload at `degrade.py:125`, and all six store reads pass it back as a filter — `server.py:182` and `:222`, `recall_b.py:317`, `recall_hybrid.py:239`, `calibrate.py:53`, `snapshot.py:53` — with no lane exempt. `scope_enforced` is earned; the limit worth stating is that `config.py:46` defaults the key to the literal `agent`, so a default install checks a predicate that has one value. **New upstream**: `src/fidelis/context.py`, a deterministic planner that runs before any search and can decline to run one — it resolves a referent from the utterance and the last four turns, returns `disposition: "abstain"` when it finds neither a referent nor a historical-context cue, and otherwise routes to one of eight evidence lanes, all by regex and with the reason carried on the plan. `context_packet` binds the plan to records without altering them. It is wired at `mcp_server.py:159-177` and covered by `tests/test_context.py`, including a table of sentence starters that must not be mistaken for project names — the failure its own code comment names. Line numbers re-verified: `degrade.py`'s `MAX_ATTEMPTS` moved from `:22` to `:21` and the writeup's findings section from `:86` to `:85`; the rest hold. Suite 312 test functions over 39,279 lines of Python. Screened before reading: an MCP server manifest declaring a start command, one dependency manifest inside the cooldown with no lockfile, and an `AGENTS.md` read as data; nothing was installed or run.
 
 **2026-08-09** — [`804e521f86e3c0056d3c89b4c7babd1eb086a6a7`](https://github.com/hermes-labs-ai/fidelis/commit/804e521f86e3c0056d3c89b4c7babd1eb086a6a7) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The figures in section 10 are read from the repository's own committed evidence files.
