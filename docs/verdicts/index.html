@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 406 reports.</strong></p>
+<p><strong>This page covers all 407 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14208,6 +14208,43 @@ than the one that wrote it.</li>
 nothing is stripped on the way in — or when you need a memory rather
 than an archive; nothing here can be marked doubtful, corrected or
 retired.</li>
+</ul>
+<h3 id="llm-wiki-cli"><a
+href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a></h3>
+<ul>
+<li>Best idea: <strong>recall walks the supersession chain and hands
+back the replacement.</strong> A lexical hit on a memory event is
+resolved forward through the <code>supersedes</code> edges before it is
+returned, so a query matching the old wording of a decision answers with
+the decision that replaced it — labelled <code>current</code>, tagged
+<code>matched_via: "superseded_event"</code> so the redirect is visible,
+and with the whole history one <code>--include-superseded</code> away.
+Correction without deletion, applied at read time.</li>
+<li>Biggest risk: <strong>two well-built vocabularies stop one clause
+short of being mechanisms.</strong> The wiki's provenance ladder is
+ordered, validated at the boundary and attached to every search result,
+and no read path filters on it — a hypothesis ranks beside a cited fact.
+The memory's <code>valid_from</code> and <code>valid_until</code> are
+written, cross-validated so the start is not later than the end, carried
+through sync and returned by <code>memory_show</code>, and appear in no
+<code>WHERE</code> in the tree. Both are data awaiting a predicate.</li>
+<li>Most reusable component: <code>MEMORY_EVENT_PROTECTED_SQL</code> —
+<code>e.pinned = 1 OR EXISTS(… fragment.kind = 'unresolved')</code> —
+spliced into the recall filter as a disjunct and into the retention
+query negated, so marking something an open question is also a decision
+not to forget it, and one string keeps both paths agreeing.</li>
+<li>Maturity impression: Apache-2.0, 294 commits between 29 July and 5
+September 2026 by two authors, 123,311 lines of Rust across 139 files
+with 868 test attributes, SQLite per scope, published on npm and
+crates.io with READMEs in seven languages and benchmark adapters for
+LongMemEval-S, LongMemEval-V2 and the Agent Memory Leaderboard pinned by
+upstream commit and dataset hash; four of seven capability marks.</li>
+<li>Study when: you want an agent to keep durable, supersedable
+decisions in a local SQLite file, and you want retention that protects
+what is still unresolved rather than only what is recent.</li>
+<li>Do not copy when: you need a scope key — scope here is a choice of
+database file, not a column — or when you need the wiki half to act on
+the provenance it so carefully records.</li>
 </ul>
         </article>
       </div>

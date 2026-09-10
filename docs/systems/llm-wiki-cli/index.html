@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Rust CLI holding two
+stores at once — a source-grounded wiki whose pages carry an ordered
+provenance from source-grounded down to hypothesis, and a temporal
+memory of fingerprinted events with typed fragments, an FTS5 recall
+bounded by event time, and a supersession chain the read path walks so a
+replaced memory returns its successor unless the caller asks for the
+history.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LWC — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Rust CLI
+holding two stores at once — a source-grounded wiki whose pages carry an
+ordered provenance from source-grounded down to hypothesis, and a
+temporal memory of fingerprinted events with typed fragments, an FTS5
+recall bounded by event time, and a supersession chain the read path
+walks so a replaced memory returns its successor unless the caller asks
+for the history.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LWC — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Rust CLI
+holding two stores at once — a source-grounded wiki whose pages carry an
+ordered provenance from source-grounded down to hypothesis, and a
+temporal memory of fingerprinted events with typed fragments, an FTS5
+recall bounded by event time, and a supersession chain the read path
+walks so a replaced memory returns its successor unless the caller asks
+for the history.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LWC — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LWC",
+      "description": "An Apache-2.0 Rust CLI holding two stores at once \u2014 a source-grounded wiki whose pages carry an ordered provenance from source-grounded down to hypothesis, and a temporal memory of fingerprinted events with typed fragments, an FTS5 recall bounded by event time, and a supersession chain the read path walks so a replaced memory returns its successor unless the caller asks for the history.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Recall hands back the replacement, not the
+superseded memory</p>
+          <h1>LWC</h1>
+          <p class="document-deck">An Apache-2.0 Rust CLI holding two
+stores at once — a source-grounded wiki whose pages carry an ordered
+provenance from source-grounded down to hypothesis, and a temporal
+memory of fingerprinted events with typed fragments, an FTS5 recall
+bounded by event time, and a supersession chain the read path walks so a
+replaced memory returns its successor unless the caller asks for the
+history.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/JanYork/llm-wiki-cli">
+              <span>Source</span>
+              <strong>JanYork/llm-wiki-cli</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/JanYork/llm-wiki-cli/commit/09e922b4c800d52053cac9ef702c15b6982152e0" title="09e922b4c800d52053cac9ef702c15b6982152e0">
+              <span>Analyzed revision</span>
+              <code>09e922b4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JanYork--llm-wiki-cli" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>JanYork--llm-wiki-cli</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LWC is two stores wearing one CLI. The visible one is a
+source-grounded wiki an agent curates — pages with cited sources,
+<code>[[slug]]</code> links, and a typed relation graph. The one that
+earns the marks is underneath it: a temporal memory of fingerprinted
+event capsules with typed fragments, an FTS5 recall bounded by event
+time, supersession resolved at read time, retention with protection, and
+a hint engine that tells the agent what needs reviewing.</p>
+<p>Apache-2.0; 294 commits between 29 July and 5 September 2026 from two
+authors — about six weeks — for 123,311 lines of Rust across 139 files,
+with 868 test attributes. Published on npm and crates.io with READMEs in
+seven languages. The screen found no auto-run surface, three manifests
+inside the seven-day cooldown, one build-time execution path and one
+unpinned dependency surface; nothing was installed, built or run.</p>
+<p><strong>Recall hands back the replacement.</strong> A lexical hit on
+a memory event is not returned directly.
+<code>current_visible_memory_id</code> walks the <code>supersedes</code>
+edges forward from the hit to the newest event that replaced it, and the
+recall loop keeps the original only if the caller passed
+<code>--include-superseded</code>. Every result is stamped
+<code>current</code> or <code>superseded</code>, and a hit reached
+through the chain is labelled
+<code>matched_via: "superseded_event"</code> so a reader can see the
+redirect happened. That is a discrete status deciding what may be
+treated as true, and it earns <code>trust_state</code> — the status is
+derived per call, but the <code>supersedes</code> rows are durable and
+indexed on their target, so replaced events are queryable rather than
+replayable, which is the line the corpus draws.</p>
+<p><strong>Event time is the axis, and record time is only a
+tiebreak.</strong> <code>occurred_at</code> and <code>recorded_at</code>
+are separate non-null columns, and every read — recall, supersession
+resolution, retention, eviction — filters on <code>occurred_at</code>
+with a configured age window and optional <code>since</code> and
+<code>until</code> bounds that are normalised through SQLite and
+rejected if inverted. <code>bitemporal</code> is earned on that, with
+two limits stated: <code>recorded_at</code> never appears in a
+predicate, so there is no as-of-record-time question; and
+<code>valid_from</code>/<code>valid_until</code> — the explicit validity
+interval — are written, cross-validated so the start is not later than
+the end, and returned by <code>memory_show</code>, and appear in no
+<code>WHERE</code> in the tree. The interval is a column; the mark rests
+on the pair that is queried.</p>
+<p><strong>Forgetting protects the unfinished.</strong> Age and capacity
+eviction both skip an event that is pinned <em>or</em> that carries a
+fragment of kind <code>unresolved</code>. Marking something as an open
+question is therefore also a retention decision, which is a better
+default than most decay schemes manage: the things you have not settled
+are the last things dropped.</p>
+<p><strong>Supersession is tested from both directions.</strong> A
+committed case stores three events, recalls a term matching the
+superseded one, and asserts exactly one result which is the replacement;
+then re-runs with the override and asserts exactly three with the old
+one marked <code>superseded</code>; then recalls an unrelated term and
+asserts exactly one. The exclusion is proved against a populated result
+with the positive controls beside it, which earns
+<code>negative_eval</code>.</p>
+<p><strong>The wiki's provenance ladder is the good idea that stayed
+inert.</strong> <code>PROVENANCE_ORDER</code> runs
+<code>source-grounded</code>, <code>user-provided</code>,
+<code>agent-observed</code>, <code>hypothesis</code>; an unrecognised
+value is rejected rather than defaulted; and the value is attached to
+every search result. No read path filters on it. A page whose only
+provenance is <code>hypothesis</code> ranks beside a cited one, and the
+distinction reaches a reader only if the reader acts on the label.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of it as a notebook and a logbook sharing a drawer.</p>
+<p>The <strong>notebook</strong> is the wiki. A page is a claim with
+citations: the agent writes it, attaches the immutable sources
+supporting it, and where there is no source declares what kind of claim
+it is instead. Pages link to each other twice — untyped
+<code>[[slug]]</code> wikilinks, and typed semantic edges that cannot
+exist without a reason and a bounded confidence. A lint flags any page
+with neither a cited source nor an explicit provenance as
+<code>uncited_page</code>.</p>
+<p>The <strong>logbook</strong> is the temporal memory. The agent hands
+over a capsule: a type, a context, when it happened, and fragments
+sorted into what was observed, what was decided, what constrains, what
+was learned, what stays unresolved, and what came out. It can carry
+evidence with excerpts, changes with before and after values, and
+relations to earlier events. The capsule is fingerprinted, so replaying
+it is idempotent; a replay under the same <code>request_id</code> with a
+<em>different</em> payload conflicts instead of overwriting.</p>
+<p>Correction in the logbook is not editing. A new event points
+<code>supersedes</code> at the old one, and from then on recall answers
+with the new one. The old event is still there, still searchable behind
+a flag, still marked for what it is. Deletion happens only through
+retention, and retention refuses to touch what is pinned or still
+unresolved.</p>
+<p>The gap runs between the two halves. The notebook has the richer
+vocabulary for doubt — four provenance values, confidence on every edge,
+a lint for ungrounded pages — and does nothing with it at read time. The
+logbook has the thinner vocabulary and enforces it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a memory capsule is fingerprinted and stored with typed fragments and relations, and the hint engine reports what needs review; recall matches by FTS5 inside an event-time window, resolves every hit forward through the supersedes chain so the replacement is returned in place of the superseded event, re-ranks by a clamped feedback score, and labels each result current or superseded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a memory capsule is fingerprinted and stored with typed fragments and relations, and the hint engine reports what needs review; recall matches by FTS5 inside an event-time window, resolves every hit forward through the supersedes chain so the replacement is returned in place of the superseded event, re-ranks by a clamped feedback score, and labels each result current or superseded
+flowchart TB
+    AG[&quot;an agent calls remember&lt;br/&gt;with a JSON capsule&quot;]
+    FP{&quot;fingerprint&lt;br/&gt;64 chars&quot;}
+    IDEM[&quot;same request_id, same payload&lt;br/&gt;→ idempotent replay&quot;]
+    CONF[&quot;same request_id, changed payload&lt;br/&gt;→ conflict, no mutation&quot;]
+    EV[(&quot;memory_events&lt;br/&gt;occurred_at · recorded_at&lt;br/&gt;valid_from · valid_until&lt;br/&gt;pinned · logical_bytes&quot;)]
+    FR[(&quot;fragments: observed · decision&lt;br/&gt;constraint · learned&lt;br/&gt;unresolved · outcome&quot;)]
+    REL[(&quot;relations: supersedes · contradicts&lt;br/&gt;resolves · supports · related&quot;)]
+    HINT[&quot;hint engine returns up to three:&lt;br/&gt;relation-review · exact-context-cluster&lt;br/&gt;aged-unresolved · storage-pressure&lt;br/&gt;each on a seven-day cooldown&quot;]
+    Q[&quot;memory recall query&quot;]
+    FTS[&quot;FTS5 bm25 over memory_fts&lt;br/&gt;AND occurred_at within max_age_days&lt;br/&gt;AND optional since / until&quot;]
+    PROT[&quot;kept past the window if&lt;br/&gt;pinned or holding an&lt;br/&gt;unresolved fragment&quot;]
+    WALK[&quot;walk supersedes forward:&lt;br/&gt;current_visible_memory_id&quot;]
+    DROP[&quot;superseded hit dropped&lt;br/&gt;unless --include-superseded&quot;]
+    RANK[&quot;rank adjusted by feedback&lt;br/&gt;clamped to ±3, five per cent&quot;]
+    OUT[&quot;results, each labelled&lt;br/&gt;current or superseded&quot;]
+    OPS[(&quot;operations: action, target,&lt;br/&gt;detail_json — 54 call sites&quot;)]
+
+    AG --&gt; FP
+    FP --&gt; IDEM
+    FP --&gt; CONF
+    FP --&gt; EV
+    EV --&gt; FR
+    EV --&gt; REL
+    AG --&gt; HINT
+    AG -.-&gt; OPS
+    Q --&gt; FTS
+    FTS --&gt; PROT
+    PROT --&gt; WALK
+    REL --&gt; WALK
+    WALK --&gt; DROP
+    DROP --&gt; RANK
+    RANK --&gt; OUT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Rust crate, 123,311 lines across 139 files: <code>agent/</code>,
+<code>artifacts/</code> (the page and source types and their
+normalisation), <code>store/</code> (schema and migrations, content
+search, graph ingest and search, checkpoints, changeset restore, sync
+publish, temporal memory), <code>codegraph/</code>,
+<code>learning/</code>, <code>view/</code>, <code>work/</code>, plus
+<code>mcp.rs</code>, <code>scope.rs</code>, <code>secret_scan.rs</code>,
+<code>source_diff.rs</code>, <code>sync_git.rs</code> and
+<code>office.rs</code>.</p>
+<p>Storage is SQLite behind a versioned migration chain — the temporal
+memory arrives as its own schema version, migrating transactionally from
+the tags version and refusing any other. The scope decision happens
+before the connection: <code>Scope::Project</code> resolves to
+<code>&lt;project&gt;/.lwc/wiki.db</code>, <code>Scope::Global</code> to
+a home-directory path, <code>Scope::All</code> to both, read-only.</p>
+<p>The memory layer is off by default in the sense that it is
+<code>Inherit</code> until a scope sets <code>enabled</code>, with a
+maximum age of 365 days and a byte budget of 256 mebibytes;
+<code>memory feedback</code> on a disabled scope returns
+<code>memory_disabled</code> rather than silently succeeding.</p>
+<p><code>secret_scan.rs</code> is wired into two paths —
+<code>config.rs</code> when a translation argument is handled, and
+<code>cli/helpers.rs</code> when file content is read — through
+<code>detect_possible_secret_reasons(path, content)</code>, which
+returns reasons rather than a boolean. A knowledge base an agent fills
+from a codebase will eventually ingest a key, and somebody thought about
+that.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Record a memory.</strong> <code>remember</code> → a capsule
+validated against <code>MemoryEventInput</code> with
+<code>deny_unknown_fields</code> → fingerprint →
+<code>INSERT INTO memory_events</code> with <code>occurred_at</code>
+defaulting to <code>recorded_at</code> when the caller gives none →
+fragments, changes, evidence and relations inserted → the hint engine
+runs → <code>record_operation</code>.</li>
+<li><strong>Recall.</strong>
+<code>store/temporal_memory.rs:790-912</code> → tokenize, normalise
+<code>since</code> and <code>until</code> through SQLite and reject an
+inverted pair → FTS5 <code>MATCH</code> with
+<code>bm25(memory_fts, 0.0, 2.0, 4.0, 1.0)</code> inside the age window
+and the bounds → each hit resolved forward by
+<code>current_visible_memory_id</code> → the superseded hit dropped
+unless overridden, the successor always kept → feedback score applied as
+a rank adjustment → sorted and truncated.</li>
+<li><strong>Resolve supersession.</strong> <code>:1029-1060</code> → a
+loop over
+<code>SELECT relation.event_id FROM memory_relations relation JOIN memory_events e … WHERE relation.relation_type = 'supersedes' AND relation.target_event_id = ?1</code>
+under the same time window, taking the newest by
+<code>occurred_at DESC, recorded_at DESC, id</code>, until no further
+replacement exists.</li>
+<li><strong>Protect and evict.</strong>
+<code>MEMORY_EVENT_PROTECTED_SQL</code> is
+<code>e.pinned = 1 OR EXISTS(SELECT 1 FROM memory_fragments unresolved WHERE unresolved.event_id = e.id AND unresolved.kind = 'unresolved')</code>,
+spliced into the recall filter as a disjunct and into the retention
+query negated.</li>
+<li><strong>Hint.</strong> <code>:1341-1476</code> → four candidate
+rules → for each, skip if a cooldown row exists, else insert one with a
+seven-day <code>next_eligible_at</code> and emit → at most three per
+call. <code>prune_memory_hint_state</code> clears rows whose
+<code>next_eligible_at</code> has passed before the loop runs, so the
+cooldown expires.</li>
+<li><strong>Create a wiki relation.</strong>
+<code>store/graph_search.rs:105-135</code> → four validations in order,
+each with its own error code: <code>invalid_semantic_relation</code> for
+the type, <code>invalid_provenance</code> for the provenance,
+<code>invalid_input</code> for an empty reason,
+<code>invalid_confidence</code> for a value outside a finite
+zero-to-one.</li>
+<li><strong>Record an operation.</strong>
+<code>store/search_state.rs:563-590</code> →
+<code>INSERT INTO operations(action, target, detail_json)</code> in the
+caller's transaction.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The event.</strong> <code>id</code>, an optional
+<code>request_id</code> under a unique partial index, a
+<code>fingerprint</code> constrained to exactly 64 characters, an
+<code>event_type</code> and a <code>context</code> both non-blank, then
+<code>occurred_at</code>, <code>recorded_at</code>,
+<code>valid_from</code>, <code>valid_until</code>, a <code>pinned</code>
+flag checked to zero or one, and <code>logical_bytes</code> checked
+non-negative. Three indexes: by request id, by
+<code>(event_type, context, occurred_at DESC, id)</code> for recall, and
+by <code>(occurred_at, id)</code> for retention.</p>
+<p>Almost every column carries a <code>CHECK</code>. That is unusual and
+it matters here, because the writer is a language model: a blank context
+or a truncated fingerprint fails at the database rather than becoming a
+row nobody can use.</p>
+<p><strong>The fragments.</strong> <code>kind</code> is constrained to
+<code>observed</code>, <code>decision</code>, <code>constraint</code>,
+<code>learned</code>, <code>unresolved</code> and <code>outcome</code>,
+with an ordinal and a non-blank value. Six genres, and
+<code>unresolved</code> is the one worth naming: a memory system that
+can record <em>this is still open</em> has somewhere to put the thing
+that usually gets lost, and here that record also buys the event
+protection from eviction.</p>
+<p><strong>The satellites.</strong>
+<code>memory_changes(subject, before_value, after_value, reason)</code>
+— what changed, from what, to what, and why.
+<code>memory_evidence(reference, excerpt)</code> — a citation with the
+passage.
+<code>memory_relations(relation_type IN ('supersedes','contradicts','resolves','supports','related'), target_event_id, basis)</code>
+— with an index on
+<code>(target_event_id, relation_type, event_id)</code> so the inbound
+direction is the fast one, which is exactly what supersession resolution
+needs.</p>
+<p><strong>The counters.</strong> <code>memory_state</code> is a single
+row holding <code>record_attempts</code>, <code>inserted_events</code>,
+<code>idempotent_replays</code>, <code>feedback_useful</code>,
+<code>feedback_not_useful</code>, <code>age_evictions</code>,
+<code>capacity_evictions</code>, <code>event_count</code> and
+<code>logical_bytes</code>. A store that counts its own replays and
+evictions can answer whether the memory is working without instrumenting
+the caller.</p>
+<p><strong>The page.</strong> <code>slug</code>, <code>title</code>, an
+optional <code>kind</code> and <code>summary</code>, a Markdown
+<code>body</code>, <code>source_artifact_paths</code>, a
+<code>provenance: Vec&lt;String&gt;</code>, created and updated.
+Provenance is a list, so a page assembled from a citation plus an
+inference is honestly both.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Memory recall</strong> is FTS5 with
+<code>bm25(memory_fts, 0.0, 2.0, 4.0, 1.0)</code> — the event id
+unweighted, the event type at two, the context terms at four, the
+content terms at one — so what a memory is <em>about</em> outweighs its
+wording. The candidate limit is the requested limit times eight, clamped
+to a thousand, which leaves room for the supersession walk to collapse
+several hits onto one successor without starving the result.</p>
+<p>The time filter is three clauses: the event must be inside
+<code>max_age_days</code> of now <em>or</em> protected, and inside the
+caller's <code>since</code> and <code>until</code> if given. Both bounds
+are normalised by asking SQLite to format them and rejected as
+<code>invalid_input</code> if they are not timestamps, and an inverted
+pair fails before any query runs.</p>
+<p>Then the walk. Every hit goes through
+<code>current_visible_memory_id</code> — and so does every candidate a
+second time, when the results are assembled — so a chain of three
+replacements resolves to the third. Note that the walk applies the same
+time window, so a replacement that has itself aged out does not hide the
+older event behind a result the reader cannot see.</p>
+<p>Feedback re-ranks and never filters: the score is the count of
+<code>useful</code> minus <code>not-useful</code> for that event,
+clamped to plus or minus three, and the adjustment is five per cent of
+the absolute lexical rank times that number. The
+<code>explanation</code> block on each result reports the raw
+<code>lexical_rank</code>, the <code>feedback</code> integer and
+<code>matched_via</code>, so the ordering is inspectable.</p>
+<p><strong>Wiki search</strong> is the weighted lexical scorer — title
+thirty-two, path sixteen, generic eight, graph match a quarter, graph
+hub four, manual boost two — and it decorates each result with the
+page's provenance, computed from whether the page has cited sources and
+what explicit values it carries. Decorated, not filtered: the searches
+for a provenance predicate return an insert, two delete-and-restore
+statements, a display query, a graph-ingest identity match, and the lint
+that flags a page with neither sources nor provenance. Nothing narrows a
+result set.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember</code> takes a JSON capsule with
+<code>deny_unknown_fields</code>, so a hallucinated key fails rather
+than being dropped. The fingerprint gives content dedup; the optional
+<code>request_id</code> gives idempotency across processes, and the
+interesting case is the third one — a replay under the same
+<code>request_id</code> with a changed payload is a conflict, and the
+test name says what that is worth:
+<code>changed_request_replay_conflicts_without_mutation</code>.</p>
+<p><code>occurred_at</code> defaults to <code>recorded_at</code> when
+the caller omits it, which is the right default and the reason the two
+columns do not collapse: a capsule about something that happened last
+month carries that fact, and one about right now carries the same value
+twice.</p>
+<p>The wiki's write path validates harder because its writer is less
+constrained. A provenance outside the four is rejected. A semantic
+relation is refused unless its type is one of six, its provenance one of
+four, its reason non-empty and its confidence a finite number in
+zero-to-one — four checks, four distinct error codes, so the agent that
+got it wrong can fix the right thing. An edge that cannot exist without
+a justification makes the graph self-documenting.</p>
+<p>Correction differs by layer. In the memory, a new event supersedes an
+old one and nothing is edited. In the wiki, a changeset can be restored
+— and <code>changeset_restore</code> deletes a page's provenance rows
+and re-inserts them from the candidate database rather than merging,
+which is the correct choice for making a rollback exact.</p>
+<p>Retention is the only deletion. The age pass evicts events past the
+window and the capacity pass evicts the oldest until the byte budget is
+met, both skipping anything protected, both rolling back if the budget
+cannot be met without touching protected rows, and both incrementing the
+counters in <code>memory_state</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server and a CLI, on npm as <code>@i-xor/lwc</code> and
+crates.io as <code>lwc</code>, with a published skill and a dozen named
+harnesses in the README, in seven languages.</p>
+<p>The hint engine is the part designed specifically for an agent. Every
+<code>remember</code> returns up to three prompts: a
+<code>contradicts</code> or <code>supersedes</code> edge that needs
+review, five or more events sharing an exact type and context — a
+redundancy signal — an <code>unresolved</code> fragment more than
+fourteen days old, and storage past eighty per cent of budget. Each is
+keyed and suppressed for seven days, and the suppression rows are pruned
+when they expire, so the same nag does not arrive on every write. That
+is a memory store telling its writer what to clean up, which is a more
+useful form of proactivity than surfacing memories unprompted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> <code>current</code> versus
+<code>superseded</code>, resolved on every recall and used to drop the
+replaced event rather than to rank it, with an explicit
+<code>--include-superseded</code> override for the history and a label
+on every result. The corpus withholds this mark from statuses computed
+per call and stored nowhere, and that objection does not apply here: the
+<code>supersedes</code> rows are durable and indexed on
+<code>(target_event_id, relation_type, event_id)</code>, so a caller can
+ask which events have been replaced with one indexed query rather than
+replaying the corpus. What is derived is the resolution, not the
+fact.</p>
+<p><strong>Bitemporal — awarded, with the interval named as
+unused.</strong> <code>occurred_at</code> and <code>recorded_at</code>
+are separate non-null columns on every event, and event time is what
+recall, supersession resolution, retention and eviction all filter on,
+with caller-supplied bounds validated before use. Two limits:
+<code>recorded_at</code> appears only in <code>ORDER BY</code>, so there
+is no as-of-record-time query; and <code>valid_from</code> and
+<code>valid_until</code> are written, cross-validated so the start is
+not later than the end, carried through sync, and returned by
+<code>memory_show</code>, yet appear in no <code>WHERE</code> anywhere.
+The explicit interval is a column awaiting a consumer.</p>
+<p><strong>Audit log — awarded, with two limits.</strong>
+<code>operations</code> records an action, a target and a JSON detail,
+written through one helper from fifty-four call sites inside the
+mutating transaction and read back by the checkpoint and sync paths.
+<code>memory_changes</code> adds the prior and new value of each mutated
+subject with a reason. Against that: four statements amend
+<code>detail_json</code> after insertion — two completing the row just
+written, two in <code>sync_publish</code> by explicit id — so a row's
+payload is not immutable. And while no ordinary write path deletes a
+row, <code>replace_main_from_attached</code> wipes
+<code>operations</code> along with every other table when a changeset is
+applied and repopulates it from the draft, whose autoincrement
+<code>changeset_begin_sparse</code> seeded at the base store's last
+operation id. So ids stay continuous across an applied changeset and the
+log is replaced rather than merged — anything recorded on the live store
+while the draft was open does not survive the apply.</p>
+<p><strong>Negative evaluation — awarded.</strong> The supersession case
+asserts a one-member result containing the replacement rather than the
+matched-and-superseded event, with the override direction and an
+unrelated-cluster control in the same test; the retention pair asserts
+an expired event is absent from recall while a
+<code>SELECT EXISTS</code> proves the row is still in the store. Neither
+can pass on a retriever that returns nothing.</p>
+<p><strong>Tombstone — withheld, and the near-miss is real.</strong>
+<code>memory_hint_state</code> is a durable row keyed on a candidate and
+consulted before a later emission, which is the <em>shape</em> the mark
+asks for — but what it suppresses is a repeated nag, not a rejected
+value, and the suppression expires by design. Supersession is explicitly
+not this either: the superseded event stays retrievable and nothing
+prevents an equivalent claim being recorded again.</p>
+<p><strong>Scope — withheld.</strong> A <code>Scope</code> enum selects
+a database file, and <code>Scope::All</code> opens both and labels each
+result with its store. There is no scope key on a record and no
+predicate on a read, so this partitions the way a per-project
+configuration directory does. It is the right shape for a local tool and
+it does not separate two callers sharing a store.</p>
+<p><strong>Human review — withheld, and this is the second-closest
+miss.</strong> <code>memory feedback</code> is a person or agent
+adjudicating a memory with a mandatory non-empty reason, and the
+<code>relation-review</code> hint exists to route a contradiction to
+somebody. But feedback moves a rank by five per cent and gates nothing,
+and the hint is a suggestion with no approval step: no surface holds
+memory content back until a person passes it.</p>
+<p><strong>One property worth naming, and one worth watching.</strong>
+The protection predicate — pinned <em>or</em> unresolved — makes marking
+a question open into a retention decision, which is a genuinely good
+coupling. Against it: the wiki's provenance ladder and the memory's
+validity interval are both carefully built, both written, both surfaced,
+and neither reaches a <code>WHERE</code>. Two well-designed vocabularies
+in one repository stopping one clause short of being mechanisms is a
+pattern, not an oversight.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>868 test attributes across 139 Rust files, with
+<code>tests/temporal_memory.rs</code> carrying twenty-five integration
+cases that drive the real binary in a temporary project and home
+directory and assert against both the JSON output and the SQLite file.
+The fixtures are written in Chinese, which is a useful side-effect:
+<code>recall_is_bounded_cjk_searchable_and_time_filterable</code> proves
+the tokenizer works on CJK text rather than assuming whitespace.</p>
+<p>The names carry the contracts:
+<code>age_retention_evicts_only_expired_unprotected_events</code>,
+<code>recall_filters_expired_events_before_physical_maintenance</code>,
+<code>byte_budget_evicts_oldest_unprotected_and_rolls_back_when_blocked</code>,
+<code>changed_request_replay_conflicts_without_mutation</code>,
+<code>feedback_is_append_only_and_reranks_only_matching_memories</code>,
+<code>version_13_store_migrates_temporal_tables_transactionally</code>.
+Each of those is an assertion about a boundary rather than a happy
+path.</p>
+<p><strong>Benchmarks are committed, and the discipline is the notable
+part.</strong> <code>benchmarks/agent_memory/</code> holds adapters for
+LongMemEval-S, LongMemEval-V2 and the Agent Memory Leaderboard
+Add/Search contract, each pinned to an upstream commit, with the
+LongMemEval-S dataset pinned by a SHA-256 the README prints and a
+Hugging Face revision. A limited run writes <code>partial=true</code>
+into its report, and the README states that a run is <code>scored</code>
+only with the benchmark's official answers — the distinction that lets a
+reader tell a smoke from a result. Reports are written to a gitignored
+directory, so the repository claims no numbers. There are also local
+latency benchmarks for search, graph, tags and word graph, opt-in behind
+an environment variable and ignored in normal runs.</p>
+<p>No paper: a search of the READMEs, <code>docs/</code> and
+<code>benchmarks/</code> for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>@misc</code> and <code>CITATION</code>
+returns nothing.</p>
+<p>The maturity signal to hold against all of it is the ratio: 123,311
+lines from two authors in about six weeks. The temporal memory is the
+best-tested part of this system and the wiki around it is much larger; a
+surface that accumulated that fast will have more of itself untested
+than the headline count suggests.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve supersession on the read path, not the write
+path.</strong> Leave the old event in place, point an edge at it, and
+let recall walk forward. You keep the history, you answer with the
+current fact, and one flag gives a reader the chain. Index the edge on
+its target so the walk is cheap.</li>
+<li><strong>Label the result with the state you filtered on.</strong>
+<code>state: "current"</code> plus
+<code>matched_via: "superseded_event"</code> tells a reader that a
+redirect happened. A filter that leaves no trace is indistinguishable
+from a retrieval miss.</li>
+<li><strong>Let "unresolved" buy protection from eviction.</strong>
+Coupling the open-question genre to the retention predicate means decay
+drops what you have settled and keeps what you have not, which is the
+opposite of what recency alone does.</li>
+<li><strong>Make a replay with a changed payload a conflict.</strong>
+Idempotency that silently overwrites hides the bug;
+<code>changed_request_replay_conflicts_without_mutation</code> surfaces
+it.</li>
+<li><strong>Put <code>CHECK</code> constraints on everything a model
+writes.</strong> Non-blank contexts, a fixed-length fingerprint, an
+enumerated fragment kind — the database is the last place to catch a
+capsule that a prompt got wrong.</li>
+<li><strong>Stamp a partial benchmark run
+<code>partial=true</code>.</strong> Pinning the upstream by commit and
+the dataset by content hash, and refusing to call an unscored run a
+score, is how a benchmark harness stays honest between releases.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Recording a signal nothing reads.</strong> The provenance
+ladder and the validity interval are both designed, written and
+surfaced, and neither is consulted. A field that only renders is a field
+a reader must remember to act on, and the distance to a mechanism is one
+clause.</li>
+<li><strong>Two vocabularies where one would do.</strong> Wiki
+provenance, memory supersession state and feedback signal are three
+trust notions in one product, and only the middle one affects what comes
+back.</li>
+<li><strong>Calling a file-per-scope arrangement a boundary.</strong> It
+is right for a local tool and it does not survive two callers sharing a
+store.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>LWC suits a developer who wants an agent to keep a durable record of
+decisions across sessions in a local SQLite file, with supersession
+handled properly and retention that protects the unfinished. The recall
+path is the reason to look: the supersession walk, the protection
+predicate and the labelled results are worth reading whatever you build.
+The wiki layer around it is larger, younger, and less connected — its
+provenance vocabulary is the best-designed inert thing in this system.
+Expect to add the provenance predicate and, if you need it, the validity
+predicate, and note that you will be adding them to a schema that
+already holds the data.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What was <code>valid_from</code>/<code>valid_until</code> for? The
+columns, the cross-validation and the sync carriage all exist; only the
+predicate is missing.</li>
+<li>Is an as-of-record-time query intended? <code>recorded_at</code> is
+stored on every event and never constrains one.</li>
+<li>Should the wiki search filter on provenance, or should the memory
+layer's supersession model absorb the wiki entirely? The two halves
+solve overlapping problems with different rigour.</li>
+<li>How does the feedback score behave over a long-lived store? Clamped
+to plus or minus three and applied as five per cent of the lexical rank,
+it can reorder near-ties and cannot promote a weak match — is that the
+intended ceiling?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store/temporal_memory.rs</code></td>
+<td>The whole memory layer: the schema (1-107),
+<code>MemoryEventInput</code> (145-160), the validity cross-check
+(449-453), the protection predicate (749-755), recall (790-912),
+feedback (928-1010), supersession resolution (1029-1060), retention and
+eviction (1150-1300), the hint engine (1341-1476), cooldown pruning
+(1504-1540)</td>
+</tr>
+<tr>
+<td><code>tests/temporal_memory.rs</code></td>
+<td>Twenty-five integration cases driving the real binary: supersession
+(814), scope-all recall (906), feedback (946), age retention (1147),
+expired-recall (1272), byte budget (1332)</td>
+</tr>
+<tr>
+<td><code>src/store/schema.rs</code></td>
+<td>The <code>operations</code> table (105-111), the column contracts
+asserted at open (433-439)</td>
+</tr>
+<tr>
+<td><code>src/store/search_state.rs</code></td>
+<td><code>record_operation</code> (563-590), the memory table registry
+(49-57)</td>
+</tr>
+<tr>
+<td><code>src/artifacts/types.rs</code></td>
+<td><code>PROVENANCE_ORDER</code> (35-40), <code>Source</code> (52-57),
+<code>Page</code> (60-70), <code>Operation</code> (72-77)</td>
+</tr>
+<tr>
+<td><code>src/artifacts/normalize.rs</code></td>
+<td>Provenance validation (121) and ordered emission (125)</td>
+</tr>
+<tr>
+<td><code>src/store/graph_search.rs</code></td>
+<td>The four semantic-relation validations (105-135), provenance
+decoration of results (665-690)</td>
+</tr>
+<tr>
+<td><code>src/store/types.rs</code></td>
+<td><code>EXPLICIT_PROVENANCE</code> (48), the search weights (51-56),
+the <code>uncited_page</code> lint (148-156)</td>
+</tr>
+<tr>
+<td><code>src/store/changeset_restore.rs</code></td>
+<td>Provenance delete-and-restore (380-385, 752), the
+<code>detail_json</code> amendments (660, 1043)</td>
+</tr>
+<tr>
+<td><code>src/scope.rs</code></td>
+<td>The <code>Scope</code> enum and per-scope store resolution</td>
+</tr>
+<tr>
+<td><code>src/config.rs</code></td>
+<td><code>MemorySetting</code> (44-50), the 365-day and 256-mebibyte
+defaults (16-17), the secret-scan call site (905)</td>
+</tr>
+<tr>
+<td><code>src/secret_scan.rs</code></td>
+<td><code>detect_possible_secret_reasons</code>, returning reasons
+rather than a boolean</td>
+</tr>
+<tr>
+<td><code>benchmarks/agent_memory/</code></td>
+<td>LongMemEval-S, LongMemEval-V2 and Agent Memory Leaderboard adapters,
+upstreams pinned by commit and the dataset by SHA-256</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;valid_until&#39; src --glob &#39;*.rs&#39; | rg &#39;WHERE|&lt;=|&gt;=&#39;                # none: written, cross-validated, returned, never a predicate
+rg -n &#39;recorded_at&#39; src --glob &#39;*.rs&#39; | rg &#39;WHERE|JULIANDAY|&lt;=|&gt;=&#39;      # none: ordering only, never a filter
+rg -n &#39;provenance&#39; src/store src/view | rg &#39;filter|WHERE|exclude&#39;       # an insert, two restore deletes, a display query, a graph-ingest identity match, the uncited_page lint — no read filter
+rg -n &#39;DELETE FROM operations|UPDATE operations&#39; src                    # four detail_json amendments; two wholesale clears, both in the changeset lifecycle
+rg -n -i &#39;arxiv|bibtex|@article|@misc|CITATION\.cff|doi\.org&#39; README*.md docs benchmarks   # none: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/JanYork/llm-wiki-cli/commit/09e922b4c800d52053cac9ef702c15b6982152e0"><code class="commit-id" title="09e922b4c800d52053cac9ef702c15b6982152e0">09e922b4…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 5
+September 2026. Screened before reading: no auto-run surface, three
+manifests inside the seven-day cooldown, one build-time execution path,
+one unpinned dependency surface, and agent instruction files treated as
+data; nothing was installed, built or run, and the read was made from a
+full clone. Four marks. The reading covered the temporal memory schema
+and its recall, supersession, retention and hint paths, the wiki page
+and provenance model, the semantic relation constraints, the operations
+log, the changeset restore path and the benchmark adapters; the code
+graph, the learning subsystem, the office and translation surfaces and
+the git sync were read as context rather than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

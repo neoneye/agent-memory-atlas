@@ -93,39 +93,73 @@ REPO_CONTEXTS = [
     "repositories of {n}", "across {n} repositories",
 ]
 
+# A digit run only counts when nothing numeric touches either side. Without
+# this, "{n} of" with n=56 matched inside "SHA-256 of", "1056 of 1200",
+# "$656 of API list price" and "2,291 of"; a single run corrupted eleven
+# unrelated numbers across five files on 2026-09-10.
+NUM_LEFT = r"(?<![\d,.$-])"
+NUM_RIGHT = r"(?![\d,.])"
+
+# "{n} of" is the loosest template here — it also matches "91 of tests",
+# meaning ninety-one lines of tests. Require a corpus-scale denominator after
+# it so only "91 of 406" moves.
+DENOM_REQUIRED = {"{n} of"}
+DENOM_AHEAD = r"(?=\s*(?:\*?\d{3}\b|four hundred|three hundred))"
+
+# A spelled number under a hundred is one word, and "ninety-one" is as likely
+# to be a retention period, a line count or a number of seconds as a corpus
+# figure. Require a corpus noun after it. Longer spelled forms
+# ("one hundred and fifty-five") are distinctive enough to replace bare.
+SPELLED_NOUN = r"(?=\]?\s+(?:systems?|repositories|reports|tombstones|trust states|negative-eval|of\b))"
+
+NUMBER_WORD = ("one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+               "thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|"
+               "twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety")
+
+def digit_pattern(tpl: str, ov: str) -> re.Pattern:
+    pre, post = tpl.split("{n}")
+    body = re.escape(pre) + NUM_LEFT + re.escape(ov) + NUM_RIGHT + re.escape(post)
+    if tpl in DENOM_REQUIRED:
+        body += DENOM_AHEAD
+    return re.compile(body)
+
 def apply(old: int, new: int, dry: bool, contexts) -> int:
     """Replace `old` with `new` where it is a count.
 
-    A *spelled* number ("three hundred and ninety-six") is replaced bare: it
-    cannot appear in a commit sha, a line reference or a version string, so
-    there is nothing to guard against. Only the digit form needs a context
-    word beside it — that guard is what stops a 353->354 sweep rewriting a
-    commit hash, which happened once.
+    Both forms need a guard. A digit run needs a context word beside it *and*
+    no digit, comma, dot, dollar or hyphen touching it — that pair is what
+    stops a sweep rewriting a commit sha, a price or a checksum name. A
+    one-word spelled number needs a corpus noun after it, because "ninety-one"
+    is a perfectly ordinary quantity of days.
     """
     total = 0
     for path in collect_files():
         s = io.open(path, encoding="utf-8").read()
         orig = s
-        # Spelled forms first. Bare of a *context* word, but not bare of a
-        # boundary: "four hundred" is a prefix of "four hundred and two", and a
-        # naive replace turned an already-updated 402 into "four hundred and one
-        # and two" across eighteen lines. So refuse to match when the spelled
-        # form is immediately followed by another number word.
+        # Spelled forms first. "four hundred" is a prefix of "four hundred and
+        # two", and a naive replace turned an already-updated 402 into "four
+        # hundred and one and two" across eighteen lines, so refuse to match
+        # when another number word follows.
         for ov, nv in list(zip(variants(old), variants(new)))[1:]:
-            pattern = re.compile(re.escape(ov) + r"(?!\s+and\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b)(?![-\w])")
+            guard = SPELLED_NOUN if " " not in ov else ""
+            pattern = re.compile(
+                re.escape(ov)
+                + r"(?!\s+and\s+(?:" + NUMBER_WORD + r")\b)(?![-\w])"
+                + guard
+            )
             c = len(pattern.findall(s))
             if c:
                 s = pattern.sub(nv, s)
                 total += c
                 print(f"  {path.relative_to(ROOT)}: {c}x {ov!r} -> {nv!r} (spelled)")
-        for ov, nv in [(str(old), str(new))]:
-            for tpl in contexts:
-                a, b = tpl.format(n=ov), tpl.format(n=nv)
-                if a in s:
-                    c = s.count(a)
-                    s = s.replace(a, b)
-                    total += c
-                    print(f"  {path.relative_to(ROOT)}: {c}x {a!r} -> {b!r}")
+        ov, nv = str(old), str(new)
+        for tpl in contexts:
+            pattern = digit_pattern(tpl, ov)
+            hits = pattern.findall(s)
+            if hits:
+                s = pattern.sub(tpl.format(n=nv), s)
+                total += len(hits)
+                print(f"  {path.relative_to(ROOT)}: {len(hits)}x {tpl.format(n=ov)!r} -> {tpl.format(n=nv)!r}")
         if s != orig and not dry:
             io.open(path, "w", encoding="utf-8").write(s)
     return total

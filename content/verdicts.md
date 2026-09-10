@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 406 reports.**
+**This page covers all 407 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3591,3 +3591,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 462 commits between 7 May and 9 September 2026 by seven authors, 78,218 lines of Rust in one crate with 307 test attributes, Lance storage local or on the user's own S3, an MCP server and a SQL surface, Homebrew and Scoop packages; one of seven capability marks.
 - Study when: you have a long history across several agent tools, you want it in storage you own and queryable with SQL as well as searched, and you value being able to continue a session in a different client than the one that wrote it.
 - Do not copy when: the machine touches other people's secrets — nothing is stripped on the way in — or when you need a memory rather than an archive; nothing here can be marked doubtful, corrected or retired.
+
+### [`llm-wiki-cli`](../systems/llm-wiki-cli/)
+- Best idea: **recall walks the supersession chain and hands back the replacement.** A lexical hit on a memory event is resolved forward through the `supersedes` edges before it is returned, so a query matching the old wording of a decision answers with the decision that replaced it — labelled `current`, tagged `matched_via: "superseded_event"` so the redirect is visible, and with the whole history one `--include-superseded` away. Correction without deletion, applied at read time.
+- Biggest risk: **two well-built vocabularies stop one clause short of being mechanisms.** The wiki's provenance ladder is ordered, validated at the boundary and attached to every search result, and no read path filters on it — a hypothesis ranks beside a cited fact. The memory's `valid_from` and `valid_until` are written, cross-validated so the start is not later than the end, carried through sync and returned by `memory_show`, and appear in no `WHERE` in the tree. Both are data awaiting a predicate.
+- Most reusable component: `MEMORY_EVENT_PROTECTED_SQL` — `e.pinned = 1 OR EXISTS(… fragment.kind = 'unresolved')` — spliced into the recall filter as a disjunct and into the retention query negated, so marking something an open question is also a decision not to forget it, and one string keeps both paths agreeing.
+- Maturity impression: Apache-2.0, 294 commits between 29 July and 5 September 2026 by two authors, 123,311 lines of Rust across 139 files with 868 test attributes, SQLite per scope, published on npm and crates.io with READMEs in seven languages and benchmark adapters for LongMemEval-S, LongMemEval-V2 and the Agent Memory Leaderboard pinned by upstream commit and dataset hash; four of seven capability marks.
+- Study when: you want an agent to keep durable, supersedable decisions in a local SQLite file, and you want retention that protects what is still unresolved rather than only what is recent.
+- Do not copy when: you need a scope key — scope here is a choice of database file, not a column — or when you need the wiki half to act on the provenance it so carefully records.
