@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 407 reports.**
+**This page covers all 408 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3599,3 +3599,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 294 commits between 29 July and 5 September 2026 by two authors, 123,311 lines of Rust across 139 files with 868 test attributes, SQLite per scope, published on npm and crates.io with READMEs in seven languages and benchmark adapters for LongMemEval-S, LongMemEval-V2 and the Agent Memory Leaderboard pinned by upstream commit and dataset hash; four of seven capability marks.
 - Study when: you want an agent to keep durable, supersedable decisions in a local SQLite file, and you want retention that protects what is still unresolved rather than only what is recent.
 - Do not copy when: you need a scope key — scope here is a choice of database file, not a column — or when you need the wiki half to act on the provenance it so carefully records.
+
+### [`continuity-v2`](../systems/continuity-v2/)
+- Best idea: **return the thread, not the row.** `thread_recall` seeds from three FTS5 matches and walks strictly adjacent `TEMPORAL` edges eight hops in both directions, returning the conversation around a hit — grouped by session, chronological, seeds marked `[MATCH]`. It keeps the `SIMILAR_TO` edges out of that walk by default, because a similarity jump mid-thread destroys the continuity the tool exists for.
+- Biggest risk: **nothing here has ever been tested, and the defects are the kind a first test catches.** No test function, no `assert`, no framework import across fourteen Python files. `turn_vecs` is keyed on an autoincrement id every re-index discards, with no delete path, so embeddings silently vanish from results while the coverage statistic climbs; `edges` is created twice with two different schemas under `CREATE TABLE IF NOT EXISTS`; and the compaction checkpoint is one file with no session key whose reader checks its age and never the `Session:` line in its own first lines.
+- Most reusable component: `drift_check.py` — 88 lines that mirror the reindexer's skip logic exactly, compare the indexed `file_mtime` against the JSONL on disk, classify every session as new, stale or in sync, write nothing, and exit 2 on drift. Any derived store owes its user this question and most cannot answer it without a rebuild.
+- Maturity impression: MIT, 25 commits between 30 April and 14 June 2026 from one author committing under two names, 2,589 lines of Python, one SQLite file with FTS5, sqlite-vec and an edge table, an eight-tool MCP server and four Claude Code hooks; no dependency manifest, nothing pushed for the three months before the pin, two absolute Windows paths and a username committed in the tree; no capability marks.
+- Study when: you want the smallest honest version of indexing agent transcripts you already have, and you want to see `thread_recall` and the two read-only staleness checks, which are worth more than their size.
+- Do not copy when: the transcripts contain anyone's data but yours — nothing is redacted, so every pasted credential is in the index — or when you need the store to be told it is wrong; there is no trust vocabulary in the tree at all, and an abandoned conclusion ranks beside the one that replaced it.

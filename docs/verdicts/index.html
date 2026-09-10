@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 407 reports.</strong></p>
+<p><strong>This page covers all 408 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14245,6 +14245,49 @@ what is still unresolved rather than only what is recent.</li>
 <li>Do not copy when: you need a scope key — scope here is a choice of
 database file, not a column — or when you need the wiki half to act on
 the provenance it so carefully records.</li>
+</ul>
+<h3 id="continuity-v2"><a
+href="../systems/continuity-v2/"><code>continuity-v2</code></a></h3>
+<ul>
+<li>Best idea: <strong>return the thread, not the row.</strong>
+<code>thread_recall</code> seeds from three FTS5 matches and walks
+strictly adjacent <code>TEMPORAL</code> edges eight hops in both
+directions, returning the conversation around a hit — grouped by
+session, chronological, seeds marked <code>[MATCH]</code>. It keeps the
+<code>SIMILAR_TO</code> edges out of that walk by default, because a
+similarity jump mid-thread destroys the continuity the tool exists
+for.</li>
+<li>Biggest risk: <strong>nothing here has ever been tested, and the
+defects are the kind a first test catches.</strong> No test function, no
+<code>assert</code>, no framework import across fourteen Python files.
+<code>turn_vecs</code> is keyed on an autoincrement id every re-index
+discards, with no delete path, so embeddings silently vanish from
+results while the coverage statistic climbs; <code>edges</code> is
+created twice with two different schemas under
+<code>CREATE TABLE IF NOT EXISTS</code>; and the compaction checkpoint
+is one file with no session key whose reader checks its age and never
+the <code>Session:</code> line in its own first lines.</li>
+<li>Most reusable component: <code>drift_check.py</code> — 88 lines that
+mirror the reindexer's skip logic exactly, compare the indexed
+<code>file_mtime</code> against the JSONL on disk, classify every
+session as new, stale or in sync, write nothing, and exit 2 on drift.
+Any derived store owes its user this question and most cannot answer it
+without a rebuild.</li>
+<li>Maturity impression: MIT, 25 commits between 30 April and 14 June
+2026 from one author committing under two names, 2,589 lines of Python,
+one SQLite file with FTS5, sqlite-vec and an edge table, an eight-tool
+MCP server and four Claude Code hooks; no dependency manifest, nothing
+pushed for the three months before the pin, two absolute Windows paths
+and a username committed in the tree; no capability marks.</li>
+<li>Study when: you want the smallest honest version of indexing agent
+transcripts you already have, and you want to see
+<code>thread_recall</code> and the two read-only staleness checks, which
+are worth more than their size.</li>
+<li>Do not copy when: the transcripts contain anyone's data but yours —
+nothing is redacted, so every pasted credential is in the index — or
+when you need the store to be told it is wrong; there is no trust
+vocabulary in the tree at all, and an abandoned conclusion ranks beside
+the one that replaced it.</li>
 </ul>
         </article>
       </div>

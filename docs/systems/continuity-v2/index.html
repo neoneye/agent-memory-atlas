@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MIT Python index over the
+Claude Code JSONL transcripts and a claude.ai export, giving one SQLite
+file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO edges and a
+BFS thread walk that returns the conversation around a hit rather than
+the hit alone — with two read-only drift checks between the index and
+its source, no tests, no redaction and no epistemic layer of any kind.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="continuity
+v2 — Agent Memory Atlas">
+    <meta property="og:description" content="An MIT Python index over
+the Claude Code JSONL transcripts and a claude.ai export, giving one
+SQLite file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO
+edges and a BFS thread walk that returns the conversation around a hit
+rather than the hit alone — with two read-only drift checks between the
+index and its source, no tests, no redaction and no epistemic layer of
+any kind.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="continuity
+v2 — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MIT Python index over
+the Claude Code JSONL transcripts and a claude.ai export, giving one
+SQLite file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO
+edges and a BFS thread walk that returns the conversation around a hit
+rather than the hit alone — with two read-only drift checks between the
+index and its source, no tests, no redaction and no epistemic layer of
+any kind.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>continuity v2 — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "continuity v2",
+      "description": "An MIT Python index over the Claude Code JSONL transcripts and a claude.ai export, giving one SQLite file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO edges and a BFS thread walk that returns the conversation around a hit rather than the hit alone \u2014 with two read-only drift checks between the index and its source, no tests, no redaction and no epistemic layer of any kind.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The third answer to a transcript already on
+disk</p>
+          <h1>continuity v2</h1>
+          <p class="document-deck">An MIT Python index over the Claude
+Code JSONL transcripts and a claude.ai export, giving one SQLite file
+FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO edges and a BFS
+thread walk that returns the conversation around a hit rather than the
+hit alone — with two read-only drift checks between the index and its
+source, no tests, no redaction and no epistemic layer of any kind.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Haustorium12/continuity-v2">
+              <span>Source</span>
+              <strong>Haustorium12/continuity-v2</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Haustorium12/continuity-v2/commit/4e98d464555603a6166df7acc177bd990096dedb" title="4e98d464555603a6166df7acc177bd990096dedb">
+              <span>Analyzed revision</span>
+              <code>4e98d464…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Haustorium12--continuity-v2" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Haustorium12--continuity-v2</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Three projects in this corpus have now made the same observation —
+the coding agent already writes every session to disk, so the episodic
+record exists and nobody wired it into recall. Deja Vu indexes it in Go
+with a redactor. pond ingests it losslessly into Lance and indexes only
+the conversational half. continuity v2 is the smallest of the three and
+the most direct: 2,589 lines of Python across fourteen files, one SQLite
+database, and an MCP server.</p>
+<p>MIT; 25 commits between 30 April and 14 June 2026 from one author
+committing under two names against one address; nothing pushed in the
+roughly three months before the pin. The screen found one auto-run
+surface — the four hook scripts — and no manifest, so nothing was
+installed, built or run.</p>
+<p><strong>Its distinctive idea is <code>thread_recall</code>.</strong>
+Every other retrieval here returns rows. This one seeds from three FTS5
+matches, then walks <code>TEMPORAL</code> edges forward and backward up
+to eight hops, and returns the conversation <em>around</em> the hit —
+grouped by session, ordered chronologically, with the seeds marked
+<code>[MATCH]</code>. For an episodic store that is the right shape: a
+decision is rarely in the turn that names it, and the turns on either
+side are what make it legible.</p>
+<p><strong>It also does the thing most derived indexes skip: it checks
+itself.</strong> <code>drift_check.py</code> compares the indexed
+<code>file_mtime</code> against the JSONL on disk and reports which
+sessions are new and which are stale, purely read-only, with a comment
+saying why it exists — the reindexer already skips unchanged sessions,
+and there was no way to <em>know</em> the index had fallen behind
+without running one. Beside it <code>fts_integrity_check</code> runs
+FTS5's own check and <code>fts_rebuild</code> repairs it. Two
+independent staleness questions, each answerable without a write.</p>
+<p><strong>No capability marks, and each was checked with a search
+rather than assumed.</strong> There is no trust vocabulary in the tree —
+<code>status</code>, <code>confidence</code>, <code>verified</code>,
+<code>superseded</code>, <code>rejected</code> and
+<code>tombstone</code> between them return one hit, and it is an HTTP
+response status in the proxy. There is no audit table.
+<code>indexed_at</code> is written by all three inserters and read by
+nothing, which is what keeps <code>bitemporal</code> off: record time is
+a column with no consumer, and there is no validity interval.
+<code>project</code> is stored on every session and applied only when a
+caller passes it, as a substring <code>LIKE</code>, and not at all by
+the semantic or graph arms. And there are no tests — no test function,
+no <code>assert</code>, no suite anywhere in fourteen Python files.</p>
+<p><strong>Four defects are worth naming because each is small and
+load-bearing.</strong> The compaction checkpoint is a single file with
+no session key, and the injector validates its age and not its owner.
+<code>edges</code> is created twice with two different schemas under
+<code>CREATE TABLE IF NOT EXISTS</code>. <code>turn_vecs</code> is keyed
+on an autoincrement id a re-index throws away, and nothing ever deletes
+from it. And <code>stop_hook_checkpoint.py</code> hardcodes
+<code>C:\Users\Sean\...</code> in a file the README says uses
+<code>Path.home()</code> throughout.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nothing here is remembered on purpose. The JSONL transcripts under
+<code>~/.claude/projects/</code> are written by the harness whether or
+not this project exists; <code>index.py</code> walks them and flattens
+each message into one text field — prose, a tool call rendered as
+<code>[tool:&lt;name&gt;] &lt;description&gt;</code>, a tool result
+rendered as <code>[result]</code> and cut at five hundred characters. A
+claude.ai data export goes into the same tables tagged
+<code>source='chat'</code>.</p>
+<p>That flattening is the design decision worth holding onto. pond keeps
+the same material and marks each part conversational or injected so only
+speech is searchable. continuity v2 concatenates everything into one
+string and indexes it, then partially takes it back at the embedding
+stage by skipping any turn whose text <em>starts with</em>
+<code>[tool:</code> or <code>[result]</code>. So the lexical arm
+searches tool output and the semantic arm does not, and the difference
+is a string prefix on synthesized text rather than a field on a row.</p>
+<p>Retrieval has three moods. Ask for a word and get ranked snippets.
+Ask for a concept and get a KNN re-ranked by how recent the session was
+and how long it ran. Ask for a thread and get the conversation around
+the match.</p>
+<p>Correction does not exist as a verb, because the transcripts are
+immutable and the index is derived: change the source and re-read the
+session whole. That is a coherent position, and it means the store
+cannot be told it is wrong about anything — a conclusion abandoned an
+hour later is in the index at the same weight as the one that replaced
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the harness writes JSONL transcripts whether or not this project exists; the indexer flattens each message into one text field, mirrors it into FTS5, and separate passes embed the turns that do not begin with a tool marker and wire temporal and similarity edges; thread_recall seeds from FTS5 and walks the temporal edges outward, while two read-only checks compare the derived index against its source</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the harness writes JSONL transcripts whether or not this project exists; the indexer flattens each message into one text field, mirrors it into FTS5, and separate passes embed the turns that do not begin with a tool marker and wire temporal and similarity edges; thread_recall seeds from FTS5 and walks the temporal edges outward, while two read-only checks compare the derived index against its source
+flowchart TB
+    JSONL[(&quot;~/.claude/projects/**/*.jsonl&lt;br/&gt;written by the harness&quot;)]
+    EXPORT[(&quot;claude.ai export&lt;br/&gt;conversations.json&quot;)]
+    IDX[&quot;index.py / chat_index.py&lt;br/&gt;skip when file_mtime matches&quot;]
+    FLAT[&quot;flatten one message to one text:&lt;br/&gt;prose · [tool:name] description&lt;br/&gt;· [result] first 500 chars&quot;]
+    T[(&quot;turns: session_id, turn_idx,&lt;br/&gt;ts, role, text&quot;)]
+    FTS[(&quot;turns_fts — FTS5 mirror,&lt;br/&gt;kept current by triggers&quot;)]
+    EMB[&quot;embed.py — skips text under&lt;br/&gt;30 chars or starting with&lt;br/&gt;[tool: or [result]&quot;]
+    V[(&quot;turn_vecs — 384-dim MiniLM,&lt;br/&gt;keyed on the turns rowid,&lt;br/&gt;never deleted from&quot;)]
+    WE[&quot;wire_edges.py — TEMPORAL&lt;br/&gt;turn i to turn i+1&quot;]
+    WS[&quot;wire_similar.py — SIMILAR_TO&lt;br/&gt;cosine &gt;= 0.85, skipping&lt;br/&gt;pairs already TEMPORAL&quot;]
+    E[(&quot;edges — created twice with&lt;br/&gt;two different schemas&quot;)]
+    S1[&quot;search_sessions&lt;br/&gt;FTS5 + optional project LIKE&quot;]
+    S2[&quot;find_similar&lt;br/&gt;0.7 sem + 0.2 recency + 0.1 turns&lt;br/&gt;no scope filter&quot;]
+    S3[&quot;thread_recall&lt;br/&gt;BFS over TEMPORAL from&lt;br/&gt;3 FTS5 seeds, 8 hops&quot;]
+    CHK[&quot;drift_check.py — new / stale / in sync&lt;br/&gt;fts_integrity_check — index vs table&lt;br/&gt;both read-only&quot;]
+
+    JSONL --&gt; IDX
+    EXPORT --&gt; IDX
+    IDX --&gt; FLAT --&gt; T
+    T --&gt; FTS
+    T --&gt; EMB --&gt; V
+    T --&gt; WE --&gt; E
+    V --&gt; WS --&gt; E
+    FTS --&gt; S1
+    V --&gt; S2
+    FTS --&gt; S3
+    E --&gt; S3
+    JSONL -.-&gt; CHK
+    T -.-&gt; CHK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Fourteen Python files, no package, no manifest, no dependency pin.
+Nine scripts at the root — <code>index.py</code>,
+<code>chat_index.py</code>, <code>embed.py</code>,
+<code>wire_edges.py</code>, <code>wire_similar.py</code>,
+<code>drift_check.py</code>, <code>search.py</code>,
+<code>recall.py</code>, <code>stats.py</code> — the 707-line
+<code>mcp_server.py</code>, and four hooks.</p>
+<p>Storage is one SQLite file in WAL with
+<code>synchronous=NORMAL</code>. <code>turns_fts</code> is a contentless
+FTS5 table with <code>content='turns'</code> and
+<code>content_rowid='id'</code>, kept current by
+<code>AFTER INSERT</code> and <code>AFTER DELETE</code> triggers, so the
+mirror follows the table without the indexer thinking about it.
+<code>turn_vecs</code> is sqlite-vec <code>vec0</code> holding
+L2-normalised 384-dimension vectors, which lets L2 distance stand in for
+cosine.</p>
+<p>The hooks are a separate concern carried over from the first version
+of the project: a PreCompact writer, a SessionStart injector, a
+Stop-hook checkpointer, and an SSE proxy on <code>127.0.0.1:9099</code>
+that the user points <code>ANTHROPIC_BASE_URL</code> at. The proxy
+forwards headers and body to the real API over TLS, relays each chunk
+before parsing it, and reads <code>message_start</code> usage to fire
+threshold signal files. It logs bell events only, not request or
+response bodies, and it is a single-threaded <code>HTTPServer</code>
+rather than a threading one.</p>
+<p>The one structural weakness is duplication. <code>reindex()</code> in
+the MCP server holds a second, inline copy of the indexer — the same
+walk, the same <code>_extract</code>, the same delete-and-reinsert —
+because the server holds the SQLite lock and <code>index.py</code>
+cannot run beside it. The comment says so honestly. It is still two
+copies of the extraction rules that must not drift.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Index.</strong> <code>index.py:168</code> →
+<code>rglob("*.jsonl")</code> → <code>index_file</code> (97) compares
+<code>sessions.file_mtime</code> against the file → on a difference,
+<code>DELETE FROM turns</code> and <code>DELETE FROM sessions</code> for
+that id, then re-read the file whole → <code>extract_text</code>
+flattens each message → one <code>INSERT</code> per non-empty turn → the
+FTS trigger mirrors it →
+<code>INSERT INTO turns_fts(turns_fts) VALUES('optimize')</code> when
+anything changed.</li>
+<li><strong>Embed.</strong> <code>embed.py:48</code> rejects text under
+thirty characters or starting with <code>[tool:</code> or
+<code>[result]</code> → batches of 128 encoded with
+<code>normalize_embeddings=True</code>, truncated to 512 characters →
+<code>INSERT OR IGNORE</code> into <code>turn_vecs</code> keyed on
+<code>turns.id</code>.</li>
+<li><strong>Wire.</strong> <code>wire_edges.py</code> deletes every
+<code>TEMPORAL</code> row and rebuilds turn <em>i</em> → turn
+<em>i+1</em> per session. <code>wire_similar.py</code> deletes every
+<code>SIMILAR_TO</code> row, then for each embedded turn takes the five
+nearest neighbours, keeps those at cosine 0.85 or better, and skips
+self-loops and pairs already joined by a <code>TEMPORAL</code>
+edge.</li>
+<li><strong>Thread.</strong> <code>mcp_server.py:305</code> → three FTS5
+seeds → up to eight hops, querying <code>edges</code> on
+<code>src_turn_id</code> and again on <code>dst_turn_id</code> so the
+walk runs both directions → capped at sixty turns → one
+<code>IN (…)</code> fetch ordered by session start and turn index.</li>
+<li><strong>Check.</strong> <code>drift_check.py:29</code> reads
+<code>id, file_mtime</code> from <code>sessions</code>, walks the same
+<code>rglob</code>, and classifies each file as new, stale or in sync,
+exiting 2 when anything drifted — a status code a scheduler can act
+on.</li>
+<li><strong>Compaction.</strong> <code>precompact_save.py</code> reads
+the transcript, takes the last five user messages at two hundred
+characters each, the last assistant response at a thousand, up to twenty
+edited file paths and ten bash descriptions, and writes
+<code>~/.claude/compaction_checkpoint.md</code> →
+<code>session_start_inject.py</code> on <code>source == "compact"</code>
+injects it if it is under 180 minutes old.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>sessions</code> carries eleven columns and no constraints
+beyond the primary key. Two of them are the interesting pair:
+<code>started_at</code>/<code>ended_at</code>, derived as the minimum
+and maximum timestamp in the file, and <code>indexed_at</code>, stamped
+at write. That is event time and record time in the same row — and
+<code>indexed_at</code> is written by <code>index.py</code>,
+<code>chat_index.py</code> and <code>reindex()</code> and read by
+nothing at all. The column exists and has no consumer, which is why
+<code>bitemporal</code> is withheld rather than debated: there is no
+as-of query, and no validity interval to have one over.</p>
+<p>What is actually used for staleness is <code>file_mtime</code>, and
+it is used well — compared by the indexer to skip, and compared again by
+<code>drift_check</code> to report.</p>
+<p><code>turns</code> carries a synthesized <code>text</code> and
+nothing about where the text came from beyond <code>role</code>. The
+<code>[tool:</code> and <code>[result]</code> markers are the only trace
+of a part's origin, and they live inside the searchable string rather
+than beside it. That is the cheap version of pond's provenance column
+and it costs the same thing pond's design buys: a caller cannot ask for
+only what a person said, because the distinction is not a field.</p>
+<p><code>edges</code> is defined twice. <code>wire_edges.py</code>
+creates it with an <code>id INTEGER PRIMARY KEY AUTOINCREMENT</code> and
+no uniqueness; <code>wire_similar.py</code> creates it with no
+<code>id</code> and a composite primary key over
+<code>(src_turn_id, dst_turn_id, edge_type)</code>. Both use
+<code>CREATE TABLE IF NOT EXISTS</code>, so the first script a reader
+runs decides which table they get — one that tolerates duplicate edges,
+or one that rejects them.</p>
+<p><code>turn_vecs</code> is keyed on <code>turns.id</code>, an
+autoincrement value that a re-index discards: a changed session deletes
+its turns and re-inserts them with fresh ids. Nothing deletes from
+<code>turn_vecs</code>, so the old vectors remain, pointing at rows that
+no longer exist. <code>find_similar</code> joins <code>turns</code> on
+<code>tv.turn_id</code> and the orphans simply vanish from results, so
+the failure is silent; <code>index_stats</code> counts
+<code>turn_vecs</code> rows against embeddable turns, so its coverage
+percentage climbs as orphans accumulate. Since a live session's
+transcript grows on every turn, its mtime changes constantly, and every
+re-index re-orphans that session's vectors.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Lexical.</strong> FTS5 with
+<code>snippet(turns_fts, 0, '&gt;&gt;&gt;', '&lt;&lt;&lt;', '...', 24)</code>
+and <code>ORDER BY rank</code>, joined back to <code>turns</code> and
+<code>sessions</code> for context. An FTS5 syntax error is caught and
+answered with a message naming the actual cause — that hyphens and
+numbers need double quotes — which is a small kindness to the model
+calling it, since a raw <code>OperationalError</code> would come back as
+a tool failure with no remedy.</p>
+<p><strong>Semantic.</strong> A KNN over <code>turn_vecs</code>
+over-fetching three times the limit, then a hybrid re-rank:
+<code>0.7 × cosine + 0.2 × recency + 0.1 × complexity</code>, where
+recency decays linearly to zero at 365 days and defaults to 0.5 when the
+timestamp cannot be parsed, and complexity is the session's turn count
+divided by fifty and capped at one. Every result prints
+<code>sem=</code>, <code>rec=</code> and <code>cplx=</code> beside the
+total, so a reader can see which term moved a row.</p>
+<p>The complexity term deserves the scrutiny the other two do not need.
+It rewards a turn for belonging to a <em>long</em> session, on the
+theory that dense sessions are substantial. A long session is also what
+a circular, unproductive afternoon looks like, and the term cannot tell
+the difference. At a tenth of the weight it will not usually decide an
+ordering, but it is a proxy standing in for a quality nobody
+measured.</p>
+<p><strong>Graph.</strong> <code>thread_recall</code> is the reason to
+read this project. Three FTS5 seeds, eight hops of BFS over
+<code>TEMPORAL</code> edges in both directions, sixty turns maximum,
+rendered chronologically grouped by session with <code>[MATCH]</code> on
+the seeds. Because <code>TEMPORAL</code> edges are strictly turn
+<em>i</em> → turn <em>i+1</em> within a session, the walk is a
+contiguous window either side of the hit, and the output reads as
+narrative rather than as evidence. <code>SIMILAR_TO</code> edges exist
+and are excluded from the walk by default — the tool's
+<code>edge_types</code> parameter defaults to <code>("TEMPORAL",)</code>
+and no caller passes anything else — which is the conservative choice,
+since a similarity jump mid-thread would break exactly the continuity
+the tool is for.</p>
+<p><strong>Scope.</strong> <code>search_sessions</code> and
+<code>recent_sessions</code> take an optional <code>project</code>
+substring and an optional <code>source</code>. <code>find_similar</code>
+and <code>thread_recall</code> take neither. So the two arms most likely
+to surface something from an unrelated project are the two with no way
+to be narrowed.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>There is no write path for a memory, and that is the design. The
+transcripts are the record; the database is a view of them that can be
+thrown away and rebuilt. <code>index.py</code> is idempotent by mtime,
+<code>embed.py</code> by <code>turn_id</code>,
+<code>wire_edges.py</code> and <code>wire_similar.py</code> by deleting
+their own edge type first. Re-running any of them is safe, which is the
+property a derived index most needs.</p>
+<p>The gap is the join between those passes. Re-indexing a session
+invalidates its vectors and its edges, and only two of the three
+consequences self-heal: the edge builders rebuild from scratch, and
+<code>turn_vecs</code> does not. A
+<code>DELETE FROM turn_vecs WHERE turn_id IN (SELECT id FROM turns WHERE session_id = ?)</code>
+before the turn delete would close it, and there is nowhere in the tree
+that it is attempted.</p>
+<p>The hooks are the only path that writes something a model will read.
+The PreCompact and Stop hooks both build the same checkpoint format —
+recent user messages, the last assistant response, files touched, bash
+descriptions — and both write it to
+<code>~/.claude/compaction_checkpoint.md</code>, overwriting. The Stop
+hook writes on every turn where a transcript is available, so the
+PreCompact hook can fall back to a checkpoint under thirty minutes old
+when the harness does not hand it a transcript path. That layered
+fallback is careful work.</p>
+<p>What it lacks is a key. The checkpoint's first lines record
+<code>Session: &lt;id&gt;</code>, and
+<code>session_start_inject.py</code> never reads them: it checks the
+file's age against a 180-minute ceiling and injects. Two Claude Code
+sessions on one machine share the file, so a compaction in the second is
+served the first one's state whenever the first wrote within three
+hours. The id needed to prevent that is already in the file.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Eight MCP tools over stdio, and the docstrings are written for the
+model that will call them: <code>search_sessions</code> states the FTS5
+quoting rule twice, <code>reindex</code> explains why it exists rather
+than telling the caller to run <code>index.py</code>, and
+<code>fts_integrity_check</code> says it is read-only and safe to call
+at any time. That is the right register for a tool surface an agent
+reads as documentation.</p>
+<p>The hooks are a second integration and a rougher one.
+<code>session_start_inject.py</code> injects on <code>compact</code> and
+<code>resume</code>, and deliberately injects nothing on
+<code>startup</code> or <code>clear</code> — the comment names
+<code>/clear</code> as intentional, and honouring a deliberate erasure
+is a choice worth crediting, because a memory layer that re-injects what
+the user just cleared is worse than no memory layer.</p>
+<p>Against that, <code>stop_hook_checkpoint.py</code> sets
+<code>SESSION_STATE = r"C:\Users\Sean\.claude\projects\C--dev\memory\project_current_state.md"</code>
+and interpolates it into the text injected into the model at eighty-five
+and ninety-five per cent context, instructing it to overwrite that path.
+The README, in the installation section for these four files, says
+<em>"All paths use <code>Path.home()</code> and resolve correctly on any
+platform"</em> and names <code>session_start_inject.py</code> as the one
+file with a constant to adapt. For a reader who is not this author, the
+pressure directive names a path that does not exist. The same block
+prints <code>85%%</code> because a doubled percent sign was left in a
+<code>.format</code> string.</p>
+<p><code>CLOSE_TRIGGERS</code> is a seventeen-word list matched as a
+lowercased substring against the whole last user message, and the first
+entry is <code>"save"</code>. In a coding session <em>save</em> appears
+constantly, so the session-close sticky-note prompt fires on ordinary
+turns; the trigger wanted a match on a short message or a leading word,
+and got a substring test.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No capability marks, and each was searched for.</strong></p>
+<p><em>Trust state</em> — the tree contains no epistemic vocabulary. A
+case-insensitive search for <code>status</code>,
+<code>confidence</code>, <code>verified</code>, <code>superseded</code>,
+<code>rejected</code> and <code>tombstone</code> across every Python
+file returns one line: <code>resp.status</code> in the HTTP proxy.
+Recency and session length affect ranking; nothing withholds a turn.</p>
+<p><em>Bitemporal</em> — <code>started_at</code> and
+<code>ended_at</code> are event time, <code>indexed_at</code> is record
+time, and <code>indexed_at</code> has three writers and no reader. There
+is no validity interval and no as-of query. This is the
+declared-and-unconsumed case on the read side, and the mark is withheld
+for the reason rather than for an absence.</p>
+<p><em>Scope enforced</em> — <code>project</code> and
+<code>source</code> are stored on every session, and applied only when a
+caller passes them, the project one as a <code>LIKE '%…%'</code>
+substring. The default is the whole machine, and the semantic and graph
+tools accept no filter at all.</p>
+<p><em>Audit log</em> — the schema has four tables and none records a
+mutation. The hooks append plain-text lines to
+<code>~/.claude/hooks/*.log</code>, which is a diagnostic log outside
+the memory's own store.</p>
+<p><em>Tombstone</em> — nothing records a rejected value. Nothing is
+rejected.</p>
+<p><em>Human review</em> — nothing presents a turn for approval. The
+only human decision in the loop is which scripts to run.</p>
+<p><em>Negative evaluation</em> — there are no tests. A search for a
+test function, an <code>assert</code> or a test framework import across
+fourteen Python files returns nothing, so there is no committed case of
+any kind, positive or negative.</p>
+<p><strong>Redaction: none, and the exposure is worth stating
+plainly.</strong> A search for <code>redact</code>, <code>secret</code>,
+<code>api_key</code>, <code>sanitiz</code> or <code>mask</code> returns
+nothing. Every session is indexed whole, tool results included, which
+means every credential anyone pasted into an agent session is in the FTS
+index, and — if it is longer than thirty characters and not inside a
+<code>[result]</code> block — in the vector table too. The database is
+local and gitignored, which bounds the blast radius to the machine, and
+the project makes no claim otherwise. Deja Vu strips secrets as its
+index is built; this one does not.</p>
+<p><strong>The proxy.</strong> Pointing <code>ANTHROPIC_BASE_URL</code>
+at a 210-line local HTTP server means every request, including the
+authorization header, passes through it. It forwards over TLS with a
+default SSL context, logs only threshold events, and binds to
+<code>127.0.0.1</code>. It is also a single-threaded
+<code>HTTPServer</code>, so concurrent requests serialise, and its
+<code>MODEL_CONTEXTS</code> table hardcodes three model substrings with
+a 200,000-token default for anything else — a table that goes quietly
+wrong rather than loudly when a model's window changes.</p>
+<p><strong>What is genuinely good here is the self-checking.</strong>
+Most derived indexes have no answer to <em>is this current</em> other
+than rebuilding. This one has two, both read-only, both cheap, one of
+them exiting with a distinct status code so a scheduler can act on it,
+and the drift checker's comment explains the gap it fills rather than
+what it does. That instinct — that a derived store owes its user a way
+to ask whether it is behind — is the thing to take from this
+project.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>None. Not a light suite, not a smoke test: a search across all
+fourteen Python files for <code>def test_</code>, <code>assert </code>,
+<code>unittest</code> or <code>pytest</code> returns zero lines. There
+is no CI directory and no manifest.</p>
+<p>That matters more here than the line count suggests, because the
+defects in this report are exactly the kind a first test would have
+caught. A test that indexes a fixture transcript, embeds it, re-indexes
+it after appending a line, and asserts that <code>find_similar</code>
+still returns the turn would fail on the orphaned vectors. A test that
+runs <code>wire_similar.py</code> before <code>wire_edges.py</code>
+would surface the double schema. A test that writes a checkpoint for
+session A and starts session B would surface the missing session
+key.</p>
+<p>No benchmark, no paper: a search of the README for
+<code>arxiv</code>, <code>bibtex</code> or <code>CITATION</code> returns
+nothing, and no <code>CITATION</code> file exists.</p>
+<p>Maturity signals, stated as what they are: MIT, 25 commits over six
+weeks from one author, 2,589 lines, no dependency manifest, and nothing
+pushed in the three months before the pin. Two absolute Windows paths
+and one username are committed in the tree. This is a personal tool
+published rather than a project built for other people to run, and it
+reads that way.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Return the thread, not the row.</strong> Seeding retrieval
+from a lexical match and then walking strictly adjacent turns outward
+gives a reader the conversation around the hit. For an episodic store
+this is nearly always what was wanted, and it needs one edge type and a
+BFS.</li>
+<li><strong>Keep the similarity edges out of the thread walk.</strong>
+<code>thread_recall</code> defaults to <code>TEMPORAL</code> only. A
+similarity jump mid-thread destroys the continuity the tool exists to
+provide.</li>
+<li><strong>Ask whether the index is behind, without rebuilding
+it.</strong> <code>drift_check.py</code> mirrors the indexer's skip
+logic exactly, writes nothing, and exits 2 on drift. Any derived store
+should be able to answer this question cheaply.</li>
+<li><strong>Print the components of a hybrid score.</strong>
+<code>sem=0.81 rec=0.42 cplx=0.60</code> beside the total makes a
+ranking argument inspectable instead of asserted.</li>
+<li><strong>Inject nothing after <code>/clear</code>.</strong> A user
+who cleared the context asked for it to be gone. Honour that, and say in
+the code that you are honouring it.</li>
+<li><strong>Answer a query-syntax error with the remedy.</strong>
+Catching the FTS5 <code>OperationalError</code> and replying that
+hyphenated tokens need quoting turns a dead end into a retry the model
+can make.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keying a derived table on an id you throw away.</strong>
+<code>turn_vecs</code> points at an autoincrement rowid that a re-index
+discards, nothing deletes the orphans, and the only symptom is
+embeddings silently missing from results while the coverage statistic
+climbs. Key on something stable, or delete alongside.</li>
+<li><strong>Two <code>CREATE TABLE IF NOT EXISTS</code> for one
+table.</strong> Whichever script runs first decides the schema. Put it
+in one place.</li>
+<li><strong>A shared-state file with no key.</strong> The checkpoint
+records the session id in its own first lines and the reader checks only
+its age. Cheap state files need an owner, not just a timestamp.</li>
+<li><strong>A hardcoded personal path in a file you tell people to
+copy</strong> — especially one interpolated into a directive the model
+is told is not optional, and especially under a README line promising
+the paths resolve anywhere.</li>
+<li><strong>A substring trigger list containing a common word.</strong>
+<code>"save"</code> matched anywhere in the last user message fires the
+end-of-session ritual during ordinary work.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this for <code>thread_recall</code> and for
+<code>drift_check.py</code>, both of which are worth more than their
+size. Run it if you are its author's kind of user — one machine, one
+person, a Windows path you are willing to edit, no secrets you would
+mind having in a local index, and an appetite for running four scripts
+in order. Do not run it where session transcripts contain other people's
+data, and do not build on it without writing the first test: the four
+defects above are each a few lines to fix and none of them can be seen
+without one.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was the orphaned-vector path noticed? A live session's transcript
+changes on every turn, so it should be reachable within a day of normal
+use.</li>
+<li>Which <code>edges</code> schema does the author's own database have?
+The answer depends on which script they happened to run first, and the
+two behave differently on a duplicate edge.</li>
+<li>Is <code>indexed_at</code> meant for anything? All three inserters
+write it and no query in this repository reads it.</li>
+<li>What was <code>complexity</code> measuring? Session length is a
+proxy for something, and the README and the code both call it complexity
+without saying for what.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mcp_server.py</code></td>
+<td>707</td>
+<td>Eight MCP tools; the hybrid weights (41-46),
+<code>search_sessions</code> (85), <code>recall_session</code> (149),
+<code>index_stats</code> (247), <code>_bfs_expand</code> (305),
+<code>thread_recall</code> (340), the inline second copy of the indexer
+in <code>reindex</code> (436), <code>fts_integrity_check</code> (589),
+<code>find_similar</code> (615)</td>
+</tr>
+<tr>
+<td><code>index.py</code></td>
+<td>214</td>
+<td>The schema, the FTS triggers, <code>extract_text</code>'s flattening
+rules, and the mtime skip</td>
+</tr>
+<tr>
+<td><code>hooks/stop_hook_checkpoint.py</code></td>
+<td>311</td>
+<td>Bell signal reading, the close-trigger list, the pressure
+directives, and the hardcoded <code>SESSION_STATE</code> path (29)</td>
+</tr>
+<tr>
+<td><code>hooks/sse_proxy.py</code></td>
+<td>210</td>
+<td>The localhost proxy, <code>MODEL_CONTEXTS</code>, threshold signal
+files</td>
+</tr>
+<tr>
+<td><code>hooks/precompact_save.py</code></td>
+<td>209</td>
+<td>Checkpoint construction and the two-layer transcript fallback</td>
+</tr>
+<tr>
+<td><code>chat_index.py</code></td>
+<td>174</td>
+<td>The claude.ai export path, <code>source='chat'</code>, attachment
+and file names folded into the indexed text</td>
+</tr>
+<tr>
+<td><code>wire_similar.py</code></td>
+<td>142</td>
+<td><code>K = 5</code>, <code>THRESHOLD = 0.85</code>, the second
+<code>edges</code> schema (49-56)</td>
+</tr>
+<tr>
+<td><code>hooks/session_start_inject.py</code></td>
+<td>136</td>
+<td>Injection by <code>source</code>, the 180-minute freshness ceiling,
+no injection on <code>startup</code> or <code>clear</code></td>
+</tr>
+<tr>
+<td><code>wire_edges.py</code></td>
+<td>111</td>
+<td>The first <code>edges</code> schema (19-31) and the TEMPORAL
+rebuild</td>
+</tr>
+<tr>
+<td><code>embed.py</code></td>
+<td>102</td>
+<td><code>is_embeddable</code> — the thirty-character floor and the
+<code>[tool:</code>/<code>[result]</code> prefix test</td>
+</tr>
+<tr>
+<td><code>drift_check.py</code></td>
+<td>88</td>
+<td>New / stale / in-sync classification, read-only, exit 2 on
+drift</td>
+</tr>
+<tr>
+<td><code>search.py</code>, <code>recall.py</code>,
+<code>stats.py</code></td>
+<td>185</td>
+<td>CLI equivalents of three of the MCP tools</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;def test_\|assert \|unittest\|pytest&#39; --include=&#39;*.py&#39; .   # nothing: no tests of any kind
+grep -rn -i &#39;redact\|secret\|api[_-]key\|sanitiz\|mask&#39; --include=&#39;*.py&#39; .  # nothing: no redaction anywhere
+grep -rn -i &#39;status\|confidence\|verified\|superseded\|rejected\|tombstone&#39; --include=&#39;*.py&#39; .  # one hit: resp.status in the proxy
+grep -rn &#39;indexed_at&#39; --include=&#39;*.py&#39; .                             # three writers, no reader
+grep -rn &#39;DELETE FROM turn_vecs&#39; --include=&#39;*.py&#39; .                  # nothing: orphaned vectors are never cleaned
+grep -rn -i &#39;arxiv\|bibtex\|CITATION&#39; README.md; ls CITATION*        # nothing: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/Haustorium12/continuity-v2/commit/4e98d464555603a6166df7acc177bd990096dedb"><code class="commit-id" title="4e98d464555603a6166df7acc177bd990096dedb">4e98d464…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 14
+June 2026. Screened before reading: one auto-run surface, the four hook
+scripts a plugin manifest could register; no manifest, no build-time
+execution and no unpinned dependency surface, and nothing was installed,
+built or run. No marks, each checked with a recorded search. Every
+Python file in the tree was read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

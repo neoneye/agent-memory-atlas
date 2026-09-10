@@ -72,7 +72,11 @@ REPORT_CONTEXTS = [
     "of {n} carry", "of {n} apply", "of {n} commit", "of {n} record",
     "of {n} systems", "of {n} repositories", "of {n} in the atlas",
     "of {n} —", "of {n}:", "of {n} verdict", "all {n} systems",
-    "about {n} repositories", "across {n} repositories", "{n} agent memory architectures",
+    # NOT "about {n} repositories" / "across {n} repositories": both name the
+    # repository count, which is one below the report count and belongs to
+    # REPO_CONTEXTS. The reports job runs first, so leaving them here let it
+    # take a repository sentence one too high.
+    "{n} agent memory architectures",
     "{n} distinct", "{n} of",
     "<strong>{n}</strong>",
     # The mirrored word order: prose says both "of N systems" and "systems of N".
@@ -90,7 +94,7 @@ MARK_CONTEXTS = [
 
 REPO_CONTEXTS = [
     "{n} repositories", "statement about {n}", "reports across {n}",
-    "repositories of {n}", "across {n} repositories",
+    "repositories of {n}", "across {n} repositories", "about {n} repositories",
 ]
 
 # A digit run only counts when nothing numeric touches either side. Without
@@ -98,7 +102,10 @@ REPO_CONTEXTS = [
 # "$656 of API list price" and "2,291 of"; a single run corrupted eleven
 # unrelated numbers across five files on 2026-09-10.
 NUM_LEFT = r"(?<![\d,.$-])"
-NUM_RIGHT = r"(?![\d,.])"
+# A trailing comma or full stop is ordinary punctuation after a count
+# ("systems of 407, and the corpus…"), so only block a separator that is
+# itself followed by a digit — 407.5 and 1,407 must not match, 407, must.
+NUM_RIGHT = r"(?!\d)(?![.,]\d)"
 
 # "{n} of" is the loosest template here — it also matches "91 of tests",
 # meaning ninety-one lines of tests. Require a corpus-scale denominator after
