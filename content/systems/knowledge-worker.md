@@ -7,24 +7,28 @@ page_kind: system
 source_name: "rahulmranga/knowledge-worker"
 source_url: https://github.com/rahulmranga/knowledge-worker
 archive_name: "rahulmranga--knowledge-worker"
-revision: 1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
-revision_url: https://github.com/rahulmranga/knowledge-worker/commit/1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858
-analyzed_at: 2026-08-09
-capabilities: "trust_state"
+revision: bbb46379be2a8c45b20627fba30ffb8c98d1adc1
+revision_url: https://github.com/rahulmranga/knowledge-worker/commit/bbb46379be2a8c45b20627fba30ffb8c98d1adc1
+analyzed_at: 2026-09-11
+capabilities: "trust_state, audit_log, human_review"
+capability_evidence:
+  trust_state: "context export | mygraph/export_context.py:55 | high/medium/low as a filter — a decision whose confidence is low is dropped from the export rather than ranked lower | tests/test_deep_dive.py::test_validation_report_records_demotions_for_bad_high_confidence_excerpt"
+  audit_log: "the eval record | mygraph/eval_log.py:24-27 | eval_record.jsonl opened in append mode and only ever appended, carrying every review verdict, extract manifest, ingest completion, merge conflict and skipped edge | unknown"
+  human_review: "ingest | mygraph/review.py:113-137, called from mygraph/ingest.py:140 | each extracted node is printed and a person answers accept, reject, edit, skip or quit; an edit is re-validated against the source before it can be accepted | unknown"
 stack_storage: ""
 stack_retrieval: ""
 stack_source: "seeded"
 matrix:
   memory_unit: "A typed node with a confidence and an excerpt, plus typed edges between nodes"
-  storage: "A local graph with OWL import and export; provenance edges kept separate"
+  storage: "A local JSON-LD graph with a published context vocabulary, OWL and Turtle export, and an append-only `eval_record.jsonl` beside it; provenance edges kept separate"
   retrieval: "Context export that drops low-confidence decisions and marks the rest"
   write: "Extraction, then a validator that rejects, demotes or accepts each node and edge"
-  update_delete: "Merge and review commands; demotion rather than deletion for weak claims"
+  update_delete: "Merge and review commands; demotion rather than deletion for weak claims. A rejected candidate is logged and not recorded against its value, so the next ingest of the same source offers it again"
   scoping: "One local graph per user; no scope key on a read path"
   integration: "A CLI, an Ollama proxy, and export for feeding an AI session"
   background: "Graph analytics — what matters, what connects, what is weak"
   trust: "high / medium / low, with high requiring an excerpt that matches the source"
-  strengths: "A fabricated-quote check, with demotion recorded in an auditable manifest"
+  strengths: "A fabricated-quote check, with demotion recorded in an auditable manifest, behind a per-node human gate whose every verdict is appended to a durable log"
   risks: "Substring matching catches invention, not misquotation in context"
 ---
 
@@ -65,6 +69,18 @@ right one.
 `rejected_nodes` with a reason, `demoted_nodes` with a reason, and the same for
 edges — so an extraction run is auditable after the fact rather than a silent
 transformation.
+
+**And the check is not the last gate — a person is.** `ingest` runs the
+validator, then hands every surviving candidate to `review()`, which prints it
+and waits: accept, reject, edit, skip or quit, one node at a time. An edit goes
+back through `validate()` against the same source before it can be accepted, so
+the substring check runs on the human's excerpt too. Every verdict — including
+the rejections and the skips — is appended to `eval_record.jsonl` with the
+candidate id, the source, the extractor's confidence and the edit if there was
+one. That combination, a deterministic evidence check under a per-item human
+gate over an append-only record of both, is what three of this report's marks
+rest on, and it is the shape most extraction pipelines in this atlas skip
+entirely.
 
 ## 2. Mental Model
 
@@ -184,19 +200,49 @@ decision on the human's side.
 
 ## 9. Reliability, Safety, and Trust
 
-**One mark: trust state.** Three values, assigned by the system on evidence,
-demoted when the evidence fails, and read at export.
+**Trust state.** Three values, assigned by the system on evidence, demoted when
+the evidence fails, and applied as a filter rather than a weight:
+`export_context.py:55` builds the decision list as
+`[n for n in by_type("decision") if n.get("confidence") != "low"]`, so a demoted
+decision is dropped from what the next session reads.
 
-**Audit log — withheld, narrowly.** The manifest is per-run and returned to the
-caller rather than being an append-only record in the store, and
-`memory_audit.py` is analytics over the current graph — "read-only and
-deterministic… keeps source/provenance edges separate from semantic graph
-analytics, and writes generated artifacts only when asked". Both are good;
-neither is a durable event log of mutations.
+**Human review — the gate is per node and it is the main path.** `review()` is
+called from `ingest.py:140` on every ingest. Each candidate node is printed and
+the person answers `[a]ccept [r]eject [e]dit [s]kip [q]uit`; `e` opens the payload
+in `$EDITOR`, and the edited node is put back through `validate()` against the
+source before a second accept prompt — so a person cannot hand-write an excerpt
+into a high-confidence claim without the substring check running on it. Only
+accepted nodes reach the graph, and an edge survives only if both its endpoints
+did. `auto_accept_high` and `auto_accept_all` exist as flags; the gate is what
+runs without them.
 
-**Tombstone, bitemporal, scope, human review, negative eval — no**, though
-`review.py` exists and a human-in-the-loop review step is the natural home for
-the demoted set.
+**Audit log — on the eval record, with its framing stated.** `eval_log.append`
+opens `eval_record.jsonl` in append mode, stamps a UTC timestamp and writes one
+line; nothing in the tree opens it any other way. What lands there is not only
+checks: every review verdict with the candidate id, the source, the extractor's
+confidence and the user's edit; an `extract_manifest` and an `ingest_complete`
+per source; `merge_body_conflict` and `merge_edge_skipped` from the merge path.
+That is a durable append-only record of what happened to the graph, which is the
+mark. Two things to know about it. The module frames the file as training data —
+*"the v1 corpus that v2+ will use for prompt refinement / edge weighting / RL"* —
+rather than as an audit surface, and **nothing in the repository reads it**: every
+reference is an append. `docs/STORAGE_DECISION.md` gives it the role explicitly,
+listing JSONL as the *"append-only event stream: reviews, evals, analyzer runs,
+replay logs"* beside JSON-LD as the source of truth.
+
+**Tombstone — no, and the near-miss is one query wide.** A `reject` verdict is
+written to the log with the candidate id, and the next ingest of the same source
+decides what to re-offer from `_already_merged_ids`, which reads `MENTIONED_IN`
+edges *in the graph*. A rejected candidate has no such edge, so it is presented
+again — and the record of the person having refused it sits in a file nothing
+opens. The rejection is also keyed on the candidate id rather than on the value,
+which is the second reason the mark does not apply.
+
+**Bitemporal, scope, negative eval — no.** The graph is one file per user, which
+is a partition rather than a key on a record; nothing stores when a claim was
+true separately from when it was written; and the committed validator case
+asserts that a fabricated excerpt *is* demoted rather than that anything is kept
+out of a result.
 
 **The limit of the check is worth stating precisely.** Substring matching catches
 *invention* — an excerpt that does not exist in the source. It does not catch
@@ -213,15 +259,23 @@ set.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**8 test files** against 7,500 lines, plus `docs/BENCHMARKS.md` described as
-"the offline demo-graph checks" and an `eval_log.py` module.
+**71 test functions across 7 files** against 7,548 lines of Python, plus
+`docs/BENCHMARKS.md` described as "the offline demo-graph checks" and an
+`eval_log.py` module.
 
-The validator is the component that most deserves a table-driven test, and the
-cases write themselves from the reason strings the code already emits: a node
-with no excerpt, one whose excerpt is absent from the source, one whose excerpt
-matches, one whose excerpt matches only after normalisation, an edge to a
-rejected candidate, an edge to an existing node. Six fixtures would pin every
-branch, and the manifest gives an exact assertion target.
+One validator branch is pinned:
+`test_validation_report_records_demotions_for_bad_high_confidence_excerpt`
+generates a real candidate set, rewrites one node to `high` with the excerpt
+`"this excerpt is not in the source"`, and asserts an `excerpt_not_in_source`
+demotion appears in the manifest. Its sibling asserts the unmodified set
+validates with zero rejections, which is the positive control the first one needs.
+
+The other branches still write themselves from the reason strings the code
+emits: a node with no excerpt, one whose excerpt matches only after
+normalisation, an edge to a rejected candidate, an edge to an existing node. And
+nothing covers the review gate at all — no test drives `review()` with a scripted
+answer sequence, so the accept/reject/edit path that decides what enters the
+graph is the least-tested code with the most authority over it.
 
 `docs/COMPETITIVE_ANALYSIS.md` positions the project in a category matrix — the
 README summarises it as a "chat-to-wiki system" that "keeps reasoning local,
@@ -306,9 +360,29 @@ and the provenance/semantic separation `:1-11`), `mygraph/audit.py`,
 `merge.py`, `review.py`, `check.py`, `discover.py`, `deep_dive.py`,
 `owl_io.py`, `viz.py`, `ollama_proxy/`
 
+**Review and the log** — `mygraph/review.py` (the per-node prompt `:113-137`, the
+editor path and its re-validation `:118-131`, the verdict records `:134-138`, the
+append loop `:147-148`), `mygraph/eval_log.py` (`append` `:24-27`),
+`mygraph/ingest.py:140` (the one caller of `review`)
+
 **Documentation** — `SPEC.md`, `DESIGN.md`, `knowledge_worker_principles.md`,
-`docs/COMPETITIVE_ANALYSIS.md`, `docs/BENCHMARKS.md`
+`docs/COMPETITIVE_ANALYSIS.md`, `docs/BENCHMARKS.md`, `docs/STORAGE_DECISION.md`
+
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The review gate is on the main path | `grep -rn "review(" --include="*.py" mygraph` | One caller, `ingest.py:140` |
+| The eval record is append-only | `grep -rn "EVAL_LOG\|eval_record.jsonl" --include="*.py" mygraph` | Every open is mode `"a"`; no read anywhere |
+| Nothing consults a rejection before re-offering | read `_already_merged_ids` at `mygraph/review.py:67-75` | It reads `MENTIONED_IN` edges in the graph, which a rejected candidate never gets |
+| No validity time separate from record time | `grep -rniE "valid_from\|valid_to\|as_of\|observed_at" --include="*.py" mygraph` | Nothing |
+| Test tree size | `grep -rc "def test_" tests/*.py` summed | 71 functions across 7 files, over 7,548 lines of Python |
 
 ## History
+
+**2026-09-11** — [`bbb46379be2a8c45b20627fba30ffb8c98d1adc1`](https://github.com/rahulmranga/knowledge-worker/commit/bbb46379be2a8c45b20627fba30ffb8c98d1adc1) — re-read, 22 files and 1,777 insertions past the previous pin in a single commit, most of it documentation and an example graph. **Two marks added, both first-reading misses rather than upstream changes.** The first reading said *"tombstone, bitemporal, scope, human review, negative eval — no, though `review.py` exists and a human-in-the-loop review step is the natural home for the demoted set"* — the file was listed in the appendix and never opened. `review()` is called from `ingest.py:140` on every ingest, prints each candidate node, and waits for accept, reject, edit, skip or quit; an edit is put back through `validate()` against the source before a second prompt, and only accepted nodes reach the graph. That is `human_review`. `audit_log` was withheld on the reasoning that the manifest is per-run and `memory_audit.py` is analytics — both true, and both beside the point, because `eval_log.append` writes `eval_record.jsonl` in append mode with every review verdict, extract manifest, ingest completion, merge conflict and skipped edge. Its two limits are stated in the report: the module frames the file as an RL corpus rather than an audit surface, and nothing in the tree reads it. `tombstone` stays withheld and the near-miss is now precise: a `reject` verdict is recorded, and the next ingest of the same source decides what to re-offer from `MENTIONED_IN` edges in the graph, which a rejected candidate never acquired. **The store changed format**: JSON-LD is the canonical local graph as of v0.8.0, with a published context vocabulary and a `docs/STORAGE_DECISION.md` naming JSONL as the append-only event layer beside it. Validator and export line numbers re-verified unchanged. Test tree 71 functions across 7 files; nothing covers `review()`. Screened before reading: four dependency manifests inside the cooldown, seven unpinned ranges, and two agent-instruction files read as data; nothing was installed or run.
+
 
 **2026-08-09** — [`1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858`](https://github.com/rahulmranga/knowledge-worker/commit/1d94dedf12a0a7a3623ee21d0ac0d773cf4ce858) — first reading. Screened before reading; the tree was read, never installed, and no check was run.

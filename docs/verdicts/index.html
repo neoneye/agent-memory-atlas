@@ -7334,20 +7334,28 @@ just not evidenced.</li>
 contains "use MongoDB for this", and a claim excerpting the fragment
 passes — storing the source offset rather than the text would let the
 surrounding span be checked.</li>
-<li>Most reusable component: the validation manifest — accepted,
-rejected and demoted nodes and edges, each with an enumerated reason
-string — which turns an extraction pass from a silent transformation
-into an auditable one, and gives tests an exact assertion target.</li>
-<li>Maturity impression: 7,500 lines with a closed node and edge type
+<li>Most reusable component: the deterministic check under a per-node
+human gate over an append-only log — <code>validate()</code> demotes
+with an enumerated reason, <code>review()</code> prints each survivor
+and waits for accept/reject/edit/skip, an edit goes back through the
+validator against the same source, and every verdict lands in
+<code>eval_record.jsonl</code>. Most extraction pipelines in this atlas
+have one of those three.</li>
+<li>Maturity impression: 7,548 lines with a closed node and edge type
 set, edge endpoints resolved against both the existing graph and the
 current candidate batch so an edge to a just-rejected node is dropped,
-OWL import and export, and analytics that keep provenance edges out of
-the semantic centrality measures — against 8 test files, none on the
-validator.</li>
+JSON-LD as the canonical store with a published context vocabulary and a
+written storage decision, and analytics that keep provenance edges out
+of the semantic centrality measures — against 71 test functions in 7
+files, one of which pins the fabricated-excerpt demotion and none of
+which drives the review gate.</li>
 <li>Study when: an LLM is deciding what becomes durable knowledge in
 your store and you take its evidence on trust.</li>
 <li>Do not copy when: you need automatic recall — the model is handed a
-filtered brief, and the retrieval decision stays with the human.</li>
+filtered brief, and the retrieval decision stays with the human. Nor
+when a refusal has to stick: a rejected candidate is logged with its
+verdict, and the next ingest of the same source decides what to re-offer
+from the graph's edges, which a rejected candidate never acquired.</li>
 </ul>
 <h3 id="memory-ts"><a
 href="../systems/memory-ts/"><code>memory-ts</code></a></h3>
