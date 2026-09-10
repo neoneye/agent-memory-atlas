@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 Rust archiver that
+ingests every agent session on the machine losslessly into Lance
+columnar storage the user owns — a local directory or their own S3 —
+records each message part's provenance as conversational or injected,
+and lets only the conversational parts contribute to the searchable
+text, so the scaffolding a harness inserted is preserved on disk and
+cannot be retrieved as something a person said.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="pond — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 Rust archiver
+that ingests every agent session on the machine losslessly into Lance
+columnar storage the user owns — a local directory or their own S3 —
+records each message part's provenance as conversational or injected,
+and lets only the conversational parts contribute to the searchable
+text, so the scaffolding a harness inserted is preserved on disk and
+cannot be retrieved as something a person said.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="pond — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 Rust
+archiver that ingests every agent session on the machine losslessly into
+Lance columnar storage the user owns — a local directory or their own S3
+— records each message part's provenance as conversational or injected,
+and lets only the conversational parts contribute to the searchable
+text, so the scaffolding a harness inserted is preserved on disk and
+cannot be retrieved as something a person said.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>pond — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "pond",
+      "description": "An Apache-2.0 Rust archiver that ingests every agent session on the machine losslessly into Lance columnar storage the user owns \u2014 a local directory or their own S3 \u2014 records each message part's provenance as conversational or injected, and lets only the conversational parts contribute to the searchable text, so the scaffolding a harness inserted is preserved on disk and cannot be retrieved as something a person said.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Harness scaffolding is stored and kept out
+of the index</p>
+          <h1>pond</h1>
+          <p class="document-deck">An Apache-2.0 Rust archiver that
+ingests every agent session on the machine losslessly into Lance
+columnar storage the user owns — a local directory or their own S3 —
+records each message part's provenance as conversational or injected,
+and lets only the conversational parts contribute to the searchable
+text, so the scaffolding a harness inserted is preserved on disk and
+cannot be retrieved as something a person said.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tenequm/pond">
+              <span>Source</span>
+              <strong>tenequm/pond</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tenequm/pond/commit/e75182a41964754acec493696581806118b2b9f0" title="e75182a41964754acec493696581806118b2b9f0">
+              <span>Analyzed revision</span>
+              <code>e75182a4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tenequm--pond" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>tenequm--pond</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>pond and the retroactive-archive idea arrive at the same observation
+— the sessions are already on disk — and diverge on what to do with
+them. Where a peer indexes the transcripts in place, pond
+<strong>ingests them losslessly</strong> into Lance columnar datasets in
+storage the user owns, a local directory or their own S3 bucket, and
+then makes the corpus searchable, SQL-queryable, and restorable:
+<em>"any session can be restored into any supported client and continued
+there."</em></p>
+<p>Apache-2.0; 462 commits between 7 May and 9 September 2026 from seven
+authors; 78,218 lines of Rust in one crate under a Moon-managed
+workspace with a Nix flake; 307 test attributes. The screen found one
+auto-run surface, two manifests inside the seven-day cooldown, two
+build-time execution paths and four unpinned dependency surfaces;
+nothing was installed or run.</p>
+<p><strong>The mechanism worth the report is one predicate.</strong>
+Every message part carries a <code>provenance</code> column with two
+values, <code>conversational</code> or <code>injected</code>, and
+<code>search_text</code> skips anything that is not conversational:</p>
+<pre class="rust"><code>// spec.md#search: only conversational parts contribute to the indexed
+// text; harness-injected scaffolding is excluded from search.
+if part.provenance != Provenance::Conversational {
+    continue;
+}</code></pre>
+<p>So the archive keeps everything — the injected
+<code>&lt;task-notification&gt;</code> blocks, the system scaffolding,
+whatever the harness put in the transcript — and none of it can be found
+later as though a person had said it. That is the right split for a
+lossless archive, and it is the distinction most session-search tools do
+not draw at all: they index the transcript, scaffolding included, and a
+search for a phrase the harness emits returns hundreds of hits.</p>
+<p><strong>The mark it earns is for testing that predicate
+honestly.</strong> The case drives the real <code>search_text</code>
+twice against the same message shape: a conversational part yields
+<code>Some("real human prompt")</code>, and an injected part carrying a
+<code>&lt;task-notification&gt;</code> payload yields <code>None</code>,
+asserted with <em>"a message whose only part is injected has null
+search_text."</em> The present control sits above the absence in the
+same body, so neither arm can pass over an empty fixture.</p>
+<p><strong>An unknown provenance is an error, not a default.</strong>
+<code>provenance_from_str</code> matches the two known values and
+otherwise <code>bail!("unknown part provenance {other}")</code>. A new
+value from a changed adapter fails the read rather than silently
+becoming conversational and entering the index — the conservative
+direction, and the one that is easy to get backwards.</p>
+<p><strong>What it does not have is any epistemic layer, and the archive
+framing explains why.</strong> No confidence, no status, no validity
+interval, no forgetting. A conclusion that was wrong a year ago is a row
+like any other, ranked by relevance. The design is an archive with
+search over it, and it says so.</p>
+<p><strong>Two things a reader should weigh before installing
+it.</strong> Nothing is redacted on ingest: a lossless archive of every
+session on a machine is a lossless archive of every credential anyone
+pasted into one, now also in an S3 bucket if that is where the corpus
+lives. And no scope is applied by default — <code>project</code> and
+<code>source_agent</code> are stored and filterable, and the corpus
+spans every tool and every project unless a caller narrows it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A session happened in some tool. An adapter for that tool parses its
+transcript into pond's own shape: a session, its messages, and each
+message's parts. The parse is meant to lose nothing, so a part that is a
+tool call keeps its <code>tool_name</code>, its <code>call_id</code> and
+whether it failed, and a part the harness injected keeps its text.</p>
+<p>Ingest is an upsert. Re-reading a session that has already been
+ingested returns an <code>UpsertStatus</code> rather than writing it
+twice, and a sync-state record per source tracks what has been
+taken.</p>
+<p>The split between <em>stored</em> and <em>searchable</em> is made at
+ingest. <code>search_text</code> is computed once, from the
+conversational parts only, and written as a column. The vector is
+computed from the same material with the embedding model recorded beside
+it. So the index is a view of what somebody said, while the dataset
+holds what happened.</p>
+<p>Reading has three shapes. An agent asks over MCP and gets ranked
+hits, hydrated from a row-id map so the exact row is fetched rather than
+re-found. A person runs SQL over the corpus. Or a session is restored
+into a client and continued — the part that makes this an archive rather
+than a search index, because the transcript was kept whole enough to
+replay.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an adapter parses a tool's transcript losslessly into sessions, messages and parts, each part carrying a provenance of conversational or injected; ingest computes search_text from the conversational parts only, so everything is stored and only what a person said is indexed; reading is by ranked search over the lexical and vector columns, by SQL, or by restoring a session into any supported client</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an adapter parses a tool&#39;s transcript losslessly into sessions, messages and parts, each part carrying a provenance of conversational or injected; ingest computes search_text from the conversational parts only, so everything is stored and only what a person said is indexed; reading is by ranked search over the lexical and vector columns, by SQL, or by restoring a session into any supported client
+flowchart TB
+    T[(&quot;transcripts from many tools&lt;br/&gt;already on disk&quot;)]
+    AD[&quot;adapter per harness&lt;br/&gt;parses losslessly&quot;]
+    PARTS[&quot;parts: ordinal, type,&lt;br/&gt;provenance = conversational | injected,&lt;br/&gt;tool_name, call_id, is_failure&quot;]
+    ST{&quot;provenance ==&lt;br/&gt;Conversational?&quot;}
+    SKIP[&quot;contributes nothing&lt;br/&gt;to search_text&quot;]
+    TXT[&quot;search_text built&lt;br/&gt;from these parts only&quot;]
+    LANCE[(&quot;Lance datasets — local dir or the user&#39;s own S3&lt;br/&gt;session_id, role, project, source_agent,&lt;br/&gt;content, search_text, vector, embedding_model,&lt;br/&gt;parent_session_id / parent_message_id&quot;)]
+    UP{&quot;already ingested?&quot;}
+    IDEM[&quot;UpsertStatus: not written twice&quot;]
+    SEARCH[&quot;ranked search: lexical + vector,&lt;br/&gt;hydrated through a row-id map&quot;]
+    SQL[&quot;SQL over the corpus&quot;]
+    REST[&quot;restore a session into&lt;br/&gt;any supported client&quot;]
+    MCP[&quot;an agent asks over MCP&quot;]
+
+    T --&gt; AD
+    AD --&gt; PARTS
+    PARTS --&gt; ST
+    ST --&gt;|no| SKIP
+    ST --&gt;|yes| TXT
+    SKIP --&gt; LANCE
+    TXT --&gt; LANCE
+    AD --&gt; UP
+    UP --&gt;|yes| IDEM
+    LANCE --&gt; SEARCH
+    LANCE --&gt; SQL
+    LANCE --&gt; REST
+    SEARCH --&gt; MCP</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Rust crate, <code>packages/pond</code>, 78,218 lines, under a
+workspace whose root manifest exists mainly to hold the build profiles —
+with a comment explaining that cargo honours them only there. Moon
+manages tasks, Nix pins the toolchain, and the release surface is
+Homebrew and Scoop.</p>
+<p>The modules divide cleanly: <code>adapter/</code> per harness,
+<code>sessions.rs</code> as the large one holding the Lance schemas and
+the read and write paths, <code>sql.rs</code> for the query surface,
+<code>embed.rs</code> for vectors, <code>handlers.rs</code> for the MCP
+tools, <code>snapshots/</code> and <code>syncstate.rs</code> for
+incremental ingest, <code>schedule.rs</code> for the periodic run,
+<code>rowmap.rs</code> for the hydration map, <code>render.rs</code> for
+output and <code>wire.rs</code> for the shared types including
+<code>Provenance</code>.</p>
+<p>Storage is Lance rather than SQLite or Postgres, which is the choice
+that makes the SQL surface and the S3 option coherent: columnar files
+the user owns, no server, and a scan that can push a predicate and a
+projection. <code>ScanOpts:: with_predicate_and_projection</code>
+appears throughout the read path, so the code is written for column
+pruning rather than row fetching.</p>
+<p>The code carries its reasoning in comments the way a maintained
+project does — the <code>SearchHit</code> type documents when
+<code>rowid</code> is <code>Some</code> and why, and the profile
+comments explain each setting's cost.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ingest.</strong> an adapter parses a transcript → messages
+and parts → <code>upsert</code> returning
+<code>UpsertStatus::Inserted</code> or its siblings →
+<code>syncstate</code> records what this source has contributed.</li>
+<li><strong>Decide what is searchable.</strong>
+<code>search_text(&amp;message, &amp;parts)</code>
+(<code>sessions.rs:4461-4470</code>) skips every part whose provenance
+is not <code>Conversational</code>, then collects text and file parts
+for user and assistant roles.</li>
+<li><strong>Parse provenance.</strong> <code>provenance_from_str</code>
+(<code>sessions.rs:5855-5861</code>) maps the two known strings and
+<code>bail!</code>s on anything else.</li>
+<li><strong>Store.</strong> the Lance message schema
+(<code>sessions.rs:5076-5107</code>) with
+<code>parent_session_id</code>, <code>parent_message_id</code>,
+<code>source_agent</code>, <code>project</code>, <code>role</code>,
+<code>content</code>, <code>search_text</code>, <code>vector</code>,
+<code>embedding_model</code>; the parts schema (<code>:5222-5233</code>)
+with <code>ordinal</code>, <code>type</code>, <code>provenance</code>,
+<code>tool_name</code>, <code>call_id</code>,
+<code>is_failure</code>.</li>
+<li><strong>Search and hydrate.</strong> the two arms produce
+<code>SearchHit</code>s carrying a <code>MessageKey</code> and an
+optional <code>rowid</code>; hydration uses <code>take_rows</code> on
+the row id when the map resolved one and falls back to an
+<code>IN</code> predicate when it did not.</li>
+<li><strong>Filter, if asked.</strong>
+<code>handlers.rs:1924-1927</code> pushes
+<code>Predicate::LikeContains("project", …)</code> or
+<code>Predicate::Regex("project", …)</code> when the caller supplied a
+project filter.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The message.</strong> <code>session_id</code>,
+<code>id</code>, <code>role</code>, <code>source_agent</code>,
+<code>project</code>, <code>content</code>, <code>search_text</code>, a
+<code>vector</code> with its <code>embedding_model</code> recorded
+beside it, a timestamp, and
+<code>parent_session_id</code>/<code>parent_message_id</code>. Those
+last two are worth naming: a session forked or resumed from another
+keeps a pointer to where it came from, so the corpus is a forest rather
+than a flat list, and a search hit can be traced back through the branch
+that produced it.</p>
+<p>Recording <code>embedding_model</code> on the row rather than in
+configuration is a small correctness win — a corpus embedded across a
+model change can tell which rows are comparable.</p>
+<p><strong>The part.</strong> <code>ordinal</code>, <code>type</code>,
+<code>provenance</code>, and for a tool interaction
+<code>tool_name</code>, <code>call_id</code> and
+<code>is_failure</code>. Keeping the failure flag means the corpus knows
+which tool calls went wrong, which is exactly the material somebody
+searching <em>"how did we fix this before"</em> wants and which most
+transcript indexes flatten away.</p>
+<p><strong>The one discrete state.</strong>
+<code>Provenance::Conversational</code> or
+<code>Provenance::Injected</code>. It is a genre — assigned by the
+adapter from the transcript's structure at ingest — rather than a
+judgement about whether something is true, which is why
+<code>trust_state</code> is withheld below. What it does is still the
+useful half: it separates what a participant said from what a harness
+inserted.</p>
+<p><strong>What is absent.</strong> No confidence, no verification
+status, no supersession pointer, no validity interval — a search of the
+crate for <code>valid_from</code>, <code>valid_to</code> and
+<code>as_of</code> returns nothing. For an archive that is coherent; the
+report records it because a reader evaluating pond as a <em>memory</em>
+rather than as an archive will find nothing here that ages a claim.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms over Lance. The lexical arm reads <code>search_text</code>;
+the vector arm reads <code>vector</code>, with
+<code>embedding_model</code> alongside so a mixed-model corpus is
+legible. Both produce <code>SearchHit</code>s that carry a
+<code>MessageKey</code> and an optional <code>rowid</code>.</p>
+<p>The hydration path is the engineering detail worth copying. A prewarm
+builds a row-id map, and a hit that resolved a stable row id is fetched
+with <code>take_rows</code> rather than re-found with an <code>IN</code>
+predicate scan — the type's own comment explains that <code>rowid</code>
+is <code>None</code> on the fallback path used by local tests and before
+prewarm. Two ways to fetch the same row, with the cheap one available
+when the map is warm and a correct fallback when it is not.</p>
+<p>Filtering is optional and caller-supplied. <code>project</code>
+accepts a contains match or a regex; <code>source_agent</code> is stored
+and available the same way. Nothing narrows by default, which is
+deliberate — the value proposition is a corpus that spans every tool —
+and it is why <code>scope_enforced</code> is withheld: there is no
+boundary, only a query the caller may narrow.</p>
+<p>A SQL surface exposes the datasets for arbitrary queries, which is a
+genuine differentiator: a person who wants <em>how many tool calls
+failed in this project last quarter</em> has a query rather than a
+feature request.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest is per-adapter parsing followed by an upsert, and the upsert
+returns a status so a caller can tell an insert from a no-op. A
+<code>syncstate</code> record per source tracks what has already been
+taken, so a periodic run is incremental rather than a full re-read.</p>
+<p><strong>The write path is where searchability is decided.</strong>
+<code>search_text</code> is computed once, at ingest, from the
+conversational parts, and stored as a column. That makes the exclusion
+cheap at query time and permanent until re-ingest — an adapter that
+mislabels a part has no second chance to be corrected without
+rebuilding, which is the cost of deciding at write time rather than
+filtering at read time.</p>
+<p><strong>Session content is not redacted, and the project does redact
+elsewhere.</strong> <code>config.rs</code> carries three separate guards
+citing <code>spec.md#storage-redaction</code> —
+<code>pond config show</code> never echoes a credential value, and the
+generated recipe must not contain the real one. So the codebase knows
+how to redact and chooses to on the configuration path. It does not on
+the ingest path: a lossless archive of every session on a machine holds
+every token, key and password anyone pasted into an agent, and if the
+corpus is configured to an S3 bucket it holds them there. Losslessness
+and redaction are in genuine tension, and the asymmetry is worth knowing
+before pointing pond at a work machine.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server is the agent-facing surface, so a coding agent can
+query the corpus mid-task rather than a person searching separately. A
+CLI covers the human side, and installation is Homebrew or Scoop, or —
+per the README — asking an agent to follow the documented setup
+prompt.</p>
+<p>The feature that distinguishes pond from a search tool is
+restoration: <em>"Sessions stop being locked to the tool that created
+them: any session can be restored into any supported client and
+continued there."</em> That is only possible because ingest is lossless
+and the part structure was preserved, and it turns the archive into a
+migration path between harnesses rather than only a memory of them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Negative evaluation — awarded.</strong> The
+<code>search_text</code> test drives the real function on both arms
+against the same message shape, with the conversational control asserted
+before the injected absence, so neither can pass on an empty fixture.
+The absence is also the property the design is <em>for</em>, which is
+the best kind of case to have.</p>
+<p><strong>Trust state — withheld, and the near miss is worth the
+paragraph.</strong> <code>Provenance</code> is a stored, discrete,
+two-value field, and one of its values causes material to be withheld
+from the index entirely — which is most of what the mark asks. Two
+things keep it back. It is a genre assigned by an adapter from the
+transcript's structure, not a judgement about whether a claim holds, so
+it answers <em>who put this here</em> rather than <em>may this be
+treated as true</em>. And the exclusion happens at ingest, when
+<code>search_text</code> is computed, rather than as a filter on the
+read path — the injected row is stored and simply never becomes
+searchable. Both are defensible choices for an archive and both put it
+outside this mark.</p>
+<p><strong>Scope — withheld.</strong> <code>project</code> and
+<code>source_agent</code> are stored and filterable, and the filter is a
+caller's option with no default. A corpus spanning every tool and
+project is the product; a boundary is not offered.</p>
+<p><strong>Tombstone — withheld.</strong> Nothing records a rejected
+value. There is no rejection in the model at all.</p>
+<p><strong>Audit log — withheld.</strong> The archive is a record of
+sessions, not of mutations to memory; <code>syncstate</code> records
+what each source has contributed, which is an ingest bookmark.</p>
+<p><strong>Bitemporal — withheld.</strong> A message timestamp; record
+time only.</p>
+<p><strong>Human review — withheld.</strong> No surface adjudicates
+content.</p>
+<p><strong>One property worth naming that the rubric has no mark
+for.</strong> An unknown provenance value is a hard error.
+<code>provenance_from_str</code> bails on anything that is not one of
+the two known strings, so an adapter change that introduces a third kind
+fails loudly instead of quietly labelling scaffolding as speech. Failing
+closed on an unrecognised value is the same instinct that makes another
+system's trust matrix raise rather than default, and it is rarer than it
+should be.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>307 test attributes across the crate, inline in the modules they
+cover in the Rust convention. The provenance case described above is the
+one this report turns on;
+<code>parts_chunk_materializes_tool_identity_columns</code> sits beside
+it, pinning that the tool identity columns reach the Lance chunk.</p>
+<p>There is no benchmark and none is claimed. The README's demonstration
+is a recording — <em>"A live 12k-session corpus, then a three-month-old
+fix found and verified against the current code"</em> — which is a claim
+about an installation rather than a measurement anyone can rerun, and
+this report records it as the former. No committed result file, no
+harness for a public benchmark, and no retrieval-quality evaluation.</p>
+<p>No paper of its own. <code>docs/spec.md</code> cites others —
+including <a
+href="https://arxiv.org/abs/2512.24601">arXiv:2512.24601</a> on
+recursive language models, credited for corroborating pond's branching
+model, which is the <code>parent_session_id</code> lineage in the
+schema.</p>
+<p><strong>The spec is worth naming as a practice.</strong>
+<code>docs/spec.md</code> is the design document, and the code cites it
+by anchor: <code>spec.md#search</code> above the provenance skip,
+<code>spec.md#storage-redaction</code> above each credential guard. A
+comment that names the section of a spec it implements is a reference
+that survives a refactor, and it is how the reasoning above stayed
+checkable while reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Store everything; index only what somebody said.</strong>
+One predicate on a provenance column keeps harness scaffolding out of
+search while leaving it on disk for reconstruction. Most transcript
+indexes skip this and then return hundreds of hits for a phrase the
+harness emits.</li>
+<li><strong>Make an unknown enum value an error.</strong>
+<code>bail!("unknown part provenance {other}")</code> means an adapter
+change cannot silently promote scaffolding into the searchable
+corpus.</li>
+<li><strong>Record the embedding model on the row.</strong> A corpus
+embedded across a model change can then say which rows are comparable,
+without a migration.</li>
+<li><strong>Keep <code>is_failure</code> on a tool part.</strong> The
+searchable corpus of <em>what went wrong</em> is the one people actually
+query, and flattening tool results loses it.</li>
+<li><strong>Give a hit a stable row id and a correct fallback.</strong>
+<code>take_rows</code> when the prewarmed map resolved one, an
+<code>IN</code> predicate when it did not, with the type's own comment
+saying which path is which.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A lossless archive with no redaction.</strong> Ingesting
+every session on a machine whole means ingesting every secret pasted
+into one, and pointing that at an S3 bucket moves them. Redaction and
+losslessness are in tension, and the tension should be a documented
+decision rather than an unstated one.</li>
+<li><strong>Deciding searchability at write time without a rebuild
+path.</strong> <code>search_text</code> is computed at ingest, so an
+adapter that mislabels a part is wrong until the corpus is
+re-ingested.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>pond suits someone with a long history across several agent tools who
+wants that history in storage they own, queryable with SQL as well as
+searched, and who values being able to pick a session up in a different
+client than the one that wrote it. The Lance choice makes it operable
+without a server and portable to a bucket, and the provenance split
+means the search results are what people said rather than what the
+harness emitted. It is the wrong choice on a machine that touches other
+people's secrets, because nothing is stripped on the way in and the
+corpus is a single undifferentiated pool. It is also not a memory in
+this atlas's sense — nothing here can be marked doubtful, corrected or
+retired, and a reader wanting that should treat pond as the substrate
+and build the epistemic layer above it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is redaction planned, and would it be compatible with the
+losslessness claim? A stored-but-masked column would satisfy both, at
+the cost of a second copy.</li>
+<li>Can <code>search_text</code> be recomputed without a full re-ingest?
+An adapter fix today appears to need one.</li>
+<li>What uses
+<code>parent_session_id</code>/<code>parent_message_id</code> on the
+read path? The lineage is stored; the reading did not find a surface
+that walks it.</li>
+<li>Does the S3 configuration change the security posture the docs
+assume? The local-directory default and a shared bucket are different
+threat models for the same unredacted corpus.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/pond/src/sessions.rs</code></td>
+<td>—</td>
+<td>The large one: <code>MessageMeta</code> (210-219),
+<code>SearchHit</code> (228-233), <code>search_text</code> and the
+provenance skip (4461-4470), the Lance message schema (5076-5107), the
+parts schema (5222-5233), <code>provenance_from_str</code> (5855-5861),
+the provenance test (6300-6329)</td>
+</tr>
+<tr>
+<td><code>packages/pond/src/adapter/</code></td>
+<td>—</td>
+<td>One parser per supported harness</td>
+</tr>
+<tr>
+<td><code>packages/pond/src/handlers.rs</code></td>
+<td>—</td>
+<td>The MCP tools; the optional project predicate (1924-1927)</td>
+</tr>
+<tr>
+<td><code>packages/pond/src/sql.rs</code>, <code>embed.rs</code>,
+<code>rowmap.rs</code></td>
+<td>—</td>
+<td>The SQL surface; the vector arm; the row-id map that makes
+<code>take_rows</code> hydration possible</td>
+</tr>
+<tr>
+<td><code>packages/pond/src/syncstate.rs</code>,
+<code>snapshots/</code>, <code>schedule.rs</code></td>
+<td>—</td>
+<td>Incremental ingest bookkeeping, snapshots, the periodic run</td>
+</tr>
+<tr>
+<td><code>packages/pond/src/wire.rs</code></td>
+<td>—</td>
+<td>The shared types including <code>Provenance</code></td>
+</tr>
+<tr>
+<td><code>Cargo.toml</code> (root), <code>moon.yml</code>,
+<code>flake.nix</code></td>
+<td>—</td>
+<td>Build profiles with their reasoning, task running, the pinned
+toolchain</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;Provenance::&#39; packages/pond/src --glob &#39;!*test*&#39;                 # the skip in search_text and the parser; nothing filters on read
+rg -n &#39;valid_from|valid_to|as_of&#39; packages/pond/src                     # none: a message timestamp, record time only
+rg -n -i &#39;redact|scrub|mask&#39; packages/pond/src                          # three guards in config.rs on credentials; none on the ingest path
+rg -n &#39;confidence|verified|status&#39; packages/pond/src/sessions.rs         # UpsertStatus only — an ingest outcome, not a claim state
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # citations in docs/spec.md to others; no paper of its own</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/tenequm/pond/commit/e75182a41964754acec493696581806118b2b9f0"><code class="commit-id" title="e75182a41964754acec493696581806118b2b9f0">e75182a4…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 9
+September 2026. Screened before reading: one auto-run surface, two
+manifests inside the seven-day cooldown, two build-time execution paths,
+four unpinned dependency surfaces, and agent instruction files treated
+as data; nothing was installed, built or run, and the read was made from
+a full clone. One mark. The reading covered the Lance schemas, the
+ingest and upsert path, the provenance split and what it excludes, the
+two retrieval arms and their hydration, and the optional filters; the
+SQL surface, the snapshot machinery, the scheduler and the per-harness
+adapters were read as context rather than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

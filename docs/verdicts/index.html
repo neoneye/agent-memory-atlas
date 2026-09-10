@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 405 reports.</strong></p>
+<p><strong>This page covers all 406 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14172,6 +14172,42 @@ interpret.</li>
 no retrieval by meaning at all, not even an <code>ilike</code> — or when
 you need something finished; twenty commits and four months quiet
 against a preview label is an early cut of a considered design.</li>
+</ul>
+<h3 id="pond"><a href="../systems/pond/"><code>pond</code></a></h3>
+<ul>
+<li>Best idea: <strong>store the whole transcript and index only what a
+person said.</strong> Every message part carries a
+<code>provenance</code> of <code>conversational</code> or
+<code>injected</code>, and <code>search_text</code> skips anything that
+is not conversational — so harness scaffolding is preserved on disk,
+where a session restore needs it, and cannot be retrieved as speech. An
+unknown provenance value is a hard <code>bail!</code> rather than a
+default.</li>
+<li>Biggest risk: <strong>a lossless archive with no redaction on the
+ingest path.</strong> <code>config.rs</code> carries three guards that
+keep credentials out of <code>pond config show</code>, so the codebase
+knows how to redact and does not at ingest; every secret anyone pasted
+into an agent session is in the corpus, and in the user's S3 bucket if
+that is where the corpus lives.</li>
+<li>Most reusable component: the ingest split itself —
+<code>search_text</code> computed at write time from the conversational
+parts only — beside the hydration path, where a hit carrying a prewarmed
+row id is fetched with <code>take_rows</code> and one without falls back
+to an <code>IN</code> predicate, with the type's own comment saying
+which path is which.</li>
+<li>Maturity impression: Apache-2.0, 462 commits between 7 May and 9
+September 2026 by seven authors, 78,218 lines of Rust in one crate with
+307 test attributes, Lance storage local or on the user's own S3, an MCP
+server and a SQL surface, Homebrew and Scoop packages; one of seven
+capability marks.</li>
+<li>Study when: you have a long history across several agent tools, you
+want it in storage you own and queryable with SQL as well as searched,
+and you value being able to continue a session in a different client
+than the one that wrote it.</li>
+<li>Do not copy when: the machine touches other people's secrets —
+nothing is stripped on the way in — or when you need a memory rather
+than an archive; nothing here can be marked doubtful, corrected or
+retired.</li>
 </ul>
         </article>
       </div>

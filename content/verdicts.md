@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 405 reports.**
+**This page covers all 406 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3583,3 +3583,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, twenty commits between 15 February and 20 May 2026 by eight authors and nothing since, `v3r1-preview`, 41,006 lines of Python on 3.13+ over PostgreSQL, fifty-one test files running against a real database; two of seven capability marks.
 - Study when: you are building several independent agent runtimes that must cooperate on one project without any of them owning the state, and you want the substrate to record attribution and causality rather than interpret.
 - Do not copy when: you want a memory rather than a ledger — there is no retrieval by meaning at all, not even an `ilike` — or when you need something finished; twenty commits and four months quiet against a preview label is an early cut of a considered design.
+
+### [`pond`](../systems/pond/)
+- Best idea: **store the whole transcript and index only what a person said.** Every message part carries a `provenance` of `conversational` or `injected`, and `search_text` skips anything that is not conversational — so harness scaffolding is preserved on disk, where a session restore needs it, and cannot be retrieved as speech. An unknown provenance value is a hard `bail!` rather than a default.
+- Biggest risk: **a lossless archive with no redaction on the ingest path.** `config.rs` carries three guards that keep credentials out of `pond config show`, so the codebase knows how to redact and does not at ingest; every secret anyone pasted into an agent session is in the corpus, and in the user's S3 bucket if that is where the corpus lives.
+- Most reusable component: the ingest split itself — `search_text` computed at write time from the conversational parts only — beside the hydration path, where a hit carrying a prewarmed row id is fetched with `take_rows` and one without falls back to an `IN` predicate, with the type's own comment saying which path is which.
+- Maturity impression: Apache-2.0, 462 commits between 7 May and 9 September 2026 by seven authors, 78,218 lines of Rust in one crate with 307 test attributes, Lance storage local or on the user's own S3, an MCP server and a SQL surface, Homebrew and Scoop packages; one of seven capability marks.
+- Study when: you have a long history across several agent tools, you want it in storage you own and queryable with SQL as well as searched, and you value being able to continue a session in a different client than the one that wrote it.
+- Do not copy when: the machine touches other people's secrets — nothing is stripped on the way in — or when you need a memory rather than an archive; nothing here can be marked doubtful, corrected or retired.
