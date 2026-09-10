@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 402 reports.**
+**This page covers all 403 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3559,3 +3559,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 306 commits between 11 June 2025 and 5 September 2026 by twenty-three authors, 98,482 lines of Python across three sibling packages of which `lightmem` is 43,466, one Qdrant backend, and a committed test suite of one file and two cases; the ICLR 2026 paper's LoCoMo and LongMemEval harnesses are committed with no result file; no capability marks.
 - Study when: you are reproducing or extending the paper, or your memory problem really is cost — one agent, one user, long conversations, where embedding and re-reading everything is the bill that hurts.
 - Do not copy when: you need a scope key, a status, or any record of what consolidation removed — there is no caller identity anywhere in the package, and one instance is one undifferentiated pool.
+
+### [`deja-vu`](../systems/deja-vu/)
+- Best idea: **the corpus already existed.** Every coding agent on the machine has been writing its sessions to disk for months; deja indexes those rather than recording forward from empty, so the memory is useful on the first index instead of after weeks of accumulation — and secrets are stripped *as the index is built*, so the derived store never holds one.
+- Biggest risk: **no boundary, by design, and the consequence is real.** Crossing projects is the value proposition, so the same index answers from every project on the machine; `Project` is stored and filterable but the default is unscoped, and the redactor's job is secrets rather than confidentiality between projects. Nothing withholds on epistemic grounds either — a session whose transcript says the approach failed is ranked down and annotated, never excluded.
+- Most reusable component: `internal/search/session_scope_test.go` — a narrowing test, a separate named test whose only job is to prove the fixture is not degenerate with the reasoning in its comment, and a third pinning that an unknown session id answers nothing rather than falling back to the whole store.
+- Maturity impression: MIT, 1,742 commits between 14 July and 10 September 2026 by thirty-one authors, 273,068 lines of Go with 4,361 test functions, twenty-one internal packages, hooks for many agent harnesses plus an MCP server and a CLI; the LoCoMo and LongMemEval harnesses are committed with no result file; one of seven capability marks.
+- Study when: you run several coding agents on one machine, have months of transcripts on disk, and keep rediscovering things you already solved — the install is a binary and a hook wiring, with nothing to operate.
+- Do not copy when: you need a project or team boundary, or you need an old wrong conclusion suppressed rather than ranked down — the project has considered the epistemic layer and declined it deliberately, which is different from not having got to it.

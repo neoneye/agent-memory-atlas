@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **402 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **403 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -125,6 +125,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/deepcode/"><span class="az-id">DeepCode</span><span class="az-what">Consolidation with no oracle</span><code class="az-repo">HKUDS/DeepCode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/deepseek-harness/"><span class="az-id">DeepSeek Harness</span><span class="az-what">The search it ships turned off</span><code class="az-repo">deepseek-ai/deepseek-harness</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/deer-flow/"><span class="az-id">DeerFlow</span><span class="az-what">The best-specified memory contract here</span><code class="az-repo">bytedance/deer-flow</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/deja-vu/"><span class="az-id">deja-vu</span><span class="az-what">The memory was already on disk; nobody had indexed it</span><code class="az-repo">vshulcz/deja-vu</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/dexto/"><span class="az-id">Dexto</span><span class="az-what">CRUD, and no retrieval on purpose</span><code class="az-repo">truffle-ai/dexto</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/diffmem/"><span class="az-id">DiffMem</span><span class="az-what">A whitelisted shell for the memory repo</span><code class="az-repo">growth-kinetics/diffmem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/dovsg/"><span class="az-id">DovSG</span><span class="az-what">A scene graph the robot edits after every grasp</span><code class="az-repo">BJHYZJ/DovSG</code><span class="az-caps"></span></a></li>

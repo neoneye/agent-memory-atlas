@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MIT Go binary that treats the
+session transcripts Claude Code, Codex, Cursor and other agents already
+wrote to disk as the corpus rather than recording forward from empty —
+redacting secrets as it indexes, serving recall through hooks at session
+start and before an edit, and telling a reader in prose when a session's
+own text says an approach was backed out rather than promoting that to a
+recorded state.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="deja-vu — Agent Memory Atlas">
+    <meta property="og:description" content="An MIT Go binary that
+treats the session transcripts Claude Code, Codex, Cursor and other
+agents already wrote to disk as the corpus rather than recording forward
+from empty — redacting secrets as it indexes, serving recall through
+hooks at session start and before an edit, and telling a reader in prose
+when a session's own text says an approach was backed out rather than
+promoting that to a recorded state.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="deja-vu — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MIT Go binary that
+treats the session transcripts Claude Code, Codex, Cursor and other
+agents already wrote to disk as the corpus rather than recording forward
+from empty — redacting secrets as it indexes, serving recall through
+hooks at session start and before an edit, and telling a reader in prose
+when a session's own text says an approach was backed out rather than
+promoting that to a recorded state.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>deja-vu — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "deja-vu",
+      "description": "An MIT Go binary that treats the session transcripts Claude Code, Codex, Cursor and other agents already wrote to disk as the corpus rather than recording forward from empty \u2014 redacting secrets as it indexes, serving recall through hooks at session start and before an edit, and telling a reader in prose when a session's own text says an approach was backed out rather than promoting that to a recorded state.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The memory was already on disk; nobody had
+indexed it</p>
+          <h1>deja-vu</h1>
+          <p class="document-deck">An MIT Go binary that treats the
+session transcripts Claude Code, Codex, Cursor and other agents already
+wrote to disk as the corpus rather than recording forward from empty —
+redacting secrets as it indexes, serving recall through hooks at session
+start and before an edit, and telling a reader in prose when a session's
+own text says an approach was backed out rather than promoting that to a
+recorded state.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/vshulcz/deja-vu">
+              <span>Source</span>
+              <strong>vshulcz/deja-vu</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/vshulcz/deja-vu/commit/22d6acccf24a83312ce99bcf1726db5935f06e07" title="22d6acccf24a83312ce99bcf1726db5935f06e07">
+              <span>Analyzed revision</span>
+              <code>22d6accc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vshulcz--deja-vu" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>vshulcz--deja-vu</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Every memory system in this atlas starts empty and records forward.
+deja-vu starts full. Its observation is that the transcripts are already
+there — Claude Code, Codex, Cursor and the rest each write their
+sessions to disk — and that what has been missing is an index over them
+and a way to hand the right one back in whichever agent asks next. The
+README puts it in one line: <em>"Your agent is about to re-debug
+something you fixed in March — in a different agent."</em></p>
+<p>MIT; 1,742 commits between 14 July 2026 and 10 September 2026 from
+thirty-one authors — two months of unusually dense work — 273,068 lines
+of Go, and 4,361 committed test functions. The screen found three
+auto-run surfaces, six manifests inside the seven-day cooldown, one
+build-time execution path, five unpinned dependency surfaces, and agent
+instruction files treated as data; nothing was installed or run.</p>
+<p><strong>The design's best property is that it does not need a write
+path.</strong> The agent's own transcript is the write.
+<code>deja</code> parses it, redacts secrets during indexing so that
+what a later recall hands a model <em>"is safe to send"</em>, derives a
+few fields the parsers never set, and builds its own index beside the
+files. The store is a derived artefact: rebuild it and you get it
+back.</p>
+<p><strong>It carries one mark, and the test that earns it is a model
+for the corpus.</strong>
+<code>internal/search/session_scope_test.go</code> asserts that a
+session-scoped search returns exactly one hit and that it is the right
+one. The <em>next</em> test in the file exists only to prove the fixture
+is not degenerate:</p>
+<blockquote>
+<p>Without the flag both sessions answer, so the test above is measuring
+the flag rather than a fixture that only had one match.</p>
+</blockquote>
+<p>Most projects that guard against a vacuous negative put the control
+in the same assertion. This one made the control its own named test and
+wrote the reasoning above it. A third case pins the fail-closed
+direction — an unknown session id <em>"answers with nothing rather than
+falling back to the whole store."</em></p>
+<p><strong>The epistemic layer is thin on purpose, and the argument is
+written down.</strong> The index derives <code>GaveUp</code> from a
+session's own words. The search applies a score penalty and prints a
+line beside the hit — <em>"mentions backing an approach out — one path
+here was abandoned"</em> — and the comment above it declines to go
+further:</p>
+<blockquote>
+<p>Nobody sets the rejected state by hand, so the sessions that ended in
+a dead end look exactly like the ones that ended in an answer. When the
+transcript itself says something was backed out, say so — as evidence
+from the session, not as a state someone recorded.</p>
+</blockquote>
+<p>That is a principled refusal to promote an inference to a state, and
+it is why <code>trust_state</code> is withheld rather than argued over.
+The one recorded state, <code>Lifecycle</code> on a promoted note,
+modifies rank and wording and never admission.</p>
+<p><strong>No scope, and that is the product.</strong>
+<code>Project</code>, <code>Harness</code> and session id are stored and
+filterable, and with no flag the search is the whole machine. A system
+whose thesis is <em>the one memory your coding agents share</em> cannot
+also partition by project, and this report records the consequence
+rather than scoring it as a defect: a session holding something specific
+to one project can answer a question asked from another.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The corpus is not something the tool creates. It is the pile of JSON
+and JSONL transcripts that a dozen coding agents have been writing to
+your home directory for months, in a dozen different shapes.
+<code>internal/sources</code> holds a parser per harness; each turns a
+file into a <code>Session</code> of <code>Message</code>s.</p>
+<p>Indexing is where the tool's own judgement enters, and it is careful
+about saying so. Three fields are stamped by the index and never by a
+parser: <code>GaveUp</code> — whether the transcript says an approach
+was backed out; <code>Words</code> — how long the session is, because
+<em>"search sees only the messages that matched a query, so it had no
+way to tell a short session that is about the query from a marathon that
+mentions it once"</em>; and <code>Touched</code> — the files it worked
+on most, so a caller holding a hit can ask a cheap question without
+reading the session back. Each carries a comment saying it is false or
+zero for a store indexed before it existed.</p>
+<p>Redaction happens on this path, not on the read path. Secrets are
+stripped as the index is built, which means the derived artefact never
+holds them and every downstream surface inherits the property.</p>
+<p>Retrieval is lexical, scored, and freshness-decayed. Then hooks put
+it in front of the agent without anybody asking: at session start, on
+each prompt, before an edit, and after a failed command. A novelty
+tracker remembers which ids were already injected so the same memory is
+not served twice into one session.</p>
+<p>The one authored object is a note: a person promotes a session, and
+the note carries a lifecycle another machine can sync. Everything else
+is history.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — transcripts already written by many agents are parsed per harness, redacted as the index is built, and stamped with fields the parsers never set; retrieval is lexical and freshness-decayed, narrowed only when a caller asks; a session whose own text reports backing an approach out takes a score penalty and a printed note rather than being excluded; hooks inject recall without anyone asking, and a novelty tracker stops the same id arriving twice</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: transcripts already written by many agents are parsed per harness, redacted as the index is built, and stamped with fields the parsers never set; retrieval is lexical and freshness-decayed, narrowed only when a caller asks; a session whose own text reports backing an approach out takes a score penalty and a printed note rather than being excluded; hooks inject recall without anyone asking, and a novelty tracker stops the same id arriving twice
+flowchart TB
+    T[(&quot;transcripts on disk&lt;br/&gt;Claude Code · Codex · Cursor · others&lt;br/&gt;already written, never by deja&quot;)]
+    P[&quot;per-harness parsers&lt;br/&gt;internal/sources&quot;]
+    RD[&quot;redact: secrets stripped&lt;br/&gt;as the index is built&quot;]
+    IDX[(&quot;index&lt;br/&gt;+ GaveUp, Words, Touched&lt;br/&gt;stamped by the index, not the parser&quot;)]
+    Q[&quot;lexical search&lt;br/&gt;CJK and NFC folding&quot;]
+    NAR{&quot;caller asked for a&lt;br/&gt;harness, project or session?&quot;}
+    ALL[&quot;no flag: the whole store&quot;]
+    ONE[&quot;narrowed; an unknown id&lt;br/&gt;answers nothing, not everything&quot;]
+    SC[&quot;score: freshness decay,&lt;br/&gt;gave-up penalty if the transcript&lt;br/&gt;says an approach was backed out&quot;]
+    NOTE[&quot;printed beside the hit:&lt;br/&gt;one path here was abandoned&quot;]
+    HOOK[&quot;hooks: session start, each prompt,&lt;br/&gt;before an edit, after a failure&quot;]
+    NOV[&quot;novelty tracker:&lt;br/&gt;ids already served are not re-injected&quot;]
+    OUT[&quot;recall reaches the agent&quot;]
+
+    T --&gt; P
+    P --&gt; RD
+    RD --&gt; IDX
+    IDX --&gt; Q
+    Q --&gt; NAR
+    NAR --&gt;|no| ALL
+    NAR --&gt;|yes| ONE
+    ALL --&gt; SC
+    ONE --&gt; SC
+    SC --&gt; NOTE
+    NOTE --&gt; HOOK
+    HOOK --&gt; NOV
+    NOV --&gt; OUT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single Go binary, <code>deja</code>, with twenty-one internal
+packages. The ones that carry the design: <code>sources</code> (a parser
+per harness), <code>index</code> (ingest, the derived fields, the
+digest), <code>search</code> (scoring, blame, context),
+<code>redact</code> (the secret stripper), <code>query</code> (the
+narrowing predicates), <code>peers</code> (machine-to-machine sync),
+<code>policy</code>, <code>mark</code>, <code>embed</code>, and two
+folding packages — <code>cjkfold</code> and <code>nfcfold</code> — that
+exist because the corpus is real user text in real languages.</p>
+<p>There is no database to run and no service to deploy.
+<code>deja install --auto</code> finds the harnesses on the machine and
+wires their hook configuration; the index lives beside the transcripts;
+a Dockerfile and a goreleaser config exist for distribution rather than
+for operation.</p>
+<p>The code is unusually well commented, and the comments are
+load-bearing: they cite the issue number each decision came from
+(<code>#765</code>, <code>#692</code>, <code>#1100</code>,
+<code>#975</code>, <code>#1316</code>, <code>#1321</code>,
+<code>#2113</code>), and several explain a choice by naming the failure
+that produced it. The <code>MarshalJSON</code> on <code>Message</code>
+is a small example — a message the transcript never stamped omits the
+time rather than emitting the zero value, because <em>"the zero time
+marshals as <code>0001-01-01T00:00:00Z</code>, which reads as a date
+rather than as the absence of one: a consumer sorting by it puts the
+message before everything that ever happened."</em></p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Parse.</strong> <code>internal/sources</code> per harness →
+a <code>model.Session</code> with <code>model.Message</code>s.</li>
+<li><strong>Index.</strong> <code>internal/index/ingest.go</code> →
+<code>preRedactSessions</code> strips secrets →
+<code>SessionMeta{...GaveUp: gaveUp(s.Messages), Words: sessionWords(s.Messages), Touched: ..., Asked: askedHashes(...), Hit: frictionHashes(...)}</code>
+(<code>ingest.go:1561</code>) → the index and its digest.</li>
+<li><strong>Narrow.</strong>
+<code>internal/search/search.go:195-210</code> → skip on a harness
+mismatch, then
+<code>if !query.ProjectMatches(s.Project, s.From, o.Project) { continue }</code>,
+then a session-id prefix match against both <code>ID</code> and
+<code>OrigID</code>.</li>
+<li><strong>Score.</strong> the ranking pass →
+<code>if doc.hit.Session.GaveUp &amp;&amp; !decided &amp;&amp; doc.hit.Session.Lifecycle != "accepted" { score *= gaveUpPenalty }</code>
+→ <code>score *= freshnessDecay(doc.hit.Session.Updated, now)</code> →
+sort → <code>liftNotesAboveTheirSource(hits)</code>.</li>
+<li><strong>Describe.</strong> <code>lifecycleSummary</code>
+(<code>search.go:1001-1015</code>) words a recorded state for a reader —
+<em>"tried and rejected"</em>, <em>"replaced by a later decision"</em>,
+<em>"marked stale — may no longer hold"</em> — under a comment saying
+<em>"superseded is our vocabulary, not the reader's."</em></li>
+<li><strong>Inject.</strong> <code>cmd/deja/hook_context.go</code> → a
+cached digest per project → <code>rememberInjectedIDsFor</code> records
+what was served so the novelty tracker can suppress a repeat.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Session</code> is what a transcript became, plus what the
+index derived from it.</p>
+<p><strong>From the transcript.</strong> <code>ID</code>,
+<code>Harness</code>, <code>Project</code>, <code>Path</code>,
+<code>Title</code>, <code>Started</code>, <code>Updated</code>, and the
+<code>Message</code> list. A <code>Message</code> is a role, text and a
+time, with the time omitted from JSON when the transcript never stamped
+one.</p>
+<p><strong>From the index.</strong> <code>GaveUp</code>,
+<code>Words</code>, <code>Touched</code>, <code>AgentTitle</code> — each
+documented as <em>"Parsers do not set it; the index fills it from what
+it read"</em>, and each explicitly false or zero for a store indexed
+before the field existed. That backward-compatibility note appears on
+every derived field, which is the sort of discipline that keeps a
+derived index safe to rebuild incrementally.</p>
+<p><strong>From sync.</strong> <code>OrigID</code> and <code>From</code>
+record where a session came from when it arrived from another machine,
+added because <em>"import renames sessions to
+<code>imported-&lt;hash&gt;</code>, so a promoted note stopped looking
+like one across a machine boundary and the rules written for notes
+stopped applying to it (#975)."</em> <code>Lifecycle</code>,
+<code>LifecycleNote</code> and <code>LifecycleAt</code> carry the state
+of a promoted note.</p>
+<p><strong>What is absent.</strong> No confidence. No validity interval
+— a session has a start and an update time, both record time. No owner
+or tenant key; <code>Project</code> is the nearest thing and it is a
+label, not a boundary. No deletion marker, because deletion is not a
+concept here: the transcripts are the truth and the index is rebuilt
+from them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical search over the index, with CJK and NFC folding so the
+corpus's real text behaves. Narrowing is opt-in: <code>--harness</code>,
+<code>--project</code>, <code>--session</code>, a time bound.
+<code>ProjectMatches</code> returns true when nothing was asked for,
+does a case-insensitive containment match otherwise, and has a guard
+worth quoting because it is exactly the sort of thing that goes wrong
+quietly — a bare want without a separator will not match the machine
+name, because <em>"<code>--project mini</code> would select every
+session from a machine called mini rather than a project of that
+name."</em></p>
+<p>Scoring applies a freshness decay and the give-up penalty. The
+penalty's comment is precise about its own scope: a session that
+<em>"reverted one thing and settled another keeps the boost above"</em>,
+the penalty is skipped only when a person accepted the session
+afterwards — <em>"that is a fresher judgement that overrides the
+transcript"</em> — and rejected, stale and superseded do not rescue it
+because they <em>"agree it was a dead end"</em> or mean <em>"a better
+record exists."</em></p>
+<p><code>liftNotesAboveTheirSource</code> puts a promoted note above the
+session it came from, and a sibling function re-stamps scores so a
+caller that re-sorts reads the same order back.</p>
+<p>Nothing is excluded on epistemic grounds. A session whose transcript
+says the approach failed is ranked down and annotated; a note marked
+rejected is described as <em>"tried and rejected"</em> and returned.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>There is no write path for memory, which is the whole point. The
+agent writes its transcript because it always did; <code>deja</code>
+reads it.</p>
+<p>The one thing the indexing path does that a write path normally would
+is redaction. <code>internal/redact</code> strips secrets —
+environment-variable keys, high-entropy spans, key-value pairs — and it
+runs <em>"as the index is built"</em>, so the derived artefact never
+holds them. The suite around it is built the way this project builds
+suites: <code>TestEnvVarKeyIsRedacted</code> beside
+<code>TestLowercaseKeyNamesAreLeftAlone</code>, and
+<code>TestKVGateNeverHidesAMatch</code> asserting the gate that decides
+whether to scan a line never suppresses a real hit.</p>
+<p>The one authored write is a note: a person promotes a session, and
+the note gets a lifecycle a peer can sync. That is the only place a
+human judgement enters the store, and it is opt-in.</p>
+<p>Because the index is derived, correcting it is re-indexing. That is a
+genuine advantage — no migration, no drift between store and source —
+and a genuine limit: a harness that changes its transcript format breaks
+a parser, and there is no copy of the old shape to fall back on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is the product. <code>deja install --auto</code>
+finds the agents on the machine and wires their hooks, so recall arrives
+at four moments without anyone calling a tool: session start, each
+prompt, before a file is edited, and after a command fails. An MCP
+server and a CLI cover the cases where an agent or a person wants to ask
+directly, and a plugin manifest packages it for harnesses that take
+one.</p>
+<p>The novelty tracker is the piece that makes automatic injection
+tolerable: <code>rememberInjectedIDsFor</code> records which ids were
+served against a project key, so the same memory does not arrive twice
+in one session. Without it, injecting on every prompt would flood the
+window with the same three hits.</p>
+<p><code>internal/peers</code> syncs between machines, which is where
+<code>OrigID</code>, <code>From</code> and the note lifecycle come from
+— a promoted note travels, and the id it had at home travels with it so
+a search by id still resolves.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Negative evaluation — awarded, on the strength of how the
+guard is written.</strong> The narrowing test asserts one hit and the
+right one; the next test asserts both answer without the flag, and says
+in a comment that its purpose is to prove the first test measures the
+flag rather than a one-match fixture; a third asserts an unknown id
+returns nothing rather than the whole store. The redaction suite pairs a
+redacted case with a left-alone case and adds a test that the pre-filter
+never hides a match.</p>
+<p><strong>Trust state — withheld, and the refusal is the project's
+own.</strong> <code>GaveUp</code> is derived, not recorded, and the code
+says why it should not be treated as a state. <code>Lifecycle</code> is
+recorded on a promoted note and is applied to rank and to wording, never
+to admission: a rejected note is returned, labelled <em>"tried and
+rejected."</em> The rubric asks for a state that withholds; nothing here
+withholds, and the project has argued that it should not.</p>
+<p><strong>Scope — withheld, and it is the design.</strong>
+<code>Project</code>, <code>Harness</code> and session id are stored and
+are applied as filters when a caller asks. The default is the whole
+machine, because a memory that spans agents and projects is the value
+proposition. A reader should take the consequence seriously rather than
+as a score: nothing prevents a session containing something specific to
+one project from answering a question asked in another, and the
+redactor's job is secrets, not confidentiality between projects.</p>
+<p><strong>Tombstone — withheld.</strong> Nothing records a rejected
+value; a note's lifecycle is keyed on the note, not on the claim, and
+does not stop anything returning.</p>
+<p><strong>Audit log — withheld.</strong> The novelty tracker records
+which ids were injected — a delivery record, not a mutation record — and
+the index is derived, so there are no mutations to log.</p>
+<p><strong>Bitemporal — withheld.</strong> Start and update times, both
+record time.</p>
+<p><strong>Human review — withheld, narrowly.</strong> Promotion is a
+human act and the lifecycle states are human judgements, which is closer
+than most. What is missing is a queue: nothing presents a set of
+sessions for adjudication, and nothing is withheld pending one.</p>
+<p><strong>One property worth naming that the rubric has no mark
+for.</strong> Redaction on the indexing path is a stronger guarantee
+than redaction on the read path, because the derived store never holds
+the secret at all. A system that redacts at read time has the secret on
+disk in its own index; this one does not.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>4,361 committed test functions across 273,068 lines of Go, and the
+suite's character is consistent: small named tests, each with a comment
+saying what it is for, several of which exist solely to keep another
+test honest.</p>
+<p>The benchmark claim is prominent and specific: <strong>85.3% hit@1 on
+LongMemEval-S</strong> and <strong>69.6% on LoCoMo</strong>, with
+<em>"millisecond lookups over 5 GB of history"</em>, under the line
+<em>"Both harnesses ship in this repo and run on the public datasets in
+minutes."</em> That claim about the harnesses is true:
+<code>scripts/locomo/main.go</code> and
+<code>scripts/longmemeval/main.go</code> are committed, and the
+LongMemEval harness has five test files of its own —
+<code>carry_test.go</code>, <code>gates_test.go</code>,
+<code>signals_test.go</code>, <code>spread_test.go</code>,
+<code>wherelost_test.go</code> — which is a harness somebody maintains
+rather than ran once.</p>
+<p><strong>No result file for either benchmark is committed.</strong>
+The numbers in the README are the project's own reported figures, and
+what is in the tree is the apparatus to reproduce them plus a
+documentation page inviting the reader to. That is the right way round,
+and the claim this report makes is the scoped one: no result is
+committed to this repository, not that the evaluation was not
+performed.</p>
+<p><code>internal/bench</code> holds the retrieval-side benchmarking
+helpers — block, corpus, context and prompt — with their own tests.</p>
+<p>No paper. A search of the README and docs for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>Citation</code>, <code>CITATION.cff</code> and <code>doi</code>
+returns nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Look for the corpus you already have.</strong> This
+project's central idea is not an algorithm: every coding agent already
+writes its sessions to disk, and nobody was reading them. A memory that
+starts full beats a better-designed one that starts empty.</li>
+<li><strong>Redact on the way in, not on the way out.</strong> Stripping
+secrets while the index is built means the derived store never holds
+them, and every downstream surface inherits the property without having
+to remember.</li>
+<li><strong>Write the vacuity guard as its own test, with the reason
+above it.</strong> <code>TestSearchWithoutSessionSeesBoth</code> costs
+six lines and makes the test beside it mean something. Most suites bury
+this in an extra assertion, where it gets deleted in a refactor.</li>
+<li><strong>Make narrowing fail closed.</strong> An unknown session id
+returning nothing rather than the whole store is the safe direction, and
+it is a one-line decision that is easy to get backwards.</li>
+<li><strong>Say what a state means in the reader's words.</strong>
+<em>"tried and rejected"</em>, <em>"replaced by a later decision"</em>,
+<em>"marked stale — may no longer hold"</em> — under a comment noting
+that <code>superseded</code> is the system's vocabulary and not the
+reader's.</li>
+<li><strong>Refuse to promote an inference to a state.</strong> Deriving
+<code>GaveUp</code> from a transcript and then declining to record it as
+a rejection, because nobody actually decided it, is a distinction most
+systems collapse.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Assuming the absence of scope is free.</strong> Crossing the
+project boundary is this design's value and also its exposure: the same
+index answers from every project on the machine, and only secrets are
+stripped.</li>
+<li><strong>Depending on file formats you do not own.</strong> A parser
+per harness is the cost of starting full, and every harness that changes
+its transcript shape is a breakage with no stored copy of the old form
+to fall back on.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>deja-vu suits one person on one machine running several coding
+agents, who has months of history already on disk and keeps
+rediscovering things they solved. The install is a binary and a hook
+wiring; there is nothing to operate; and the value arrives on the first
+index rather than after weeks of accumulation. It is not a team memory
+and not a multi-project memory — there is no boundary to enforce one —
+and it is not the choice where an old wrong conclusion must be
+suppressed rather than ranked down. A reader wanting the epistemic layer
+should note that the project has thought about it and declined it
+deliberately, which is a different thing from not having got to it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a project boundary be available for people who want one? The
+key is stored and the filter exists; only the default is unscoped.</li>
+<li>Does <code>Lifecycle</code> ever need to withhold? A note marked
+<code>rejected</code> is returned with a label; the same argument that
+keeps <code>GaveUp</code> out of admission may or may not extend to a
+state a person set deliberately.</li>
+<li>What happens to the index when a harness changes its transcript
+format mid-history — is a partial parse recorded, or does the session
+drop out?</li>
+<li>How is the novelty tracker bounded? It records served ids per
+project key, and nothing in the reading showed what expires them.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/model/model.go</code></td>
+<td>—</td>
+<td><code>Message</code> with its zero-time marshalling (10-36),
+<code>Session</code> with the derived and synced fields (38-90)</td>
+</tr>
+<tr>
+<td><code>internal/sources/</code></td>
+<td>—</td>
+<td>A parser per supported harness</td>
+</tr>
+<tr>
+<td><code>internal/index/</code></td>
+<td>—</td>
+<td><code>ingest.go</code> with <code>SessionMeta</code> assembly (1561)
+and the pre-redaction pass; <code>index.go</code> with the derived-field
+docs (344-348); <code>sync.go</code> with the lifecycle vocabulary
+(407)</td>
+</tr>
+<tr>
+<td><code>internal/search/search.go</code></td>
+<td>—</td>
+<td>The narrowing loop (195-210), the gave-up penalty and freshness
+decay (640-658), <code>lifecycleSummary</code> (1001-1015), the printed
+give-up note (1300-1313)</td>
+</tr>
+<tr>
+<td><code>internal/query/project.go</code></td>
+<td>—</td>
+<td><code>ProjectMatches</code> (18-34) and <code>DisplayProject</code>,
+kept together <em>"so the filter and the screen cannot drift"</em></td>
+</tr>
+<tr>
+<td><code>internal/redact/</code></td>
+<td>—</td>
+<td>The secret stripper and its paired tests:
+<code>env_key_test.go</code>, <code>kvgate_test.go</code>,
+<code>entropy_scan_test.go</code></td>
+</tr>
+<tr>
+<td><code>internal/peers/</code></td>
+<td>—</td>
+<td>Machine-to-machine sync; the source of <code>OrigID</code>,
+<code>From</code> and note lifecycles</td>
+</tr>
+<tr>
+<td><code>internal/cjkfold/</code>, <code>internal/nfcfold/</code></td>
+<td>—</td>
+<td>Folding for real multilingual text</td>
+</tr>
+<tr>
+<td><code>cmd/deja/hook_context.go</code>, <code>hook_prompt.go</code>,
+<code>hook_tool.go</code>, <code>mcp.go</code></td>
+<td>—</td>
+<td>The four injection points, the digest cache and the novelty
+tracker</td>
+</tr>
+<tr>
+<td><code>scripts/locomo/</code>, <code>scripts/longmemeval/</code></td>
+<td>—</td>
+<td>The two benchmark harnesses; the LongMemEval one has five test files
+of its own</td>
+</tr>
+<tr>
+<td><code>internal/search/session_scope_test.go</code></td>
+<td>—</td>
+<td>The narrowing case, its named vacuity guard, and the fail-closed
+unknown-id case</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;Lifecycle&#39; internal/search internal/query cmd/deja/mcp.go | rg -n &#39;continue|skip|exclude&#39;  # none: lifecycle ranks and words, never withholds
+rg -n &#39;gaveUpPenalty&#39; internal/search                                   # a score multiplier, not an exclusion
+rg -n &#39;valid_from|valid_to|as_of|ValidFrom|ValidTo&#39; internal            # none: start and update times, both record time
+find . -name &#39;*.json&#39; -path &#39;*bench*&#39;                                   # none: both harnesses committed, no result file
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/vshulcz/deja-vu/commit/22d6acccf24a83312ce99bcf1726db5935f06e07"><code class="commit-id" title="22d6acccf24a83312ce99bcf1726db5935f06e07">22d6accc…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 10
+September 2026. Screened before reading: three auto-run surfaces, six
+manifests inside the seven-day cooldown, one build-time execution path,
+five unpinned dependency surfaces, and <code>GEMINI.md</code> and the
+other agent instruction files treated as data; nothing was installed or
+run, and the read was made from a full clone. One mark. The reading
+covered the session model and its derived fields, the indexing and
+redaction path, the narrowing and scoring in search, the lifecycle
+handling, and the hook injection surface; the peer sync, the blame
+surface and the per-harness parsers were read as context rather than as
+subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
