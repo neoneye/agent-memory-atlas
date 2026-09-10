@@ -648,12 +648,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need memory within a session, semantic retrieval, or a shared service — none of the three is here; the tenant-scoped flag refuses caller-chosen scope on a shared home and adds no isolation.
 
 ### [`memory-project`](../systems/memory-project/)
-- Best idea: forgetting has two speeds and only the slow one destroys — `prune()` archives to a cold tier that a specific enough cue can still reach, `purge()` is a separate deliberate call, and the source says plainly which is which.
-- Biggest risk: `purge()` is documented for accidentally-jotted secrets and implemented as a Chroma `col.delete`, so the embedding stays in the index file; and with no tombstone, re-jotting a purged claim re-admits it at full stability.
-- Most reusable component: `prune()` and `purge()` together — about forty lines that remove the false choice between growing forever and destroying on "forget".
-- Maturity impression: 3,113 lines, 26 commits, AGPL-3.0, 16 regression assertions on the decay maths and nothing testing the hooks. Small and legible, with the tuning constants named and grouped rather than scattered.
-- Study when: you want a forgetting curve with a reversible archive tier, or an injection boundary that distinguishes assert from hedge from silence.
-- Do not copy when: anything needs a scope boundary — topic is a ranking boost and never a filter, by design — or when a memory has to be markable as wrong.
+- Best idea: forgetting has two speeds and only the slow one destroys — `prune()` archives to a cold tier that a specific enough cue can still reach, `purge()` is a separate deliberate call, and the two deletion modes want opposite things from the embedding: a correction tombstone keeps it so the same wrong claim is recognised coming back, while the accidentally-jotted-secret case needs it gone. Most stores here have one delete verb and inherit whichever property their engine happens to give them.
+- Biggest risk: the tombstone check runs on `jot()` at a fixed 0.82 similarity, and `purge()` rebuilds the whole collection on every call — both accepted in the docstrings as the price of operations documented as rare, with the corpus size at which that stops being true named rather than left to be discovered.
+- Most reusable component: `purge()`'s docstring as much as its body — it explains why `col.delete()` will not erase an hnswlib-backed embedding, then why the collection rebuild that replaces it is still not sufficient, because `delete_collection()` orphans the old segment directory on disk fully intact; the audit it reports found about 137 such copies across a corpus of 140 purges.
+- Maturity impression: 3,113 lines, AGPL-3.0, 95 regression checks against a live store covering decay, the archive and revive round trip, the tombstone refusal and orphan-sweep behaviour, with the tuning constants named and grouped; four of seven capability marks.
+- Study when: you want a forgetting curve with a reversible archive tier, an injection boundary that distinguishes assert from hedge from silence, or a worked example of not trusting a vector store's delete.
+- Do not copy when: anything needs a scope boundary — topic is a ranking boost and never a filter, by design, because cross-project recall is the goal.
 
 ### [`hippo-memory`](../systems/hippo-memory/)
 - Best idea: the scope boundary is enforced in the query on the read path and *deliberately suspended* for consolidation, with the suspension fenced at the transport layer instead — `/v1/sleep` is loopback-only and admin-gated, and the 403 names the reason and the version that introduced it.

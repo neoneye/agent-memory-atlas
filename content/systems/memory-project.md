@@ -7,10 +7,15 @@ page_kind: system
 source_name: "acdesigntech/memory-project"
 source_url: https://github.com/acdesigntech/memory-project
 archive_name: "acdesigntech--memory-project"
-revision: 992dc090b347f31976316cfac885b097a26bb298
-revision_url: https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298
-analyzed_at: 2026-08-03
-capabilities: "audit_log, human_review"
+revision: 83b2ac97c19b6dc650e9d48e20c47e68df50f998
+revision_url: https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998
+analyzed_at: 2026-09-10
+capabilities: "tombstone, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "a rejected claim keeps its embedding on purpose, and every later write is checked against the nearest one before it is stored | memory_store.py:96, :341-344, :373-398, :400-460, :856-857 | `purge(doc_id, tombstone=True)` calls `reject_claim(text, reason, topic_hint, source_doc_id)` with the purged text before it is gone, writing a row at `capture_tier: \"tombstone\"` that carries the claim's embedding. `jot()` computes its embedding once, calls `_nearest_tombstone(embedding)` before touching the collection, and returns `None` when the nearest tombstone clears `TOMBSTONE_MATCH_THRESHOLD = 0.82`, logging `blocked` with the similarity. The key is the embedding, so a restatement inside that radius is caught rather than only an identical sentence. Tombstones are excluded from `recall`, `recall_associative` and `recall_cold` — the docstring calls one *metadata about what NOT to write, never itself a retrievable memory* — and carry no decay curve. The design keeps this opt-in on purpose: a tombstone preserves the rejected embedding, which is the opposite of what plain `purge()` guarantees for the accidentally-jotted-secret case | regression_test.py:296-335 pins the refusal, an unrelated write still succeeding, the absence from recall, and that a plain purge does not block a retry"
+  audit_log: "an append-only plain-text activity log of every mutation, with a query tool over it | memory_store.py `_log_activity`, query_activity.py | Each store operation appends a line naming the operation, the document id, the topic and the title — including `blocked` when a tombstone refuses a write, which means the log records the writes that did not happen as well as the ones that did. `query_activity.py` reads it back rather than leaving it to `grep`. It is a mutation record in the system's own store, which is what separates it from a retrieval log | regression_test.py"
+  human_review: "consolidation drafts a rule and a person approves it before it takes effect | memory_store.py, the feedback-consolidation path | Repeated feedback is consolidated into a proposed rule that a human confirms rather than one the system installs, and `purge` — the only true deletion — is documented as a deliberate operator act rather than routine cleanup, with `prune()` carrying the routine, reversible half | regression_test.py"
+  negative_eval: "a committed case asserting an archived memory is absent from both ordinary retrievers and present in the cold one, on the same document | regression_test.py:240-262, :296-335 | The prune cycle ages a document past the deletion floor, asserts `prune()` archived it, then asserts `archived doc invisible to recall()` and `archived doc invisible to recall_associative() (both tiers)` — and immediately asserts `archived doc findable via recall_cold()` on the same id. The positive control is the same document in a different retriever, so neither half can pass on a retriever that returns nothing. The tombstone case adds a second: a tombstoned claim's re-write is refused, unrelated content still writes, and no `tombstone/` id surfaces in a `recall()` that returns the unrelated fact | 95 checks in regression_test.py"
 stack_storage: "chroma"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -19,13 +24,13 @@ matrix:
   storage: "One ChromaDB collection plus a plain-text activity log; embeddings from a local all-MiniLM-L6-v2"
   retrieval: "Cosine similarity weighted by a forgetting-curve strength, topic as a 1.5x boost, plus an associative second hop"
   write: "`jot()` for one-line fragments and `ingest()` for session summaries; background transcript extraction at session end"
-  update_delete: "`prune()` archives below a strength floor and is reversible via `recall_cold`/`revive_from_cold`; `purge()` is the only true delete and no tombstone survives it"
+  update_delete: "`prune()` archives below a strength floor and is reversible via `recall_cold`/`revive_from_cold`; `purge()` is the only true delete and rebuilds the collection so the embedding does not survive. `purge(doc_id, tombstone=True)` additionally records the rejected claim, and `jot()` refuses a later write within 0.82 similarity of one"
   scoping: "`topic` derived from the working directory, applied as a ranking boost and never as a filter — cross-project recall is the goal"
   integration: "Claude Code hooks — SessionStart backstop, prompt-time recall, SessionEnd capture"
   background: "Session-end transcript extraction in a subprocess; `prune()` and feedback consolidation are on-demand, not scheduled"
   trust: "No status field; strength and stability stand in for confidence, and a confirmed activation reinforces harder than an ordinary hit"
   strengths: "Two-speed forgetting where routine cleanup is reversible and deletion is a separate deliberate act; consolidation drafts rules a human must approve"
-  risks: "`purge()` targets the sensitive-content case and leaves the embedding in Chroma's index file; no tombstone, so re-jotting a purged claim re-admits it"
+  risks: "The tombstone check runs on `jot()` and the rebuild is O(corpus) on every purge, which the docstring accepts as the price of a rare operation; scoping is a ranking boost and never a filter, because cross-project recall is the goal"
 ---
 
 ## 1. Executive Summary
@@ -243,33 +248,48 @@ of this corpus does not.
 
 ## 9. Reliability, Safety, and Trust
 
-**`purge()` is the finding.** It is documented for the one case where erasure has
-to be real — "accidentally jotted sensitive content" — and it implements that as
-`col.delete(ids=[doc_id])` (`memory_store.py:592`).
+**`purge()` does not trust its storage engine, and the docstring is the reason
+to read it.** The function is documented for the one case where erasure has to be
+real — "accidentally jotted sensitive content" — and it does a full rebuild:
+read every remaining row, `delete_collection`, `create_collection`, re-add. The
+comment explains why `col.delete(ids=[doc_id])` will not do, in the engine's own
+terms — Chroma's local index is hnswlib-backed and soft-delete only, so *"a
+deleted vector's slot isn't necessarily zeroed or compacted"* and the embedding
+can sit in `.chromadb/<uuid>/data_level0.bin` until a later insert happens to
+take the slot. This is the mechanism set out under
+[the layer below delete](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector),
+answered rather than inherited.
 
-That call does not erase the embedding. Chroma's hnswlib fork marks the element
-deleted with one bit in the level-0 link-list header, and the function comment
-says what that means: *"Marks an element with the given label deleted, does NOT
-really change the current graph."* `saveIndex` then writes the level-0 memory for
-every element, so **the purged memory's embedding is persisted to the index file
-verbatim**, and `unmarkDelete` can restore it. Only a later insert reusing the
-slot overwrites the vector. The mechanism is set out under
-[the layer below delete](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector);
-this is the first report in the atlas where a system's *stated* sensitive-content
-path lands on it.
+**And the rebuild alone is not enough, which the project found by measuring.**
+`delete_collection()` drops the old segment from `chroma.sqlite3`'s own
+`segments` table, and leaves that segment's UUID-named directory on disk — *"just
+orphans it, still fully intact, still fully readable outside the Chroma API."*
+The docstring reports the audit: every purge before the fix left exactly one such
+directory, and *"a real corpus of ~140 purges had accumulated ~137 of them, every
+one still holding a complete, undeleted copy of a 'purged' collection's full
+index."* `_gc_orphaned_segments()` is named as the actual fix — *"it's what makes
+the old data genuinely gone, not the rebuild by itself."* The cost is stated with
+it: an O(corpus) rebuild on every call, accepted because purge is documented as
+rare and deliberate rather than routine, with the size at which that stops being
+true named. So is the trap for callers — the module-level collection handle is
+replaced, and any handle taken before the call raises afterwards, *"confirmed
+empirically: a stale handle fails loudly, not silently."*
 
-The practical consequence is bounded and worth stating precisely: the document
-text is gone from the store and a query will not return the memory. The embedding
-— a lossy but non-trivial representation of the purged content — remains on disk
-in `.chromadb/` until an insert happens to take the slot. For a single-developer
-local store that is a smaller problem than it would be on a shared host, and it
-is still not what "should never have been recorded" implies.
+**Correction is encoded, and it is opt-in on purpose.** `purge(doc_id,
+tombstone=True)` records the rejected claim's text and embedding before the row
+goes, and `jot()` refuses any later write within 0.82 similarity of a tombstone,
+logging it as `blocked`. The two deletion modes are kept apart deliberately,
+because they want opposite things from the embedding: a correction tombstone
+*"keeps the rejected claim's embedding around on purpose, because the whole point
+is recognizing when the same wrong claim comes back"*, while the
+accidentally-jotted-secret case needs the embedding gone. Most systems in this
+atlas have one delete verb and inherit whichever of those two properties their
+engine happens to give them.
 
-**Correction is absent.** `tombstone`, `rejected`, `supersede` and `retract`
-appear nowhere in the repository. Purging a wrong claim removes the row; the next
-`jot()` of the same sentence creates a new one at full curated stability. Since
-session-end extraction re-reads transcripts automatically, a purged claim still
-present in a retained transcript has a live path back in.
+The failure it closes is the one automatic capture creates: session-end
+extraction re-reads transcripts, so a purged claim still sitting in a retained
+transcript had a live path back in — and would have returned *"at full stability
+like nothing happened."*
 
 **The mutation log earns its mark, narrowly.** `_log_activity`
 (`memory_store.py:202`) appends a line for `ingest`, `jot`, `confirm`, `archive`,
@@ -291,16 +311,25 @@ to the one file where getting it wrong is worst.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`regression_test.py` carries 16 assertions covering the decay and reinforcement
-maths and the archive/revive round trip. It is a regression guard on the numeric
-core, not a suite: there is no test of the hooks, of capture resumption, or of
-the feedback loop. I did not run it.
+`regression_test.py` carries 95 checks against a live store — the decay and
+reinforcement maths, the archive and revive round trip, the tombstone refusal,
+topic exclusion, orphan-sweep behaviour and capture idempotence. I did not run
+it.
 
-**No committed case asserts that anything must *not* be retrieved**, which is why
-the negative-eval mark is withheld. That matters more here than in most reports,
-because archival-not-deletion is the headline claim and the property that would
-prove it — an archived memory unreachable from ordinary `recall()` but reachable
-from `recall_cold()` — is exactly the shape a negative assertion expresses.
+**Two committed cases assert that something must not be retrieved, and both
+carry their own positive control.** The prune cycle ages a document past the
+deletion floor, asserts `prune()` archived it, then asserts it is *invisible to
+`recall()`* and *invisible to `recall_associative()` (both tiers)* — and asserts
+in the next line that the same id is *findable via `recall_cold()`*. Absence in
+one retriever and presence in another, on one document, is a shape neither half
+can fake: a retriever returning nothing fails the cold check. The tombstone case
+does the same work on the write path — the refused re-write returns `None`, an
+unrelated write in the same test still succeeds, and no `tombstone/` id appears
+in a `recall()` that returns that unrelated fact.
+
+The suite's most quietly useful check is the inverse one: *plain `purge()`
+(tombstone=False) does not block a later identical jot()*. Asserting that a
+feature stays off when it was not asked for is how an opt-in stays opt-in.
 
 `classify.py` is the closest thing to an eval: it fits a vectorizer over the
 corpus and runs `leave_one_out_eval` on topic classification. That measures the
@@ -392,5 +421,7 @@ feature.
 - `classify.py` — leave-one-out evaluation of topic classification
 
 ## History
+
+**2026-09-10** — [`83b2ac97c19b6dc650e9d48e20c47e68df50f998`](https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998) — read again, 18 commits past the previous pin. Two marks are added and they arrive for opposite reasons. **`tombstone` is genuinely new**: `reject_claim()` and the `TOMBSTONE_MATCH_THRESHOLD` check inside `jot()` were committed on 4 August under the message *"Add correction-encoding tombstones so purged facts can't silently recur"*, which names the failure it closes — an autonomous re-extraction pulling a corrected claim back out of a retained transcript. **`negative_eval` is a first-reading error**: the report said `regression_test.py` carried sixteen assertions and that no committed case asserted anything must not be retrieved, and at the previous pin the file already held seventy-five `check()` calls including *archived doc invisible to `recall()`*, *invisible to `recall_associative()` (both tiers)* and *findable via `recall_cold()`* on the same document — the exact paired shape the report described as the one that would prove the headline claim. The count and the claim were both wrong when written. The central `purge()` finding was fixed upstream and the fix went past it: the rebuild the project added is documented as necessary but not sufficient, because `delete_collection()` leaves the old segment's directory on disk *"still fully intact, still fully readable outside the Chroma API"* — measured at about 137 orphaned copies across a real corpus of 140 purges — and `_gc_orphaned_segments()` is named as what actually makes the data gone. Two commit messages in this range name the atlas review as their source. `audit_log` and `human_review` hold, the first strengthened by a `query_activity.py` that makes the log queryable and by `blocked` entries recording the writes a tombstone refused. Checks went from 75 to 95. Screened before reading: one auto-run surface in `hooks/`, no manifest inside the seven-day cooldown, no build-time execution path and no unpinned dependency surface; nothing was installed or run.
 
 **2026-08-03** — [`992dc090b347f31976316cfac885b097a26bb298`](https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298) — first reading.

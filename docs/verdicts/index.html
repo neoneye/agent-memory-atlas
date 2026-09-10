@@ -1736,25 +1736,33 @@ href="../systems/memory-project/"><code>memory-project</code></a></h3>
 <li>Best idea: forgetting has two speeds and only the slow one destroys
 — <code>prune()</code> archives to a cold tier that a specific enough
 cue can still reach, <code>purge()</code> is a separate deliberate call,
-and the source says plainly which is which.</li>
-<li>Biggest risk: <code>purge()</code> is documented for
-accidentally-jotted secrets and implemented as a Chroma
-<code>col.delete</code>, so the embedding stays in the index file; and
-with no tombstone, re-jotting a purged claim re-admits it at full
-stability.</li>
-<li>Most reusable component: <code>prune()</code> and
-<code>purge()</code> together — about forty lines that remove the false
-choice between growing forever and destroying on "forget".</li>
-<li>Maturity impression: 3,113 lines, 26 commits, AGPL-3.0, 16
-regression assertions on the decay maths and nothing testing the hooks.
-Small and legible, with the tuning constants named and grouped rather
-than scattered.</li>
+and the two deletion modes want opposite things from the embedding: a
+correction tombstone keeps it so the same wrong claim is recognised
+coming back, while the accidentally-jotted-secret case needs it gone.
+Most stores here have one delete verb and inherit whichever property
+their engine happens to give them.</li>
+<li>Biggest risk: the tombstone check runs on <code>jot()</code> at a
+fixed 0.82 similarity, and <code>purge()</code> rebuilds the whole
+collection on every call — both accepted in the docstrings as the price
+of operations documented as rare, with the corpus size at which that
+stops being true named rather than left to be discovered.</li>
+<li>Most reusable component: <code>purge()</code>'s docstring as much as
+its body — it explains why <code>col.delete()</code> will not erase an
+hnswlib-backed embedding, then why the collection rebuild that replaces
+it is still not sufficient, because <code>delete_collection()</code>
+orphans the old segment directory on disk fully intact; the audit it
+reports found about 137 such copies across a corpus of 140 purges.</li>
+<li>Maturity impression: 3,113 lines, AGPL-3.0, 95 regression checks
+against a live store covering decay, the archive and revive round trip,
+the tombstone refusal and orphan-sweep behaviour, with the tuning
+constants named and grouped; four of seven capability marks.</li>
 <li>Study when: you want a forgetting curve with a reversible archive
-tier, or an injection boundary that distinguishes assert from hedge from
-silence.</li>
+tier, an injection boundary that distinguishes assert from hedge from
+silence, or a worked example of not trusting a vector store's
+delete.</li>
 <li>Do not copy when: anything needs a scope boundary — topic is a
-ranking boost and never a filter, by design — or when a memory has to be
-markable as wrong.</li>
+ranking boost and never a filter, by design, because cross-project
+recall is the goal.</li>
 </ul>
 <h3 id="hippo-memory"><a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a></h3>

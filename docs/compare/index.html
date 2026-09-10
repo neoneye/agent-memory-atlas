@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 34
+<li><strong>Correction is the phase that goes unbuilt.</strong> 35
 systems of 412 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 216 of 412 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 159 of
+<li><strong>Negative evidence is almost never tested.</strong> 160 of
 412 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,9 +324,9 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-thirty-four tombstones, one hundred and fifty-nine negative-eval suites
-— are counts <em>over inspectable code</em>, and a closed system could
-hold any of these mechanisms without this method ever knowing. And a
+thirty-five tombstones, one hundred and sixty negative-eval suites — are
+counts <em>over inspectable code</em>, and a closed system could hold
+any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
 presence: finding a tombstone proves someone built one, while not
 finding one proves only that nobody built one <em>in public</em>.</p>
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Thirty-four of four hundred and
+everything can overwrite or supersede. Thirty-five of four hundred and
 twelve systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -13931,8 +13931,11 @@ for session summaries; background transcript extraction at session
 end</td>
 <td><code>prune()</code> archives below a strength floor and is
 reversible via <code>recall_cold</code>/<code>revive_from_cold</code>;
-<code>purge()</code> is the only true delete and no tombstone survives
-it</td>
+<code>purge()</code> is the only true delete and rebuilds the collection
+so the embedding does not survive.
+<code>purge(doc_id, tombstone=True)</code> additionally records the
+rejected claim, and <code>jot()</code> refuses a later write within 0.82
+similarity of one</td>
 <td><code>topic</code> derived from the working directory, applied as a
 ranking boost and never as a filter — cross-project recall is the
 goal</td>
@@ -13946,9 +13949,10 @@ a confirmed activation reinforces harder than an ordinary hit</td>
 <td>Two-speed forgetting where routine cleanup is reversible and
 deletion is a separate deliberate act; consolidation drafts rules a
 human must approve</td>
-<td><code>purge()</code> targets the sensitive-content case and leaves
-the embedding in Chroma's index file; no tombstone, so re-jotting a
-purged claim re-admits it</td>
+<td>The tombstone check runs on <code>jot()</code> and the rebuild is
+O(corpus) on every purge, which the docstring accepts as the price of a
+rare operation; scoping is a ranking boost and never a filter, because
+cross-project recall is the goal</td>
 </tr>
 <tr>
 <td><code>memory-ts</code></td>
@@ -21163,7 +21167,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>34 of 412:</em> <a
+<p><em>35 of 412:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -21175,6 +21179,7 @@ href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
+href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/mimir/"><code>mimir</code></a>, <a
 href="../systems/mnemosyne/"><code>mnemosyne</code></a>, <a
@@ -21863,7 +21868,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>159 of 412:</em> <a
+<p><em>160 of 412:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
@@ -21941,6 +21946,7 @@ href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memorax-code/"><code>memorax-code</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
+href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
 href="../systems/memspec/"><code>memspec</code></a>, <a
@@ -22043,11 +22049,11 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and fifty-nine repositories of four hundred and twelve assert
-that particular material must <em>not</em> be retrieved — the assertion
-every scope, deletion and correction claim in this document ultimately
-rests on. Read together rather than one at a time, they split cleanly in
-two, and the split says more than the count.</p>
+hundred and sixty repositories of four hundred and twelve assert that
+particular material must <em>not</em> be retrieved — the assertion every
+scope, deletion and correction claim in this document ultimately rests
+on. Read together rather than one at a time, they split cleanly in two,
+and the split says more than the count.</p>
 <p><strong>Five assert a boundary:</strong> that a principal cannot
 retrieve another principal's material. <a
 href="../systems/mirix/">MIRIX</a>'s <code>test_filter_tags_db.py</code>
@@ -26702,7 +26708,7 @@ href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1
 <li><a
 href="https://github.com/acdesigntech/memory-project">acdesigntech/memory-project</a>
 at <a
-href="https://github.com/acdesigntech/memory-project/commit/992dc090b347f31976316cfac885b097a26bb298"><code class="commit-id" title="992dc090b347f31976316cfac885b097a26bb298">992dc090…</code></a></li>
+href="https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998"><code class="commit-id" title="83b2ac97c19b6dc650e9d48e20c47e68df50f998">83b2ac97…</code></a></li>
 <li><a
 href="https://github.com/akitaonrails/ai-memory">akitaonrails/ai-memory</a>
 at <a
