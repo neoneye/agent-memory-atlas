@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 409 reports.</strong></p>
+<p><strong>This page covers all 410 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14335,6 +14335,52 @@ author ran.</li>
 claim in different words to be caught — the duplicate refusal keys on an
 exact title within a type and records nothing about the write it turned
 away.</li>
+</ul>
+<h3 id="somnigraph"><a
+href="../systems/somnigraph/"><code>somnigraph</code></a></h3>
+<ul>
+<li>Best idea: <strong>write the study into the constant, and publish
+the regression.</strong> Every tuning parameter carries the study that
+set it, its previous value and the measured delta —
+<code>K_FTS = 8.002 # wm38. Was 6.593 (wm37). 12D tight, +79bp blended.</code>
+— and deprecated ones say so instead of lingering. In the same spirit,
+the architecture page records that from 7 April to 1 July 2026 the
+learned reranker silently was not loaded, so retrieval ran on the
+hand-tuned formula <em>"through the entire V5 documentation arc, which
+describes offline eval numbers for a model that was not the one serving
+live queries."</em> The fix was a loud warning at load time; the
+disclosure is worth more.</li>
+<li>Biggest risk: <strong>the benchmarks are extensive and there is no
+test suite.</strong> Eleven <code>assert</code> statements in the whole
+tree, all inside a benchmark harness checking feature-matrix shape and
+rerun determinism. Nothing pins the status transitions, the dedup branch
+or the supersede cleanup — and the supersede cleanup is exactly what a
+2026-07-01 audit found broken, leaving deleted rows in the search tables
+as candidates the reranker scored and discarded. Beside that, the
+licence: Apache-2.0 under a Commons Clause, which forbids selling,
+hosting or supporting it.</li>
+<li>Most reusable component: the missing-value policy in
+<code>src/memory/reranker.py</code> and
+<code>scripts/train_reranker.py</code> — any feature whose missing value
+would masquerade as a real measurement is NaN-encoded so LightGBM learns
+an explicit missing branch, while a feature whose zero means something
+(no overlap, no PMI, a real count of zero) keeps its zero. A default
+indistinguishable from data is a bug a model will happily learn.</li>
+<li>Maturity impression: Apache-2.0 with a Commons Clause, 191 commits
+between 6 March and 27 July 2026 from one author, 5,382 lines of Python
+across twenty modules against 3,869 lines of docs and 188 per-system
+research analyses; RRF over FTS5, sqlite-vec and a theme channel with
+UCB feedback, Hebbian co-retrieval, PageRank expansion and a 31-feature
+LightGBM reranker; a LoCoMo run history from bare fusion through five
+levels with an explicit turn-level versus session-level comparability
+note; three of seven capability marks.</li>
+<li>Study when: you are tuning a hybrid retriever and want to see six
+months of parameter decisions with their evidence attached — and read
+<code>docs/architecture.md</code> and <code>docs/benchmarks.md</code>
+before the code, because the write-ups are the artifact.</li>
+<li>Do not copy when: you need more than one user or one project — there
+is no scope key on a record and no read filters on one — or when you
+need the code under a licence you can build a business on.</li>
 </ul>
         </article>
       </div>

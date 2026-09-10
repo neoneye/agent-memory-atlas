@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **409 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **410 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -475,6 +475,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/siyuan/"><span class="az-id">SiYuan</span><span class="az-what">An agent inside the notebook, with a snapshot before it writes</span><code class="az-repo">siyuan-note/siyuan</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/skales/"><span class="az-id">Skales</span><span class="az-what">Ask it to forget</span><code class="az-repo">skalesapp/skales</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/smythos-sre/"><span class="az-id">SmythOS SRE</span><span class="az-what">A conversation handle in a request header</span><code class="az-repo">SmythOS/sre</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/somnigraph/"><span class="az-id">Somnigraph</span><span class="az-what">The reranker was off for three months, and the docs say so</span><code class="az-repo">AlexisOlson/somnigraph</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/sonder-runtime/"><span class="az-id">Sonder Runtime</span><span class="az-what">A quarantine that checks the base rate before it blames</span><code class="az-repo">Krilliac/Sonder-runtime</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/soul-of-waifu/"><span class="az-id">Soul of Waifu</span><span class="az-what">Rollback that nothing calls</span><code class="az-repo">jofizcd/Soul-of-Waifu</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/stash/"><span class="az-id">Stash</span><span class="az-what">A hypothesis is not a fact, and gets its own table</span><code class="az-repo">alash3al/stash</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
