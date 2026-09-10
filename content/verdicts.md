@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 408 reports.**
+**This page covers all 409 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3607,3 +3607,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 25 commits between 30 April and 14 June 2026 from one author committing under two names, 2,589 lines of Python, one SQLite file with FTS5, sqlite-vec and an edge table, an eight-tool MCP server and four Claude Code hooks; no dependency manifest, nothing pushed for the three months before the pin, two absolute Windows paths and a username committed in the tree; no capability marks.
 - Study when: you want the smallest honest version of indexing agent transcripts you already have, and you want to see `thread_recall` and the two read-only staleness checks, which are worth more than their size.
 - Do not copy when: the transcripts contain anyone's data but yours — nothing is redacted, so every pasted credential is in the index — or when you need the store to be told it is wrong; there is no trust vocabulary in the tree at all, and an abandoned conclusion ranks beside the one that replaced it.
+
+### [`memspec`](../systems/memspec/)
+- Best idea: **anchor a claim to the artifact it is about.** `memspec anchor <id> src/auth/jwt.ts` records that file's git blob SHA; `reconcile` re-hashes every anchored claim, uncommitted edits included, and flags the drifted ones for a person. Staleness stops being a guess about elapsed time and becomes a fact about the repository — the project's own line is that calendar TTL is the wrong signal for facts about code.
+- Biggest risk: **every mechanism that keeps this store honest needs an operator.** Nothing retires a claim it decided was wrong: drift flags, `check_by` warns, the dream pass produces candidates, and `sweep` prompts. That is the right default and it means a store whose `reconcile` is never run keeps drifted facts flagged and retrievable. Beside it, a live edge: `memspec init` still writes `min_confidence: 0.7` and a `ranking` weight over `confidence` — a field v0.3 removed — and the value is carried three layers down without ever being compared to anything, so tuning it does nothing and says nothing.
+- Most reusable component: the scope pair in `src/lib/scope.ts` and `src/lib/fts.ts` — a predicate inside the same `WHERE` as `MATCH` so a small scope is not starved out of the candidate page, a graph-expansion pool that *removes* out-of-scope records rather than filtering them from results because traversable-but-unreturnable leaks the foreign graph's shape, and an unknown scope name that throws because silent under-retrieval reads as "the knowledge isn't there".
+- Maturity impression: MIT, 146 commits between 4 April and 20 August 2026 from two contributors, 9,710 lines of TypeScript against 8,640 lines of test carrying 321 cases across 39 files, markdown under git as canonical with a rebuildable SQLite FTS5 cache, an eleven-tool MCP server, eighteen CLI verbs and three Claude Code hooks; benchmarks against LoCoMo and LongMemEval-S pinned by sha256 at n=20, with the saturated slice reported as continuity rather than a result; six of seven capability marks.
+- Study when: project knowledge has outgrown a paragraph in `AGENTS.md`, you want it reviewable in diffs, and you can commit to running the maintenance loop — and read the scoping tests whatever you build, because one of them records the mutation check its author ran.
+- Do not copy when: nobody will answer a prompt, or you need the same claim in different words to be caught — the duplicate refusal keys on an exact title within a type and records nothing about the write it turned away.

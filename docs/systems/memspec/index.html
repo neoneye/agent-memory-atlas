@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MIT TypeScript store whose
+memories are markdown files under version control, each a typed claim
+anchored to the git blob SHAs of the files it depends on, so a code
+change flags the claim for review instead of letting it rot — with a
+three-state lifecycle that keeps superseded records out of search,
+world-state validity queried separately from the review schedule, a
+scope predicate applied inside the FTS query and as a hard wall on graph
+expansion, and removal reserved to an interactive operator prompt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memspec — Agent Memory Atlas">
+    <meta property="og:description" content="An MIT TypeScript store
+whose memories are markdown files under version control, each a typed
+claim anchored to the git blob SHAs of the files it depends on, so a
+code change flags the claim for review instead of letting it rot — with
+a three-state lifecycle that keeps superseded records out of search,
+world-state validity queried separately from the review schedule, a
+scope predicate applied inside the FTS query and as a hard wall on graph
+expansion, and removal reserved to an interactive operator prompt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memspec — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MIT TypeScript store
+whose memories are markdown files under version control, each a typed
+claim anchored to the git blob SHAs of the files it depends on, so a
+code change flags the claim for review instead of letting it rot — with
+a three-state lifecycle that keeps superseded records out of search,
+world-state validity queried separately from the review schedule, a
+scope predicate applied inside the FTS query and as a hard wall on graph
+expansion, and removal reserved to an interactive operator prompt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memspec — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memspec",
+      "description": "An MIT TypeScript store whose memories are markdown files under version control, each a typed claim anchored to the git blob SHAs of the files it depends on, so a code change flags the claim for review instead of letting it rot \u2014 with a three-state lifecycle that keeps superseded records out of search, world-state validity queried separately from the review schedule, a scope predicate applied inside the FTS query and as a hard wall on graph expansion, and removal reserved to an interactive operator prompt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A claim about code, accountable to the
+code</p>
+          <h1>Memspec</h1>
+          <p class="document-deck">An MIT TypeScript store whose
+memories are markdown files under version control, each a typed claim
+anchored to the git blob SHAs of the files it depends on, so a code
+change flags the claim for review instead of letting it rot — with a
+three-state lifecycle that keeps superseded records out of search,
+world-state validity queried separately from the review schedule, a
+scope predicate applied inside the FTS query and as a hard wall on graph
+expansion, and removal reserved to an interactive operator prompt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/siimvene/memspec">
+              <span>Source</span>
+              <strong>siimvene/memspec</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/siimvene/memspec/commit/c8f68a9a415b26cff5f555406437720dcfe81299" title="c8f68a9a415b26cff5f555406437720dcfe81299">
+              <span>Analyzed revision</span>
+              <code>c8f68a9a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/siimvene--memspec" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>siimvene--memspec</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memspec's thesis is in one sentence of its own README: <em>"Calendar
+TTL is the wrong signal for facts about code."</em> A claim gets
+anchored to the git blob SHAs of the files it depends on; when those
+files change, <code>reconcile</code> flags the claim for review. The
+loop the project names as its differentiator is
+<code>anchor → reconcile → verify | supersede</code>, and it is the only
+mechanism in this corpus that makes a stored belief accountable to the
+artifact it is about rather than to a clock.</p>
+<p>MIT; 146 commits between 4 April and 20 August 2026 from two
+contributors; 9,710 lines of TypeScript under <code>src/</code> against
+8,640 lines of test carrying 321 cases across 39 files. The screen found
+one auto-run surface (three Claude Code hooks), one build-time execution
+path (<code>prepublishOnly: npm run check</code>), one unpinned
+dependency surface with a lockfile 21 days old, and no manifest inside
+the cooldown; nothing was installed, built or run.</p>
+<p><strong>Six of seven capability marks</strong>, and the reasoning
+behind them is written in the source rather than inferred from it. Three
+passages carry the report:</p>
+<ul>
+<li>On the scope predicate living inside the SQL rather than over the
+returned page: it must, because filtering afterwards <em>"would starve
+small scopes out of existence"</em> — and the test that proves it seeds
+sixty out-of-scope records that outrank two in-scope ones on every BM25
+signal.</li>
+<li>On why the graph walker cannot traverse <em>through</em> an
+out-of-scope record: traversable-but-unreturnable would leak the foreign
+graph's shape, because at depth two or three the neighbours of a record
+you may not see get pulled in, and <em>"one project's edge edits
+silently change another's retrieval."</em></li>
+<li>On why an unrecognised <code>--scope</code> throws instead of
+answering: <em>"a scope nothing matches doesn't return 'no results', it
+returns 'unscoped and universal records only'… Silent under-retrieval is
+the worst possible failure for a memory store — the caller concludes the
+knowledge isn't there."</em></li>
+</ul>
+<p><strong>The lifecycle earns <code>trust_state</code> in its strong
+form.</strong> The FTS index is built from <code>loadActive()</code>
+alone, so a superseded record is not ranked down — it cannot seed a
+query. Reaching one is an explicit <code>--include-superseded</code>,
+and even then it enters the graph-walk pool only, never the seeds.</p>
+<p><strong>Validity is genuinely separate from the review
+schedule.</strong> <code>valid_from</code> and <code>valid_to</code> say
+when a fact holds in the world; <code>created</code>,
+<code>last_verified</code> and <code>check_by</code> say things about
+the record. <code>--as-of</code> filters on the first and the MCP tool's
+own description states the orthogonality. Eight committed cases pin the
+boundary behaviour, including both open-ended bounds.</p>
+<p><strong>Removal is a person's job.</strong> <code>sweep</code>
+prompts once per candidate and is <em>"deliberately CLI-only: removal is
+an operator act, not an agent surface"</em>; a closed stdin stops the
+loop rather than continuing. Operator-sourced records cannot be
+superseded or have an edge removed without an override that MCP is not
+allowed to pass.</p>
+<p><strong>What is withheld and what is stale.</strong>
+<code>tombstone</code> — the duplicate refusal points at an existing
+survivor and records nothing about the rejected write, so the same claim
+in different words is accepted. And one mechanism is declared and
+unconsumed: <code>memspec init</code> writes
+<code>min_confidence: 0.7</code> and
+<code>ranking: {relevance, confidence, recency}</code> into the config,
+two call sites thread them into the FTS options,
+<code>MemspecStore.search</code> passes <code>minConfidence</code> on
+into <code>fts.search</code>, and <code>FtsIndex.search</code>
+destructures <code>limit</code>, <code>types</code> and
+<code>scope</code> and stops. The weights refer to a confidence field
+v0.3 removed and replaced with <code>verified_with</code>; the config
+still offers the knob.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a claim somebody could be wrong about, written down
+in a form that can be checked.</p>
+<p>The claim is a markdown file. Its body is prose; its frontmatter is
+the part the tool reasons over — what type of claim it is, whether it is
+current, when it should be looked at again, which files it depends on,
+which other claims it refines or contradicts, and which window of
+world-time it describes. Being a file means git is the history and
+<code>grep</code> is the fallback, and the SQLite index beside it is
+disposable by design.</p>
+<p>Ageing is two independent questions the project keeps apart.
+<em>Should someone look at this again?</em> is <code>check_by</code>,
+and passing it sets a <code>stale</code> flag that prints a warning and
+withholds nothing. <em>Was this true at the moment I care about?</em> is
+<code>valid_from</code>/<code>valid_to</code>, and asking it with
+<code>--as-of</code> removes records outright. A claim can be overdue
+for review and still true, or current in the review schedule and false
+for the date you asked about.</p>
+<p>Correction is never an edit. <code>supersede</code> writes a new
+record, links both directions, and puts the reason on both — so the
+wrong version survives with an explanation attached, out of search but
+reachable through the lineage chain.</p>
+<p>The anchor is what makes the whole thing more than a notes file.
+<code>memspec anchor &lt;id&gt; src/auth/jwt.ts</code> records the blob
+SHA of that file. <code>reconcile</code> walks every anchored claim and
+compares. A drifted claim does not archive itself; it appears in
+<code>memspec status</code>, waiting for a person to say whether the
+claim survived the change.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a claim is written as a markdown file and anchored to the git blob SHAs of the files it depends on; reconcile compares those SHAs against the working tree and flags drift for a person, who either verifies the claim or supersedes it into a new record; search seeds only from active records inside the active scope, applies the scope predicate inside the FTS query and an as-of validity filter, and expands along typed edges through a pool from which out-of-scope records have been removed entirely</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a claim is written as a markdown file and anchored to the git blob SHAs of the files it depends on; reconcile compares those SHAs against the working tree and flags drift for a person, who either verifies the claim or supersedes it into a new record; search seeds only from active records inside the active scope, applies the scope predicate inside the FTS query and an as-of validity filter, and expands along typed edges through a pool from which out-of-scope records have been removed entirely
+flowchart TB
+    W[&quot;agent or operator:&lt;br/&gt;remember / observe&quot;]
+    DUP{&quot;active record of this type&lt;br/&gt;with the same title?&quot;}
+    REF[&quot;refused, naming the survivor&quot;]
+    F[(&quot;markdown file under .memspec/&lt;br/&gt;frontmatter: state · scope · check_by&lt;br/&gt;valid_from / valid_to · verified_with&lt;br/&gt;anchors · probe · typed edges&quot;)]
+    A[&quot;anchor: record git blob SHAs&lt;br/&gt;probe: record sha256 of a command&#39;s stdout&quot;]
+    R[&quot;reconcile: compare recorded SHA&lt;br/&gt;against the working tree&quot;]
+    ST[&quot;status: drifted claims listed&lt;br/&gt;— never auto-archived&quot;]
+    H{&quot;a person decides&quot;}
+    V[&quot;verify: refresh last_verified,&lt;br/&gt;clear stale, re-baseline the anchor&quot;]
+    S[&quot;supersede: new record,&lt;br/&gt;reason written on both&quot;]
+    ARCH[(&quot;archive/ — superseded and retired,&lt;br/&gt;out of the search index&quot;)]
+    IDX[(&quot;FTS5 cache built from&lt;br/&gt;loadActive() only&quot;)]
+    Q[&quot;search&quot;]
+    SQL[&quot;scope predicate inside the&lt;br/&gt;same WHERE as MATCH,&lt;br/&gt;before LIMIT&quot;]
+    AS[&quot;as-of: drop records whose&lt;br/&gt;validity window excludes the instant&quot;]
+    EX[&quot;expand-edges over a pool with&lt;br/&gt;out-of-scope records removed&lt;br/&gt;— not traversable, not returnable&quot;]
+    OUT[&quot;results, each tagged with its&lt;br/&gt;witness and any stale warning&quot;]
+    SW[&quot;sweep: one interactive prompt&lt;br/&gt;per candidate — the only removal path&quot;]
+
+    W --&gt; DUP
+    DUP --&gt;|yes| REF
+    DUP --&gt;|no| F
+    F --&gt; A --&gt; R --&gt; ST --&gt; H
+    H --&gt;|still true| V --&gt; F
+    H --&gt;|no longer true| S --&gt; ARCH
+    S --&gt; F
+    F --&gt; IDX --&gt; Q --&gt; SQL --&gt; AS --&gt; EX --&gt; OUT
+    ARCH -.-&gt;|--include-superseded,&lt;br/&gt;expansion pool only| EX
+    F -.-&gt; SW --&gt; ARCH</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One npm package, no service. <code>src/commands/</code> holds
+eighteen verbs — <code>remember</code>, <code>observe</code>,
+<code>search</code>, <code>context</code>, <code>anchor</code>,
+<code>probe</code>, <code>verify</code>, <code>reconcile</code>,
+<code>supersede</code>, <code>relate</code>, <code>sweep</code>,
+<code>status</code>, <code>normalize</code>, <code>distill</code>,
+<code>export</code>, <code>migrate</code>, <code>init</code>,
+<code>unrelate</code> — and <code>src/lib/</code> the machinery:
+<code>store</code>, <code>composite-store</code>, <code>fts</code>,
+<code>embeddings</code>, <code>graph-walk</code>, <code>scope</code>,
+<code>registry</code>, <code>anchors</code>, <code>lineage</code>,
+<code>decay</code>, <code>frontmatter</code>, <code>schema</code>,
+<code>config</code>, <code>usage</code>, <code>probe</code>,
+<code>source</code>, <code>brownfield</code>,
+<code>import-openclaw</code>, <code>agent-addon</code>.</p>
+<p>The layering is deliberate. <code>MemspecStore</code> reads and
+writes markdown; <code>CompositeStore</code> merges a project store with
+a global one at read time, project records taking priority, with a
+comment recording a bug the design had — priority once acted as an
+absolute gate rather than a ranking input, and a whole layer went
+invisible. <code>FtsIndex</code> is a cache that knows it is a cache: it
+checks its own schema against the running version, because a cache
+written by an older memspec has the right tables and the wrong columns
+and an mtime that says it is fresh.</p>
+<p>Migration is treated as a first-class problem rather than a footnote.
+Pre-0.3 lifecycle values are mapped on read
+(<code>captured → active</code>, <code>corrected → superseded</code>,
+<code>decayed → retired</code>, <code>archived → retired</code>),
+<code>ext.code_anchors</code> is promoted to a top-level
+<code>anchors</code> field, an absent <code>verified_with</code> is
+inferred from the strongest available witness, and the old confidence
+float is kept under <code>ext.legacy_confidence</code> <em>"for
+archaeology only"</em>. There is a 588-line <code>migrate</code> command
+and a <code>MIGRATION-v0.3.md</code> beside it.</p>
+<p>Three release tarballs — 0.7.2, 0.8.0 and 0.9.0 — are committed at
+the repository root. They are build output rather than source, and a
+reader cloning this tree gets them.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>runRemember</code> → resolve the
+active scope from cwd → load candidates visible from that scope → refuse
+when an active record of the same type has the same title, naming the
+survivor → dedupe the typed edge lists inline → write a ULID-named
+markdown file into the store the <code>claims:</code> config routes
+to.</li>
+<li><strong>Anchor and reconcile.</strong> <code>anchor</code> runs the
+equivalent of <code>git hash-object</code> per file and stores
+<code>{file, sha}</code> → <code>reconcile</code> re-hashes, including
+uncommitted edits, and records the drifted ids → <code>status</code>
+reports them → <code>verify</code> refreshes <code>last_verified</code>,
+clears <code>stale</code>, re-baselines the anchor and records the
+witness, or <code>supersede</code> writes the replacement.</li>
+<li><strong>Search.</strong> <code>runSearch</code> → resolve or
+validate the scope, throwing on an unknown name → parse
+<code>--as-of</code> before touching the store, so a bad ISO string
+fails loudly rather than letting <code>NaN</code> comparisons pass
+everything → FTS5 with the scope predicate inside the <code>WHERE</code>
+→ temporal filter → optional edge expansion over a scope-filtered pool →
+optional dense rerank → render, tagging each row with its witness, its
+stale warning and its <code>expanded_via</code>.</li>
+<li><strong>Expand.</strong> <code>graph-walk</code> follows
+<code>refines</code>, <code>supports</code>, <code>depends_on</code>,
+<code>conflicts_with</code>, <code>supersedes</code> and
+<code>superseded_by</code> to a bounded depth and expansion count, over
+a <code>Map&lt;id, item&gt;</code> built from records visible in the
+active scope — so an out-of-scope record is neither a destination nor a
+waypoint.</li>
+<li><strong>Retract an edge.</strong> <code>runUnrelate</code> → require
+a reason → refuse on an operator-sourced record unless overridden, and
+refuse the override outright over MCP → remove the edge, drop the paired
+provenance mark for a <code>conflicts_with</code> → append
+<code>{type, to, removed_at, removed_by, reason}</code> to
+<code>ext.edge_removals</code>, with override use folded into the
+reason.</li>
+<li><strong>Remove.</strong> <code>sweep</code> → iterate stale-flagged
+candidates → one <code>readline</code> prompt each → archive on
+confirmation; a closed stdin ends the loop rather than continuing
+without an answer.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The frontmatter is worth reading as a design document, because the
+comments say what each field is for and what it deliberately is not.</p>
+<p><strong>Kind and type.</strong> A <code>claim</code> carries a type —
+<code>fact</code> (90-day default review), <code>decision</code> (180),
+<code>procedure</code> (90) — and an <code>observation</code> carries
+none but has a hard <code>expires</code> at seven days. Separating a
+durable claim from a point-in-time note at the schema level means the
+expiry policies do not have to argue.</p>
+<p><strong>Lifecycle.</strong>
+<code>active | superseded | retired</code>, with the four pre-0.3 values
+mapped on read. This is the field that decides visibility.</p>
+<p><strong>Witness.</strong> <code>verified_with</code> is one of
+<code>anchor</code>, <code>probe</code>, <code>operator</code>,
+<code>evidence</code>, <code>assertion</code>, ordered by strength in
+the comment and described as <em>"provenance, not a confidence
+score."</em> <code>anchor</code> and <code>probe</code> are called
+mechanical witnesses: a blob SHA and the sha256 of a stored command's
+stdout, both re-checked on demand and — the comment is explicit — never
+on a read path, because probes execute shell commands.</p>
+<p><strong>Review versus validity.</strong> <code>check_by</code> is a
+review schedule whose expiry sets a flag;
+<code>valid_from</code>/<code>valid_to</code> is a truth window whose
+expiry removes the record from an as-of query. The type definition
+states the difference in one line: past <code>check_by</code> means
+review is overdue, past <code>valid_to</code> means the fact no longer
+holds.</p>
+<p><strong>Scope.</strong> Single-valued by design — <em>"a record
+belongs to one project or to everyone"</em> — with absent and
+<code>universal</code> kept apart because <em>"classified as global" and
+"not yet classified" are different facts about a record.</em></p>
+<p><strong>Edges.</strong> Six typed lists, plus
+<code>supersede_reason</code> and, in <code>ext</code>,
+<code>edge_sources</code> marking which <code>conflicts_with</code>
+edges a caller deliberately wired rather than ones a since-removed
+lexical heuristic inferred, and <code>edge_removals</code> recording
+retractions.</p>
+<p><strong>Source tier.</strong> <code>operator | agent | import</code>,
+inferred from the source at write time, gating the override
+protections.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 over a porter-stemmed FTS5 index with title at ten, tags at five
+and body at one, and a four-step fallback chain — exact-AND, then
+prefix-AND, then exact-OR, then prefix-OR — so precision is preferred
+when every term matches and a multi-term question does not return
+nothing because one term is absent.</p>
+<p>Three filters reach the query. Type is a plain <code>IN</code>. Scope
+is the predicate in the same <code>WHERE</code> as <code>MATCH</code>,
+and the comment explains the ordering: a scope holding three records
+<em>"can't compete for a twenty-row page against three hundred
+out-of-scope records that match the same terms."</em> Validity is
+applied over the loaded set with <code>isValidAsOf</code>.</p>
+<p>Expansion is the second arm. Each seed's typed edges are followed to
+a bounded depth, and every surfaced neighbour carries
+<code>expanded_via</code> naming the match and the link that brought it
+in — so a reader can tell a direct hit from a second-order one.
+<code>--include-superseded</code> widens the pool to archived records so
+the walk can reach a predecessor, and even then the seeds stay
+active-only.</p>
+<p>The scope wall on expansion is the part worth copying. The seed pass
+is filtered in SQL; the expansion pass reads its own pool, so without a
+second filter <em>"a hit in scope A follows a <code>refines</code> edge
+and returns a record from scope B."</em> The implementation removes
+out-of-scope records from the pool rather than from the results, and the
+comment states the side channel that motivates it and the bound on the
+cost: the only paths severed are ones routing through a genuinely
+foreign record, because unscoped and universal records stay visible
+everywhere.</p>
+<p><strong>One knob does nothing.</strong> <code>FtsSearchOptions</code>
+declares <code>minConfidence</code> and a <code>ranking</code> object of
+<code>relevance</code>, <code>confidence</code> and
+<code>recency</code>; <code>runSearch</code> and <code>runContext</code>
+populate them from the active profile; <code>MemspecStore.search</code>
+destructures <code>minConfidence</code> and hands it to
+<code>fts.search</code>; and <code>FtsIndex.search</code> destructures
+<code>limit</code>, <code>types</code> and <code>scope</code> and stops.
+The value travels three layers and is never compared to anything. The
+default config <code>memspec init</code> writes still carries
+<code>min_confidence: 0.7</code> and
+<code>ranking: { relevance: 0.4, confidence: 0.3, recency: 0.3 }</code>
+— weights over a confidence field that v0.3 removed. What actually
+adjusts the boot ordering is a separate mechanism, the
+<code>usage_boost</code> computed from <code>usage.jsonl</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is refused before it is deduplicated. <code>remember</code>
+compares against active records of the same type visible from the
+current scope and, on an exact title match, refuses with the survivor's
+id — the README's promise that memory <em>"accretes corrections via
+<code>supersede</code> instead of silent duplicates."</em> The band
+below that surfaces high-similarity candidates as a hint rather than a
+refusal. The limit is the key: an exact title match within a type
+catches the same claim written twice, not the same claim written
+differently.</p>
+<p>Correction never mutates. <code>supersede</code> writes the new
+record, sets <code>supersedes</code> on it and
+<code>superseded_by</code> on the old one, and puts the reason on both,
+so a reader arriving at either end of the chain finds the explanation.
+Operator records are protected: superseding one requires
+<code>--override-operator</code>, and the override is folded into the
+persisted reason so the record says it was used.</p>
+<p>Anchoring and probing are the two mechanical witnesses. An anchor is
+cheap and safe to check on any path; a probe stores a command and the
+hash of its output and is re-run only when a person asks, because
+running it is executing a shell command. Keeping that distinction in the
+type definition rather than in a comment somewhere is the right place
+for it.</p>
+<p>Removal has exactly one door. <code>sweep</code> walks the
+stale-flagged set and prompts per item, and the loop breaks when stdin
+closes mid-prompt — so a piped or non-interactive invocation retires
+nothing rather than everything.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Eleven MCP tools with descriptions written for the model that will
+read them: <code>memspec_search</code> opens with <em>"Search project
+memory before answering questions or starting work"</em> and documents
+<code>expand_edges</code>, <code>as_of</code> and
+<code>include_superseded</code> in the same string. The
+<code>unrelate</code> tool's description states its own refusal before
+the model tries it — an operator-sourced record's edge cannot be removed
+over MCP, and the reason given is that a terminal is where a human is
+present to authorize it. That is the right shape: the channel, not just
+the flag, decides what is allowed.</p>
+<p>Three Claude Code hooks. The session-start hook resolves the store
+through four candidates in order — <code>$MEMSPEC_ROOT</code>,
+<code>&lt;cwd&gt;/.memspec</code>, ancestors up to home, then
+<code>~/.memspec</code> — and its own comment sets the contract: if
+nothing is found or the CLI is unavailable, it exits 0 with empty
+context, because <em>"it must never block or confuse the session."</em>
+A hook that fails open is the only kind worth installing.</p>
+<p>The project generates an agent addon rather than rewriting
+<code>CLAUDE.md</code> wholesale, which keeps the file the agent reads a
+thing the user owns.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> The lifecycle decides
+visibility, not rank: the index is built from the active set, so a
+superseded record is absent from search. Beside it two things that are
+deliberately <em>not</em> the mark, and the project is clear about both.
+<code>verified_with</code> is provenance and annotates every result
+without filtering any. <code>stale</code> warns — the rendered line
+reads <code>[STALE — verify or supersede before relying on this]</code>
+— and withholds nothing, which is the correct choice for a review flag
+and worth distinguishing from a truth claim.</p>
+<p><strong>Bitemporal — awarded.</strong> Two axes, both used, and the
+code says which is which. The <code>--as-of</code> parse happening
+before the store query, with a comment naming the failure it prevents,
+is the detail that shows the filter was thought about rather than
+added.</p>
+<p><strong>Scope enforced — awarded twice.</strong> In SQL before LIMIT,
+and as a pool exclusion on the graph walk. The corpus contains several
+systems where a scope predicate was duplicated and one copy drifted;
+this one duplicates it on purpose, <code>isVisibleFromScope</code>
+carrying the comment <em>"mirrors the SQL in
+<code>FtsIndex.runFtsQuery</code>; kept here so non-FTS consumers and
+tests can assert the same rule"</em> — the duplication is named, and a
+test asserts the rule.</p>
+<p><strong>Audit log — awarded, and narrow.</strong>
+<code>ext.edge_removals</code> records who removed which edge, when and
+why, and exists because edges were append-only until v0.10, so <em>"a
+wrong <code>conflicts_with</code> was permanent."</em> It covers edge
+retractions only. Every other mutation is auditable through git, which
+this atlas counts as a different mechanism and does not credit here.
+<code>usage.jsonl</code> is a retrieval log — the other half of the
+pattern, and not this.</p>
+<p><strong>Human review — awarded.</strong> Removal prompts. Drift
+surfaces rather than acts. The dream pass produces candidates, not
+changes. Operator records resist the agent by default and the MCP
+channel cannot override at all.</p>
+<p><strong>Negative evaluation — awarded.</strong> The scoping suite
+proves exclusion against a populated page whose in-scope members are
+named, and the test's comment records that the author removed the SQL
+predicate and confirmed the test fails.</p>
+<p><strong>Tombstone — withheld.</strong> The duplicate refusal is a
+write-time check against existing active records; nothing durable
+records the rejected write, and nothing is consulted later to prevent
+the same claim returning in different words. The near-miss is real,
+because the machinery is present: a <code>conflicts_with</code> edge and
+a <code>supersede_reason</code> are the vocabulary a value-level
+rejection record would use.</p>
+<p><strong>Two things to hold against it.</strong> The
+declared-and-unconsumed ranking config is a live edge — a user who tunes
+<code>ranking</code> in <code>.memspec/config.yaml</code> will see no
+change and get no warning, and the field naming <code>confidence</code>
+refers to something the schema no longer has. And the honesty of the
+whole design rests on somebody running <code>reconcile</code>, answering
+<code>sweep</code> and reading the dream output; the store never retires
+a claim it decided was wrong, which is the right default and puts the
+burden on an operator who may not come back.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>321 cases across 39 files on <code>node:test</code> with
+<code>node:assert/strict</code>, plus 8,640 lines of test code against
+9,710 of source. The files are named after the properties rather than
+the modules — <code>record-scoping</code>,
+<code>layered-stores-retrieval</code>, <code>archive-expansion</code>,
+<code>temporal-validity</code>, <code>operator-tier</code>,
+<code>anchor-containment</code>, <code>repair-inferred-conflicts</code>,
+<code>removed-commands</code> — and the assertions carry messages that
+state the requirement rather than the expression.</p>
+<p><strong>One test does what this atlas asks of every test and few
+do.</strong> The scope-starvation case at
+<code>test/record-scoping.test.ts:156</code> seeds sixty out-of-scope
+records whose query term sits in title and tags against two in-scope
+records that carry it only in the body, asks for five rows, and asserts
+exactly the two in-scope titles come back. Its comment then records the
+mutation check: <em>"Verified by removing the SQL predicate and
+re-running: this test fails with <code>0 !== 2</code>, and it is the
+only one in the file that does."</em> A test that has been shown to fail
+is a different artifact from one that has only ever passed, and writing
+down which one it was is a small act of engineering discipline worth
+naming.</p>
+<p><strong>The benchmark page is the most careful disclosure in this
+round.</strong> Both datasets are pinned by sha256 — LoCoMo category-2
+temporal and LongMemEval-S knowledge-update — and the page states that
+the LongMemEval hash <em>differs</em> from the earlier runs because the
+upstream file was revised, rather than quietly comparing across it. The
+saturated 1.000 result is reported <em>"for continuity, not bragging
+rights"</em>, with the reason: ground-truth session ids are lexically
+distinctive and the slice cannot differentiate retrieval strategies at
+this protocol. The unchanged LoCoMo figures are called <em>"regression
+evidence, not a new claim."</em> Latency is marked not comparable to the
+earlier table because the machine changed. The limits are equally plain:
+n=20 per dataset, retrieval only, no model in the loop, and the
+multi-condition harness that produced the original comparison was
+removed from the tree and survives only at a git tag.</p>
+<p>No paper, and none claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Anchor a claim to the artifact it is about.</strong> A blob
+SHA per depended-on file turns "this fact may be stale" from a guess
+about elapsed time into a fact about the repository. Re-baseline the
+anchor when the claim is re-verified.</li>
+<li><strong>Keep the review schedule and the truth window
+apart.</strong> Overdue for review and no longer true are different
+states, they expire on different clocks, and conflating them means a
+fact that changed one day into a ninety-day window still looks fine for
+the remaining eighty-nine.</li>
+<li><strong>Put the scope predicate inside the query, and prove it with
+a starved page.</strong> A post-filter over a returned page looks
+identical in every small test and silently returns nothing once one
+scope outweighs another.</li>
+<li><strong>Exclude an out-of-scope record from the traversal pool, not
+from the results.</strong> Traversable-but-unreturnable leaks the shape
+of the graph you are not allowed to see, and lets one partition's edge
+edits change another's retrieval.</li>
+<li><strong>Throw on an unknown scope name.</strong> Silent
+under-retrieval reads as "the knowledge isn't there", which is the one
+wrong answer a memory store must never give confidently.</li>
+<li><strong>Give removal exactly one door and put a person behind
+it.</strong> One prompt per item, and stop when stdin closes rather than
+proceeding unattended.</li>
+<li><strong>Record the mutation check in the test's comment.</strong>
+<em>"Removing the SQL predicate makes this test fail with
+<code>0 !== 2</code>"</em> is worth more to the next reader than any
+amount of coverage percentage.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Leaving a tuning knob in the generated config after removing
+what it tuned.</strong> <code>min_confidence</code> and a
+<code>confidence</code> ranking weight are still written by
+<code>init</code> and carried three layers down without ever being
+compared to anything — over a field the schema dropped two minor
+versions ago.</li>
+<li><strong>Deduplicating on an exact title.</strong> It catches the
+accident and misses the paraphrase, which is the case a claim store
+actually accumulates.</li>
+<li><strong>Ordering a vocabulary you never compare.</strong> The
+witness ladder documents a strength order from <code>anchor</code> down
+to <code>assertion</code> and no read path uses it — the ordering is
+currently a comment.</li>
+<li><strong>Committing release tarballs to the source tree.</strong>
+Three of them are here.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Memspec suits a developer or a small team who want project knowledge
+to live in the repository, reviewable in diffs, and who are willing to
+run a maintenance loop — because the mechanisms that keep it honest are
+operator-driven by design. It is the right shape when memory has grown
+past a paragraph in <code>AGENTS.md</code> into a list of claims that
+need to track code, expire, supersede and link, which is the case its
+own comparison table makes. It is the wrong shape when nobody will
+answer a prompt: nothing here retires a claim on its own, and a store
+whose <code>reconcile</code> is never run keeps drifted facts flagged
+and retrievable.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will <code>min_confidence</code> and the <code>ranking</code>
+weights be wired to the witness ladder, or removed from the generated
+config? Either resolves the mismatch; leaving both is the only outcome
+that misleads.</li>
+<li>Should the duplicate refusal reach past an exact title? The
+similarity band already computes candidates and surfaces them as a
+hint.</li>
+<li>Is a rejected write worth recording? <code>conflicts_with</code> and
+<code>supersede_reason</code> are most of the vocabulary a value-level
+tombstone would need.</li>
+<li>Does the layered-store merge label which layer a result came from?
+The composite store already had one bug where priority acted as a gate
+rather than a ranking input.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/lib/types.ts</code></td>
+<td>130</td>
+<td>The frontmatter contract: lifecycle states (12-13), the witness
+ladder (24-30), scope semantics (44-48), <code>check_by</code> versus
+<code>valid_from</code>/<code>valid_to</code> (52, 64-69), the
+<code>ext</code> conventions including <code>edge_sources</code> and
+<code>edge_removals</code> (72-83), <code>CodeAnchor</code> and
+<code>ProbeWitness</code></td>
+</tr>
+<tr>
+<td><code>src/lib/scope.ts</code></td>
+<td>100</td>
+<td><code>resolveScopeForCwd</code>, <code>assertKnownScope</code> with
+the silent-under-retrieval argument, <code>isVisibleFromScope</code>
+mirroring the SQL</td>
+</tr>
+<tr>
+<td><code>src/lib/fts.ts</code></td>
+<td>258</td>
+<td>The FTS5 cache, its own schema-version check, the four-step fallback
+chain, the scope predicate inside <code>WHERE</code> (205-212), and the
+unread <code>minConfidence</code>/<code>ranking</code> options
+(21-35)</td>
+</tr>
+<tr>
+<td><code>src/commands/search.ts</code></td>
+<td>446</td>
+<td><code>isValidAsOf</code> (70-79), scope resolution and validation
+(261-266), the as-of parse before the store query (275-289), the
+expansion pool's hard wall (310-327)</td>
+</tr>
+<tr>
+<td><code>src/lib/store.ts</code></td>
+<td>401</td>
+<td>Markdown load and write, the lazy stale flag,
+<code>loadActive</code> (262) and <code>loadSuperseded</code> (273),
+<code>moveToArchive</code> (302), the FTS build from the active set
+(333-339)</td>
+</tr>
+<tr>
+<td><code>src/lib/composite-store.ts</code></td>
+<td>334</td>
+<td>Project-over-global layering, and the comment recording the
+priority-as-gate bug (188)</td>
+</tr>
+<tr>
+<td><code>src/commands/remember.ts</code></td>
+<td>479</td>
+<td>Scope-aware candidate load, the exact-title refusal (250-262), the
+similarity hint band, inline edge dedup</td>
+</tr>
+<tr>
+<td><code>src/commands/relate.ts</code></td>
+<td>263</td>
+<td><code>relate</code> and <code>runUnrelate</code> (187-262) with the
+required reason and the <code>ext.edge_removals</code> append</td>
+</tr>
+<tr>
+<td><code>src/commands/supersede.ts</code></td>
+<td>242</td>
+<td>The operator-tier protection and the override note folded into the
+reason (50-57)</td>
+</tr>
+<tr>
+<td><code>src/commands/sweep.ts</code></td>
+<td>60</td>
+<td>The one removal path: interactive per candidate, stopping on closed
+stdin</td>
+</tr>
+<tr>
+<td><code>src/commands/reconcile.ts</code></td>
+<td>258</td>
+<td>Anchor drift detection including uncommitted edits</td>
+</tr>
+<tr>
+<td><code>src/mcp.ts</code></td>
+<td>541</td>
+<td>Eleven tools; the <code>as_of</code> description (70), the
+<code>unrelate</code> channel refusal (473-478)</td>
+</tr>
+<tr>
+<td><code>test/record-scoping.test.ts</code></td>
+<td>—</td>
+<td>The scoping suite, including the starvation case and its recorded
+mutation check (145-176)</td>
+</tr>
+<tr>
+<td><code>test/temporal-validity.test.ts</code></td>
+<td>—</td>
+<td>Eight as-of boundary cases and frontmatter round-trip</td>
+</tr>
+<tr>
+<td><code>BENCHMARK.md</code></td>
+<td>38</td>
+<td>LoCoMo and LongMemEval-S at pinned hashes, n=20, with the saturation
+and comparability caveats stated</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;minConfidence\|\.ranking&#39; src --include=&#39;*.ts&#39;          # populated from the profile, threaded through MemspecStore.search into fts.search, never destructured by FtsIndex.search
+grep -rn &#39;verified_with&#39; src --include=&#39;*.ts&#39; | grep -i &#39;filter\|where\|&lt;\|&gt;&#39;   # two hits, both GraphML export attributes; no read path filters on the witness
+grep -rn -i &#39;audit\|journal\|append.only&#39; src --include=&#39;*.ts&#39;    # ext.edge_removals and the usage log; no general mutation journal
+grep -rn -i &#39;arxiv\|bibtex\|CITATION&#39; README.md SPEC.md BENCHMARK.md  # nothing: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/siimvene/memspec/commit/c8f68a9a415b26cff5f555406437720dcfe81299"><code class="commit-id" title="c8f68a9a415b26cff5f555406437720dcfe81299">c8f68a9a…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 20
+August 2026. Screened before reading: one auto-run surface in the three
+Claude Code hooks, one build-time execution path
+(<code>prepublishOnly</code>), one unpinned dependency surface with a
+lockfile 21 days old, and no manifest inside the cooldown; nothing was
+installed, built or run, and the read was made from a full clone. Six
+marks. The reading covered the frontmatter contract, the store and
+composite store, the FTS index and its scope predicate, the temporal
+filter, the graph walk, the write and supersede paths, the
+edge-retraction audit, the sweep prompt, the MCP surface and the hooks;
+the transcript ingestion pipeline, the embeddings reranker, the
+migration command and the export path were read as context rather than
+as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

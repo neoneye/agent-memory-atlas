@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 408 reports.</strong></p>
+<p><strong>This page covers all 409 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14288,6 +14288,53 @@ nothing is redacted, so every pasted credential is in the index — or
 when you need the store to be told it is wrong; there is no trust
 vocabulary in the tree at all, and an abandoned conclusion ranks beside
 the one that replaced it.</li>
+</ul>
+<h3 id="memspec"><a
+href="../systems/memspec/"><code>memspec</code></a></h3>
+<ul>
+<li>Best idea: <strong>anchor a claim to the artifact it is
+about.</strong> <code>memspec anchor &lt;id&gt; src/auth/jwt.ts</code>
+records that file's git blob SHA; <code>reconcile</code> re-hashes every
+anchored claim, uncommitted edits included, and flags the drifted ones
+for a person. Staleness stops being a guess about elapsed time and
+becomes a fact about the repository — the project's own line is that
+calendar TTL is the wrong signal for facts about code.</li>
+<li>Biggest risk: <strong>every mechanism that keeps this store honest
+needs an operator.</strong> Nothing retires a claim it decided was
+wrong: drift flags, <code>check_by</code> warns, the dream pass produces
+candidates, and <code>sweep</code> prompts. That is the right default
+and it means a store whose <code>reconcile</code> is never run keeps
+drifted facts flagged and retrievable. Beside it, a live edge:
+<code>memspec init</code> still writes <code>min_confidence: 0.7</code>
+and a <code>ranking</code> weight over <code>confidence</code> — a field
+v0.3 removed — and the value is carried three layers down without ever
+being compared to anything, so tuning it does nothing and says
+nothing.</li>
+<li>Most reusable component: the scope pair in
+<code>src/lib/scope.ts</code> and <code>src/lib/fts.ts</code> — a
+predicate inside the same <code>WHERE</code> as <code>MATCH</code> so a
+small scope is not starved out of the candidate page, a graph-expansion
+pool that <em>removes</em> out-of-scope records rather than filtering
+them from results because traversable-but-unreturnable leaks the foreign
+graph's shape, and an unknown scope name that throws because silent
+under-retrieval reads as "the knowledge isn't there".</li>
+<li>Maturity impression: MIT, 146 commits between 4 April and 20 August
+2026 from two contributors, 9,710 lines of TypeScript against 8,640
+lines of test carrying 321 cases across 39 files, markdown under git as
+canonical with a rebuildable SQLite FTS5 cache, an eleven-tool MCP
+server, eighteen CLI verbs and three Claude Code hooks; benchmarks
+against LoCoMo and LongMemEval-S pinned by sha256 at n=20, with the
+saturated slice reported as continuity rather than a result; six of
+seven capability marks.</li>
+<li>Study when: project knowledge has outgrown a paragraph in
+<code>AGENTS.md</code>, you want it reviewable in diffs, and you can
+commit to running the maintenance loop — and read the scoping tests
+whatever you build, because one of them records the mutation check its
+author ran.</li>
+<li>Do not copy when: nobody will answer a prompt, or you need the same
+claim in different words to be caught — the duplicate refusal keys on an
+exact title within a type and records nothing about the write it turned
+away.</li>
 </ul>
         </article>
       </div>
