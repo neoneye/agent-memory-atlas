@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 400 reports.</strong></p>
+<p><strong>This page covers all 401 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -2604,7 +2604,7 @@ kind, and persistence by whole-state serialisation.</li>
 <li>Most reusable component: <code>BaseTextMemory</code> as a diff
 target — set it beside ADK's <code>BaseMemoryService</code> and
 AutoGen's <code>Memory</code> and the missing methods are obvious in
-about ninety seconds.</li>
+about ninety-one seconds.</li>
 <li>Maturity impression: unit tests under
 <code>goodai/ltm/mem/tests/</code> with no negative retrieval assertion,
 and the interesting evaluation story living in a separate benchmark
@@ -5810,7 +5810,7 @@ matching an HMAC digest against every <em>retained key version</em>, so
 rotating the HMAC key cannot resurrect a revocation. No other
 rejected-value record here reasons about the key used to compute its own
 key.</li>
-<li>Biggest risk: the tombstone carries a ninety-day TTL by design,
+<li>Biggest risk: the tombstone carries a ninety-one-day TTL by design,
 bounding the keyring. The refusal is durable for a window, not forever,
 and a reader wanting "never again" needs an unbounded tier beside
 it.</li>
@@ -5826,7 +5826,7 @@ and the insert must be correct under concurrency, a stdio MCP server for
 Codex and an installer that pins its artifacts by SHA-256; a candidate
 tier declared in the schema that no code creates or promotes.</li>
 <li>Study when: a deletion in your system has to actually stick.</li>
-<li>Do not copy when: you need permanence; ninety days is the
+<li>Do not copy when: you need permanence; ninety-one days is the
 guarantee.</li>
 </ul>
 <h3 id="cortexgraph"><a
@@ -9190,9 +9190,9 @@ href="../systems/open-second-brain/"><code>open-second-brain</code></a></h3>
 <code>value = wilson_low(applied, applied + violated) × freshness</code>
 — a 95% Wilson lower bound at z = 1.96 times a term decaying linearly to
 zero across the staleness window — so three-for-three cannot outrank
-ninety-for-a-hundred and an unused rule fades without a sweep. Ninety
-lines, no dependencies, and it makes "measurable confidence" a claim a
-reader can check.</li>
+ninety-one-for-a-hundred and an unused rule fades without a sweep.
+Ninety-one lines, no dependencies, and it makes "measurable confidence"
+a claim a reader can check.</li>
 <li>Biggest risk: the counters are self-reported. <code>applied</code>
 and <code>violated</code> are emitted by the agent about its own
 behaviour, so a rigorous statistic sits on an input nothing
@@ -13550,7 +13550,7 @@ switches.</li>
 nothing.</strong> The chat is panel state a restart empties, a note
 carries no mark of what the model wrote, and the app's
 <code>revisions</code> collapse ten minutes of edits into one and expire
-at ninety days.</li>
+at ninety-one days.</li>
 <li>Most reusable component: <code>EmbeddingIndexer.ts</code> — an
 indexer on the application's own change feed with a durable cursor
 advanced after the batch, one embedding per note per tick, removal for
@@ -13986,6 +13986,46 @@ argument rather than sit outside it.</li>
 the memory is not addressable without it — or when you need a validity
 interval, a queue where a person adjudicates a pending memory, or a
 record of what the system has already refused.</li>
+</ul>
+<h3 id="mcp-memory-service"><a
+href="../systems/mcp-memory-service/"><code>mcp-memory-service</code></a></h3>
+<ul>
+<li>Best idea: <strong>a belief ladder with two floors to promote and
+one to demote, filtered in SQL rather than scored.</strong>
+<code>beliefs.status</code> is <code>candidate</code>,
+<code>active</code> or <code>superseded</code>; promotion needs the
+confidence to clear a floor <em>and</em> the supporting count to clear a
+provenance floor; <code>get_beliefs</code> reads
+<code>WHERE status = ? AND confidence &gt;= ?</code> so a candidate is
+excluded rather than ranked lower.</li>
+<li>Biggest risk: <strong>the contradiction detector marks a memory and
+nothing reads the mark.</strong> <code>quarantine_memory</code> writes a
+metadata flag and a <code>quarantined</code> tag for a memory that
+disagrees with an active belief, the write response warns the caller,
+and two MCP tools list and release it — but a search of
+<code>storage/</code> and <code>services/</code> for
+<code>quarantin</code> returns nothing, so the quarantined memory keeps
+coming back from ordinary semantic search.</li>
+<li>Most reusable component: <code>consolidation/</code> — associations,
+clustering, compression, decay, forgetting, insights, belief,
+contradictions and relationship inference as separate modules under a
+scheduler and a run tracker, with forgetting that archives to a dated
+tree instead of deleting.</li>
+<li>Maturity impression: Apache-2.0 at the root (with an MIT header
+still on <code>storage/base.py</code>), 3,337 commits since 26 December
+2024 by eighty-seven authors, 71,120 lines under <code>src/</code>
+beside 68,820 lines of tests holding 3,067 functions, four storage
+backends, twenty-eight MCP tools, and committed LoCoMo and LongMemEval
+harnesses with no score asserted; two of seven capability marks.</li>
+<li>Study when: you want a widely integrated MCP memory server with a
+real choice of backends and the most decomposed consolidation pipeline
+you are likely to find, and you are storing one project's or one
+person's memories.</li>
+<li>Do not copy when: you need a contradiction to actually suppress a
+memory rather than flag it, you need a scope key the server enforces
+rather than a tag convention, or you need an attribute the storage layer
+can index — everything epistemic on a memory lives in an untyped
+metadata dict.</li>
 </ul>
         </article>
       </div>

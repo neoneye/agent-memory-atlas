@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 400 reports.**
+**This page covers all 401 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -909,7 +909,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`goodai-ltm`](../systems/goodai-ltm/)
 - Best idea: targeted update and delete on the interface itself. It is the cleanest demonstration in the atlas that a memory abstraction's first job is to give memories addresses, and the relevant part is two pages long.
 - Biggest risk: no commit since 28 February 2024, no scope key of any kind, and persistence by whole-state serialisation.
-- Most reusable component: `BaseTextMemory` as a diff target — set it beside ADK's `BaseMemoryService` and AutoGen's `Memory` and the missing methods are obvious in about ninety seconds.
+- Most reusable component: `BaseTextMemory` as a diff target — set it beside ADK's `BaseMemoryService` and AutoGen's `Memory` and the missing methods are obvious in about ninety-one seconds.
 - Maturity impression: unit tests under `goodai/ltm/mem/tests/` with no negative retrieval assertion, and the interesting evaluation story living in a separate benchmark repository.
 - Study when: you are designing a provider contract and want to see what the frameworks dropped.
 - Do not copy when: you intend to run it. Choose something maintained — and then check whether its interface can say "delete that one", because the odds are it cannot.
@@ -1808,11 +1808,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`noosphere`](../systems/noosphere/)
 
 - Best idea: the eleventh tombstone in this atlas and the most rigorous. A revoked capture is refused on the write path — inside a serializable transaction, after the lineage rows are locked — by matching an HMAC digest against every *retained key version*, so rotating the HMAC key cannot resurrect a revocation. No other rejected-value record here reasons about the key used to compute its own key.
-- Biggest risk: the tombstone carries a ninety-day TTL by design, bounding the keyring. The refusal is durable for a window, not forever, and a reader wanting "never again" needs an unbounded tier beside it.
+- Biggest risk: the tombstone carries a ninety-one-day TTL by design, bounding the keyring. The refusal is durable for a window, not forever, and a reader wanting "never again" needs an unbounded tier beside it.
 - Most reusable component: the three independent upserts on revocation — a tombstone that blocks re-entry, a privacy-review row for a person, and a durable cleanup job under an idempotency key — none depending on the others succeeding.
 - Maturity impression: Apache-2.0 at release 1.13.3, 55,367 lines of TypeScript under `src/` and 76,788 across the repository with its six sibling packages, on Postgres through Prisma, with `capture-race-integration.test.ts` written because the check and the insert must be correct under concurrency, a stdio MCP server for Codex and an installer that pins its artifacts by SHA-256; a candidate tier declared in the schema that no code creates or promotes.
 - Study when: a deletion in your system has to actually stick.
-- Do not copy when: you need permanence; ninety days is the guarantee.
+- Do not copy when: you need permanence; ninety-one days is the guarantee.
 
 ### [`cortexgraph`](../systems/cortexgraph/)
 
@@ -2593,7 +2593,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`open-second-brain`](../systems/open-second-brain/)
 
-- Best idea: confidence as a lower bound rather than an average. `value = wilson_low(applied, applied + violated) × freshness` — a 95% Wilson lower bound at z = 1.96 times a term decaying linearly to zero across the staleness window — so three-for-three cannot outrank ninety-for-a-hundred and an unused rule fades without a sweep. Ninety lines, no dependencies, and it makes "measurable confidence" a claim a reader can check.
+- Best idea: confidence as a lower bound rather than an average. `value = wilson_low(applied, applied + violated) × freshness` — a 95% Wilson lower bound at z = 1.96 times a term decaying linearly to zero across the staleness window — so three-for-three cannot outrank ninety-one-for-a-hundred and an unused rule fades without a sweep. Ninety-one lines, no dependencies, and it makes "measurable confidence" a claim a reader can check.
 - Biggest risk: the counters are self-reported. `applied` and `violated` are emitted by the agent about its own behaviour, so a rigorous statistic sits on an input nothing independently samples; a compliant reporter can manufacture confidence the Wilson bound will then present as rigour. `self-approval-guardrail.ts` bounds who may confirm a cluster, not whether the evidence is real.
 - Most reusable component: `user_rejected_reason`. One optional frontmatter field, written only by `o2b brain reject --reason`, converts a retired rule into a suppressor that swallows the signals which would regrow it — scope-aware, so an unscoped rejection covers the topic everywhere and a scoped one only its own scope, with a `signal-suppressed` event emitted per swallowed signal naming the rule and the reason. It is the rejected-value tombstone arrived at independently, with a scope dimension no other instance in the atlas carries.
 - Maturity impression: MIT, v1.45.0, 190,847 lines of TypeScript against 172,320 lines across 1,031 test files — a ratio at the top of anything here — 175 commits since 6 May 2026, ten contributors. Local-first in the user's own Obsidian vault, so the memory outlives the tool. Two committed git hooks activated by the package `prepare` script run fmt, lint and typecheck only. No lockfile beside `package.json` at this commit.
@@ -3441,7 +3441,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`joplin`](../systems/joplin/)
 - Best idea: **every capability beyond the open note is a switch, and the refusal names it.** Eleven global tools each behind an `ai.tool.<id>.enabled` setting that defaults to off, a disabled call answered with the setting the model should ask the user to enable, remote providers behind a second opt-in with the LAN counted as remote, and an MCP server that inherits the same switches.
-- Biggest risk: **the assistant remembers nothing and attributes nothing.** The chat is panel state a restart empties, a note carries no mark of what the model wrote, and the app's `revisions` collapse ten minutes of edits into one and expire at ninety days.
+- Biggest risk: **the assistant remembers nothing and attributes nothing.** The chat is panel state a restart empties, a note carries no mark of what the model wrote, and the app's `revisions` collapse ten minutes of edits into one and expire at ninety-one days.
 - Most reusable component: `EmbeddingIndexer.ts` — an indexer on the application's own change feed with a durable cursor advanced after the batch, one embedding per note per tick, removal for trashed, locked and conflict notes, and a clear-and-rebuild when the model id changes.
 - Maturity impression: AGPL-3.0, 15,728 commits since 2017 by the GitHub count, release 3.7.16 the day of the pin, an AI service of 4,250 lines with 130 test cases in sixteen files added over three months, an MCP server with 26; one of seven capability marks.
 - Study when: you want an assistant over a human's notes with the smallest default blast radius, or a worked example of a semantic index that rides an app's change feed.
@@ -3543,3 +3543,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 2,114 commits between 28 January and 27 August 2026 by five authors, version 0.8.2.1, 141,275 lines under `src/` with 13,963 in the memory package, beside 212,716 lines of tests holding 4,974 functions and a twenty-six-file adversarial suite; four of seven capability marks.
 - Study when: you are building an agent with real capability and have concluded that prompt injection is answered by enforcement rather than by restriction, and you want the memory to carry provenance into that argument rather than sit outside it.
 - Do not copy when: you want a memory library — this is a daemon and the memory is not addressable without it — or when you need a validity interval, a queue where a person adjudicates a pending memory, or a record of what the system has already refused.
+
+### [`mcp-memory-service`](../systems/mcp-memory-service/)
+- Best idea: **a belief ladder with two floors to promote and one to demote, filtered in SQL rather than scored.** `beliefs.status` is `candidate`, `active` or `superseded`; promotion needs the confidence to clear a floor *and* the supporting count to clear a provenance floor; `get_beliefs` reads `WHERE status = ? AND confidence >= ?` so a candidate is excluded rather than ranked lower.
+- Biggest risk: **the contradiction detector marks a memory and nothing reads the mark.** `quarantine_memory` writes a metadata flag and a `quarantined` tag for a memory that disagrees with an active belief, the write response warns the caller, and two MCP tools list and release it — but a search of `storage/` and `services/` for `quarantin` returns nothing, so the quarantined memory keeps coming back from ordinary semantic search.
+- Most reusable component: `consolidation/` — associations, clustering, compression, decay, forgetting, insights, belief, contradictions and relationship inference as separate modules under a scheduler and a run tracker, with forgetting that archives to a dated tree instead of deleting.
+- Maturity impression: Apache-2.0 at the root (with an MIT header still on `storage/base.py`), 3,337 commits since 26 December 2024 by eighty-seven authors, 71,120 lines under `src/` beside 68,820 lines of tests holding 3,067 functions, four storage backends, twenty-eight MCP tools, and committed LoCoMo and LongMemEval harnesses with no score asserted; two of seven capability marks.
+- Study when: you want a widely integrated MCP memory server with a real choice of backends and the most decomposed consolidation pipeline you are likely to find, and you are storing one project's or one person's memories.
+- Do not copy when: you need a contradiction to actually suppress a memory rather than flag it, you need a scope key the server enforces rather than a tag convention, or you need an attribute the storage layer can index — everything epistemic on a memory lives in an untyped metadata dict.

@@ -464,7 +464,7 @@ Apache-2.0, read at
 capability, and it is worth an entry here for two opposite reasons: what it does
 not measure, and how well it reports what it does.
 
-**What it is.** Sixty-six live task directories and ninety archived directories
+**What it is.** Sixty-six live task directories and ninety-one archived directories
 at the inspected pin. The [pinned README](https://github.com/harbor-framework/terminal-bench/blob/83c7a6172d629c6575b785ab12c8db787bb2e323/README.md)
 describes tagged releases published on Harbor Hub. The archive includes an
 [import from Terminal-Bench 2.1](https://github.com/harbor-framework/terminal-bench/commit/f38349fc9c32aeaf77e30b5bd0464f3a2af8b791);
@@ -1136,7 +1136,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and fifty-two of four hundred. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | One hundred and fifty-three of four hundred and one. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
@@ -2393,7 +2393,7 @@ without committed artifacts" is a named antipattern here with several instances
 among the systems; this is the same antipattern in the evaluation literature,
 and it was caught the same way — by reading past the abstract.
 
-### A decaying score and a latched state, ninety-seven points apart
+### A decaying score and a latched state, ninety-one-seven points apart
 
 Every capability judgement on this site turns on one distinction, stated in the
 rubric as *"a confidence number answers 'how sure' and gets used for ranking; a
@@ -3339,7 +3339,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about 399 repositories,
+  [comparative report](../compare/). It is a statement about 400 repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An Apache-2.0 MCP memory server
+over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose
+consolidation package derives beliefs, detects contradictions and
+quarantines the memory that disagrees with an active belief — writing a
+metadata flag and a tag that a listing tool reads, that a release tool
+clears, and that no retrieval path consults, so a quarantined memory is
+still returned by search.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MCP Memory
+Service — Agent Memory Atlas">
+    <meta property="og:description" content="An Apache-2.0 MCP memory
+server over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose
+consolidation package derives beliefs, detects contradictions and
+quarantines the memory that disagrees with an active belief — writing a
+metadata flag and a tag that a listing tool reads, that a release tool
+clears, and that no retrieval path consults, so a quarantined memory is
+still returned by search.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MCP Memory
+Service — Agent Memory Atlas">
+    <meta name="twitter:description" content="An Apache-2.0 MCP memory
+server over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose
+consolidation package derives beliefs, detects contradictions and
+quarantines the memory that disagrees with an active belief — writing a
+metadata flag and a tag that a listing tool reads, that a release tool
+clears, and that no retrieval path consults, so a quarantined memory is
+still returned by search.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MCP Memory Service — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MCP Memory Service",
+      "description": "An Apache-2.0 MCP memory server over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose consolidation package derives beliefs, detects contradictions and quarantines the memory that disagrees with an active belief \u2014 writing a metadata flag and a tag that a listing tool reads, that a release tool clears, and that no retrieval path consults, so a quarantined memory is still returned by search.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Quarantine tags the contradiction and
+recall returns it anyway</p>
+          <h1>MCP Memory Service</h1>
+          <p class="document-deck">An Apache-2.0 MCP memory server over
+SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose consolidation
+package derives beliefs, detects contradictions and quarantines the
+memory that disagrees with an active belief — writing a metadata flag
+and a tag that a listing tool reads, that a release tool clears, and
+that no retrieval path consults, so a quarantined memory is still
+returned by search.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/doobidoo/mcp-memory-service">
+              <span>Source</span>
+              <strong>doobidoo/mcp-memory-service</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/doobidoo/mcp-memory-service/commit/63801ca5e3f2f02f392c34d395fc62adc9049796" title="63801ca5e3f2f02f392c34d395fc62adc9049796">
+              <span>Analyzed revision</span>
+              <code>63801ca5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/doobidoo--mcp-memory-service" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>doobidoo--mcp-memory-service</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MCP Memory Service has 3,337 commits from eighty-seven authors since
+26 December 2024 and was still committing on the day of this reading.
+Its consolidation package is unusually decomposed: separate modules for
+associations, clustering, compression, decay, forgetting, insights,
+belief derivation, contradiction detection and relationship inference,
+with a run tracker and a scheduler over them.</p>
+<p>Apache-2.0 at the repository root; 71,120 lines under
+<code>src/</code> beside 68,820 lines of tests holding 3,067 functions;
+storage over SQLite-vec, Cloudflare, Milvus or a hybrid; twenty-eight
+MCP tools plus a REST API, a web surface with OAuth, a CLI, ingestion,
+sync and backup. The screen found four auto-run surfaces, seven
+build-time execution paths, eight unpinned dependency surfaces, two
+manifests inside the seven-day cooldown, and an uninstalled
+<code>pre-commit</code> hook payload; nothing was installed or run.</p>
+<p><strong>Two layers, two different answers, and the gap between them
+is the report.</strong> The belief layer gets this right: beliefs live
+in their own table with a <code>candidate</code> → <code>active</code> →
+<code>superseded</code> status, promotion requires both a confidence
+floor and a provenance floor, demotion happens when confidence falls
+back, and <code>get_beliefs</code> filters
+<code>WHERE status = ? AND confidence &gt;= ?</code> with
+<code>active</code> as the default — a state that excludes rather than
+reorders. That earns <code>trust_state</code>.</p>
+<p><strong>The memory layer has the same idea and does not finish
+it.</strong> The system does the hard part:
+<code>consolidation/belief.py</code> derives active beliefs,
+<code>consolidation/contradictions.py</code> detects a new memory that
+disagrees with one, and <code>consolidation/quarantine.py</code>
+quarantines it —</p>
+<pre class="python"><code>quarantine_meta = {
+    &quot;quarantined&quot;: True,
+    &quot;quarantined_at&quot;: datetime.now(timezone.utc).isoformat(),
+    &quot;contradicted_belief&quot;: contradicted_belief_hash,
+    &quot;quarantine_reason&quot;: reason,
+}
+await storage.update_memory_metadata(
+    content_hash=content_hash,
+    updates={&quot;metadata&quot;: quarantine_meta, &quot;tags&quot;: [&quot;quarantined&quot;]},</code></pre>
+<p>The producer is real: the write handler reports the outcome to the
+caller as <em>"⚠️ Memory quarantined: contradicts an active
+belief."</em> Two MCP tools front it —
+<code>get_quarantined_memories</code> to review and
+<code>unquarantine_memory</code> to release, the latter documented for
+<em>"when a quarantined memory is valid (e.g., the contradicted belief
+was wrong)."</em></p>
+<p><strong>And no retrieval path reads the flag.</strong> A search of
+<code>storage/</code> and <code>services/</code> for
+<code>quarantin</code> returns nothing.
+<code>get_quarantined_memories</code> finds them by calling
+<code>search_by_tag(["quarantined"])</code> — the same generic tag
+search any caller uses — and filters in Python afterwards. So a memory
+the system has identified as contradicting an active belief, flagged,
+and offered a release tool for, is still returned by ordinary semantic
+search. The state exists, it is produced, it is inspectable, and it
+withholds nothing. The mark is earned on the belief table and not on the
+memory row, which is a distinction worth carrying: the same codebase
+demonstrates it knows how to make a status filter, one module away from
+the place it does not.</p>
+<p><strong>Everything epistemic lives in an untyped dict.</strong>
+Quarantine status, the contradicted belief's hash, the quarantine reason
+and the timestamp are all keys in <code>Memory.metadata</code>, a
+<code>Dict[str, Any]</code>. Nothing at the storage layer can index
+them, no backend can enforce them, and a filter that wanted to exclude
+quarantined memories would have to parse JSON per row — which may be why
+no filter exists.</p>
+<p><strong>No scope is enforced.</strong> <code>TagTaxonomy</code>
+defines six namespaces including <code>proj:</code> and
+<code>user:</code>, and validates them at write by <em>logging</em> the
+tags that do not match — legacy unnamespaced tags are explicitly still
+supported. Nothing on the read path filters on a namespace. For a server
+several agents may point at, the separation between one project's
+memories and another's is a tag the caller must remember to include.</p>
+<p><strong>What it does earn.</strong>
+<code>tests/test_time_filter_vector_search.py</code> is a properly built
+negative case: it stores an old PostgreSQL memory and a recent Redis
+one, searches with an <code>after</code> bound one day back, and asserts
+<code>total &gt;= 1</code>, then that Redis is present, then that
+PostgreSQL is absent — the non-empty check and the control both before
+the absence, so the case cannot pass over an empty result.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is content plus a hash of that content. The hash is the
+identity, so storing the same text twice is the same memory. Around it
+sit tags, an optional type drawn from an ontology, timestamps, and a
+metadata dict that ends up carrying everything the schema does not.</p>
+<p>Writing is cheap and mostly unguarded: hash, validate the type
+against the ontology and fall back to <code>observation</code> with a
+warning if it does not match, check tag namespaces and log the ones that
+do not, store. Then, separately, a contradiction check may run and mark
+the new memory as quarantined.</p>
+<p>The consolidation scheduler is where the design's ambition lives. On
+its own clock it clusters memories, derives associations, infers
+relationships, computes decay, compresses what is redundant, derives
+beliefs from what recurs, and forgets by archiving to a dated tree on
+disk rather than deleting. Each of those is a module with its own file,
+and a run tracker records what happened.</p>
+<p>The gap between those two halves is the report's finding.
+Consolidation reaches conclusions — this memory contradicts an active
+belief — and records them where retrieval cannot see them. The knowledge
+is derived and then set down beside the door rather than in front of
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write hashes the content, defaults an unrecognised type to observation and logs an unrecognised tag namespace without rejecting it; a contradiction check may mark the memory quarantined by writing a metadata flag and a tag; the consolidation scheduler derives beliefs, decays, compresses and archives; and the retrieval path applies vector, tag and time filters but never reads the quarantine flag, so a contradicting memory is still returned</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write hashes the content, defaults an unrecognised type to observation and logs an unrecognised tag namespace without rejecting it; a contradiction check may mark the memory quarantined by writing a metadata flag and a tag; the consolidation scheduler derives beliefs, decays, compresses and archives; and the retrieval path applies vector, tag and time filters but never reads the quarantine flag, so a contradicting memory is still returned
+flowchart TB
+    W[&quot;store_memory over MCP&quot;]
+    H[&quot;content_hash = identity&quot;]
+    ONT{&quot;memory_type in&lt;br/&gt;the ontology?&quot;}
+    DEF[&quot;default to &#39;observation&#39;,&lt;br/&gt;log a warning&quot;]
+    NS{&quot;tag namespace in&lt;br/&gt;sys: q: proj: topic: t: user:?&quot;}
+    LOG[&quot;log the invalid tags;&lt;br/&gt;store anyway&quot;]
+    ST[(&quot;memory&lt;br/&gt;content, hash, tags, type,&lt;br/&gt;metadata dict, embedding,&lt;br/&gt;created_at / updated_at&quot;)]
+    CON[&quot;contradiction check&lt;br/&gt;against active beliefs&quot;]
+    Q[&quot;quarantine: metadata flag&lt;br/&gt;+ &#39;quarantined&#39; tag&quot;]
+    SCHED[&quot;consolidation scheduler&lt;br/&gt;associations · clustering · decay&lt;br/&gt;compression · belief · insights&quot;]
+    ARCH[(&quot;~/.mcp_memory_archive&lt;br/&gt;forgetting archives, never deletes&quot;)]
+    R{&quot;retrieval:&lt;br/&gt;vector + tag + time filters&quot;}
+    OUT[&quot;results returned to the agent&quot;]
+    LIST[&quot;get_quarantined_memories&lt;br/&gt;finds them by the quarantined tag&quot;]
+
+    W --&gt; H
+    H --&gt; ONT
+    ONT --&gt;|no| DEF
+    DEF --&gt; NS
+    ONT --&gt;|yes| NS
+    NS --&gt;|invalid| LOG
+    LOG --&gt; ST
+    NS --&gt;|valid| ST
+    ST --&gt; CON
+    CON --&gt; Q
+    Q -.-&gt;|&quot;metadata + tag only&quot;| ST
+    ST --&gt; SCHED
+    SCHED --&gt; ARCH
+    ST --&gt; R
+    R --&gt; OUT
+    Q -.-&gt;|&quot;read by this tool only&quot;| LIST
+    Q -. &quot;never consulted here&quot; .-&gt; R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package of about two dozen subsystems: <code>api</code>,
+<code>backup</code>, <code>bootstrap</code>, <code>cli</code>,
+<code>config</code>, <code>consolidation</code>, <code>discovery</code>,
+<code>embeddings</code>, <code>extraction</code>, <code>harvest</code>,
+<code>health</code>, <code>ingestion</code>, <code>models</code>,
+<code>plugins</code>, <code>quality</code>, <code>reasoning</code>,
+<code>scoring</code>, <code>server</code>, <code>services</code>,
+<code>storage</code>, <code>sync</code>, <code>tools</code>,
+<code>utils</code>, <code>web</code>.</p>
+<p>Storage is pluggable and genuinely so: <code>sqlite_vec.py</code>,
+<code>cloudflare.py</code>, <code>milvus.py</code> with its own
+expression and graph helpers, and <code>hybrid.py</code> that combines
+backends, all behind <code>base.py</code> with a migration runner and
+shared mixins. A separate <code>graph.py</code> backs relationship
+inference.</p>
+<p>The delivery surface is broad — MCP, REST, a web UI with OAuth, a
+CLI, a discovery mechanism for agent harnesses, ingestion and harvest
+paths, a sync package for multi-device use, and backup. Eighty-seven
+contributors over twenty-one months shows in the breadth: this is a
+project that has said yes to a lot of integration requests, and the
+memory model has stayed simple while the surface grew.</p>
+<p>One inconsistency worth recording because a reader may rely on it:
+<code>src/mcp_memory_service/storage/base.py</code> carries the header
+<em>"Licensed under the MIT License. See LICENSE file in the project
+root"</em> while the root <code>LICENSE</code> is Apache-2.0. Both are
+permissive and the practical difference is small, but the file points at
+a licence the project root does not contain.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>store_memory</code> →
+<code>Memory.__post_init__</code> synchronises the timestamp
+representations, validates <code>memory_type</code> against
+<code>MemoryTypeOntology</code> and defaults to <code>observation</code>
+on a miss, then checks tag namespaces against
+<code>TagTaxonomy.VALID_NAMESPACES</code> and logs the invalid ones
+(<code>models/memory.py:70-101</code>) → backend write.</li>
+<li><strong>Quarantine.</strong>
+<code>consolidation/quarantine.py:14-33</code> writes
+<code>{"quarantined": True, "quarantined_at", "contradicted_belief", "quarantine_reason"}</code>
+into the metadata and adds the <code>quarantined</code> tag via
+<code>update_memory_metadata</code>; <code>:67</code> is the internal
+call site, and <code>server/handlers/memory.py:271-273</code> surfaces
+the outcome on the write response.</li>
+<li><strong>Review and release.</strong>
+<code>get_quarantined_memories</code>
+(<code>consolidation/quarantine.py:98-115</code>) calls
+<code>storage.search_by_tag( ["quarantined"])</code> and filters on the
+metadata key in Python; <code>unquarantine_memory</code>
+(<code>:34</code>) clears both. Both are MCP tools
+(<code>tools/registry.py:1110</code>, <code>:1125</code>).</li>
+<li><strong>Retrieve.</strong> the storage backend's semantic search
+with tag and time filters — and no quarantine predicate anywhere in
+<code>storage/</code> or <code>services/</code>.</li>
+<li><strong>Consolidate.</strong>
+<code>consolidation/scheduler.py</code> drives
+<code>consolidator.py</code> over <code>associations</code>,
+<code>clustering</code>, <code>compression</code>, <code>decay</code>,
+<code>forgetting</code>, <code>insights</code>,
+<code>belief_service</code>, <code>contradictions</code> and
+<code>relationship_inference</code>, with <code>run_tracker.py</code>
+recording the pass and <code>health.py</code> reporting on it.</li>
+<li><strong>Forget.</strong>
+<code>consolidation/forgetting.py:51-70</code> — <em>"Rather than
+deleting memories, this system compresses and archives"</em> — into
+<code>~/.mcp_memory_archive</code> with daily subdirectories, recording
+an <code>action_taken</code> of <code>archived</code>,
+<code>compressed</code>, <code>deleted</code> or
+<code>skipped</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> is a dataclass with six substantive fields and
+four timestamp fields. <code>content</code> and
+<code>content_hash</code>; <code>tags</code>; an optional
+<code>memory_type</code>; a <code>Dict[str, Any]</code> of metadata; an
+optional embedding. Timestamps are stored twice over — as a float and as
+an ISO string, for both <code>created_at</code> and
+<code>updated_at</code> — with a legacy <code>timestamp</code> kept for
+compatibility and synchronised in <code>__post_init__</code>.</p>
+<p><strong>The type ontology is the one place the model is strict, and
+it is strict gently.</strong> An unrecognised <code>memory_type</code>
+produces a warning naming the first five valid types and is replaced by
+<code>observation</code> rather than rejected. A recognised one is
+canonicalised, with a comment explaining why: <em>"Store the canonical
+form so <code>Decision</code> and <code>decision</code> are one type on
+disk and type filters match either spelling (#176)."</em> That is a real
+fix to a real class of bug.</p>
+<p><strong>The tag taxonomy is a convention.</strong> Six namespaces —
+<code>sys:</code>, <code>q:</code>, <code>proj:</code>,
+<code>topic:</code>, <code>t:</code>, <code>user:</code> — validated at
+write by logging what does not match, with the message stating that
+<em>"Legacy tags (no namespace) are still supported."</em> Nothing
+rejects an invalid namespace and nothing on the read path distinguishes
+one.</p>
+<p><strong>Everything else lives in <code>metadata</code>.</strong>
+Quarantine status and its four associated fields, archival state, belief
+membership. There is no status column, no scope column, no validity
+interval — a search of the model for <code>valid_from</code>,
+<code>valid_to</code>, <code>valid_time</code> and <code>as_of</code>
+returns nothing, so <code>bitemporal</code> is withheld. The consequence
+is structural rather than stylistic: an attribute in an untyped JSON
+blob cannot be indexed by SQLite-vec, expressed in a Milvus filter
+expression, or enforced by any of the four backends.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Semantic search over whichever backend is configured, with tag
+filtering (<code>search_by_tag</code>) and time filtering (an
+<code>after</code> bound, and the test suggests a before as well). A
+<code>scoring</code> package and a <code>reasoning</code> layer sit
+above, and <code>quality</code> holds quality checks.</p>
+<p>The filters that exist work and are tested.
+<code>test_time_filter_vector_search.py</code> demonstrates the time
+filter excluding an out-of-window memory while keeping the in-window
+one, and does so with the assertions in the right order.</p>
+<p>The filter that does not exist is the quarantine. To be precise about
+the search, because this is the report's central claim:
+<code>rg -n 'quarantin' src/mcp_memory_service/storage src/mcp_memory_service/services</code>
+returns nothing. The only readers of the flag are the listing tool and
+the release tool. An agent calling <code>retrieve_memory</code> after a
+contradiction has been detected and quarantined will receive the
+quarantined memory as an ordinary result, with no marker on it beyond a
+<code>quarantined</code> tag in its tag list — which the agent would
+have to notice and interpret.</p>
+<p>There is also no scope predicate. A <code>proj:</code> tag narrows a
+search only if the caller passes it to <code>search_by_tag</code>;
+nothing in the server applies one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and local to the configured backend, with no
+model call on the path unless embedding generation requires one. The
+identity is the content hash, so re-storing identical text is idempotent
+by construction.</p>
+<p>Validation is advisory in both places it happens. An unrecognised
+memory type becomes <code>observation</code> with a log line. An
+unrecognised tag namespace produces a log line and the tag is stored as
+written. Neither rejects the write. That is a defensible choice for a
+server eighty-seven people contribute to and many harnesses call — a
+strict validator would break callers — and it does mean the ontology and
+the taxonomy describe intent rather than enforce it.</p>
+<p>The contradiction check runs after the write rather than gating it,
+which is why the quarantine is a post-hoc mark rather than a refusal.
+<code>CONTRADICTION_THRESHOLD</code> defaults to three and is read from
+<code>MCP_QUARANTINE_CONTRADICTION_THRESHOLD</code>, so an operator can
+tune how many contradictions it takes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Twenty-eight MCP tools, a REST API, a web dashboard with OAuth, a
+CLI, and a discovery mechanism so an agent harness can find a running
+instance. Ingestion and harvest paths pull documents in; a sync package
+handles multiple devices; backup and health round it out.</p>
+<p>The two quarantine tools are the ones this report turns on.
+<code>get_quarantined_memories</code> is described as <em>"List memories
+that have been quarantined due to contradicting active beliefs. Use to
+review flagged memories."</em> <code>unquarantine_memory</code> is
+<em>"Release a memory from quarantine. Use when a quarantined memory is
+valid (e.g., the contradicted belief was wrong)."</em></p>
+<p>That is a review loop, and it is why <code>human_review</code> is a
+near miss rather than an absence. What withholds the mark is that both
+are MCP tools an agent calls as readily as a person — there is no
+operator-only surface, no queue a person is asked to work, and nothing
+that requires a human decision before a memory becomes retrievable.
+Since the memory is retrievable throughout, there is nothing for a
+review to gate.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Negative evaluation — awarded.</strong> The time-filter case
+asserts a non-empty result, then a present control, then the absence,
+over a real <code>search_memories</code> call against a real backend.
+The semantic-search case pairs a present and an absent term on the top
+hit.</p>
+<p><strong>Trust state — awarded, on the belief table.</strong>
+<code>beliefs.status</code> is <code>candidate</code>,
+<code>active</code> or <code>superseded</code>, stored in a typed
+column, moved by rules that require a confidence floor <em>and</em> a
+provenance floor to promote and a fall below the floor to demote, and
+filtered in SQL with <code>active</code> as the default. The confidence
+rides alongside as an ordering and a floor. That is the mark
+exactly.</p>
+<p><strong>And the same idea is unfinished one module away.</strong> The
+memory row has a discrete condition — <code>quarantined</code> — that is
+stored, produced on a real path by the contradiction detector, carries
+the contradicted belief's hash and a reason, and has a tool to clear it.
+It is not consulted by retrieval. The rubric draws the line at usage,
+and here nothing filters. The distance is one predicate, and the reason
+it is hard is the next paragraph. A reader should take the mark as
+describing the belief layer and read the memory layer as the
+counterexample sitting beside it.</p>
+<p><strong>The metadata dict is why.</strong> Quarantine state lives in
+<code>Memory.metadata</code>, a <code>Dict[str, Any]</code> serialised
+into whichever backend is configured. SQLite-vec, Cloudflare and Milvus
+each store it differently, and a filter would have to be written three
+times against three different expression languages. A typed column would
+have made the predicate trivial and portable; the dict made it a
+project.</p>
+<p><strong>Tombstone — withheld.</strong> Forgetting archives rather
+than deletes, which is careful, and archival is explicitly not this
+mark. The archive lives outside the store under
+<code>~/.mcp_memory_archive</code>, and nothing consults it on a later
+write — so re-storing an archived memory's text produces a live memory
+again, and the archive is a backup rather than a record of rejection.
+Quarantine is closer in spirit but is keyed on the memory, not the
+value, and expires the moment <code>unquarantine_memory</code> is
+called.</p>
+<p><strong>Scope — withheld.</strong> Six tag namespaces, none applied
+as a read-path predicate. A <code>proj:</code> tag is a convention a
+caller may filter on.</p>
+<p><strong>Audit log — withheld.</strong> <code>run_tracker.py</code>
+records consolidation <em>runs</em>, which is an operational record of
+scheduled passes rather than of memory mutations. The files matching
+<code>audit</code> are the OAuth module's, not the memory's.</p>
+<p><strong>Bitemporal — withheld.</strong> Two timestamps in two
+representations, both record time.</p>
+<p><strong>Human review — withheld</strong>, for the reason in section
+8.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>3,067 test functions across 68,820 lines — close to parity with the
+71,120 lines of source, which for a project with this many contributors
+is a good sign.</p>
+<p>The suite is broad rather than deep on any one mechanism: backend
+behaviour, cascading fallback, external embeddings, response limiting,
+partial results, semantic search, time filtering, OAuth, sync.
+<code>tests/integration/</code> carries its own
+<code>package-lock.json</code>, so some of the integration surface is
+exercised through a JavaScript client.</p>
+<p>The two cases that earn the mark are described above. It is worth
+noting what the suite does <em>not</em> contain: no test asserts that a
+quarantined memory is absent from a retrieval result, which is
+consistent — there is no behaviour to assert. A test written for that
+today would fail, and would be the cheapest possible statement of the
+gap.</p>
+<p><strong>Benchmark harnesses are committed; results are not.</strong>
+<code>scripts/benchmarks/</code> holds <code>benchmark_locomo.py</code>
+and <code>benchmark_longmemeval.py</code> beside seven others — filter
+performance, hybrid sync, memory usage, server caching, NER domain, code
+execution and devbench — and <code>tests/benchmarks/</code> carries four
+LoCoMo files covering the dataset loader, the evaluator, the LLM arm and
+the benchmark itself.
+<code>docs/research/locomo-benchmark-analysis.md</code> is a careful
+reading of the LoCoMo paper. What is not in the tree is a score: no
+result file for LoCoMo or LongMemEval is committed, and the README makes
+no accuracy claim. That is the honest shape — the apparatus to measure,
+and no number asserted without it.</p>
+<p>No paper of its own. The arXiv links under
+<code>docs/research/</code> are citations to LoCoMo and to a multi-agent
+reasoning paper, not to work by this project.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Canonicalise the type at write so filters match either
+spelling.</strong> Storing <code>Decision</code> and
+<code>decision</code> as one value on disk removes a whole class of
+silently-empty filter, and the comment naming the issue number is how
+that fix survives.</li>
+<li><strong>Archive rather than delete when you forget.</strong> A dated
+archive tree with an <code>action_taken</code> of archived, compressed,
+deleted or skipped makes a forgetting pass reviewable instead of
+terrifying.</li>
+<li><strong>Split consolidation into modules that name their
+concerns.</strong> Associations, clustering, compression, decay, belief,
+contradiction, insight and relationship inference as separate files with
+a run tracker is a legible design for the most opaque part of any memory
+system.</li>
+<li><strong>Order a negative assertion behind a non-empty check and a
+present control.</strong> The time-filter test does all three in five
+lines.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Detecting a contradiction and not acting on it at read
+time.</strong> The expensive half — deriving beliefs, comparing,
+deciding — is built here. The cheap half, one predicate that excludes a
+quarantined memory from search, is missing, so the work produces a label
+rather than a behaviour.</li>
+<li><strong>Putting epistemic state in an untyped metadata
+dict.</strong> It reads well and it cannot be indexed, filtered in a
+backend expression language, or enforced. Anything a read path must
+consult belongs in a column.</li>
+<li><strong>Validating by logging.</strong> An unrecognised tag
+namespace and an unrecognised memory type both produce a log line and a
+stored row. Over eighty-seven contributors and two years, a taxonomy
+enforced only in the logs becomes a taxonomy in name.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who wants a widely-used, actively-maintained MCP
+memory server with a real choice of backends and an unusually thorough
+scheduled consolidation, and who is storing one person's or one
+project's memories so the absence of a scope key costs nothing. The
+breadth of integration is the reason to pick it: it will connect to what
+you already run. It is the wrong choice where a contradiction must
+actually suppress a memory rather than flag it, where several projects
+or users share one instance, or where an attribute has to be enforceable
+at the storage layer — and a team that needs the first of those should
+know the belief and contradiction machinery is already written, and that
+what is missing is a filter rather than a feature.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should retrieval exclude quarantined memories by default? The tool
+descriptions imply a reviewer will act before the memory is used again,
+and nothing enforces that ordering.</li>
+<li>Would a <code>quarantined</code> column pay for itself across four
+backends? The migration runner exists; the cost is the three expression
+languages.</li>
+<li>Should the memory row's quarantine flag become a column the way
+<code>beliefs.status</code> already is? The belief table proves the
+pattern works here; the memory row is the one that skipped it.</li>
+<li>Is the MIT header in <code>storage/base.py</code> intentional, or a
+leftover from before the repository settled on Apache-2.0?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/</code></td>
+<td>71,120</td>
+<td>Two dozen subsystems; <code>models</code>, <code>storage</code>,
+<code>consolidation</code>, <code>server</code>, <code>tools</code>,
+<code>web</code> are the load-bearing ones</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/models/memory.py</code></td>
+<td>—</td>
+<td>The <code>Memory</code> dataclass, timestamp synchronisation,
+ontology validation and canonicalisation (70-101)</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/models/tag_taxonomy.py</code></td>
+<td>—</td>
+<td><code>VALID_NAMESPACES</code> (61) and the parser</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/storage/</code></td>
+<td>—</td>
+<td><code>base.py</code> (with the MIT header),
+<code>sqlite_vec.py</code>, <code>cloudflare.py</code>,
+<code>milvus.py</code>, <code>hybrid.py</code>, <code>graph.py</code>,
+the migration runner</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/consolidation/quarantine.py</code></td>
+<td>—</td>
+<td><code>quarantine_memory</code> (14-33),
+<code>unquarantine_memory</code> (34),
+<code>get_quarantined_memories</code> (98-115), the threshold constant
+(12)</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/consolidation/</code></td>
+<td>—</td>
+<td><code>belief.py</code>, <code>belief_service.py</code>,
+<code>contradictions.py</code>, <code>associations.py</code>,
+<code>clustering.py</code>, <code>compression.py</code>,
+<code>decay.py</code>, <code>forgetting.py</code>,
+<code>insights.py</code>, <code>relationship_inference.py</code>,
+<code>run_tracker.py</code>, <code>scheduler.py</code>,
+<code>health.py</code></td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/tools/registry.py</code></td>
+<td>—</td>
+<td>Twenty-eight tools; the quarantine pair at 1110 and 1125</td>
+</tr>
+<tr>
+<td><code>src/mcp_memory_service/server/handlers/memory.py</code></td>
+<td>—</td>
+<td>The write handler and the quarantine notice (271-273)</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>68,820</td>
+<td>3,067 test functions; <code>test_time_filter_vector_search.py</code>
+and <code>test_semantic_search.py</code> carry the negative cases</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>rg -n &#39;quarantin&#39; src/mcp_memory_service/storage src/mcp_memory_service/services  # none: no retrieval path reads the flag
+rg -n &#39;proj:|user:&#39; src/mcp_memory_service/storage src/mcp_memory_service/services # none: the tag namespaces are not read-path predicates
+rg -n &#39;valid_from|valid_to|valid_time|as_of&#39; src/mcp_memory_service/models/memory.py  # none: two timestamps, both record time
+rg -l &#39;audit&#39; src/mcp_memory_service                                    # the OAuth module only; run_tracker records passes, not mutations
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs   # citations to LoCoMo and others; no paper of its own
+ls scripts/benchmarks tests/benchmarks                                  # LoCoMo and LongMemEval harnesses committed; no result file for either
+rg -n &#39;not in&#39; tests --glob &#39;*.py&#39; | rg -i &#39;result|memories&#39;            # the two paired cases; nothing asserts a quarantined memory absent</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/doobidoo/mcp-memory-service/commit/63801ca5e3f2f02f392c34d395fc62adc9049796"><code class="commit-id" title="63801ca5e3f2f02f392c34d395fc62adc9049796">63801ca5…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 10
+September 2026. Screened before reading: four auto-run surfaces, seven
+build-time execution paths, eight unpinned dependency surfaces, two
+manifests inside the seven-day cooldown, and an uninstalled
+<code>pre-commit</code> hook payload noted as inert until something
+copies it; nothing was installed or run, and the read was made from a
+full clone. One mark. The reading covered the memory model, the four
+storage backends, the write and retrieval paths, and the consolidation
+package with its belief, contradiction and quarantine modules; the web,
+OAuth, sync, ingestion and harvest surfaces were read as context rather
+than as subject.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
