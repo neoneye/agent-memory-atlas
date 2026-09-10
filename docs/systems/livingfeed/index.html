@@ -114,14 +114,14 @@ layer.</p>
               <strong>showjihyun/livingfeed</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae" title="9bdd464d570a493ba9125636f4cf01b6cff78bae">
+            <a class="meta-pill revision-pill" href="https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002" title="732d8bed74abb17b3079f2841911227c91468002">
               <span>Analyzed revision</span>
-              <code>9bdd464d…</code>
+              <code>732d8bed…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/showjihyun--livingfeed" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -314,10 +314,35 @@ Every consolidated memory carries mandatory
 <code>source_event_ids</code> back to the events that produced it, and
 the event store is append-only — so provenance is complete in the
 direction that matters for rebuilding. What is absent is a record of
-memory <em>mutations</em>, because there are none: nothing is ever
-updated or deleted, so there is nothing for a mutation log to hold. The
-column is withheld on a technicality that is really a design
-property.</p>
+memory <em>mutations</em>, because there are none: nothing in the memory
+path is ever updated or deleted, so there is nothing for a mutation log
+to hold. The column is withheld on a technicality that is really a
+design property.</p>
+<p><strong>What the provenance is for is a three-valued replay verdict,
+and the third value is the point.</strong> <code>verify_digest</code>
+compares the context digest recorded at a decision against one
+reassembled from the event log, and <code>DigestVerdict</code> has three
+values whose docstring insists the last two are never the same thing:
+<code>MATCH</code>, the context at the decision was reproduced;
+<code>MISMATCH</code>, <em>the same assembler with a different result —
+a real accident, meaning the inputs changed or the assembly is not pure,
+and a subject for investigation</em>; and <code>UNVERIFIABLE</code>,
+where the assembler versions differ so the comparison is meaningless —
+<em>"not a failure but an 'unknown', and collapsing that into a failure
+makes the report lie."</em> The function refuses to compare hashes at
+all across versions, for a stated reason: report that mismatch and
+<em>every time you fix the assembler the entire past looks
+divergent</em>.</p>
+<p>The L1 runner built on it carries the same rule up a level, and its
+module docstring names the property it is defending: <em>it must not
+manufacture a false accusation</em> — if the reassembly inputs could not
+all be restored, a disagreeing fingerprint is <code>UNVERIFIABLE</code>
+and not <code>MISMATCH</code>. This is the same discipline <a
+href="../gmr/">GMR</a> applies to a failed probe, arriving independently
+in a different domain: a verifier that cannot tell <em>I checked and it
+differs</em> from <em>I could not check</em> will eventually be ignored,
+and the fix in both cases is a third value rather than a better error
+message.</p>
 <p><strong>The risk is a swallowed failure.</strong> <code>recall</code>
 wraps its Qdrant call in a bare <code>except Exception</code>, logs
 <em>"recall failed (bypassing with empty recall)"</em> (회상 실패(빈
@@ -461,6 +486,30 @@ was traced into the memory path.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002"><code class="commit-id" title="732d8bed74abb17b3079f2841911227c91468002">732d8bed…</code></a>
+— read again, 19 commits and 151 files past the previous pin.
+<code>scope_enforced</code> holds and carries an evidence record:
+<code>recall</code> still posts a three-clause <code>filter.must</code>
+— actor, importance floor, unexpired — under a per-world collection.
+Every absence claim was re-run and holds, including the swallowed recall
+failure, which is the same bare <code>except Exception</code> logging
+<em>회상 실패(빈 회상으로 우회)</em> and returning an empty list. The
+substantial addition is replay verification: a 509-line
+<code>replay_l1.py</code> beside <code>replay_ai.py</code>,
+<code>replay_rules.py</code> and <code>replay_world.py</code>, and a
+<code>DigestVerdict</code> in <code>context.py</code> whose three values
+keep <em>the fingerprint differs</em> apart from <em>I could not restore
+the inputs to check</em>, with the reasoning written into the docstrings
+— a comparison across assembler versions is refused outright, because
+reporting it would make the whole past look divergent every time the
+assembler is fixed. Four new replay suites totalling about 760 lines
+came with it, against 945 test functions across the tree. Screened
+before reading: no auto-run surface, no manifest inside the seven-day
+cooldown, ten build-time execution paths and nineteen unpinned
+dependency surfaces across a monorepo carrying both
+<code>pnpm-lock.yaml</code> and <code>uv.lock</code>; nothing was
+installed, built or run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae"><code class="commit-id" title="9bdd464d570a493ba9125636f4cf01b6cff78bae">9bdd464d…</code></a>
 — first reading.</p>

@@ -934,7 +934,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: storing the *components* of a composite importance score rather than only the total, so the coefficients can be tuned offline by replay instead of guessed.
 - Biggest risk: a recall failure is caught and returned as an empty list, so an actor with an unreachable index is simply amnesiac and nothing upstream is told.
 - Most reusable component: confining forgetting to the derived layer while keeping the source, with expiry expressed as a query predicate.
-- Maturity impression: 429 test functions across 40 files, and a deterministic embedder in dev and CI that makes real similarity assertions possible rather than mocked ones.
+- Maturity impression: 945 test functions, a deterministic embedder in dev and CI that makes real similarity assertions possible rather than mocked ones, and four replay suites over a digest comparison whose verdict keeps *the fingerprint differs* apart from *I could not restore the inputs to check* — the assembler-version case is refused outright rather than reported, because reporting it would make the whole past look divergent every time the assembler is fixed.
 - Study when: you are building a simulation or a companion where memory should fade rather than be corrected — it is the most carefully reasoned member of the Generative Agents lineage here.
 - Do not copy when: you need factual memory. There is no correction path, no trust state and no deletion by identity — and the design rationale is in Korean-language comments, so the reasons are only partly accessible to a non-Korean-reading team.
 

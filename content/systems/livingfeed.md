@@ -7,10 +7,12 @@ page_kind: system
 source_name: "showjihyun/livingfeed"
 source_url: https://github.com/showjihyun/livingfeed
 archive_name: "showjihyun--livingfeed"
-revision: 9bdd464d570a493ba9125636f4cf01b6cff78bae
-revision_url: https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae
-analyzed_at: 2026-07-30
+revision: 732d8bed74abb17b3079f2841911227c91468002
+revision_url: https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002
+analyzed_at: 2026-09-10
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the actor key is one of three mandatory clauses on the vector search, under a collection that is already partitioned per world | engine/actor/src/lf_actor/semantic.py:151-177 | `recall` posts to `lf_semantic_{world_id}` — a collection per world — with a `filter.must` of three clauses: `actor_id` matches, `importance` is at or above the floor, and `decay_at` is greater than now. So the scope is enforced twice over, by collection and by predicate, and expiry rides in the same `must` rather than waiting for a sweeper, which is why a forgotten memory needs no job to disappear. The docstring states the rule the filter implements: *only an actor's own memories, only the unexpired, nearest first*. The limit belongs with the mark: the whole call is wrapped in a bare `except Exception` that logs and returns an empty list, so an unreachable index produces an actor with no memories rather than an error | engine/actor/tests/test_semantic.py"
 stack_storage: "qdrant, redis"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -192,9 +194,31 @@ coherent position for a simulation and would not be for an assistant.
 carries mandatory `source_event_ids` back to the events that produced it, and the
 event store is append-only — so provenance is complete in the direction that
 matters for rebuilding. What is absent is a record of memory *mutations*, because
-there are none: nothing is ever updated or deleted, so there is nothing for a
-mutation log to hold. The column is withheld on a technicality that is really a
-design property.
+there are none: nothing in the memory path is ever updated or deleted, so there
+is nothing for a mutation log to hold. The column is withheld on a technicality
+that is really a design property.
+
+**What the provenance is for is a three-valued replay verdict, and the third
+value is the point.** `verify_digest` compares the context digest recorded at a
+decision against one reassembled from the event log, and `DigestVerdict` has
+three values whose docstring insists the last two are never the same thing:
+`MATCH`, the context at the decision was reproduced; `MISMATCH`, *the same
+assembler with a different result — a real accident, meaning the inputs changed
+or the assembly is not pure, and a subject for investigation*; and
+`UNVERIFIABLE`, where the assembler versions differ so the comparison is
+meaningless — *"not a failure but an 'unknown', and collapsing that into a
+failure makes the report lie."* The function refuses to compare hashes at all
+across versions, for a stated reason: report that mismatch and *every time you
+fix the assembler the entire past looks divergent*.
+
+The L1 runner built on it carries the same rule up a level, and its module
+docstring names the property it is defending: *it must not manufacture a false
+accusation* — if the reassembly inputs could not all be restored, a disagreeing
+fingerprint is `UNVERIFIABLE` and not `MISMATCH`. This is the same discipline
+[GMR](../gmr/) applies to a failed probe, arriving independently in a different
+domain: a verifier that cannot tell *I checked and it differs* from *I could not
+check* will eventually be ignored, and the fix in both cases is a third value
+rather than a better error message.
 
 **The risk is a swallowed failure.** `recall` wraps its Qdrant call in a bare
 `except Exception`, logs *"recall failed (bypassing with empty recall)"*
@@ -288,5 +312,7 @@ the code is legible, the *reasons* are in the comments.
 | `engine/**/tests` | 429 tests | Memory, semantic, phases, integration |
 
 ## History
+
+**2026-09-10** — [`732d8bed74abb17b3079f2841911227c91468002`](https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002) — read again, 19 commits and 151 files past the previous pin. `scope_enforced` holds and carries an evidence record: `recall` still posts a three-clause `filter.must` — actor, importance floor, unexpired — under a per-world collection. Every absence claim was re-run and holds, including the swallowed recall failure, which is the same bare `except Exception` logging *회상 실패(빈 회상으로 우회)* and returning an empty list. The substantial addition is replay verification: a 509-line `replay_l1.py` beside `replay_ai.py`, `replay_rules.py` and `replay_world.py`, and a `DigestVerdict` in `context.py` whose three values keep *the fingerprint differs* apart from *I could not restore the inputs to check*, with the reasoning written into the docstrings — a comparison across assembler versions is refused outright, because reporting it would make the whole past look divergent every time the assembler is fixed. Four new replay suites totalling about 760 lines came with it, against 945 test functions across the tree. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, ten build-time execution paths and nineteen unpinned dependency surfaces across a monorepo carrying both `pnpm-lock.yaml` and `uv.lock`; nothing was installed, built or run.
 
 **2026-07-30** — [`9bdd464d570a493ba9125636f4cf01b6cff78bae`](https://github.com/showjihyun/livingfeed/commit/9bdd464d570a493ba9125636f4cf01b6cff78bae) — first reading.
