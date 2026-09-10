@@ -7,9 +7,9 @@ page_kind: system
 source_name: "munch2u-a11y/Helix-AGI"
 source_url: https://github.com/munch2u-a11y/Helix-AGI
 archive_name: "munch2u-a11y--Helix-AGI"
-revision: 280bb0447a48cdcef8a557fc08f70551e47d1891
-revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891
-analyzed_at: 2026-08-20
+revision: 7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5
+revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5
+analyzed_at: 2026-09-10
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the scratchpad, which is the only store surface with a committed absence assertion | tests/test_scratchpad_postpone.py | `remove_note(note_id)` is called and the test then opens the file and asserts `assertNotIn(note_id, f.read())` — a deletion-durability assertion against that store's only read surface. It is narrow on purpose: nothing asserts that a *removed belief* is absent, and the test that would matter most is the one this design would fail, because a removed belief's content remains in the journal and the journal is a read path | tests/test_scratchpad_postpone.py:130"
@@ -32,7 +32,7 @@ matrix:
 
 ## 1. Executive Summary
 
-Helix AGI is a 59,000-line single-agent runtime, AGPL-3.0, built around a
+Helix AGI is a 62,000-line single-agent runtime, AGPL-3.0, built around a
 continuous four-state pulse loop rather than a request/response chain. Its memory
 layer has two halves that do not share a storage model. **Beliefs** live in seven
 JSON files, one per category, in a two-tier epistemic topology: an outer tier
@@ -55,7 +55,7 @@ somatic state at encoding — and confidence is recomputed nightly by a stated
 attrition equation over time held, reliance, verifications and stability. The
 code explains what it excluded and why: relation count was removed from
 individual mass because it produced *"relations → mass ↑ → gravity ↑ →
-co-injection → more relations"* (`memory/belief_store.py:44-47`), a
+co-injection → more relations"* (`memory/belief_store.py:43-47`), a
 self-reinforcing popularity loop caught and cut.
 
 Against that, one gap runs through the whole design. `CognitiveJournal`'s module
@@ -270,7 +270,7 @@ paused night.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Roughly forty test files, plus sandboxes for LoCoMo, StateBench, belief
+Thirty-eight test files, plus sandboxes for LoCoMo, StateBench, belief
 extrapolation and tool creation. `tests/test_belief_operations.py` covers the
 store's arithmetic; `tests/test_runtime_integrity.py` exercises journal
 round-trips.
@@ -298,12 +298,26 @@ with itself.
 `documents/benchmark/` contains a token measurement. The mechanism makes the
 direction plausible; the number is unsupported in the tree.
 
+**And the default branch does not contain the project's own August work.**
+`main` runs from a base of 8 July 2026 plus three commits dated 20 August — a
+restored UI widget with an Apache-2.0 licence file, an isolated `Over_Agent_Design`
+subproject, and a README rewrite. Forty-three commits made between 6 and 16
+August are reachable in the repository but are not ancestors of `main`, and they
+carry roughly 27,600 lines across `core/`, `memory/` and `tests/` that the branch
+does not have: a unified-retrieval layer, a task-cognition module and a semantic
+encoder, each with its own suite. Test files number thirty-eight on the branch
+against seventy-three on that abandoned line. The memory layer described in this
+report is the one on `main`, and every symbol and line cited here resolves
+against it — the discarded work added modules beside these rather than editing
+them. A reader who finds a description of Helix's retrieval architecture written
+from those commits is reading about code they will not get from a clone.
+
 ## 11. Patterns Worth Stealing
 
 ### Steal
 
 **Cut the loop between reachability and importance, and write down why.** The
-comment at `belief_store.py:44-47` records that relation count was removed from
+comment at `belief_store.py:43-47` records that relation count was removed from
 individual mass because related beliefs got co-injected, which created more
 relations, which raised mass again. Cluster gravity now emerges from spatial
 density instead. Most systems that ship this loop never name it.
@@ -412,6 +426,8 @@ mutation log.
 | `documents/benchmark/` | Committed per-run benchmark JSON and reports |
 
 ## History
+
+**2026-09-10** — [`7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5`](https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5) — re-pinned because the previous pin stopped being an ancestor of the default branch. `main` was rebuilt from a base of 8 July 2026 with three commits dated 20 August, abandoning the forty-three commits made between 6 and 16 August — the line that carried both of this atlas's earlier readings. Those commits remain fetchable and hold about 27,600 lines across `core/`, `memory/` and `tests/` that the branch does not, including the unified-retrieval layer, the task-cognition module and the semantic encoder; test files run thirty-eight on the branch against seventy-three on the abandoned line. Every claim in this report was re-verified against the branch and holds: the `MemoryManager.store` docstring, the journal's single-source-of-truth line, the dual 8D manifold with the 384D index and its FAISS threshold, the seven belief categories, the excluded-relation-count comment, and the central criticism — `remove_belief` writes the category file and clears the physics point, `archive_belief` sets mass to `0.01` and tags, and neither appends to the journal that `_resolve_memory_content` reads from. Every cited line number resolves to the same symbol. The mark holds: `tests/test_scratchpad_postpone.py:130` still asserts the removed note id is absent from the file. Both absence claims were re-run — the 63× token claim appears three times in the README and no file under `documents/benchmark/` measures tokens. Screened before reading: no auto-run surface, one build-time execution path in `setup.py`, and two unpinned dependency surfaces including twenty-nine `>=` requirements; nothing was installed, built or run.
 
 **2026-08-20** — [`280bb0447a48cdcef8a557fc08f70551e47d1891`](https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891) — re-pinned 42 commits on: 198 files and +34,459 lines, with a whole retrieval architecture added. Screened again: no auto-run surface, one build-time execution point, two unpinned surfaces; nothing installed and nothing run. The mark holds at `negative_eval` and now carries an evidence record. **The central criticism in this report survives the growth unchanged.**
 

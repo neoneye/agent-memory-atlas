@@ -7251,7 +7251,7 @@ Privacy/deletion:
 - [kirodotdev/KiroCrew](https://github.com/kirodotdev/KiroCrew) at [`429cbad8cdb7bfbf4c10f6343374565832b176d2`](https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2)
 - [fpytloun/mnemory](https://github.com/fpytloun/mnemory) at [`c67b9167e18f1730786c07c48f883674425dd681`](https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681)
 - [techtheist/engram](https://github.com/techtheist/engram) at [`9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357`](https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357)
-- [munch2u-a11y/Helix-AGI](https://github.com/munch2u-a11y/Helix-AGI) at [`280bb0447a48cdcef8a557fc08f70551e47d1891`](https://github.com/munch2u-a11y/Helix-AGI/commit/280bb0447a48cdcef8a557fc08f70551e47d1891)
+- [munch2u-a11y/Helix-AGI](https://github.com/munch2u-a11y/Helix-AGI) at [`7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5`](https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5)
 - [munch2u-a11y/AIMAOS](https://github.com/munch2u-a11y/AIMAOS) at [`65f68450450c8ba6190197b23993d74a3ab8b020`](https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020)
 - [Cedrick-Coto/Aeris](https://github.com/Cedrick-Coto/Aeris) at [`68a2bd6d11a12beab705ce400e5c3a052d7f71db`](https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db)
 - [MakerViking/mimir](https://github.com/MakerViking/mimir) at [`ff5b3688da694be0edb38232a1d90843d00a5fa7`](https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7) — read only; no auto-run surface, no build-time execution, no manifest inside the cooldown, nothing installed or run
