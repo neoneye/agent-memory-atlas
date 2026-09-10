@@ -4,27 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="A Postgres memory service where
-the agent is a first-class access-control principal with its own
-credentials, and a clamp makes over-granting an agent harmless by
-construction.">
+    <meta name="description" content="A Postgres memory service where a
+delegated credential can only narrow what its holder already has — a
+restricted API key declares a ceiling per space and tree path, and the
+access function intersects it against the member's live grants at the
+deeper of the two paths, so over-declaring a key cannot escalate; every
+memory mutation is journalled by database trigger with the cause the
+caller named.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Memory
 Engine — Agent Memory Atlas">
     <meta property="og:description" content="A Postgres memory service
-where the agent is a first-class access-control principal with its own
-credentials, and a clamp makes over-granting an agent harmless by
-construction.">
+where a delegated credential can only narrow what its holder already has
+— a restricted API key declares a ceiling per space and tree path, and
+the access function intersects it against the member's live grants at
+the deeper of the two paths, so over-declaring a key cannot escalate;
+every memory mutation is journalled by database trigger with the cause
+the caller named.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Memory
 Engine — Agent Memory Atlas">
     <meta name="twitter:description" content="A Postgres memory service
-where the agent is a first-class access-control principal with its own
-credentials, and a clamp makes over-granting an agent harmless by
-construction.">
+where a delegated credential can only narrow what its holder already has
+— a restricted API key declares a ceiling per space and tree path, and
+the access function intersects it against the member's live grants at
+the deeper of the two paths, so over-declaring a key cannot escalate;
+every memory mutation is journalled by database trigger with the cause
+the caller named.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Memory Engine — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -46,7 +55,7 @@ construction.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Memory Engine",
-      "description": "A Postgres memory service where the agent is a first-class access-control principal with its own credentials, and a clamp makes over-granting an agent harmless by construction.",
+      "description": "A Postgres memory service where a delegated credential can only narrow what its holder already has \u2014 a restricted API key declares a ceiling per space and tree path, and the access function intersects it against the member's live grants at the deeper of the two paths, so over-declaring a key cannot escalate; every memory mutation is journalled by database trigger with the cause the caller named.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -100,26 +109,30 @@ construction.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">Agents as principals</p>
+          <p class="eyebrow">A delegated key is a ceiling, not a
+grant</p>
           <h1>Memory Engine</h1>
-          <p class="document-deck">A Postgres memory service where the
-agent is a first-class access-control principal with its own
-credentials, and a clamp makes over-granting an agent harmless by
-construction.</p>
+          <p class="document-deck">A Postgres memory service where a
+delegated credential can only narrow what its holder already has — a
+restricted API key declares a ceiling per space and tree path, and the
+access function intersects it against the member's live grants at the
+deeper of the two paths, so over-declaring a key cannot escalate; every
+memory mutation is journalled by database trigger with the cause the
+caller named.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/timescale/memory-engine">
               <span>Source</span>
               <strong>timescale/memory-engine</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927" title="54e4d7d201b5c7ba3aed618ea343d9f4d3f40927">
+            <a class="meta-pill revision-pill" href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d" title="2ef90da9385448e0bbb02ed1da82c04bd663602d">
               <span>Analyzed revision</span>
-              <code>54e4d7d2…</code>
+              <code>2ef90da9…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/timescale--memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -127,7 +140,7 @@ construction.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -152,31 +165,36 @@ functions.</p>
 <p>The memory model is deliberately plain. The access model is the most
 developed in this atlas, and it is the reason to read the
 repository.</p>
-<p><strong>The agent is a first-class principal.</strong> Principals are
-users, <em>agents</em>, service accounts, or groups; an agent has its
-own api key, its own grants, and its own identity in the authorization
-tables. Everywhere else in this atlas an agent acts with the user's
-authority or with none, and "which memories may this agent read" is not
-a question the schema can express.</p>
+<p><strong>A delegated credential is a ceiling, not a grant.</strong>
+Principals are users, service accounts or groups, and a credential can
+be <em>restricted</em>: an API key carries per-space declarations and,
+optionally, per-tree-path access levels of read, write or owner. What
+those declarations express is a maximum.
+<code>api_key_declared_tree_access</code> says so in its own header — it
+returns <em>"the ceiling on effective tree access implied by an api key
+— not the effective access itself"</em> — and
+<code>build_tree_access</code> intersects that ceiling against the
+member's live grants.</p>
 <p>Grants are <code>(space, principal, tree_path, level)</code> with
 three additive levels — read, write, owner — where
-<code>tree_path</code> is an ltree, so a grant covers a subtree. And the
-safety property that makes it workable:</p>
-<blockquote>
-<p>"a member may grant/revoke their <strong>own agents</strong> at any
-path… safe because <code>agent_tree_access</code> clamps an agent to
-<code>least(agent, owner)</code> at every path, so an over-grant clamps
-<strong>down</strong> to the owner's level rather than escalating"</p>
-</blockquote>
-<p>That clamp is the good idea. Letting people delegate to their own
-agents without an approval workflow is only safe if delegation cannot
-exceed the delegator, and making that a <code>least()</code> at every
-path means a careless or malicious over-grant is <em>harmless by
+<code>tree_path</code> is an ltree, so a grant covers a subtree. The
+intersection is <code>least(ka.access, ma.access)</code> and it runs in
+both directions: where the member's grant sits at or above the key's
+path the key is clamped down at the key's path, and where the key's
+declaration sits at or above a narrower member grant the minimum is
+taken at the member's path. A declaration with no tree rows means no
+key-side restriction at all, encoded as an owner-at-root sentinel, and a
+key whose member and space do not agree yields zero rows — an empty
+grant array, which the comment names as <em>"the safe
+direction"</em>.</p>
+<p>That clamp is the good idea. Letting people mint scoped credentials
+without an approval workflow is only safe if a delegation cannot exceed
+the delegator, and making that a <code>least()</code> at every path
+means a careless or malicious over-declaration is <em>harmless by
 construction</em> rather than caught by a check somebody might forget. A
-joining agent is even provisioned at
-<code>owner@home.&lt;owner_id&gt;.&lt;agent_id&gt;</code> — nested
-inside its owner's home so the owner's grant covers it and the clamp
-stays effective.</p>
+declaration with no tree rows is the common case and means the key
+inherits whatever its holder has in that space, so the narrow path is
+opt-in rather than the default a caller has to remember.</p>
 <p>Three more decisions are worth the read. Authorization is evaluated
 <strong>inside the search SQL</strong>:
 <code>core.build_tree_access(principalId, spaceId)</code> produces a
@@ -252,35 +270,37 @@ flowchart TD
   Mem[&quot;me_slug.memory&quot;] --&gt; SQL
   SQL --&gt; RRF[&quot;BM25 + semantic,&lt;br/&gt;fused by RRF&quot;]
   RRF --&gt; Out[&quot;visible,&lt;br/&gt;ranked results&quot;]
-  Agent[&quot;agent principal&quot;] --&gt; Clamp[&quot;agent_tree_access&lt;br/&gt;= least(agent,&lt;br/&gt;owner)&quot;]
+  Key[&quot;restricted api key —&lt;br/&gt;per-space and per-path&lt;br/&gt;declarations&quot;] --&gt; Clamp[&quot;build_tree_access&lt;br/&gt;= least(key, member)&lt;br/&gt;at the deeper path&quot;]
   Clamp --&gt; TA
   W[&quot;memory.create —&lt;br/&gt;tree required&quot;] --&gt; Mem</code></pre></details></figure>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<h3 id="agents-as-principals-clamped-to-their-owner">Agents as
-principals, clamped to their owner</h3>
+<h3 id="a-delegated-key-clamped-to-its-holder">A delegated key, clamped
+to its holder</h3>
 <p>The clamp is the mechanism this atlas has been missing without naming
-it. Every system here that mounts memory into an agent grants the agent
-whatever the process has. Ask "can this agent read the other project's
-memories?" and the answer is a property of the deployment, not of the
-data model.</p>
+it. Every system here that mounts memory into an agent gives it whatever
+the process has. Ask "can this agent read the other project's memories?"
+and the answer is a property of the deployment, not of the data
+model.</p>
 <p>Memory Engine answers it in the schema, and then solves the
-delegation problem the answer creates. If agents are principals, someone
-must grant them access — and routing every grant through an owner
-approval makes the feature unusable, while allowing self-service invites
-privilege escalation. <code>least(agent, owner)</code> at every path
-dissolves the dilemma: a member may grant their own agents freely,
-because the grant is evaluated against their own level at that path.
-Over-grant and it clamps down; lose access yourself and your agent loses
-it too, without a revocation sweep.</p>
-<p>The <code>X-Me-As-Agent</code> header carries the same discipline
-into impersonation, with a stated <strong>parity invariant</strong> —
-acting as your own agent gives "exactly what the agent's own
-<code>ME_API_KEY</code> could do", with management operations barred.
-The human is recorded as <code>authenticatedAs</code> "for observability
-only (never gates authz)", which is precisely the right split between an
-audit field and an authorization field, and one that systems get wrong
-in the other direction all the time.</p>
+delegation problem the answer creates. Somebody must be able to mint a
+credential for a tool — routing every one through an approval makes the
+feature unusable, while unrestricted self-service invites privilege
+escalation. Intersecting a key's declaration with the holder's live
+grants at every path dissolves the dilemma: a member may scope their own
+keys freely, because the declaration is evaluated against their own
+level at that path. Over-declare and it clamps down; lose access
+yourself and the key loses it too, without a revocation sweep.</p>
+<p>The impersonation header this discipline was originally carried by,
+<code>X-Me-As-Agent</code>, is retired, and
+<code>authenticate-space.integration.test.ts</code> pins the retirement
+with a case named <em>legacy X-Me-As-Agent is ignored</em> — a header
+that quietly stops meaning anything is otherwise indistinguishable from
+one that quietly still works. The human behind a call is recorded as
+<code>authenticatedAs</code> "for observability only (never gates
+authz)", which is precisely the right split between an audit field and
+an authorization field, and one that systems get wrong in the other
+direction all the time.</p>
 <h3 id="authorization-inside-the-ranking-query">Authorization inside the
 ranking query</h3>
 <p><code>build_tree_access</code> materializes the caller's grants as
@@ -419,11 +439,15 @@ that nobody can explain their retrieval.</p>
 required tree, plus importers for git history, sessions, and memory
 packs. A worker pool handles embedding generation. Harness adapters
 inject an environment contract so a <code>me</code> call from inside
-Claude, opencode, Codex or Gemini resolves to the configured agent
-identity rather than the human's.</p>
-<p>That last part matters for the access model: without it, an agent's
-writes would land under the human's principal and the whole clamp would
-be decorative.</p>
+Claude, opencode, Codex or Gemini resolves to the configured credential
+rather than to whatever the shell happened to hold.</p>
+<p>That last part matters for the access model: without it, a tool's
+writes would land under whichever key was ambient and the scoping would
+be decorative. A Claude Code plugin registers the same contract through
+hooks — <code>me claude env</code> at SessionStart,
+<code>me claude hook</code> on Stop and SessionEnd — and a
+<code>.claude-plugin/marketplace.json</code> at the repository root is
+the entry a harness installs it from.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Two JSON-RPC endpoints with deliberately different credentials — the
 memory data plane accepts any bearer plus an <code>X-Me-Space</code>
@@ -441,10 +465,13 @@ config-file-driven systems in this atlas simply have.</p>
 Trust</h2>
 <p>Strengths:</p>
 <ul>
-<li><strong>Agents are principals</strong> with their own credentials
-and grants.</li>
-<li><strong><code>least(agent, owner)</code> clamping</strong>, making
-delegation safe by construction.</li>
+<li><strong>A delegated key is a ceiling</strong>, per-space and
+per-tree-path, not a grant.</li>
+<li><strong><code>least(key, member)</code> clamping in both path
+directions</strong>, making delegation safe by construction, with an
+inconsistent triple resolving to no access at all.</li>
+<li><strong>A retired header that stays retired</strong>, pinned by
+<code>legacy X-Me-As-Agent is ignored</code>.</li>
 <li><strong>Authorization inside the ranking query</strong>, not as a
 post-filter.</li>
 <li><strong>A documented negative result on RLS</strong>, with a
@@ -467,10 +494,18 @@ diagnostics.</strong></li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>No trust state, correction semantics, or tombstone.</strong>
-Memory is a governed store, not a belief model.</li>
-<li><strong><code>replace</code> overwrites in place</strong>, so a
-corrected memory leaves no history.</li>
+<li><strong>No trust state and no tombstone.</strong> Memory is a
+governed store, not a belief model: nothing marks a memory doubtful,
+superseded or rejected.</li>
+<li><strong><code>replace</code> overwrites the row in place</strong>,
+and the prior shape survives in <code>memory_event</code> rather than in
+the table — recoverable from the log, and only inside its retention
+window.</li>
+<li><strong>The mutation log has a horizon.</strong> Where TimescaleDB
+is installed the migration installs a thirty-day retention policy, and
+its comment states the consequence: per-memory history is bounded to
+that window. On a plain-Postgres deployment the policy is skipped and
+the table grows without one.</li>
 <li><strong>Access is evaluated per query from a materialized
 jsonb</strong>, so a grant change mid-request is not observable —
 acceptable, but the staleness window is not documented.</li>
@@ -498,13 +533,26 @@ the other wall.</p>
 <li><strong>Make the agent a principal.</strong> If an agent has memory,
 "which memories may this agent read" should be answerable from the
 schema rather than from the deployment.</li>
-<li><strong>Clamp delegated grants to the delegator</strong> with
-<code>least()</code> at every path. It turns self-service delegation
-from a privilege-escalation risk into a no-op-when-wrong, and removes
-the need for an approval workflow.</li>
-<li><strong>Keep the impersonation parity invariant</strong>: acting as
-an agent grants exactly what that agent could do, and the human identity
-is recorded for observability without ever gating authorization.</li>
+<li><strong>Make a delegated credential a ceiling and intersect it with
+live access</strong>, with <code>least()</code> at the deeper of the two
+paths and in both directions. It turns self-service delegation from a
+privilege-escalation risk into a no-op-when-wrong, and removes the need
+for an approval workflow.</li>
+<li><strong>Resolve an inconsistent credential to no access rather than
+to an error.</strong> A key whose member and space do not agree yields
+zero rows and an empty grant array; the failure direction is chosen and
+commented.</li>
+<li><strong>Pin a retired auth header with a test that it is
+ignored.</strong> A header that quietly starts meaning nothing is
+indistinguishable from one that quietly still works.</li>
+<li><strong>Log the change, not the write.</strong> The trigger fires on
+every insert and delete, and on an update only when the tree, temporal
+range, name, meta or content actually differ — so a no-op write leaves
+the history alone.</li>
+<li><strong>Let the caller name the cause and mint the operation id
+yourself.</strong> A session-local setting carries a <code>cause</code>
+into every row of a multi-row operation, and the engine supplies a
+shared <code>operation_id</code> when the caller does not.</li>
 <li><strong>Evaluate authorization inside the ranking query</strong>, so
 <code>LIMIT</code> means the same thing for every caller.</li>
 <li><strong>Require the write destination</strong>, and let the default
@@ -554,13 +602,14 @@ the part this repository solved.</li>
 <ul>
 <li>How stale can a materialized <code>_tree_access</code> be relative
 to a concurrent grant change?</li>
-<li>Does anything test that an over-granted agent actually clamps, or is
-the invariant only argued in documentation?</li>
+<li>Does anything test that an over-declared key actually clamps, or is
+the invariant only argued in the function's header comment?</li>
 <li>What is retrieval quality? No labelled evaluation was found.</li>
 <li>Does <code>deleteTree</code> reach embeddings and any derived
 artifacts, or only rows?</li>
-<li>With <code>replace</code> overwriting in place, what recovers a
-memory a bad import clobbered?</li>
+<li>Past the thirty-day retention window, with <code>replace</code>
+overwriting in place and the event dropped, what recovers a memory a bad
+import clobbered?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -583,6 +632,43 @@ functions.</li>
 <code>packages/cli/failsafe.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d"><code class="commit-id" title="2ef90da9385448e0bbb02ed1da82c04bd663602d">2ef90da9…</code></a>
+— read again, 144 commits and 339 files past the previous pin, and the
+delegation model changed shape. <code>018_remove_agents.sql</code>
+deletes every agent principal and drops <code>create_agent</code>,
+<code>list_agents</code> and <code>agent_tree_access</code>, and
+<code>017_scoped_api_keys.sql</code> puts a restricted API key in their
+place, carrying per-space declarations and optional per-tree-path
+levels. The clamping property survives the substitution and is better
+documented for it: <code>api_key_declared_tree_access</code> returns a
+<em>ceiling</em> rather than an effective access,
+<code>build_tree_access</code> intersects it against the member's live
+grants with <code>least()</code> in both path directions, and a key
+whose member and space do not agree yields zero rows — an empty grant
+array the comment names as the safe direction. The retired impersonation
+header is pinned by a test asserting it is ignored.
+<code>audit_log</code> is earned where it was not: a
+<code>memory_event</code> table records every insert, update and delete
+with the prior tree, temporal range, name, meta, content and version,
+written by a database trigger rather than by an application path, with
+the caller's declared <code>cause</code> and an
+<code>operation_id</code> shared across a multi-row operation, and
+firing on an update only when something actually differs. Two published
+gaps move with it — a corrected memory leaves a recoverable prior shape,
+in the log rather than the table — and one arrives: where TimescaleDB is
+installed a retention policy drops those events after thirty days.
+<code>bitemporal</code> and <code>scope_enforced</code> hold, the
+temporal query surface having grown to five predicates beside the range
+itself. The absence claim that no labelled retrieval evaluation exists
+was re-run and holds; the <code>queries/</code> set is still query-shape
+benchmarks. Screened before reading: one auto-run surface that was not
+there at the previous pin — a
+<code>.claude-plugin/marketplace.json</code> registering a plugin whose
+hooks run <code>me claude env</code> at SessionStart and
+<code>me claude hook</code> on Stop and SessionEnd — two build-time
+execution paths and twelve unpinned dependency surfaces; nothing was
+installed, built or run.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927"><code class="commit-id" title="54e4d7d201b5c7ba3aed618ea343d9f4d3f40927">54e4d7d2…</code></a>
 — first reading.</p>

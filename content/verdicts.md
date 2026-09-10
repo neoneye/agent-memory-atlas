@@ -520,12 +520,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need trust state or ranking you can inspect — storage is the vendor's own service.
 
 ### [`memory-engine`](../systems/memory-engine/)
-- Best idea: agents are access-control principals, and a delegated agent grant clamps to `least(agent, owner)` at every path, so over-granting cannot escalate.
-- Biggest risk: no trust state, supersession, or tombstone — it governs who may read a memory and knows nothing about whether it is true.
-- Most reusable component: the `tree_access` model with the agent clamp, and authorization evaluated inside the ranking query.
-- Maturity impression: a serious database-native service with committed SQL benchmarks, access diagnostics, and unusually candid design notes including a negative result on RLS.
-- Study when: agents write to shared memory and you cannot say from the schema which memories each may read.
-- Do not copy when: you need correction semantics — `replace` overwrites in place and leaves no history.
+- Best idea: a delegated credential is a *ceiling*, not a grant. A restricted API key declares per-space and per-tree-path access, and `build_tree_access` intersects that declaration against the holder's live grants with `least()` at the deeper of the two paths, in both directions — so over-declaring a key clamps down instead of escalating, and self-service delegation needs no approval workflow. A key whose member and space do not agree resolves to an empty grant array rather than an error, which the function's comment names as the safe direction.
+- Biggest risk: no trust state and no tombstone — it governs who may read a memory and knows nothing about whether it is true. And the history it does keep has a horizon: where TimescaleDB is installed, a retention policy drops mutation events after thirty days.
+- Most reusable component: the `tree_access` model with the ceiling clamp, authorization evaluated inside the ranking query rather than over its output, and a `memory_event` trigger that fires on an update only when the tree, temporal range, name, meta or content actually differ — logging the change rather than the write.
+- Maturity impression: a serious database-native service with committed SQL benchmarks, access diagnostics, unusually candid design notes including a negative result on RLS, and a retired impersonation header pinned by a test asserting it is ignored; three of seven capability marks.
+- Study when: tools write to shared memory and you cannot say from the schema which memories each credential may read.
+- Do not copy when: you need a belief model rather than a governed store, or you need correction history past the retention window — `replace` overwrites the row, and what recovers it is an event the policy may already have dropped.
 
 ### [`ai-memory`](../systems/ai-memory/)
 - Best idea: a `Handoff` with an open/accepted/expired lifecycle, typed sender and recipient, and an `open_questions` list — memory of what is *not* known.

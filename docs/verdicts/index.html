@@ -1379,21 +1379,35 @@ storage is the vendor's own service.</li>
 <h3 id="memory-engine"><a
 href="../systems/memory-engine/"><code>memory-engine</code></a></h3>
 <ul>
-<li>Best idea: agents are access-control principals, and a delegated
-agent grant clamps to <code>least(agent, owner)</code> at every path, so
-over-granting cannot escalate.</li>
-<li>Biggest risk: no trust state, supersession, or tombstone — it
-governs who may read a memory and knows nothing about whether it is
-true.</li>
+<li>Best idea: a delegated credential is a <em>ceiling</em>, not a
+grant. A restricted API key declares per-space and per-tree-path access,
+and <code>build_tree_access</code> intersects that declaration against
+the holder's live grants with <code>least()</code> at the deeper of the
+two paths, in both directions — so over-declaring a key clamps down
+instead of escalating, and self-service delegation needs no approval
+workflow. A key whose member and space do not agree resolves to an empty
+grant array rather than an error, which the function's comment names as
+the safe direction.</li>
+<li>Biggest risk: no trust state and no tombstone — it governs who may
+read a memory and knows nothing about whether it is true. And the
+history it does keep has a horizon: where TimescaleDB is installed, a
+retention policy drops mutation events after thirty days.</li>
 <li>Most reusable component: the <code>tree_access</code> model with the
-agent clamp, and authorization evaluated inside the ranking query.</li>
+ceiling clamp, authorization evaluated inside the ranking query rather
+than over its output, and a <code>memory_event</code> trigger that fires
+on an update only when the tree, temporal range, name, meta or content
+actually differ — logging the change rather than the write.</li>
 <li>Maturity impression: a serious database-native service with
-committed SQL benchmarks, access diagnostics, and unusually candid
-design notes including a negative result on RLS.</li>
-<li>Study when: agents write to shared memory and you cannot say from
-the schema which memories each may read.</li>
-<li>Do not copy when: you need correction semantics —
-<code>replace</code> overwrites in place and leaves no history.</li>
+committed SQL benchmarks, access diagnostics, unusually candid design
+notes including a negative result on RLS, and a retired impersonation
+header pinned by a test asserting it is ignored; three of seven
+capability marks.</li>
+<li>Study when: tools write to shared memory and you cannot say from the
+schema which memories each credential may read.</li>
+<li>Do not copy when: you need a belief model rather than a governed
+store, or you need correction history past the retention window —
+<code>replace</code> overwrites the row, and what recovers it is an
+event the policy may already have dropped.</li>
 </ul>
 <h3 id="ai-memory"><a
 href="../systems/ai-memory/"><code>ai-memory</code></a></h3>

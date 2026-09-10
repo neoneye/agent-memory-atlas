@@ -13832,18 +13832,33 @@ SQL functions</td>
 <td>JSON-RPC create/batchCreate requiring an explicit tree; importers
 for git, sessions, packs</td>
 <td>Update, delete by id or path, <code>deleteTree</code> for a subtree;
-onConflict error/replace/ignore</td>
-<td><code>tree_access(space, principal, ltree path, level)</code>
-evaluated inside the search SQL; agents clamped to their owner</td>
+onConflict error/replace/ignore. A <code>replace</code> overwrites the
+row, and a trigger writes the prior shape into <code>memory_event</code>
+— so the correction is recoverable from the log within the retention
+window rather than from the table</td>
+<td>A <code>_tree_access jsonb</code> is the first parameter of
+<code>search_memory</code> and <code>hybrid_search_memory</code>, so
+authorization is inside the ranking query rather than a post-filter. A
+restricted API key carries per-space and per-tree-path declarations that
+act as a ceiling, intersected against the member's live grants at the
+deeper of the two paths</td>
 <td>JSON-RPC over HTTP, MCP, CLI, web UI, harness adapters for Claude,
 opencode, Codex, Gemini</td>
 <td>Worker pool; embedding generation; importers</td>
-<td>Authorization by principal and path; <code>authenticatedAs</code>
-recorded for observability only</td>
-<td>Agents are principals, and the agent grant clamps to its owner so
-over-granting cannot escalate</td>
-<td>No trust state or correction semantics; memory is a well-governed
-store, not a belief model</td>
+<td>None about the memory. Authorization is by principal and path,
+<code>authenticatedAs</code> is recorded for observability and
+explicitly never gates authz, and a <code>cause</code> the caller
+declares is journalled beside every mutation — provenance of the change,
+not a claim about the content</td>
+<td>A delegated credential is a ceiling rather than a grant, intersected
+with the holder's live access in both path directions, and an
+inconsistent key/member/space triple yields no rows at all — the safe
+direction. Every memory mutation is journalled by trigger, and an update
+that changes nothing writes no event</td>
+<td>No trust state and no tombstone; memory is a well-governed store,
+not a belief model. The mutation log is bounded — where TimescaleDB is
+installed a retention policy drops audit events after thirty days, so
+per-memory history has a horizon</td>
 </tr>
 <tr>
 <td><code>memory-lancedb-pro</code></td>
@@ -21574,7 +21589,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>137 of 412:</em> <a
+<p><em>138 of 412:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-techniques/"><code>agent-memory-techniques</code></a>,
@@ -21641,6 +21656,7 @@ href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memoir/"><code>memoir</code></a>, <a
 href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
 href="../systems/memora/"><code>memora</code></a>, <a
+href="../systems/memory-engine/"><code>memory-engine</code></a>, <a
 href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memorybear/"><code>memorybear</code></a>, <a
 href="../systems/memoryops-ai/"><code>memoryops-ai</code></a>, <a
@@ -26677,7 +26693,7 @@ build-time execution points, nothing installed or run</li>
 <li><a
 href="https://github.com/timescale/memory-engine">timescale/memory-engine</a>
 at <a
-href="https://github.com/timescale/memory-engine/commit/54e4d7d201b5c7ba3aed618ea343d9f4d3f40927"><code class="commit-id" title="54e4d7d201b5c7ba3aed618ea343d9f4d3f40927">54e4d7d2…</code></a></li>
+href="https://github.com/timescale/memory-engine/commit/2ef90da9385448e0bbb02ed1da82c04bd663602d"><code class="commit-id" title="2ef90da9385448e0bbb02ed1da82c04bd663602d">2ef90da9…</code></a></li>
 <li><a
 href="https://github.com/acdesigntech/memory-project">acdesigntech/memory-project</a>
 at <a
