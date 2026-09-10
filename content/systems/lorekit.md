@@ -7,10 +7,14 @@ page_kind: system
 source_name: "mthines/lorekit"
 source_url: https://github.com/mthines/lorekit
 archive_name: "mthines--lorekit"
-revision: 08e3065b3f77dffa8ec313c25e6b38cbab77b67f
-revision_url: https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f
-analyzed_at: 2026-07-31
+revision: f50830a2a9470c3736cbcde2d963768efde9bc49
+revision_url: https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49
+analyzed_at: 2026-09-10
 capabilities: "scope_enforced, audit_log, human_review"
+capability_evidence:
+  scope_enforced: "the scope key is an equality predicate on every read, and the wider tenant-visibility filter is one module that mirrors a single SQL source of truth under a parity test | packages/mcp-core/src/tools/read.ts:8, :31, packages/mcp-core/src/auth/tenant-scope.ts:1-18, supabase/functions/_shared/auth/tenant-scope.ts | `read` validates the scope against `ScopeSchema` and applies `.eq(\"scope\", input.scope)` to the query, so the stored key reaches the statement rather than trimming its result. Above it the tenant predicate — a caller sees their own rows or any row owned by an org they belong to — is deliberately a filter-shaper only: it *never re-derives membership itself*, taking an already-resolved org-id list so *the predicate can never drift from the SQL side*, whose sole source of truth is `lorekit_member_org_ids()`. The copy the Deno edge functions import is a second file by necessity and the duplication is named rather than accidental, with a parity spec guarding the pair. The known duplication with a test asserting the mirror is the safer of the two answers this corpus keeps finding | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts"
+  audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. The limit belongs with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
+  human_review: "the one operation that destroys is a confirmation a person must give, and it cannot be satisfied by omission | packages/cli/src/commands/purge.mjs:10-27 | The purge command reasons its gate out in the source: the purge RPCs return their count only after deleting and the REST dry-run header returns nothing previewable, so *\"would purge N\" cannot be answered honestly* and *the gate is therefore a confirmation, not a preview* — prompt on an interactive terminal, and require `--yes` when there is nobody to ask, because *an agent loop must not be able to trigger one by omission*. A scoped key is refused server-side and the refusal is passed through verbatim, never retried, split or re-scoped. Beside it the retention-policy path keeps preview and apply honest from the other direction: one candidate function is the single source of truth for what matches, so *a previewed count always equals what a run archives* | packages/cli/test, supabase/migrations/00088_retention_policies.sql"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -190,13 +194,38 @@ one file per `scope+key` under a directory derived from the scope. So the
 project maintains two storage engines with different substrates behind one
 command surface, and `migrate` moves between them.
 
-**Background work is not in the repository.** Purge is an RPC. The migration
-suggests *"a pg_cron job (or the memory.purge RPC called by the dashboard)"*; no
-cron schedule is committed, so on a self-hosted install nothing expires or purges
-until an operator wires it up. Rows accumulate and stay invisible-but-present,
-which the TTL migration presents as a virtue — the sweep stays an index scan and
-*"no data is silently lost"* — and which also means an unattended instance grows
-forever.
+**Background work is scheduled where the extension exists, and never destroys.**
+Several migrations register `pg_cron` jobs behind the same guard — a rate-limit
+reaper every fifteen minutes, and a nightly `lorekit-groom-sweep` at 03:17 UTC,
+each wrapped in `if exists (select 1 from pg_extension where extname =
+'pg_cron')` so the migration still applies on an instance without it, where the
+functions can be driven by an external scheduler or the dashboard instead.
+
+What the sweep does is bounded by design. Retention policies are *"scoped, saved
+rules that AUTO-ARCHIVE (never hard-delete) matching lessons"*, reusing the
+existing soft-archive; the migration states that *"a policy NEVER hard-deletes;
+hard purge stays exactly where it is… manual, confirm-or---yes"*. So the
+automated half can only move a lesson out of retrieval, and the half that
+destroys stays a human act.
+
+The preview property is the part to copy. One function,
+`lorekit_groom_candidates`, is *"the single source of truth for 'what matches' —
+preview, run-now, and the nightly sweep all resolve the SAME candidates, so a
+previewed count always equals what a run archives."* A preview computed by a
+different query from the apply is a preview that can lie, and this is the shape
+that forecloses it.
+
+Hard purge is still an RPC an operator or the dashboard calls, so an unattended
+instance accumulates archived and expired rows — which the TTL migration
+presents as a virtue, since the sweep stays an index scan and *"no data is
+silently lost"*.
+
+The migration is also candid about what it approximates. `unseen_days` is a
+policy dimension, and LoreKit *"does not yet track per-memory READ activity
+(usage_events records reads in aggregate, not per row)"*, so rather than wiring
+read-tracking through every read handler the field stands on a proxy — the
+limitation named in the migration that depends on it rather than discovered by
+whoever trusts it.
 
 ### Deployment and ergonomics
 
@@ -562,5 +591,7 @@ and `retrospective.md`;
 `org-permissions.spec.ts`.
 
 ## History
+
+**2026-09-10** — [`f50830a2a9470c3736cbcde2d963768efde9bc49`](https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49) — read again, 1,649 commits and 1,355 files past the previous pin, against 214,121 insertions. **The central criticism survives all of it unchanged**: the audit row for a `memory.update` carries `metadata: { scope, key }` and not the value, the `audit_log` columns are untouched, and every migration since has widened the action `CHECK` rather than adding a column. All three marks hold and now carry evidence records; several cited files moved — `scope.ts` into a `scope/` directory, `tenant-scope.ts` under `auth/`, and the webhook signal filter out of `packages/mcp-server` — and the mechanisms they carried survive the moves. One published claim went stale: background work is scheduled, with a rate-limit reaper and a nightly groom sweep registered behind a `pg_cron` guard, and retention policies added as saved rules that auto-archive and are stated never to hard-delete, with one candidate function shared by preview, run-now and the sweep *"so a previewed count always equals what a run archives"*. Two disciplines are worth naming for the first time: `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it disagrees with the TypeScript action set, because `recordAudit` swallows a rejected action and would otherwise leave *"a silent, permanent hole"*; and the purge command argues its own gate — no honest dry run is possible, so it is a confirmation rather than a preview, requiring `--yes` where there is nobody to ask, because *"an agent loop must not be able to trigger one by omission."* At this diff size the reading was targeted rather than exhaustive: the memory tools, the scope and tenant predicates, the audit schema and its vocabulary test, the retention-policy migration and the CLI's destructive paths were read; the web application, the evals package and the plugin surfaces were not. Screened before reading: one auto-run surface, one manifest inside the seven-day cooldown, one build-time execution path and five unpinned dependency surfaces; nothing was installed, built or run.
 
 **2026-07-31** — [`08e3065b3f77dffa8ec313c25e6b38cbab77b67f`](https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f) — first reading.

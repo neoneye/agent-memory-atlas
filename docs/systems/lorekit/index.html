@@ -110,14 +110,14 @@ entrenchment doctrine that lives entirely in a skill file.</p>
               <strong>mthines/lorekit</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f" title="08e3065b3f77dffa8ec313c25e6b38cbab77b67f">
+            <a class="meta-pill revision-pill" href="https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49" title="f50830a2a9470c3736cbcde2d963768efde9bc49">
               <span>Analyzed revision</span>
-              <code>08e3065b…</code>
+              <code>f50830a2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mthines--lorekit" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -305,14 +305,40 @@ tier at <code>~/.lorekit/</code> and an opt-in per-repo tier at
 under a directory derived from the scope. So the project maintains two
 storage engines with different substrates behind one command surface,
 and <code>migrate</code> moves between them.</p>
-<p><strong>Background work is not in the repository.</strong> Purge is
-an RPC. The migration suggests <em>"a pg_cron job (or the memory.purge
-RPC called by the dashboard)"</em>; no cron schedule is committed, so on
-a self-hosted install nothing expires or purges until an operator wires
-it up. Rows accumulate and stay invisible-but-present, which the TTL
-migration presents as a virtue — the sweep stays an index scan and
-<em>"no data is silently lost"</em> — and which also means an unattended
-instance grows forever.</p>
+<p><strong>Background work is scheduled where the extension exists, and
+never destroys.</strong> Several migrations register
+<code>pg_cron</code> jobs behind the same guard — a rate-limit reaper
+every fifteen minutes, and a nightly <code>lorekit-groom-sweep</code> at
+03:17 UTC, each wrapped in
+<code>if exists (select 1 from pg_extension where extname = 'pg_cron')</code>
+so the migration still applies on an instance without it, where the
+functions can be driven by an external scheduler or the dashboard
+instead.</p>
+<p>What the sweep does is bounded by design. Retention policies are
+<em>"scoped, saved rules that AUTO-ARCHIVE (never hard-delete) matching
+lessons"</em>, reusing the existing soft-archive; the migration states
+that <em>"a policy NEVER hard-deletes; hard purge stays exactly where it
+is… manual, confirm-or---yes"</em>. So the automated half can only move
+a lesson out of retrieval, and the half that destroys stays a human
+act.</p>
+<p>The preview property is the part to copy. One function,
+<code>lorekit_groom_candidates</code>, is <em>"the single source of
+truth for 'what matches' — preview, run-now, and the nightly sweep all
+resolve the SAME candidates, so a previewed count always equals what a
+run archives."</em> A preview computed by a different query from the
+apply is a preview that can lie, and this is the shape that forecloses
+it.</p>
+<p>Hard purge is still an RPC an operator or the dashboard calls, so an
+unattended instance accumulates archived and expired rows — which the
+TTL migration presents as a virtue, since the sweep stays an index scan
+and <em>"no data is silently lost"</em>.</p>
+<p>The migration is also candid about what it approximates.
+<code>unseen_days</code> is a policy dimension, and LoreKit <em>"does
+not yet track per-memory READ activity (usage_events records reads in
+aggregate, not per row)"</em>, so rather than wiring read-tracking
+through every read handler the field stands on a proxy — the limitation
+named in the migration that depends on it rather than discovered by
+whoever trusts it.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>The hosted path is three steps and genuinely does not require running
 anything: generate a token at lorekit.io,
@@ -699,6 +725,40 @@ have caught a drift or missed one.</li>
 <code>scope.spec.ts</code>, <code>ttl.spec.ts</code>,
 <code>org-permissions.spec.ts</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49"><code class="commit-id" title="f50830a2a9470c3736cbcde2d963768efde9bc49">f50830a2…</code></a>
+— read again, 1,649 commits and 1,355 files past the previous pin,
+against 214,121 insertions. <strong>The central criticism survives all
+of it unchanged</strong>: the audit row for a <code>memory.update</code>
+carries <code>metadata: { scope, key }</code> and not the value, the
+<code>audit_log</code> columns are untouched, and every migration since
+has widened the action <code>CHECK</code> rather than adding a column.
+All three marks hold and now carry evidence records; several cited files
+moved — <code>scope.ts</code> into a <code>scope/</code> directory,
+<code>tenant-scope.ts</code> under <code>auth/</code>, and the webhook
+signal filter out of <code>packages/mcp-server</code> — and the
+mechanisms they carried survive the moves. One published claim went
+stale: background work is scheduled, with a rate-limit reaper and a
+nightly groom sweep registered behind a <code>pg_cron</code> guard, and
+retention policies added as saved rules that auto-archive and are stated
+never to hard-delete, with one candidate function shared by preview,
+run-now and the sweep <em>"so a previewed count always equals what a run
+archives"</em>. Two disciplines are worth naming for the first time:
+<code>audit-vocabulary.spec.ts</code> parses the newest action-CHECK
+migration and fails when it disagrees with the TypeScript action set,
+because <code>recordAudit</code> swallows a rejected action and would
+otherwise leave <em>"a silent, permanent hole"</em>; and the purge
+command argues its own gate — no honest dry run is possible, so it is a
+confirmation rather than a preview, requiring <code>--yes</code> where
+there is nobody to ask, because <em>"an agent loop must not be able to
+trigger one by omission."</em> At this diff size the reading was
+targeted rather than exhaustive: the memory tools, the scope and tenant
+predicates, the audit schema and its vocabulary test, the
+retention-policy migration and the CLI's destructive paths were read;
+the web application, the evals package and the plugin surfaces were not.
+Screened before reading: one auto-run surface, one manifest inside the
+seven-day cooldown, one build-time execution path and five unpinned
+dependency surfaces; nothing was installed, built or run.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f"><code class="commit-id" title="08e3065b3f77dffa8ec313c25e6b38cbab77b67f">08e3065b…</code></a>
 — first reading.</p>

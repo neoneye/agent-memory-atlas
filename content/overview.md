@@ -7214,7 +7214,7 @@ Privacy/deletion:
 - [deeplethe/lethe](https://github.com/deeplethe/lethe) at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495)
 - [NovasPlace/CSM](https://github.com/NovasPlace/CSM) at [`21d00969c25ca170ef40bc07e6811beb5e78c99e`](https://github.com/NovasPlace/CSM/commit/21d00969c25ca170ef40bc07e6811beb5e78c99e)
 - [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4)
-- [mthines/lorekit](https://github.com/mthines/lorekit) at [`08e3065b3f77dffa8ec313c25e6b38cbab77b67f`](https://github.com/mthines/lorekit/commit/08e3065b3f77dffa8ec313c25e6b38cbab77b67f)
+- [mthines/lorekit](https://github.com/mthines/lorekit) at [`f50830a2a9470c3736cbcde2d963768efde9bc49`](https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49)
 - [SyntheticAutonomicMind/CLIO](https://github.com/SyntheticAutonomicMind/CLIO) at [`6f462b8a5a5d8c33c1d624824668aff8ab67ebca`](https://github.com/SyntheticAutonomicMind/CLIO/commit/6f462b8a5a5d8c33c1d624824668aff8ab67ebca)
 - [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`cfde9169ede6128f3cf149e0b3748859e1a2f4e4`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4)
 - [proxysoul/Empryo](https://github.com/proxysoul/Empryo) at [`e6b5885db1232f35a52eb9faeae1023ab46d5685`](https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685) — renamed from `proxysoul/soulforge`
