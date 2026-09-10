@@ -150,7 +150,7 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 217 of 412 apply a scope key as a filter on the
+shallowest.</strong> 216 of 412 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 159 of
@@ -352,7 +352,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 217 of
+A scope <em>key applied as a filter on the read path</em> is what 216 of
 412 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -10712,14 +10712,19 @@ distinguishes a fact from a correction of it</td>
 counter-arguments and a protocol</td>
 <td>Postgres with pgvector on Supabase, or a local .gitmem directory on
 the free tier</td>
-<td>Vector search over learnings and decisions, scoped by project,
-filtered by severity and type</td>
+<td>Vector search over learnings and decisions from one cross-project
+cache, filtered by severity and type; the primary path holds every scar
+in a single instance regardless of project</td>
 <td>create_learning, with scar-specific validation that refuses the
 write</td>
 <td>archive_learning sets is_active false; nothing is keyed on a
 rejected value</td>
-<td>project is resolved per call and passed into both the local and
-remote search</td>
+<td>None applied. <code>project</code> is stored on the row and resolved
+on every call, and the search functions take it as <code>_project</code>
+and ignore it — the cache is unified across projects on the stated
+argument that at about four hundred scars similarity beats partitioning,
+and the remote fallback omits <code>project_filter</code> on purpose so
+it matches the path it stands in for</td>
 <td>MCP server plus lifecycle hooks — SessionStart, UserPromptSubmit,
 PreToolUse, close</td>
 <td>Implicit thread detection from session-embedding similarity;
@@ -10729,7 +10734,8 @@ linked to the original scar</td>
 <td>Refute-or-obey confirmation enforced by a hard-blocking hook, per
 surfaced scar</td>
 <td>The suggestion dismissal counter can never exceed one, so its
-suppression rule is unreachable</td>
+suppression rule is unreachable; and retrieval is cross-project, so a
+scar recorded in one repository surfaces in another</td>
 </tr>
 <tr>
 <td><code>gmr</code></td>
@@ -21364,7 +21370,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>217 of 412:</em> <a
+<p><em>216 of 412:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -21441,7 +21447,6 @@ href="../systems/gbrain/"><code>gbrain</code></a>, <a
 href="../systems/genome/"><code>genome</code></a>, <a
 href="../systems/gh-aw/"><code>gh-aw</code></a>, <a
 href="../systems/gini-agent/"><code>gini-agent</code></a>, <a
-href="../systems/gitmem/"><code>gitmem</code></a>, <a
 href="../systems/gobii/"><code>gobii</code></a>, <a
 href="../systems/gortex/"><code>gortex</code></a>, <a
 href="../systems/graphiti/"><code>graphiti</code></a>, <a
@@ -27357,7 +27362,7 @@ href="https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d11
 own Python is 1,411 lines</li>
 <li><a href="https://github.com/gitmem-dev/gitmem">gitmem-dev/gitmem</a>
 at <a
-href="https://github.com/gitmem-dev/gitmem/commit/c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5"><code class="commit-id" title="c091a7589858e6e8cf0a6b3774a7e9d0ffbf0aa5">c091a758…</code></a></li>
+href="https://github.com/gitmem-dev/gitmem/commit/d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6"><code class="commit-id" title="d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6">d47a625f…</code></a></li>
 <li><a
 href="https://github.com/Harshitk-cp/engram">Harshitk-cp/engram</a> at
 <a
