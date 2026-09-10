@@ -1464,11 +1464,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`aeris`](../systems/aeris/)
 - Best idea: a validator that refuses to hand a language model the engine's own vocabulary — eighteen forbidden identifiers, a bare-entity-id check and a token budget, asserted by committed tests on the *serialized* projection rather than on the extractor's return value.
-- Biggest risk: a memory carries no text, so nothing can be corrected about what was remembered — a wrong memory is a wrong weight, and the repair is decay.
-- Most reusable component: `BeliefData` — a five-value status enum where three values are ways of not being believed, a provenance enum running from direct observation to assumption, and two ids giving the belief a why and a why-not for eight bytes.
-- Maturity impression: 9,834 lines of xUnit and FsCheck over 16,719 lines of engine, eight ADRs, every NuGet reference exactly pinned and every GitHub action pinned to a commit SHA, with determinism enforced in a workflow of its own — beside an ADR selecting SQLite that the code has not implemented.
+- Biggest risk: nothing in the engine writes a memory or a belief. `AddMemory` and `AddBelief` are called only from tests, so decay, consolidation, retrieval and projection all run over a store an actual simulation leaves empty, and the belief-status model has no transition anywhere in the repository.
+- Most reusable component: `BeliefData` as a design — a five-value status enum where three values are ways of not being believed, a provenance enum running from direct observation to assumption, and two ids giving the belief a why and a why-not for eight bytes. Copy the shape, and wire the transitions this repository never did.
+- Maturity impression: 9,834 lines of xUnit and FsCheck over 6,472 lines of engine, ten ADRs, every NuGet reference exactly pinned and every GitHub action pinned to a commit SHA, with determinism enforced in a workflow of its own — and the test suite as the only writer the durable tier has. The author deleted the whole implementation on 2026-08-11; the report is pinned to the commit before that.
 - Study when: you assemble context for a model from an internal store and want the boundary between engine state and model-visible state checked rather than assumed.
-- Do not copy when: an agent has to be told it was wrong about a fact — there is no fact here to be wrong about, and the store is built so that there could not be.
+- Do not copy when: an agent has to be told it was wrong about a fact — there is no fact here to be wrong about, and the store is built so that there could not be. Also do not copy the retrieval path: it reads every entity's memories into one world-level working memory of seven chunks, so the per-entity partition stops at the store boundary.
 
 ### [`mimir`](../systems/mimir/)
 - Best idea: typed memories, doc chunks and code symbols are rows in one `node` table with a `kind`, so a note about a function and the function itself are ranked against each other in one query instead of merged by a caller afterwards.

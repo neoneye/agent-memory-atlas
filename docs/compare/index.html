@@ -150,7 +150,7 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 213 of 412 apply a scope key as a filter on the
+shallowest.</strong> 212 of 412 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 161 of
@@ -162,7 +162,7 @@ path</strong>, and the rest keep material out of a projection, a
 preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 96 of 412
+<li><strong>Trust is usually a number, not a state.</strong> 95 of 412
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -352,7 +352,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 213 of
+A scope <em>key applied as a filter on the read path</em> is what 212 of
 412 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -5058,27 +5058,33 @@ its most legible form, with the promotion rule written down as
 href="https://arxiv.org/abs/2506.06326">arXiv:2506.06326</a>, which
 states they "are equality set to 1" and ablates modules instead), so
 verbosity scores like importance. <strong>Aeris is the family's outlier
-and the only system here where the model has no write path by
-construction.</strong> It is a deterministic ECS simulation whose agents
-hold memories that carry no text at all — type, category, importance,
-certainty, emotional weight, the entity involved, a forgotten flag — and
-beliefs that carry what most systems here express as a float: a
-five-value status enum
+and the clearest case in this atlas of a memory model whose only writer
+is its test suite.</strong> It is a deterministic ECS simulation whose
+agents hold memories that carry no text at all — type, category,
+importance, certainty, emotional weight, the entity involved, a
+forgotten flag — and beliefs that declare what most systems here express
+as a float: a five-value status enum
 (<code>Active | Weakening | Revised | Abandoned | Contradicted</code>)
 beside a provenance enum running from <code>DirectObservation</code> to
 <code>Assumed</code>, and two ids naming the memory that supports the
-belief and the memory that contradicts it. The mechanism worth taking is
-at the boundary rather than in the store. <code>SemanticValidator</code>
+belief and the memory that contradicts it. Grep the tree for the four
+non-<code>Active</code> statuses and the enum declaration is the only
+hit. <code>AddMemory</code> and <code>AddBelief</code> have no caller in
+<code>src/</code>, so the decay pass, the consolidation pass, the
+retrieval pass and the model projection are all written against a store
+a running simulation never fills — and 9,834 lines of xUnit over 6,472
+lines of engine pass anyway, because the tests construct the state the
+engine does not. That is the failure mode a green build cannot show you,
+and the cheapest guard against it is one assertion that a full tick loop
+leaves the store non-empty. The mechanism worth taking is at the
+boundary rather than in the store. <code>SemanticValidator</code>
 refuses the projection assembled for a language model if it contains any
 of eighteen engine identifiers — <code>EntityId</code>,
 <code>Arch.</code>, <code>MemoryStore</code>, <code>BeliefData</code> —
 and committed tests assert on the <em>serialized</em> payload that none
 of them appears. Nothing else in this atlas checks that the model is
 being handed facts about the world rather than the engine's own
-vocabulary. The cost of the design is stated by it: with no content in a
-memory, a wrong memory is a wrong weight, so the correction machinery
-this report spends most of its length on has nothing here to attach to.
-See <a href="../systems/aeris/">Aeris</a>.</p>
+vocabulary. See <a href="../systems/aeris/">Aeris</a>.</p>
 <p><strong>LivingFeed answers the criticism this atlas makes of the
 family's founder.</strong> <a
 href="../systems/generative-agents/">Generative Agents</a> ships
@@ -6205,19 +6211,25 @@ emotional weight, involved entity, location, a forgotten flag — carrying
 no text at all, beside a belief struct with a status enum and pointers
 to the memories supporting and contradicting it</td>
 <td>In-process stores keyed by entity id, serialized whole into JSON
-world snapshots at a tick interval; no database, despite an ADR
-selecting SQLite</td>
-<td>Swappable <code>IMemoryRetrievalStrategy</code> implementations over
-one entity's list, scored by importance decayed against simulation
-time</td>
-<td>Simulation systems only. Ordered per-tick phases write perception,
-working memory and consolidation, with no model anywhere on the
-path</td>
+world snapshots at a tick interval by a generic resource loop no test
+exercises for them; no database, despite an ADR selecting SQLite</td>
+<td>Swappable <code>IMemoryRetrievalStrategy</code> implementations,
+scored by importance decayed against simulation time, over a candidate
+list the retrieval system flattens out of every entity's memories into
+one world-level working memory of seven chunks</td>
+<td>Nothing in the engine writes a memory or a belief.
+<code>AddMemory</code> and <code>AddBelief</code> have no caller outside
+the test suite; the per-tick phases decay, consolidate, retrieve and
+project a store only a test can fill</td>
 <td><code>Forgotten</code> flips when decayed importance falls below a
-threshold and nothing is destroyed; a belief moves through
-<code>Active | Weakening | Revised | Abandoned | Contradicted</code></td>
-<td>Every store is a dictionary keyed by entity id and every read passes
-one, so one simulated agent cannot reach another's memory</td>
+threshold and nothing is destroyed; the belief statuses
+<code>Weakening</code>, <code>Revised</code>, <code>Abandoned</code> and
+<code>Contradicted</code> are declared in the enum and assigned nowhere
+in the repository</td>
+<td>Each store is one list per entity id, so the owner is the container
+rather than a field on the record — a partition, not a filter. Three
+reads pass an id; the retrieval system reads every entity's memories at
+once</td>
 <td>None shipped. The engine builds a validated
 <code>SemanticState</code> for a language model and the repository
 contains no client that sends it</td>
@@ -6225,15 +6237,17 @@ contains no client that sends it</td>
 consolidation, long-term decay, reasoning, planning, decision, audit,
 enforcement — under a deterministic scheduler</td>
 <td><code>BeliefStatus</code> as a five-value enum beside
-<code>BeliefSource</code> provenance from direct observation to
-assumption, with a confidence float and a last-confirmation time</td>
+<code>BeliefSource</code> provenance, read as a filter by the extractor
+and written by nothing — <code>Active</code> is the only value assigned
+anywhere, and only in four test lines</td>
 <td>A validator that refuses to hand a model engine internals, asserted
-on the serialized payload by committed tests; belief status and
-provenance as enums rather than scores; determinism enforced in its own
-CI job</td>
-<td>Memory rows carry no content, so nothing can be corrected about what
-was remembered; the reasoning trace is cleared every tick and no durable
-record of a mutation exists</td>
+on the serialized payload by committed tests; determinism enforced in
+its own CI job; a test suite half again the size of the engine it
+covers</td>
+<td>The durable tier has no producer, so every mechanism over it is
+specified rather than exercised; memory rows carry no content, so
+nothing can be corrected about what was remembered; the reasoning trace
+is cleared every tick</td>
 </tr>
 <tr>
 <td><code>agent-afk</code></td>
@@ -21208,8 +21222,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>96 of 412:</em> <a
-href="../systems/aeris/"><code>aeris</code></a>, <a
+<p><em>95 of 412:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 <a href="../systems/agentdatabase/"><code>agentdatabase</code></a>, <a
@@ -21376,10 +21389,9 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>213 of 412:</em> <a
+<p><em>212 of 412:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
-href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
@@ -31758,7 +31770,7 @@ each reference the analyzer could not resolve, so the index ships its
 own coverage gaps. Read against the corpus this atlas holds, that is a
 discrete ordered status that withholds, kept apart from where a claim
 came from, and applied on the read path — the combination <a
-href="../capabilities/">ninety-six systems</a> here express as a single
+href="../capabilities/">ninety-five systems</a> here express as a single
 float, and the reason <code>trust_state</code> is the mark most often
 refused. <strong>And the README states the retrieval consequence better
 than most memory systems state it about themselves</strong>: because the

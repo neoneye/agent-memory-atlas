@@ -4596,24 +4596,31 @@ engine's own vocabulary — eighteen forbidden identifiers, a
 bare-entity-id check and a token budget, asserted by committed tests on
 the <em>serialized</em> projection rather than on the extractor's return
 value.</li>
-<li>Biggest risk: a memory carries no text, so nothing can be corrected
-about what was remembered — a wrong memory is a wrong weight, and the
-repair is decay.</li>
-<li>Most reusable component: <code>BeliefData</code> — a five-value
-status enum where three values are ways of not being believed, a
-provenance enum running from direct observation to assumption, and two
-ids giving the belief a why and a why-not for eight bytes.</li>
-<li>Maturity impression: 9,834 lines of xUnit and FsCheck over 16,719
-lines of engine, eight ADRs, every NuGet reference exactly pinned and
+<li>Biggest risk: nothing in the engine writes a memory or a belief.
+<code>AddMemory</code> and <code>AddBelief</code> are called only from
+tests, so decay, consolidation, retrieval and projection all run over a
+store an actual simulation leaves empty, and the belief-status model has
+no transition anywhere in the repository.</li>
+<li>Most reusable component: <code>BeliefData</code> as a design — a
+five-value status enum where three values are ways of not being
+believed, a provenance enum running from direct observation to
+assumption, and two ids giving the belief a why and a why-not for eight
+bytes. Copy the shape, and wire the transitions this repository never
+did.</li>
+<li>Maturity impression: 9,834 lines of xUnit and FsCheck over 6,472
+lines of engine, ten ADRs, every NuGet reference exactly pinned and
 every GitHub action pinned to a commit SHA, with determinism enforced in
-a workflow of its own — beside an ADR selecting SQLite that the code has
-not implemented.</li>
+a workflow of its own — and the test suite as the only writer the
+durable tier has. The author deleted the whole implementation on
+2026-08-11; the report is pinned to the commit before that.</li>
 <li>Study when: you assemble context for a model from an internal store
 and want the boundary between engine state and model-visible state
 checked rather than assumed.</li>
 <li>Do not copy when: an agent has to be told it was wrong about a fact
 — there is no fact here to be wrong about, and the store is built so
-that there could not be.</li>
+that there could not be. Also do not copy the retrieval path: it reads
+every entity's memories into one world-level working memory of seven
+chunks, so the per-entity partition stops at the store boundary.</li>
 </ul>
 <h3 id="mimir"><a href="../systems/mimir/"><code>mimir</code></a></h3>
 <ul>
