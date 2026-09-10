@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 401 reports.</strong></p>
+<p><strong>This page covers all 402 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14026,6 +14026,40 @@ memory rather than flag it, you need a scope key the server enforces
 rather than a tag convention, or you need an attribute the storage layer
 can index — everything epistemic on a memory lives in an untyped
 metadata dict.</li>
+</ul>
+<h3 id="lightmem"><a
+href="../systems/lightmem/"><code>lightmem</code></a></h3>
+<ul>
+<li>Best idea: <strong>filter before you store, with a small model, and
+keep what you threw away.</strong> An LLMLingua-2 compressor and topic
+segmenter cut a buffered stream into topic groups before anything is
+embedded, and the payload retains <code>original_memory</code> and
+<code>compressed_memory</code> beside the stored text, so a discard
+decision stays reviewable at the row.</li>
+<li>Biggest risk: <strong>the pass with the most judgement leaves the
+least evidence.</strong> <code>offline_update_all_entries</code> applies
+<code>delete</code> by hard-deleting the Qdrant point and
+<code>update</code> by overwriting <code>payload["memory"]</code> in
+place. Nothing records the prior text or that a deletion happened, so a
+consolidation that merges two facts wrongly is undetectable from the
+store.</li>
+<li>Most reusable component: the sleep-time separation itself — the
+online write path contains no consolidation <em>by construction</em>, so
+the latency claim does not depend on a worker keeping up — beside
+<code>memory_toolkits/token_monitor.py</code>, which ships the
+efficiency accounting inside the library.</li>
+<li>Maturity impression: MIT, 306 commits between 11 June 2025 and 5
+September 2026 by twenty-three authors, 98,482 lines of Python across
+three sibling packages of which <code>lightmem</code> is 43,466, one
+Qdrant backend, and a committed test suite of one file and two cases;
+the ICLR 2026 paper's LoCoMo and LongMemEval harnesses are committed
+with no result file; no capability marks.</li>
+<li>Study when: you are reproducing or extending the paper, or your
+memory problem really is cost — one agent, one user, long conversations,
+where embedding and re-reading everything is the bill that hurts.</li>
+<li>Do not copy when: you need a scope key, a status, or any record of
+what consolidation removed — there is no caller identity anywhere in the
+package, and one instance is one undifferentiated pool.</li>
 </ul>
         </article>
       </div>

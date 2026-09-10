@@ -15,7 +15,7 @@ Usage:
         --mark scope_enforced=209:210 --mark trust_state=86:87
 """
 from __future__ import annotations
-import argparse, io, sys
+import argparse, io, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -106,11 +106,16 @@ def apply(old: int, new: int, dry: bool, contexts) -> int:
     for path in collect_files():
         s = io.open(path, encoding="utf-8").read()
         orig = s
-        # Spelled forms first, bare and unguarded.
+        # Spelled forms first. Bare of a *context* word, but not bare of a
+        # boundary: "four hundred" is a prefix of "four hundred and two", and a
+        # naive replace turned an already-updated 402 into "four hundred and one
+        # and two" across eighteen lines. So refuse to match when the spelled
+        # form is immediately followed by another number word.
         for ov, nv in list(zip(variants(old), variants(new)))[1:]:
-            if ov in s:
-                c = s.count(ov)
-                s = s.replace(ov, nv)
+            pattern = re.compile(re.escape(ov) + r"(?!\s+and\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b)(?![-\w])")
+            c = len(pattern.findall(s))
+            if c:
+                s = pattern.sub(nv, s)
                 total += c
                 print(f"  {path.relative_to(ROOT)}: {c}x {ov!r} -> {nv!r} (spelled)")
         for ov, nv in [(str(old), str(new))]:

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 401 reports.**
+**This page covers all 402 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3551,3 +3551,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 at the root (with an MIT header still on `storage/base.py`), 3,337 commits since 26 December 2024 by eighty-seven authors, 71,120 lines under `src/` beside 68,820 lines of tests holding 3,067 functions, four storage backends, twenty-eight MCP tools, and committed LoCoMo and LongMemEval harnesses with no score asserted; two of seven capability marks.
 - Study when: you want a widely integrated MCP memory server with a real choice of backends and the most decomposed consolidation pipeline you are likely to find, and you are storing one project's or one person's memories.
 - Do not copy when: you need a contradiction to actually suppress a memory rather than flag it, you need a scope key the server enforces rather than a tag convention, or you need an attribute the storage layer can index — everything epistemic on a memory lives in an untyped metadata dict.
+
+### [`lightmem`](../systems/lightmem/)
+- Best idea: **filter before you store, with a small model, and keep what you threw away.** An LLMLingua-2 compressor and topic segmenter cut a buffered stream into topic groups before anything is embedded, and the payload retains `original_memory` and `compressed_memory` beside the stored text, so a discard decision stays reviewable at the row.
+- Biggest risk: **the pass with the most judgement leaves the least evidence.** `offline_update_all_entries` applies `delete` by hard-deleting the Qdrant point and `update` by overwriting `payload["memory"]` in place. Nothing records the prior text or that a deletion happened, so a consolidation that merges two facts wrongly is undetectable from the store.
+- Most reusable component: the sleep-time separation itself — the online write path contains no consolidation *by construction*, so the latency claim does not depend on a worker keeping up — beside `memory_toolkits/token_monitor.py`, which ships the efficiency accounting inside the library.
+- Maturity impression: MIT, 306 commits between 11 June 2025 and 5 September 2026 by twenty-three authors, 98,482 lines of Python across three sibling packages of which `lightmem` is 43,466, one Qdrant backend, and a committed test suite of one file and two cases; the ICLR 2026 paper's LoCoMo and LongMemEval harnesses are committed with no result file; no capability marks.
+- Study when: you are reproducing or extending the paper, or your memory problem really is cost — one agent, one user, long conversations, where embedding and re-reading everything is the bill that hurts.
+- Do not copy when: you need a scope key, a status, or any record of what consolidation removed — there is no caller identity anywhere in the package, and one instance is one undifferentiated pool.
