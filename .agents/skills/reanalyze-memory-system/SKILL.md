@@ -158,7 +158,7 @@ of the tree can support.
 
 ## Decide the shape, then write
 
-Three outcomes. Name which one you are in before editing, because they call for
+Four outcomes. Name which one you are in before editing, because they call for
 different work.
 
 **Nothing moved.** The mechanism is unchanged and no published claim is stale.
@@ -199,6 +199,19 @@ pins without matching the original pattern, over a test that existed at both —
 `asserts?|tests?|covers?` were added for it. Sentences of the shape *"there
 are tests that X, and none that Y"* are absence claims too, and the grep will
 not see them; read section 10 for them by hand.
+
+**The code is gone.** The upstream deleted the implementation, or rewrote history
+past it. Do not re-pin: a pin to a tree with nothing in it makes every section of
+the report false, and the reading it records was of real code. Keep `revision`
+where it is, fetch the pinned commit from the atlas's archive fork by full sha
+(`git init` a scratch dir, `git remote add`, `git fetch --depth 1 <remote> <sha>`
+— the fork keeps the objects after upstream drops them), and re-read from there.
+Bump `analyzed_at` if you actually re-read the whole report, and leave the
+screening ledger record alone: it is keyed to the pinned revision, which has not
+moved. Say the deletion plainly and early in the body — a reader who goes looking
+for the file paths in the appendix must not find out at the repository. Aeris was
+the first of these: 129 files and 16,729 lines removed in one commit on
+2026-08-11, and the re-read from the archive fork withdrew two of its three marks.
 
 **The mechanism is unchanged and the context is not.** The report's findings
 hold and something else has appeared — a second entry point, a new mode, a
