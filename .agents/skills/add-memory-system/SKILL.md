@@ -259,7 +259,7 @@ Review and update every applicable area:
   | `tombstone` | A durable record of a *rejected value*, keyed on the value, so later extraction cannot re-assert it. Supersession, archival, and delete-sync markers are **not** this. |
   | `trust_state` | Discrete epistemic status — at least candidate vs verified vs rejected — as a field. A confidence *score* is not a state. |
   | `bitemporal` | Validity time tracked separately from record time. |
-  | `scope_enforced` | A stored scope key applied as a filter on the read path. A scope stored as a tag but not applied is not this. |
+  | `scope_enforced` | A stored scope key applied as a filter on the read path. A scope stored as a tag but not applied is not this, and **neither is a physical partition** — one database, collection, directory or file per agent, role, project or tenant, with no key on a record and no predicate on a query. That is a real and often stronger boundary; it is a different one, and it goes in the prose and the `scoping` matrix row without the mark. |
   | `audit_log` | An explicit append-only event or audit record of mutations in the system's own store. Git history alone is a different mechanism — note it in prose instead. |
   | `human_review` | A surface where a person inspects, approves, or adjudicates memory content. A memory UI that only displays is not this. |
   | `negative_eval` | Committed evaluation cases asserting that particular material must *not* be retrieved. |

@@ -10,12 +10,11 @@ archive_name: "Lumen-Labs--brainapi2"
 revision: b434f92a10d5b95aceab3f845d54472212672a10
 revision_url: https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10
 analyzed_at: 2026-08-30
-capabilities: "scope_enforced, audit_log, negative_eval"
+capabilities: "audit_log, negative_eval"
 stack_storage: "graph, postgres, mongo, milvus, qdrant, redis"
 stack_retrieval: "vector, lexical, graph"
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "the brain, resolved in middleware and used as the database name | src/services/api/middlewares/brains.py:70-140, src/services/api/middlewares/auth.py:66-107, src/services/api/dependencies.py:4-5 | `X-Brain-ID` — or a query param, or a body field — is resolved before any route runs, refused unless `brain_id.isalnum()`, refused outright when it is the reserved `system`, and then carried as `request.state.brain_id` into every controller. It is not a filter predicate: Mongo takes it as the database and Neo4j as `database_=brain_id`, so a query cannot cross brains by construction. Auth is per-brain — `stored_brain.pat` must match the `BrainPAT` header — so reaching another brain needs that brain's own credential. Two env flags widen it and both are off unless set: `BRAIN_CREATION_ALLOWED` creates a brain on first sight of an unknown id, `DEFAULT_BRAIN_FALLBACK` sends an unnamed request to `default`; a system PAT bypasses the per-brain check entirely | tests/test_brain_lifecycle.py"
   audit_log: "the `kg_changes` collection, one per brain | src/lib/mongo/client.py:193-196,:359-448, src/constants/data.py:81-160, src/core/agents/tools/kg_agent/KGAgentAddTripletsTool.py:187-244, src/core/agents/tools/kg_agent/KGAgentDeleteRelationshipTool.py:121-130 | four change types — `relationship_created`, `relationship_deprecated`, `node_properties_updated`, `relationship_properties_updated` — each a real model carrying the subject, predicate and object as partials, and the deprecation type also carrying `new_predicate`. `save_kg_changes` is `insert_one` and nothing in the tree updates or deletes the collection, so it is append-only in practice rather than by constraint. It is readable: `get_changelogs_list` filters by type with text search, limit and skip. The caveat belongs with the mark and is the report's main finding about it: `_invalidate_superseded_relationships` in `src/workers/tasks/ingestion.py:507-560` is the supersession that runs on every ingest, it calls `graph_adapter.update_properties` directly, and it writes no changelog entry — so the highest-volume mutation path is the one the audit does not see | tests/"
   negative_eval: "the supersession rule, asserted through the read-path validity filter in both directions | tests/test_event_hub_invalidation.py:141-176 | `test_functional_attribute_edge_is_still_superseded` seeds two live `LIVES_IN` edges for the same subject, runs the invalidation, asserts the exact property write `{\"invalid_at\": \"02/02/2024\", \"deprecated\": True}` on the older one, then asserts `assertFalse(_is_currently_valid(rel-1))` beside `assertTrue(_is_currently_valid(rel-2))` — named material excluded from a result the fixture guarantees is otherwise populated. The two cases around it are its negative controls: an event-hub leg and an inbound edge must *not* be superseded, each asserting `graph.updates == []`, and those empty assertions are meaningful because the middle case proves the same fake records a write. What it pins is the predicate every retrieval path calls, not the output of an end-to-end retrieve | this is the test"
 matrix:
@@ -355,12 +354,19 @@ leaves `janitor_drop_reasons` in a run-scoped ledger, so the same text ingested
 again is vetted again from scratch, and a batch that passes on the second roll
 is written.
 
-**Multi-tenancy is the strongest part of the design.** Database-level partition
-plus a per-brain PAT is a stronger boundary than the tag-based scoping this
-atlas usually finds. State the widening flags with it: `BRAIN_CREATION_ALLOWED`
-turns an unknown header into a new brain, `DEFAULT_BRAIN_FALLBACK` turns an
-absent one into `default`, and a system PAT bypasses the per-brain check on every
-route.
+**Multi-tenancy is the strongest part of the design, and it is not
+`scope_enforced`.** A database-level partition plus a per-brain PAT is a harder
+boundary than the tag-based scoping this atlas usually finds — the credential for
+one brain does not reach another, and there is no predicate to forget. The mark
+asks for something narrower and different: a stored scope key applied as a filter
+on the read path. The brain id is a database name, as this report's own section 5
+says — *"not a column, not a predicate"* — so no row carries it and no query
+applies it, and the mark is withheld on the definition rather than on any
+weakness.
+
+State the widening flags with it: `BRAIN_CREATION_ALLOWED` turns an unknown
+header into a new brain, `DEFAULT_BRAIN_FALLBACK` turns an absent one into
+`default`, and a system PAT bypasses the per-brain check on every route.
 
 **Two marks withheld, with the reason.** `tombstone` — nothing anywhere is keyed
 on a rejected value; deprecation is keyed on the relationship, and re-asserting a

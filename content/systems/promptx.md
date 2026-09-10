@@ -10,7 +10,7 @@ archive_name: "deepractice--promptx"
 revision: 93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 revision_url: https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 analyzed_at: 2026-08-04
-capabilities: "scope_enforced"
+capabilities: ""
 stack_storage: "sqlite, files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -184,15 +184,20 @@ that vocabulary.
 
 ## 9. Reliability, Safety, and Trust
 
-**`scope_enforced` — earned by construction.** One database per role, opened from
-the role's own directory. This is the strongest form of the mechanism because
-there is no predicate that can be omitted: [daimon](../daimon/) and
-[memory-project](../memory-project/) scope by directory too, and here the
-isolation is at the database-file level rather than a filter over shared rows.
+**Isolation is by construction, and `scope_enforced` is withheld anyway.** One
+database per role, opened from the role's own directory, so there is no predicate
+that can be omitted — [daimon](../daimon/) and
+[memory-project](../memory-project/) scope by directory too. That is a genuine
+property with a genuine advantage over a filter, and it is not what the mark
+certifies: `scope_enforced` asks for a stored scope key applied as a filter on
+the read path, and here no record carries a scope key and no query applies one.
+The boundary is the file handle.
 
-The limit worth stating: a role is not a user and not a tenant. Two people using
-the same install share every role, and nothing in the cognition package expresses
-a person.
+Two limits follow from that rather than from any oversight. A role is not a user
+and not a tenant: two people using the same install share every role, and nothing
+in the cognition package expresses a person. And nothing can express a query that
+spans roles, or one that admits a subset of them — the partition is total in both
+directions.
 
 **`tombstone`, `trust_state`, `bitemporal`, `audit_log`, `human_review`,
 `negative_eval` — none found.** The cognition package has no correction

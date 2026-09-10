@@ -7,10 +7,10 @@ page_kind: system
 source_name: "munch2u-a11y/AIMAOS"
 source_url: https://github.com/munch2u-a11y/AIMAOS
 archive_name: "munch2u-a11y--AIMAOS"
-revision: 65f68450450c8ba6190197b23993d74a3ab8b020
-revision_url: https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020
-analyzed_at: 2026-08-07
-capabilities: "scope_enforced"
+revision: 0d8c58c2bee5addc72a13c5c95839635d809b5b0
+revision_url: https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0
+analyzed_at: 2026-09-10
+capabilities: ""
 stack_storage: "sqlite, files, delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -216,12 +216,16 @@ cross-agent read path at all, which is the flip side of isolation by directory.
 
 ## 9. Reliability, Safety, and Trust
 
-**Isolation is structural.** Each agent's store lives under its own workspace,
-constructed from its own name. Nothing composes a scope predicate, so nothing can
-forget one. That earns `scope_enforced` on the same basis as
-[PromptX](../promptx/)'s one-database-per-role: the boundary is the file handle.
-The limit is the same too — it is isolation between agents on one machine, not
-authorisation, and there is no user or tenant axis at all.
+**Isolation is structural, and it is not the mark.** Each agent's store lives
+under its own workspace, constructed from its own name, so nothing composes a
+scope predicate and nothing can forget one. That is a real property and a
+different one from `scope_enforced`, which asks for a stored scope key applied as
+a filter on the read path: no record here carries such a key and no query applies
+one, so the mark is withheld. What the design buys instead is that the boundary
+cannot be bypassed by a forgotten `WHERE` — and what it cannot do is separate two
+callers who share a store, express a user or a tenant, or answer *which memories
+may this agent read* as anything other than *whichever directory it was pointed
+at*.
 
 **Privacy has code and tests.** `redact_sensitive` strips emails, SSN-shaped
 strings and card numbers; `privacy_safe_tool_record` stores a digest and a length
@@ -364,5 +368,7 @@ epistemic status and a history row beside it.
 | `System Technical Documents/AIMAOS_flaw_report_and_benchmarks.md` | Release audit that retires its own earlier numbers |
 
 ## History
+
+**2026-09-10** — [`0d8c58c2bee5addc72a13c5c95839635d809b5b0`](https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0) — read again, 4 commits past the previous pin, of which three add UI widgets and document-display notes and one is a Dependabot bump. **`core/mrag/` is byte-identical**, so every finding about the belief store, the consolidator, the journal and the injection path is unchanged. All three absence claims were re-run and hold: `previous_content` has exactly one occurrence in the tree, the write at `belief_store.py:752`, and no reader; no test covers the memory package; and no scope predicate exists anywhere in `core/mrag`. **`scope_enforced` is withdrawn**, not because anything moved but because the mark asks for a stored scope key applied as a filter on the read path and this store has neither — the boundary is a directory derived from the agent's name, which is a different property and is described as one. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, one build-time execution path and two unpinned dependency surfaces; nothing was installed or run.
 
 **2026-08-07** — [`65f68450450c8ba6190197b23993d74a3ab8b020`](https://github.com/munch2u-a11y/AIMAOS/commit/65f68450450c8ba6190197b23993d74a3ab8b020) — first reading. Screened before reading: 0 auto-run surfaces, 1 build-time execution surface (`setup.py`), 2 unpinned dependency surfaces and 3 files inside the seven-day cooldown; `requirements.lock` and `requirements-dev.lock` sit beside the floating manifests. Nothing was installed, built or run. The pinned commit is the head of a 27-commit public-beta branch whose most recent work is documentation and privacy review rather than the memory package.
