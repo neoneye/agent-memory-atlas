@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The published shape of a context
+system its author says has run for a year: daily observations an agent
+appends to one Markdown file under three priority marks, a weekly
+reflector that promotes the durable ones into rule files and then
+rewrites the observation log without them, and a real embedding index
+over the tree — all of it carried by prompt templates whose filesystem
+paths are placeholders, in a repository with no licence file.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Context
+Infrastructure — Agent Memory Atlas">
+    <meta property="og:description" content="The published shape of a
+context system its author says has run for a year: daily observations an
+agent appends to one Markdown file under three priority marks, a weekly
+reflector that promotes the durable ones into rule files and then
+rewrites the observation log without them, and a real embedding index
+over the tree — all of it carried by prompt templates whose filesystem
+paths are placeholders, in a repository with no licence file.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Context
+Infrastructure — Agent Memory Atlas">
+    <meta name="twitter:description" content="The published shape of a
+context system its author says has run for a year: daily observations an
+agent appends to one Markdown file under three priority marks, a weekly
+reflector that promotes the durable ones into rule files and then
+rewrites the observation log without them, and a real embedding index
+over the tree — all of it carried by prompt templates whose filesystem
+paths are placeholders, in a repository with no licence file.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Context Infrastructure — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Context Infrastructure",
+      "description": "The published shape of a context system its author says has run for a year: daily observations an agent appends to one Markdown file under three priority marks, a weekly reflector that promotes the durable ones into rule files and then rewrites the observation log without them, and a real embedding index over the tree \u2014 all of it carried by prompt templates whose filesystem paths are placeholders, in a repository with no licence file.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A year of one person's system, published as
+a blueprint</p>
+          <h1>Context Infrastructure</h1>
+          <p class="document-deck">The published shape of a context
+system its author says has run for a year: daily observations an agent
+appends to one Markdown file under three priority marks, a weekly
+reflector that promotes the durable ones into rule files and then
+rewrites the observation log without them, and a real embedding index
+over the tree — all of it carried by prompt templates whose filesystem
+paths are placeholders, in a repository with no licence file.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/grapeot/context-infrastructure">
+              <span>Source</span>
+              <strong>grapeot/context-infrastructure</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/grapeot/context-infrastructure/commit/421df58bcb2f53ead50f85de2adbd31fdfc9ea3f" title="421df58bcb2f53ead50f85de2adbd31fdfc9ea3f">
+              <span>Analyzed revision</span>
+              <code>421df58b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-10</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/grapeot--context-infrastructure" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>grapeot--context-infrastructure</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (46%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Context Infrastructure is the published structure of a system its
+author says has been running for a year. The README is unusually clear
+about what it is not:
+<em>"这不是开箱即用的工具，而是一个可以参考的蓝图"</em> — this is not an
+out-of-the-box tool but a blueprint you can reference — and it says the
+honest thing about adoption, that making the AI genuinely yours
+<em>"需要从头采集你的行为数据——没有 捷径"</em>, requires collecting your
+own behavioural data from scratch, with no shortcut.</p>
+<p>159 commits between 15 March and 6 September 2026 from three authors;
+10,646 lines of Markdown against 3,496 lines of Python; the
+documentation is the system and the code is its trigger. The screen
+found no auto-run surface, no build-time execution path, nothing inside
+the cooldown, one unpinned dependency surface, and an
+<code>AGENTS.md</code> treated as data; nothing was installed or
+run.</p>
+<p><strong>There is no licence file.</strong> Not a permissive one, not
+a restrictive one — none. <code>ls LICENSE* COPYING*</code> returns
+nothing and no licence is declared in the README or a manifest. A reader
+should treat the contents as all-rights-reserved by default, which
+matters for a repository whose stated purpose is to be copied as a
+blueprint.</p>
+<p><strong>The memory is three layers and a promotion rule.</strong> An
+L1 observer runs daily: a Python trigger hands a prompt to an OpenCode
+agent, which scans the workspace, filters what changed, and appends a
+dated block to <code>contexts/memory/OBSERVATIONS.md</code> under three
+marks — 🔴 High for cross-project lessons and hard constraints, kept
+permanently and eligible for promotion; 🟡 Medium for things that will
+matter for a few more weeks; 🟢 Low for daily task flow,
+garbage-collected periodically. An L2 reflector runs weekly, promotes
+the durable entries into <code>rules/</code> by responsibility boundary,
+and then rewrites the observation file without them.</p>
+<p><strong>The promotion threshold is written down</strong>, which is
+more than most systems manage: <em>"跨项目通用 + 多次验证 +
+有明确适用场景"</em> — general across projects, verified more than once,
+with a clear applicable scenario. It is a prompt rather than a
+predicate, so nothing enforces it, but it is stated.</p>
+<p><strong>The idempotency rule lives in the prompt that performs the
+write.</strong> Before appending, the agent must read
+<code>OBSERVATIONS.md</code> and check for an existing block for that
+date; if one exists it must <em>"不要进行任何文件修改"</em> — make no
+file modification at all — and say so. The prompt also tells the agent
+to append with <code>&gt;&gt;</code> or <code>tee -a</code> rather than
+editing a large file whole. Both are the right instructions and both are
+instructions rather than code.</p>
+<p><strong>It carries no capability marks, and the reason is the same
+one twice.</strong> The three priority marks are retention classes an
+LLM assigns at write time — 🟢 means <em>collect this later</em>, not
+<em>this might be false</em> — and nothing filters recall on them. And
+consolidation deletes its own evidence: the reflector rewrites the
+observation log without the entries it promoted, while a promoted
+axiom's frontmatter carries <code>id</code>, <code>category</code>,
+<code>created</code> and <code>updated</code> and no pointer back to the
+observations that produced it. After a promotion, the chain from rule to
+evidence is gone.</p>
+<p><strong>Nothing in the tree runs as committed.</strong> Both trigger
+scripts hardcode <code>/path/to/your/workspace</code> and offer a single
+<code>--model</code> choice of <code>&lt;your-model-id&gt;</code>. That
+is consistent with the blueprint framing and it means a reader is
+looking at a shape rather than at a working install.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A day happens. Overnight, an agent looks at what changed in the
+workspace and writes down what it thinks was worth noticing, sorted into
+three buckets by how long it expects the note to matter. That file
+grows.</p>
+<p>A week happens. Another agent reads the top two buckets, asks which
+entries are general enough to be a rule rather than a record, and moves
+those into the rule files — <code>SOUL.md</code> for identity and
+values, <code>USER.md</code> for the person,
+<code>COMMUNICATION.md</code> for style, <code>WORKSPACE.md</code> for
+routing, <code>skills/</code> for methodology. Then it rewrites the
+observation file, dropping what it promoted and what has gone stale.</p>
+<p>Reading is a routing problem rather than a search problem, most of
+the time. <code>AGENTS.md</code> is the table an agent hits at session
+start; it points at the rule files and at <code>WORKSPACE.md</code>,
+which points at directories. The observation file carries its own
+retrieval instruction: do not load me whole. When routing is not enough,
+<code>tools/semantic_search</code> embeds the tree and answers a query
+against it.</p>
+<p>The shape of the thing is a funnel with a cliff at the end.
+Observations accumulate, the durable ones are distilled upward into
+rules, and the rest is deleted. What the design does not have is any way
+back down: a rule cannot be traced to the observations that justified
+it, because those were rewritten away in the same pass that created
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a daily observer agent scans the workspace and appends a dated block of three priority marks to one Markdown file, under a prompt rule that forbids writing when a block for that date already exists; a weekly reflector promotes the durable entries into rule files by responsibility boundary and then rewrites the observation file without them, so the evidence for a rule does not survive the promotion that created it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a daily observer agent scans the workspace and appends a dated block of three priority marks to one Markdown file, under a prompt rule that forbids writing when a block for that date already exists; a weekly reflector promotes the durable entries into rule files by responsibility boundary and then rewrites the observation file without them, so the evidence for a rule does not survive the promotion that created it
+flowchart TB
+    DAY[&quot;the day&#39;s changes&lt;br/&gt;in the workspace&quot;]
+    OBS[&quot;L1 observer: a Python trigger&lt;br/&gt;hands a prompt to an agent&quot;]
+    IDEM{&quot;a block for this&lt;br/&gt;date already there?&quot;}
+    SKIP[&quot;make no file modification;&lt;br/&gt;say it was skipped&quot;]
+    APP[&quot;append a dated block&lt;br/&gt;with &gt;&gt; or tee -a&quot;]
+    FILE[(&quot;contexts/memory/OBSERVATIONS.md&lt;br/&gt;🔴 permanent, promotion candidate&lt;br/&gt;🟡 weeks&lt;br/&gt;🟢 collected later&quot;)]
+    REF[&quot;L2 reflector, weekly:&lt;br/&gt;read 🔴 and high 🟡&quot;]
+    THRESH{&quot;general across projects,&lt;br/&gt;verified more than once,&lt;br/&gt;clear applicable scenario?&quot;}
+    RULES[(&quot;rules/ — SOUL, USER,&lt;br/&gt;COMMUNICATION, WORKSPACE,&lt;br/&gt;axioms, skills&quot;)]
+    GC[&quot;rewrite OBSERVATIONS.md&lt;br/&gt;without the promoted&lt;br/&gt;and the expired 🟢&quot;]
+    ROUTE[&quot;AGENTS.md at session start&lt;br/&gt;routes to the rule files&quot;]
+    SEM[&quot;tools/semantic_search&lt;br/&gt;embeddings.npy + chunks.pkl&quot;]
+    AGENT[&quot;the agent reads&quot;]
+
+    DAY --&gt; OBS
+    OBS --&gt; IDEM
+    IDEM --&gt;|yes| SKIP
+    IDEM --&gt;|no| APP
+    APP --&gt; FILE
+    FILE --&gt; REF
+    REF --&gt; THRESH
+    THRESH --&gt;|yes| RULES
+    THRESH --&gt;|no| GC
+    RULES --&gt; GC
+    GC -.-&gt;|&quot;the evidence is rewritten away&quot;| FILE
+    RULES --&gt; ROUTE
+    FILE --&gt; SEM
+    ROUTE --&gt; AGENT
+    SEM --&gt; AGENT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no service. The repository is the system:
+<code>rules/</code> holds the four rule files plus <code>axioms/</code>
+and <code>skills/</code>; <code>contexts/</code> holds
+<code>memory/OBSERVATIONS.md</code>, <code>daily_records/</code>,
+<code>survey_sessions/</code> and <code>thought_review/</code>;
+<code>periodic_jobs/</code> and <code>adhoc_jobs/</code> hold the
+scheduled work; <code>tools/</code> holds the Python.</p>
+<p>The Python splits cleanly into two kinds. The
+<strong>triggers</strong> are thin: <code>observer.py</code> is 84 lines
+and <code>reflector.py</code> is 57, and most of each is a prompt
+template — the work is done by an OpenCode agent the script dispatches
+to through <code>opencode_client.py</code> (228 lines). The
+<strong>tool</strong> is real: <code>tools/semantic_search</code> is 418
+lines across a chunker, an embedding client, a forward index and a CLI,
+with <code>embeddings.npy</code> and <code>chunks.pkl</code> under an
+<code>fcntl</code> lock and a <code>manifest.json</code>, and mmap used
+to keep loading cheap.</p>
+<p>Beside those sit ordinary utilities — GA4 and Kit metrics, Typefully
+posting, an email-to-self script, report templates — which are the
+author's actual working surface rather than part of the memory.</p>
+<p><code>docs/SKILL_ECOSYSTEM.md</code> names separately installable
+skill repositories (web search, Google Docs, Maps, newsletter, OpenCode,
+PPTX, social media, payment analysis, home network analysis, a local
+process launcher) so this repository <em>"保持轻量"</em> — stays light —
+and capability arrives by installing others.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Observe.</strong> cron →
+<code>periodic_jobs/ai_heartbeat/src/v0/observer.py &lt;date&gt;</code>
+→ <code>OpenCodeClient.create_session</code> → the prompt template at
+<code>:18-38</code> instructing the agent to read the SOP, check
+idempotency, scan the workspace, and append a dated block to
+<code>contexts/memory/OBSERVATIONS.md</code>.</li>
+<li><strong>Constrain the observer.</strong> The same prompt scopes it:
+<em>"仅执行 L1 Observer 任务"</em> — do only the L1 task, do not modify
+anything under <code>rules/</code>, do not promote and do not
+garbage-collect. The separation between the two layers is a sentence in
+a prompt.</li>
+<li><strong>Reflect.</strong> cron → <code>reflector.py</code> → a
+prompt at <code>:12-29</code>: read the 🔴 and high 🟡 entries, promote
+by responsibility boundary into the five rule destinations, then rewrite
+<code>OBSERVATIONS.md</code> dropping the promoted and the expired
+🟢.</li>
+<li><strong>Route.</strong> an agent opens the directory →
+<code>AGENTS.md</code> is the root table →
+<code>rules/WORKSPACE.md</code> for directory routing → the rule files
+for identity, user, communication and skills.</li>
+<li><strong>Search.</strong> <code>tools/semantic_search/main.py</code>
+→ <code>search/cli.py</code> → <code>search/chunker.py</code> splits the
+tree → <code>search/embedding.py</code> embeds →
+<code>ForwardIndex</code> (<code>search/index.py:11-40</code>) persists
+<code>embeddings.npy</code>, <code>chunks.pkl</code> and a manifest
+under a lock, loading with mmap.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>The observation.</strong> A block under a
+<code>Date: YYYY-MM-DD</code> header, containing lines prefixed 🔴, 🟡
+or 🟢. The file documents the three levels itself: 🔴 High is
+<em>"跨项目通用的经验教训、硬性约束、影响系统架构的重大决策"</em> —
+cross-project lessons, hard constraints, decisions that shape the
+architecture — <em>"永久保留, 候选晋升为 axiom 或 skill"</em>, kept
+permanently and a candidate for promotion. 🟡 Medium is key progress on
+active projects and decision background still worth referring to for a
+few weeks. 🟢 Low is daily task flow, transient debugging and temporary
+context, <em>"定期垃圾回收"</em>.</p>
+<p>Those are <strong>retention classes, not truth states</strong>. The
+distinction is what keeps this report's capability list empty: 🟢 says
+<em>this will stop being worth keeping</em>, not <em>this might be
+wrong</em>, and no read path consults any of the three.</p>
+<p><strong>The rule.</strong> An axiom is a Markdown file with
+frontmatter — <code>id</code>, <code>category</code>,
+<code>created</code>, <code>updated</code> — and a body.
+<code>a01_ask_do_paradigm.md</code> is dated February 2026 and states
+its core proposition and then argues it. What the frontmatter does not
+carry is provenance: there is no field naming the observations that were
+promoted into it, and the reflector's own instruction deletes those
+observations in the same pass. A reader asking <em>why does this rule
+say that</em> has the argument in the body and nothing behind it.</p>
+<p><strong>No scope and no validity.</strong> One workspace, one owner.
+<code>WORKSPACE.md</code> routes directories rather than partitioning
+memory. Nothing carries a validity interval; <code>created</code> and
+<code>updated</code> on an axiom are record times.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Routing first. <code>AGENTS.md</code> is described as
+<em>"根路由表（AI 每次 session 的 起点）"</em> — the root routing table,
+the starting point for every session — and the rule files are small
+enough to load. That is the common path, and it is why the system works
+without a query at all for most questions.</p>
+<p>The observation file is the exception, and it says so in its own
+text: <em>"不要全文 加载这个文件（可能很大）。按需检索"</em> — do not
+load this file whole, it may be large; retrieve on demand. A memory file
+that carries its own retrieval instruction is a small, good idea, and it
+is the kind of thing that only appears in a system somebody actually ran
+into trouble with.</p>
+<p><code>tools/semantic_search</code> is the on-demand path and it is
+properly built for its size: chunks and embeddings persisted as
+<code>.npy</code> and <code>.pkl</code>, a manifest, an
+<code>fcntl</code> lock so a concurrent build cannot corrupt the index,
+and mmap on load so a query does not pay for the whole array. It is 418
+lines and it does one thing.</p>
+<p>Nothing on either path filters by priority mark, by date, or by any
+other property of an entry. Retrieval returns what matches.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The write is an LLM appending to a Markdown file, and the interesting
+engineering is in the prompt.</p>
+<p><strong>Idempotency before anything else.</strong> The observer's
+prompt puts the constraint first and in bold: before any write, read
+<code>OBSERVATIONS.md</code> and check for a block with this date; if
+one exists, make no modification and reply that it was skipped. For a
+job on a timer that may be retried, that is the correct guard, and
+putting it ahead of the task rather than after it is deliberate.</p>
+<p><strong>Append, do not rewrite.</strong> The prompt tells the agent
+to use <code>echo ... &gt;&gt;</code> or <code>tee -a</code>,
+<em>"避免对大文件做全文编辑"</em> — avoid full-text editing of a large
+file. This is a prompt working around a real failure mode of agents
+editing large files, and it is the same instinct as the retrieval note
+in the file's header.</p>
+<p><strong>Format discipline.</strong> The date header format is
+specified exactly, and file references must be
+<em>"相对于根目录的完整路径"</em> — full paths relative to the root, not
+bare filenames — so a later reader or a later search can resolve
+them.</p>
+<p><strong>Layer separation is a sentence.</strong> The observer is told
+to do only L1 and not to touch <code>rules/</code> or perform promotion
+or GC. Nothing enforces that; the model is asked.</p>
+<p>The reflector's write is a rewrite, and that is where the design's
+cost sits. It deletes what it promoted, so the observation that
+justified a rule is gone at the moment the rule exists.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration is a directory an agent opens. Claude Code, OpenCode
+or Cursor pointed at the checkout, with <code>AGENTS.md</code> as the
+entry point — no MCP server, no plugin, no hooks.
+<code>rules/USER.md</code> is named as the highest-return first step:
+fill it in and behaviour personalises immediately.</p>
+<p>Scheduled work goes the other way: cron invokes the trigger scripts,
+which drive an OpenCode session through <code>opencode_client.py</code>
+— creating a session, sending the prompt, and by default deleting the
+session afterwards, with a <code>--no-delete</code> flag to keep it.
+<code>docs/CRONTAB.md</code> documents the timeline and example
+crontab.</p>
+<p>The skill ecosystem is deliberately external. Rather than growing
+this repository, <code>docs/SKILL_ECOSYSTEM.md</code> lists ten
+separately installable skill repositories, so an adopter composes
+capability instead of forking a monolith.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No capability marks, and each absence has a specific
+cause.</strong></p>
+<p><strong>Trust state — no.</strong> The three priority marks are the
+closest thing, and they grade retention rather than truth: 🔴 is kept
+permanently, 🟢 is collected later. An LLM assigns them at write time,
+no read path consults them, and nothing anywhere records that a claim
+turned out to be wrong as opposed to no longer useful.</p>
+<p><strong>Tombstone — no.</strong> The reflector deletes; nothing is
+recorded about what was deleted or why, and nothing consults a record of
+it on a later write. The same observation can be written again the next
+day and will be.</p>
+<p><strong>Audit log — no.</strong> <code>OBSERVATIONS.md</code> is
+append-only in the write path and is periodically rewritten by the
+reflector, which is the opposite property. Git history exists and is a
+different mechanism, which this atlas does not count as this mark.</p>
+<p><strong>Scope — no.</strong> One workspace, one owner, one
+observation file.</p>
+<p><strong>Bitemporal — no.</strong> <code>created</code> and
+<code>updated</code> on an axiom, a date on an observation; all record
+time.</p>
+<p><strong>Human review — no.</strong> Promotion is performed by an
+agent against a prose threshold, not proposed to a person for approval.
+The threshold is stated — general across projects, verified more than
+once, clear applicable scenario — which makes it reviewable after the
+fact by reading the rules, and there is no surface where a person
+decides before the fact.</p>
+<p><strong>Negative evaluation — no.</strong> The single test file in
+the tree covers a PDF-to-Markdown CLI in
+<code>rules/skills/tests/</code>, unrelated to memory or retrieval.</p>
+<p><strong>The finding that outranks the mark list.</strong>
+Consolidation deletes its own evidence. The reflector's instruction is
+explicit — rewrite the file, dropping what was promoted — and a promoted
+axiom carries no pointer back. So the system compounds beliefs upward
+with no way to audit downward, and a rule that was promoted from a
+misreading is indistinguishable from one promoted from a year of
+repeated experience. A <code>source:</code> list in the axiom
+frontmatter would cost one line in the prompt and would make the whole
+ladder checkable.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>One test file,
+<code>rules/skills/tests/test_pdf_to_markdown_cli.py</code>, covering a
+skill utility. <code>tools/pytest.ini</code> exists. There is no test of
+the observer, the reflector, the promotion threshold or the search
+index, and no evaluation of retrieval quality.</p>
+<p>That is consistent with what the repository is — a published
+structure rather than a maintained product — and it is worth stating
+plainly because the mechanism most in need of a test is the one most
+exposed: a reflector that rewrites a file, deleting entries, with no
+assertion anywhere that what it kept is what it should have kept.</p>
+<p>No benchmark, and none claimed. No paper. A search of the README and
+<code>docs/</code> for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>@misc</code>, <code>Citation</code>,
+<code>CITATION.cff</code> and <code>doi</code> returns nothing; the
+background reading the README links is the author's own essay.</p>
+<p>The claim the repository does make is experiential and cannot be
+checked from here: that this is <em>"一个运行了一年的 context
+infrastructure 系统的完整结构"</em> — the complete structure of a
+context infrastructure system that has run for a year. Nothing in the
+tree contradicts it, and nothing in the tree evidences it either; the
+commit history begins in March 2026, six months before this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the idempotency rule ahead of the task in the
+prompt.</strong> The observer is told to read the file and check for
+today's date <em>before</em> the instruction to scan and write, in bold.
+A scheduled job that may be retried needs that guard first, not as a
+footnote.</li>
+<li><strong>Tell the agent to append rather than edit.</strong>
+<code>&gt;&gt;</code> or <code>tee -a</code> instead of a whole-file
+edit is a workaround for a real failure mode, and it is one line.</li>
+<li><strong>Put the retrieval instruction inside the memory
+file.</strong> <code>OBSERVATIONS.md</code> opens by telling its reader
+not to load it whole and to retrieve on demand. The file that knows how
+big it is is the right place to say so.</li>
+<li><strong>Write the promotion threshold down.</strong> <em>General
+across projects, verified more than once, clear applicable scenario</em>
+is a real bar, stated in the prompt that applies it. Most systems
+promote on a score with no stated meaning.</li>
+<li><strong>Keep the skill ecosystem in other repositories.</strong> Ten
+installable skill repos and a light core is a better answer than a
+monolith that grows.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deleting the evidence in the same pass that creates the
+conclusion.</strong> The reflector promotes an observation into a rule
+and then rewrites the observation file without it. A
+<code>source:</code> list in the promoted rule's frontmatter would
+preserve the chain at negligible cost.</li>
+<li><strong>Grading by retention and reading it as trust.</strong>
+🔴/🟡/🟢 answer <em>how long should this be kept</em>, and a reader will
+hear <em>how much should this be believed</em>. They are not the same
+question and one file cannot carry both.</li>
+<li><strong>Shipping a blueprint with placeholder paths and calling it a
+reference implementation.</strong> <code>/path/to/your/workspace</code>
+and <code>&lt;your-model-id&gt;</code> appear in both trigger scripts,
+so nothing runs as committed — which is defensible for a blueprint and
+should be said in the README's Quick Start rather than discovered.</li>
+<li><strong>Publishing without a licence.</strong> A repository whose
+stated purpose is to be copied, with no licence file, is
+all-rights-reserved by default.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a reader who wants to see the shape of a personal context
+system that somebody has actually lived with, and who is prepared to
+build their own from the pattern — which is exactly what the README asks
+for. The promotion ladder, the routing table and the prompt-level
+discipline are worth reading whatever you build on. It is not a tool to
+adopt: nothing runs as committed, there is no licence, the documentation
+is Chinese with an English sibling repository linked, and the mechanisms
+that matter are prompts an adopter will rewrite anyway. A team should
+not reach for it at all — there is no scope key, one observation file
+and one owner — and anyone who does take the pattern should add the
+provenance field before the first reflection runs.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a promoted rule record what it was promoted from? The
+reflector knows the entries at the moment it writes the rule, and the
+frontmatter already has a place for a list.</li>
+<li>What stops the observer re-observing something already promoted? The
+idempotency check is per date, not per content, so a lesson promoted in
+week one can be observed again in week three with nothing to notice
+it.</li>
+<li>How large does <code>OBSERVATIONS.md</code> get between reflections,
+and what does the semantic index do about a file that is rewritten
+weekly?</li>
+<li>Is the English sibling repository a translation or a fork with its
+own history?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>contexts/memory/OBSERVATIONS.md</code></td>
+<td>—</td>
+<td>The L1/L2 store: the three-level definition, the retrieval
+instruction, and the dated blocks</td>
+</tr>
+<tr>
+<td><code>periodic_jobs/ai_heartbeat/src/v0/observer.py</code></td>
+<td>84</td>
+<td>The L1 trigger and its prompt: idempotency first, append not edit,
+format discipline, L1-only scope</td>
+</tr>
+<tr>
+<td><code>periodic_jobs/ai_heartbeat/src/v0/reflector.py</code></td>
+<td>57</td>
+<td>The L2 trigger and its prompt: promote by responsibility boundary,
+then rewrite the file without what was promoted</td>
+</tr>
+<tr>
+<td><code>periodic_jobs/ai_heartbeat/src/v0/opencode_client.py</code></td>
+<td>228</td>
+<td>Session create, prompt send,
+delete-unless-<code>--no-delete</code></td>
+</tr>
+<tr>
+<td><code>tools/semantic_search/</code></td>
+<td>418</td>
+<td><code>chunker.py</code>, <code>embedding.py</code>,
+<code>index.py</code> with the <code>fcntl</code> lock and mmap load,
+<code>cli.py</code>, <code>models.py</code></td>
+</tr>
+<tr>
+<td><code>rules/</code></td>
+<td>—</td>
+<td><code>SOUL.md</code>, <code>USER.md</code>,
+<code>COMMUNICATION.md</code>, <code>WORKSPACE.md</code>,
+<code>axioms/</code> with an <code>INDEX.md</code>,
+<code>skills/</code></td>
+</tr>
+<tr>
+<td><code>AGENTS.md</code></td>
+<td>—</td>
+<td>The root routing table an agent reads at session start</td>
+</tr>
+<tr>
+<td><code>docs/CRONTAB.md</code>,
+<code>docs/SKILL_ECOSYSTEM.md</code></td>
+<td>—</td>
+<td>The schedule; the ten separately installable skill repositories</td>
+</tr>
+<tr>
+<td><code>rules/skills/tests/test_pdf_to_markdown_cli.py</code></td>
+<td>—</td>
+<td>The only test in the repository</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>ls LICENSE* COPYING*                                                    # none: no licence file anywhere
+rg -n &#39;^(source|derived_from|promoted_from|observations):&#39; rules/axioms/*.md  # none in frontmatter: id, category, created, updated only
+rg -n &#39;🔴|🟡|🟢&#39; periodic_jobs tools --glob &#39;*.py&#39;                       # three hits, all inside prompt strings; no code branches on a mark
+rg -n &#39;path/to/your/workspace|&lt;your-model-id&gt;&#39; periodic_jobs             # both trigger scripts, so nothing runs as committed
+find . -name &#39;test_*.py&#39; -o -name &#39;*_test.py&#39;                            # one file, on a PDF skill
+rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/grapeot/context-infrastructure/commit/421df58bcb2f53ead50f85de2adbd31fdfc9ea3f"><code class="commit-id" title="421df58bcb2f53ead50f85de2adbd31fdfc9ea3f">421df58b…</code></a>
+— first reading, at the head of <code>main</code>, the last commit of 6
+September 2026. Screened before reading: no auto-run surface, no
+build-time execution path, nothing inside the seven-day cooldown, one
+unpinned dependency surface, and an <code>AGENTS.md</code> treated as
+data; nothing was installed or run, and the read was made from a full
+clone. No marks. The repository has no licence file, which is recorded
+in section 1 because its stated purpose is to be copied. The reading
+covered the observation store, the two heartbeat triggers and their
+prompts, the rule and axiom layout, and the semantic-search tool; the
+metrics, posting and reporting utilities under <code>tools/</code> were
+read as the author's working surface rather than as memory. The
+documentation is in Chinese and an English sibling repository is linked
+from the README; quotations here are from the tree read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

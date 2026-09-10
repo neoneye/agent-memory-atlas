@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **403 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **404 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -99,6 +99,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/cognicore/"><span class="az-id">CogniCore</span><span class="az-what">Candidate-to-verified memory with a utility ledger</span><code class="az-repo">cognicore-dev/cognicore-my-openenv</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/cognis/"><span class="az-id">Cognis</span><span class="az-what">A memory policy with a fingerprint</span><code class="az-repo">fpytloun/cognis</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cognitive-spatial-memory/"><span class="az-id">Cognitive Spatial Memory</span><span class="az-what">Gravity instead of cosine</span><code class="az-repo">munch2u-a11y/Cognitive-Spatial-Memory</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/context-infrastructure/"><span class="az-id">Context Infrastructure</span><span class="az-what">A year of one person&#x27;s system, published as a blueprint</span><code class="az-repo">grapeot/context-infrastructure</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/context-keeper/"><span class="az-id">Context Keeper</span><span class="az-what">The schema rejects a thin memory at the door</span><code class="az-repo">jarmstrong158/context-keeper</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/context-mem/"><span class="az-id">Context Mem</span><span class="az-what">The unflattering number is committed; the badge is not about it</span><code class="az-repo">JubaKitiashvili/context-mem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/context-mode/"><span class="az-id">Context Mode</span><span class="az-what">Session knowledge across seventeen harnesses</span><code class="az-repo">mksglu/context-mode</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

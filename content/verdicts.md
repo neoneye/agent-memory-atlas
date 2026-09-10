@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 403 reports.**
+**This page covers all 404 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3567,3 +3567,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 1,742 commits between 14 July and 10 September 2026 by thirty-one authors, 273,068 lines of Go with 4,361 test functions, twenty-one internal packages, hooks for many agent harnesses plus an MCP server and a CLI; the LoCoMo and LongMemEval harnesses are committed with no result file; one of seven capability marks.
 - Study when: you run several coding agents on one machine, have months of transcripts on disk, and keep rediscovering things you already solved — the install is a binary and a hook wiring, with nothing to operate.
 - Do not copy when: you need a project or team boundary, or you need an old wrong conclusion suppressed rather than ranked down — the project has considered the epistemic layer and declined it deliberately, which is different from not having got to it.
+
+### [`context-infrastructure`](../systems/context-infrastructure/)
+- Best idea: **the promotion threshold is written down where the promotion happens.** The weekly reflector's prompt states the bar — general across projects, verified more than once, with a clear applicable scenario — rather than promoting on an unexplained score; and the daily observer's prompt puts its idempotency rule *ahead* of the task, so a retried job reads the file and changes nothing when today's block already exists.
+- Biggest risk: **consolidation deletes its own evidence.** The reflector promotes an observation into a rule and then rewrites the observation file without it, while a promoted axiom's frontmatter carries `id`, `category`, `created` and `updated` and no pointer back. A rule promoted from a misreading is indistinguishable from one promoted from a year of repeated experience, and a `source:` list would cost one line in the prompt.
+- Most reusable component: the three prompt-level disciplines — idempotency before the task, append with `>>` rather than a whole-file edit, and a retrieval instruction inside the memory file itself telling a reader not to load it whole — beside `tools/semantic_search`, a 418-line forward index with an `fcntl` lock, a manifest and mmap loading.
+- Maturity impression: 159 commits between 15 March and 6 September 2026 by three authors, 10,646 lines of Markdown against 3,496 of Python, one test file covering an unrelated PDF skill, both trigger scripts shipping `/path/to/your/workspace` and `<your-model-id>` placeholders so nothing runs as committed, and **no licence file at all**; no capability marks.
+- Study when: you want to see the shape of a personal context system somebody has lived with, and you intend to build your own from the pattern — which is what the README asks for.
+- Do not copy when: you need it to run, you need a licence, or you need more than one owner — there is one workspace, one observation file and no scope key anywhere.
