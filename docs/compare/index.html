@@ -10736,8 +10736,14 @@ suppression rule is unreachable</td>
 <td>A binding — an external memory reference (provider, external_id)
 attached to one or more anchors, each anchor an observable fact with a
 versioned probe and content-hashed transition rules</td>
-<td>One append-only SQLite database: a journal, bindings,
-binding_anchors, links, and a content-addressed sealed table; memory
+<td>One SQLite database whose append-only half is enforced by sixteen
+<code>BEFORE UPDATE</code>/<code>BEFORE DELETE</code> triggers raising
+<code>append_only</code> — journal, bindings, binding_anchors, links,
+both revocation tables, and a content-addressed <code>sealed</code>
+table that raises <code>sealed_immutable</code>. Four tables are mutable
+and each says so in the schema with its reason: <code>sighting</code>
+and <code>usage</code> counters, a per-session <code>ledger</code> of
+verb calls and envelope bytes, and a polling <code>queue</code>. Memory
 content itself stays in an external provider (git files)</td>
 <td>Not search — surfacing. Observe an anchor, and if its
 content-addressed fact crosses a declared transition, return the
@@ -10748,26 +10754,44 @@ open, transition, still, revise and close entries accrete on the
 anchor's append-only journal</td>
 <td>An anchor is revised (reprobe/retransition/reterminal/restate) or
 closed, each with a rationale hash; a memory whose content moved since
-binding is flagged rewritten and can be reaffirmed; detaching removes it
-from an anchor</td>
+binding is flagged rewritten and can be reaffirmed. Detaching is a
+revocation row rather than a delete, and it names the binding rows it
+observed — so a later re-add of the same anchor is a tag the revocation
+never saw, and survives. Link revocation works the same way, each row
+killing exactly one observed edge</td>
 <td>A memory reference is namespaced by provider and external_id; there
 is no per-user or per-tenant scope filter — GMR is a single-project
 grounding layer</td>
-<td>A Rust runtime and CLI over seven crates, with a coding domain
-shipping probes and an extractor; memory providers are pluggable behind
-a ContentProvider trait</td>
+<td>A Rust runtime and CLI over eight crates, with a
+<code>console/</code> holding the CLI plus Node and Python bindings,
+<code>batteries/</code> for transport, provider, survey and atlas
+adapters, and <code>packs/coding</code> shipping probes and an
+extractor; memory providers are pluggable behind a
+<code>ContentProvider</code> trait</td>
 <td>Observation runs the probe on a cadence and appends a sighting; a
 Still is written when nothing moved, a Transition when the fact crosses
-a rule, an Attempt when the probe fails</td>
+a rule, an Attempt when the probe fails. A <code>queue</code> table with
+a lease and an epoch high-water mark carries polling deployments, and a
+caller can demand freshness inline instead: <code>grounded_within</code>
+with <code>Instructions::fresher_than</code> errors rather than serving
+a reading older than the caller asked for</td>
 <td>A memory's currency is its anchor's discrete state at the sequence
 it was bound; anchors carry status, terminal statuses, closed and
 superseded; probes are Closed (reproducible) or Open (declared)</td>
 <td>Grounds a memory in the observable fact it depends on and surfaces
 it when that fact drifts, with a probe-failure taxonomy that never lets
-an unreachable probe masquerade as a change</td>
+an unreachable probe masquerade as a change; append-only enforced by
+database trigger rather than by convention; a <code>health</code> verb
+that reports which anchors have never answered and which answered
+without ever moving a memory, so a badly chosen anchor is measurable
+rather than merely suspected</td>
 <td>It grounds and surfaces but does not decide correctness or store the
 memory; the value depends on someone writing good anchors, and an Open
-probe is trusted rather than verified</td>
+probe is trusted rather than verified. There is no per-user or
+per-tenant scope filter anywhere in the runtime or store. And the
+surface has grown fast — 50,501 lines of Rust across eight crates plus
+four sibling trees — against a design whose whole argument is that a
+small number of semantics are held exactly</td>
 </tr>
 <tr>
 <td><code>gobii</code></td>
@@ -28513,7 +28537,7 @@ registry were read from <code>retriever.py</code>,
 <li><a
 href="https://github.com/Anchorstate-Lab/GMR">Anchorstate-Lab/GMR</a> at
 <a
-href="https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981"><code class="commit-id" title="8c4bc230c501a344b6d52d4f51f08e0d7b51c981">8c4bc230…</code></a>
+href="https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0"><code class="commit-id" title="34845baba22aee4c46200e0adc68699c8ee4cde0">34845bab…</code></a>
 — read only, at release v0.3.2; dependency surfaces inside the seven-day
 cooldown (the tree released v0.3.2 the day of reading) and the ordinary
 Cargo build surfaces, <code>Cargo.lock</code> present, so nothing was

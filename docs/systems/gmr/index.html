@@ -115,14 +115,14 @@ assumption is surfaced rather than trusted.</p>
               <strong>Anchorstate-Lab/GMR</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981" title="8c4bc230c501a344b6d52d4f51f08e0d7b51c981">
+            <a class="meta-pill revision-pill" href="https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0" title="34845baba22aee4c46200e0adc68699c8ee4cde0">
               <span>Analyzed revision</span>
-              <code>8c4bc230…</code>
+              <code>34845bab…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-10</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Anchorstate-Lab--GMR" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -148,10 +148,10 @@ assumption is surfaced rather than trusted.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>GMR — Grounded Memory Runtime — is a grounding layer that sits
 <em>beside</em> an agent's memory rather than being one. Apache-2.0,
-~11,500 lines of Rust across seven crates. It answers a question the
-rest of this atlas mostly leaves to decay heuristics and manual review:
-<strong>when does a stored belief stop being true because the thing it
-was about changed?</strong></p>
+50,501 lines of Rust across eight crates and four sibling trees. It
+answers a question the rest of this atlas mostly leaves to decay
+heuristics and manual review: <strong>when does a stored belief stop
+being true because the thing it was about changed?</strong></p>
 <p>Its answer is a first-class mechanism, and it is the reason the
 report exists. A memory is not stored as content here; it is stored as a
 <strong>binding</strong> — an external reference
@@ -273,9 +273,9 @@ flowchart TB
     Trans --&gt; Journal
     Bind -.-&gt;|&quot;provider file moved since bind&quot;| Rewritten[&quot;memory marked rewritten;&lt;br/&gt;reaffirm accepts it without touching anchors&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>Seven crates, cleanly separated:</p>
+<p>Eight crates, cleanly separated:</p>
 <ul>
-<li><strong><code>gmr-core</code></strong> (1,670 lines) — the types:
+<li><strong><code>gmr-core</code></strong> (2,648 lines) — the types:
 <code>anchor.rs</code> (<code>Anchor</code>, <code>Rule</code>,
 <code>Transitions</code>, <code>State</code>, <code>Superseded</code>,
 <code>RunSettings</code>), <code>memory.rs</code> (<code>Ref</code>,
@@ -287,34 +287,47 @@ flowchart TB
 <code>Verifiability</code>, <code>Derivation</code>, <code>Facts</code>,
 <code>Outcome</code>), and <code>addr.rs</code> (content-hashing,
 canonicalization, string newtypes).</li>
-<li><strong><code>gmr-expr</code></strong> (1,630 lines) — the
+<li><strong><code>gmr-expr</code></strong> (1,934 lines) — the
 transition expression language: the <code>when</code> guard and
 <code>to</code> state expressions are content-hashed source evaluated
 against the observed facts, with a failure code per evaluation error
 (<code>GuardNotBoolean</code>, <code>NoSuchField</code>,
 <code>NotComparable</code>, <code>DividedByZero</code>).</li>
-<li><strong><code>gmr-probe</code></strong> (311 lines) — probe
-execution budgets and deadlines.</li>
-<li><strong><code>gmr-runtime</code></strong> (4,706 lines) — the loop:
-<code>observe.rs</code> runs a probe and produces an
+<li><strong><code>gmr-probe</code></strong> (130 lines) and
+<strong><code>gmr-budget</code></strong> (220 lines) — probe execution
+deadlines and the budget a batch of observations spends.</li>
+<li><strong><code>gmr-runtime</code></strong> (11,792 lines) — the loop
+and the verbs: <code>observe.rs</code> runs a probe and produces an
 <code>Observed</code>, <code>read.rs</code> derives <code>cobound</code>
-memories, and the assembly wires stores together.</li>
-<li><strong><code>gmr-store</code></strong> (3,060 lines) — SQLite (via
-<code>sqlx</code>) with an append-only <code>journal</code>,
-<code>bindings</code>, <code>binding_anchors</code>, <code>links</code>,
-and a content-addressed <code>sealed</code> table, plus a portable
-export/import for binary upgrades.</li>
-<li><strong><code>gmr-content</code></strong> (54 lines) — the
+memories and answers freshness-bounded reads, <code>health.rs</code>
+computes the anchor and corpus census, and <code>assembly.rs</code>
+wires the stores together, with <code>bind</code>, <code>link</code>,
+<code>edges</code>, <code>open</code>, <code>close</code>,
+<code>revise</code>, <code>pass</code>, <code>policy</code>,
+<code>translate</code> and <code>scheduler</code> beside them.</li>
+<li><strong><code>gmr-store</code></strong> (5,207 lines) — SQLite (via
+<code>sqlx</code>) with the trigger-enforced append-only tables, the
+revocation pair, the mutable <code>sighting</code>, <code>usage</code>,
+<code>ledger</code> and <code>queue</code> counters, a content-addressed
+<code>sealed</code> table, and a portable export/import for binary
+upgrades.</li>
+<li><strong><code>gmr-content</code></strong> (360 lines) — the
 <code>ContentProvider</code> trait: <code>fetch(id)</code> and
 <code>fetch_at(id, version)</code>, so a provider that keeps history can
 serve the content a memory was bound against.</li>
-<li><strong><code>gmr</code></strong> (29 lines) — the umbrella.</li>
+<li><strong><code>gmr</code></strong> (37 lines) — the umbrella.</li>
 </ul>
-<p>Beside the crates, <code>domains/coding/</code> ships a concrete
-domain: a <code>probes/</code> directory with a
-<code>test-roster.sh</code> probe, an <code>extract</code> crate, a
-<code>cli</code>, and a <code>SKILL.md</code> — the batteries that turn
-the runtime into a coding-memory grounding tool.</p>
+<p>Four sibling trees sit beside them and are larger than the crates
+they wrap: <code>console/</code> (14,884 lines) holds the CLI plus Node
+and Python bindings; <code>batteries/</code> (11,685) holds transport,
+provider, survey and atlas adapters; <code>packs/coding</code> (2,586)
+ships the concrete coding domain — a <code>probes/</code> directory, an
+<code>extract</code> crate, a <code>cli</code> and a
+<code>SKILL.md</code>; and <code>tools/</code> (4,526) holds the
+acceptance and measurement harnesses. That proportion is the thing to
+weigh: the semantics this report credits live in about 22,000 lines of
+crate code, and roughly 34,000 lines of adapter, console and tooling
+surround them.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>One SQLite file</strong>, no service. Memory content lives
@@ -332,11 +345,15 @@ coding domain's probe is a shell script.</li>
 <code>about:</code> header</strong> — human- and agent-readable,
 diffable, and the binding is what GMR adds on top.</li>
 </ul>
-<p>The screen found dependency surfaces inside the seven-day cooldown
-(the tree released v0.3.2 the day of reading) and the ordinary build
-surfaces of a Cargo workspace, with <code>Cargo.lock</code> present.
-Nothing was installed or run; the crates were read and cross-checked
-against 223 committed tests.</p>
+<p>The screen found two dependency surfaces inside the seven-day
+cooldown, three build-time execution paths — two <code>build.rs</code>
+and one more under <code>packs/coding</code> — and one unpinned surface
+in <code>console/python</code>, against a workspace
+<code>Cargo.lock</code>. It also flags
+<code>dist/moment/pre-push</code>, a git hook payload that is inert
+until something copies it into <code>.git/hooks</code>. Nothing was
+installed or run; the crates were read and cross-checked against 858
+committed tests.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
@@ -537,12 +554,23 @@ is the discipline the atlas's <a
 href="../../compare/#verify-memory-against-its-subject">verify memory
 against its subject</a> pattern asks for, implemented as a runtime
 rather than a one-off check.</p>
-<p><strong>The audit trail reaches the grounding definition.</strong>
-Every anchor mutation — data and declaration alike — is a journalled
-entry with a rationale hash, so "why is this memory considered current"
-is answerable from the journal, not reconstructed. That is stronger
-provenance than most stores here offer, because most audit the memory
-and not the policy that judges it.</p>
+<p><strong>The audit trail reaches the grounding definition, and the
+database refuses to break it.</strong> Every anchor mutation — data and
+declaration alike — is a journalled entry with a rationale hash, so "why
+is this memory considered current" is answerable from the journal, not
+reconstructed. That is stronger provenance than most stores here offer,
+because most audit the memory and not the policy that judges it. The
+append-only property is not a convention either: sixteen
+<code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers
+<code>RAISE(ABORT, 'append_only')</code> across the journal, bindings,
+binding anchors, both revocation tables and links, and the
+content-addressed <code>sealed</code> table raises
+<code>sealed_immutable</code>. The schema's own comment for that block —
+<em>"Append-only — by trigger, not by good intentions"</em> — is the
+right instinct, and four tables are exempted openly rather than quietly:
+<code>sighting</code> and <code>usage</code> counters, a per-session
+<code>ledger</code>, and a polling <code>queue</code>, each labelled
+mutable in the schema with the reason it is.</p>
 <p><strong>Trust is honest about its own limits.</strong>
 <code>Verifiability::Closed</code> vs <code>Open</code> marks whether an
 observation is reproducible, and GMR records it rather than pretending
@@ -559,23 +587,32 @@ wrong, and nothing here catches that. It does not store the content, so
 it cannot enforce redaction or scoping on it — that is the provider's
 job. And there is no multi-tenant boundary. These are scope choices,
 stated plainly in the README, not gaps to fix.</p>
-<p>The <code>tombstone</code> near-miss deserves a sentence:
-<code>Superseded</code> and <code>Close</code> retire an anchor with a
-rationale, which retires the grounding, but nothing records a
-<em>rejected memory value</em> keyed on content, so a memory re-created
-in the provider and re-bound would be grounded afresh. Closing that
-would require GMR to reach into the content it deliberately does not
-own.</p>
+<p><strong>The <code>tombstone</code> near-miss is a refusal rather than
+a gap, and the schema argues for it.</strong> <code>Superseded</code>
+and <code>Close</code> retire an anchor with a rationale, and
+<code>binding_revocations</code> with <code>binding_revoked_tags</code>
+retire a binding — but a revocation names <em>the binding rows it
+observed</em>, and the comment states the consequence it is buying:
+<em>"Naming them is what keeps a later add of the same anchor alive: it
+is a tag this revocation never saw."</em> Link revocation is scoped the
+same way, each row killing exactly one observed edge <em>"so a
+concurrent re-assertion of the same edge lands as a new seq and
+survives."</em> So the machinery that would carry a value-level
+tombstone exists and is deliberately bounded to what a revoker actually
+saw, which is the correct call for a store with concurrent writers and
+the reason the mark is withheld. Nothing records a <em>rejected memory
+value</em> keyed on content, and closing that would require GMR to reach
+into the content it deliberately does not own.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>223 tests across the crates, and the runtime's integration suites are
+<p>858 tests across the crates, and the runtime's integration suites are
 aimed squarely at the mechanisms this report credits.
 <code>grounding.rs</code> asserts the memory-content behaviours: a
 rewritten record emits an edge with both versions, reaffirming clears
 <code>rewritten</code> without touching anchors, reaffirming an unbound
 reference is refused, an unreachable bound version is flagged not
 dropped, <code>cobound</code> is derived not stored, an unanchored
-record is carried but marked, and a detached record is no longer listed
+record is carried but marked, and a revoked record is no longer listed
 under its anchor. <code>operations.rs</code> covers the transition
 machinery, including that a transition "waits for the streak" (a single
 observation does not move an anchor) and that a failed probe does not
@@ -583,17 +620,53 @@ blame anchors it never reached.</p>
 <p>Those last two are the tests that matter most, because they pin the
 two ways a drift detector goes wrong — firing on noise, and firing on
 its own failure — and GMR asserts against both. The negative cases
-(<code>detached … no longer listed</code>,
-<code>does_not_blame … never reached</code>) are the committed "must not
-surface" assertions behind <code>negative_eval</code>.</p>
-<p>What is absent is a benchmark: there is no committed measurement of
-detection precision or recall — how often a real drift is surfaced, how
-often a surfaced drift is spurious — over a corpus of memories and
-changes. That is the evaluation the design most invites, and the coding
-domain plus the 135 dogfooded memories are the fixture it could be run
-on. The unit and integration tests establish that the mechanism behaves
-as specified; nothing yet establishes how well the grounding choices
-track real staleness in practice.</p>
+(<code>a_revoked_record_is_no_longer_listed_under_the_anchor</code>,
+<code>a_batch_that_runs_out_of_budget_does_not_blame_the_anchors_it_never_reached</code>)
+are the committed "must not surface" assertions behind
+<code>negative_eval</code>.</p>
+<p>Two committed instruments sit above the unit tests, and they measure
+different things.</p>
+<p><code>gmr health</code> is the corpus-level one.
+<code>AnchorHealth</code> reports, per anchor, how many readings it
+took, how many answered, and how many of those answers moved a memory,
+with <code>never_fired()</code> and
+<code>fired_and_changed_nothing()</code> naming the two shapes of a
+badly chosen anchor; beside them a restate count and the intervals
+between restatements, whether the declaration drifted, the rationale
+sizes, a stall ratio and the last failure. <code>CorpusHealth</code>
+aggregates it: bound references, active anchors, memories per anchor,
+<code>barren_anchors</code> — anchors carrying no memory at all — and
+<code>unsupervised</code> claims carrying no anchor. All of it is
+derived from the journal, so the census costs a read rather than an
+instrumented run.</p>
+<p><code>tools/msis</code> is the acceptance one, and its stance is the
+part worth copying. A fresh agent holding only the binary and its
+<code>SKILL.md</code> must assemble a task's minimal sufficient
+information set by walking the anchor-memory network of a synthetic
+repository, and the fixture is built so the trivial baseline cannot win:
+the vendor name and contract cap live only in one note's body and the
+conclusion only in the journal, so <em>"no file grep can complete the
+set."</em> Four scenarios cover an incoming-link walk, an outgoing one,
+an unannounced edit, and a mechanical no-LLM case. Two gates fire —
+sufficiency, that the answer states what only the full set yields, and
+findability, that every ground-truth address appears in
+<code>relied_on</code> — and the third scenario gates that a drifted
+ground is <em>reported</em> rather than silently relied on. Minimality
+precision against three distractor notes is computed and deliberately
+<strong>not</strong> gated: the stated infrastructure bar is <em>"found,
+even if slowly — retrieval speed and precision are reported as metrics,
+never gated."</em> Declining to gate a metric you are already computing
+is the discipline most eval harnesses skip. It costs API money per
+scenario and never runs in CI, and it grants the agent unrestricted Bash
+inside a throwaway fixture directory, which the README says in as many
+words.</p>
+<p>What neither establishes is detection precision and recall over a
+corpus of real memories and real changes — how often a genuine drift is
+surfaced and how often a surfaced drift is spurious. Health counts what
+the anchors did; msis proves a sufficient set is findable on a synthetic
+fixture of six notes. The 197 dogfooded memories in
+<code>memories/</code> are the fixture the missing measurement could be
+run on.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Bind a memory to the observable fact it depends on, and
@@ -624,7 +697,7 @@ memory grounded on a re-runnable probe from one grounded on an
 assertion, without forcing the system to reject the latter.</p>
 <p><strong>Let the memory name its dependency in frontmatter.</strong>
 <code>about: path/to/file#symbol</code> plus a "When this changes, ask"
-section is the zero-infrastructure version of a binding, and the 135
+section is the zero-infrastructure version of a binding, and the 197
 dogfooded memories prove it scales on a real codebase.</p>
 <h3 id="avoid">Avoid</h3>
 <p><strong>Do not let a probe failure surface memories as
@@ -649,9 +722,10 @@ as verified is exactly the mistake the flag exists to prevent.</p>
 thing most stores lack: a principled answer to when a stored belief has
 gone stale because its subject moved. It composes with any store in this
 atlas — it is a grounding index beside them, not a replacement — and it
-is unusually disciplined for a v0.3 (a portable store, a failure
-taxonomy, a dogfooded corpus, 223 tests). The coding domain makes it
-directly usable for grounding memories about a codebase.</p>
+is unusually disciplined for a v0.6 (a portable store, a failure
+taxonomy, a dogfooded corpus, trigger-enforced append-only tables, 858
+tests). The coding domain makes it directly usable for grounding
+memories about a codebase.</p>
 <p>Walk away if you want a store: GMR does not hold your memory content,
 retrieve by similarity, or scope by tenant, and it will not decide
 whether a memory is correct. And weigh the authoring cost honestly — the
@@ -665,7 +739,9 @@ decay-and-reinforcement systems here ask less and promise less.</p>
 <ul>
 <li>What is detection quality in practice — over a corpus of memories
 and real changes, how often does a genuine drift surface and how often
-is a surfaced drift spurious? Nothing committed measures it.</li>
+is a surfaced drift spurious? <code>health</code> counts what the
+anchors did and <code>msis</code> proves a sufficient set is findable on
+a six-note fixture; neither answers this.</li>
 <li>How are transitions authored at scale? The <code>when → to</code>
 expressions are the labour; the coding domain has an extractor, but how
 much of anchor authoring is automatable versus hand-written is not
@@ -711,30 +787,74 @@ failure codes.</li>
 <li><code>crates/gmr-runtime/src/observe.rs</code> — observation and
 journal append.</li>
 <li><code>crates/gmr-runtime/src/read.rs</code> — <code>cobound</code>
-surfacing.</li>
-<li><code>crates/gmr-store/src/sqlite/schema.rs</code> — the append-only
-journal/bindings/links/sealed tables.</li>
+surfacing, and <code>grounded_within</code> with
+<code>Instructions::fresher_than</code>, which errors rather than
+serving a reading older than the caller demanded.</li>
+<li><code>crates/gmr-runtime/src/health.rs</code> — <code>Aim</code>
+with <code>never_fired</code> and
+<code>fired_and_changed_nothing</code>, <code>AnchorHealth</code>, and
+<code>CorpusHealth</code> with <code>barren_anchors</code> and
+<code>unsupervised</code>; surfaced as the CLI's <code>health</code>
+verb.</li>
+<li><code>crates/gmr-store/src/sqlite/schema.rs</code> — the tables, the
+revocation pair with its tag-scoping comment (52-70), the four mutable
+counters (120-158), and the sixteen append-only triggers (160-192).</li>
 <li><code>crates/gmr-store/src/bindings.rs</code>,
 <code>sqlite/portable.rs</code> — binding records and portable
 export/import.</li>
+<li><code>crates/gmr-store/src/{ledger,sightings,usage}.rs</code> — the
+mutable tallies.</li>
 <li><code>crates/gmr-content/</code> — the <code>ContentProvider</code>
 trait.</li>
 </ul>
 <p><strong>Domain and corpus</strong></p>
 <ul>
-<li><code>domains/coding/</code> — probes (<code>test-roster.sh</code>),
+<li><code>packs/coding/</code> — probes (<code>test-roster.sh</code>),
 <code>extract</code>, <code>cli</code>, <code>SKILL.md</code>.</li>
-<li><code>memories/</code> — 135 memories anchored to GMR's own code via
+<li><code>memories/</code> — 197 memories anchored to GMR's own code via
 <code>about:</code> frontmatter.</li>
 </ul>
-<p><strong>Tests</strong></p>
+<p><strong>Tests and harnesses</strong></p>
 <ul>
 <li><code>crates/gmr-runtime/tests/grounding.rs</code> —
-rewritten/reaffirm/unreachable/cobound/detached behaviours.</li>
+rewritten/reaffirm/unreachable/cobound behaviours, and
+<code>a_revoked_record_is_no_longer_listed_under_the_anchor</code>
+(630).</li>
 <li><code>crates/gmr-runtime/tests/operations.rs</code> — transition
-streak, probe-failure-does-not-blame.</li>
+streak, the aim counters, and
+<code>a_batch_that_runs_out_of_budget_does_not_blame_the_anchors_it_never_reached</code>
+(956).</li>
+<li><code>crates/gmr-store/tests/{conformance,durable,portable}.rs</code>
+— the store contract, including that the append-only triggers fire.</li>
+<li><code>tools/msis/</code> — <code>fixture.py</code> (the ground
+truth), <code>grade.py</code> (the two gates and the ungated precision
+metric), <code>run.sh</code>, and a README stating the bar.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-10</strong> — <a
+href="https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0"><code class="commit-id" title="34845baba22aee4c46200e0adc68699c8ee4cde0">34845bab…</code></a>
+— read again at release v0.6.4, 246 commits and 471 files past the
+previous pin. Screened first: two dependency surfaces inside the
+seven-day cooldown, three build-time execution paths, one unpinned
+surface under <code>console/python</code>, and a
+<code>dist/moment/pre-push</code> hook payload that is inert until
+something installs it; nothing was installed or run. The three marks
+hold, and two published claims did not. Section 10 said no committed
+measurement existed: <code>gmr health</code> computes an anchor and
+corpus census from the journal — including anchors that never answered,
+anchors that answered without moving a memory, barren anchors and
+unsupervised claims — and <code>tools/msis</code> is an acceptance
+harness with a synthetic fixture, four scenarios and two gates, which
+reports minimality precision and deliberately does not gate on it.
+Section 9's tombstone paragraph said the machinery was absent:
+<code>binding_revocations</code> and <code>binding_revoked_tags</code>
+exist and are deliberately scoped to the binding rows a revocation
+observed, so a later re-add survives — the mark stays withheld, on a
+refusal rather than an absence. The append-only property moved from
+convention to sixteen database triggers. Test attributes went from 223
+to 858 and the tree from about 11,500 lines of Rust to 50,501 across
+eight crates and four sibling trees. The absence claim that no scope
+filter exists anywhere in the runtime or store was re-run and holds.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/Anchorstate-Lab/GMR/commit/8c4bc230c501a344b6d52d4f51f08e0d7b51c981"><code class="commit-id" title="8c4bc230c501a344b6d52d4f51f08e0d7b51c981">8c4bc230…</code></a>
 — first reading, at release v0.3.2. Screened before opening: dependency
