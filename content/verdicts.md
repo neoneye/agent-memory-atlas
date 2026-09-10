@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 397 reports.**
+**This page covers all 398 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3519,3 +3519,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 74 commits between 9 April and 6 August 2026 by three authors, version 0.19.0, 7,587 lines of Python with zero runtime dependencies beside 7,510 lines of tests holding 511 cases, fourteen MCP tools and seven hooks; three of seven capability marks.
 - Study when: you want an agent's project memory to be structured rather than freeform, you are willing to have a schema reject your thin rationale, and you want a retrieval that tells you when it has no confident answer.
 - Do not copy when: you need a retired rule to stay retired without a person noticing, a record of what an entry said before it was edited, a validity interval, or an abstention that withholds rather than annotates.
+
+### [`statewave`](../systems/statewave/)
+- Best idea: **compile once per subject change, then serve the compiled set.** Raw episodes are append-only and the expensive derivation happens off the request path, so assembly reads an already-typed active set and the same subject and task at the same point in time returns the same bytes — determinism the receipts make checkable.
+- Biggest risk: **`tombstoned` is an expiry, not a rejection.** The enum's own comment records the rename from an aspirational `deleted` that was never wired up, and nothing consults a tombstoned memory when the compiler next runs — a claim whose validity lapsed is re-derivable from the same episodes and re-enters as `active`. There is also no record of memory mutations: the receipts say what was assembled, and the diff reconstructs what changed by comparing state afterwards.
+- Most reusable component: `tests/test_tenant_scoping_invariant.py` — forty lines of `ast` that collect every repository helper taking `subject_id` without `tenant_id` and fail CI when the set is non-empty, with an empty allowlist and a docstring forbidding additions; beside `tests/integration/test_episode_leak.py`, which proves a superseded fact cannot return through the raw episode it was compiled from.
+- Maturity impression: Apache-2.0, 462 commits between 24 April and 8 September 2026 by thirteen authors, version 1.5.0, 26,041 lines under `server/` beside 27,927 lines of tests holding 1,271 functions, thirteen Postgres tables under Alembic, shipped as a PyPI package, a Docker image, a Helm chart and a Fly config; four of seven capability marks.
+- Study when: you run Postgres, you want per-subject memory whose every claim traces to the raw events it came from, and you need to answer *why did the assistant say that* months later from a receipt rather than a guess.
+- Do not copy when: you want a library or an MCP server rather than a service, you need per-memory correction by an end user — erasure here is subject-level — or you need a memory a person approves before it can be retrieved.

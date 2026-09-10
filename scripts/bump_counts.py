@@ -92,11 +92,26 @@ REPO_CONTEXTS = [
 ]
 
 def apply(old: int, new: int, dry: bool, contexts) -> int:
+    """Replace `old` with `new` where it is a count.
+
+    A *spelled* number ("three hundred and ninety-six") is replaced bare: it
+    cannot appear in a commit sha, a line reference or a version string, so
+    there is nothing to guard against. Only the digit form needs a context
+    word beside it — that guard is what stops a 353->354 sweep rewriting a
+    commit hash, which happened once.
+    """
     total = 0
     for path in collect_files():
         s = io.open(path, encoding="utf-8").read()
         orig = s
-        for ov, nv in zip(variants(old), variants(new)):
+        # Spelled forms first, bare and unguarded.
+        for ov, nv in list(zip(variants(old), variants(new)))[1:]:
+            if ov in s:
+                c = s.count(ov)
+                s = s.replace(ov, nv)
+                total += c
+                print(f"  {path.relative_to(ROOT)}: {c}x {ov!r} -> {nv!r} (spelled)")
+        for ov, nv in [(str(old), str(new))]:
             for tpl in contexts:
                 a, b = tpl.format(n=ov), tpl.format(n=nv)
                 if a in s:

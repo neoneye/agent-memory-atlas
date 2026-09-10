@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 397 reports.</strong></p>
+<p><strong>This page covers all 398 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -13869,6 +13869,46 @@ confident answer.</li>
 person noticing, a record of what an entry said before it was edited, a
 validity interval, or an abstention that withholds rather than
 annotates.</li>
+</ul>
+<h3 id="statewave"><a
+href="../systems/statewave/"><code>statewave</code></a></h3>
+<ul>
+<li>Best idea: <strong>compile once per subject change, then serve the
+compiled set.</strong> Raw episodes are append-only and the expensive
+derivation happens off the request path, so assembly reads an
+already-typed active set and the same subject and task at the same point
+in time returns the same bytes — determinism the receipts make
+checkable.</li>
+<li>Biggest risk: <strong><code>tombstoned</code> is an expiry, not a
+rejection.</strong> The enum's own comment records the rename from an
+aspirational <code>deleted</code> that was never wired up, and nothing
+consults a tombstoned memory when the compiler next runs — a claim whose
+validity lapsed is re-derivable from the same episodes and re-enters as
+<code>active</code>. There is also no record of memory mutations: the
+receipts say what was assembled, and the diff reconstructs what changed
+by comparing state afterwards.</li>
+<li>Most reusable component:
+<code>tests/test_tenant_scoping_invariant.py</code> — forty lines of
+<code>ast</code> that collect every repository helper taking
+<code>subject_id</code> without <code>tenant_id</code> and fail CI when
+the set is non-empty, with an empty allowlist and a docstring forbidding
+additions; beside <code>tests/integration/test_episode_leak.py</code>,
+which proves a superseded fact cannot return through the raw episode it
+was compiled from.</li>
+<li>Maturity impression: Apache-2.0, 462 commits between 24 April and 8
+September 2026 by thirteen authors, version 1.5.0, 26,041 lines under
+<code>server/</code> beside 27,927 lines of tests holding 1,271
+functions, thirteen Postgres tables under Alembic, shipped as a PyPI
+package, a Docker image, a Helm chart and a Fly config; four of seven
+capability marks.</li>
+<li>Study when: you run Postgres, you want per-subject memory whose
+every claim traces to the raw events it came from, and you need to
+answer <em>why did the assistant say that</em> months later from a
+receipt rather than a guess.</li>
+<li>Do not copy when: you want a library or an MCP server rather than a
+service, you need per-memory correction by an end user — erasure here is
+subject-level — or you need a memory a person approves before it can be
+retrieved.</li>
 </ul>
         </article>
       </div>
