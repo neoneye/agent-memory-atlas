@@ -4724,16 +4724,20 @@ whose subject is the actor rather than the world.</li>
 <li>Biggest risk: the audit rows the profile derives from are updated in
 place when a human resolves them, so the history being summarised is
 rewritten after the fact, and the risk level it produces gates behaviour
-with no path for anyone to dispute it.</li>
+with no path for anyone to dispute it. The commit adds a genuinely
+append-only <code>audit_event_index</code> beside them, sequenced per
+session with no update or delete — but it carries the tool calls, not
+the decisions, so the immutable record holds what the agent did and the
+mutable one holds what was judged about it.</li>
 <li>Most reusable component: <code>precedent.py</code> — mapping a call
 into a coarse capability family so one human approval generalises across
 equivalent low-risk tools <em>"without turning into blanket approval for
 all calls to the same tool name"</em>, with mutating verbs kept out of
 lookup families.</li>
-<li>Maturity impression: 212 files under BSL 1.1 with a dual-dialect
-SQLite/Postgres schema, hierarchical sessions with an idle sweep, and
-one <code>WHERE</code> clause that excludes judge-authored decisions
-from the data it treats as authoritative human guidance.</li>
+<li>Maturity impression: 82,701 lines of Python under BSL 1.1 with a
+dual-dialect SQLite/Postgres schema, hierarchical sessions with an idle
+sweep, and one <code>WHERE</code> clause that excludes judge-authored
+decisions from the data it treats as authoritative human guidance.</li>
 <li>Study when: you reuse human approvals and need them to generalise
 without becoming reflexive, or you want the one worked example here of
 memory about the actor.</li>

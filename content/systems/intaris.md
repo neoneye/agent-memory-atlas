@@ -7,10 +7,13 @@ page_kind: system
 source_name: "fpytloun/intaris"
 source_url: https://github.com/fpytloun/intaris
 archive_name: "fpytloun--intaris"
-revision: d07ea183ff637c0208e87357d51aa097dd3fced0
-revision_url: https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0
-analyzed_at: 2026-08-07
+revision: 59b148d1d56286f4511473cf13021581746ace36
+revision_url: https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "every store query | `user_id` as a tenant identifier in each query, `agent_id` beside it in the profile key | a stored key applied as a predicate, not a partition | unknown"
+  human_review: "escalation resolution | intaris/audit.py:542 | a person resolves an escalated or denied call and the row records `user_decision`, `user_note`, `resolved_at` and `resolved_by`, with the WHERE clause refusing to overwrite a decision a human already made | tests/test_resolve.py"
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -178,6 +181,27 @@ shape for a work queue and the wrong shape for an audit, and it is why this repo
 withholds the `audit_log` mark: the record the profile is derived from can change
 after the fact, and nothing preserves what it said before.
 
+The `WHERE` clause on that update is worth reading, because it encodes an
+authority ordering rather than merely a row filter:
+`AND (user_decision IS NULL OR resolved_by = 'judge')`. A human may overwrite a
+judge's decision; nothing may overwrite a human's. The comment above it states
+the rule — *"Human decisions are final — `resolved_by='user'` is NOT matched"* —
+and `COALESCE` preserves the judge's reasoning when a human override passes none,
+so the override records what it overrode. The mutability is deliberate and
+bounded; it is still mutability.
+
+**An append-only stream sits beside it, and it holds the wrong half.**
+`audit_event_index` takes `tool_call` and `tool_result` events under a
+`(user_id, session_id, seq)` primary key, written by a single `INSERT ... ON
+CONFLICT DO NOTHING` in `event_audit.py:113` with no `UPDATE` and no `DELETE`
+anywhere — a genuine append-only projection, with `audit_event_projection_state`
+as its watermark and `event_append_idempotency` guarding a duplicate append by
+key. What it carries is what the agent *did*: the tool, the call id, the error
+flag, the duration. What it does not carry is the decision, the resolution, or
+the human's note — those live only in the row that gets rewritten. So the system holds
+an immutable record of the events and a mutable record of the judgements made
+about them, which is the opposite of the split an audit wants.
+
 Profile writes are background and unattended. A new analysis replaces the current
 profile wholesale; the version increments; the previous one is recoverable only
 through `behavioral_analyses`.
@@ -313,6 +337,20 @@ action side.
 | `intaris/db.py` | Dual-dialect schema and migrations |
 | `tests/test_redactor.py` | Secret redaction assertions |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Audit rows are rewritten in place | `grep -rn "UPDATE audit_log" --include="*.py" intaris` | Two sites, `audit.py:542` and `:617` |
+| A human decision cannot be overwritten | read the `WHERE` at `intaris/audit.py:548-550` | `AND (user_decision IS NULL OR resolved_by = 'judge')` |
+| The event index is append-only | `grep -rn "audit_event_index" --include="*.py" intaris \| grep -iE "INSERT\|UPDATE\|DELETE"` | One `INSERT ... ON CONFLICT DO NOTHING`; no update, no delete |
+| The event index carries no decision | read the `CREATE TABLE` at `intaris/db.py:1266-1281` | Eleven columns, none of them a decision, resolution or note |
+| Tree size | `find . -name "*.py" -not -path "./.git/*" \| xargs wc -l \| tail -1` | 82,701 lines |
+
 ## History
+
+**2026-09-11** — [`59b148d1d56286f4511473cf13021581746ace36`](https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36) — re-read, 63 files and 7,163 insertions past the previous pin in a single commit. **Both marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. **`audit_log` stays withheld, and the reason is now more specific rather than less.** The in-place update is unchanged — `UPDATE audit_log` at `audit.py:542` and `:617` — but reading its `WHERE` clause is worth the trip: `AND (user_decision IS NULL OR resolved_by = 'judge')` means a human may overwrite a judge and nothing may overwrite a human, with `COALESCE` preserving the judge's reasoning through the override. The mutability is bounded and deliberate. Beside it the commit adds a genuinely append-only stream: `audit_event_index`, keyed `(user_id, session_id, seq)`, written by one `INSERT ... ON CONFLICT DO NOTHING` with no update or delete anywhere, plus a projection watermark and an idempotency ledger for appends. It records `tool_call` and `tool_result` events — what the agent did — and carries no decision, resolution or note. The system therefore keeps an immutable record of the events and a mutable record of the judgements about them, which is the inverse of the split the mark asks for. Screened before reading: eight findings; nothing was installed or run.
 
 **2026-08-07** — [`d07ea183ff637c0208e87357d51aa097dd3fced0`](https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0) — first reading. Screened before reading: unpinned dependency surfaces and files inside the seven-day cooldown, so nothing was installed, built or run. Licensed BSL 1.1, recorded as a caveat rather than an exclusion. Admitted on `behavioral_profiles` alone: a guard's decision record is not a belief, but a versioned profile of the agent that the evaluator reads back and acts on is one, and it is the only memory in this atlas whose subject is the actor.

@@ -1488,9 +1488,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`intaris`](../systems/intaris/)
 - Best idea: a durable, versioned behavioural profile of the *agent* — risk level, alerts, summary, keyed on `(user_id, agent_id)` — derived from its own audit history and read back before the next decision. The only memory in this atlas whose subject is the actor rather than the world.
-- Biggest risk: the audit rows the profile derives from are updated in place when a human resolves them, so the history being summarised is rewritten after the fact, and the risk level it produces gates behaviour with no path for anyone to dispute it.
+- Biggest risk: the audit rows the profile derives from are updated in place when a human resolves them, so the history being summarised is rewritten after the fact, and the risk level it produces gates behaviour with no path for anyone to dispute it. The commit adds a genuinely append-only `audit_event_index` beside them, sequenced per session with no update or delete — but it carries the tool calls, not the decisions, so the immutable record holds what the agent did and the mutable one holds what was judged about it.
 - Most reusable component: `precedent.py` — mapping a call into a coarse capability family so one human approval generalises across equivalent low-risk tools *"without turning into blanket approval for all calls to the same tool name"*, with mutating verbs kept out of lookup families.
-- Maturity impression: 212 files under BSL 1.1 with a dual-dialect SQLite/Postgres schema, hierarchical sessions with an idle sweep, and one `WHERE` clause that excludes judge-authored decisions from the data it treats as authoritative human guidance.
+- Maturity impression: 82,701 lines of Python under BSL 1.1 with a dual-dialect SQLite/Postgres schema, hierarchical sessions with an idle sweep, and one `WHERE` clause that excludes judge-authored decisions from the data it treats as authoritative human guidance.
 - Study when: you reuse human approvals and need them to generalise without becoming reflexive, or you want the one worked example here of memory about the actor.
 - Do not copy when: the profile must be correctable — nothing disputes it, and only the next analysis can disagree with the last.
 

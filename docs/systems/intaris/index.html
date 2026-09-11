@@ -113,14 +113,14 @@ world.</p>
               <strong>fpytloun/intaris</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0" title="d07ea183ff637c0208e87357d51aa097dd3fced0">
+            <a class="meta-pill revision-pill" href="https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36" title="59b148d1d56286f4511473cf13021581746ace36">
               <span>Analyzed revision</span>
-              <code>d07ea183…</code>
+              <code>59b148d1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-07</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fpytloun--intaris" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -298,6 +298,31 @@ work queue and the wrong shape for an audit, and it is why this report
 withholds the <code>audit_log</code> mark: the record the profile is
 derived from can change after the fact, and nothing preserves what it
 said before.</p>
+<p>The <code>WHERE</code> clause on that update is worth reading,
+because it encodes an authority ordering rather than merely a row
+filter:
+<code>AND (user_decision IS NULL OR resolved_by = 'judge')</code>. A
+human may overwrite a judge's decision; nothing may overwrite a human's.
+The comment above it states the rule — <em>"Human decisions are final —
+<code>resolved_by='user'</code> is NOT matched"</em> — and
+<code>COALESCE</code> preserves the judge's reasoning when a human
+override passes none, so the override records what it overrode. The
+mutability is deliberate and bounded; it is still mutability.</p>
+<p><strong>An append-only stream sits beside it, and it holds the wrong
+half.</strong> <code>audit_event_index</code> takes
+<code>tool_call</code> and <code>tool_result</code> events under a
+<code>(user_id, session_id, seq)</code> primary key, written by a single
+<code>INSERT ... ON CONFLICT DO NOTHING</code> in
+<code>event_audit.py:113</code> with no <code>UPDATE</code> and no
+<code>DELETE</code> anywhere — a genuine append-only projection, with
+<code>audit_event_projection_state</code> as its watermark and
+<code>event_append_idempotency</code> guarding a duplicate append by
+key. What it carries is what the agent <em>did</em>: the tool, the call
+id, the error flag, the duration. What it does not carry is the
+decision, the resolution, or the human's note — those live only in the
+row that gets rewritten. So the system holds an immutable record of the
+events and a mutable record of the judgements made about them, which is
+the opposite of the split an audit wants.</p>
 <p>Profile writes are background and unattended. A new analysis replaces
 the current profile wholesale; the version increments; the previous one
 is recoverable only through <code>behavioral_analyses</code>.</p>
@@ -452,7 +477,72 @@ application</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audit rows are rewritten in place</td>
+<td><code>grep -rn "UPDATE audit_log" --include="*.py" intaris</code></td>
+<td>Two sites, <code>audit.py:542</code> and <code>:617</code></td>
+</tr>
+<tr>
+<td>A human decision cannot be overwritten</td>
+<td>read the <code>WHERE</code> at
+<code>intaris/audit.py:548-550</code></td>
+<td><code>AND (user_decision IS NULL OR resolved_by = 'judge')</code></td>
+</tr>
+<tr>
+<td>The event index is append-only</td>
+<td><code>grep -rn "audit_event_index" --include="*.py" intaris | grep -iE "INSERT|UPDATE|DELETE"</code></td>
+<td>One <code>INSERT ... ON CONFLICT DO NOTHING</code>; no update, no
+delete</td>
+</tr>
+<tr>
+<td>The event index carries no decision</td>
+<td>read the <code>CREATE TABLE</code> at
+<code>intaris/db.py:1266-1281</code></td>
+<td>Eleven columns, none of them a decision, resolution or note</td>
+</tr>
+<tr>
+<td>Tree size</td>
+<td><code>find . -name "*.py" -not -path "./.git/*" | xargs wc -l | tail -1</code></td>
+<td>82,701 lines</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36"><code class="commit-id" title="59b148d1d56286f4511473cf13021581746ace36">59b148d1…</code></a>
+— re-read, 63 files and 7,163 insertions past the previous pin in a
+single commit. <strong>Both marks re-verified and unchanged</strong>,
+with <code>capability_evidence</code> records added where the report had
+none. <strong><code>audit_log</code> stays withheld, and the reason is
+now more specific rather than less.</strong> The in-place update is
+unchanged — <code>UPDATE audit_log</code> at <code>audit.py:542</code>
+and <code>:617</code> — but reading its <code>WHERE</code> clause is
+worth the trip:
+<code>AND (user_decision IS NULL OR resolved_by = 'judge')</code> means
+a human may overwrite a judge and nothing may overwrite a human, with
+<code>COALESCE</code> preserving the judge's reasoning through the
+override. The mutability is bounded and deliberate. Beside it the commit
+adds a genuinely append-only stream: <code>audit_event_index</code>,
+keyed <code>(user_id, session_id, seq)</code>, written by one
+<code>INSERT ... ON CONFLICT DO NOTHING</code> with no update or delete
+anywhere, plus a projection watermark and an idempotency ledger for
+appends. It records <code>tool_call</code> and <code>tool_result</code>
+events — what the agent did — and carries no decision, resolution or
+note. The system therefore keeps an immutable record of the events and a
+mutable record of the judgements about them, which is the inverse of the
+split the mark asks for. Screened before reading: eight findings;
+nothing was installed or run.</p>
 <p><strong>2026-08-07</strong> — <a
 href="https://github.com/fpytloun/intaris/commit/d07ea183ff637c0208e87357d51aa097dd3fced0"><code class="commit-id" title="d07ea183ff637c0208e87357d51aa097dd3fced0">d07ea183…</code></a>
 — first reading. Screened before reading: unpinned dependency surfaces
