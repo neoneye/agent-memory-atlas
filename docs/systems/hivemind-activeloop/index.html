@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript hook layer for seven
+coding agents that captures every turn into Deeplake's hosted SQL store,
+mounts that store as a virtual filesystem the agent greps, mines batches
+of recent sessions into SKILL.md files, and — when an LLM judge reads
+the user's reaction to a skill and calls the task failed — edits that
+skill and republishes it to the whole organisation with no approval
+step.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hivemind
+(Activeloop) — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript hook layer for
+seven coding agents that captures every turn into Deeplake's hosted SQL
+store, mounts that store as a virtual filesystem the agent greps, mines
+batches of recent sessions into SKILL.md files, and — when an LLM judge
+reads the user's reaction to a skill and calls the task failed — edits
+that skill and republishes it to the whole organisation with no approval
+step.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hivemind
+(Activeloop) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript hook layer
+for seven coding agents that captures every turn into Deeplake's hosted
+SQL store, mounts that store as a virtual filesystem the agent greps,
+mines batches of recent sessions into SKILL.md files, and — when an LLM
+judge reads the user's reaction to a skill and calls the task failed —
+edits that skill and republishes it to the whole organisation with no
+approval step.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hivemind (Activeloop) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hivemind (Activeloop)",
+      "description": "A TypeScript hook layer for seven coding agents that captures every turn into Deeplake's hosted SQL store, mounts that store as a virtual filesystem the agent greps, mines batches of recent sessions into SKILL.md files, and \u2014 when an LLM judge reads the user's reaction to a skill and calls the task failed \u2014 edits that skill and republishes it to the whole organisation with no approval step.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Traces mined into team skills, corrected by
+the next user message</p>
+          <h1>Hivemind (Activeloop)</h1>
+          <p class="document-deck">A TypeScript hook layer for seven
+coding agents that captures every turn into Deeplake's hosted SQL store,
+mounts that store as a virtual filesystem the agent greps, mines batches
+of recent sessions into SKILL.md files, and — when an LLM judge reads
+the user's reaction to a skill and calls the task failed — edits that
+skill and republishes it to the whole organisation with no approval
+step.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/activeloopai/hivemind">
+              <span>Source</span>
+              <strong>activeloopai/hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/activeloopai/hivemind/commit/26bdf69cdd0198bed344f252ef7abf85b1fdc604" title="26bdf69cdd0198bed344f252ef7abf85b1fdc604">
+              <span>Analyzed revision</span>
+              <code>26bdf69c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/activeloopai--hivemind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>activeloopai--hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hivemind is a TypeScript hook layer that gives a team of coding
+agents one shared long-term memory: every prompt, tool call and
+assistant turn is written as a row in a Deeplake workspace, a background
+worker turns each session into an LLM-written wiki summary, and a second
+worker mines batches of recent sessions into <code>SKILL.md</code> files
+that install themselves on every teammate's machine at the next session
+start. Apache-2.0, package <code>@deeplake/hivemind</code> at version
+0.7.152, 57,117 lines of TypeScript in <code>src/</code> against 314
+test files carrying 5,470 <code>it()</code> cases. This is Activeloop's
+Hivemind; the atlas also covers an unrelated project of the same name,
+<a href="../hivemind/">causewayai/hivemind</a>, which shares nothing
+with it.</p>
+<p><strong>The interface is the interesting product decision.</strong>
+Memory is not a tool API. A <code>PreToolUse</code> hook watches for
+Bash, Read and Grep touching <code>~/.deeplake/memory/</code>, validates
+the command against an allowlist of 74 builtins, and executes it against
+a virtual filesystem backed by SQL
+(<code>src/hooks/pre-tool-use.ts</code>,
+<code>src/shell/deeplake-fs.ts</code>,
+<code>src/hooks/memory-path-utils.ts:8-37</code>). The agent runs
+<code>grep -r auth ~/.deeplake/memory/</code> and gets a
+<code>UNION ALL</code> of an ILIKE scan and a cosine search across the
+summaries and sessions tables. Nothing had to be taught a new tool.</p>
+<p><strong>The correction mechanism is the reason to read this
+repository.</strong> Invoking an org skill arms a judgment window of
+three user messages
+(<code>src/skillify/skillopt-trigger.ts:1-17,:39</code>). The next user
+message spawns a detached worker that reconstructs the window around the
+invocation, appends the reaction, and asks an LLM one deliberately
+narrow question — <em>"Ignore whether the user seemed happy or polite —
+a praised-but-wrong answer is a FAILURE"</em>
+(<code>src/skillify/success-judge.ts:28-33</code>). On
+<code>success: 0</code> a proposer returns at most three structured
+edits, which are applied outside a protected <code>SLOW_UPDATE</code>
+region and published as version N+1 to the organisation's skills table
+(<code>src/skillify/skillopt-improve.ts:119-152</code>,
+<code>src/skillify/skill-edits.ts:19-43</code>). A memory correction
+driven by the user's next sentence, in a setting with no training
+reward, is rare.</p>
+<p><strong>It publishes that correction to everyone with nothing in the
+way, and says so.</strong>
+<code>src/skillify/skill-org-publish.ts:5-6</code> reads <em>"No
+approval gate by design: detect → improve → publish, directly."</em> The
+edited skill is a teammate's, the editor is recorded only as a
+contributor, and auto-pull writes it to every signed-in machine at the
+next session start with the author filter hardcoded to the empty list
+(<code>src/skillify/auto-pull.ts:147</code>). <code>human_review</code>
+is withheld on that sentence.</p>
+<p><strong>The loop does not learn from itself.</strong>
+<code>MetaStatus</code> is
+<code>"proposed" | "applied" | "reverted"</code>
+(<code>src/skillify/skillopt-meta.ts:15</code>) and the docstring says
+the A/B gate will close the loop; <code>metaEntryFor</code> writes
+<code>status: "proposed"</code> and nothing in the tree writes either
+other value or reads the field at all. The optimizer's cross-run memory
+therefore prevents re-proposing an identical edit and records nothing
+about whether any edit helped.</p>
+<p><strong>The weakest claim is proactive recall.</strong> The README
+says recall degrades to <em>"lexical (ILIKE keyword overlap), so it
+works without the embedding model"</em>. The hook says the opposite in a
+comment and in code: <em>"SEMANTIC (cosine) ONLY… there is deliberately
+no lexical (ILIKE) fallback"</em>
+(<code>src/hooks/recall.ts:13-16</code>). Embeddings are off unless
+<code>@huggingface/transformers</code> resolves, which a fresh install
+does not have (<code>src/embeddings/disable.ts:17-22</code>), so on a
+default install the advertised unprompted recall returns nothing on
+every prompt. The documented tuning knob for the removed path,
+<code>HIVEMIND_RECALL_MIN_OVERLAP</code>, survives as
+<code>MIN_LEXICAL_OVERLAP</code> with no reader anywhere in the
+tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Four kinds of thing are remembered and they sit at different
+epistemic levels. A <strong>trace row</strong> is a fact about what
+happened and cannot be wrong; it is immutable through the agent's own
+surfaces — <code>rm</code> on a session path throws <code>EPERM</code>
+(<code>src/shell/deeplake-fs.ts:1120</code>) — and removable only by the
+owner through <code>hivemind sessions prune</code>. A
+<strong>summary</strong> is one LLM's reading of a session, rewritten in
+place on each checkpoint. A <strong>skill</strong> is a claim about how
+to do something, and it is the only object with a lifecycle. A
+<strong>rule</strong>, <strong>goal</strong>, <strong>KPI</strong> or
+<strong>doc page</strong> is human- or generator-authored state with its
+own small table.</p>
+<p>A skill becomes a belief when an LLM curator, shown the last ten
+sessions in scope and every existing skill, answers <code>KEEP</code> or
+<code>MERGE</code> against a rule it is told: the pattern must recur
+across at least three exchanges, be non-obvious to a competent engineer,
+and not already be covered
+(<code>src/skillify/skillify-worker.ts:276-278</code>). There is no
+execution and no outcome check at write time — the gate is a model
+reading transcripts. It stops being a belief only by being edited:
+<code>MERGE</code> from the mining worker, <code>push</code> from a
+person, or the reaction-driven optimizer, each appending a row at
+version N+1 that later readers select with
+<code>ORDER BY version DESC LIMIT 1</code>. Nothing retires a skill.
+<code>unpull</code> deletes the local copy and its manifest entry, and
+the next auto-pull reinstalls it, because the row is untouched and the
+pull carries no exclusion list.</p>
+<p>Scope is the one field that moves on its own, in one direction. A
+<code>MERGE</code> whose editor is not the row's author sets
+<code>scope</code> from <code>me</code> to <code>team</code> —
+<em>"one-directional promotion"</em>
+(<code>src/skillify/scope-promotion.ts:34-41</code>) — and the SkillOpt
+publish promotes unconditionally, on the argument that an optimizer edit
+is inherently shared. The <code>scope</code> column is written on every
+row and read by no query in the tree.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a trace is a fact, a skill is a claim; the only thing that corrects a claim is the user's next message, judged by an LLM, and the edit it produces reaches every teammate before anything measures whether it helped</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a trace is a fact, a skill is a claim; the only thing that corrects a claim is the user&#39;s next message, judged by an LLM, and the edit it produces reaches every teammate before anything measures whether it helped
+flowchart TD
+  H[&quot;hook event: prompt, tool call, assistant turn&quot;] --&gt; R[&quot;redactSecrets, embed locally, one INSERT on the turn path&quot;]
+  R --&gt; S[&quot;sessions table: immutable to the agent, EPERM on rm&quot;]
+  S --&gt; W[&quot;wiki worker: host agent CLI writes a summary, redacted again, UPDATE in place&quot;]
+  S --&gt; M[&quot;skillify worker: last 10 sessions in scope, Haiku returns KEEP / SKIP / MERGE&quot;]
+  M --&gt;|&quot;KEEP or MERGE&quot;| K[&quot;SKILL.md on disk + append-only row v=N+1 in the skills table&quot;]
+  K --&gt; P[&quot;auto-pull at SessionStart, users hardcoded empty: every author&#39;s skills onto every machine&quot;]
+  P --&gt; I[&quot;agent invokes an org skill: PreToolUse arms a 3-message window&quot;]
+  I --&gt; J{&quot;LLM judge on the next user message: was the task accomplished correctly?&quot;}
+  J --&gt;|&quot;success, unparseable or error&quot;| N[&quot;nothing happens&quot;]
+  J --&gt;|&quot;failure&quot;| E[&quot;proposer: at most 3 structured edits, SLOW_UPDATE region off-limits&quot;]
+  E --&gt; Q{&quot;identical edit already in meta.jsonl?&quot;}
+  Q --&gt;|&quot;yes&quot;| N
+  Q --&gt;|&quot;no&quot;| V[&quot;publish v=N+1 org-wide, no approval gate by design&quot;]
+  V --&gt; P
+  V --&gt; D[&quot;meta.jsonl appends status proposed; applied and reverted have no producer&quot;]
+  D --&gt; X[&quot;nothing ever records whether the edit helped&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Nothing runs as a server here.</strong> The unit of execution
+is a short-lived Node process spawned by a host agent's hook, and every
+one of them talks to <code>https://api.deeplake.ai</code> by
+<code>POST /workspaces/&lt;workspaceId&gt;/tables/query</code> with
+<code>{query: "&lt;SQL&gt;"}</code> in the body, a bearer token, and an
+<code>X-Activeloop-Org-Id</code> header
+(<code>src/deeplake-api.ts:305-314</code>). The client composes all the
+SQL — DDL, healing <code>ALTER TABLE</code>, inserts, the retrieval
+UNIONs — so the mechanism is fully readable at this commit even though
+the engine behind the endpoint is not.</p>
+<p>Eight tables are declared in one place
+(<code>src/deeplake-schema.ts</code>): <code>memory</code> for summaries
+and virtual-filesystem files, <code>sessions</code> for per-event
+traces, plus <code>skills</code>, <code>hivemind_rules</code>, goals,
+KPIs, docs and a codebase-graph snapshot table. Schema drift is handled
+by <code>healMissingColumns</code>, which reads
+<code>information_schema.columns</code> for the workspace, diffs against
+the declaration, and <code>ALTER TABLE ADD COLUMN</code>s only what is
+missing, tolerating one "already exists" race and re-verifying it. A
+module-load lint refuses any <code>NOT NULL</code> column without a
+<code>DEFAULT</code>, because the backfill on a populated table would
+fail.</p>
+<p><strong>Local state is small but real</strong>:
+<code>~/.deeplake/credentials.json</code> at mode 0600,
+<code>~/.deeplake/state/skillify/{config,pulled}.json</code>,
+<code>skillopt/meta.jsonl</code>, <code>recall-events.jsonl</code>, a
+per-session event cache the summary worker reads instead of re-scanning
+the fat <code>message</code> column, a <code>query-cache</code>
+directory materialising intercepted <code>Read</code> results as real
+files, and the skills themselves as <code>SKILL.md</code> directories
+under <code>.claude/skills/</code> or
+<code>~/.claude/skills/</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>An account and a token are required before anything is stored; there
+is no local-only mode, and with no credentials session start prints
+<em>"Not logged in to Deeplake; memory search is unavailable this
+session."</em> Install is one command that detects every supported
+assistant and wires its hooks. Semantic search is opt-in:
+<code>hivemind embeddings install</code> fetches nomic-embed-text-v1.5
+(768 dimensions, matryoshka-truncated) and a local daemon, a ~600 MB
+dependency the README states up front. The summary, doc and skill-mining
+workers shell out to the host agent's own CLI (<code>claude -p</code>,
+<code>codex exec</code>, <code>pi --print</code>), so no second API key
+is needed and the token cost lands on the user's existing plan. The
+store is not repairable by hand — it is rows behind an HTTP endpoint —
+but the virtual filesystem makes it browsable with <code>ls</code> and
+<code>cat</code>, and BYOC points the bytes at the adopter's own GCS,
+Azure or S3 bucket.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> <code>src/hooks/capture.ts</code> on
+<code>UserPromptSubmit</code>, <code>PostToolUse</code>,
+<code>Stop</code> and <code>SubagentStop</code>: resolve the
+per-directory config, build the event object, <code>redactSecrets</code>
+the serialized line, embed it through the local daemon, and
+<code>buildDirectSessionInsertSql</code> → one INSERT, with a
+create-and-retry fallback on a missing table.</li>
+<li><strong>Summary.</strong>
+<code>src/hooks/spawn-wiki-worker.ts</code> spawns
+<code>src/hooks/wiki-worker.ts</code> detached; it prefers the local
+event cache over the table, writes the JSONL to a temp dir, runs the
+host CLI against <code>WIKI_PROMPT_TEMPLATE</code>
+(<code>spawn-wiki-worker.ts:21-66</code>), redacts the result and hands
+it to <code>src/hooks/upload-summary.ts</code>, which redacts again and
+UPDATEs the row.</li>
+<li><strong>Skill mining.</strong> <code>src/skillify/triggers.ts</code>
+counts assistant turns and fires
+<code>src/skillify/skillify-worker.ts</code>; it lists candidate
+sessions with <code>project = ?</code> plus <code>authorClause()</code>,
+extracts prompt/answer pairs under a 40,000-character budget, renders
+every existing skill into the prompt, runs the gate CLI, parses a
+verdict from a file or stdout, writes or merges the
+<code>SKILL.md</code>, and <code>insertSkillRow</code>s version
+N+1.</li>
+<li><strong>Propagation.</strong> <code>src/skillify/auto-pull.ts</code>
+at SessionStart → <code>src/skillify/pull.ts</code>:
+<code>buildPullSql</code> selects every skill row,
+<code>selectLatestPerName</code> keeps the highest version per
+<code>(project_key, name)</code>, and each is rendered back to a
+<code>SKILL.md</code> at
+<code>&lt;root&gt;/&lt;name&gt;--&lt;author&gt;/</code> with symlinks
+fanned out to other agents' skill roots.</li>
+<li><strong>Retrieval.</strong> <code>src/hooks/pre-tool-use.ts</code>
+intercepts the tool call; <code>src/shell/grep-core.ts:308-412</code>
+builds the hybrid UNION; <code>src/shell/grep-core.ts:681-768</code>
+re-applies the real regex to the returned rows and formats grep-shaped
+output. <code>src/hooks/recall.ts</code> is the unprompted path.
+<code>src/mcp/server.ts</code> exposes the same searches as
+<code>hivemind_search</code>, <code>hivemind_docs_search</code>,
+<code>hivemind_read</code> and <code>hivemind_index</code>.</li>
+<li><strong>Correction.</strong>
+<code>src/hooks/shared/skillopt-hook.ts</code> arms and reacts;
+<code>src/skillify/skillopt-worker.ts</code> takes a per-skill lock;
+<code>src/skillify/skillopt-improve.ts</code> judges, proposes and
+publishes.</li>
+<li><strong>Deletion.</strong>
+<code>src/commands/session-prune.ts</code> via
+<code>hivemind sessions prune</code>; <code>DeeplakeFs.rm</code>
+(<code>src/shell/deeplake-fs.ts:1118-1194</code>) for everything under
+the memory mount.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A trace row carries <code>id</code>, <code>path</code>
+(<code>/sessions/&lt;user&gt;/&lt;user&gt;_&lt;org&gt;_&lt;ws&gt;_&lt;sessionId&gt;.jsonl</code>),
+<code>message</code> as JSONB, a <code>FLOAT4[]</code> embedding,
+<code>author</code>, <code>project</code>, <code>description</code> (the
+hook event name), <code>agent</code>, <code>plugin_version</code>,
+<code>creation_date</code> and <code>last_update_date</code>. A summary
+row is the same shape with <code>summary</code> text instead of JSON.
+Both carry record time only: a search for <code>valid_from</code>,
+<code>valid_until</code>, <code>valid_time</code>,
+<code>effective_from</code> or <code>as_of</code> across
+<code>src</code> and <code>tests</code> returns nothing, so
+<code>bitemporal</code> is withheld.</p>
+<p><code>project</code> is two different things under one name, and the
+difference matters. On trace and summary rows it is
+<code>basename(cwd)</code>
+(<code>src/utils/project-name.ts:14-16</code>) — two checkouts named
+<code>api</code> collide, and a prompt issued from a subdirectory tags a
+different project. On docs and skills rows it is
+<code>deriveProjectKey</code>: a sha1 of the normalised
+<code>remote.origin.url</code>, truncated to 16 hex, falling back to the
+absolute cwd. The weak one is why proactive recall has no project filter
+at all, and the comment says so: a basename filter <em>"both collides…
+and — worse — silently drops valid history when the user prompts from a
+subdirectory"</em> (<code>src/hooks/recall.ts:122-128</code>).</p>
+<p>A skill row is the richest object: <code>name</code>,
+<code>project_key</code>, <code>local_path</code>, <code>install</code>,
+<code>source_sessions</code> (the session ids it was mined from),
+<code>source_agent</code>, <code>scope</code>, <code>author</code>
+(immutable lineage across merges), <code>contributors</code>,
+<code>description</code>, <code>trigger_text</code>, <code>body</code>,
+<code>version</code>, timestamps. Correction is a version chain —
+skills, rules and docs all INSERT a new row rather than UPDATE,
+explicitly to sidestep a storage quirk the comments describe as <em>"two
+rapid UPDATEs on the same row drop one silently"</em>. Goals and KPIs
+were written the same way and are not any more:
+<code>upsertGoalRow</code> UPDATEs in place and the comment is candid —
+<em>"The version column stays at 1 (vestigial in the schema…). Cons: no
+audit trail"</em> (<code>src/shell/deeplake-fs.ts:524-538</code>). Two
+comments in the tree still describe the old behaviour, including
+<code>rm</code>'s claim that closing a goal <em>"writes a new v=N+1 with
+status='closed' (soft-close, preserves audit trail)"</em> when it
+reaches the in-place UPDATE.</p>
+<p>Multi-tenancy is the workspace, enforced on the other side of the
+API: the workspace id is a path segment and the org an auth header, so
+every row a query can see belongs to one workspace. That is a partition,
+not a stored key applied on a read path, and it earns no mark here.
+Everyone in the workspace reads everything in it, which the README
+states as the design.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Grep is compiled, not passed through.
+<code>buildGrepSearchOptions</code> turns the agent's flags into a
+server-side <code>LIKE</code>/<code>ILIKE</code> prefilter, extracting a
+literal prefix or an alternation set from a regex when it can, and
+<code>refineGrepMatches</code> re-applies the true regex in Node so
+<code>-v</code>, <code>-c</code>, <code>-l</code> and <code>-n</code>
+behave. With an embedding available the query becomes four subqueries in
+one <code>UNION ALL</code> — semantic over
+<code>summary_embedding</code> and <code>message_embedding</code> with
+<code>ARRAY_LENGTH(col, 1) &gt; 0</code> to exclude rows a migration
+backfilled with <code>[]</code>, and lexical over
+<code>summary::text</code> and <code>message::text</code> — then
+<code>ORDER BY score DESC LIMIT 40</code>. <strong>Lexical rows emit a
+constant <code>1.0</code> sentinel</strong>, so every literal substring
+hit sorts above every semantic hit regardless of cosine; the comment
+defends it, and notes that BM25 was tried and dropped because its
+<code>~1..3</code> scale swamped cosine in the same union.</p>
+<p>Proactive recall is a different query and a stricter one: only
+<code>/summaries/%</code> paths, only rows with a non-empty vector, the
+current session's own summary excluded by path, top three by cosine, one
+injected if it clears the threshold — attributed as
+<code>recalled from &lt;teammate&gt; · &lt;date&gt;</code>, on a 1,500
+ms budget whose abort actually cancels the in-flight query. The gate
+before it skips acknowledgements and short follow-ups, and every
+recall-worthy invocation is appended to
+<code>~/.deeplake/recall-events.jsonl</code> with <code>injected</code>,
+<code>below</code>, <code>none</code>, <code>timeout</code> or
+<code>error</code>, which is a usable hit-rate instrument.
+<code>RecallQueryOptions.project</code> exists and is exercised only by
+a test; the single production caller omits it deliberately, so recall
+reads the whole workspace's summaries.</p>
+<p><strong>Failure modes.</strong> Over-recall is bounded to one snippet
+per prompt and under-recall is the default state, since with no
+embedding daemon the path returns <code>none</code> every time. The
+index the agent reads first, <code>/index.md</code>, is capped at the 50
+most recent rows per section. Tool output is normalised on the way out —
+<code>formatToolCall</code> drops boilerplate, and any
+<code>&lt;recalled-memories&gt;</code> block injected by a previous turn
+is stripped greedily from first open to last close, so recalled text
+cannot be re-retrieved as if it were fresh evidence
+(<code>src/shell/grep-core.ts:248-269</code>). The code graph under
+<code>&lt;memory&gt;/graph/</code> is substring search over node ids
+with a one-hop neighbourhood, read from a local snapshot with zero
+network calls; it is a browsable surface, not an arm of memory
+retrieval, and the README's claim that <em>"Search and recall walk this
+graph"</em> is not true of either <code>searchDeeplakeTables</code> or
+the recall query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture is on the turn path. Each hook event does one local embed and
+one INSERT before the hook returns; a table-missing error triggers a
+create and one retry, and the whole <code>main</code> is wrapped so a
+failure exits 0 and surfaces nothing mid-session. The refusal to surface
+anything is a deliberate rule worth quoting: a user-facing message can
+only reach a mid-session hook through <code>additionalContext</code>,
+which is the model's prompt, and <em>"Writing a user-facing 'credits
+exhausted, top up at <code>&lt;url&gt;</code>' notice there is a
+prompt-injection pattern… Hard rule: nothing user-facing is ever written
+into the model/agent prompt"</em>
+(<code>src/hooks/capture.ts:304-318</code>). The same rule keeps
+LLM-derived banner prose out of <code>additionalContext</code> at
+session start.</p>
+<p>Everything derived is deferred to a detached worker. Summaries fire
+at 10 captured events, then every 50 events or 2 hours, and at session
+end; mining fires when a per-project counter of assistant-complete
+events reaches 20, and unconditionally at session end so the tail of a
+session is not missed. Lag before a new memory is retrievable is
+therefore a trace immediately, a summary at the next checkpoint, and a
+skill at the next mining run plus the next machine's session start — and
+the optimizer builds in a bounded retry for the insert-to-read
+visibility lag, polling <code>findInvocation</code> five times with
+linear backoff before giving up. No pass rewrites the whole store; every
+background job reads a bounded window, and the mining watermark is set
+to the <strong>oldest</strong> session in the batch rather than the
+newest, so a session older than the <code>LIMIT</code> cutoff is not
+permanently skipped.</p>
+<p>Deduplication is the curator's job, not the store's: the mining
+prompt renders every existing skill, project and global, tagged with its
+author, and forbids <code>MERGE</code> into any name not in that list.
+Conflict between two workers on the same skill is handled by a per-skill
+lock plus the meta fingerprint; across machines it is not, and the
+comment says the append-only history plus a deterministic pull
+tie-breaker is the intended follow-up.</p>
+<p>Noisy input is filtered in exactly one place and it is a good one.
+<code>src/hooks/shared/redact.ts</code> masks before the text is
+embedded or written: PEM and OpenSSH key blocks, about thirty provider
+token schemes with the scheme prefix kept as a hint,
+<code>Authorization</code> headers, URL basic-auth, Sentry DSNs and
+Slack webhooks, <code>KEY=VALUE</code> where the key is secret-ish, and
+a Shannon-entropy backstop for unlabelled tokens with guards that exempt
+UUIDs, hex hashes and dated model identifiers. It runs on capture, on
+the generated summary, and again on upload. It does not run on a
+<code>SKILL.md</code> a person pushes with
+<code>hivemind skillify push</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Seven host agents, each wired differently: a marketplace plugin for
+Claude Code, hooks in <code>hooks.json</code> for Codex and Cursor,
+shell hooks in <code>config.yaml</code> plus an MCP server and a skill
+for Hermes, a native extension for OpenClaw, a TypeScript extension
+registering first-class tools for pi, and MCP alone for Claude Cowork.
+The Cowork path is honest about its limit: with no hook lifecycle, a
+background ingester tails Local Agent Mode transcripts with a
+per-transcript line watermark, and plain desktop-chat turns are stated
+as uncapturable because an MCP server never sees the conversation.</p>
+<p>The agent's agency over memory is broad and indirect. It cannot call
+a <code>save_memory</code> tool — writes happen to it, by hook — but it
+can read, <code>grep</code>, <code>cat</code>, <code>mv</code> and
+<code>rm</code> anything under the mount, create goals by Bash heredoc
+against
+<code>&lt;memory&gt;/goal/&lt;owner&gt;/&lt;status&gt;/&lt;uuid&gt;.md</code>,
+and move a goal between states with <code>mv</code>. <code>Write</code>
+and <code>Edit</code> on the mount are denied with a message telling it
+to use Bash instead. Session start injects the active team rules plus a
+how-to block telling the model to treat a rule violation as a critical
+error, and a one-line note for the graph and the docs wiki; Codex is
+deliberately excluded from the rules injection to keep its TUI
+clean.</p>
+<p>Adapting this to another agent is the same three pieces each time — a
+capture hook, a session-end hook, and either a tool-intercept point or
+the shared MCP server — and the tree contains seven worked instances of
+it, including one (Cowork) where the intercept does not exist and the
+transcript tail stands in for it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is genuinely tracked and never consulted.</strong>
+A skill row records who authored it, who has edited it, which session
+ids it came from, which agent produced it and which plugin version wrote
+it, and the pulled file carries all of it in frontmatter so a later gate
+can see whose skill it is. No query filters on any of it. There is no
+epistemic state anywhere: <code>trust_state</code> is withheld because
+no field distinguishes a candidate from a verified skill, and the
+closest thing — <code>docs.status</code> moving <code>active</code> →
+<code>archived</code> when a branch overlay is promoted — is archival,
+which the rubric excludes.</p>
+<p><strong><code>tombstone</code> is withheld and the near-miss is
+written down in the tree.</strong> The only occurrence of the word is a
+schema comment: <em>"deleting a KPI conceptually means writing a
+tombstone version, deferred to v1.1"</em>
+(<code>src/deeplake-schema.ts:163</code>). Deletion elsewhere is
+unrecorded: <code>hivemind sessions prune</code> hard-deletes your own
+trace rows and the matching summary, <code>rm</code> under the mount is
+a <code>DELETE FROM … WHERE path = …</code>, and neither touches the
+skills those sessions were mined into — a skill's
+<code>source_sessions</code> can name rows that no longer exist, and the
+knowledge distilled from a session survives the session's deletion with
+no marker anywhere.</p>
+<p><strong><code>audit_log</code> is withheld, and the version chain is
+the reason it is close.</strong> Skills, rules and docs are append-only
+by construction, so every edit to them is durable and attributable. But
+that is a version history of the object, not a named event record of
+mutations, and the two tables holding the captured memory go the other
+way: <code>upsertRowSql</code> UPDATEs a summary in place, and prune
+deletes. The project knows the cost of in-place writes — the append-only
+pattern exists to dodge a documented storage quirk — and chose it twice
+anyway, for summaries and for goals.</p>
+<p><strong>The trust boundary is stated plainly by the product and is
+the thing to weigh.</strong> Everyone in the workspace reads every
+trace, and a skill mined from one engineer's session is executed as
+instructions in another's. A <code>.hivemind</code> file travels with a
+repository and can route a clone's traces and reads to a different org;
+the defence is that it cannot carry a token, so it can only target orgs
+the existing login already authorises, and that the session-start banner
+always prints the effective org, workspace and the file that routed it.
+The command interception is defended with unusual care:
+<code>isSafe</code> rejects <code>$( )</code>, backticks, process
+substitution and <code>$'…'</code> ANSI-C quoting, splits on pipes and
+separators and requires every stage's first token to be in the
+allowlist, and the allowlist's comments record what was removed and why
+— <code>sed</code> for <code>-e '1e &lt;cmd&gt;'</code>,
+<code>awk</code> for <code>system()</code>, <code>xargs</code>,
+<code>tar --to-command</code>, <code>env</code>, <code>timeout</code>
+and <code>time</code> as wrappers that run an arbitrary child. Against
+that, the summary prompt instructs the model to preserve <em>"exact
+token/key/secret-name values"</em> verbatim into a summary every
+workspace member can read, with a worked example that writes a staging
+token into the wiki; the redactor masks on both sides of that
+instruction, so what survives is whatever the masker does not
+recognise.</p>
+<p><strong>Recovery and consistency.</strong> Queries retry with
+exponential backoff and bounded concurrency; a 402 enqueues a
+user-visible banner because otherwise <em>"captures and memory recalls
+fail silently — the agent reads empty memory and confidently reasons
+from no data"</em>. A session-start placeholder row is cleaned up if
+events never arrive. There is no backup of the local skill directory
+beyond a <code>.bak</code> written when a pull clobbers a same-named
+file.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is large and the CI gate is unusual: per-file coverage
+thresholds, mostly 90, that each pull request appends to, with the
+comments explaining every calibration below the bar. Vitest runs with
+coverage on every push, alongside a duplication check, CodeQL, a Windows
+smoke subset, and a static audit of the OpenClaw bundle against
+ClawHub's scan rules.</p>
+<p>What that gate does not cover is named in the same file.
+<code>src/skillify/skillify-worker.ts</code> and its spawner are
+excluded from coverage because they <em>"need a live Deeplake workspace
++ a real agent CLI to exercise meaningfully"</em> — so the worker whose
+verdict decides what becomes a team skill is checked only by a
+bundle-scan test asserting the built artifact exists and contains the
+right entry strings, and the end-to-end matrix script is recorded as
+living <em>"at /tmp/skillify-e2e-matrix.mjs in the author's worktree,
+not committed"</em>.</p>
+<p>The evaluation claims are the weakest part. The README reports a
+LoCoMo run — $8.94 to $6.65 per 100 QA, 1,700 to 1,008 tokens per
+question, 8.9 to 6.2 turns — and no harness, result file or dataset for
+it exists in the tree: no path matches <code>locomo</code> or
+<code>benchmark</code>, and the numbers appear only as prose plus a
+hardcoded 1.7x multiplier used to render a per-session "tokens saved"
+banner (<code>src/dashboard/data.ts:57</code>,
+<code>vitest.config.ts:486</code>). What the repository does carry is
+the residue of that run as regression tests:
+<code>tests/claude-code/pre-tool-use-baseline-cloud.test.ts</code>
+rebuilds 272 session rows matching the real
+<code>locomo_benchmark/baseline</code> workspace and pins the three QAs
+the run got wrong, and <code>tests/claude-code/output-cap.test.ts</code>
+records the cause behind that run's losses — <em>"11 of 14 losing QAs
+that hit this path never recovered the persisted file"</em> when Claude
+Code spilled a large tool result to disk and showed the model a 2 KB
+preview. Turning a benchmark loss into a committed fixture is better
+practice than most published numbers, and it is not the number.</p>
+<p>The cited tests can fail. The resume-brief exclusions each assert the
+replacement is present against a populated fixture, so none of them can
+pass on an empty result; the docs project-scope test asserts the
+predicate is present when a project is set and absent when it is not, so
+it fails in both directions. No test in the tree asserts that a skill
+mined in one project stays out of another's search, and none asserts
+anything about the optimizer's effect on a skill's later success — there
+is no signal to assert it with.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Mount memory as a filesystem and compile the shell
+commands.</strong> An allowlist of builtins, a path intercept, and a
+compiler from <code>grep</code> flags to SQL gets you retrieval that
+needs no tool documentation, no schema in the prompt, and no new habit
+from the model. The allowlist's removal comments are the artifact to
+copy: each one names the escape it closes.</li>
+<li><strong>Judge the user's reaction, and ask the question that resists
+sycophancy.</strong> <em>"Ignore whether the user seemed happy or polite
+— a praised-but-wrong answer is a FAILURE"</em> is the whole idea, and
+the conservative parse — unparseable, empty or errored returns success —
+means a flaky judge can fail to detect but never manufacture a
+failure.</li>
+<li><strong>Bound the edit and protect a region.</strong> At most three
+structured ops, anchored on existing text, with a
+<code>SLOW_UPDATE</code> block that fast edits may not touch, keeps an
+automatic rewriter from laundering a document into something else over a
+dozen turns.</li>
+<li><strong>Set a mining watermark to the oldest item in the batch, not
+the newest.</strong> Ordering DESC and limiting N means a
+newest-watermark permanently skips everything under the cutoff.
+Re-mining is cheap; a permanent gap is not.</li>
+<li><strong>Redact before you embed.</strong> Masking at the
+serialization boundary covers every field and both egress paths at once,
+and a fixed-width mask that keeps the scheme prefix stays debuggable
+without leaking length.</li>
+<li><strong>Never write user-facing prose into the model's
+context.</strong> A mid-session notice with a URL in it is a
+prompt-injection pattern whoever audits you will flag, and there is
+almost always a user channel available instead.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Publishing an automatic correction to shared memory with no
+review.</strong> The judge is one LLM reading one window; the blast
+radius is every teammate's next session. A staging scope, or a diff a
+person confirms, costs a version bump and buys back the failure
+mode.</li>
+<li><strong>Declaring an outcome vocabulary you never write.</strong>
+<code>proposed | applied | reverted</code> with only the first produced
+and none read means the loop cannot tell an improvement from a
+regression, and the dedup it does have only prevents proposing the
+<em>same</em> edit — a different edit toward the same wrong idea is
+unimpeded.</li>
+<li><strong>Filtering a read path with a parameter every caller
+omits.</strong> An optional <code>project</code> on the query builder, a
+<code>users</code> list hardcoded empty at the only automatic call site,
+and a <code>scope</code> column nothing selects on are three shapes of
+the same defect: the boundary exists in the code and not in any
+request.</li>
+<li><strong>Deriving a scope key from a basename.</strong> It collides
+across repositories and changes when the agent is invoked from a
+subdirectory. The fix here — a hash of the git remote — already exists
+in the same tree and is used for a different table.</li>
+<li><strong>Letting a README describe a path the code removed.</strong>
+A documented fallback, a documented tuning variable and a documented
+degradation mode all outlived the lexical recall arm; a reader tuning
+<code>HIVEMIND_RECALL_MIN_OVERLAP</code> is adjusting a constant nothing
+reads.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an organisation that has already decided its agent
+transcripts are a shared asset and is willing to keep them in a vendor's
+store — the data-collection notice is blunt about what is captured and
+who can read it, and that is the first question, not the last. Inside
+that decision it is a strong fit for a small-to-mid engineering team on
+one codebase who all use coding agents daily and want the propagation:
+the install is one command, the per-agent adapters are real, and nothing
+needs to be operated. It is a poor fit for anyone who needs local-only
+memory, since no credential means no storage at all; for consultancies
+and anyone working across client boundaries, where the
+<code>.hivemind</code> routing is the only separation and the default is
+one shared pool; and for teams that would need to review what enters a
+shared skill library, because the repository's position on that is
+explicit and the roadmap entry for pre-release review is a roadmap
+entry. Adopt the mounted-filesystem interface and the reaction judge as
+ideas regardless — they transfer to a store you run yourself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often does the optimizer actually fire and publish in a real
+team, and how often is the resulting edit an improvement? Nothing in the
+tree measures it, and <code>recall-events.jsonl</code> has no
+counterpart for SkillOpt outcomes.</li>
+<li>Does the LoCoMo comparison hold up? Without a committed harness,
+dataset or per-question output, the cost, token and turn figures cannot
+be recomputed or re-run.</li>
+<li>What does the Deeplake engine do with a deleted row and its vector?
+Prune issues <code>DELETE FROM</code>; whether the embedding survives is
+on the other side of the API.</li>
+<li>How does a cross-machine race on the same skill resolve in practice?
+The per-skill lock is local, and the comment names a deterministic pull
+tie-breaker as a follow-up.</li>
+<li>The comments cite a <code>CLAUDE.md</code> as the authority for the
+UPDATE-coalescing quirk that shapes the whole append-only design, and
+that file is gitignored, so the reasoning behind the central storage
+decision is not in the repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and client:</strong>
+<code>src/deeplake-schema.ts</code>, <code>src/deeplake-api.ts</code>,
+<code>src/utils/sql.ts</code>, <code>src/utils/repo-identity.ts</code>,
+<code>src/utils/project-name.ts</code>.</li>
+<li><strong>Write path:</strong> <code>src/hooks/capture.ts</code>,
+<code>src/hooks/shared/redact.ts</code>,
+<code>src/hooks/shared/session-insert-sql.ts</code>,
+<code>src/hooks/summary-state.ts</code>,
+<code>src/hooks/session-event-cache.ts</code>.</li>
+<li><strong>Summaries:</strong>
+<code>src/hooks/spawn-wiki-worker.ts</code>,
+<code>src/hooks/wiki-worker.ts</code>,
+<code>src/hooks/upload-summary.ts</code>,
+<code>src/hooks/wiki-offset.ts</code>.</li>
+<li><strong>Retrieval:</strong> <code>src/shell/grep-core.ts</code>,
+<code>src/shell/grep-interceptor.ts</code>,
+<code>src/shell/deeplake-fs.ts</code>,
+<code>src/hooks/pre-tool-use.ts</code>,
+<code>src/hooks/memory-path-utils.ts</code>,
+<code>src/hooks/virtual-table-query.ts</code>,
+<code>src/hooks/recall.ts</code>,
+<code>src/hooks/shared/recall-{gate,query,format,events}.ts</code>.</li>
+<li><strong>Skills:</strong>
+<code>src/skillify/skillify-worker.ts</code>,
+<code>skill-writer.ts</code>, <code>skills-table.ts</code>,
+<code>pull.ts</code>, <code>auto-pull.ts</code>, <code>push.ts</code>,
+<code>unpull.ts</code>, <code>manifest.ts</code>,
+<code>scope-config.ts</code>, <code>scope-promotion.ts</code>,
+<code>gate-{parser,runner}.ts</code>.</li>
+<li><strong>Correction loop:</strong>
+<code>src/skillify/skillopt-trigger.ts</code>,
+<code>skillopt-worker.ts</code>, <code>skillopt-improve.ts</code>,
+<code>success-judge.ts</code>, <code>skill-proposer.ts</code>,
+<code>skill-edits.ts</code>, <code>skillopt-meta.ts</code>,
+<code>skill-org-publish.ts</code>.</li>
+<li><strong>Other memory kinds:</strong>
+<code>src/rules/{read,write}.ts</code>,
+<code>src/commands/goal.ts</code>, <code>src/shell/goal-paths.ts</code>,
+<code>src/docs/{write,refresh,promote,vfs-handler}.ts</code>,
+<code>src/graph/vfs-handler.ts</code>.</li>
+<li><strong>Integration and deletion:</strong>
+<code>src/mcp/server.ts</code>, <code>src/mcp/cowork-ingest.ts</code>,
+<code>src/hooks/session-start.ts</code>, <code>src/dir-config.ts</code>,
+<code>src/commands/session-prune.ts</code>,
+<code>harnesses/</code>.</li>
+<li><strong>Tests:</strong>
+<code>tests/claude-code/{grep-core,resume-brief,skillify-pull,deeplake-fs,pre-tool-use-baseline-cloud,output-cap}.test.ts</code>,
+<code>tests/shared/{recall,docs,success-judge,skillopt-*}.test.ts</code>,
+<code>vitest.config.ts</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &#39;MIN_LEXICAL_OVERLAP&#39; --include=&#39;*.ts&#39; .                          # 1 hit: the declaration in recall-gate.ts:125, no reader
+grep -rn &#39;RECALL_MIN_OVERLAP&#39; .                                            # README table + prose, one test&#39;s env cleanup, the declaration
+grep -rnE &quot;&#39;applied&#39;|\&quot;applied\&quot;|&#39;reverted&#39;|\&quot;reverted\&quot;&quot; --include=&#39;*.ts&#39; src tests   # 1 hit: the MetaStatus type itself
+grep -rn &#39;\.status&#39; src/skillify/                                          # only HTTP statuses and a spawn error; nothing reads MetaEntry.status
+grep -rniE &#39;tombstone|deleted_value|rejected_value&#39; --include=&#39;*.ts&#39; src tests         # 1 hit: the deferred-to-v1.1 KPI comment
+grep -rniE &#39;valid_from|valid_time|valid_until|effective_from|as_of&#39; --include=&#39;*.ts&#39; src tests   # 0: record time only
+grep -rniE &#39;audit|event_log|mutation_log&#39; --include=&#39;*.ts&#39; src             # comments only, plus a graph-build history.jsonl
+grep -rn &#39;recallTopHit&#39; .                                                  # one production caller (recall.ts:163) and the tests; only a test passes `project`
+grep -rn &#39;users: \[\]&#39; src/                                                # auto-pull.ts:147 — the automatic pull has no author filter
+grep -n &#39;author\|project&#39; src/shell/grep-core.ts                           # both appear only in searchDocs; memory search has neither predicate
+grep -rniE &#39;denylist|blocklist|blacklist&#39; src/                             # 0: unpull records no exclusion the next pull consults
+find . -path ./.git -prune -o \( -iname &#39;*locomo*&#39; -o -iname &#39;*benchmark*&#39; -o -iname &#39;*eval*&#39; \) -print   # one knowledge doc matching on &quot;retrieval&quot;
+find . -path ./.git -prune -o \( -iname &#39;CITATION*&#39; -o -iname &#39;*.bib&#39; -o -iname &#39;*.cff&#39; \) -print          # 0: no paper of its own
+grep -rni &#39;arxiv|bibtex|@article|@misc|citation|doi&#39; . | grep -v package-lock   # the LoCoMo dataset paper only; &quot;the paper&quot; in skillopt comments cites SkillOpt, uncited
+find . -path ./.git -prune -o \( -iname &#39;CLAUDE.md&#39; -o -iname &#39;AGENTS.md&#39; -o -iname &#39;.cursorrules&#39; \) -print  # 0; CLAUDE.md is gitignored and cited by seven source comments
+python3 -c &quot;…count SAFE_BUILTINS…&quot;                                         # 74 allowlisted builtins</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/activeloopai/hivemind/commit/26bdf69cdd0198bed344f252ef7abf85b1fdc604"><code class="commit-id" title="26bdf69cdd0198bed344f252ef7abf85b1fdc604">26bdf69c…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>
+before any file was read: one auto-run surface
+(<code>.claude-plugin/</code> marketplace and plugin manifests, which
+point at a pinned subdirectory of this same repository), two build-time
+execution paths (<code>postinstall</code> running
+<code>scripts/ensure-tree-sitter.mjs</code>, a documented native-build
+heal, and <code>prepare</code> running husky plus the build), one
+unpinned manifest with 26 floating ranges against a present lockfile,
+and four surfaces inside the seven-day cooldown because a depth-1 clone
+dates every file to the pinned commit. <code>.husky/pre-commit</code> is
+<code>npx lint-staged</code> and is not installed in a bare checkout. No
+<code>CLAUDE.md</code>, <code>AGENTS.md</code> or
+<code>.cursorrules</code> exists in the tree;
+<code>library/README.md</code> carries an <code>ai_description</code>
+block addressed to a reading agent, which was read as data. Nothing was
+installed, built or run; every claim here comes from reading the
+tree.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 309 of 426 screened at the report's current pin.**
+**Progress: 310 of 427 screened at the report's current pin.**
 
 12 further record(s) describe a revision the report has since moved
 off, and 105 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 124 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 151 |
-| Repositories with build-time execution (`EXEC`) | 229 |
+| Repositories with an auto-run surface (`RUNS`) | 125 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 152 |
+| Repositories with build-time execution (`EXEC`) | 230 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -76,6 +76,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |
 | [`hipocampus`](../../content/systems/hipocampus.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
+| [`hivemind-activeloop`](../../content/systems/hivemind-activeloop.md) | `.claude-plugin/` |
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |

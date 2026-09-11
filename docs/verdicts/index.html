@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 426 reports.</strong></p>
+<p><strong>This page covers all 427 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15177,6 +15177,54 @@ answer to when an agent may act without asking.</li>
 agent — there is no SDK, no automatic injection, no per-agent scope, and
 the queue that makes the write path safe assumes a person who attends to
 it.</li>
+</ul>
+<h3 id="hivemind-activeloop"><a
+href="../systems/hivemind-activeloop/"><code>hivemind-activeloop</code></a></h3>
+<ul>
+<li>Best idea: <strong>correct a skill from the user's next message, and
+ask the question that resists sycophancy.</strong> A
+<code>PreToolUse</code> on an org skill arms a three-message window; the
+next user prompt spawns a detached worker that rebuilds the window,
+appends the reaction, and asks a model <em>"Ignore whether the user
+seemed happy or polite — a praised-but-wrong answer is a FAILURE"</em>.
+A failed verdict produces at most three anchored edits that may not
+touch a protected region, and an unparseable or errored judgment returns
+success, so a flaky judge can fail to detect but never manufacture a
+failure. Beside it, memory as a mounted filesystem: <code>grep</code>
+and <code>cat</code> compiled to SQL behind an allowlist of 74 builtins
+whose removal comments name each escape they close. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the loop publishes to everyone and measures
+nothing.</strong> The improved version lands in the org skills table
+under a comment reading <em>"No approval gate by design: detect →
+improve → publish, directly"</em>, and auto-pull writes every author's
+skills onto every signed-in machine with the user filter hardcoded empty
+at the only automatic call site. The meta status is
+<code>proposed | applied | reverted</code>; only <code>proposed</code>
+is ever written and the field is never read, so the optimizer avoids
+repeating one edit and learns nothing about whether any edit helped.
+Unpulling deletes the local copy and the next pull restores it.</li>
+<li>Most reusable component: <code>src/hooks/shared/redact.ts</code> —
+PEM blocks, about thirty provider token schemes with the prefix kept,
+structured secrets, and a Shannon-entropy backstop with guards for
+UUIDs, hashes and dated model ids, applied at the serialization boundary
+so it covers every field and both egress paths at once.</li>
+<li>Maturity impression: Apache-2.0, 57,117 lines of TypeScript against
+314 test files, 80,844 lines and 5,470 <code>it()</code> cases, with
+per-file coverage thresholds each pull request appends to, plus
+duplicate detection, CodeQL, a Windows smoke subset and a static audit
+in CI. The skill-mining worker is excluded from coverage by name and its
+end-to-end matrix script is recorded as living in the author's worktree,
+uncommitted. The LoCoMo headline in the README has no harness, dataset
+or result file in the tree; what is committed is the regression fixtures
+the losing answers produced.</li>
+<li>Study when: you want memory the agent reaches with ordinary shell
+commands, or a correction signal derived from human reaction outside a
+training loop.</li>
+<li>Do not copy when: a shared skill library needs review before it
+propagates, when memory must work without an account, or when you need
+"forget that" to survive — pruning deletes the sessions and leaves the
+skills mined from them standing.</li>
 </ul>
         </article>
       </div>
