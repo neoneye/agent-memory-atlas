@@ -1782,7 +1782,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`nornicdb`](../systems/nornicdb/)
 
 - Best idea: `ConstraintTemporal` — validity declared as a schema constraint over `(key, valid_from, valid_to)` and enforced at write time, so a node cannot claim a temporal label without the fields. Everywhere else in this atlas validity is a convention two queries must remember to share.
-- Biggest risk: "search remains current-state focused: current search paths are intentionally separate from historical MVCC state" — the constraint, the temporal index and the MVCC reads all exist, and the retrieval path a memory client uses reaches none of them.
+- Biggest risk: "search remains current-state focused: current search paths are intentionally separate from historical MVCC state" — `CALL db.temporal.asOf` takes a validity instant and an MVCC commit version independently, so a Cypher client has both clocks, and the hybrid and vector arm a memory client is most likely to call has neither.
 - Most reusable component: `kalman_anti_sycophancy_test.go` and the filter behind it — fifty measurements of 0.6, one 0.99 asserted to stay under 0.8, then recovery, so an agent agreeing enthusiastically with itself cannot ratchet a confidence score.
 - Maturity impression: 780,000 lines of Go with forty-plus packages, MVCC snapshot isolation, Bolt/Cypher/gRPC/GraphQL/Qdrant/MCP surfaces, and an audit module citing GDPR, HIPAA, FISMA, SOC2 and SOX by clause rather than by name.
 - Study when: you are building the memory layer and want validity enforceable and history queryable underneath it.

@@ -1,31 +1,35 @@
 ---
 title: "NornicDB"
 eyebrow: "Temporal validity as a constraint"
-description: "A database that lets you declare validity as a schema constraint over (key, valid_from, valid_to) — and runs a Kalman filter over confidence so one enthusiastic spike cannot move a memory's score."
+description: "A database whose Cypher surface can ask what it recorded, at one commit version, as valid at another instant — two clocks in one call — with validity declarable as a schema constraint and a Kalman filter over confidence so one enthusiastic spike cannot move a memory's score."
 root: ../..
 page_kind: system
 source_name: "orneryd/NornicDB"
 source_url: https://github.com/orneryd/NornicDB
 archive_name: "orneryd--NornicDB"
-revision: a5f623399830d76e3e22e56264548c613ba897aa
-revision_url: https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa
-analyzed_at: 2026-08-09
-capabilities: "audit_log, scope_enforced"
+revision: 5c03eb157216c421b234202f2a12587a81bd3706
+revision_url: https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706
+analyzed_at: 2026-09-11
+capabilities: "audit_log, scope_enforced, bitemporal"
+capability_evidence:
+  audit_log: "the compliance audit logger, beside the graph store rather than inside it | pkg/audit/audit.go:597 (`Logger.Log`), pkg/server/server.go:1839, pkg/mcp/auth.go:688-724 | `Log` appends a structured event; the live producers are the retention manager, which calls `LogDataAccess(\"system\", \"retention-manager\", \"node\", recordID, action, …)` for every record it acts on, and the MCP auth middleware, gated on `config.AuditEnabled`. Several further call sites in `pkg/bolt/server.go:724-732` and `pkg/auth/auth.go:455` are commented out, so the trail covers retention and MCP auth, not Bolt query execution | none"
+  scope_enforced: "the namespaced engine's read methods, over one shared store | pkg/storage/namespaced.go:122-127 (`prefixNodeID`), :350-366 (`GetNodesByLabel`) | the namespace is a key prefix, and twenty-seven read methods filter the inner engine's results with `hasNodePrefix`/`hasEdgePrefix` before returning them — a predicate on a stored key, not a separate database file | pkg/storage/namespaced_test.go, namespaced_extra_test.go"
+  bitemporal: "the Cypher temporal procedures over the MVCC graph store | pkg/cypher/call_temporal.go:93-192, dispatched from procedure_registry_builtin.go:256 | `CALL db.temporal.asOf(label, keyProp, keyValue, validFromProp, validToProp, asOf [, systemTime [, systemSequence]])` takes a validity instant and an optional MVCC commit version as separate arguments; with a system version it skips the current-state fast path and reads `GetNodesByLabelVisibleAt(label, version)` before filtering on `[valid_from, valid_to)` | pkg/cypher/temporal_procedures_test.go:120-161 (`TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, then asserts the same validity instant returns nothing without a system time and returns the node with one)"
 stack_storage: "kv"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
 matrix:
   memory_unit: "A graph node or edge with properties and an optional vector, under a Neo4j-compatible model"
   storage: "Badger with MVCC snapshot isolation, an HNSW vector index and prefixed key spaces per index type"
-  retrieval: "Cypher plus hybrid graph and vector search, with knowledge-policy scoring applied as a visibility filter"
+  retrieval: "Cypher — including temporal procedures that take a validity instant and an MVCC commit version independently — plus hybrid graph and vector search, with knowledge-policy scoring applied as a visibility filter"
   write: "Transactional, anchored to an MVCC version, with declarable constraints including a TEMPORAL kind"
   update_delete: "MVCC versions with a retained floor; pruning keeps the head and fails historical reads below it"
   scoping: "A namespace component in every storage key prefix, plus multi-database separation"
   integration: "Bolt and Cypher for Neo4j clients, gRPC, GraphQL, a Qdrant-compatible endpoint and MCP"
   background: "Access accumulation and flushing, decay driven by temporal access patterns, retention and replication"
   trust: "A confidence property filtered through a per-property Kalman filter that dampens single-measurement spikes"
-  strengths: "Validity can be declared and enforced as a constraint, rather than being a convention two queries must share"
-  risks: "Search is current-state only by design, so the historical reads and the retrieval path do not meet"
+  strengths: "Validity can be declared and enforced as a constraint, and a single query can fix both clocks — what was recorded then about what was true then"
+  risks: "The hybrid and vector search arm is current-state only by design, so the two clocks are reachable from Cypher and not from the search path a memory client is most likely to use"
 ---
 
 ## 1. Executive Summary
@@ -169,16 +173,33 @@ scoring filter that acts on visibility — the test names
 `access_flusher_property_suppression_test.go`) show that scoring decides what is
 returned, not only how it is ordered.
 
-**The important limitation is stated in the README and it is the reason
-`bitemporal` is withheld.** "Search remains current-state focused: current search
-paths are intentionally separate from historical MVCC state." So the database can
-hold a validity interval, index it, and enforce its shape as a constraint — and
-the retrieval path a memory client actually uses does not query it. The
-capability lives at the storage layer; the memory surface does not reach it.
+**Two clocks are reachable from Cypher, and the atlas's question is which read
+path carries them.** `db.temporal.asOf` is a registered built-in procedure
+(`procedure_registry_builtin.go:256`) whose signature is
+`asOf(label, keyProp, keyValue, validFromProp, validToProp, asOf [, systemTime
+[, systemSequence]])`. The sixth argument is a **validity** instant; the seventh
+and eighth are an **MVCC commit timestamp and sequence** — the record clock. They
+are independent, and the code treats them as such: with no system version the
+call takes a fast path through `GetTemporalNodeAsOf` over current state, and with
+one it deliberately skips that path (`ok && !hasSnapshot`) and reads
+`GetNodesByLabelVisibleAt(label, version)` before applying the `[valid_from,
+valid_to)` window.
 
-That is a different failure from the common one. Elsewhere in this atlas the
-columns exist and nobody wired the read. Here the read exists, at a lower layer,
-and the search path is deliberately kept away from it.
+A committed test demonstrates the difference rather than asserting it. It creates
+a node valid from 2024-01-01 to 2024-02-01, captures its head version, **deletes
+it**, then asks for the validity instant 2024-01-15 twice: without a system time
+the result is empty, and with the captured commit timestamp and sequence the node
+comes back. The same validity instant answers differently depending on when you
+ask the database to have been. That is bitemporality, exercised.
+
+**The README's limitation is real and it is about a different arm.** "Search
+remains current-state focused: current search paths are intentionally separate
+from historical MVCC state." The hybrid graph-and-vector search a memory client
+reaches for does not consult either clock; the Cypher procedure surface does. So
+the capability is not stranded at the storage layer — it is reachable through the
+system's primary query language, and absent from its similarity search. A memory
+client that speaks Cypher has both clocks; one that only calls the vector
+endpoint has neither.
 
 MVCC retention is handled with an explicit safety posture: pruning "preserves the
 current head and a retained floor per logical key; requests below that retained
@@ -219,12 +240,33 @@ append-only entries, structured JSON, real-time alerting and a seven-year defaul
 retention. Citing the specific clause a control answers, rather than a framework
 name, is what makes a compliance claim checkable.
 
-**Scope — awarded**, for the namespace prefix in the key layout plus multi-database
-separation.
+**What that trail actually covers is narrower than the clause list implies.**
+`Logger.Log` has two live producers: the retention manager, which calls
+`LogDataAccess("system", "retention-manager", "node", recordID, action, …)` for
+every record it acts on (`pkg/server/server.go:1839`), and the MCP auth
+middleware, gated on `config.AuditEnabled` (`pkg/mcp/auth.go:688-724`). The call
+sites that would log Bolt query execution and authentication are present as
+commented-out code — `// e.audit.LogDataAccess(user, user, "query", query,
+"EXECUTE", true, "")` in `pkg/bolt/server.go:732`, `// auditLogger.Log(audit.Event{`
+in `pkg/auth/auth.go:455`. The mark is for the mechanism and the retention trail
+it carries; a reader planning on GDPR Art.15 coverage of query access should
+grep those two files first.
 
-**Bitemporal — withheld**, for the reason in section 6, and it is the most
-frustrating withholding in this batch: the constraint, the index and the MVCC
-reads are all there, and the search path does not use them.
+**Scope — awarded**, and the tier is the read path rather than the layout. The
+namespace is a key prefix (`prefixNodeID`: `"123"` becomes `"tenant_a:123"`), and
+`NamespacedEngine`'s read methods do not rely on that alone — `GetNodesByLabel`
+asks the inner engine for every node with the label and then keeps only those
+whose id carries the prefix, with twenty-seven such filters across the file. One
+store, filtered on the way out, which is a predicate and not a partition.
+Multi-database separation sits above it.
+
+**Bitemporal — awarded**, on the Cypher temporal procedures. `db.temporal.asOf`
+accepts a validity instant and an MVCC commit version as separate arguments and
+honours both, and `TestTemporalAsOf_WithSnapshotVersion` proves the axes are
+independent by deleting the node and getting it back at the same validity instant
+under an older commit version. The mark names that read path and not the other
+one: the hybrid and vector search arm is current-state by design and consults
+neither clock, which is the limitation section 6 records.
 
 **Trust state — no.** `confidenceScore` is a filtered float. The Kalman work is a
 trust *model* of unusual quality with no trust *state* attached to a node.
@@ -332,7 +374,29 @@ whether the search-path separation blocks what they need.
 **Temporal constraint and index** —
 `pkg/storage/badger_constraint_validation.go:164-200` (node validation), `:717`
 (edge validation), `pkg/storage/badger.go:36` (`prefixTemporalIndex`),
-`pkg/storage/badger_edge_constraint_validation_test.go:163`
+`pkg/storage/badger_edge_constraint_validation_test.go:163`,
+`pkg/storage/constraint_validation.go`
+
+**The two clocks** — `pkg/cypher/call_temporal.go`
+(`callDbTemporalAsOf` `:93-192`, the fast-path skip `:134`,
+`coerceOptionalMVCCVersion` `:269-286`, `temporalNodesByLabel` `:316-324`),
+`pkg/cypher/procedure_registry_builtin.go:256` (registration),
+`pkg/cypher/call.go:3952` (dispatch),
+`pkg/storage/badger_mvcc.go:1450` (`GetNodesByLabelVisibleAt`),
+`pkg/storage/badger_temporal_index.go:367`
+(`GetTemporalNodeAsOfInNamespace`),
+`pkg/cypher/temporal_procedures_test.go:120-161`
+
+**Recorded searches.** Run from a checkout at
+`5c03eb157216c421b234202f2a12587a81bd3706`.
+
+- **The system clock is not a decorative argument.**
+  `grep -rn "GetNodesByLabelVisibleAt" --include="*.go" pkg` — implementations on
+  `BadgerEngine`, `WALEngine`, `NamespacedEngine`, `AsyncEngine`, the
+  size-tracking and transaction wrappers, plus a benchmark. The Cypher call
+  reaches it only when a system version was supplied.
+- **The search arm does not.** `grep -n -i "current search paths are
+  intentionally separate" README.md` — `README.md:97`, unchanged.
 
 **Kalman / anti-sycophancy** — `pkg/knowledgepolicy/kalman_accumulator.go`
 (`ProcessKalmanMutation`), `kalman_anti_sycophancy_test.go`,
@@ -359,5 +423,7 @@ whether the search-path separation blocks what they need.
 `docs/user-guides/canonical-graph-ledger.md`
 
 ## History
+
+**2026-09-11** — [`5c03eb157216c421b234202f2a12587a81bd3706`](https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706) — re-read. Screened before reading: a committed `.githooks/pre-commit` (harmless unless `core.hooksPath` points at it), an `AGENTS.md` addressed to a reading agent, five dependency manifests inside the cooldown, four floating ranges, two build-time execution hooks. The tree was read, never built, and nothing was run. 785 files and 73,886 insertions past the previous pin, most of it a knowledge-policy admin UI and a localization catalogue for storage-validation messages. **`bitemporal` awarded**, and it is a correction rather than drift: `systemSequence` was already in `call_temporal.go` at the previous pin. `CALL db.temporal.asOf` takes a validity instant and, optionally, an MVCC commit timestamp and sequence, as separate arguments; supplying the system version makes the call skip its current-state fast path and read `GetNodesByLabelVisibleAt(label, version)` before filtering the validity window. `TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, and asserts the validity instant 2024-01-15 returns nothing without a system time and returns the node with one. The previous withholding rested on the README's "search remains current-state focused", which is true of the hybrid and vector arm and not of the Cypher procedure surface — the mark names the read path that carries the predicate, as the scope marks in this corpus do. `audit_log` and `scope_enforced` unchanged.
 
 **2026-08-09** — [`a5f623399830d76e3e22e56264548c613ba897aa`](https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa) — first reading. Screened before reading: one auto-run surface (`.githooks/`), build-time execution in two `Makefile`s, and five dependency manifests inside the seven-day cooldown including `go.mod` and `go.sum`. The tree was read, never built, and no test was run. The licence is MIT per the README badge and `LICENSE.md`; there is no plain `LICENSE` file.

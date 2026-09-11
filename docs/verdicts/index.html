@@ -5852,9 +5852,11 @@ enforced at write time, so a node cannot claim a temporal label without
 the fields. Everywhere else in this atlas validity is a convention two
 queries must remember to share.</li>
 <li>Biggest risk: "search remains current-state focused: current search
-paths are intentionally separate from historical MVCC state" — the
-constraint, the temporal index and the MVCC reads all exist, and the
-retrieval path a memory client uses reaches none of them.</li>
+paths are intentionally separate from historical MVCC state" —
+<code>CALL db.temporal.asOf</code> takes a validity instant and an MVCC
+commit version independently, so a Cypher client has both clocks, and
+the hybrid and vector arm a memory client is most likely to call has
+neither.</li>
 <li>Most reusable component: <code>kalman_anti_sycophancy_test.go</code>
 and the filter behind it — fifty measurements of 0.6, one 0.99 asserted
 to stay under 0.8, then recovery, so an agent agreeing enthusiastically
