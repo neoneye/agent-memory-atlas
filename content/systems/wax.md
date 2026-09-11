@@ -7,17 +7,22 @@ page_kind: system
 source_name: "christopherkarani/Wax"
 source_url: https://github.com/christopherkarani/Wax
 archive_name: "christopherkarani--Wax"
-revision: 93cbf51f76f7db4f837c744f84d26554f7fc9f66
-revision_url: https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66
-analyzed_at: 2026-08-09
-capabilities: "audit_log, human_review, negative_eval"
+revision: 77778962d25a163bdb32a6319d10b52c323d3036
+revision_url: https://github.com/christopherkarani/Wax/commit/77778962d25a163bdb32a6319d10b52c323d3036
+analyzed_at: 2026-09-11
+capabilities: "bitemporal, audit_log, human_review, negative_eval"
+capability_evidence:
+  bitemporal: "the structured fact tier | Sources/WaxTextSearch/FTS5SearchEngine.swift:413-420 | two independent half-open intervals — `system_from_ms`/`system_to_ms` and `valid_from_ms`/`valid_to_ms` — each filtered against its own caller-supplied instant from `StructuredMemoryAsOf` | unknown"
+  audit_log: "the WAL ring | the single .wax file | an append-only frame log with crash-injection tests asserting recovery invariants | Tests, crash injection"
+  human_review: "promotion | Sources/Wax/Broker/BrokerCommand.swift:338-341 | a promotion proposal a person approves before anything durable is written | unknown"
+  negative_eval: "rerank | the semantic rerank that drops expired entries | committed cases asserting an expired entry is absent from a populated result | unknown"
 stack_storage: ""
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
-  memory_unit: "A frame in a single .wax file, with typed metadata under wax.* keys"
+  memory_unit: "A frame in a single .wax file with typed metadata under `wax.*` keys, beside a structured fact tier of subject/predicate/object statements carrying two time intervals"
   storage: "One self-contained file — double-buffered header pages, a TOC, a footer and a WAL ring"
-  retrieval: "Hybrid text and vector search, then a semantic rerank that adjusts scores and drops expired"
+  retrieval: "Hybrid text and vector search, then a semantic rerank that adjusts scores and drops expired; the fact tier answers separately through an FTS5 index filtered on both a system-time and a valid-time as-of"
   write: "put and commit through an actor holding the descriptor, lock, header, TOC and index state"
   update_delete: "TTL expiry via wax.expires_at_ms; a maintenance live-set rewrite compacts the file"
   scoping: "repo and project raise the score by 0.9 and 0.7; they never remove a result"
@@ -162,6 +167,30 @@ that is not.
 ## 6. Retrieval Mechanics
 
 Hybrid text and vector search, then `semanticMemoryRerank` over a capped window.
+
+**A second retrieval path answers from a structured fact tier, and its
+bi-temporal query is unusually complete.** Beside the frame
+store, `WaxTextSearch` holds structured subject/predicate/object statements in an
+FTS5 index, and every read composes four `WHERE` clauses from a
+`StructuredMemoryAsOf` carrying two separate instants
+(`FTS5SearchEngine.swift:413-420`):
+
+```swift
+whereClauses.append("s.system_from_ms <= ?");              args.append(asOf.systemTimeMs)
+whereClauses.append("(s.system_to_ms IS NULL OR s.system_to_ms > ?)"); args.append(asOf.systemTimeMs)
+whereClauses.append("s.valid_from_ms <= ?");               args.append(asOf.validTimeMs)
+whereClauses.append("(s.valid_to_ms IS NULL OR s.valid_to_ms > ?)");   args.append(asOf.validTimeMs)
+```
+
+Two half-open intervals, one per clock, each closed against its own
+caller-supplied instant, with `NULL` read as open-ended on both. The broker
+exposes it as `facts_query` with a `valid_as_of` argument that falls back to the
+system `as_of` when omitted (`AgentBrokerService.swift:2324`), so asking *what did
+we believe last March about what was true last January* is two arguments rather
+than a reconstruction. `fact_assert` validates the interval at write —
+*"valid_to_ms must be greater than valid_from_ms"*. The same four clauses appear
+at `:590-593` and `:705-706`, which is the usual copy-paste exposure, and here
+every copy carries both clocks.
 
 **Expiry is a read-path exclusion, implemented as a sentinel.**
 `rankingReasons` returns `(-10, ["expired memory"])` for an expired memory, and
@@ -363,6 +392,25 @@ event `:633-646`, the response `:648-654`, the `promote` alias `:657-663`,
 **Tests** — `Tests/WaxIntegrationTests/UnifiedSearchTests.swift`
 (`expiredMemoriesAreExcludedFromUnifiedSearch` `:1157-1190`)
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Two clocks are filtered independently | read `Sources/WaxTextSearch/FTS5SearchEngine.swift:413-420` | Four clauses: `system_from_ms`/`system_to_ms` against `asOf.systemTimeMs`, `valid_from_ms`/`valid_to_ms` against `asOf.validTimeMs` |
+| Both clocks are caller-supplied | `grep -rn "validAsOfMs" --include="*.swift" Sources` | `BrokerCommand.swift:771` takes `valid_as_of`; `AgentBrokerService.swift:2324` falls back to the system `as_of` |
+| The two promote verbs disagree on approval | `grep -n "defaultApprove" Sources/Wax/Broker/BrokerCommand.swift` | `:339` `memory_promote` with `false`, `:341` `promote` with `true` — adjacent lines |
+| `reviewed` does not affect ranking | `grep -rn "reviewed" --include="*.swift" Sources \| grep -i rank` | Nothing |
+| The pinned commit is orphaned | `git merge-base --is-ancestor <old-pin> HEAD` | Fails; `c023b7c4` carries the same timestamp and subject with 224 lines removed across three files |
+| Tree and suite size | `find Sources -name "*.swift" \| xargs wc -l \| tail -1`; `find Tests -name "*.swift" \| wc -l` | 64,587 lines; 251 test files |
+
 ## History
+
+**2026-09-11** — [`77778962d25a163bdb32a6319d10b52c323d3036`](https://github.com/christopherkarani/Wax/commit/77778962d25a163bdb32a6319d10b52c323d3036) — re-read. **The previous pin is no longer reachable from the branch**: the history was rewritten, and the commit carrying the same timestamp and subject, [`c023b7c4d09557e550c441b1ec70facc74b60eb2`](https://github.com/christopherkarani/Wax/commit/c023b7c4d09557e550c441b1ec70facc74b60eb2), differs from the orphaned `93cbf51f` by 224 deletions across three files — an internal deploy skill, a `.pi` extension manifest and a todo list. This report cites none of them, so the rewrite costs it nothing; the orphaned commit remains fetchable by full sha and the atlas archive preserves it.
+
+**`bitemporal` is added, and it is a first-reading miss rather than an upstream change** — the columns and the four `WHERE` clauses are present at both pins, in identical number. The previous edition described only the `.wax` frame store and never reached `WaxTextSearch`, where structured subject/predicate/object statements are queried through two independent half-open intervals: `system_from_ms`/`system_to_ms` against `asOf.systemTimeMs` and `valid_from_ms`/`valid_to_ms` against `asOf.validTimeMs`, each `NULL` read as open-ended. The broker surfaces it as `facts_query` with a `valid_as_of` that defaults to the system `as_of`, and `fact_assert` refuses an interval whose end does not exceed its start. The previous edition had this tier as a store of frames with TTLs.
+
+**The approve-default inconsistency holds**, and is now easier to see than when first reported: `BrokerCommand.swift:339` decodes `memory_promote` with `defaultApprove: false` and `:341` decodes `promote` with `defaultApprove: true`, two adjacent lines dispatching the same `MemoryPromote`. `reviewed` is still a `Bool` no ranking path reads. Screened before reading: thirteen findings; nothing was built or run.
 
 **2026-08-09** — [`93cbf51f76f7db4f837c744f84d26554f7fc9f66`](https://github.com/christopherkarani/Wax/commit/93cbf51f76f7db4f837c744f84d26554f7fc9f66) — first reading. Screened before reading; the tree was read, never built, and no test was run.
