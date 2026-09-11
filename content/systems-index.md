@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **418 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **419 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -204,6 +204,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/hipocampus/"><span class="az-id">Hipocampus</span><span class="az-what">An index of what it knows it knows</span><code class="az-repo">kevin-hs-sohn/hipocampus</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/hippo-memory/"><span class="az-id">Hippo</span><span class="az-what">Physics-model decay memory</span><code class="az-repo">kitfunso/hippo-memory</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hipporag/"><span class="az-id">HippoRAG</span><span class="az-what">Associative graph memory</span><code class="az-repo">OSU-NLP-Group/HippoRAG</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/hivemind/"><span class="az-id">Hivemind</span><span class="az-what">Session-scoped MCP memory behind a placeholder embedder</span><code class="az-repo">causewayai/hivemind</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/holographic/"><span class="az-id">Holographic</span><span class="az-what">Vector-symbolic memory</span><code class="az-repo">NousResearch/hermes-agent</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/holomem/"><span class="az-id">holomem</span><span class="az-what">One vector that forgets on a schedule</span><code class="az-repo">polmanas1998-star/holomem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/honcho/"><span class="az-id">Honcho</span><span class="az-what">Peer and session representation</span><code class="az-repo">plastic-labs/honcho</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

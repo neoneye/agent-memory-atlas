@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go daemon serving memory over
+MCP whose session scope is a real, tested read filter, and whose only
+embedder is a hash that places every text about 22 units from every
+other — so with the 1.0 cutoff a query finds a memory only by its exact
+text.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hivemind — Agent Memory Atlas">
+    <meta property="og:description" content="A Go daemon serving memory
+over MCP whose session scope is a real, tested read filter, and whose
+only embedder is a hash that places every text about 22 units from every
+other — so with the 1.0 cutoff a query finds a memory only by its exact
+text.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hivemind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go daemon serving memory
+over MCP whose session scope is a real, tested read filter, and whose
+only embedder is a hash that places every text about 22 units from every
+other — so with the 1.0 cutoff a query finds a memory only by its exact
+text.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hivemind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hivemind",
+      "description": "A Go daemon serving memory over MCP whose session scope is a real, tested read filter, and whose only embedder is a hash that places every text about 22 units from every other \u2014 so with the 1.0 cutoff a query finds a memory only by its exact text.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Session-scoped MCP memory behind a
+placeholder embedder</p>
+          <h1>Hivemind</h1>
+          <p class="document-deck">A Go daemon serving memory over MCP
+whose session scope is a real, tested read filter, and whose only
+embedder is a hash that places every text about 22 units from every
+other — so with the 1.0 cutoff a query finds a memory only by its exact
+text.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/causewayai/hivemind">
+              <span>Source</span>
+              <strong>causewayai/hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec" title="1c93254066af4df39a7f12c2787f1de401137cec">
+              <span>Analyzed revision</span>
+              <code>1c932540…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/causewayai--hivemind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>causewayai--hivemind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hivemind's Local Edition is a Go daemon, <code>hivemindd</code>, that
+gives AI harnesses a memory over MCP: write a fact, read it back later
+or from another harness on the same machine. Forty-four commits by one
+author over 5 and 6 September 2026, 865 lines of Go with 450 lines of
+tests. The repository carries no licence file and GitHub reports none,
+so by default nothing in it is licensed for reuse.</p>
+<p>It is an MVP and its README says so, with a limitations list worth
+reading. What it has is small and, in one respect, careful: every entry
+carries a scope — <code>session</code> or <code>user</code>, constrained
+by a <code>CHECK</code> — and a session id, and
+<code>memory_query</code> returns the caller's own session entries plus
+the <code>user</code> scope, with the session predicate applied in SQL.
+A committed test puts identical vectors in two sessions and a shared
+entry, queries as one session, and asserts the other session's entry is
+absent while its own and the shared one are present. That is both the
+atlas's <code>scope_enforced</code> and <code>negative_eval</code>
+marks.</p>
+<p>What it does not have is retrieval. The only embedding provider in
+the tree is <code>HashProvider</code>, which the code calls a
+<em>"non-semantic stand-in… It must be swapped for a real provider
+before semantic search results are meaningful"</em>, and the daemon
+wires it unconditionally. Every vector component is an FNV-1a hash of
+the dimension index and the text, spread into [-1, 1) across 768
+dimensions and never normalised; the store keeps only neighbours within
+an L2 distance of 1.0. Computing the distances offline with the same
+hash: the exact query text is at 0.00, and the same sentence with one
+capital letter is at 22.54 — as far as unrelated text. So a query finds
+a memory only by its byte-identical content. The README's claim that
+search finds <em>"identical or near-identical"</em> text is right about
+identical and wrong about near. And its suggested workaround, writing a
+vector from the harness's own model, makes things worse:
+<code>memory_query</code> accepts no vector and always hash-embeds the
+query, so an entry written with a real embedding cannot be reached even
+by its exact text.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a memory when a harness calls
+<code>memory_write</code> with a session id. It is visible to queries
+carrying that session id, and to nothing else until something promotes
+it to <code>user</code> scope — which nothing in the tree does. It is
+never updated or deleted through the interface.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the scope predicate is real and tested, but every query is hash-embedded and cut at distance 1.0, so only a byte-identical query reaches a memory, and a harness-supplied vector reaches nothing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the scope predicate is real and tested, but every query is hash-embedded and cut at distance 1.0, so only a byte-identical query reaches a memory, and a harness-supplied vector reaches nothing
+flowchart TD
+  W[&quot;memory_write: session_id, content, optional vector&quot;] --&gt; V{&quot;caller supplied a vector?&quot;}
+  V --&gt;|no| H[&quot;hash of the content&quot;]
+  V --&gt;|yes| E[&quot;caller&#39;s vector stored as is&quot;]
+  H --&gt; T[&quot;memory_entries scope session, plus vec0 row&quot;]
+  E --&gt; T
+  Q[&quot;memory_query: session_id, text&quot;] --&gt; QH[&quot;hash of the query text, no vector accepted&quot;]
+  QH --&gt; K[&quot;nearest 5 x top_k by L2 across all sessions&quot;]
+  T --&gt; K
+  K --&gt;|&quot;distance at most 1.0: only byte-identical text&quot;| F[&quot;filter scope and session_id, then user scope&quot;]
+  F --&gt; R[&quot;own session first, then user scope, truncated to top_k&quot;]
+  U[&quot;user scope&quot;] -.-&gt;|&quot;no writer in the tree&quot;| F</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One daemon process, one SQLite file with the sqlite-vec extension
+through cgo, and an MCP server over HTTP on a local port. Configuration
+is three environment variables — data directory, port, embedding
+dimension. Homebrew and Scoop packaging exist, from taps the README
+notes are still private. There is no CLI and no UI, so there is no way
+to inspect, edit, promote or delete an entry except by speaking MCP.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>handleMemoryWrite</code>
+(<code>internal/mcpserver/write.go:27-49</code>) hash-embeds the content
+unless the caller supplied a vector, and calls <code>CreateMemory</code>
+with <code>Scope: "session"</code> and
+<code>SourceType: "harness"</code>; the input schema has no scope field,
+so a harness cannot write anything else.</li>
+<li><strong>Query.</strong> <code>handleMemoryQuery</code>
+(<code>internal/mcpserver/query.go:27-56</code>) hash-embeds the query
+text, runs <code>Store.Query</code> once for the caller's session and
+once for <code>user</code> scope, appends the second list to the first,
+and truncates to <code>top_k</code> — so own-session results always come
+first regardless of distance.</li>
+<li><strong>Store query.</strong> <code>Store.Query</code>
+(<code>internal/store/memory.go:219-302</code>) takes the nearest
+<code>5 × top_k</code> rows by L2 across the whole table, drops any with
+distance above <code>defaultMaxDistance = 1.0</code>
+(<code>:204</code>), and only then applies the scope, session and source
+predicates (<code>:250-261</code>) — a filter after truncation, so a
+session with few entries in a large store can find none of its own even
+with a working embedder.</li>
+<li><strong>Embedder.</strong> <code>HashProvider.Embed</code>
+(<code>internal/embedding/hash.go:21-31</code>) is the only
+implementation of <code>Provider</code>, and <code>main.go:61</code>
+constructs it unconditionally.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_entries(id, content, scope CHECK IN ('session','user'), session_id, source, source_type CHECK IN ('harness','etl'), external_id, created_at, updated_at)</code>,
+<code>memory_tags(memory_id, tag)</code>, and
+<code>memory_vectors USING vec0(embedding float[768])</code>.
+<code>external_id</code> and the <code>etl</code> source type are
+declared for a bulk-ingest path the store's own comment says is not
+built.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector-first with no lexical arm: a query that matches no vector
+returns nothing, and tags and source can narrow a result but never widen
+one. With the hash embedder the vector arm is an exact-match lookup in
+disguise. Every query also reads the <code>user</code> scope, which is
+always empty at this commit because nothing writes it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is one insert and one vector insert, visible to the next
+query immediately. Nothing runs in the background and nothing rewrites
+an entry.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP over HTTP with three tools — <code>memory_write</code>,
+<code>memory_query</code>, <code>list_scopes</code> — for any harness
+that can reach a local port. The session id each harness passes is the
+whole of its identity.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Retrieval does not work beyond exact text, and the workaround
+stops that working too.</strong> As above. Until a real provider is
+wired and <code>memory_query</code> either uses the same provider as
+writes or accepts a vector, the daemon is a keyed store read by exact
+content.</p>
+<p><strong>Scope is enforced on read and chosen by the caller.</strong>
+The predicate is correct and tested. The session id it filters on
+arrives from the harness unauthenticated, so any client of the local
+port can read any session it can name; the boundary holds against a
+well-behaved harness and not against anything else on the machine.</p>
+<p><strong>The shared scope is declared and unwired.</strong> Every
+query reads <code>user</code> scope; no tool, script or migration writes
+it, and the README lists promotion to <code>user</code> scope as not yet
+possible. Cross-harness sharing, which the README leads with, currently
+happens only by one harness passing another's session id.</p>
+<p><strong>No way to correct or delete.</strong> There is no update or
+delete tool, and no CLI or UI.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Thirteen test functions in nine files. I did not run them; there is
+no CI configuration in the tree, and the manifests are inside the
+seven-day cooldown.</p>
+<p><code>TestMemoryQuery_SessionIsolation</code> is the case both marks
+rest on, and it is well built: three entries written with the same
+vector, so distance cannot decide inclusion, and three assertions — own
+entry present, shared entry present, other session's entry absent. The
+test's own comment explains that it pins explicit vectors because the
+hash embedder is non-semantic, which is correct and is also why no test
+in the tree exercises retrieval by anything other than an identical
+vector: <code>TestQuery_HybridSemanticAndTagFilter</code> uses vectors
+<em>"designed for that purpose"</em>, and
+<code>TestDaemon_WriteThenQuery</code>, the one end-to-end test, writes
+<em>the build is broken on main</em> through the real daemon and queries
+<em>build</em> — which, by the distances above, returns nothing — and
+asserts only that neither call errored. No test writes with a
+caller-supplied vector and queries by text, which is the path the README
+recommends.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Scope in the schema, predicate in the query, and a
+three-assertion isolation test.</strong> Own present, shared present,
+other absent, over identical vectors so the filter is the only thing
+deciding. It is the minimum test every scoped memory should have.</li>
+<li><strong>A write tool with no scope parameter.</strong> A harness
+cannot write outside its session because the input schema has nowhere to
+say so.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Embedding writes and queries through different
+paths.</strong> If a caller may supply a vector on write, the query must
+accept one too, or both must go through the same provider.</li>
+<li><strong>A distance cutoff chosen without the embedder.</strong> A
+fixed L2 cutoff of 1.0 means nothing without knowing the scale of the
+vectors it is applied to; on these vectors it admits only identity.</li>
+<li><strong>Filtering after the nearest-neighbour limit.</strong> Push
+the scope predicate into the vector search, or a small session in a
+large store finds nothing of its own.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A clear skeleton for a local, multi-harness memory service, worth
+reading for its scope handling and its honest limitations list. Not
+usable as memory at this commit: until a real embedding provider is
+wired through both write and query, it retrieves only what is asked for
+word for word.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the planned pluggable provider will be applied to queries as
+well as writes, and whether <code>memory_query</code> will accept a
+caller vector; either closes the gap described above.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Daemon wiring: <code>cmd/hivemindd/main.go</code>. Config:
+<code>internal/config/config.go</code>.</li>
+<li>MCP tools: <code>internal/mcpserver/write.go</code>,
+<code>query.go</code>, <code>scopes.go</code>,
+<code>adapters.go</code>.</li>
+<li>Store and schema: <code>internal/store/memory.go</code>,
+<code>store.go</code>, <code>schema.go</code>.</li>
+<li>Embedder: <code>internal/embedding/hash.go</code>,
+<code>provider.go</code>.</li>
+<li>Tests: <code>internal/**/*_test.go</code>,
+<code>cmd/hivemindd/main_test.go</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &#39;Scope: *&quot;user&quot;&#39; --type go . | grep -v _test                 # only the query side reads it; nothing writes user scope
+rg -n &quot;Embedding&quot; internal/mcpserver/query.go                      # the query builds its own hash vector; MemoryQueryInput has no Embedding field
+rg -n &quot;Provider interface|NewHashProvider&quot; --type go .              # one Provider implementation, constructed unconditionally in main.go
+rg -n &quot;func .*Delete|func .*Update&quot; internal/store internal/mcpserver   # 0: no update or delete</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration, a <code>Makefile</code>, two manifests
+inside the seven-day cooldown and no unpinned surface. Nothing was built
+or run. The embedding distances quoted were computed offline by
+reimplementing <code>HashProvider.Embed</code>, not by running the
+daemon.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

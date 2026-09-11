@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 418 reports.**
+**This page covers all 419 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3688,3 +3688,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT or Apache-2.0, twenty-nine commits by one author since 6 September 2026, 6,157 lines of Rust with 1,545 of tests, a CI that runs them with clippy and coverage, and a benchmark method with synthetic corpora committed and the headline corpus private.
 - Study when: you want one local, inspectable memory shared by several coding agents, with a model that costs 198 MB and no network.
 - Do not copy when: unrelated projects share a root and their notes must never meet in a prompt, or superseded facts must stay superseded.
+
+### [`hivemind`](../systems/hivemind/)
+- Best idea: **scope in the schema, predicate in the query, and a three-assertion isolation test.** Session A's entry, session B's and a user-scope entry share one vector; a query as A must return A's and the shared one and must not return B's. Two marks, `scope_enforced` and `negative_eval`.
+- Biggest risk: **there is no retrieval yet.** The only embedder is a non-semantic FNV hash spread over 768 unnormalised dimensions, and the store keeps neighbours within an L2 distance of 1.0: computed with the same hash, identical text is at 0.00 and one changed capital at 22.54. A memory is found only by its exact text — and writing a real vector, the README's workaround, makes it unreachable, because `memory_query` accepts no vector and always hash-embeds.
+- Most reusable component: `TestMemoryQuery_SessionIsolation` — pinning identical vectors so the scope filter is the only thing deciding inclusion.
+- Maturity impression: forty-four commits by one author over two days in September 2026, 865 lines of Go with 450 of tests, no CI and no licence; an honest limitations list. The user scope is read on every query and written by nothing, and the one end-to-end test queries through the real embedder, gets nothing back by construction, and asserts only that the call succeeded.
+- Study when: you are designing scoped memory for several harnesses on one machine and want the isolation test to copy.
+- Do not copy when: you need to find anything by meaning, or a boundary that holds against a client that lies about its session id.

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 418 reports.</strong></p>
+<p><strong>This page covers all 419 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14894,6 +14894,36 @@ coding agents, with a model that costs 198 MB and no network.</li>
 <li>Do not copy when: unrelated projects share a root and their notes
 must never meet in a prompt, or superseded facts must stay
 superseded.</li>
+</ul>
+<h3 id="hivemind"><a
+href="../systems/hivemind/"><code>hivemind</code></a></h3>
+<ul>
+<li>Best idea: <strong>scope in the schema, predicate in the query, and
+a three-assertion isolation test.</strong> Session A's entry, session
+B's and a user-scope entry share one vector; a query as A must return
+A's and the shared one and must not return B's. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>there is no retrieval yet.</strong> The only
+embedder is a non-semantic FNV hash spread over 768 unnormalised
+dimensions, and the store keeps neighbours within an L2 distance of 1.0:
+computed with the same hash, identical text is at 0.00 and one changed
+capital at 22.54. A memory is found only by its exact text — and writing
+a real vector, the README's workaround, makes it unreachable, because
+<code>memory_query</code> accepts no vector and always hash-embeds.</li>
+<li>Most reusable component:
+<code>TestMemoryQuery_SessionIsolation</code> — pinning identical
+vectors so the scope filter is the only thing deciding inclusion.</li>
+<li>Maturity impression: forty-four commits by one author over two days
+in September 2026, 865 lines of Go with 450 of tests, no CI and no
+licence; an honest limitations list. The user scope is read on every
+query and written by nothing, and the one end-to-end test queries
+through the real embedder, gets nothing back by construction, and
+asserts only that the call succeeded.</li>
+<li>Study when: you are designing scoped memory for several harnesses on
+one machine and want the isolation test to copy.</li>
+<li>Do not copy when: you need to find anything by meaning, or a
+boundary that holds against a client that lies about its session
+id.</li>
 </ul>
         </article>
       </div>
