@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 412 reports.**
+**This page covers all 413 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3640,3 +3640,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 148 commits between 7 January and 1 June 2026 with 144 from one author, 7,705 lines of TypeScript and Python against 383 test cases in 34 files; one Postgres table behind an adapter interface implemented three times, an API that runs on Cloudflare Workers or Node, parsers for five agents and writers for two, MCP plus npm and PyPI SDKs; three long-lived side branches suggest a rewrite in progress; three of seven capability marks.
 - Study when: you switch coding agents often and want the last session available in the next one as a file rather than a paraphrase — and read the compatibility matrix, which declares in code which CLI versions each parser was verified against, whatever you build.
 - Do not copy when: you need memory rather than storage — nothing here ranks, decays or knows a stored claim went stale — or when secrets pass through the sessions you capture: the redactor masks the archival `raw` copy and ships the `message` text derived from the same bytes untouched, and no test covers it.
+
+### [`khabeer`](../systems/khabeer/)
+- Best idea: **Hermes's staged write-approval queue as a page rather than a prompt.** With approval on, the agent's own writes and the background review's batches both land in `pending/memory/` with their origin recorded, survive restart, and wait for a person to press Approve or Reject on the Memory page — one mark, `human_review`, and the right shape for a phone, where the person is not watching every turn.
+- Biggest risk: **the design it copies is built around a frozen prompt, and this one is rebuilt from disk on every tool step.** The spec states Hermes's rule — a mid-turn write must never mutate the live prompt — and every provider request builder calls `systemInstructions()`, which re-reads `MEMORY.md`; on the Anthropic path that is once per step of the tool loop. The cache saving is gone, and so is the window in which something the model just wrote cannot steer the rest of the turn.
+- Most reusable component: the FTS5 capability probe in `AiDatabase` — create, insert, match and drop before trusting the virtual table, and drop orphan insert triggers when the table is absent — written after a vendor SQLite build accepted the `CREATE` and failed on first use.
+- Maturity impression: GPL-3.0, a modified Termux created on 6 September 2026 whose inherited history carries Termux's contributors; the memory is a 731-line store (`AiMemoryStore`) with transcript search in a 1,631-line database class, and 401 lines of focused unit tests across two files pin batches, budgets, drift and strict UTF-8 reads. The load-time `[BLOCKED]` fence has no test, the one absence assertion in the suite passes on an empty result, and a rejected staged write is deleted without a record the review pass could consult.
+- Study when: you want a single-user mobile agent whose memory a person can read, edit and gate, or you are porting a Python agent's memory onto Android storage and service lifecycles.
+- Do not copy when: prompt-cache cost is why you wanted this design, or anything is multi-user — the specification removes scoping in its first section.

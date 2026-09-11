@@ -181,6 +181,13 @@ on how to write one.
   it lands in the cached prefix. Nothing in that tree says this was reasoned
   about, which is worth noting — it is the one arrangement here that could
   silently stop being true if a maintainer added a per-turn refresh.
+- **[Khabeer](../../systems/khabeer/)** — that failure, with the intent written
+  down. A port of Hermes whose specification states the frozen-snapshot rule in
+  so many words, and whose runtime rebuilds the system prompt from the memory
+  files inside every provider request builder — once per tool step on the
+  Anthropic path. Everything else in the Hermes store came across; the one
+  property this pattern names did not, because the function that renders the
+  block is called `systemPromptSnapshot` and holds no state.
 - **[Helm](../../systems/helm/)**, **[CSM](../../systems/csm/)**,
   **[RisuAI](../../systems/risuai/)**, **[SillyTavern](../../systems/sillytavern/)**
   — the counter-examples, each invalidating on every turn.

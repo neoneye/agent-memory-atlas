@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 412 reports.</strong></p>
+<p><strong>This page covers all 413 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14702,6 +14702,45 @@ ranks, decays or knows a stored claim went stale — or when secrets pass
 through the sessions you capture: the redactor masks the archival
 <code>raw</code> copy and ships the <code>message</code> text derived
 from the same bytes untouched, and no test covers it.</li>
+</ul>
+<h3 id="khabeer"><a
+href="../systems/khabeer/"><code>khabeer</code></a></h3>
+<ul>
+<li>Best idea: <strong>Hermes's staged write-approval queue as a page
+rather than a prompt.</strong> With approval on, the agent's own writes
+and the background review's batches both land in
+<code>pending/memory/</code> with their origin recorded, survive
+restart, and wait for a person to press Approve or Reject on the Memory
+page — one mark, <code>human_review</code>, and the right shape for a
+phone, where the person is not watching every turn.</li>
+<li>Biggest risk: <strong>the design it copies is built around a frozen
+prompt, and this one is rebuilt from disk on every tool step.</strong>
+The spec states Hermes's rule — a mid-turn write must never mutate the
+live prompt — and every provider request builder calls
+<code>systemInstructions()</code>, which re-reads
+<code>MEMORY.md</code>; on the Anthropic path that is once per step of
+the tool loop. The cache saving is gone, and so is the window in which
+something the model just wrote cannot steer the rest of the turn.</li>
+<li>Most reusable component: the FTS5 capability probe in
+<code>AiDatabase</code> — create, insert, match and drop before trusting
+the virtual table, and drop orphan insert triggers when the table is
+absent — written after a vendor SQLite build accepted the
+<code>CREATE</code> and failed on first use.</li>
+<li>Maturity impression: GPL-3.0, a modified Termux created on 6
+September 2026 whose inherited history carries Termux's contributors;
+the memory is a 731-line store (<code>AiMemoryStore</code>) with
+transcript search in a 1,631-line database class, and 401 lines of
+focused unit tests across two files pin batches, budgets, drift and
+strict UTF-8 reads. The load-time <code>[BLOCKED]</code> fence has no
+test, the one absence assertion in the suite passes on an empty result,
+and a rejected staged write is deleted without a record the review pass
+could consult.</li>
+<li>Study when: you want a single-user mobile agent whose memory a
+person can read, edit and gate, or you are porting a Python agent's
+memory onto Android storage and service lifecycles.</li>
+<li>Do not copy when: prompt-cache cost is why you wanted this design,
+or anything is multi-user — the specification removes scoping in its
+first section.</li>
 </ul>
         </article>
       </div>

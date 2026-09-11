@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **412 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **413 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -229,6 +229,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/kage/"><span class="az-id">Kage</span><span class="az-what">Memory verified against the code</span><code class="az-repo">kage-core/kage</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kaisen/"><span class="az-id">KAISEN</span><span class="az-what">The block outlives the reason for it</span><code class="az-repo">RAZZULLIX/KAISEN</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/khabeer/"><span class="az-id">Khabeer</span><span class="az-what">Hermes memory ported to Android</span><code class="az-repo">bakka22/khabeer</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/khoj/"><span class="az-id">Khoj</span><span class="az-what">Muninn keeps the facts</span><code class="az-repo">khoj-ai/khoj</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kirocrew/"><span class="az-id">Kiro Crew</span><span class="az-what">Seven ways a write is refused</span><code class="az-repo">kirodotdev/KiroCrew</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/klypix-mcp/"><span class="az-id">Klypix MCP</span><span class="az-what">The state machine is a regex over the card&#x27;s own prose</span><code class="az-repo">dahshanlabs/klypix-mcp</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>

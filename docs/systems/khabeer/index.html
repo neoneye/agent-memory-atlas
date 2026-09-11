@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Java port of Hermes Agent's
+bounded-file memory into a Termux-based Android app that keeps the human
+write-approval queue and rebuilds the system prompt from disk on every
+tool step, which the design it copies was built to avoid.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Khabeer — Agent Memory Atlas">
+    <meta property="og:description" content="A Java port of Hermes
+Agent's bounded-file memory into a Termux-based Android app that keeps
+the human write-approval queue and rebuilds the system prompt from disk
+on every tool step, which the design it copies was built to avoid.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Khabeer — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Java port of Hermes
+Agent's bounded-file memory into a Termux-based Android app that keeps
+the human write-approval queue and rebuilds the system prompt from disk
+on every tool step, which the design it copies was built to avoid.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Khabeer — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Khabeer",
+      "description": "A Java port of Hermes Agent's bounded-file memory into a Termux-based Android app that keeps the human write-approval queue and rebuilds the system prompt from disk on every tool step, which the design it copies was built to avoid.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hermes memory ported to Android</p>
+          <h1>Khabeer</h1>
+          <p class="document-deck">A Java port of Hermes Agent's
+bounded-file memory into a Termux-based Android app that keeps the human
+write-approval queue and rebuilds the system prompt from disk on every
+tool step, which the design it copies was built to avoid.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/bakka22/khabeer">
+              <span>Source</span>
+              <strong>bakka22/khabeer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/bakka22/khabeer/commit/cd7526219892d097646434e6802f105cc796d87b" title="cd7526219892d097646434e6802f105cc796d87b">
+              <span>Analyzed revision</span>
+              <code>cd752621…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/bakka22--khabeer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>bakka22--khabeer</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Khabeer is an Android application built on the Termux terminal
+emulator — it keeps Termux's package name, shared user id and
+GPL-3.0-only licence — with a native agent runtime written in Java
+inside the app. Its memory is a deliberate port of <a
+href="../hermes-agent/">Hermes Agent</a>'s built-in memory, and
+<code>docs/MEMORY_SOURCE_OF_TRUTH.md</code> says so in its first lines:
+it <em>"mirrors the Hermes Agent memory system, with exactly two
+exclusions"</em>, names the Hermes files it was mapped from, and
+declares that <em>"where this doc and code disagree, this doc wins —
+update the code."</em></p>
+<p>That makes the report a comparison as much as a reading. What
+survived the port intact is substantial: two character-capped Markdown
+files (<code>MEMORY.md</code> at 2,200 characters, <code>USER.md</code>
+at 1,375) plus a user-owned <code>SOUL.md</code>; a <code>memory</code>
+tool that addresses entries by substring; all-or-nothing operation
+batches checked against the budget on the final state; a threat-pattern
+scan with NFKC normalisation on every write; a drift guard that refuses
+to write a file it no longer round-trips and snapshots it to
+<code>.bak.&lt;timestamp&gt;</code> first; and Hermes's staged
+write-approval queue, here surfaced as Approve and Reject buttons on the
+app's Memory page. That queue is the one capability mark this report
+awards.</p>
+<p>What did not survive is the property the Hermes report is titled
+after. Hermes freezes the memory block into the system prompt at session
+start so a mid-session write cannot invalidate the provider's prompt
+cache. Khabeer's spec states the same rule — <em>"mid-turn
+<code>memory</code> writes persist to disk immediately but NEVER mutate
+the live prompt snapshot"</em> — and its code rebuilds the system prompt
+from the files on disk inside the tool loop.
+<code>callAnthropicApi</code> puts <code>systemInstructions()</code>
+into every request body (<code>AiRuntimeService.java:2270</code>), and
+that call site runs once per step of the loop at <code>:2191</code>. A
+<code>memory add</code> at one step is in the system prompt of the
+next.</p>
+<p>Two smaller gaps sit beside it. The load-time fence that replaces a
+poisoned on-disk entry with a <code>[BLOCKED: …]</code> placeholder in
+the prompt was ported (<code>AiMemoryStore.java:587-593</code>), but the
+Hermes test that asserts it — and that earns Hermes its
+<code>negative_eval</code> mark — was not, and no test in the tree
+exercises it. And rejecting a staged write deletes the staged file and
+records nothing, so the background review that proposed it can propose
+it again every ten turns.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a belief in Khabeer by being written into one of two
+small files, and it stops being one when a later write removes the entry
+that contains it. There is no intermediate state and no record of the
+transition. Everything else in the design is a gate in front of that
+write.</p>
+<p>Four actors can write. The agent calls the <code>memory</code> tool
+in the foreground. A background review call, fired every tenth user
+message, returns an operation batch. A person edits a file from the
+Memory page. And, when the approval toggle is on, a person approving a
+staged write replays the original arguments through the tool. All four
+pass the same gates: strict UTF-8 read, threat scan, file lock, drift
+guard, dedupe, budget check, atomic temp-file-and-rename.</p>
+<p>With approval on, the first two actors do not write at all — they
+stage. A staged write is a JSON file under <code>pending/memory/</code>,
+and it waits there, across restarts, until a person decides. That is a
+real epistemic step: a proposed memory that is not yet a memory. It is
+not a state on the memory itself, though. It lives beside the store, it
+has two exits — applied or deleted — and neither leaves a trace.</p>
+<p>Recall has two routes that never meet. The two memory files are
+always in the system prompt, whole. Everything else — past sessions,
+compacted history, tool output — is reached only when the model calls
+<code>session_search</code>, which runs against the transcript tables in
+SQLite.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four writers reach the two files through one set of gates, two of them through a queue a person approves; a rejection deletes the proposal, and every write is in the system prompt of the next tool step because the prompt is re-read from disk</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four writers reach the two files through one set of gates, two of them through a queue a person approves; a rejection deletes the proposal, and every write is in the system prompt of the next tool step because the prompt is re-read from disk
+flowchart TD
+  A[&quot;Foreground memory tool call&quot;] --&gt; G{&quot;Write approval on?&quot;}
+  R[&quot;Background review every 10 user turns&quot;] --&gt; G
+  G --&gt;|no| W[&quot;Gated write to MEMORY.md or USER.md&quot;]
+  G --&gt;|yes| S[&quot;Staged JSON under pending/memory&quot;]
+  S --&gt; P{&quot;Person on the Memory page&quot;}
+  P --&gt;|Approve| W
+  P --&gt;|Reject| X[&quot;Staged file deleted, nothing recorded&quot;]
+  X -.-&gt;|&quot;same batch can return at the next review&quot;| R
+  E[&quot;Person edits a file&quot;] --&gt; W
+  W --&gt; D[&quot;File on disk&quot;]
+  D --&gt; L[&quot;systemInstructions re-reads the files&quot;]
+  L --&gt; Q[&quot;System prompt of the NEXT tool step&quot;]
+  Q -.-&gt;|&quot;spec says frozen until next session&quot;| F[&quot;Frozen snapshot, as specified&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Everything runs inside one Android application process. There is no
+server to operate. Memory is three plain-text files in the app's private
+storage under <code>$HOME/.khabeer/</code>, and transcripts live in an
+app-private SQLite database managed by <code>AiDatabase</code>. The
+agent loop, the provider clients and the tool dispatch are in
+<code>AiRuntimeService</code>, a 4,746-line Android service; the Memory
+page, the approval list and the editors are in <code>AiActivity</code>,
+at 6,761 lines the largest file in <code>com/termux/app</code>.</p>
+<p>The Termux half of the tree — <code>terminal-emulator</code>,
+<code>terminal-view</code>, <code>termux-shared</code> — provides the
+Linux environment the agent's terminal tool runs commands in. It is not
+part of the memory system, and this report does not read it.</p>
+<p>The cost of standing it up is a signed APK and a provider key. The
+operational constraint the README spends most words on is the package
+identity: the app retains <code>com.termux</code>, so it cannot be
+installed beside another Termux build, and builds signed with different
+keys cannot update each other.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-memory-tool">The memory tool</h3>
+<p><code>AiMemoryStore.tool</code>
+(<code>AiMemoryStore.java:239-258</code>) dispatches <code>add</code>,
+<code>replace</code> and <code>remove</code> at <code>:251-253</code>,
+and an <code>operations[]</code> array to <code>applyBatch</code> at
+<code>:348</code>. Replace and remove match by substring against entries
+rather than by id (<code>:449</code>): zero matches return the current
+inventory, more than one distinct match returns previews and asks for a
+more specific string. A batch runs under one file lock, pre-scans every
+operation's content, checks the budget only against the final state, and
+aborts whole on the first failure.
+<code>MAX_CONSOLIDATION_FAILURES_PER_TURN = 3</code> (<code>:31</code>)
+turns a fourth overflow or zero-match in one turn into a terminal "stop
+retrying" response, which is the anti-thrash rule from Hermes ported as
+a constant.</p>
+<h3 id="gates-on-every-write">Gates on every write</h3>
+<p><code>withFileLock</code> (<code>:497</code>) takes an OS lock on a
+sibling <code>.lock</code> file; <code>driftErrorIfNeeded</code>
+(<code>:516-532</code>) refuses a write to a file that no longer parses
+as clean <code>§</code>-delimited entries and writes
+<code>&lt;file&gt;.bak.&lt;unix_ts&gt;</code> before refusing;
+<code>dedupe</code> (<code>:564</code>) collapses repeated entries
+order-preserving; <code>writeTextAtomic</code> (<code>:712</code>)
+writes a temporary file and renames it. An unreadable file is never
+treated as empty, and
+<code>unreadableUtf8DoesNotBecomeEmptyStoreOnWrite</code> and
+<code>saveRawRefusesToClearUnreadableFile</code> pin that.</p>
+<h3 id="threat-scanning">Threat scanning</h3>
+<p><code>threatMessage</code> (<code>:595</code>) normalises to NFKC
+(<code>:604</code>), bounds the scan at 64 KiB
+(<code>MAX_SCAN_CHARS</code>, <code>:41</code>), and matches
+prompt-injection, exfiltration and persistence patterns ported from
+Hermes's <code>threat_patterns.py</code>. It runs on add and replace
+inside batches (<code>:362</code>) and on every single-action write.
+<code>sanitizeForPrompt</code> (<code>:587-593</code>) runs it again
+when the prompt is assembled and substitutes <em>"[BLOCKED: … entry
+contained a prompt-injection pattern. The raw file is preserved; edit
+Memory to remove it.]"</em> for a matching entry.</p>
+<h3 id="staging-and-approval">Staging and approval</h3>
+<p><code>stageWrite</code> (<code>:291-307</code>) serialises the tool
+arguments with an <code>origin</code> of <code>foreground</code> or
+<code>background_review</code> into
+<code>pending/memory/&lt;id&gt;.json</code>. Its two producers are
+<code>runMemoryTool</code>
+(<code>AiRuntimeService.java:3638-3641</code>), when
+<code>isMemoryWriteApprovalEnabled()</code> is true, and
+<code>applyReviewOps</code> (<code>:4184-4189</code>), which receives
+the same flag. The Memory page lists pending items and wires Approve to
+<code>approvePending(id)</code> and Reject to
+<code>rejectPending(id)</code> (<code>AiActivity.java:2020-2040</code>).
+The toggle is a switch on the same page
+(<code>AiActivity.java:1732-1733</code>) backed by a preference that
+defaults to <code>false</code>
+(<code>AiProviderConfig.java:113-118</code>).</p>
+<h3 id="system-prompt-assembly">System prompt assembly</h3>
+<p><code>systemPromptSnapshot</code>
+(<code>AiMemoryStore.java:201-217</code>) reads <code>SOUL.md</code>,
+then renders each enabled file as a block headed with its usage —
+<code>MEMORY (your personal notes) [62% — 1,364/2,200 chars]</code>.
+Despite the name it holds no state: every call reads the files from
+disk. <code>systemInstructions</code>
+(<code>AiRuntimeService.java:4015</code>) wraps it with the runtime's
+rules, and it is called from each provider's request builder —
+<code>callAnthropicApi</code> at <code>:2270</code>,
+<code>callResponsesApi</code> at <code>:2869</code>,
+<code>callCodexApi</code> at <code>:1846</code> — and from
+<code>refreshSystemMessage</code> (<code>:4048</code>), whose comment
+says it <em>"rebuilds the system message at the start of every
+turn."</em> The Anthropic builder is called inside the step loop at
+<code>:2191</code>.</p>
+<h3 id="session-history">Session history</h3>
+<p><code>AiDatabase</code> probes whether the device's SQLite can
+actually use FTS5 by creating, inserting into, matching and dropping a
+probe table (<code>fts5Available</code>, <code>:279</code>), because —
+as the spec records from a MIUI device — some builds parse
+<code>CREATE VIRTUAL TABLE</code> and fail on first use. With FTS5 it
+maintains <code>messages_fts</code> by trigger (<code>:304-316</code>)
+and a trigram table where the tokenizer exists (<code>:352</code>);
+without it, <code>session_search</code> falls back to <code>LIKE</code>
+(<code>:1532</code>). <code>sessionSearch</code> (<code>:1302</code>)
+implements the four modes — discovery, read, scroll, browse. Compaction
+(<code>compactSession</code>, <code>:930</code>) archives rows by
+setting <code>active=0, compacted=1</code> and inserts one summary row;
+it does not delete, and recall reaches the archived rows.</p>
+<h3 id="background-review">Background review</h3>
+<p>Every time the user-message count is a multiple of the configured
+interval (<code>AiRuntimeService.java:4101-4103</code>, default 10 at
+<code>AiProviderConfig.java:130</code>), a quiet call returns
+<code>operations[]</code> and <code>skill_operations[]</code>. Memory
+operations are split by target and handed to
+<code>applyReviewOps</code>, which either stages them or applies them
+through the ordinary tool, and appends a
+<code>memory/reviewResult</code> event to the run.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a plain-text entry. Entries are joined by
+<code>ENTRY_DELIMITER = "\n§\n"</code>
+(<code>AiMemoryStore.java:32</code>) and split only on the full
+delimiter, so a bare <code>§</code> inside an entry survives. There are
+no ids, no timestamps, no provenance, no confidence and no status on an
+entry; its identity is its text, and it is addressed by a substring of
+it.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Cap</th>
+<th>Writers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MEMORY.md</code></td>
+<td style="text-align: right;">2,200 chars</td>
+<td>the <code>memory</code> tool, the review batch, a person</td>
+</tr>
+<tr>
+<td><code>USER.md</code></td>
+<td style="text-align: right;">1,375 chars</td>
+<td>the <code>memory</code> tool, the review batch, a person</td>
+</tr>
+<tr>
+<td><code>SOUL.md</code></td>
+<td style="text-align: right;">4,000 chars</td>
+<td>a person only; never a tool target</td>
+</tr>
+<tr>
+<td><code>pending/memory/&lt;id&gt;.json</code></td>
+<td style="text-align: right;">none</td>
+<td><code>stageWrite</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Caps are characters rather than tokens so they do not depend on the
+model. A write over the cap is refused with the current usage and the
+entry inventory so the model can consolidate in the same turn; nothing
+is silently truncated or evicted.</p>
+<p>The transcript is the other store: <code>messages</code> rows carry
+<code>session_id</code>, <code>role</code>, <code>content</code>,
+timestamps and the <code>active</code>, <code>compacted</code>,
+<code>_compressed_summary</code> and <code>rewound</code> flags that
+compaction, retry and undo set. Those flags hide rows from replay
+without deleting them, and <code>getHistoricalTranscript</code>
+(<code>AiDatabase.java:1285</code>) reads them back.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval for curated memory. Both files, whole, are in
+every system prompt, in a fixed order: <code>SOUL.md</code>, then the
+memory blocks, then memory guidance, then session-search guidance, then
+skills. The only selection is the character cap, applied at write
+time.</p>
+<p>Everything outside the two files is reached by the model's own
+<code>session_search</code> call. Discovery mode ranks newest first,
+demotes tool-role rows below user and assistant hits
+(<code>AiDatabase.java:1417-1454</code>), returns one hit per lineage
+root, hydrates the top hit with a surrounding window and returns the
+rest as anchored snippets. The search includes archived compacted rows
+by design, so detail a compaction removed from the replay is
+recoverable, and
+<code>compactionTrimsActiveReplayButSessionSearchRecoversHistory</code>
+asserts exactly that. It excludes rewound rows
+(<code>COALESCE(rewound, 0)=0</code> at <code>:1515</code> and
+<code>:1532</code>).</p>
+<p>There is no vector arm, no fusion between the two routes, and no path
+by which a session-search hit becomes a memory entry other than the
+model deciding to write one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A foreground write blocks the turn for the duration of a file lock
+and an atomic rename on local storage, which is effectively immediate.
+It is on disk before the tool returns, and — because the prompt is
+rebuilt from disk on each step — in the model's system prompt at the
+next step of the same turn on the Anthropic path, and at the next turn
+on every path that goes through <code>refreshSystemMessage</code>. The
+spec intends the lag to be "until the next session"; the code makes it
+one step.</p>
+<p>With approval on, the lag is however long the staged file waits for a
+person.</p>
+<p>No background pass rewrites the store wholesale. The review call
+proposes operations, which pass the same substring, budget and scan
+checks as any other write; it cannot replace a file.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory is exposed to the model as two tools — <code>memory</code> and
+<code>session_search</code> — across every provider dialect the runtime
+speaks: OpenAI Responses, Chat Completions and Anthropic Messages. When
+both files are disabled the <code>memory</code> tool is hidden; when one
+is, its target enum narrows. Delegated child agents see the memory block
+but cannot write to it: <code>SUBAGENT_BLOCKED_TOOLS</code>
+(<code>AiRuntimeService.java:2969</code>) holds <code>memory</code>,
+<code>delegate_task</code> and <code>skill_manage</code>, and
+<code>AiSubagentTest</code> asserts the set.</p>
+<p>Hermes's external memory providers — mem0, Honcho, Supermemory and
+the rest — were excluded from the port on purpose, along with per-user
+scoping. There is exactly one store per installation.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The approval queue is a real review surface, off by default,
+with two sharp edges.</strong> When a person turns on <em>Require
+approval before memory writes</em>, nothing the agent or the review pass
+proposes reaches the files until someone presses Approve. That is the
+strongest trust control in the design and it has producers on both
+automated write paths. The two edges: approval calls
+<code>approvePending(id)</code>, which forwards <code>true, true</code>
+for the store toggles (<code>AiMemoryStore.java:320-321</code>), so a
+staged write to a file the user has since disabled is applied anyway;
+and the person approving sees <code>id</code> and a 140-character
+single-line rendering of the arguments JSON
+(<code>AiActivity.java:2011</code>), which for an operations batch can
+hide most of what they are approving.</p>
+<p><strong>The frozen snapshot is specified and not
+implemented.</strong> The spec's reason for freezing is cache
+efficiency, and the consequence of not freezing is mostly cost. There is
+a second consequence. A frozen prompt is also a window in which a write
+the model just made cannot steer the rest of the same turn; rebuilding
+each step removes that window, so an entry written at step <em>k</em> is
+instruction-adjacent system-prompt text at step <em>k + 1</em>. The
+threat scan and the <code>[BLOCKED]</code> substitution still apply at
+assembly, so a pattern-matched injection is fenced; one the patterns
+miss is live immediately.</p>
+<p><strong>Rejection is deletion.</strong> <code>rejectPending</code>
+(<code>:339-346</code>) deletes the staged file and returns a success
+message. There is no record of the rejected value, so the review call —
+which sees the same transcript and has no knowledge of the rejection —
+can stage the same operation again at the next interval. The Hermes
+report records the same absence for Hermes; the port had the staging
+record in hand and did not keep it.</p>
+<p><strong>Removal leaves nothing.</strong> A <code>remove</code>
+rewrites the file without the entry. There is no tombstone, no history
+table and no event for manual edits, approvals or rejections. The
+background review does append <code>memory/reviewResult</code> to the
+run's event log (<code>AiRuntimeService.java:4163</code>,
+<code>:4190</code>), and a foreground tool call survives as a tool row
+in the transcript, but a person's edit, approval or rejection leaves no
+trace outside a <code>.bak</code> file written only on drift. That is
+why <code>audit_log</code> is withheld.</p>
+<p><strong>No scoping, by decision.</strong> The spec's exclusion list
+removes per-user scoping explicitly. One installation is one memory,
+which is honest for a phone and worth stating because the app runs
+arbitrary shell commands and MCP servers alongside it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The unit suite under <code>app/src/test/java/com/termux/app/</code>
+runs in CI (<code>.github/workflows/run_tests.yml</code>). I did not
+build the app or run the suite; everything below is read from the
+committed test files.</p>
+<p>The memory-relevant tests are in two files.
+<code>AiMemoryStoreTest</code> (192 lines) asserts: seeding and prompt
+injection of both blocks; refusal of a Hermes strict threat pattern at
+write; an atomic remove-then-add batch that is over budget mid-way and
+under budget at the end; that unreadable UTF-8 is not treated as an
+empty store, on both the tool path and a raw save; refusal of an
+over-limit save with usage and inventory returned; dedupe on save;
+refusal of a drifted file with a <code>.bak</code> written; and staging,
+approving and rejecting a write. <code>AiDatabaseMemoryTest</code> (209
+lines) asserts that compaction trims the replay while
+<code>session_search</code> still recovers the archived detail, that
+tool rows rank below user hits, that sub-agent runs are listed
+separately, that export carries the transcript markers, and the rewind
+and retry semantics.</p>
+<p><strong><code>negative_eval</code> is withheld, and the reason is a
+one-line repair.</strong> The candidate is
+<code>rewindHidesTurnsButKeepsAuditAndClamps</code>
+(<code>AiDatabaseMemoryTest.java:124-156</code>): after undoing one turn
+it searches for <code>"second question"</code> and asserts
+<code>0</code> results. The fixture guarantees material is present —
+<code>"first question"</code> is in the same session — but the test
+never asserts that a search finds it, so a search returning nothing for
+every query passes the case. Adding a positive query for
+<code>"first question"</code> beside the negative one would make it a
+populated-result exclusion. The other absence assertion, in the
+compaction test, is about the replay window rather than a memory result,
+and is on the context side of the line.</p>
+<p><strong>The load-time fence is untested.</strong>
+<code>sanitizeForPrompt</code> substitutes <code>[BLOCKED: …]</code> for
+a poisoned entry at assembly, and no test writes a threat pattern to
+disk and asserts the placeholder in <code>systemPromptSnapshot</code> —
+a search of the test tree for <code>BLOCKED</code> or
+<code>sanitizeForPrompt</code> finds only the sub-agent tool list. That
+is the case that earns <a href="../hermes-agent/">Hermes</a> its
+<code>negative_eval</code> mark, and it did not come across with the
+mechanism.</p>
+<p>There is no benchmark, no retrieval eval and no paper. The README and
+the Markdown under <code>docs/</code> carry no arXiv, DOI or citation
+block.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>The approval queue as a page, not a prompt.</strong> Hermes
+asks inline when a terminal is attached. Khabeer puts every pending
+write on a list that survives restart, with its origin recorded, which
+is the right shape for a device where the person is not watching every
+turn.</li>
+<li><strong>The FTS5 capability probe.</strong> Create, insert, match
+and drop before trusting a virtual table, and drop orphan triggers when
+the table is absent. The spec records the device that taught it: some
+SQLite builds accept the <code>CREATE</code> and fail on first use, and
+an orphaned insert trigger then aborts every message write.</li>
+<li><strong>Compaction that archives rather than deletes, with recall
+reaching the archive.</strong> Replay gets smaller; nothing is lost; the
+test pins both halves.</li>
+<li><strong>Refusing an unreadable file instead of treating it as
+empty</strong>, on every write path, with a test for each.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Specifying a frozen snapshot and calling the builder per
+request.</strong> If the prompt is meant to be stable for a session,
+hold the rendered block on the session object; a function called
+<code>systemPromptSnapshot</code> that reads from disk will be called
+from wherever a prompt is needed.</li>
+<li><strong>Deleting a rejected proposal.</strong> Keep the rejected
+staged record — its arguments are already a value you can match — and
+have the review pass consult it before staging.</li>
+<li><strong>Approving what the approver cannot see.</strong> A
+140-character preview of a JSON batch is a signature on a document with
+most of it folded.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a reasonable foundation for a single person who wants a
+mobile agent whose memory they can read, edit and gate, and who is
+willing to turn the approval switch on. It is a poor foundation for
+anyone whose reason for the Hermes design was cost: on a pay-per-token
+provider the memory block is re-sent and, on a cache-keyed provider,
+re-cached at every write. And it is not a candidate for anything
+multi-user, which the spec rules out in its first section.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the providers the runtime targets cache the system prompt
+separately from the messages, which decides how much the per-step
+rebuild costs in practice. I did not measure it.</li>
+<li>Whether the OpenAI Responses and Codex paths are called once per
+tool step as the Anthropic path is; their builders call
+<code>systemInstructions()</code> the same way, and I traced the loop
+only for Anthropic.</li>
+<li>Whether a second review pass after a rejection does in fact stage
+the same operation. The code gives it nothing that would prevent it;
+whether the model tends to repeat itself is an empirical question.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory store, gates, threat scan, prompt assembly, staging:
+<code>app/src/main/java/com/termux/app/AiMemoryStore.java</code>.</li>
+<li>Transcripts, FTS5 probe and indexes, session search, compaction,
+rewind:
+<code>app/src/main/java/com/termux/app/AiDatabase.java</code>.</li>
+<li>Agent loop, provider request builders, memory tool dispatch,
+background review:
+<code>app/src/main/java/com/termux/app/AiRuntimeService.java</code>.</li>
+<li>Memory page, approval list, editors, toggles:
+<code>app/src/main/java/com/termux/app/AiActivity.java</code>.</li>
+<li>Settings and defaults:
+<code>app/src/main/java/com/termux/app/AiProviderConfig.java</code>.</li>
+<li>Specification: <code>docs/MEMORY_SOURCE_OF_TRUTH.md</code>.</li>
+<li>Tests:
+<code>app/src/test/java/com/termux/app/AiMemoryStoreTest.java</code>,
+<code>AiDatabaseMemoryTest.java</code>,
+<code>AiSubagentTest.java</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;systemPromptSnapshot\(|systemInstructions\(\)&quot; app/src/main/java   # every caller rebuilds; no cached copy on the session
+rg -n &quot;BLOCKED|sanitizeForPrompt&quot; app/src/test                           # only SUBAGENT_BLOCKED_TOOLS: the fence is untested
+rg -n &quot;appendEvent|logEvent|audit&quot; app/src/main/java/com/termux/app/AiMemoryStore.java   # 0: the store records no mutation
+rg -n &quot;rejected|tombstone|reject&quot; app/src/main/java/com/termux/app/AiMemoryStore.java     # rejectPending, which deletes, and one comment
+rg -n -i &quot;arxiv|doi\.org|bibtex|citation&quot; README.md docs/*.md          # 0: no paper (docs/*.csv only lists bundled skill files)</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/bakka22/khabeer/commit/cd7526219892d097646434e6802f105cc796d87b"><code class="commit-id" title="cd7526219892d097646434e6802f105cc796d87b">cd752621…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration; three build-time execution points, all
+inside the bundled skill library under
+<code>app/src/main/assets/skills/</code> (a <code>conftest.py</code>, a
+<code>setup.py</code> and a LaTeX <code>Makefile</code>). Nothing was
+built, installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
