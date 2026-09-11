@@ -4665,18 +4665,26 @@ instruction text, frozen into a per-turn
 <code>audit_metadata()</code>, so "which memory rules were in force when
 this happened" is a value to compare rather than a configuration to
 reconstruct.</li>
-<li>Biggest risk: nothing epistemic crosses the provider boundary — no
-status, no provenance, no trust — so a backend that models belief has no
-way to tell the host and the host has no way to ask.</li>
-<li>Most reusable component: a memory contract with
+<li>Biggest risk: the boundary is asymmetric. Provenance crosses it — a
+SHA-256 binding a memory write to the exact persisted user message at
+its sequence in the session stream — and belief does not: no confidence,
+status or verdict appears on any model in the contract, so a backend
+that models belief has no way to tell the host and the host has no way
+to ask.</li>
+<li>Most reusable component: the write-outcome model. A seven-value
+<code>EvidenceOutcome</code>, a literal-typed rejection asserting
+<code>semantic_effects: "none"</code> with a parser that refuses to read
+an ordinary 422 as one, and an explicit <code>outcome_unknown</code>
+state that disables automatic retry because a transport error means the
+write may have landed. Beside it, a contract with
 <code>delete_memory</code> and <code>delete_memory_tool</code> as
-separate methods, <code>agent_id</code> and <code>user_email</code> on
-every call, a <code>null</code> backend as the copyable template, and a
-contract test that pins the response shape.</li>
-<li>Maturity impression: 1,495 files and 802 commits under BSL 1.1,
-controller/executor split with Docker images for both,
-<code>uv.lock</code> twelve days cold — and a contract suite that
-asserts a JWT subject cannot be overridden by a request header.</li>
+separate methods and a <code>null</code> backend as the copyable
+template.</li>
+<li>Maturity impression: 365,005 lines of Python under BSL 1.1 with
+7,026 test functions, controller/executor split with Docker images for
+both — and two contract suites that test the edges: a JWT subject that
+cannot be overridden by a request header, and an evidence protocol whose
+fourteen cases are almost all about what must not happen.</li>
 <li>Study when: memory is somebody else's service and your job is
 deciding when it runs, under which policy, and how to prove afterwards
 which policy that was.</li>

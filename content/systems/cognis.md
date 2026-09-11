@@ -7,10 +7,13 @@ page_kind: system
 source_name: "fpytloun/cognis"
 source_url: https://github.com/fpytloun/cognis
 archive_name: "fpytloun--cognis"
-revision: b918c94563608e379e4fd2fd28e863371fc86d37
-revision_url: https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37
-analyzed_at: 2026-08-07
+revision: 2bcafe4c2913b4757ddec246f550fbbf4556377d
+revision_url: https://github.com/fpytloun/cognis/commit/2bcafe4c2913b4757ddec246f550fbbf4556377d
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the provider boundary | cognis/providers/memory/protocol.py, cognis/core/trusted_evidence.py | `agent_id` and `user_email` on every contract method, taken from a verified JWT subject; the trusted routes add a per-route JWT with exact claim bindings, a fresh `jti`, a 60-second lifetime and no agent claim | tests/contract/test_mnemory_contract.py::test_jwt_subject_is_not_overridden_by_openwebui_header"
+  negative_eval: "identity, not retrieval | tests/contract/test_mnemory_contract.py:128,:142 | a caller-supplied OpenWebUI header is asserted not to override the JWT subject, and a wrong audience is asserted rejected — the input the retrieval boundary depends on | test_mnemory_contract"
 stack_storage: "postgres"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -18,14 +21,14 @@ matrix:
   memory_unit: "None of its own. The unit is whatever the mounted provider returns — a recall payload of instructions, core memories, search results and stats — with the host holding the policy that produced it"
   storage: "No memory store. Postgres holds users, agents, conversations and workflows; memory is delegated to a provider, with Mnemory and a null backend shipped"
   retrieval: "`recall` on the provider, parameterised by search mode, instruction mode, TTL and a managed flag, with auto-recall a policy switch rather than a call site"
-  write: "`remember` for turns and `add_memory` for explicit facts, both carrying agent and user identity; auto-remember is a policy flag"
+  write: "`remember` for turns and `add_memory` for explicit facts, both carrying agent and user identity; auto-remember is a policy flag; and a trusted-evidence route that sends a strict pydantic body bound to a SHA-256 hash of the exact persisted session event"
   update_delete: "`delete_memory` and a separate `delete_memory_tool` on the contract, so the agent-facing delete is a distinct method from the host's own"
   scoping: "`agent_id` and `user_email` on every contract method, with the caller's identity taken from a verified JWT subject rather than a request header"
   integration: "Controller and executors split over a bus — tools, browsers, shells, LSPs and MCP servers run wherever the work belongs; memory and guardrails are companion services"
   background: "Workflows run agent work off the chat path; memory bootstrap, auto-recall and auto-remember are per-turn policy rather than background passes"
-  trust: "None modelled. The host records which policy governed a turn and leaves epistemic status entirely to the provider"
-  strengths: "A frozen per-turn memory policy carrying a SHA-256 fingerprint over backend, flags and instruction text, returned as audit metadata; deletion in the contract twice; a null backend and a contract test"
-  risks: "Nothing carrying trust, provenance or status crosses the provider boundary, and the fingerprint records which policy ran without any log here of what it changed"
+  trust: "None on a stored memory. What the host models is the fate of a *write*: a seven-value evidence outcome, a typed rejection contract asserting no semantic effects, and an explicit unknown-outcome state that disables automatic retry"
+  strengths: "A frozen per-turn memory policy carrying a SHA-256 fingerprint over backend, flags and instruction text; a memory write bound by hash to the exact persisted event that occasioned it; a transport failure classed as *unknown* rather than failed, with retry refused; deletion in the contract twice"
+  risks: "Provenance crosses the boundary and belief does not — the provider is told who and which event, never how much to trust it — and neither the fingerprint nor the evidence hash records what a write changed in the store"
 ---
 
 ## 1. Executive Summary
@@ -170,6 +173,39 @@ different authority — and several host runtimes in this atlas collapse them.
 Both are policy-gated: `auto_remember` decides whether the first fires without a
 tool call.
 
+**A third route exists for the case where the host wants the provider to trust
+it.** `remember_evidence` and `remember_user_event` post to
+`/api/evidence/remember/v1` and `/api/user-events/remember/v1` under a protocol
+string, `mnemory.trusted-evidence.v1`, with a body that pydantic will not let
+drift: `extra: forbid` on every model, exactly one message, `role` a literal
+`"user"`, content bounded at 400,000 characters, and `event_hash` constrained to
+`^[0-9a-f]{64}$`. A validator rejects a message that is structurally present and
+empty.
+
+The hash is the part worth taking. `event_hash(stream_id, seq, event)` is a
+SHA-256 over the stream id, the sequence number and the event's type and data,
+under a docstring stating the intent: *"Bind the exact persisted event to its
+authoritative Intaris stream/seq."* The agent loop computes it at the moment the
+event is appended and carries it on the turn context, and the trusted write fires
+only when the policy allows auto-remember, the hash exists, and
+`evidence_admission_authorizes` matches the agent's owner. So a memory written
+this way is not merely attributed to a user — it names the exact byte-identical
+persisted message, at its position in an append-only session stream, in a form
+the receiving service can recompute. Normalisation is specified rather than
+assumed: strings to NFC, object keys sorted, recursively.
+
+**The alias table is the other new mechanism, and it is about revisions rather
+than identity.** `cognis/core/memory_aliases.py` gives the model short session
+handles — `m1`, `m2` — that bind not to a record but to a record *revision*.
+`memory_revision` returns a native `revision_id`, `revision`, `version` or
+`provenance_id` when the backend has one, and otherwise a deterministic hash of
+the record with the volatile keys removed — `access_count`, `checked_at`,
+`last_accessed`, `score` — so a read that only bumped a counter does not look
+like an edit. A binding carries an `expected_revision` precondition, and
+`invalidate_memory` drops the alias when the record moves. The effect is
+optimistic concurrency for a model that refers to memories by number: an edit
+against `m3` is refused if `m3` is no longer what the model was shown.
+
 ## 8. Agent Integration
 
 `cognis/tools/builtin/memory.py` is 720 lines of agent-facing tools, and
@@ -199,22 +235,68 @@ its policy file and stamping the hash on every event it influenced. Cognis does
 it a layer up, for the host's own memory policy, and reaches the same property
 from a different direction.
 
-**The boundary is thin on epistemics, deliberately.** Nothing carrying trust,
-provenance or status crosses it. That is a defensible split for a host — the
-provider owns belief — and it has the cost DeerFlow's report records for the same
-family: what a backend models and the host does not simply does not travel.
+**Provenance crosses the boundary; belief does not.** The trusted-evidence route
+sends a strict body — an `actor` of `user_id` and `owner_id`, an `event` of id,
+`event_hash`, session, conversation and turn, and exactly one user message,
+`extra: forbid` on every model — so the provider is told precisely *who* said
+*which persisted thing, where*. What never crosses is a confidence, a status or a
+verdict. That is a defensible split for a host, and it has the cost DeerFlow's
+report records for the same family: what a backend models and the host does not
+simply does not travel. The boundary is asymmetric rather than thin: identity and
+position cross it, epistemics never do.
 
-**And the fingerprint is not an audit.** It records which policy governed a turn,
-not what changed in the store. No append-only record of memory mutations exists
-on this side of the boundary, and the provider's log is the provider's.
+**The host models the fate of a write, which is not the same as trust in a
+memory.** `EvidenceOutcome` is seven-valued — `accepted | replayed | recovered |
+skipped | conflict | rejected | unavailable` — and each result carries `terminal`
+and `retryable` booleans beside it. `TrustedEventRejection` is stricter still: a
+closed set of four budget reasons, and literal-typed fields asserting
+`terminal: true`, `retryable: false`, `fallback_allowed: false`,
+`semantic_effects: "none"` and `source_retention: "caller_queue"`. A validator
+refuses a non-boolean for the safety flags, and `parse_trusted_rejection` returns
+`None` rather than a rejection when the payload does not match — under a docstring
+saying why: *"Do not classify unrelated validation errors as effect-free
+rejections."* A 422 that is merely a 422 must not be mistaken for a durable,
+side-effect-free refusal.
+
+**The best detail is the state between success and failure.** A transport error
+on `remember` raises `RememberOutcomeUnknownError` — *"Mnemory remember outcome is
+unknown; automatic retry is disabled"* — and the evidence result carries
+`outcome_unknown` through to a queue-friendly dict. Most systems in this atlas
+retry a failed memory write; this one distinguishes *the write failed* from *we
+do not know whether the write happened*, and refuses to retry the second, because
+a duplicate memory is worse than a missing one when the caller still holds the
+source. `test_evidence_transport_failure_is_outcome_unknown_and_not_retried` and
+`test_uncertain_write_reuses_canonical_request` pin both halves.
+
+**And none of it is an audit of the memory.** The policy fingerprint records which
+rules governed a turn; the evidence hash records which persisted event a write was
+derived from. Neither records what the write changed in the store. What Cognis can
+prove is provenance — *this memory came from exactly this message at exactly this
+sequence in the session stream* — and what it cannot is history: no append-only
+record of memory mutations exists on this side of the boundary, and the provider's
+log is the provider's.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`tests/contract/test_mnemory_contract.py` is the piece worth copying: a contract
-suite that runs against the real provider surface and asserts authentication
-behaviour, identity precedence and response shape. `test_memory_policy.py` covers
-the resolution and fingerprinting; `test_memory_tools.py` the agent-facing tools;
-`tests/integration/test_memory.py` the wiring.
+7,026 test functions over 365,005 lines of Python, and the shape matters more
+than the size. `tests/contract/test_mnemory_contract.py` is the piece worth
+copying: a contract suite that runs against the real provider surface and asserts
+authentication behaviour, identity precedence and response shape.
+`test_memory_policy.py` covers the resolution and fingerprinting;
+`test_memory_tools.py` the agent-facing tools; `tests/integration/test_memory.py`
+the wiring.
+
+`tests/unit/test_evidence_contract.py` is the newer one and it tests the
+protocol's *edges* rather than its happy path: a typed rejection retains its
+source without retry; an unrelated 422 is not classified as a budget rejection;
+an uncertain write reuses the canonical request rather than composing a new one;
+the JWT has exact claim bindings, a fresh `jti`, a 60-second lifetime, route
+binding and no agent claim; a fixture is asserted byte- and hash-exact; and a
+transport failure is `outcome_unknown` and not retried. Fourteen cases, almost
+all of them about what must *not* happen.
+
+`tests/unit/test_memory_aliases.py` and `tests/integration/test_memory_alias_replay.py`
+cover the alias table, replay included.
 
 `negative_eval` is earned narrowly and precisely, on
 `test_jwt_subject_is_not_overridden_by_openwebui_header` and
@@ -246,6 +328,28 @@ backend a copy-and-fill exercise; the second is what stops it drifting.
 
 **Verify identity, then test that a header cannot override it.** The assertion is
 three lines and it guards every scope filter downstream.
+
+**Bind a memory write to the exact persisted event it came from.** A SHA-256 over
+`(stream_id, seq, event_type, event_data)`, computed at append time and carried on
+the write, means the receiving store can recompute the identity of its own source.
+Specify the normalisation — NFC, sorted keys, recursive — or the hash is a hash of
+your serializer.
+
+**Model *unknown* as a third outcome of a write, and refuse to retry it.** A
+transport error is not a failure: the write may have landed. Cognis raises
+`RememberOutcomeUnknownError`, disables automatic retry and leaves the source with
+the caller, which is the correct trade when a duplicate memory costs more than a
+missing one.
+
+**Make a rejection contract literal-typed.** `terminal: Literal[True]`,
+`retryable: Literal[False]`, `semantic_effects: Literal["none"]` — and a parser
+that returns `None` rather than a rejection when the payload does not match, so an
+ordinary validation error is never mistaken for a durable, effect-free refusal.
+
+**Alias to a revision, not to a record.** If the model refers to memories by short
+handle, bind the handle to the revision it was shown, drop the volatile fields
+from the identity so a read does not look like an edit, and carry the revision as
+a precondition on the edit.
 
 ### Avoid
 
@@ -307,7 +411,27 @@ the seam it defines rather than anything it stores.
 | `cognis/tools/builtin/memory.py` | Agent-facing memory tools |
 | `tests/contract/test_mnemory_contract.py` | Identity precedence, audience rejection, response shape |
 | `tests/unit/test_memory_policy.py` | Policy resolution and fingerprinting |
+| `cognis/providers/memory/evidence.py` | The `mnemory.trusted-evidence.v1` contract, the seven-value outcome, the literal-typed rejection |
+| `cognis/core/trusted_evidence.py` | `event_hash`, event markers, canonical turn selection — 1,074 lines |
+| `cognis/core/memory_aliases.py` | Session aliases bound to record revisions, with `expected_revision` preconditions |
+| `tests/unit/test_evidence_contract.py` | Fourteen cases on the protocol's edges |
+| `tests/unit/test_memory_aliases.py`, `tests/integration/test_memory_alias_replay.py` | The alias table and its replay |
+
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| No memory store of its own | `grep -rniE "CREATE TABLE.*memor" --include="*.py" cognis` | Nothing; Postgres holds users, agents, conversations and workflows |
+| Belief does not cross the boundary | read the models in `cognis/providers/memory/evidence.py:29-85` | `actor`, `event` and one message; no confidence, status or verdict field on any of them |
+| The trusted route is wired | `grep -rn "remember_evidence\|remember_user_event" --include="*.py" cognis` | Computed at `agent_loop.py:22528`, gated at `:22551-22562`, sent from `mnemory.py:428` and `:504` |
+| No append-only record of memory mutations | `grep -rn "memory" --include="*.py" cognis/core/agent_loop.py \| grep -iE "append.*event\|ledger"` | Nothing; the Intaris stream records session events, and the memory write carries their hash |
+| Tree and suite size | `find cognis packages -name "*.py" \| xargs wc -l \| tail -1`; `grep -rc "def test_" tests/*.py tests/*/*.py` summed | 365,005 lines; 7,026 test functions |
 
 ## History
 
+**2026-09-11** — [`2bcafe4c2913b4757ddec246f550fbbf4556377d`](https://github.com/fpytloun/cognis/commit/2bcafe4c2913b4757ddec246f550fbbf4556377d) — re-read, 1,589 files and 344,354 insertions past the previous pin in a single commit, of which 2,117 lines are the memory paths and 1,074 are one new module. **Marks unchanged at two, both re-verified; one published claim is stale.** The report said *"Nothing carrying trust, provenance or status crosses it"* — provenance does now. `mnemory.trusted-evidence.v1` posts an `actor` of `user_id` and `owner_id` and an `event` carrying a SHA-256 `event_hash` over the stream id, sequence and payload of the exact persisted user message, computed at append time in the agent loop and gated on an owner match. Belief still does not cross: no confidence, status or verdict appears on any model in the contract, so the split is now identity-and-position out, epistemics never. **Three mechanisms are new and worth the report.** A seven-value `EvidenceOutcome` beside a literal-typed `TrustedEventRejection` asserting `semantic_effects: "none"`, with a parser that returns `None` rather than a rejection when the payload does not match — *"Do not classify unrelated validation errors as effect-free rejections."* An explicit `outcome_unknown` state: a transport error on a write raises `RememberOutcomeUnknownError` and disables automatic retry, because the write may have landed. And a session alias table binding `m1`-style handles to record *revisions*, with volatile fields excluded from the identity so a read does not read as an edit, and `expected_revision` as a mutation precondition. `audit_log` stays withheld and the reasoning is sharpened: the fingerprint says which rules ran, the evidence hash says which event a write came from, and neither says what the write changed. Suite 7,026 test functions over 365,005 lines. Screened before reading: no auto-run surface, five build-time execution paths, six dependency manifests inside the cooldown; nothing was built or run.
+
+**2026-08-07** —
 **2026-08-07** — [`b918c94563608e379e4fd2fd28e863371fc86d37`](https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37) — first reading. Screened before reading: 0 auto-run surfaces, 5 build-time execution paths, 1 unpinned dependency surface, and `uv.lock` unchanged for twelve days, so every version it resolves is at least that old. Nothing was built or run. Licensed BSL 1.1, which is recorded as a caveat rather than an exclusion. The system is the controller of a three-service platform by one author — memory in [Mnemory](../mnemory/), guardrails in [Intaris](../intaris/) — and is read here for its provider contract rather than for a store it does not have.

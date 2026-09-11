@@ -110,14 +110,14 @@ stamped on the turn it governed.</p>
               <strong>fpytloun/cognis</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37" title="b918c94563608e379e4fd2fd28e863371fc86d37">
+            <a class="meta-pill revision-pill" href="https://github.com/fpytloun/cognis/commit/2bcafe4c2913b4757ddec246f550fbbf4556377d" title="2bcafe4c2913b4757ddec246f550fbbf4556377d">
               <span>Analyzed revision</span>
-              <code>b918c945…</code>
+              <code>2bcafe4c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-07</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fpytloun--cognis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -287,6 +287,46 @@ modes and different authority — and several host runtimes in this atlas
 collapse them.</p>
 <p>Both are policy-gated: <code>auto_remember</code> decides whether the
 first fires without a tool call.</p>
+<p><strong>A third route exists for the case where the host wants the
+provider to trust it.</strong> <code>remember_evidence</code> and
+<code>remember_user_event</code> post to
+<code>/api/evidence/remember/v1</code> and
+<code>/api/user-events/remember/v1</code> under a protocol string,
+<code>mnemory.trusted-evidence.v1</code>, with a body that pydantic will
+not let drift: <code>extra: forbid</code> on every model, exactly one
+message, <code>role</code> a literal <code>"user"</code>, content
+bounded at 400,000 characters, and <code>event_hash</code> constrained
+to <code>^[0-9a-f]{64}$</code>. A validator rejects a message that is
+structurally present and empty.</p>
+<p>The hash is the part worth taking.
+<code>event_hash(stream_id, seq, event)</code> is a SHA-256 over the
+stream id, the sequence number and the event's type and data, under a
+docstring stating the intent: <em>"Bind the exact persisted event to its
+authoritative Intaris stream/seq."</em> The agent loop computes it at
+the moment the event is appended and carries it on the turn context, and
+the trusted write fires only when the policy allows auto-remember, the
+hash exists, and <code>evidence_admission_authorizes</code> matches the
+agent's owner. So a memory written this way is not merely attributed to
+a user — it names the exact byte-identical persisted message, at its
+position in an append-only session stream, in a form the receiving
+service can recompute. Normalisation is specified rather than assumed:
+strings to NFC, object keys sorted, recursively.</p>
+<p><strong>The alias table is the other new mechanism, and it is about
+revisions rather than identity.</strong>
+<code>cognis/core/memory_aliases.py</code> gives the model short session
+handles — <code>m1</code>, <code>m2</code> — that bind not to a record
+but to a record <em>revision</em>. <code>memory_revision</code> returns
+a native <code>revision_id</code>, <code>revision</code>,
+<code>version</code> or <code>provenance_id</code> when the backend has
+one, and otherwise a deterministic hash of the record with the volatile
+keys removed — <code>access_count</code>, <code>checked_at</code>,
+<code>last_accessed</code>, <code>score</code> — so a read that only
+bumped a counter does not look like an edit. A binding carries an
+<code>expected_revision</code> precondition, and
+<code>invalidate_memory</code> drops the alias when the record moves.
+The effect is optimistic concurrency for a model that refers to memories
+by number: an edit against <code>m3</code> is refused if <code>m3</code>
+is no longer what the model was shown.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p><code>cognis/tools/builtin/memory.py</code> is 720 lines of
 agent-facing tools, and <code>delete_memory_tool</code> existing
@@ -315,23 +355,80 @@ here does it, <a href="../memledger/">MemLedger</a>, by canonicalising
 and hashing its policy file and stamping the hash on every event it
 influenced. Cognis does it a layer up, for the host's own memory policy,
 and reaches the same property from a different direction.</p>
-<p><strong>The boundary is thin on epistemics, deliberately.</strong>
-Nothing carrying trust, provenance or status crosses it. That is a
-defensible split for a host — the provider owns belief — and it has the
-cost DeerFlow's report records for the same family: what a backend
-models and the host does not simply does not travel.</p>
-<p><strong>And the fingerprint is not an audit.</strong> It records
-which policy governed a turn, not what changed in the store. No
+<p><strong>Provenance crosses the boundary; belief does not.</strong>
+The trusted-evidence route sends a strict body — an <code>actor</code>
+of <code>user_id</code> and <code>owner_id</code>, an <code>event</code>
+of id, <code>event_hash</code>, session, conversation and turn, and
+exactly one user message, <code>extra: forbid</code> on every model — so
+the provider is told precisely <em>who</em> said <em>which persisted
+thing, where</em>. What never crosses is a confidence, a status or a
+verdict. That is a defensible split for a host, and it has the cost
+DeerFlow's report records for the same family: what a backend models and
+the host does not simply does not travel. The boundary is asymmetric
+rather than thin: identity and position cross it, epistemics never
+do.</p>
+<p><strong>The host models the fate of a write, which is not the same as
+trust in a memory.</strong> <code>EvidenceOutcome</code> is seven-valued
+—
+<code>accepted | replayed | recovered | skipped | conflict | rejected | unavailable</code>
+— and each result carries <code>terminal</code> and
+<code>retryable</code> booleans beside it.
+<code>TrustedEventRejection</code> is stricter still: a closed set of
+four budget reasons, and literal-typed fields asserting
+<code>terminal: true</code>, <code>retryable: false</code>,
+<code>fallback_allowed: false</code>,
+<code>semantic_effects: "none"</code> and
+<code>source_retention: "caller_queue"</code>. A validator refuses a
+non-boolean for the safety flags, and
+<code>parse_trusted_rejection</code> returns <code>None</code> rather
+than a rejection when the payload does not match — under a docstring
+saying why: <em>"Do not classify unrelated validation errors as
+effect-free rejections."</em> A 422 that is merely a 422 must not be
+mistaken for a durable, side-effect-free refusal.</p>
+<p><strong>The best detail is the state between success and
+failure.</strong> A transport error on <code>remember</code> raises
+<code>RememberOutcomeUnknownError</code> — <em>"Mnemory remember outcome
+is unknown; automatic retry is disabled"</em> — and the evidence result
+carries <code>outcome_unknown</code> through to a queue-friendly dict.
+Most systems in this atlas retry a failed memory write; this one
+distinguishes <em>the write failed</em> from <em>we do not know whether
+the write happened</em>, and refuses to retry the second, because a
+duplicate memory is worse than a missing one when the caller still holds
+the source.
+<code>test_evidence_transport_failure_is_outcome_unknown_and_not_retried</code>
+and <code>test_uncertain_write_reuses_canonical_request</code> pin both
+halves.</p>
+<p><strong>And none of it is an audit of the memory.</strong> The policy
+fingerprint records which rules governed a turn; the evidence hash
+records which persisted event a write was derived from. Neither records
+what the write changed in the store. What Cognis can prove is provenance
+— <em>this memory came from exactly this message at exactly this
+sequence in the session stream</em> — and what it cannot is history: no
 append-only record of memory mutations exists on this side of the
 boundary, and the provider's log is the provider's.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>tests/contract/test_mnemory_contract.py</code> is the piece
-worth copying: a contract suite that runs against the real provider
-surface and asserts authentication behaviour, identity precedence and
-response shape. <code>test_memory_policy.py</code> covers the resolution
-and fingerprinting; <code>test_memory_tools.py</code> the agent-facing
+<p>7,026 test functions over 365,005 lines of Python, and the shape
+matters more than the size.
+<code>tests/contract/test_mnemory_contract.py</code> is the piece worth
+copying: a contract suite that runs against the real provider surface
+and asserts authentication behaviour, identity precedence and response
+shape. <code>test_memory_policy.py</code> covers the resolution and
+fingerprinting; <code>test_memory_tools.py</code> the agent-facing
 tools; <code>tests/integration/test_memory.py</code> the wiring.</p>
+<p><code>tests/unit/test_evidence_contract.py</code> is the newer one
+and it tests the protocol's <em>edges</em> rather than its happy path: a
+typed rejection retains its source without retry; an unrelated 422 is
+not classified as a budget rejection; an uncertain write reuses the
+canonical request rather than composing a new one; the JWT has exact
+claim bindings, a fresh <code>jti</code>, a 60-second lifetime, route
+binding and no agent claim; a fixture is asserted byte- and hash-exact;
+and a transport failure is <code>outcome_unknown</code> and not retried.
+Fourteen cases, almost all of them about what must <em>not</em>
+happen.</p>
+<p><code>tests/unit/test_memory_aliases.py</code> and
+<code>tests/integration/test_memory_alias_replay.py</code> cover the
+alias table, replay included.</p>
 <p><code>negative_eval</code> is earned narrowly and precisely, on
 <code>test_jwt_subject_is_not_overridden_by_openwebui_header</code> and
 <code>test_whoami_rejects_wrong_jwt_audience</code> — committed cases
@@ -359,6 +456,31 @@ what stops it drifting.</p>
 <p><strong>Verify identity, then test that a header cannot override
 it.</strong> The assertion is three lines and it guards every scope
 filter downstream.</p>
+<p><strong>Bind a memory write to the exact persisted event it came
+from.</strong> A SHA-256 over
+<code>(stream_id, seq, event_type, event_data)</code>, computed at
+append time and carried on the write, means the receiving store can
+recompute the identity of its own source. Specify the normalisation —
+NFC, sorted keys, recursive — or the hash is a hash of your
+serializer.</p>
+<p><strong>Model <em>unknown</em> as a third outcome of a write, and
+refuse to retry it.</strong> A transport error is not a failure: the
+write may have landed. Cognis raises
+<code>RememberOutcomeUnknownError</code>, disables automatic retry and
+leaves the source with the caller, which is the correct trade when a
+duplicate memory costs more than a missing one.</p>
+<p><strong>Make a rejection contract literal-typed.</strong>
+<code>terminal: Literal[True]</code>,
+<code>retryable: Literal[False]</code>,
+<code>semantic_effects: Literal["none"]</code> — and a parser that
+returns <code>None</code> rather than a rejection when the payload does
+not match, so an ordinary validation error is never mistaken for a
+durable, effect-free refusal.</p>
+<p><strong>Alias to a revision, not to a record.</strong> If the model
+refers to memories by short handle, bind the handle to the revision it
+was shown, drop the volatile fields from the identity so a read does not
+look like an edit, and carry the revision as a precondition on the
+edit.</p>
 <h3 id="avoid">Avoid</h3>
 <p><strong>Do not mistake a policy fingerprint for an audit
 log.</strong> It says which rules ran, not what they did.</p>
@@ -445,10 +567,112 @@ deletes</td>
 <td><code>tests/unit/test_memory_policy.py</code></td>
 <td>Policy resolution and fingerprinting</td>
 </tr>
+<tr>
+<td><code>cognis/providers/memory/evidence.py</code></td>
+<td>The <code>mnemory.trusted-evidence.v1</code> contract, the
+seven-value outcome, the literal-typed rejection</td>
+</tr>
+<tr>
+<td><code>cognis/core/trusted_evidence.py</code></td>
+<td><code>event_hash</code>, event markers, canonical turn selection —
+1,074 lines</td>
+</tr>
+<tr>
+<td><code>cognis/core/memory_aliases.py</code></td>
+<td>Session aliases bound to record revisions, with
+<code>expected_revision</code> preconditions</td>
+</tr>
+<tr>
+<td><code>tests/unit/test_evidence_contract.py</code></td>
+<td>Fourteen cases on the protocol's edges</td>
+</tr>
+<tr>
+<td><code>tests/unit/test_memory_aliases.py</code>,
+<code>tests/integration/test_memory_alias_replay.py</code></td>
+<td>The alias table and its replay</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No memory store of its own</td>
+<td><code>grep -rniE "CREATE TABLE.*memor" --include="*.py" cognis</code></td>
+<td>Nothing; Postgres holds users, agents, conversations and
+workflows</td>
+</tr>
+<tr>
+<td>Belief does not cross the boundary</td>
+<td>read the models in
+<code>cognis/providers/memory/evidence.py:29-85</code></td>
+<td><code>actor</code>, <code>event</code> and one message; no
+confidence, status or verdict field on any of them</td>
+</tr>
+<tr>
+<td>The trusted route is wired</td>
+<td><code>grep -rn "remember_evidence|remember_user_event" --include="*.py" cognis</code></td>
+<td>Computed at <code>agent_loop.py:22528</code>, gated at
+<code>:22551-22562</code>, sent from <code>mnemory.py:428</code> and
+<code>:504</code></td>
+</tr>
+<tr>
+<td>No append-only record of memory mutations</td>
+<td><code>grep -rn "memory" --include="*.py" cognis/core/agent_loop.py | grep -iE "append.*event|ledger"</code></td>
+<td>Nothing; the Intaris stream records session events, and the memory
+write carries their hash</td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find cognis packages -name "*.py" | xargs wc -l | tail -1</code>;
+<code>grep -rc "def test_" tests/*.py tests/*/*.py</code> summed</td>
+<td>365,005 lines; 7,026 test functions</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
-<p><strong>2026-08-07</strong> — <a
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/fpytloun/cognis/commit/2bcafe4c2913b4757ddec246f550fbbf4556377d"><code class="commit-id" title="2bcafe4c2913b4757ddec246f550fbbf4556377d">2bcafe4c…</code></a>
+— re-read, 1,589 files and 344,354 insertions past the previous pin in a
+single commit, of which 2,117 lines are the memory paths and 1,074 are
+one new module. <strong>Marks unchanged at two, both re-verified; one
+published claim is stale.</strong> The report said <em>"Nothing carrying
+trust, provenance or status crosses it"</em> — provenance does now.
+<code>mnemory.trusted-evidence.v1</code> posts an <code>actor</code> of
+<code>user_id</code> and <code>owner_id</code> and an <code>event</code>
+carrying a SHA-256 <code>event_hash</code> over the stream id, sequence
+and payload of the exact persisted user message, computed at append time
+in the agent loop and gated on an owner match. Belief still does not
+cross: no confidence, status or verdict appears on any model in the
+contract, so the split is now identity-and-position out, epistemics
+never. <strong>Three mechanisms are new and worth the report.</strong> A
+seven-value <code>EvidenceOutcome</code> beside a literal-typed
+<code>TrustedEventRejection</code> asserting
+<code>semantic_effects: "none"</code>, with a parser that returns
+<code>None</code> rather than a rejection when the payload does not
+match — <em>"Do not classify unrelated validation errors as effect-free
+rejections."</em> An explicit <code>outcome_unknown</code> state: a
+transport error on a write raises
+<code>RememberOutcomeUnknownError</code> and disables automatic retry,
+because the write may have landed. And a session alias table binding
+<code>m1</code>-style handles to record <em>revisions</em>, with
+volatile fields excluded from the identity so a read does not read as an
+edit, and <code>expected_revision</code> as a mutation precondition.
+<code>audit_log</code> stays withheld and the reasoning is sharpened:
+the fingerprint says which rules ran, the evidence hash says which event
+a write came from, and neither says what the write changed. Suite 7,026
+test functions over 365,005 lines. Screened before reading: no auto-run
+surface, five build-time execution paths, six dependency manifests
+inside the cooldown; nothing was built or run.</p>
+<p><strong>2026-08-07</strong> — <strong>2026-08-07</strong> — <a
 href="https://github.com/fpytloun/cognis/commit/b918c94563608e379e4fd2fd28e863371fc86d37"><code class="commit-id" title="b918c94563608e379e4fd2fd28e863371fc86d37">b918c945…</code></a>
 — first reading. Screened before reading: 0 auto-run surfaces, 5
 build-time execution paths, 1 unpinned dependency surface, and
