@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 417 reports.**
+**This page covers all 418 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3680,3 +3680,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, five commits by one author between 31 August and 7 September 2026, 7,619 lines of Python with 2,413 of tests and evaluation, no CI. A gated twelve-case agent evaluation; three exclusion checks that are each one assertion from counting.
 - Study when: you are building memory about a person's own views, beliefs or history, and want the model to propose and the person to decide.
 - Do not copy when: you need a denial that survives the person editing their notes, or memory an agent acts on rather than reflects with.
+
+### [`kept`](../systems/kept/)
+- Best idea: **a bounded session index, generated per project.** One `MEMORY.md` per project, capped at 17 KB, durable knowledge first and project notes compacted oldest-verified first, with a line counting what left — so session-start context stays flat as the notes grow. A committed test renders a populated index and asserts an archived note is absent: one mark, `negative_eval`.
+- Biggest risk: **the per-prompt hook reads every project.** The hot index follows the project directory; the `UserPromptSubmit` hook, which runs on every request, ranks every active note in the root, so a question in one project can be answered with another project's notes. The write gate refuses a near-duplicate only of an active note, so a superseded fact can be written back as new.
+- Most reusable component: the write gate in `create_note` — secrets refused, an existing file refused with a pointer to `append` or `supersede`, a near-duplicate refused with its cosine and the note it matches — and the local tokenizers kept in parity with the reference by test.
+- Maturity impression: MIT or Apache-2.0, twenty-nine commits by one author since 6 September 2026, 6,157 lines of Rust with 1,545 of tests, a CI that runs them with clippy and coverage, and a benchmark method with synthetic corpora committed and the headline corpus private.
+- Study when: you want one local, inspectable memory shared by several coding agents, with a model that costs 198 MB and no network.
+- Do not copy when: unrelated projects share a root and their notes must never meet in a prompt, or superseded facts must stay superseded.

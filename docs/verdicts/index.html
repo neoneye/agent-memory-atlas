@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 417 reports.</strong></p>
+<p><strong>This page covers all 418 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14863,6 +14863,37 @@ beliefs or history, and want the model to propose and the person to
 decide.</li>
 <li>Do not copy when: you need a denial that survives the person editing
 their notes, or memory an agent acts on rather than reflects with.</li>
+</ul>
+<h3 id="kept"><a href="../systems/kept/"><code>kept</code></a></h3>
+<ul>
+<li>Best idea: <strong>a bounded session index, generated per
+project.</strong> One <code>MEMORY.md</code> per project, capped at 17
+KB, durable knowledge first and project notes compacted oldest-verified
+first, with a line counting what left — so session-start context stays
+flat as the notes grow. A committed test renders a populated index and
+asserts an archived note is absent: one mark,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the per-prompt hook reads every
+project.</strong> The hot index follows the project directory; the
+<code>UserPromptSubmit</code> hook, which runs on every request, ranks
+every active note in the root, so a question in one project can be
+answered with another project's notes. The write gate refuses a
+near-duplicate only of an active note, so a superseded fact can be
+written back as new.</li>
+<li>Most reusable component: the write gate in <code>create_note</code>
+— secrets refused, an existing file refused with a pointer to
+<code>append</code> or <code>supersede</code>, a near-duplicate refused
+with its cosine and the note it matches — and the local tokenizers kept
+in parity with the reference by test.</li>
+<li>Maturity impression: MIT or Apache-2.0, twenty-nine commits by one
+author since 6 September 2026, 6,157 lines of Rust with 1,545 of tests,
+a CI that runs them with clippy and coverage, and a benchmark method
+with synthetic corpora committed and the headline corpus private.</li>
+<li>Study when: you want one local, inspectable memory shared by several
+coding agents, with a model that costs 198 MB and no network.</li>
+<li>Do not copy when: unrelated projects share a root and their notes
+must never meet in a prompt, or superseded facts must stay
+superseded.</li>
 </ul>
         </article>
       </div>

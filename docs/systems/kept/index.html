@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory for coding agents
+made of Markdown files: a CPU embedding model searches them locally, a
+prompt hook adds the two closest passages to every request, and one
+generated MEMORY.md per project — bounded to 17 KB, archived notes
+excluded and tested — is what a session loads.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kept — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory for coding
+agents made of Markdown files: a CPU embedding model searches them
+locally, a prompt hook adds the two closest passages to every request,
+and one generated MEMORY.md per project — bounded to 17 KB, archived
+notes excluded and tested — is what a session loads.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kept — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory for coding
+agents made of Markdown files: a CPU embedding model searches them
+locally, a prompt hook adds the two closest passages to every request,
+and one generated MEMORY.md per project — bounded to 17 KB, archived
+notes excluded and tested — is what a session loads.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kept — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kept",
+      "description": "A Rust memory for coding agents made of Markdown files: a CPU embedding model searches them locally, a prompt hook adds the two closest passages to every request, and one generated MEMORY.md per project \u2014 bounded to 17 KB, archived notes excluded and tested \u2014 is what a session loads.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Markdown notes with a local embedder and a
+bounded index</p>
+          <h1>Kept</h1>
+          <p class="document-deck">A Rust memory for coding agents made
+of Markdown files: a CPU embedding model searches them locally, a prompt
+hook adds the two closest passages to every request, and one generated
+MEMORY.md per project — bounded to 17 KB, archived notes excluded and
+tested — is what a session loads.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/codexofc/kept">
+              <span>Source</span>
+              <strong>codexofc/kept</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/codexofc/kept/commit/1de02b9c9fb06b9b3ce4f7711750412b13f14831" title="1de02b9c9fb06b9b3ce4f7711750412b13f14831">
+              <span>Analyzed revision</span>
+              <code>1de02b9c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/codexofc--kept" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>codexofc--kept</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kept is a memory for coding agents that is nothing but Markdown
+files. One Rust binary embeds them with a small model on the CPU — the
+README measures 198 MB resident and a tenth of a second per answer —
+searches them locally with no server and no network at query time, and
+wires itself into Claude Code as a prompt hook and an MCP server, and
+into Codex CLI, opencode, Gemini CLI, Cursor, Windsurf and Kandev as an
+MCP server. MIT or Apache-2.0, twenty-nine commits by one author since 6
+September 2026, 6,157 lines of Rust with 1,545 lines of tests and a CI
+that runs them, clippy and coverage.</p>
+<p>A note carries frontmatter — a name, a one-line description, a type,
+a <code>status</code>, a <code>verified</code> date — and a body. The
+agent writes, appends to, supersedes and re-verifies notes through
+tools; supersession archives the old note with a
+<code>superseded_by</code> link and rewrites every link that pointed at
+it. Nothing is deleted.</p>
+<p>Two read paths reach the model. The prompt hook runs on every request
+of thirty characters or more, finds the two passages closest to it with
+a cosine of at least 0.60, and prints them inside a
+<code>&lt;working-memory&gt;</code> block that tells the model they may
+be off topic and to read the whole note before relying on one. And one
+generated <code>MEMORY.md</code> per project — the <em>hot index</em>,
+bounded to 17 KB, ordered durable knowledge first and projects last,
+compacting oldest-verified project notes first when it overflows — is
+what Claude Code loads at session start once its per-project memory
+directory is linked to the right folder. The hot index excludes archived
+notes, and a committed test that renders a populated index and asserts
+the archived note is absent earns the atlas's <code>negative_eval</code>
+mark.</p>
+<p>Its two weaknesses are both about what the read and write paths do
+not consult. The hot index follows the project directory, but the hook
+and search read the whole root, so a question in one project can be
+answered with another project's notes — the per-project directory is a
+physical partition, which the rubric does not count as
+<code>scope_enforced</code>, and the read path that runs on every prompt
+does not use it. And the write path refuses a near-duplicate only of an
+<em>active</em> note, so a fact that was superseded can be written back
+as a new note.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a memory when an agent or a person writes a note and
+the index embeds it. It is believed as far as its <code>verified</code>
+date suggests — the date is shown beside every passage the hook returns,
+and <code>kept curation</code> lists notes that have gone stale. It
+stops being current when it is superseded: the old note becomes
+<code>status: archived</code> with <code>superseded_by: [[new]]</code>,
+drops out of search, answers and the hot index, and stays on disk.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — notes are files; the hot index per project and the prompt hook are the two ways they reach a session, and only the hot index follows the project; the write gate refuses a duplicate of an active note, not of an archived one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: notes are files; the hot index per project and the prompt hook are the two ways they reach a session, and only the hot index follows the project; the write gate refuses a duplicate of an active note, not of an archived one
+flowchart TD
+  W[&quot;write, append, supersede, verify via CLI or MCP&quot;] --&gt; G{&quot;secret, existing file, or near-duplicate of an ACTIVE note?&quot;}
+  G --&gt;|yes| R[&quot;refused&quot;]
+  G --&gt;|no| N[&quot;Markdown note under family/project&quot;]
+  N --&gt; S[&quot;supersede: old note archived, superseded_by, links rewritten&quot;]
+  N --&gt; I[&quot;daemon embeds changed chunks&quot;]
+  I --&gt; H[&quot;MEMORY.md per project: active notes only, 17 KB bound&quot;]
+  H --&gt; SS[&quot;loaded at session start via the project memory directory&quot;]
+  I --&gt; K[&quot;prompt hook: top 2 passages over the WHOLE root, cosine at least 0.60&quot;]
+  K --&gt; P[&quot;working-memory block on every prompt&quot;]
+  S -.-&gt;|&quot;archived content can be written again as new&quot;| W</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single binary with a daemon mode. The root, <code>~/kept</code> by
+default, holds
+<code>&lt;family&gt;/&lt;project&gt;/&lt;note&gt;.md</code> and the
+generated <code>MEMORY.md</code> files; a state directory beside it
+holds the vector index, caches, a search journal and the learned
+feedback table. The daemon keeps the embedding model resident so the
+hook answers quickly, and re-indexes notes that changed on disk. The
+tokenizers and the model runtimes — XLM-RoBERTa and ModernBERT — are
+implemented in the crate rather than pulled from a Python stack;
+<code>tokenizer_parity.rs</code> checks them against the reference
+tokenizer. There is no database and no model call anywhere on the memory
+path.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Writing.</strong> <code>create_note</code>
+(<code>src/main.rs:1139-1178</code>) refuses secrets found by
+<code>refuse_secrets</code>, refuses a file that exists with a pointer
+to <code>append</code> or <code>supersede</code>, and unless
+<code>--force</code> is given refuses a note whose name, description and
+body sit within the duplicate threshold of an existing note — found by
+<code>nearest_active_note</code> (<code>:1089-1110</code>), which keeps
+only hits whose note is active (<code>:1107</code>). A new note gets
+<code>status: active</code> and today's <code>verified</code> date.
+<code>append_note</code> refuses secrets and re-stamps
+<code>verified</code>.</li>
+<li><strong>Superseding.</strong> <code>run_supersede</code>
+(<code>:1234-1260</code>) sets the old note's <code>status</code> to
+<code>archived</code> and <code>superseded_by</code> to the new note,
+and <code>lifecycle::relink</code> rewrites every <code>[[old]]</code>
+link in the root to the new name.</li>
+<li><strong>Answering.</strong> <code>Engine::answer</code>
+(<code>:604-636</code>) ranks chunks by cosine plus learned bonuses,
+skips any note that is not active (<code>:618</code>), and returns
+passages with their path, score and <code>verified</code> date within a
+character budget. <code>search</code> does the same with an opt-in for
+archives (<code>:577</code>).</li>
+<li><strong>The hook.</strong> <code>run_hook</code>
+(<code>:1746-1773</code>) reads the prompt, skips short ones and slash
+or bang commands, queries with its first twelve lines, keeps passages at
+or above <code>KEPT_HOOK_MIN</code> (0.60), and prints them in a
+<code>&lt;working-memory&gt;</code> block with the off-topic
+caution.</li>
+<li><strong>The hot index.</strong> <code>hot::write</code> renders one
+<code>MEMORY.md</code> per project from that project's active notes plus
+its family's <code>common</code> project, in the order durable
+knowledge, ways of working, projects, shared, and compacts project notes
+oldest-verified first past <code>BOUND</code> = 17,408 bytes, counting
+what it left out in a comment (<code>src/hot.rs</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code>, <code>description</code></td>
+<td>identity and the one line the hot index shows</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>the stratum: durable knowledge, ways of working, project,
+reference</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>active</code> or <code>archived</code>; absent means
+active</td>
+</tr>
+<tr>
+<td><code>verified</code></td>
+<td>the date the note was last confirmed, set on write, append and
+verify</td>
+</tr>
+<tr>
+<td><code>superseded_by</code>, <code>depends_on</code>,
+<code>source</code></td>
+<td>links and provenance, optional</td>
+</tr>
+</tbody>
+</table></div>
+<p>The body is Markdown with <code>[[wiki links]]</code>. There is no
+per-note owner, agent or session, and no confidence.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector only: chunks are embedded by the local model and ranked by
+cosine, with a bonus from <code>feedback.rs</code> for notes a previous,
+similar query was pointed to by <code>kept learn</code>. The README's
+own comparison against "a well-ranked grep" on its private corpus is the
+argument for dropping the lexical arm; the committed synthetic corpora
+in <code>bench/corpora/</code> let anyone run the same protocol.
+Archived notes are excluded from answers and the hook, and from search
+unless asked. No project or family filter is applied on any of these
+paths.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is a file write plus an incremental embed of the changed note
+by the daemon, so a note is retrievable seconds after it is written; the
+hot index is regenerated by <code>kept index</code> or
+<code>kept regen</code>. No background pass rewrites notes. The write
+blocks the caller only for the file write and the duplicate check, which
+embeds the candidate text once.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>kept setup</code> finds installed tools and wires them: a
+<code>UserPromptSubmit</code> hook and an MCP registration for Claude
+Code, MCP entries for the others. The MCP tools are <code>search</code>,
+<code>answer</code>, <code>read</code>, <code>write</code>,
+<code>append</code>, <code>link</code> and <code>learn</code>. The
+README recommends a short <code>CLAUDE.md</code> block telling the model
+to search before a task and to write, append and supersede rather than
+edit, and asks the user to link Claude Code's per-project memory
+directory to the matching Kept project so the hot index loads.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The hook reads across projects.</strong> The one read path
+that runs on every prompt ranks every active note in the root. A request
+in project A can be answered with project B's notes if they are close
+enough in vector space — the caution in the preamble is the only
+defence. The hot index does follow the project, because it is built from
+the project's directory; that is a physical partition, and the rubric
+counts it in the prose rather than as <code>scope_enforced</code>.</p>
+<p><strong>A superseded fact can come back.</strong>
+<code>nearest_active_note</code> keeps only active hits, so a note whose
+content matches an archived note is not a duplicate and is written. The
+<code>superseded_by</code> link is a record of the replacement, keyed on
+the note rather than on its content, and nothing on the write path reads
+it — the same one-predicate gap the <a
+href="../../patterns/rejected-value-tombstone/">tombstone pattern</a>
+documents in MemoryOps AI and Memora Engine.</p>
+<p><strong>Secrets are refused on the way in,</strong> by a scanner with
+its own tests, and the notes are plain files a person can read, grep and
+version.</p>
+<p><strong>The benchmark headline is private.</strong> The recall table
+in the README is measured on 296 private bilingual notes;
+<code>docs/BENCHMARKS.md</code> says so and ships two synthetic corpora
+and the tooling to reproduce the protocol. I did not run it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Eighteen test files under <code>tests/</code>; CI runs
+<code>cargo fmt --check</code>, clippy with warnings as errors,
+<code>cargo test --all-targets</code> and coverage. I did not run any of
+it.</p>
+<p>The case the mark rests on is
+<code>strata_archived_and_shared_notes_are_rendered_in_order</code>
+(<code>tests/hot.rs:20-37</code>): five notes in a project, one
+archived; the rendered hot index must place the durable-knowledge,
+ways-of-working, projects and shared sections in order and list the
+shared note, must not contain the archived <code>old.md</code>, and must
+count one archived note. The exclusion is asserted beside a populated
+render, and an index that listed every note would fail it. Beside it,
+<code>tests/duplicates.rs</code> asserts an archived note's chunks do
+not count toward near-duplicate detection, and
+<code>tests/frontmatter.rs</code> that an archived status makes a note
+inactive. The feedback, secrets, chunking, tokenizer-parity and search
+suites cover the rest.</p>
+<p>What is not tested is the gap above: no test writes a superseded
+note's content again and asserts a refusal.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A bounded session index, generated.</strong> One file per
+project, capped in bytes, ordered so durable knowledge survives
+compaction and old project notes leave first, with a line saying how
+many left. It keeps session-start context from growing with the
+corpus.</li>
+<li><strong>A <code>verified</code> date on every fact, shown with
+it.</strong> It is not a trust state, but it gives the model and the
+person a cheap reason to doubt an old note.</li>
+<li><strong>Refusing duplicates and secrets at write time</strong>, with
+messages that name the command to use instead.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A per-prompt hook over every project.</strong> Filter the
+hook by the project the session is in, as the hot index already
+does.</li>
+<li><strong>A duplicate check that ignores archived notes.</strong>
+Include them, and refuse — or at least flag — content that matches
+something superseded.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A strong choice for one developer who wants a local, inspectable
+memory shared across several coding agents, and who is willing to link
+the per-project memory directory and keep projects' notes apart by hand.
+Less suitable when several unrelated projects share a root and their
+notes must not meet in a prompt.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often, on a real root, the hook's 0.60 threshold admits a
+passage from a different project; the private corpus that sets the
+default is not available to measure it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Commands, engine, hook, MCP: <code>src/main.rs</code>. Note model:
+<code>src/note.rs</code>. Lifecycle edits:
+<code>src/lifecycle.rs</code>.</li>
+<li>Hot index: <code>src/hot.rs</code>. Index and similarity:
+<code>src/index.rs</code>, <code>src/similarity.rs</code>. Duplicates:
+<code>src/duplicates.rs</code>. Feedback: <code>src/feedback.rs</code>.
+Secrets: <code>src/secrets.rs</code>.</li>
+<li>Embedding and tokenizers: <code>src/embedder.rs</code>,
+<code>src/xlm_roberta.rs</code>, <code>src/modernbert.rs</code>,
+<code>src/tokenizer.rs</code>, <code>src/bpe.rs</code>.</li>
+<li>Tests: <code>tests/</code>. Benchmarks:
+<code>docs/BENCHMARKS.md</code>, <code>bench/corpora/</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;fn run_hook|fn answer_text|fn search_text&quot; -A4 src/main.rs | rg project   # 0: no project argument on the hook, answer or search
+rg -n &quot;is_active&quot; src/main.rs                                                    # nearest_active_note keeps active hits only (:1107)
+rg -n &quot;superseded_by&quot; src                                                        # written by supersede; read by the linter and for display, never on the write path
+rg -n &quot;remove_file|fs::remove&quot; src/main.rs                                      # the daemon socket and a failed model download only: no note is deleted</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/codexofc/kept/commit/1de02b9c9fb06b9b3ce4f7711750412b13f14831"><code class="commit-id" title="1de02b9c9fb06b9b3ce4f7711750412b13f14831">1de02b9c…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration and no build-time execution path; two
+manifests inside the seven-day cooldown and no unpinned surface. Nothing
+was built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
