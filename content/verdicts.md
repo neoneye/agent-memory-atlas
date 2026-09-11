@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 415 reports.**
+**This page covers all 416 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3664,3 +3664,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, fifty-nine commits by one author since 5 September 2026, about 4,500 lines of Rust in the core with Rust and React tests and a CI that runs them, clippy and a desktop build. Every memory is hand-written; there is no model client in the tree and no purge for the trash.
 - Study when: you want to carry decisions between coding agents without letting any model write your memory, or you want a small, correct scope model to copy.
 - Do not copy when: you want memory that learns — nothing here extracts, ranks or decays — or you need the boundary enforced beneath the interface.
+
+### [`tanglies-agentos`](../systems/tanglies-agentos/)
+- Best idea: **keyword recall that works for Chinese without a tokenizer.** A run of Chinese characters plus its overlapping bigrams, matched as substrings and weighted by length, recalls two-character words that SQLite's FTS5 tokenizer misses — and the module states its own limits in its first paragraph.
+- Biggest risk: **one global store the model writes and every session reads by default.** The module documents long-term memory as shared across sessions, `session_id` is written as provenance and never read, automatic recall is on, and `fetch_url` is always registered — so text from a fetched page can become a system-prompt line in every later conversation. No mark.
+- Most reusable component: `extract_terms` in `long_term_memory.py`, for keyword matching over mixed English and Chinese text.
+- Maturity impression: MIT, fourteen commits by one author on 11 September 2026, version 0.1 by its own description; 204 lines of long-term memory in a 4,679-line platform with 3,642 lines of tests and no CI. The one negative recall test asserts an empty result.
+- Study when: you want the smallest readable example of model-written memory with automatic recall — and of why scope has to come first.
+- Do not copy when: more than one person, or any web access, will share the store.

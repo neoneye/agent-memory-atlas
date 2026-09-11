@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A FastAPI agent platform at v0.1
+whose long-term memory is one SQLite table the model writes with a
+<code>remember</code> tool and the runtime recalls into every system
+prompt by default — shared across all sessions, keyword-matched, and
+reachable from a fetched web page.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentOS
+(Tanglies) — Agent Memory Atlas">
+    <meta property="og:description" content="A FastAPI agent platform at
+v0.1 whose long-term memory is one SQLite table the model writes with a
+<code>remember</code> tool and the runtime recalls into every system
+prompt by default — shared across all sessions, keyword-matched, and
+reachable from a fetched web page.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentOS
+(Tanglies) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A FastAPI agent platform
+at v0.1 whose long-term memory is one SQLite table the model writes with
+a <code>remember</code> tool and the runtime recalls into every system
+prompt by default — shared across all sessions, keyword-matched, and
+reachable from a fetched web page.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentOS (Tanglies) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentOS (Tanglies)",
+      "description": "A FastAPI agent platform at v0.1 whose long-term memory is one SQLite table the model writes with a `remember` tool and the runtime recalls into every system prompt by default \u2014 shared across all sessions, keyword-matched, and reachable from a fetched web page.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A global keyword memory the model writes
+and every session reads</p>
+          <h1>AgentOS (Tanglies)</h1>
+          <p class="document-deck">A FastAPI agent platform at v0.1
+whose long-term memory is one SQLite table the model writes with a
+<code>remember</code> tool and the runtime recalls into every system
+prompt by default — shared across all sessions, keyword-matched, and
+reachable from a fetched web page.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Tanglies/AgentOS">
+              <span>Source</span>
+              <strong>Tanglies/AgentOS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Tanglies/AgentOS/commit/cea6420c92bda3331d99ee68de4e96c1a2d61e7c" title="cea6420c92bda3331d99ee68de4e96c1a2d61e7c">
+              <span>Analyzed revision</span>
+              <code>cea6420c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Tanglies--AgentOS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Tanglies--AgentOS</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentOS is a Python agent platform — FastAPI, a tool-calling runtime,
+planning, delegation to sub-agents, local file and shell tools behind a
+sandbox, and web tools — published by one author in fourteen commits,
+all on 11 September 2026, as version 0.1, which its README calls the
+engineering base. MIT-licensed. It is unrelated to openEuler's
+AgentOS.</p>
+<p>Its long-term memory is 204 lines: one SQLite table, a
+<code>remember</code> tool the model calls, a <code>recall</code> tool,
+and an automatic recall that runs once at the start of each run and
+places the matches in the system prompt for every model call in it.
+Retrieval is keyword matching, and the module says so in its first
+paragraph — no embeddings, no model call, a known cost in recall for
+paraphrase and cross-language queries. Chinese queries are split into
+overlapping two-character bigrams, because, as the code notes, SQLite's
+built-in FTS5 tokenizer does not recall two-character Chinese words.</p>
+<p>It carries none of the atlas's seven marks, and the one that matters
+is the absence of scope — which is a stated design, not an oversight.
+The module's opening table contrasts short-term memory, scoped to one
+<code>session_id</code>, with long-term memory, <em>shared across
+sessions</em>; the <code>session_id</code> column on a long-term row is
+provenance, the <code>remember</code> tool never sets it, and no query
+reads it. So every memory the model writes in any session is recalled
+into every other. Together with three defaults — long-term memory on,
+automatic recall on, and <code>fetch_url</code> always registered — that
+makes the store a path from any web page the agent reads into the system
+prompt of every later conversation. Whether a given model will write
+what a page tells it to is a question about the model. Nothing in the
+tree stands in the way.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact becomes a memory when the model decides to call
+<code>remember</code> with it. From then on it is recalled into any
+conversation whose words overlap with it, until someone deletes it by id
+or clears the store. There is no state between written and deleted, no
+check on who wrote it or from what, and no boundary around which
+conversations can see it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model writes memories into one global table, and the runtime recalls keyword matches into the system prompt of every later session by default, so anything the agent reads can end up there</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the model writes memories into one global table, and the runtime recalls keyword matches into the system prompt of every later session by default, so anything the agent reads can end up there
+flowchart TD
+  U[&quot;user message&quot;] --&gt; RT[&quot;runtime turn&quot;]
+  W[&quot;fetch_url result, always registered&quot;] --&gt; RT
+  RT --&gt;|&quot;model calls remember&quot;| T[&quot;memories table, session_id never set&quot;]
+  N[&quot;next session, any user&quot;] --&gt; Q[&quot;automatic recall with the new message&quot;]
+  T --&gt; Q
+  Q --&gt;|&quot;LIKE matches on words and CJK bigrams, top 5&quot;| S[&quot;system prompt: long-term memory, for reference&quot;]
+  S --&gt; RT2[&quot;model call&quot;]
+  D[&quot;DELETE by id or clear all&quot;] --&gt; T</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One FastAPI process with the runtime in it. <code>api/app.py</code>
+builds the <code>LongTermMemory</code> when
+<code>memory.long_term_enabled</code> is true — the default — and passes
+it both to the tool registry, which adds <code>remember</code> and
+<code>recall</code>, and to the runtime, which uses it for automatic
+recall. The database lives at <code>.agentos/memory.db</code> relative
+to the working directory unless configured. Short-term memory is
+separate and in-process: <code>runtime/memory.py</code> keeps each
+session's history in an LRU with turn-based truncation that keeps
+tool-call pairs together.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>RememberTool.run</code>
+(<code>src/agentos/runtime/memory_tools.py:36-38</code>) calls
+<code>LongTermMemory.remember(content)</code> with no session id.
+<code>remember</code> (<code>long_term_memory.py:125-147</code>) strips,
+truncates to 4,000 characters, refuses an empty string, and inserts.
+There is no deduplication: the same sentence remembered twice is two
+rows.</li>
+<li><strong>Recall.</strong> <code>recall</code> (<code>:149-178</code>)
+extracts terms — lowercased English words of two or more characters, and
+for each run of Chinese characters the run itself plus its bigrams — and
+scores each row as the sum of the lengths of the terms it contains, by
+<code>lower(content) LIKE %term%</code>, returning rows with a positive
+score, best first, then newest.</li>
+<li><strong>Automatic recall.</strong> Once per run,
+<code>AgentRuntime._recall_long_term</code>
+(<code>src/agentos/runtime/runtime.py:397-408</code>, called at
+<code>:232</code>) recalls with the incoming message and, if anything
+matches, formats it under a <em>long-term memory — historical records
+relevant to the current question, for reference</em> header;
+<code>_rebuild_system_prompt</code> places that same text after the base
+prompt and before the current plan on every model call of the run
+(<code>:263</code>).</li>
+<li><strong>Delete.</strong> <code>forget(id)</code> and
+<code>clear()</code> run <code>DELETE</code>; the REST routes in
+<code>api/routes/memories.py</code> expose list, create and delete.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories(id INTEGER PRIMARY KEY, content TEXT NOT NULL, session_id TEXT, created_at TEXT NOT NULL)</code>,
+indexed on <code>created_at</code>. That is the whole model: no type, no
+source, no confidence, no status, no owner.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword only, and scored by the length of what matched rather than by
+frequency, so a query that shares one long word with a memory outranks
+one that shares two short ones. The limit defaults to five and is capped
+at twenty. Because matching is substring, a two-letter English term
+matches inside longer words, and every Chinese bigram of a long query is
+a separate term, which raises recall at the price of precision. The
+substring approach avoids FTS5's tokenizer and pays for it with a full
+scan per query; at the scale a v0.1 single-process service reaches, that
+is not yet a cost.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A <code>remember</code> call blocks for one SQLite insert and is
+retrievable immediately through the <code>recall</code> tool. The
+automatic recall picks it up at the start of the next run, because it
+recalls once per run rather than per model call. No background process
+rewrites or consolidates anything.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The model sees <code>remember</code> and <code>recall</code> as
+ordinary tools beside <code>fetch_url</code>, <code>web_search</code>
+when a key is configured, sandboxed local file and shell tools, planning
+tools, and <code>delegate_to_agent</code>. The memory is also injected
+without the model asking, through the automatic recall. There is no MCP
+surface and no SDK.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No scope, by design.</strong> The module documents long-term
+memory as shared across sessions. The <code>session_id</code> column is
+never populated by the tool and is not used in any <code>WHERE</code>
+clause, and there is no user, tenant or agent key, so every session —
+and every user of a shared deployment — reads the same memories. For one
+person on one machine that is the intended behaviour; it is the reason
+the store is unsafe for anything else.</p>
+<p><strong>The write is the model's, and the read is automatic.</strong>
+A memory written because a user stated a preference and a memory written
+because a fetched page contained an instruction are indistinguishable
+rows, and both are recalled into the system prompt by default under a
+header that asks the model to use them <em>for reference</em>. The
+<code>fetch_url</code> tool has an SSRF guard for where it may connect;
+nothing guards what it brings back from reaching
+<code>remember</code>.</p>
+<p><strong>Deletion is final and unrecorded.</strong>
+<code>forget</code> and <code>clear</code> remove rows with no history,
+and nothing prevents the model from writing the same content again.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Fourteen test files, 3,642 lines, for the whole platform; no CI
+configuration is committed. I did not run them.</p>
+<p><code>tests/test_long_term_memory.py</code> covers term extraction
+for English and Chinese, write, truncation, listing order, forget and
+clear, persistence across instances, recall of short Chinese and English
+queries, the limit, length-weighted ranking, empty queries, the two
+tools, automatic injection into the system prompt with and without a
+base prompt, its absence when disabled, and the REST routes.
+<code>tests/test_memory.py</code> covers the short-term session store
+thoroughly, including truncation that does not split a tool-call
+pair.</p>
+<p>The one negative case is
+<code>test_recall_returns_empty_for_unrelated_query</code>, which
+asserts <code>recall(...) == []</code>. A retriever that returned
+nothing for every query would pass it, so it does not establish that
+anything specific was kept out of a populated result, and
+<code>negative_eval</code> is withheld. No test writes memories in two
+sessions and asserts either one's isolation, which is consistent with
+there being none.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>CJK bigrams when FTS5 will not tokenise Chinese.</strong> A
+run of Chinese characters plus its overlapping pairs, matched as
+substrings, is a small, dependency-free way to make keyword recall work
+for Chinese, and the module states its limits honestly.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A global memory the model writes and every session reads by
+default.</strong> Scope the store before turning automatic recall on,
+and record where each memory came from so recall can treat a user's
+statement and a tool result differently.</li>
+<li><strong>Recalled memory in the system prompt without
+framing.</strong> Mark it as data the model should weigh, not
+instruction it should follow.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A readable starting point for a single-user, local experiment with
+agent memory, and a clear illustration of why scope comes first. Not
+something to run for more than one person, or with web access, until the
+store is scoped and recall is framed.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the planned evaluation module, listed in the README as not
+yet started, will include isolation or poisoning cases for the long-term
+store.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Long-term memory:
+<code>src/agentos/runtime/long_term_memory.py</code>; tools:
+<code>src/agentos/runtime/memory_tools.py</code>.</li>
+<li>Automatic recall and prompt assembly:
+<code>src/agentos/runtime/runtime.py</code>.</li>
+<li>Short-term session memory:
+<code>src/agentos/runtime/memory.py</code>.</li>
+<li>Wiring and defaults: <code>src/agentos/api/app.py</code>,
+<code>src/agentos/runtime/builtin_tools.py</code>,
+<code>src/agentos/core/config.py</code>.</li>
+<li>Tests: <code>tests/test_long_term_memory.py</code>,
+<code>tests/test_memory.py</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;session_id&quot; src/agentos/runtime/long_term_memory.py src/agentos/runtime/memory_tools.py   # written on insert and selected, never in a WHERE; the tool passes none
+rg -n &quot;user_id|tenant|owner&quot; src/agentos/runtime/long_term_memory.py                               # 0: no scope key
+rg -n &quot;UPDATE memories|tombstone|history&quot; src/agentos/runtime/long_term_memory.py                  # 0: no edit and no record of deletion
+ls .github                                                                                         # absent: no CI</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Tanglies/AgentOS/commit/cea6420c92bda3331d99ee68de4e96c1a2d61e7c"><code class="commit-id" title="cea6420c92bda3331d99ee68de4e96c1a2d61e7c">cea6420c…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: two
+editor-configuration findings, <code>.vscode/settings.json</code>
+enabling pytest discovery and <code>.vscode/tasks.json</code> defining
+six manual tasks, none set to run on folder open; one
+<code>conftest.py</code>; one manifest inside the seven-day cooldown and
+one unpinned surface; an <code>AGENTS.md</code> of project conventions
+for coding assistants, read as data. The folder was not opened in an
+editor, and nothing was installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
