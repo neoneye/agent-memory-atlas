@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-binary Rust memory engine
+— SQLite with FTS5, a usearch HNSW index and a local EmbeddingGemma
+model behind a CLI, an HTTP daemon and 46 MCP tools — whose namespace
+filter holds on every memory recall path and is tested, and whose
+corrections are soft deprecations that point-in-time recall never
+returns and a thirty-day prune hard-deletes along with their
+supersession edges and events.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Uteke — Agent Memory Atlas">
+    <meta property="og:description" content="A single-binary Rust memory
+engine — SQLite with FTS5, a usearch HNSW index and a local
+EmbeddingGemma model behind a CLI, an HTTP daemon and 46 MCP tools —
+whose namespace filter holds on every memory recall path and is tested,
+and whose corrections are soft deprecations that point-in-time recall
+never returns and a thirty-day prune hard-deletes along with their
+supersession edges and events.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Uteke — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-binary Rust
+memory engine — SQLite with FTS5, a usearch HNSW index and a local
+EmbeddingGemma model behind a CLI, an HTTP daemon and 46 MCP tools —
+whose namespace filter holds on every memory recall path and is tested,
+and whose corrections are soft deprecations that point-in-time recall
+never returns and a thirty-day prune hard-deletes along with their
+supersession edges and events.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Uteke — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Uteke",
+      "description": "A single-binary Rust memory engine \u2014 SQLite with FTS5, a usearch HNSW index and a local EmbeddingGemma model behind a CLI, an HTTP daemon and 46 MCP tools \u2014 whose namespace filter holds on every memory recall path and is tested, and whose corrections are soft deprecations that point-in-time recall never returns and a thirty-day prune hard-deletes along with their supersession edges and events.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Single-binary hybrid recall with a
+soft-delete lifecycle</p>
+          <h1>Uteke</h1>
+          <p class="document-deck">A single-binary Rust memory engine —
+SQLite with FTS5, a usearch HNSW index and a local EmbeddingGemma model
+behind a CLI, an HTTP daemon and 46 MCP tools — whose namespace filter
+holds on every memory recall path and is tested, and whose corrections
+are soft deprecations that point-in-time recall never returns and a
+thirty-day prune hard-deletes along with their supersession edges and
+events.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/codecoradev/uteke">
+              <span>Source</span>
+              <strong>codecoradev/uteke</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/codecoradev/uteke/commit/3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e" title="3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e">
+              <span>Analyzed revision</span>
+              <code>3b93b34d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/codecoradev--uteke" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>codecoradev--uteke</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Uteke is a local memory engine for AI agents shipped as one Rust
+binary family: SQLite with FTS5, a usearch HNSW index, and
+EmbeddingGemma (Q4 ONNX, 768 dimensions) on the CPU, behind a CLI, an
+HTTP daemon and a stdio MCP server with 46 tools. Apache-2.0, 228
+commits on <code>develop</code> since 29 May 2026, 57,559 lines of Rust
+in five crates and 706 test functions, 34 of them ignored because they
+need the model. CI runs clippy with warnings as errors and the suite,
+and <code>cargo mutants</code> runs on pull requests to
+<code>main</code>.</p>
+<p><strong>Retrieval is where the engineering went.</strong> The default
+<code>fusion</code> strategy is a weighted reciprocal-rank fusion of a
+vector ranking and a vector-plus-FTS5 ranking, with weights tuned on a
+LongMemEval subset and a comment saying so. The raw per-question output
+of the full 500-question LongMemEval-S run is committed, and the
+README's 98.4% recall_any@5 recomputes from it exactly: 492 correct out
+of 500.</p>
+<p><strong>Scope is a real predicate.</strong> Every memory carries a
+<code>namespace</code>; the lexical arm filters it in SQL, the vector
+arm before scoring, and two committed tests that run in CI assert that a
+same-text row from another namespace, and a deprecated row, stay out of
+a populated result. Those earn <code>scope_enforced</code> and
+<code>negative_eval</code>. The boundary is chosen by the caller,
+though: no token binds a namespace, an HTTP recall without one reads all
+of them, documents have no namespace predicate, and the server's
+background dedup merges near-duplicates across namespaces.</p>
+<p><strong>Correction is a soft delete, and the design stops
+there.</strong> Every path that retires a memory — forget, the
+<code>supersede</code> tool, contradiction-on-write, dream dedup, weekly
+aging, room consolidation — sets <code>deprecated = 1</code>, stamps
+<code>valid_until</code> with the current time and removes the vector.
+<code>supersede</code> is done carefully: one transaction, an edge pair,
+provenance events on both memories and an undo that records itself. But
+point-in-time recall never returns a deprecated row, the timeline
+records no dedup, aging or room-consolidation deprecation and no content
+edit, the server prunes deprecated rows after thirty days with their
+edges and events, and a committed test asserts that writing a retired
+value again stores it as new. <code>audit_log</code>,
+<code>bitemporal</code> and <code>tombstone</code> are withheld on those
+grounds.</p>
+<p><strong>Several declared paths do not work at this commit.</strong>
+With default configuration neither auto-recall hook injects anything:
+the pi extension passes a flag the CLI does not accept, and the Hermes
+plugin either parses a JSON shape the CLI does not emit or drops every
+hit below a threshold the default strategy's scores cannot reach. The
+dream cycle's contradiction edges and the MCP
+<code>uteke_graph_add_edge</code> tool insert raw memory ids where a
+foreign key wants graph-node ids. Room consolidation writes its merged
+record under a metadata key the linker never reads. Each is a one-line
+repair.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row of text an agent or a person hands to
+<code>remember</code>; nothing is extracted on the hot path. It is
+believed while <code>deprecated = 0</code>. The only other epistemic
+signal is attribution — <code>author_type</code> of <code>human</code>
+or <code>agent</code>, and a <code>source_type</code> such as
+<code>user</code>, <code>url</code>, <code>import</code> or
+<code>derived</code> — which <code>TrustTier::of</code> maps to a tier
+at read time for the provenance report and the room-consolidation gate,
+and which no recall path reads.</p>
+<p>The paths that retire a memory leave very different amounts behind.
+<code>supersede</code> writes a
+<code>superseded_by</code>/<code>supersedes</code> edge pair and two
+provenance events. Contradiction-on-write writes one
+<code>consolidated</code> event on the loser. Dream dedup, aging, room
+consolidation and forget write a <code>deprecate_reason</code> string
+and nothing else. Every deprecated row can be restored —
+<code>promote</code>, or <code>contradictions undo</code> for a
+supersession — until a prune deletes it. The word <em>contradiction</em>
+means two unrelated things: on write, cosine above 0.65 in the same
+namespace, so the nearest related memory is retired; in the dream cycle,
+shared tags with cosine at or below 0.6.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every retirement is the same soft delete, only supersede leaves a structured record, time travel never sees a retired row, and after thirty days the prune removes the row, its edges and its events, so the same text can be written back as new</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every retirement is the same soft delete, only supersede leaves a structured record, time travel never sees a retired row, and after thirty days the prune removes the row, its edges and its events, so the same text can be written back as new
+flowchart TD
+  W[&quot;remember via CLI, HTTP or MCP, caller-chosen namespace&quot;] --&gt; D{&quot;cosine at least 0.95 to a LIVE row in the namespace?&quot;}
+  D --&gt;|yes| R[&quot;existing id returned, nothing written&quot;]
+  D --&gt;|no| A[&quot;active: SQLite row, FTS5 row, HNSW vector, created event&quot;]
+  A --&gt; S[&quot;supersede tool: edge pair plus superseded event&quot;]
+  A --&gt; C[&quot;contradiction-on-write: nearest row above 0.65 loses, consolidated event&quot;]
+  A --&gt; X[&quot;dream dedup, weekly aging, room consolidation, forget&quot;]
+  S --&gt; P[&quot;deprecated: flag set, valid_until = now, vector removed&quot;]
+  C --&gt; P
+  X --&gt;|&quot;reason string only&quot;| P
+  P --&gt;|&quot;promote or contradictions undo&quot;| A
+  P --&gt; T[&quot;recall --at and list --at exclude it at every past time&quot;]
+  P --&gt;|&quot;30 days, default namespace, server lifecycle or dream compact&quot;| H[&quot;hard delete: edges and timeline cascade&quot;]
+  H -.-&gt;|&quot;same text is accepted as a new memory&quot;| W
+  P -.-&gt;|&quot;the dedup gate skips deprecated rows&quot;| W</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Five crates: <code>uteke-core</code> (the library),
+<code>uteke-cli</code>, <code>uteke-server</code> on
+<code>tiny_http</code> with one
+<code>Arc&lt;Mutex&lt;Uteke&gt;&gt;</code>, <code>uteke-mcp</code> (the
+shared JSON-RPC handler and a stdio binary) and <code>docgen</code>. The
+store lives in <code>~/.codecora/uteke</code> or
+<code>UTEKE_HOME</code>: a SQLite file opened with WAL, a 5-second busy
+timeout and foreign keys on
+(<code>crates/uteke-core/src/memory/store.rs:201-206</code>), a usearch
+index file (or the pure-Rust <code>vecq</code> backend, chosen at
+runtime), and an embedding cache. Vectors are stored twice, as a BLOB on
+the row and in the index, so <code>uteke repair</code> can rebuild the
+index from SQLite. Embeddings default to local ONNX; OpenAI-compatible
+and Ollama embedders and a cloud fallback are optional.</p>
+<p><strong>One process per store.</strong>
+<code>load_or_create_for</code> takes an exclusive lock on the index
+file and holds it for the life of the <code>Uteke</code> instance
+(<code>crates/uteke-core/src/memory/vector.rs:441-467</code>); a second
+process retries for 30 seconds (<code>:866-867</code>). When the lock
+times out, <code>Uteke::open</code> treats the error as a corrupt index:
+it deletes the index and <code>.keys</code> files and continues with an
+index that has no path
+(<code>crates/uteke-core/src/lib.rs:893-911</code>). On Unix the unlink
+succeeds under the other process's lock, so a <code>uteke</code> command
+run while a long-lived <code>uteke-mcp</code> holds the store removes
+that process's index files and then works from an index it never saves.
+The CLI routes through the HTTP server when the server is enabled and
+answers, which avoids this for the daemon but not for the stdio MCP
+binary.</p>
+<p><strong>Deployment.</strong> One binary, no API key, a 200 MB model
+on first run; a Docker image for the daemon. The server runs three
+background threads: a weekly lifecycle cycle, a three-day dream cycle,
+and a daily update check that sends a <code>HEAD</code> to
+<code>github.com/codecoradev/uteke/releases/latest</code>
+(<code>crates/uteke-core/src/update_check.rs:185</code>); the stdio MCP
+binary makes the same check at start. No memory content leaves the
+machine unless extraction or a cloud embedder is configured. The store
+is SQLite and can be inspected and repaired by hand.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>remember_embed</code>
+(<code>crates/uteke-core/src/operations.rs:161-219</code>) embeds, calls
+<code>check_duplicate</code> — a 5-nearest search that returns an
+existing id at cosine 0.95 or above in the namespace, skipping hits
+whose row is deprecated or gone (<code>:231-296</code>,
+<code>:283-291</code>) — then <code>remember_precomputed</code>
+(<code>:299-421</code>) inserts with <code>valid_from = now</code>,
+writes a SHA-256 of the content, appends a <code>created</code> event,
+wires edges from <code>[[slug]]</code>, <code>@tag</code> and
+<code>^uuid</code> markup, inserts the vector, saves the whole index
+file, and adds <code>similar_to</code> and
+<code>possible_duplicate</code> edges at cosine 0.80 and 0.92.</li>
+<li><strong>Recall.</strong> <code>recall_hybrid</code>
+(<code>:612-685</code>) checks a cache, computes over a boost window of
+<code>4 x limit + 16</code>, applies salience and recency boosts, then
+<code>min_score</code>, then truncates. <code>compute_recall</code>
+(<code>:695-768</code>) dispatches: <code>Vector</code> is
+<code>recall_inner</code> (<code>:455-607</code>), which searches the
+HNSW index, fetches rows, drops other namespaces, tags and deprecated
+rows, and adds 0.1 to the cosine of memories accessed in the last seven
+days; <code>Fts5</code> is a phrase match with a token-OR fallback;
+<code>Hybrid</code> is unweighted RRF of vector and FTS5
+(<code>:943-1068</code>); <code>Fusion</code> is
+<code>rrf_fuse_weighted</code> of <code>Vector</code> and
+<code>Hybrid</code> at 1.7 and 1.0 (<code>:2249-2296</code>).</li>
+<li><strong>Unified recall.</strong> <code>recall_unified</code>
+(<code>crates/uteke-core/src/lib.rs:2134-2179</code>) is the default for
+the CLI and MCP. For <code>type = all</code> it resolves an omitted
+namespace to <code>default</code>, runs memory recall and
+<code>doc_search</code>, and fuses them by RRF
+(<code>:2330-2482</code>); <code>doc_search</code> takes no namespace
+(<code>:1908-1913</code>).</li>
+<li><strong>Supersede and undo.</strong> <code>supersede</code>
+(<code>crates/uteke-core/src/edges.rs:1977-2108</code>) clears any prior
+pair, inserts both edges and deprecates the old row in one transaction
+(<code>:2007-2050</code>), writes <code>superseded</code> and
+<code>updated</code> events with an actor and evidence
+(<code>:2056-2084</code>), and removes the vector.
+<code>undo_supersession</code> (<code>:2139-2226</code>) reverses it in
+one transaction and records <code>supersession_undone</code>.
+<code>contradiction_resolutions</code> (<code>:2236-2292</code>) lists
+deprecated rows that carry a <code>superseded_by</code> edge.</li>
+<li><strong>Contradiction-on-write.</strong>
+<code>remember_with_contradiction</code>
+(<code>crates/uteke-core/src/consolidate.rs:61-154</code>), reached by
+<code>--detect-contradiction</code> and
+<code>detect_contradiction</code> on HTTP at threshold 0.65
+(<code>crates/uteke-server/src/handlers.rs:194-204</code>), retires the
+first live neighbour in the namespace above the threshold
+(<code>consolidate.rs:27-31</code>) with a <code>consolidated</code>
+event and <code>Store::deprecate</code>, and bypasses the 0.95 dedup
+gate.</li>
+<li><strong>Lifecycle.</strong> <code>lifecycle_cycle</code>
+(<code>crates/uteke-core/src/maintenance.rs:511-610</code>) deprecates
+the oldest unpinned rows older than 90 days with at most three accesses,
+capped at 1% of active rows between 1 and 50, then hard-deletes rows
+deprecated more than 30 days (<code>:570-596</code>). Both queries
+resolve an absent namespace to <code>default</code>
+(<code>crates/uteke-core/src/memory/aging.rs:142</code>,
+<code>crates/uteke-core/src/memory/bulk.rs:287</code>), so the server's
+<code>lifecycle_cycle(None)</code> touches only that namespace.</li>
+<li><strong>Dream.</strong> <code>dream</code>
+(<code>crates/uteke-core/src/dream.rs:127-206</code>) runs lint,
+backlinks, dedup — <code>consolidate</code> at cosine 0.92, keeping the
+newer row (<code>crates/uteke-core/src/consolidate.rs:233-332</code>) —
+contradiction scan, orphan count, compact (prune at 30 days) and
+verify.</li>
+<li><strong>Time travel.</strong> <code>recall_at_time</code>
+(<code>crates/uteke-core/src/operations.rs:1801-1853</code>) asks
+<code>recall_inner</code> for deprecated rows too and filters with
+<code>memory_existed_at</code> (<code>:2648-2672</code>);
+<code>list_at_time</code> is SQL with <code>deprecated = 0</code> in
+every branch
+(<code>crates/uteke-core/src/memory/crud.rs:785-904</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memories</code></td>
+<td><code>id</code> (UUIDv7), <code>content</code>,
+<code>embedding</code> BLOB, <code>tags</code>, <code>metadata</code>,
+<code>namespace</code>, <code>memory_type</code>,
+<code>importance</code>, <code>pinned</code>, <code>access_count</code>,
+<code>last_accessed</code>, <code>deprecated</code>,
+<code>deprecate_reason</code>, <code>deprecated_at</code>,
+<code>valid_from</code>, <code>valid_until</code>, <code>slug</code>,
+<code>source</code>, <code>source_type</code>, <code>author_type</code>,
+<code>source_hash</code>
+(<code>crates/uteke-core/src/memory/store.rs:11-36</code>)</td>
+</tr>
+<tr>
+<td><code>memory_tags</code>, <code>memories_fts</code></td>
+<td>a tag join table and an FTS5 index over content, tags, namespace and
+type, kept by triggers</td>
+</tr>
+<tr>
+<td><code>memory_edges</code></td>
+<td>typed edges between memories — <code>supersedes</code>,
+<code>superseded_by</code>, <code>references</code>,
+<code>similar_to</code>, <code>possible_duplicate</code> and more —
+cascading on delete (<code>:69-76</code>)</td>
+</tr>
+<tr>
+<td><code>graph_nodes</code>, <code>graph_edges</code></td>
+<td>a separate entity graph whose edges reference
+<code>graph_nodes(id)</code> (<code>:47-63</code>)</td>
+</tr>
+<tr>
+<td><code>timeline_events</code></td>
+<td>per-memory events with <code>actor</code> and
+<code>evidence_json</code>, <code>memory_id</code> cascading on delete
+(<code>:82-90</code>)</td>
+</tr>
+<tr>
+<td><code>documents</code>, <code>document_chunks</code>,
+<code>documents_fts</code></td>
+<td>a hierarchical wiki with a version counter, chunked and embedded;
+slugs are global with no namespace isolation
+(<code>crates/uteke-core/src/memory/documents.rs:181</code>)</td>
+</tr>
+<tr>
+<td><code>rooms</code>, <code>room_memories</code>,
+<code>room_documents</code></td>
+<td>rooms as a join to memories with a caller-supplied
+<code>author</code> and <code>role</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>valid_from</code> always equals <code>created_at</code> — the
+write time, or the file's <code>created_at</code> on JSONL import
+(<code>crates/uteke-core/src/import_export.rs:116-123</code>) — and
+outside import and restore, every statement that sets
+<code>valid_until</code> is a deprecation stamping the current time, or
+its undo (<code>bulk.rs:158</code>, <code>:174</code>,
+<code>:211</code>, <code>edges.rs:2035</code>,
+<code>tags.rs:512</code>). An HTTP caller's <code>valid_from</code> and
+<code>valid_until</code> are copied into <code>metadata</code>
+(<code>crates/uteke-server/src/handlers.rs:158-163</code>), which no
+time filter reads. The nine memory types select a recency time constant:
+365 days for decisions and preferences, 180 for facts, 30 for
+events.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Fusion is the default everywhere — CLI, server and MCP — and it is a
+sound design: the vector and hybrid arms fail on different questions,
+and weighted RRF keeps both. What follows it is not calibrated to it.
+After <code>rrf_fuse_weighted</code> a memory's score is the fused RRF
+sum, at most <code>(1.7 + 1.0) / 61 ≈ 0.044</code>, and
+<code>recall_hybrid</code> then adds
+<code>0.1 x salience + 0.1 x recency</code>
+(<code>crates/uteke-core/src/salience_recency.rs:40-47</code>,
+<code>:121-138</code>), on by default in the library
+(<code>lib.rs:958</code>) and the CLI
+(<code>crates/uteke-cli/src/commands/recall.rs:96-110</code>).</p>
+<p><strong>The boosts outweigh the ranking inside the window.</strong>
+For a <code>fact</code>, a 30-day age gap is worth 0.015 of recency; the
+fused gap between rank 1 and rank 35 in both arms is 0.016. With the
+default limit of 5 the window is 36 candidates, so the final top five
+inside it is ordered about as much by age and importance as by
+relevance.</p>
+<p><strong>No memory can clear a cosine-scale threshold.</strong> The
+best possible default score is about 0.244, or 0.344 with both boosts
+raised to the 0.15 the config offers. <code>--strict</code> resolves to
+0.5 (<code>crates/uteke-cli/src/config.rs:267</code>,
+<code>crates/uteke-server/src/types.rs:466</code>), so a strict recall
+under fusion returns documents and no memories; the unified path's
+comment says memories report a real cosine
+(<code>lib.rs:2391-2398</code>), which holds only for the
+<code>vector</code> strategy, and there only before the boosts.</p>
+<p>Access tracking counts candidates, not results: every sub-search
+bumps <code>access_count</code> and <code>last_accessed</code> on
+everything it returned (<code>operations.rs:602-604</code>,
+<code>:1063-1065</code>,
+<code>crates/uteke-core/src/memory/aging.rs:26-45</code>). One default
+MCP recall with limit 5 runs a 168-row vector search inside its hybrid
+arm and touches up to 168 memories. Access feeds the seven-day hot
+boost, salience, and the aging rule that spares any row accessed more
+than three times.</p>
+<p>Retrieval quality is otherwise careful: FTS5 scores are normalised
+over surviving rows only, filters widen the vector pool up to three
+times before giving up, the cache stores pre-boost scores so warm and
+cold reads agree, and <code>--explain</code> replays each stage.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and local. A <code>remember</code> blocks for
+one CPU embedding (the code puts it near 50 ms), a 5-nearest dedup
+search, three SQLite writes, edge wiring, a 20-nearest auto-link search,
+and a save that serialises and rewrites the whole index file
+(<code>operations.rs:387-405</code>, <code>vector.rs:575-600</code>) —
+about 3 KB per stored vector at 768 <code>f32</code> dimensions, so near
+30 MB per write at 10,000 memories. A memory is retrievable as soon as
+the call returns. LLM extraction and room consolidation are opt-in and
+call an OpenAI-compatible endpoint; nothing in the default path
+does.</p>
+<p>Dedup and contradiction are both nearest-neighbour thresholds on the
+new text's embedding, scoped to its namespace: at 0.95 the write is
+dropped in favour of the live row, and with contradiction mode on, the
+first live row above 0.65 is retired regardless of whether it disagrees.
+<code>update_memory</code> (<code>operations.rs:1669-1790</code>)
+re-embeds and overwrites content in place with no event and without
+refreshing <code>source_hash</code>.</p>
+<p><strong>Background.</strong> In server mode, the weekly cycle
+deprecates at most 50 rows and prunes rows deprecated for 30 days, both
+in <code>default</code> only; the three-day dream cycle runs
+<code>consolidate(None, 0.92)</code>, which loads every namespace and
+pairs each memory with its index neighbours without a namespace check
+(<code>crates/uteke-core/src/consolidate.rs:158-230</code>), deprecating
+the older of each pair, plus an O(n²) tag scan capped at the 200 most
+recently updated rows. Nothing rewrites memory content in the
+background.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The stdio MCP server exposes 46 tools
+(<code>crates/uteke-mcp/src/lib.rs:140-189</code>) for memories,
+documents, rooms, tags, namespaces, the graph, provenance and the
+contradiction ledger; the same handler serves <code>POST /mcp</code>.
+Recall results flag a memory that still carries a
+<code>superseded_by</code> edge (<code>:1195-1207</code>), which after
+the deprecation filter only fires for a row restored by
+<code>promote</code>, since <code>promote</code> leaves the edge.
+<code>uteke init</code> writes a <code>UTEKE.md</code> rule telling
+Claude Code to call <code>uteke_recall</code> at task start, and wires
+Cursor, OpenCode, pi and Hermes.</p>
+<p><strong>Neither auto-recall hook works at the defaults.</strong> The
+pi extension's <code>before_agent_start</code> hook runs
+<code>uteke recall … --min-score 0.45</code>
+(<code>extensions/pi-memory-provider/index.ts:28-29</code>,
+<code>:122-158</code>); the CLI flag is <code>--min</code> with no alias
+(<code>crates/uteke-cli/src/cli.rs:105-107</code>), so every call exits
+with a usage error, which the extension swallows into an empty result.
+Even spelled <code>--min</code>, 0.45 is above anything fusion scores.
+The Hermes <code>pre_llm_call</code> plugin shells out to
+<code>uteke recall --json</code> and reads
+<code>item["memory"]["content"]</code>
+(<code>crates/uteke-cli/assets/hermes-memory-provider/__init__.py.tmpl:169-209</code>),
+but the CLI's default unified output has <code>content</code> at the top
+level; over HTTP the shape matches and the plugin then drops every hit
+below 0.40. The init tests check that the hook names appear in the
+templates (<code>crates/uteke-cli/src/init.rs:700-735</code>), not that
+the commands they build parse. The shell hooks export
+<code>UTEKE_PROJECT_STORE</code>, which no binary reads.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>A correction is not remembered.</strong> Deprecation removes
+a memory from recall, but nothing keyed on its content survives:
+<code>check_duplicate</code> skips deprecated rows by design, and
+<code>test_dedup_skips_deprecated_stale_index_entry</code>
+(<code>operations.rs:2561-2593</code>, ignored in CI because it needs
+the model) asserts that rewriting a soft-deleted value produces a new
+live memory. After a prune even the reason string is gone.
+<code>tombstone</code> is withheld.</p>
+<p><strong>Time travel shows today's survivors.</strong> Every
+deprecation stamps <code>valid_until</code> and removes the vector;
+<code>recall_at_time</code> draws candidates from that index, and a
+rebuild loads only <code>deprecated = 0</code> rows
+(<code>crud.rs:591-601</code>), so a memory deprecated after the
+requested time never reaches <code>memory_existed_at</code>, whose
+deprecated-after-the-point branch is correct and unreachable.
+<code>list_at_time</code> excludes deprecated rows in SQL. The tests for
+that branch call the predicate on a hand-built struct
+(<code>operations.rs:2632-2642</code>,
+<code>crates/uteke-server/src/handlers.rs:2871-2911</code>). With both
+columns holding record time, <code>bitemporal</code> is withheld.</p>
+<p><strong>The timeline has three producers missing.</strong>
+<code>timeline_events</code> is append-only — nothing in the tree
+updates or deletes a row — and records creation, supersession, undo and
+contradiction-on-write. Its own enum declares <code>forgot</code>,
+<code>tagged</code>, <code>recalled</code> and content
+<code>updated</code>
+(<code>crates/uteke-core/src/timeline.rs:25-42</code>); no production
+path writes the first three, and <code>update_memory</code> does not
+write the fourth. Dedup, aging and room-consolidation deprecations write
+nothing, and a prune cascades a memory's events away. Because edits also
+skip <code>source_hash</code>, the provenance report's tamper check
+flags every content edit made through <code>uteke_update</code> as a
+modification. <code>audit_log</code> is withheld: the log answers why a
+memory was superseded by hand, not why most memories changed.</p>
+<p><strong>Scope holds on the read path, for a well-behaved caller, and
+that is what the README's "fully isolated memory per agent" amounts
+to.</strong> The server's two tokens are store-wide
+(<code>crates/uteke-server/src/context.rs:34-91</code>), so any client
+names any namespace; HTTP <code>/recall</code> passes an absent
+namespace through as "all" (<code>handlers.rs:502-509</code>); documents
+join every unified recall; rooms deliberately span namespaces; and the
+dream dedup retires one namespace's memory because another holds a newer
+near-copy.</p>
+<p><strong>Declared and unwired.</strong> The dream contradiction scan
+calls <code>GraphStore::add_edge</code> with memory ids
+(<code>crates/uteke-core/src/dream.rs:444-446</code>), as does MCP
+<code>uteke_graph_add_edge</code>
+(<code>crates/uteke-mcp/src/lib.rs:1794</code>);
+<code>graph_edges</code> references <code>graph_nodes(id)</code>, and
+<code>INSERT OR IGNORE</code> does not suppress a foreign-key failure —
+reproduced offline against the same DDL — so both fail, while the HTTP
+route maps ids through <code>ensure_node_for_memory</code> first
+(<code>handlers.rs:1050-1071</code>), as <code>graph.rs:324-333</code>
+says callers must. Room consolidation stores its record's room under
+<code>metadata["room"]</code>
+(<code>crates/uteke-core/src/consolidation_exec.rs:138-141</code>) and
+<code>insert_memory</code> looks for <code>room_id</code>
+(<code>crates/uteke-core/src/consolidation_api.rs:28-33</code>), so the
+merged record never joins the room while its sources leave it. And the
+provenance gate there cannot fail on tier: the executor builds every
+record as <code>agent</code>/<code>derived</code>, the lowest tier
+(<code>consolidation_exec.rs:160-161</code>,
+<code>crates/uteke-core/src/provenance.rs:44</code>); only the hedging
+check can reject.</p>
+<p><strong>Withheld marks, stated once.</strong>
+<code>trust_state</code>: <code>deprecated</code> is a lifecycle flag
+and the trust tier is derived at read time and never filters.
+<code>human_review</code>: <code>promote</code>,
+<code>/lifecycle/deprecated</code> and <code>contradictions undo</code>
+are API, CLI and MCP operations open to any caller, automatic
+deprecations take effect at once, and the contradiction ledger lists
+only manual supersessions; the 30-day window the config calls "the
+review window" (<code>lib.rs:303-307</code>) is the near-miss.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>706 test functions across 51 files; 34 are <code>#[ignore]</code>
+because they load the ONNX model, which leaves the Uteke-level recall,
+dedup and room tests out of CI. I did not run any of it.</p>
+<p>The marks rest on <code>test_fts5_namespace_filter</code> and
+<code>test_fts5_deprecated_excluded</code>
+(<code>crates/uteke-core/src/memory/fts5.rs:327-345</code>,
+<code>:364-380</code>): each asserts an exact result of one row beside a
+matching row that must be excluded, and each fails without its
+predicate. The supersession test's vector-index check is weaker —
+<code>hits.iter().all(|(id, _)| id != &amp;old)</code>
+(<code>crates/uteke-core/src/edges.rs:2359-2362</code>) passes on an
+empty result, and the live <code>new</code> memory it would find is
+never asserted present.</p>
+<p><strong>Benchmarks recompute.</strong> The README's 98.4%
+recall_any@5 on LongMemEval-S recomputes from
+<code>benchmarks/longmemeval/results/default-500q-v017.jsonl</code> as
+492 correct out of 500 (0.9851 on the 470 non-abstention questions, as
+<code>REPRODUCING.md</code> states), using the dataset's
+<code>answer_</code> prefix on evidence sessions because the gold file
+is not committed. The harness's per-row field named
+<code>recall_all@5</code> is fractional and averages 94.4%, the figure
+the README calls coverage@5. The benchmark imports each haystack in one
+batch, so every memory shares a write time and the recency boost is
+flat; it does not exercise the ordering effect in section 6. LoCoMo raw
+results are committed with a reported 0.840 recall_any@5, which I did
+not recompute; an AMB run kit is committed without results.
+<code>contradiction-f3-metrics.json</code> records a 40-topic run where
+no superseded memory reaches the top five after <code>supersede</code> —
+a measurement, not an asserting test. No paper;
+<code>provenance.rs</code> cites three external papers for its
+policy.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Weighted fusion of two complete rankings, tuned and
+documented in place.</strong> Fuse a vector ranking with a hybrid
+ranking, state the tuning set and the plateau in the constant's comment,
+and commit the raw per-question outputs so the headline recomputes
+without an embedder.</li>
+<li><strong>Supersession as one transaction with an undo that is itself
+an event.</strong> Edge pair, deprecation and reason commit together;
+undo restores, removes the pair and records who did it.</li>
+<li><strong>A dedup gate that verifies the index hit against the
+database.</strong> An index can hold vectors for rows that are gone;
+check the row before treating a neighbour as a duplicate.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Adding cosine-scale boosts and thresholds to RRF
+scores.</strong> Either normalise the fused score or keep boosts and
+thresholds on the arm that produced them.</li>
+<li><strong>Treating a lock timeout as corruption.</strong> Distinguish
+"someone else has it" from "it is broken" before deleting files.</li>
+<li><strong>Stamping <code>valid_until</code> at deprecation and calling
+the result time travel.</strong> If the index drops retired rows, a
+point-in-time query cannot see what was believed then; keep retired
+vectors or query history from SQL.</li>
+<li><strong>Counting candidates as accesses.</strong> Only what reaches
+the caller should reinforce a memory or protect it from aging.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A strong choice for one developer who wants fast, offline,
+well-measured recall over a few thousand memories behind MCP, and who
+reads recall through <code>uteke_recall</code> rather than an
+auto-injection hook. Weigh it carefully if the store must explain its
+own history — why a fact changed, what was believed last month, whether
+a retracted value came back — or if namespaces must hold against another
+client on the same server.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often, on a real store with memories of different ages, the
+recency and salience boosts reorder the top five against the fused
+ranking; the committed benchmarks cannot show it.</li>
+<li>Whether the prune scoped to <code>default</code> is intended to
+spare other namespaces or is an artefact of
+<code>unwrap_or(DEFAULT_NAMESPACE)</code> in two queries.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Library entry and open path:
+<code>crates/uteke-core/src/lib.rs</code>. Operations:
+<code>crates/uteke-core/src/operations.rs</code>.</li>
+<li>Schema and store:
+<code>crates/uteke-core/src/memory/store.rs</code>,
+<code>schema.rs</code>, <code>crud.rs</code>, <code>bulk.rs</code>,
+<code>aging.rs</code>, <code>fts5.rs</code>, <code>vector.rs</code>,
+<code>documents.rs</code>, <code>rooms.rs</code>.</li>
+<li>Edges, supersession and graph:
+<code>crates/uteke-core/src/edges.rs</code>, <code>graph.rs</code>,
+<code>graph_rerank.rs</code>.</li>
+<li>Consolidation and dream:
+<code>crates/uteke-core/src/consolidate.rs</code>,
+<code>dream.rs</code>, <code>maintenance.rs</code>,
+<code>consolidation_exec.rs</code>, <code>consolidation_api.rs</code>,
+<code>consolidation_plan.rs</code>.</li>
+<li>Provenance and timeline:
+<code>crates/uteke-core/src/provenance.rs</code>,
+<code>timeline.rs</code>. Scoring: <code>salience_recency.rs</code>,
+<code>recall_cache.rs</code>, <code>recall_explain.rs</code>.</li>
+<li>Server: <code>crates/uteke-server/src/main.rs</code>,
+<code>handlers.rs</code>, <code>context.rs</code>,
+<code>types.rs</code>. MCP: <code>crates/uteke-mcp/src/lib.rs</code>,
+<code>main.rs</code>. CLI: <code>crates/uteke-cli/src/cli.rs</code>,
+<code>commands/</code>, <code>init.rs</code>,
+<code>config.rs</code>.</li>
+<li>Integrations: <code>extensions/pi-memory-provider/index.ts</code>,
+<code>crates/uteke-cli/assets/hermes-memory-provider/__init__.py.tmpl</code>,
+<code>crates/uteke-cli/assets/shell/</code>.</li>
+<li>Benchmarks: <code>benchmarks/longmemeval/</code>,
+<code>benchmarks/locomo/</code>, <code>benchmarks/amb/</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn --include=&#39;*.rs&#39; &#39;try_timeline_event(\|add_timeline_event(\|add_timeline_event_with_provenance(&#39; crates   # producers: create, supersede, undo, contradiction-on-write only
+grep -rn --include=&#39;*.rs&#39; &#39;TimelineEventType::Forgot\|TimelineEventType::Tagged\|TimelineEventType::Recalled&#39; crates # only the enum&#39;s own tests
+grep -rn --include=&#39;*.rs&#39; &#39;DELETE FROM timeline_events\|UPDATE timeline_events&#39; crates                              # 0: append-only apart from cascade
+grep -rn --include=&#39;*.rs&#39; &#39;valid_until&#39; crates | grep -i &#39;update\|set&#39;                                             # outside import and restore, every writer is a deprecate statement or its undo
+grep -rn --include=&#39;*.rs&#39; &#39;min-score&#39; crates/uteke-cli/src                                                          # 0: the CLI has --min only
+grep -rn --include=&#39;*.rs&#39; &#39;&quot;room_id&quot;\|&quot;room&quot;&#39; crates/uteke-core/src/consolidation_exec.rs crates/uteke-core/src/consolidation_api.rs   # writer uses &quot;room&quot;, reader &quot;room_id&quot;
+grep -rn --include=&#39;*.rs&#39; &#39;\.add_edge(&#39; crates                                                                      # dream.rs:446 and uteke-mcp lib.rs:1794 pass memory ids unmapped
+grep -rn --include=&#39;*.rs&#39; &#39;set_salience_recency_config(&#39; crates                                                     # never called by the server: default 0.1/0.1 boosts
+grep -rn &#39;UTEKE_PROJECT_STORE&#39; --include=&#39;*.rs&#39; --include=&#39;*.ts&#39; --include=&#39;*.py&#39; --include=&#39;*.tmpl&#39; .              # exported by shell hooks, read by nothing
+grep -rln --include=&#39;*.rs&#39; &#39;text/html&#39; crates                                                                       # 0: no review UI
+grep -rn --include=&#39;*.rs&#39; &#39;#\[ignore&#39; crates | wc -l                                                                # 34
+grep -rn -i &#39;arxiv\|bibtex\|@article\|@misc\|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; . | grep -v CHANGELOG      # LongMemEval citation only: no paper of its own
+python3 scratchpad/uteke-check/fk.py    # INSERT OR IGNORE into graph_edges with memory ids under foreign_keys=ON: IntegrityError
+python3 scratchpad/uteke-check/lme.py   # recall_any@5 = 492/500 from default-500q-v017.jsonl via the answer_ prefix</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/codecoradev/uteke/commit/3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e"><code class="commit-id" title="3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e">3b93b34d…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration and no build-time execution path; every
+manifest reads as inside the seven-day cooldown because the depth-1
+clone dates each file to the pinned commit; three unpinned surfaces in
+benchmark and docs tooling (a Python requirements file with
+<code>&gt;=</code> ranges, a VitePress <code>package.json</code> with
+floating ranges and a GitHub-sourced theme); <code>AGENT.md</code> and
+<code>AGENTS.md</code> read as data. Nothing was built or run. The
+LongMemEval figures were recomputed from the committed raw outputs, and
+the foreign-key failure reproduced against the tree's DDL in Python's
+<code>sqlite3</code>, not by running Uteke.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

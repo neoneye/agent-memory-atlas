@@ -323,6 +323,17 @@ was. The single-axis version is genuinely useful and much cheaper; the
 distinction is worth drawing explicitly, because a reader comparing
 feature lists will see <code>as_of</code> and <code>valid_to</code> and
 assume the pair.</p>
+<p><a href="../../systems/uteke/">Uteke</a> ships
+<code>valid_from</code>, <code>valid_until</code> and
+<code>recall --at</code>, and all three are record time.
+<code>valid_from</code> equals <code>created_at</code> on every path,
+and <code>valid_until</code> is set only by a deprecation, to the moment
+it happened. Point-in-time recall draws candidates from a vector index
+that drops a row when it is deprecated, and <code>list --at</code>
+filters <code>deprecated = 0</code> in SQL, so a memory retired after
+the requested time is missing from the answer about that time. The
+predicate that would keep it is correct and never receives such a
+row.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

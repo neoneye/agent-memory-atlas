@@ -223,6 +223,8 @@ between a retriever that degrades and one that degrades silently.
 
 [Forgetful](../../systems/forgetful/) is the counterexample to keep beside these. Its README, the four-stage docstring on `search` in both of its repositories, and the recall skill the agent loads all describe *dense → sparse → reciprocal rank fusion → cross-encoder*, and the tree implements dense → cross-encoder: no FTS table, no `tsvector`, no fusion function. The identifiers the skill says are matched *"literally"* are matched by cosine over a 384-dimension embedding. A fusion that is documented and not built is worse than one never mentioned, because the query-shaping advice — put the exact error code and config key in the query — is written for the arm that is missing.
 
+[Uteke](../../systems/uteke/) tunes the fusion and then leaves its scale. The default recall fuses two complete rankings — vector at weight 1.7 and a vector-plus-FTS5 RRF at 1.0, `k = 60` — with the tuning set and plateau written in the constant's comment, and the committed LongMemEval-S raw output recomputes the published 98.4% recall_any@5. After fusion a memory's score is the RRF sum, at most `2.7 / 61 ≈ 0.044`; the default path then adds `0.1 × salience + 0.1 × recency` and applies thresholds written for cosine, so `--strict` at 0.5, the Hermes hook at 0.40 and the pi hook at 0.45 exclude every memory. RRF's virtue of not pretending incomparable scores share a scale lasts only until something downstream pretends again.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.

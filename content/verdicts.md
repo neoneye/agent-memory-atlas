@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 421 reports.**
+**This page covers all 422 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3712,3 +3712,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 277 commits by four contributors between 14 May and 5 September 2026, 114,032 lines of package Python beside 140,124 of tests, CI on three operating systems with Hermes pinned by commit, a writer lease, a vector outbox with generations and a managed upgrade with rollback. `update` overwrites content with no audit event, and the published LoCoMo run bypasses the journal and candidate path.
 - Study when: you are building a provider for a multi-user gateway and want scope, lifecycle and vector-index consistency expressed as predicates rather than conventions.
 - Do not copy when: promotion must be a person's decision, or a rejected value must stay rejected.
+
+### [`uteke`](../systems/uteke/)
+- Best idea: **weighted fusion of two whole rankings, tuned in the open.** A vector ranking at 1.7 and a vector-plus-FTS5 RRF ranking at 1.0, the plateau stated in the constant's comment, and the raw 500-question LongMemEval-S output committed so the 98.4% recall_any@5 recomputes — 492 correct out of 500 — without an embedder. Beside it, a `supersede` that commits the edge pair and the deprecation in one transaction and an undo that records itself. Two marks, `scope_enforced` and `negative_eval`, on a namespace predicate in SQL and two CI-run exclusion tests.
+- Biggest risk: **a correction leaves nothing that lasts.** Every retirement is `deprecated = 1` with `valid_until = now` and the vector removed; point-in-time recall draws from an index that no longer holds retired rows, the timeline has no producer for edits, forgets or background deprecations, the server prunes deprecated rows after thirty days with their edges and events, and the dedup gate skips deprecated rows, so the retracted text is stored again as new.
+- Most reusable component: `rrf_fuse_weighted` with its tuning comment, together with the raw outputs in `benchmarks/longmemeval/results/` — a fusion and a benchmark a reader can check.
+- Maturity impression: 228 commits since 29 May 2026, 57,559 lines of Rust, 706 tests with 34 ignored for needing the model, clippy and the suite in CI, `cargo mutants` on release pull requests. The integration edge is thin: the pi hook passes a flag the CLI rejects, the Hermes hook misreads the JSON or filters at 0.40 against fused scores that cannot exceed 0.244, the dream's contradiction edges and the MCP edge tool fail a foreign key, and a lock timeout deletes a running process's index files.
+- Study when: you want a local hybrid retriever with published, recomputable numbers and a supersession you can undo.
+- Do not copy when: you need to know what was believed last month, why a fact changed, or that a retracted value stays retracted — or when thresholds are applied to fused scores.

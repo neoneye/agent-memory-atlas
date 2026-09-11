@@ -201,6 +201,8 @@ wrong then or the retrieval was. The single-axis version is genuinely useful and
 much cheaper; the distinction is worth drawing explicitly, because a reader
 comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
+[Uteke](../../systems/uteke/) ships `valid_from`, `valid_until` and `recall --at`, and all three are record time. `valid_from` equals `created_at` on every path, and `valid_until` is set only by a deprecation, to the moment it happened. Point-in-time recall draws candidates from a vector index that drops a row when it is deprecated, and `list --at` filters `deprecated = 0` in SQL, so a memory retired after the requested time is missing from the answer about that time. The predicate that would keep it is correct and never receives such a row.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-five systems of four hundred and twenty-one
+> **This is not an established best practice.** Thirty-five systems of four hundred and twenty-two
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-five systems of 421 in the atlas have this.** That is still the most
+**Thirty-five systems of 422 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -220,8 +220,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of four hundred and twenty-one
-would suggest a hard idea that a few teams reach independently. One of four hundred and twenty-one, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of four hundred and twenty-two
+would suggest a hard idea that a few teams reach independently. One of four hundred and twenty-two, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -939,6 +939,8 @@ which is the first tradeoff on this list in its plainest form: erasing a claim
 for being wrong does not record it, and recording it does not erase it.
 
 [Scope Recall](../../systems/scope-recall-hermes/) declines the pattern in writing. The store's dedupe comment says an archived row must not suppress a distinct new candidate, the digest's match reads only visible rows, and a review's reject is the same `archived` that forgetting produces. Its privacy purge writes tombstones keyed on scope and row id and stores a `content_hash` no write path reads. Re-assertion is handed to the candidate review instead: a refused fact said again returns as a new candidate, and stays out of recall only as long as the digest default stays `candidate` and nobody promotes it.
+
+[Uteke](../../systems/uteke/) asserts the opposite of a tombstone in a committed test. Its dedup gate checks each index hit against the database and skips rows that are deprecated or gone, which is right for the stale-index bug it fixed; `test_dedup_skips_deprecated_stale_index_entry` then asserts that writing a soft-deleted memory's text again creates a new live memory. The rejection is recorded, as a `superseded_by` edge and a reason, but keyed on the row, and thirty days later the server prunes the row, the edge and its events.
 
 ## Tests to require
 
