@@ -34239,6 +34239,33 @@ configuration, three <code>build.rs</code> files, thirty-one manifests
 inside the seven-day cooldown; nothing was built or run. The unwired
 crate is the design worth watching: if a later commit gives it a caller,
 it becomes a report.</li>
+<li><strong><code>Abhishekax7/HYDRA</code> was examined and has no
+report: its "persistent memory" is a record of which sources belong to
+which project, and no stored finding is ever read back into a later
+run.</strong> At <a
+href="https://github.com/Abhishekax7/HYDRA/commit/9b33d8946a9d81f72ddb9d6716f5fbb0652cccb5"><code class="commit-id" title="9b33d8946a9d81f72ddb9d6716f5fbb0652cccb5">9b33d894…</code></a>
+(MIT, nineteen commits by one author between 2 and 7 September 2026,
+14,349 lines of Python in the backend against 13,499 of tests) it is a
+research platform — LangGraph orchestrating document, dataset and web
+agents over FAISS-and-BM25 retrieval with correction, citation-linked
+synthesis, and deterministic grounding and calibration evaluation. What
+its code calls memory is <code>ProjectMemory</code>
+(<code>backend/app/memory/models.py</code>): a project's name,
+description, the ids of its documents, datasets and research threads,
+and a web-research flag. A research request checks that the project
+exists and attaches the finished run's thread id to it. Each result is
+saved, and read back only by API routes:
+<code>rg -n '\.get_result\(|\.list_results\(' backend/app</code> finds
+an evaluation endpoint that scores a stored result and two routes that
+return results for display, and nothing on the research path. The other
+durable state is LangGraph's SQLite checkpointer, which lets a caller
+who supplies a <code>thread_id</code> resume that thread's workflow
+state — continuity of one workflow, the same shape as session resume,
+not a store of claims that could later be scoped, corrected or
+forgotten. Uploaded documents are a retrieval corpus, not memory.
+Screened before reading: no auto-running configuration, no build-time
+execution path, three dependency manifests inside the seven-day cooldown
+and one unpinned surface; nothing was installed or run.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
