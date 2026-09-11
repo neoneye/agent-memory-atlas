@@ -7,10 +7,13 @@ page_kind: system
 source_name: "nutshellai-tech/mobius"
 source_url: https://github.com/nutshellai-tech/mobius
 archive_name: "nutshellai-tech--mobius"
-revision: fe744d5b65c1d8d1665c820753a9404837e983bd
-revision_url: https://github.com/nutshellai-tech/mobius/commit/fe744d5b65c1d8d1665c820753a9404837e983bd
-analyzed_at: 2026-08-13
+revision: 0f74ca8412f42f65bcb68c7cd2be7f4978acef29
+revision_url: https://github.com/nutshellai-tech/mobius/commit/0f74ca8412f42f65bcb68c7cd2be7f4978acef29
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "the catalog read, not the directory layout | mobius/backend/services/access-control.ts:409-427, reached from routes/memories.ts:128-131 | `canReadContextItem` parses the item id for its stored `userId`, `scope` and `projectId` and checks them against the caller, then consults `contextPolicy` and `allowedByVisibility` over `resource_acl_entries`; the `user=`/`project=` path segments are the storage partition | unknown"
+  human_review: "per-user hides and ACL management | mobius/backend/services/access-control.ts | a person suppresses an item without deleting it, and `can_manage` gates who may change a policy | unknown"
 stack_storage: "files, sqlite"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -320,11 +323,30 @@ take the lesson rather than the code: when a scope key becomes a path segment,
 every operation that composes the path needs the check, and the read is the one
 that looks harmless.
 
-**Authorization is real and layered** — `auth` on every route, `resource_acl_entries`
-and `resource_policies`, `visibleMemoryList` over the copy catalogue, per-user
-hides that suppress without deleting, and `project_user_context_whitelists`
-bounding what a session may draw on. For a multi-user product this is the part
-that is properly built.
+**Authorization is real and layered, and it is where the scope mark actually
+rests.** The eyebrow names the directory path because that is the striking part
+of the design, but a `user=<id>/project=<id>` path is a partition: no key on a
+record, no predicate on a query. What the atlas's mark measures is one layer up.
+Every catalog read runs `visibleMemoryList` → `filterReadableContextItems` →
+`canReadContextItem` (`access-control.ts:409-427`), which parses the item's own
+id for its stored `userId`, `scope` and `projectId`, compares them against the
+caller, and falls through to `contextPolicy` and `allowedByVisibility` over
+`resource_acl_entries`. Beside it: `auth` on every route, per-user hides that
+suppress without deleting, and `project_user_context_whitelists` bounding what a
+session may draw on. For a multi-user product this is the part that is properly
+built, and the path containment below it is a second, different guard on the
+same data.
+
+**A prompt boundary arrived, and its docstring refuses to overclaim.**
+`services/trust-boundary.ts` wraps material drawn from another session in
+`<external_session_context>` tags, escapes any occurrence of those tags in the
+content itself so the fence cannot be forged from inside, and tells the model in
+plain terms that this is reference material from another session rather than
+current instructions. The comment above it is the part worth copying: *"This is
+a prompt boundary, not an authorization boundary. Callers must still enforce
+access control and capability policy before constructing a context."* Systems in
+this atlas routinely let a fence in the prompt stand in for a check in the code;
+this one writes down that it does not.
 
 **Uncertainty cannot be represented at all**, and neither can history. No
 timestamp, no author, no version. If two team members disagree about a project
@@ -468,7 +490,21 @@ breakage this platform absorbs.
 **Tests** — `mobius/tests/memory-copy-scope.js`,
 `mobius/tests/access-control-policy.js`.
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Every catalog read runs the ACL filter | `grep -n "visibleMemoryList" mobius/backend/routes/memories.ts` | Defined at `:128`, applied on the catalog route at `:232` |
+| The check reads a stored key off the item | read `canReadContextItem` at `mobius/backend/services/access-control.ts:409-427` | `parsedContextId` yields `userId`, `scope`, `projectId`; compared against the caller before any policy lookup |
+| Path containment is on both branches | `grep -rn "withinRoot" --include="*.ts" mobius/backend` | Six call sites in `memories-fs.ts`, including both `findById` branches |
+| The prompt fence is not claimed as authorization | `head -6 mobius/backend/services/trust-boundary.ts` | *"This is a prompt boundary, not an authorization boundary."* |
+| Nothing timestamps or versions a memory | `grep -rniE "updated_at\|version\|author" --include="*.ts" mobius/backend/services/memories-fs.ts` | Nothing on the memory record |
+
 ## History
+
+**2026-09-11** — [`0f74ca8412f42f65bcb68c7cd2be7f4978acef29`](https://github.com/nutshellai-tech/mobius/commit/0f74ca8412f42f65bcb68c7cd2be7f4978acef29) — re-read, 183 files and 17,941 insertions past the previous pin in a single commit. **Both marks hold and `scope_enforced` has its basis stated.** The eyebrow names the directory path, and a `user=<id>/project=<id>` path is a partition — no key on a record, no predicate on a query. The predicate is one layer up and was already half-named in the matrix: every catalog read goes through `canReadContextItem`, which parses the item's own id for `userId`, `scope` and `projectId`, checks them against the caller, and falls through to `resource_acl_entries`. Section 9 now says which of the two the mark measures. Path containment is unchanged, with `withinRoot` on both `findById` branches. **One addition worth the report**: `services/trust-boundary.ts` fences material drawn from another session in `<external_session_context>` tags, escapes those tags where they appear in the content so the fence cannot be forged from inside, and instructs the model that the contents are reference rather than instruction — under a docstring that declines the overclaim this atlas keeps finding: *"This is a prompt boundary, not an authorization boundary. Callers must still enforce access control and capability policy before constructing a context."* The gaps in section 9 are unchanged: no timestamp, no author, no version on a memory, and content is still never scanned before injection. Screened before reading: nineteen findings across twenty-three files; nothing was installed or run.
 
 **2026-08-13** — [`fe744d5b65c1d8d1665c820753a9404837e983bd`](https://github.com/nutshellai-tech/mobius/commit/fe744d5b65c1d8d1665c820753a9404837e983bd)
 — first reading, at the 1,131st commit of a repository created 18 June 2026.
