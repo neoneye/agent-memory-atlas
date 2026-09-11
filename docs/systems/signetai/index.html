@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local daemon that captures every
+harness transcript into one SQLite store as immutable episodic evidence,
+derives a semantic entity graph from it in background dreaming passes
+that cannot write without citing a verbatim quote, and serves
+agent-scoped hybrid recall, synced identity files and a libsodium secret
+store to Claude Code, Codex, OpenCode, Gemini CLI and six more
+harnesses.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Signet AI — Agent Memory Atlas">
+    <meta property="og:description" content="A local daemon that
+captures every harness transcript into one SQLite store as immutable
+episodic evidence, derives a semantic entity graph from it in background
+dreaming passes that cannot write without citing a verbatim quote, and
+serves agent-scoped hybrid recall, synced identity files and a libsodium
+secret store to Claude Code, Codex, OpenCode, Gemini CLI and six more
+harnesses.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Signet AI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local daemon that
+captures every harness transcript into one SQLite store as immutable
+episodic evidence, derives a semantic entity graph from it in background
+dreaming passes that cannot write without citing a verbatim quote, and
+serves agent-scoped hybrid recall, synced identity files and a libsodium
+secret store to Claude Code, Codex, OpenCode, Gemini CLI and six more
+harnesses.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Signet AI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Signet AI",
+      "description": "A local daemon that captures every harness transcript into one SQLite store as immutable episodic evidence, derives a semantic entity graph from it in background dreaming passes that cannot write without citing a verbatim quote, and serves agent-scoped hybrid recall, synced identity files and a libsodium secret store to Claude Code, Codex, OpenCode, Gemini CLI and six more harnesses.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Cross-harness memory behind an exact-quote
+gate</p>
+          <h1>Signet AI</h1>
+          <p class="document-deck">A local daemon that captures every
+harness transcript into one SQLite store as immutable episodic evidence,
+derives a semantic entity graph from it in background dreaming passes
+that cannot write without citing a verbatim quote, and serves
+agent-scoped hybrid recall, synced identity files and a libsodium secret
+store to Claude Code, Codex, OpenCode, Gemini CLI and six more
+harnesses.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Signet-AI/signetai">
+              <span>Source</span>
+              <strong>Signet-AI/signetai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Signet-AI/signetai/commit/088e02e22d42142a12f133cb58ca1a0d48a201fe" title="088e02e22d42142a12f133cb58ca1a0d48a201fe">
+              <span>Analyzed revision</span>
+              <code>088e02e2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Signet-AI--signetai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Signet-AI--signetai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Signet is a local memory daemon that sits underneath ten coding
+harnesses — Claude Code, Codex, OpenCode, OpenClaw, Kimi Code, Hermes
+Agent, Pi, Oh My Pi, Gemini CLI and ForgeCode — capturing their
+transcripts into one SQLite store, deriving a semantic entity graph from
+that store in background passes it calls <em>dreaming</em>, and serving
+recall back through MCP tools and session hooks. It also syncs the
+identity files those harnesses read (AGENTS.md, SOUL.md, USER.md,
+MEMORY.md) and keeps a separate encrypted secret store. Apache-2.0,
+1,052 released versions between 0.1.53 on 19 February 2026 and 0.225.0
+on 10 September 2026, about 230,000 lines of non-test TypeScript across
+<code>platform/</code>, <code>surfaces/</code>,
+<code>integrations/</code> and <code>libs/</code>, 152 SQLite
+migrations, and 464 test files holding 151,887 lines.</p>
+<p><strong>The memory is its own, and the best part of it is a citation
+gate.</strong> A dreaming pass may not write to the graph without citing
+a quote, and <code>citeEvidence</code> resolves that quote against the
+immutable episodic store —
+<code>record.content.includes(requested.quote)</code> at
+<code>platform/daemon/src/pipeline/dreaming-operations.ts:127</code> —
+with <code>validateRequestBeforeWrites</code> rejecting the whole batch
+before any write when a citation does not resolve (<code>:736</code>).
+The same function scopes the lookup by <code>agent_id</code>, so a
+citation to another agent's evidence fails as a scope mismatch. This is
+a code gate, not a prompt rule, and the prompt states it too.</p>
+<p><strong>Two layers that deliberately do not merge.</strong> An
+episodic row is primary evidence and is never edited by the pipeline;
+the semantic graph is derived and can be rebuilt. Migration 094 says so
+in as many words — <em>"remember/CLI/MCP/plugin/harness saves are
+immutable EPISODIC evidence… Only Dreaming derives semantic state from
+episodic rows"</em> — and the MCP <code>memory_store</code> description
+repeats it to the model. Deleting an imported source purges the claim
+projections derived from it
+(<code>platform/daemon/src/semantic-memory-projection.ts:9-50</code>),
+which is the half of forgetting a soft delete on the evidence row alone
+would miss.</p>
+<p><strong>Prompt injection is treated as a memory problem.</strong>
+<code>scanMemoryContent</code>
+(<code>platform/core/src/memory-content-safety.ts:110-138</code>)
+classifies every memory, artifact, transcript and summary
+<code>clean</code>, <code>tainted</code> or <code>blocked</code> against
+six named reasons, with defensive-context heuristics so that writing
+<em>about</em> an attack is not treated as one; the verdict is stored in
+<code>memory_content_safety</code> and joined into recall as
+<code>AND (mcs.source_id IS NULL OR (mcs.status = 'clean' AND mcs.context_eligible = 1))</code>,
+then re-scanned on the returned text. The policy never rewrites the
+evidence — only the projection.</p>
+<p><strong>The weakest points are the published number and what the
+tests are allowed to prove.</strong> The README badge claims 97.6%
+LongMemEval answer accuracy; no result artifact is committed,
+<code>memorybench/.gitignore:5</code> ignores <code>/data/</code>, the
+dataset is fetched from HuggingFace at run time, and the run ledger the
+docs point to opens with <em>"This is a development progress log, not a
+publishable benchmark claim"</em> over tables whose largest sample is 12
+questions. Separately, no GitHub Actions workflow runs the suite:
+<code>bun run test:workspace</code> appears in
+<code>package.json:68</code> and in none of the 22 workflows, which run
+roughly 20 named files. And 12 cases in
+<code>synthesis-worker.test.ts</code> return early with a warning when
+no real database is present, reporting green having asserted
+nothing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is first a piece of <strong>episodic evidence</strong>: text
+an agent, a hook, a plugin or an importer handed over, stored with a
+content hash, an owning <code>agent_id</code>, a
+<code>visibility</code>, and optionally a canonical structured payload
+kept verbatim in <code>evidence_meta</code>. It is immediately
+retrievable and it is never rewritten by the pipeline.
+<code>memory_kind</code> labels it <code>episodic</code> by exclusion —
+anything whose <code>source_type</code> is not one of the daemon's own
+derived outputs (<code>extract</code>, <code>aggregate-recall</code>,
+<code>session_end</code>, <code>checkpoint</code>) is evidence.</p>
+<p>Belief is a second layer built from the first. A dreaming pass reads
+episodic sources it has not consumed, and emits operations from a closed
+vocabulary — <code>create_entity</code>, <code>add_claim_value</code>,
+<code>set_claim_value</code>, <code>supersede_claim_value</code>,
+<code>merge_entities</code>, <code>archive_entity</code>,
+<code>archive_aspect</code>, <code>archive_claim_value</code>,
+<code>archive_link</code>, <code>update_link</code>, <code>flag</code>,
+<code>decline_attention</code>. Content operations must cite a verbatim
+quote; hygiene operations must cite an attention-flag id, and a flag is
+one-use. An <code>entity_attributes</code> row is <code>active</code>,
+and retrieval reads <code>status = 'active'</code>; supersession moves
+it to <code>superseded</code> with a pointer. Beside that sits
+<code>epistemic_assertions</code>, which records <em>who said what,
+when</em> under a predicate from
+<code>claims | believes | observed | decided | prefers | denies | questions</code>,
+kept separate from current graph truth on purpose, and
+<code>ontology_contradictions</code>, which stores two competing claim
+values side by side with both provenance snapshots rather than picking a
+winner.</p>
+<p>Death is three different things. An episodic row is soft-deleted
+(<code>is_deleted = 1</code>), superseded (<code>superseded_by</code>),
+or marked <code>stale_at</code>; one predicate excludes all three from
+delivery. A claim value is archived or superseded. A <em>source</em> can
+be purged, which deletes its derived claim projections. Nothing keyed on
+the rejected text survives any of them: the uniqueness index is
+<code>WHERE content_hash IS NOT NULL AND is_deleted = 0</code>
+(<code>platform/core/src/migrations/056-agent-scoped-content-hash.ts:24-30</code>)
+and the dedup lookup filters <code>is_deleted = 0</code>
+(<code>platform/daemon/src/routes/memory-routes.ts:498</code>,
+<code>:519</code>), so a sentence that was forgotten is accepted as a
+new memory the next time it is said, and the next dreaming pass may cite
+it again.</p>
+<p>Control is hybrid and the split is explicit: the agent writes
+evidence and reads recall, the daemon derives belief, and a person may
+adjudicate the subset of graph operations the dreaming model itself
+marked <code>review_required</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — evidence is immutable and belief is derived from it behind a quote gate; every route out of a belief leaves the evidence standing, and nothing keyed on a rejected value stops it being written back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: evidence is immutable and belief is derived from it behind a quote gate; every route out of a belief leaves the evidence standing, and nothing keyed on a rejected value stops it being written back
+flowchart TD
+  H[&quot;harness hooks, MCP memory_store, CLI, importers, Obsidian, Discord, GitHub&quot;] --&gt; E[&quot;episodic row: content hash, agent_id, visibility, evidence_meta, memory_kind = episodic&quot;]
+  E --&gt; S{&quot;scanMemoryContent: clean, tainted or blocked?&quot;}
+  S --&gt;|&quot;blocked or tainted&quot;| Q[&quot;stored, never projected: recall joins memory_content_safety and keeps only clean&quot;]
+  S --&gt;|clean| R[&quot;eligible for recall and for Dreaming&quot;]
+  R --&gt; D[&quot;dreaming pass reads unconsumed evidence&quot;]
+  D --&gt; G{&quot;citeEvidence: is the quote a verbatim substring of a scoped source?&quot;}
+  G --&gt;|no| X[&quot;batch rejected before any write; failure_class quote_mismatch or scope_mismatch recorded in dreaming_evidence_exclusions&quot;]
+  G --&gt;|&quot;yes, risk = review_required&quot;| P[&quot;ontology_proposals status pending&quot;]
+  G --&gt;|yes| A[&quot;entity_attributes status active, plus a derived memory projection&quot;]
+  P --&gt;|&quot;dashboard or POST apply, actor defaults to operator&quot;| A
+  P --&gt;|&quot;POST reject&quot;| RJ[&quot;status rejected with rejected_by and a reason; graph unchanged&quot;]
+  A --&gt; SU[&quot;supersede_claim_value: status superseded, pointer kept&quot;]
+  A --&gt; AR[&quot;archive_claim_value or archive_entity&quot;]
+  E --&gt; F[&quot;forget, tombstone, supersede, or stale_at: memory_history row written&quot;]
+  F --&gt; H2[&quot;retention worker hard-deletes after 30 days, history after 180&quot;]
+  F -.-&gt;|&quot;dedup index excludes deleted rows, so the same text is stored again&quot;| H</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One daemon, one database, one owner process.</strong>
+<code>platform/daemon</code> is a Bun HTTP server on Hono with routes
+split across <code>routes/</code> (memory, ontology, hooks, sources,
+transcript import, inference, marketplace, secrets, telemetry). Every
+write goes through a db-owner protocol
+(<code>db-owner-protocol.md</code>, <code>db-accessor.ts</code>,
+<code>db-owner-worker.ts</code>) with lanes, deadlines and a work-unit
+budget, so long reads cannot starve the event loop;
+<code>yielding-writes.ts</code>, <code>async-yield.ts</code> and
+<code>event-loop-responsiveness.test.ts</code> exist for the same
+reason, and a dedicated CI workflow
+(<code>event-loop-contract.yml</code>) guards it.
+<code>platform/core</code> owns the schema: 152 migrations, an integrity
+audit table, and a <code>vec0</code> virtual table created inside a
+<code>try</code> so the store degrades to lexical-only when the
+sqlite-vec extension is absent
+(<code>platform/core/src/migrations/001-baseline.ts:95-103</code>).</p>
+<p><strong>Embeddings are local by default.</strong> The
+<code>native</code> provider loads
+<code>@huggingface/transformers</code> through
+<code>transformers-runtime.ts</code> with
+<code>nomic-embed-text-v1.5</code>; <code>platform/native</code> is a
+small napi-rs crate (<code>knn.rs</code>, <code>search.rs</code>,
+<code>vector.rs</code>, <code>normalization.rs</code>) for the scoring
+hot path. <code>ollama</code>, <code>llama-cpp</code>,
+<code>openai</code> and <code>none</code> are the alternatives. Vectors
+live in the same SQLite file.</p>
+<p><strong>Dreaming needs a model, and it may be one you already
+run.</strong> <code>inference-provider-factory.ts</code> offers
+<code>anthropic</code>, <code>openrouter</code>, <code>ollama</code>,
+<code>llama-cpp</code> and <code>acpx</code> — the last driving an
+existing agent over the Agent Client Protocol, so the dreaming pass can
+be executed by the coding agent the user already has rather than by a
+separate key.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>A single installed binary plus a background daemon (launchd on
+macOS), one SQLite file, and a workspace directory holding the identity
+Markdown. It runs fully local and offline: local embeddings, local FTS5,
+and a local LLM through Ollama or llama.cpp for dreaming. Without any
+model, capture, recall, scoping and the safety ledger still work; what
+stops is the semantic graph. No API key is required to store anything.
+Telemetry is opt-in, content-free by its own header, and goes to
+PostHog. The store is ordinary SQLite and repairable by hand;
+<code>repair-actions.ts</code> (2,959 lines) and a database-integrity
+worker exist for when it is not. The surface is large for an operator: a
+daemon, a dashboard, a tray app, a desktop Electron build, a browser
+extension, and ten harness connectors.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Capture.</strong> Harness hooks post to
+<code>/api/hooks/session-start</code>, <code>/user-prompt-submit</code>,
+<code>/pre-compaction</code>, <code>/session-end</code> and
+<code>/session-checkpoint-extract</code>
+(<code>platform/daemon/src/routes/hooks-routes.ts:375-1132</code>),
+handled by <code>handleSessionStart</code>,
+<code>handleUserPromptSubmit</code>, <code>handlePreCompaction</code>,
+<code>handleSessionEnd</code> and <code>handleCheckpointExtract</code>
+(<code>platform/daemon/src/hooks.ts:674</code>, <code>:1616</code>,
+<code>:1359</code>, <code>:1991</code>, <code>:2345</code>). A
+transcript-capture worker and a recovery worker durably move harness
+JSONL into <code>session_transcripts</code>
+(<code>transcript-capture-worker.ts</code>,
+<code>transcript-recovery-worker.ts</code>,
+<code>session-transcripts.ts:511</code>, <code>:599</code>).</li>
+<li><strong>Write.</strong> <code>POST /api/memory/remember</code>
+(<code>routes/memory-routes.ts:1487</code>) validates, hashes, dedups on
+<code>(content_hash, agent_id, scope)</code>, writes the row through
+<code>txIngestEnvelope</code> (<code>transactions.ts:269</code>),
+records a content-safety verdict, and inserts explicit temporal edges
+(<code>:1981</code>, <code>:2020</code>, <code>:2055</code>). The MCP
+<code>memory_store</code> tool is the agent-facing door onto the same
+path.</li>
+<li><strong>Dreaming.</strong> <code>dreaming-worker.ts</code> sweeps
+every 5 minutes (<code>CHECK_INTERVAL_MS</code> at <code>:126</code>),
+alternating content and hygiene passes; <code>dreaming.ts</code>
+assembles the pass, <code>dreaming-agent-tools.ts</code> exposes
+<code>search_evidence</code>, <code>attention_list</code>,
+<code>runbook_read</code> and <code>apply_ontology_ops</code> to the
+model, and <code>dreaming-operations.ts</code> validates and applies.
+<code>dreaming_passes</code>, <code>dreaming_tool_calls</code>,
+<code>dreaming_attention</code>,
+<code>dreaming_evidence_consumption</code>,
+<code>dreaming_evidence_exclusions</code> and
+<code>dreaming_evidence_reviews</code> record what each pass saw, did
+and refused.</li>
+<li><strong>Retrieval.</strong> <code>hybridRecall</code>
+(<code>memory-search.ts:1480</code>) builds a filter clause, runs
+lexical, vector, traversal, hint and temporal arms, authorizes
+candidates against the safety ledger and lifecycle predicate
+(<code>:780-820</code>), fuses structured evidence, dampens, optionally
+reranks, dedupes against what this session already saw, and finally
+bumps <code>access_count</code> on what it returned.</li>
+<li><strong>Context assembly.</strong> <code>handleSessionStart</code>
+returns a <code>stableSystemPrompt</code> built by
+<code>buildSignetSystemPrompt</code>
+(<code>session-start-format.ts:37-49</code>) separately from a
+<code>dynamicContext</code>, with identity files selected by preset and
+per-file token budgets
+(<code>platform/core/src/identity.ts:159-195</code>);
+<code>context-budget.ts</code> truncates to fit.</li>
+<li><strong>Correction and forgetting.</strong>
+<code>txModifyMemory</code>, <code>txForgetMemory</code>,
+<code>txSupersedeMemory</code>, <code>txRecoverMemory</code>
+(<code>transactions.ts:326</code>, <code>:586</code>, <code>:703</code>,
+<code>:827</code>), each writing a <code>memory_history</code> row;
+<code>POST /api/memory/forget</code> takes
+<code>mode: preview | execute</code>
+(<code>routes/memory-routes.ts:3087-3110</code>);
+<code>source-purge.ts</code> and
+<code>purgeAttributeMemoryProjectionsInTx</code> remove a source and its
+derived claims; <code>pipeline/retention-worker.ts</code> sweeps every 6
+hours.</li>
+<li><strong>Human adjudication.</strong> <code>ontology_proposals</code>
+written by <code>createOntologyProposalsInTx</code>
+(<code>ontology-proposals.ts:2317</code>) from
+<code>ontology-extraction.ts:751</code>,
+<code>ontology-consolidation.ts:342</code> and
+<code>dreaming-operations.ts:813</code>; applied or rejected through
+<code>routes/ontology-routes.ts:861-895</code> and
+<code>surfaces/dashboard/src/views/home.tsx:213-214</code>.</li>
+<li><strong>Secrets.</strong> <code>platform/core/src/secrets.ts</code>
+for the encrypted store, <code>secrets-keyring.ts</code> for the OS
+keychain, <code>platform/daemon/src/routes/secrets-routes.ts</code> for
+the API, <code>plugins/bundled/secrets.ts</code> for the plugin manifest
+and the two MCP tools.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memories</code></td>
+<td><code>id</code>, <code>content</code>, <code>type</code>,
+<code>category</code>, <code>confidence</code>, <code>importance</code>,
+<code>tags</code>, <code>who</code>, <code>why</code>,
+<code>project</code>, <code>agent_id</code>, <code>visibility</code>,
+<code>scope</code>, <code>memory_kind</code>,
+<code>evidence_meta</code>, <code>content_hash</code>,
+<code>normalized_content</code>, <code>pinned</code>,
+<code>access_count</code>, <code>last_accessed</code>,
+<code>is_deleted</code>, <code>deleted_at</code>,
+<code>superseded_by</code>, <code>superseded_at</code>,
+<code>superseded_reason</code>, <code>stale_at</code>,
+<code>review_after</code>, <code>idempotency_key</code>,
+<code>version</code>, <code>vector_clock</code></td>
+</tr>
+<tr>
+<td><code>memories_fts</code>, <code>embeddings</code>,
+<code>vec_embeddings</code></td>
+<td>FTS5 over content, an embedding row per content hash, and a
+sqlite-vec <code>FLOAT[768]</code> table</td>
+</tr>
+<tr>
+<td><code>memory_history</code></td>
+<td>append-only <code>event</code>, <code>old_content</code>,
+<code>new_content</code>, <code>changed_by</code>, <code>reason</code>,
+<code>metadata</code>, <code>actor_type</code>, <code>session_id</code>,
+<code>request_id</code></td>
+</tr>
+<tr>
+<td><code>entities</code>, <code>entity_aspects</code>,
+<code>entity_attributes</code>, <code>entity_dependencies</code>,
+<code>entity_aliases</code>, <code>entity_communities</code></td>
+<td>the derived graph: an attribute is a claim value with
+<code>kind</code>, <code>content</code>,
+<code>normalized_content</code>, <code>confidence</code>,
+<code>status</code>, <code>superseded_by</code>, <code>claim_key</code>,
+<code>group_key</code>, <code>proposal_id</code> and
+<code>proposal_evidence</code></td>
+</tr>
+<tr>
+<td><code>epistemic_assertions</code></td>
+<td>source-attributed assertions with <code>predicate</code>,
+<code>speaker</code>, <code>asserted_at</code>, <code>evidence</code>,
+<code>status</code>
+(<code>active</code>/<code>archived</code>/<code>superseded</code>),
+<code>supersedes_assertion_id</code>, <code>archived_by</code>,
+<code>archive_reason</code></td>
+</tr>
+<tr>
+<td><code>ontology_contradictions</code></td>
+<td>two competing claim values kept whole — both contents, confidences,
+scopes, visibilities, source pointers and evidence — with
+<code>detector IN ('lexical','semantic','manual')</code> and
+<code>status IN ('active','resolved')</code></td>
+</tr>
+<tr>
+<td><code>ontology_proposals</code></td>
+<td><code>operation</code>,
+<code>status IN ('pending','applied','rejected','failed')</code>,
+<code>payload</code>, <code>confidence</code>, <code>rationale</code>,
+<code>evidence</code>, <code>risk</code>, <code>applied_by</code>,
+<code>rejected_by</code></td>
+</tr>
+<tr>
+<td><code>memory_content_safety</code></td>
+<td><code>status IN ('clean','tainted','blocked')</code>,
+<code>context_eligible</code>, <code>reasons_json</code>,
+<code>policy_version</code>, <code>scanned_at</code>, keyed on
+<code>(agent_id, source_kind, source_id)</code></td>
+</tr>
+<tr>
+<td><code>temporal_edges</code></td>
+<td><code>facet IN ('captured','session','source','observed','occurred','valid')</code>,
+<code>start_at</code>, <code>end_at</code>, <code>confidence</code>,
+<code>provenance_json</code></td>
+</tr>
+<tr>
+<td><code>memory_artifacts</code>,
+<code>memory_artifact_tombstones</code>, <code>memory_md_heads</code>,
+<code>memory_head_revisions</code></td>
+<td>the rebuildable MEMORY.md rolling window, its head revisions, and
+per-session removal records</td>
+</tr>
+<tr>
+<td><code>session_transcripts</code>, <code>session_summaries</code>,
+<code>session_checkpoints</code>, <code>session_memories</code>,
+<code>session_claims</code></td>
+<td>captured harness history and its per-session derivatives</td>
+</tr>
+<tr>
+<td><code>dreaming_*</code></td>
+<td>passes, tool calls, attention, surprisal, evidence consumption,
+exclusions, reviews, runbook, failure backoff</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping is <code>agent_id</code> first.</strong> Migration
+043 adds an <code>agents</code> roster with a <code>read_policy</code>
+and a <code>policy_group</code>; <code>project</code> and a nullable
+<code>scope</code> column layer on top, the latter documented as being
+for benchmark and namespaced runs, defaulting to
+<code>m.scope IS NULL</code> so scoped rows stay out of ordinary recall
+(<code>memory-search.ts:303-314</code>).</p>
+<p><strong>Temporal fields split three ways.</strong>
+<code>created_at</code>/<code>updated_at</code> are record time.
+<code>captured_at</code>, <code>started_at</code>, <code>ended_at</code>
+on artifacts and summaries are the session's own clock.
+<code>temporal_edges</code> carries explicit validity, and
+<code>epistemic_assertions.asserted_at</code> carries utterance time
+beside the row's <code>created_at</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Default <code>alpha</code> is 0.7, <code>top_k</code> 20,
+<code>min_score</code> 0.3 (<code>memory-config.ts:424-426</code>).
+<code>hybridRecall</code> runs arms in parallel and keeps them separate
+before fusion — the project's own name for it is structured evidence,
+and the design note is that collapsing lexical, semantic, hint and
+traversal signal into one early score loses the ability to cap
+traversal-only candidates below directly anchored ones. Graph traversal
+degrades explicitly rather than silently: a timeout or failure sets
+<code>graphPartial</code> and a <code>degradation</code> of
+<code>graph_traversal_timeout</code> or
+<code>graph_traversal_failed</code> in the response meta
+(<code>memory-search.ts:1517-1533</code>), and lexical truncation
+reports <code>fts_incomplete</code>.</p>
+<p><strong>Three filters run before ranking.</strong> The lifecycle
+predicate, <code>currentMemorySql</code>, is written once and called at
+fourteen sites outside tests:
+<code>AND m.is_deleted = 0 AND m.superseded_by IS NULL AND m.stale_at IS NULL</code>.
+The scope clause is appended by <code>buildFilterClause</code> whenever
+an agent is known. The safety join keeps only <code>clean</code> rows,
+and then the returned text is scanned again, so a row edited directly in
+the database under a stale ledger entry is still caught
+(<code>memory-search.ts:814-818</code>).</p>
+<p><strong>Recall is deduped per session.</strong>
+<code>applyRecallDedupe</code> suppresses what this session already saw
+unless <code>includeRecalled</code> is set, and records the claim in
+<code>session_recall_events</code> with a context epoch that a session
+clear advances. This is a genuine ergonomic gain — the same three
+memories do not arrive at every prompt — and it means a recall's result
+depends on the session's history, not only on the query.</p>
+<p><strong>Failure modes.</strong> Traversal can return candidates whose
+only link to the query is graph adjacency, which is why they are
+dampened; the safety ledger is a regex policy and will occasionally
+block a legitimate technical note that quotes an instruction; and access
+counts are bumped for what is returned rather than for what is read,
+which is the right side of that choice. The
+<code>visibility = 'archived'</code> exclusion is hand-copied into eight
+files and, unlike the other two filters, is not centralised and not
+covered by any test.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A <code>remember</code> is <strong>synchronous and cheap</strong>:
+validation, a content hash, a dedup lookup, one insert, a content-safety
+scan, optional temporal edges, and embedding queued to a worker. There
+is no LLM on the write path. A memory is retrievable by lexical search
+as soon as the call returns; it is retrievable by vector search once the
+embedding worker reaches it, and <code>embedding-coverage.ts</code>,
+<code>embedding-health.ts</code> and
+<code>embedding-repair-state.ts</code> exist to measure and repair that
+gap.</p>
+<p><strong>Consolidation is a separate, budgeted pass.</strong> The
+dreaming worker wakes every 5 minutes, checks whether there is
+unconsumed evidence or queued attention, and runs one bounded pass. It
+does not re-read the whole store:
+<code>dreaming_evidence_consumption</code> records a per-source
+delivered offset, <code>dreaming_evidence_cursor</code> and the pass
+runbook carry the cutoff, and <code>dreaming_evidence_exclusions</code>
+holds sources it deliberately skipped with a <code>failure_class</code>
+from
+<code>incomplete_transcript | source_projection | scope_mismatch | quote_mismatch | unknown</code>,
+a retry count and a requeue timestamp. So the token bill scales with the
+day's activity rather than with the corpus — with the exception of
+hygiene passes over the attention queue, whose cost follows graph
+size.</p>
+<p><strong>Correction is explicit and logged.</strong>
+<code>POST /api/memory/forget</code> defaults to
+<code>mode: preview</code>, so the destructive call is the second one.
+<code>txSupersedeMemory</code> refuses a self-supersede and refuses a
+target in a different scope (<code>scope_mismatch</code>). Every one of
+these writes a <code>memory_history</code> row with an actor. Mutations
+can be frozen globally by a <code>pipelineV2.mutationsFrozen</code> kill
+switch that returns 503 on each mutation route.</p>
+<p><strong>On the read path</strong>, session start injects a
+<code>stableSystemPrompt</code> and a separate
+<code>dynamicContext</code>, and a second start for the same session
+returns a minimal stub rather than re-injecting. Keeping the invariant
+text in one block ahead of the variable text is the shape that preserves
+a provider's prompt-prefix cache; interleaving per-turn memories into
+the system prompt would invalidate it on every turn. Identity files are
+budgeted per file — 12,000 characters for AGENTS.md, 10,000 for
+MEMORY.md under the <code>openclaw</code> preset — and
+<code>applyTokenBudget</code> truncates the assembled injection.</p>
+<p><strong>Nothing filters hostile input at write time</strong>, by
+design: the evidence is stored as received and the safety verdict gates
+the projection. The consequence is in section 9.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server's base tool set names 62 tools
+(<code>platform/daemon/src/mcp/tools.ts:164-227</code>), grouped as
+memory (<code>memory_search</code>, <code>memory_store</code>,
+<code>memory_get</code>, <code>memory_list</code>,
+<code>memory_modify</code>, <code>memory_forget</code>,
+<code>memory_feedback</code>), recall and sources
+(<code>signet_recall</code>, <code>signet_source_search</code>,
+<code>signet_session_search</code>, <code>signet_save_note</code>),
+knowledge (<code>knowledge_expand</code>, <code>knowledge_tree</code>,
+<code>knowledge_list_claims</code>, <code>signet_explain_claim</code>,
+<code>knowledge_hygiene_report</code>, <code>apply_ontology_ops</code>),
+entities, cross-agent messaging (<code>agent_peers</code>,
+<code>agent_message_send</code>, <code>agent_message_inbox</code>,
+<code>agent_message_ack</code>), secrets (<code>secret_list</code>,
+<code>secret_exec</code>, <code>secret_exec_status</code>), an MCP-proxy
+family, and a code-graph family. Tools are filtered per context and the
+server sends <code>toolListChanged</code> when the set moves.</p>
+<p><strong>The model has a lot of agency over evidence and very little
+over belief.</strong> It can store, modify and forget episodic rows
+freely. It cannot write a claim except through
+<code>apply_ontology_ops</code>, which enforces the citation gate, and a
+dreaming operation the model marks <code>review_required</code> lands in
+a queue instead of the graph. <code>memory_store</code>'s own
+description tells the model that a structured payload is retained as
+evidence and <em>"is not applied to the graph from this tool"</em>.</p>
+<p><strong>Injection is by hook where a harness has them and by plugin
+where it does not.</strong> Claude Code, Kimi Code and ForgeCode get
+hooks plus MCP; OpenCode, OpenClaw and Codex get native plugins; Hermes
+gets a memory-provider plugin; Pi and Oh My Pi get extensions; Gemini
+CLI gets MCP plus GEMINI.md sync. <code>libs/connector-base</code> and
+<code>libs/sdk</code> are the shared surface, and
+<code>integrations/openclaw/memory-adapter/src/index.ts</code> (2,645
+lines, with a 2,550-line test file beside it) is the most complete
+example of adapting the daemon to a foreign memory interface.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Secrets are handled well, and the report should say so
+plainly because the product claims it.</strong> Values live in
+<code>&lt;workspace&gt;/.secrets/secrets.enc</code>, mode
+<code>0600</code> in a <code>0700</code> directory, each encrypted
+individually with libsodium <code>crypto_secretbox</code>
+(XSalsa20-Poly1305, random 24-byte nonce) at
+<code>platform/core/src/secrets.ts:457-466</code>. The 256-bit master
+key is generated with <code>randomBytes(32)</code> and stored in the OS
+keychain through <code>@napi-rs/keyring</code> under service
+<code>ai.signet.secrets</code> with a per-workspace account
+(<code>secrets-keyring.ts:30-38</code>); it never touches disk. Where no
+keychain exists the store falls back to a key derived from the host
+machine id (<code>getLegacyMasterKey</code>, <code>:314-320</code>) —
+obfuscation rather than encryption, since the machine id is
+world-readable — and the code says so, writes a
+<code>.degraded-warning</code> marker and reports
+<code>status: "degraded"</code>. There is <strong>no secrets table in
+SQLite</strong>:
+<code>grep -rliE "CREATE TABLE[^;]*secret" platform/core/src/migrations/</code>
+returns nothing. There is <strong>no API, CLI or MCP verb that returns a
+secret value</strong> — <code>GET /api/secrets</code> returns names,
+<code>POST /api/secrets/:name</code> writes, and the only way to use one
+is <code>secret_exec</code>, which resolves values into a child
+process's <code>env</code> (never argv), rejects shell metacharacters,
+redacts each value out of stdout and stderr by exact substring with an
+overlap buffer so a value split across chunks is still caught, and
+zeroes the resolved map on exit (<code>secrets.ts:968-1114</code>).
+1Password is a one-way import into the local store; Bitwarden is an
+alternative backend reached through the <code>bw</code> CLI with item
+JSON on stdin. Nothing ships a secret to Signet: there is no hosted
+secret sync anywhere in the tree.</p>
+<p><strong>The gap is on the other side of the boundary.</strong> A
+credential a user pastes into a chat is captured like any other text:
+<code>transcript-capture-worker.ts</code> and
+<code>transcript-import-commit.ts</code> contain no redaction (grep for
+<code>redact|scrub|mask</code> in both returns nothing), and neither
+does <code>session-transcripts.ts</code>. The only value-scrubber in the
+tree is <code>redactSecrets</code>
+(<code>platform/daemon/src/session-checkpoints.ts:65-86</code>), five
+heuristic regexes, and its call sites are checkpoint digests,
+<code>recentRemembers</code>, and subagent context — not transcript
+storage. <code>memory-content-safety.ts</code> is not a credential
+scrubber; its <code>credential_harvesting</code> and
+<code>exfiltration</code> patterns match text <em>asking for</em>
+secrets, not secrets themselves. So the plugin's own prompt contribution
+telling agents to keep credentials out of <em>"chat, memory, logs, or
+source files"</em> is load-bearing advice rather than an enforced
+invariant. The git-sync route pushes <code>*.md</code> and
+<code>*.jsonl</code> to the user's own remote while
+<code>memories.db</code> is hard-denied; <code>.secrets/</code> is kept
+out of that push only by the extension allowlist
+<code>SIGNET_GIT_TRACKED_PATHS</code>
+(<code>platform/core/src/gitignore.ts:32-47</code>), not by the explicit
+deny list that protects <code>.daemon/</code> and
+<code>memory/*.db*</code>.</p>
+<p><strong>Prompt-injected false memories are the one threat this design
+takes seriously at the memory layer.</strong> The safety ledger is the
+mechanism and it is a good one, but it is a regex policy with a version
+string, so it is a filter, not a proof, and a novel phrasing passes.</p>
+<p><strong>Scope holds on the read path and is not bound to a
+caller.</strong> <code>buildAgentScopeClause</code> is real SQL on every
+recall arm and the tests for it cannot pass vacuously. But
+<code>shouldEnforceScope</code> returns false when
+<code>authMode === 'local'</code>, which is the default
+(<code>platform/daemon/src/auth/config.ts:32</code>), so
+<code>resolveScopedAgentId</code> accepts whatever agent id the request
+names. On a single-user machine that is the correct trade; in
+<code>team</code> or <code>hybrid</code> mode with claims,
+<code>authorizeMemoryMutationScope</code> and the project predicate do
+bind it. A reader evaluating this for more than one principal should
+read those two modes rather than the default.</p>
+<p><strong>Withheld marks, stated once.</strong></p>
+<p><code>tombstone</code> — no. The repository has a table called
+<code>memory_artifact_tombstones</code> and a route called
+<code>/tombstone</code>, and neither is the mechanism. The table is
+keyed <code>(agent_id, session_token)</code> with
+<code>removed_paths</code>, a record of what the MEMORY.md rolling
+window dropped so a privacy removal survives re-index; the route calls
+<code>txForgetMemory</code> with <code>force: true</code>, which is a
+soft delete. Nothing is keyed on the rejected <em>value</em>: the unique
+index excludes deleted rows, the dedup lookup filters
+<code>is_deleted = 0</code>, and the retention worker hard-deletes the
+row after 30 days, after which even the content hash is gone. A user who
+says "forget that" and then discusses the same fact again gets it
+stored, and a later dreaming pass may cite the new row and re-assert the
+claim.</p>
+<p><code>trust_state</code> — no, and the near-miss is the most
+interesting thing in the schema.
+<code>memory_content_safety.status</code> is a genuine discrete field
+with <code>blocked</code> and <code>tainted</code> states that withhold
+a row from every prompt-facing projection, and it is filtered on in SQL
+on the read path — everything the mark's shape asks for. It is withheld
+because it answers <em>is this content instruction-shaped</em>, not
+<em>may this be treated as true</em>: it is recomputed deterministically
+from the bytes on every read (<code>memory-search.ts:816</code>), so it
+is a derived property of the text rather than an epistemic status a pass
+or a person can set. The two fields that do carry epistemic vocabulary
+fall the other way: <code>epistemic_assertions.status</code> is
+<code>active | archived | superseded</code>, lifecycle rather than
+belief, and its <code>predicate</code> enum (<code>claims</code>,
+<code>believes</code>, <code>denies</code>, <code>questions</code>)
+types the speech act rather than the system's stance;
+<code>entity_attributes.status</code> is
+<code>active | superseded | archived | deleted</code>, and every graph
+read path filters <code>status = 'active'</code>. No field anywhere says
+<em>recorded but not believed</em>.</p>
+<p><strong>Declared and unwired: the review queue.</strong>
+<code>GET /api/memory/review-queue</code>
+(<code>routes/memory-routes.ts:1292-1330</code>) selects
+<code>memory_history</code> rows
+<code>WHERE h.event IN ('DEDUP', 'REVIEW_NEEDED', 'BLOCKED_DESTRUCTIVE')</code>.
+Those three strings appear exactly once each in the entire tree — on
+that line. Every producer of <code>memory_history</code> writes
+<code>updated</code>, <code>deleted</code>, <code>superseded</code> or
+<code>recovered</code>, so the endpoint returns an empty list against
+every possible database state — and no test exercises it, so nothing
+notices. <code>human_review</code> is awarded on the ontology proposal
+queue and not on this one; the difference between the two is exactly the
+difference between a queue with a producer and a queue without.</p>
+<p><strong>Retention deletes the audit.</strong> History older than 180
+days is purged on a 6-hourly sweep (<code>retention-worker.ts:75</code>,
+<code>:388</code>). That is a defensible default for a personal store
+and it means "why does the system believe this" has a horizon.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>464 test files, 4,899 cases, 151,887 lines; about 65% of the cases
+are in the daemon package. I ran none of it.</p>
+<p><strong>The marks rest on tests that cannot pass vacuously.</strong>
+<code>memory-search.test.ts:1791-1828</code> writes the identical string
+<code>"agent-isolation-marker recall content"</code> under
+<code>agent-a</code> and <code>agent-b</code>, recalls as
+<code>agent-a</code>, asserts <code>toEqual(["mem-agent-a"])</code>, and
+then asserts the access counters are exactly
+<code>{mem-agent-a: 1, mem-agent-b: 0}</code> — the excluded row was not
+merely filtered from the output, it was never read.
+<code>memory-candidates.test.ts:95-108</code> asks
+<code>fetchTraversalCandidates</code> for five ids, asserts
+<code>toHaveLength(3)</code>, names each survivor's score and asserts
+<code>byId.has("memory-deleted")</code> and
+<code>byId.has("memory-superseded")</code> are both false.
+<code>hooks-recall.test.ts:824-829</code> pairs a
+<code>not.toContain</code> with an explicit
+<code>expect(body.meta?.noHits).toBeFalse()</code>.</p>
+<p><strong>Two nearby tests read better than they assert, and a reader
+picking evidence should skip them.</strong>
+<code>memory-similar-lifecycle.test.ts:138-185</code> has four
+<code>not.toContain</code> lines for deleted, superseded, stale and
+aggregate rows — under <code>expect(ids).toHaveLength(0)</code> at
+<code>:178</code>, which makes all four tautologies over an empty array;
+the file's own comment explains why the set is empty, and the sibling
+case at <code>:232-251</code> is the one with teeth.
+<code>memory-search.test.ts:1678-1708</code> seeds a live control row
+but queries a marker that does not match it, so an empty result passes
+the soft-delete exclusion silently.</p>
+<p><strong><code>visibility = 'archived'</code> is untested.</strong>
+The predicate is hand-written into eight files; grepping
+<code>"archived"</code> across all 464 test files finds ontology entity
+archival and imported-source archival, and no case that seeds an
+archived memory and asserts it is absent from recall.</p>
+<p><strong>The benchmark claim is not backed by an artifact in this
+tree.</strong> The README badge and headline say 97.6% LongMemEval
+answer accuracy, and
+<code>web/docs/src/content/docs/benchmarking.md:17-25</code> repeats it
+as <em>"an average across the current tracked local and canary score
+set"</em> and points at <code>docs/BENCHMARKING-PROGRESS.md</code> as
+the ledger. That document opens: <em>"This is a development progress
+log, not a publishable benchmark claim. Run artifacts and reports remain
+ignored under <code>memorybench/data/runs/</code>"</em>. Its tables are
+six- and twelve-question samples — the largest denominator anywhere in
+the file is 12, against LongMemEval-S's 500 — and one passage records a
+denominator bug that had hidden two temporal failures behind a
+<code>9/10</code>. <code>memorybench/.gitignore:5</code> ignores
+<code>/data/</code>, the dataset is downloaded from HuggingFace at run
+time
+(<code>memorybench/src/benchmarks/longmemeval/index.ts:14-15</code>,
+<code>:95-118</code>), and no result file is committed anywhere in the
+repository. The docs page states the policy honestly — <em>"Benchmark
+reports and run artifacts stay under ignored paths and should not be
+committed until the team explicitly decides to publish a score"</em> —
+which is a reasonable internal rule that the README badge then publishes
+a number against. The harness itself computes accuracy, Hit@K,
+precision, recall, F1, MRR and NDCG and asserts none of them: there is
+no threshold, no baseline comparison and no <code>process.exit(1)</code>
+on a score in <code>memorybench/src/</code>.</p>
+<p><strong>CI runs about twenty test files out of the 464 in the
+tree.</strong> <code>bun run test:workspace</code>
+(<code>package.json:68</code>) appears in no workflow; the 22 workflows
+in <code>.github/workflows/</code> run named files plus lint, typecheck,
+build and doc-sync. <code>memorybench-dreaming-gate.yml:55-61</code>
+sounds like a score gate and runs four unit tests asserting corpus
+structure and ingestion scope. None of the isolation and lifecycle tests
+the marks rest on is executed by CI.</p>
+<p><strong>Twelve tests can report green having asserted
+nothing.</strong> <code>synthesis-worker.test.ts</code> opens each of
+its twelve cases with
+<code>if (!DB_AVAILABLE) { console.warn("SKIP: real DB not available"); return; }</code>
+— a pass, not a skip. The <code>describe.skipIf</code> uses elsewhere
+are honest by comparison, and
+<code>scripts/native-embedding-runtime-smoke.test.ts:261-264</code> is
+the counter-example worth crediting: it throws <em>"native binary not
+found"</em> rather than returning green.</p>
+<p><strong>No paper.</strong>
+<code>grep -rniE 'arxiv|bibtex|@article|@misc|CITATION|doi\.org'</code>
+over <code>README.md</code>, <code>docs/</code> and
+<code>web/docs/</code> returns a research-tracking reference to <a
+href="https://arxiv.org/abs/2601.07372">arxiv:2601.07372</a> in
+<code>docs/specs/dependencies.yaml</code> as an input to a predictor
+design, and nothing else; there is no <code>CITATION.cff</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Validate a citation against the store, before the batch
+writes.</strong> Have the consolidation model return
+<code>{quote, source_ref}</code> per operation, resolve the ref in the
+same scope the write targets, check the quote is a verbatim substring,
+and reject the whole batch on the first failure. Then record
+<em>why</em> it failed — <code>quote_mismatch</code>,
+<code>scope_mismatch</code>, <code>source_projection</code>,
+<code>incomplete_transcript</code> — so the failures are a queue you can
+retry rather than a log line.</li>
+<li><strong>Keep evidence immutable and make belief a
+projection.</strong> Label rows as primary or derived, never let the
+pipeline edit a primary row, and make source deletion reach the derived
+rows. It converts "rebuild the graph" from a migration into a background
+pass.</li>
+<li><strong>Store contradictions whole instead of resolving
+them.</strong> Both contents, both confidences, both provenance
+snapshots, a detector name and a resolution reason, with the attribute
+ids as soft links so the observation outlives the claim it was
+about.</li>
+<li><strong>Split the injected prompt into a stable half and a dynamic
+half.</strong> One block of invariant instructions ahead of the per-turn
+context keeps a provider's prefix cache warm, and a second session-start
+for the same session should return a stub, not a re-injection.</li>
+<li><strong>Make a destructive bulk operation take
+<code>mode: preview | execute</code>.</strong> Two calls, the first of
+which shows exactly which rows match.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Publishing a headline a reader cannot check.</strong> A
+badge is a claim; a committed per-question output file is evidence. If
+the policy is that artifacts stay unpublished, the number should stay
+unpublished with them.</li>
+<li><strong>A consumer whose producer was never written.</strong> Three
+event names in one <code>IN</code> clause and nowhere else is an
+endpoint that returns empty forever; a grep for each literal at the
+moment the reader is added costs nothing.</li>
+<li><strong>Copying a filter predicate into eight files.</strong> The
+two predicates here that live in one function are tested; the one that
+is duplicated is not.</li>
+<li><strong>Letting a suite report PASS when its dependency is
+absent.</strong> An early <code>return</code> inside a test is a pass.
+Use the runner's skip, or throw.</li>
+<li><strong>Treating a write-time content classifier as a credential
+control.</strong> Detecting text that <em>asks</em> for secrets is not
+detecting secrets, and the transcript reaches the database either
+way.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is the heaviest system a single developer can reasonably run,
+and the question is whether the harness spread is what you need. If you
+work across three or four agents and the fragmentation of context
+between them is the actual pain, Signet is aimed precisely at that, and
+the ten-harness plumbing is most of what you are buying; the citation
+gate and the immutable evidence layer mean the derived graph is
+disposable, which is the property that makes a background consolidation
+pass safe to let run unattended. If you use one harness on one project,
+this is several services, a 152-migration schema and a dreaming model's
+token bill to solve a problem a much smaller store would solve. Walk
+away if you need a memory layer you can fully audit yourself in an
+afternoon, if you need the semantic layer's behaviour pinned by CI
+before you depend on it, or if transcripts of your sessions must not sit
+unredacted in a local database.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What the dreaming pass costs per day on a real store, and how the
+hygiene half scales with graph size rather than with the day's activity
+— the attention queue's size is the variable and nothing in the tree
+bounds it against corpus size.</li>
+<li>Whether the 97.6% figure comes from runs at the twelve-question
+scale of the committed ledger or from larger unpublished runs; the
+ledger is the only in-tree evidence and its largest denominator is
+12.</li>
+<li>How often the deterministic safety policy blocks a legitimate
+technical memory.
+<code>platform/core/src/memory-content-safety.test.ts</code> exercises
+the defensive-context heuristics, but nothing measures the
+false-positive rate on a real corpus, and a blocked row is invisible to
+recall without being visibly missing.</li>
+<li>Whether <code>entity_attributes.status</code> was intended to carry
+a candidate state; the column has a free-text default of
+<code>'active'</code> with no CHECK constraint, unlike every later
+status column in the schema.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>platform/core/src/migrations/</code> (001 baseline,
+002 pipeline-v2, 019 knowledge-structure, 033 scope, 043 agents, 051
+MEMORY.md lineage, 056 content hash, 067 proposals, 071 assertions, 076
+temporal edges, 094 memory kind, 125 content safety, 127
+contradictions), <code>platform/core/src/database.ts</code>,
+<code>fts-schema.ts</code>.</li>
+<li>Write and correction:
+<code>platform/daemon/src/transactions.ts</code>,
+<code>routes/memory-routes.ts</code>, <code>source-purge.ts</code>,
+<code>semantic-memory-projection.ts</code>,
+<code>pipeline/retention-worker.ts</code>.</li>
+<li>Retrieval: <code>platform/daemon/src/memory-search.ts</code>,
+<code>memory-candidates.ts</code>, <code>memory-access-scope.ts</code>,
+<code>temporal-recall.ts</code>,
+<code>pipeline/graph-traversal.ts</code>,
+<code>pipeline/reranker*.ts</code>,
+<code>pipeline/structured-evidence.ts</code>.</li>
+<li>Context assembly: <code>platform/daemon/src/hooks.ts</code>,
+<code>session-start-format.ts</code>, <code>context-budget.ts</code>,
+<code>subagent-context.ts</code>,
+<code>platform/core/src/identity.ts</code>.</li>
+<li>Dreaming: <code>platform/daemon/src/pipeline/dreaming.ts</code>,
+<code>dreaming-worker.ts</code>, <code>dreaming-operations.ts</code>,
+<code>dreaming-operation-contract.ts</code>,
+<code>dreaming-evidence.ts</code>,
+<code>dreaming-evidence-retry.ts</code>,
+<code>dreaming-agent-tools.ts</code>,
+<code>platform/daemon/src/ontology-proposals.ts</code>,
+<code>ontology-extraction.ts</code>,
+<code>ontology-contradictions.ts</code>,
+<code>ontology-assertions.ts</code>.</li>
+<li>Safety and secrets:
+<code>platform/core/src/memory-content-safety.ts</code>,
+<code>platform/daemon/src/memory-content-safety.ts</code>,
+<code>platform/core/src/secrets.ts</code>,
+<code>secrets-keyring.ts</code>,
+<code>platform/daemon/src/routes/secrets-routes.ts</code>,
+<code>plugins/bundled/secrets.ts</code>,
+<code>platform/core/src/gitignore.ts</code>.</li>
+<li>Integration: <code>platform/daemon/src/mcp/tools.ts</code>,
+<code>routes/hooks-routes.ts</code>,
+<code>routes/ontology-routes.ts</code>, <code>libs/sdk/</code>,
+<code>libs/connector-base/</code>,
+<code>integrations/*/connector/</code>,
+<code>integrations/openclaw/memory-adapter/</code>.</li>
+<li>Tests and benchmarks:
+<code>platform/daemon/src/memory-search.test.ts</code>,
+<code>memory-candidates.test.ts</code>,
+<code>hooks-recall.test.ts</code>, <code>transactions.test.ts</code>,
+<code>ontology-proposals.test.ts</code>,
+<code>memory-similar-lifecycle.test.ts</code>,
+<code>memorybench/</code>, <code>docs/BENCHMARKING-PROGRESS.md</code>,
+<code>.github/workflows/</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;REVIEW_NEEDED\|BLOCKED_DESTRUCTIVE\|&#39;DEDUP&#39;&quot; --include=&#39;*.ts&#39; .          # one hit each, all on memory-routes.ts:1313 — the SELECT; no producer
+grep -rn &quot;INSERT INTO memory_history&quot; --include=&#39;*.ts&#39; .                            # producers: database.ts:488, transactions.ts:226, memory-routes.ts:4352, db-owner-maintenance.ts:993
+grep -rn &quot;insertHistoryEvent&quot; --include=&#39;*.ts&#39; .                                    # events written: updated, deleted, superseded, recovered — no others
+grep -rliE &quot;CREATE TABLE[^;]*secret&quot; platform/core/src/migrations/                  # 0: no secrets table in SQLite
+grep -niE &quot;redact|scrub|mask&quot; platform/daemon/src/transcript-capture-worker.ts platform/daemon/src/transcript-import-commit.ts platform/daemon/src/session-transcripts.ts   # 0: transcripts are stored unscrubbed
+grep -rn &quot;redactSecrets&quot; --include=&#39;*.ts&#39; .                                         # call sites: session-checkpoints.ts and subagent-context.ts only
+grep -rn &quot;getSecret(&quot; platform/daemon/src/routes/secrets-routes.ts                  # only the 1Password/Bitwarden backend tokens; no route returns a user secret
+grep -rn &quot;temporal_edges&quot; --include=&#39;*.ts&#39; . | grep -v migrations                   # one writer: memory-routes.ts:223, reached from POST /api/memory/remember
+grep -rn &quot;applyOntologyProposal\|rejectOntologyProposal&quot; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .   # routes + dashboard home.tsx:213-214
+grep -rn &quot;archived&quot; --include=&#39;*.test.ts&#39; .                                         # entity and imported-source archival only; no archived-memory recall exclusion test
+grep -rn &quot;test:workspace\|bun run test\b\|bun test&quot; .github/workflows/              # 0 matches for the workspace suite; named files only
+grep -rn -i &#39;arxiv|bibtex|@article|@misc|CITATION|doi\.org&#39; README.md docs web/docs # one research-tracking arxiv reference in docs/specs/dependencies.yaml; no paper, no CITATION.cff
+find memorybench -name &#39;*result*&#39; -o -name &#39;*report*.json&#39; -o -name &#39;*run*.json&#39;    # 0 committed result artifacts; memorybench/.gitignore:5 ignores /data/
+grep -rn &quot;97\.6&quot; --include=&#39;*.md&#39; --include=&#39;*.json&#39; --include=&#39;*.ts&#39; .             # README.md:10,12,140 and web/docs benchmarking.md:17 — no data file</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/Signet-AI/signetai/commit/088e02e22d42142a12f133cb58ca1a0d48a201fe"><code class="commit-id" title="088e02e22d42142a12f133cb58ca1a0d48a201fe">088e02e2…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>
+before any file was opened: one auto-run surface (a committed
+<code>.githooks/</code> with <code>commit-msg</code> and
+<code>pre-commit</code>, inert until <code>core.hooksPath</code> points
+at it, which the root <code>prepare</code> script would do on an
+install), no <code>.gitattributes</code> filter, five build-time
+execution paths (<code>postinstall</code>, two
+<code>prepublishOnly</code>, a <code>prepare</code>, and
+<code>platform/native/build.rs</code>), 44 manifests reading as inside
+the seven-day cooldown because the depth-1 clone dates every file to the
+pin, and 31 unpinned surfaces in web, dashboard and template tooling;
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> read as data. Nothing
+was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

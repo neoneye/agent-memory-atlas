@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 428 reports.**
+**This page covers all 429 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3768,3 +3768,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 34,689 lines of TypeScript in the server under the Elastic License 2.0 with Apache-2.0 client packages, changesets releases, CI that builds, lints and runs the contract's six cases plus the Cypher-parser unit tests. The end-to-end suite carrying the isolation assertions is not in CI, the memory contract is at 0.2.0 with two changesets, and a swallowed embedding-queue rejection leaves a record permanently unembedded with nothing to notice.
 - Study when: you want a graph and vector store in one transaction boundary and a worked protocol for putting agent memory on top of it.
 - Do not copy when: memory must survive a crash, a correction or a hostile input without you writing the adapter — or when isolation must be per-user rather than per-project.
+
+### [`signetai`](../systems/signetai/)
+- Best idea: **a citation gate enforced in code, before the batch writes.** A dreaming operation returns a quote and a source ref; `citeEvidence` resolves the ref in the target's own agent scope and checks that the stored content contains the quote, and `validateRequestBeforeWrites` rejects the whole batch on the first citation that does not resolve — then records *why* as `quote_mismatch`, `scope_mismatch`, `source_projection` or `incomplete_transcript`, with a retry count, so refusals are a queue rather than a log line. Beside it, an evidence layer the pipeline never edits and a source purge that reaches the claims derived from it. Five marks.
+- Biggest risk: **the published number has nothing behind it in the tree.** The README badge claims 97.6% LongMemEval answer accuracy; the dataset directory is gitignored and downloaded at run time, no result file is committed, and the ledger the docs point at opens *"This is a development progress log, not a publishable benchmark claim"* over six- and twelve-question tables, one of which records a denominator bug that had hidden two failures. The harness computes accuracy, Hit@K, F1, MRR and NDCG and asserts none of them. Captured transcripts reach the database with no credential scrubbing.
+- Most reusable component: `citeEvidence` and `validateRequestBeforeWrites` in the dreaming pipeline, with the evidence-retry module's `failure_class` vocabulary — a consolidation gate and its refusal ledger.
+- Maturity impression: 1,052 released versions between 19 February and 10 September 2026, about 230,000 lines of non-test TypeScript, 152 migrations, 464 test files and 151,887 lines of tests, a db-owner protocol with lanes and deadlines and a CI workflow guarding event-loop responsiveness. But the workspace test command appears in none of the 22 workflows, which run roughly twenty named files; twelve cases in one worker suite return early with a warning and report green; a review-queue endpoint selects three event names nothing in the tree writes; and the archived-visibility predicate is hand-copied into eight files with no test.
+- Study when: you run three or four harnesses against one body of context and want a background consolidation pass you can let run unattended because its writes are all traceable to a quote.
+- Do not copy when: you need a retraction to stay retracted, need the semantic layer's behaviour pinned by CI before depending on it, or cannot have unredacted session transcripts sitting in a local database.

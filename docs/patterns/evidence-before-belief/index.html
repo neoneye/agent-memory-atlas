@@ -427,6 +427,26 @@ harness wrote them and a lost database is rebuilt by re-import. What it
 does not keep is the other direction — a <code>&lt;private&gt;</code>
 tag applied after the fact cannot reach a chunk already stored, because
 nothing in the tree deletes one.</p>
+<p><a href="../../systems/signetai/">Signet AI</a> enforces the
+separation in the schema and then again at the write gate. A migration
+splits rows into episodic evidence — anything not produced by the
+daemon's own derived source types — and derived state, stating that
+saves are <em>"immutable EPISODIC evidence"</em> and that <em>"Only
+Dreaming derives semantic state from episodic rows"</em>. The MCP store
+tool's own description repeats it to the model, adding that a structured
+payload is <em>"retained alongside the content as evidence but is not
+applied to the graph from this tool"</em>. The gate is in code, not the
+prompt: <code>citeEvidence</code> resolves each operation's quote and
+source ref against the episodic store, scoped by agent, and requires the
+stored content to contain the quote;
+<code>validateRequestBeforeWrites</code> refuses the whole batch on the
+first citation that does not resolve. What distinguishes it from the
+other instances here is the refusal ledger — the exclusion row records
+the failure with a class of <code>quote_mismatch</code>,
+<code>scope_mismatch</code>, <code>source_projection</code> or
+<code>incomplete_transcript</code>, a retry count and a requeue
+timestamp, so an ungrounded belief is a work item rather than a
+silence.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>
