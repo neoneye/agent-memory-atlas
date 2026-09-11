@@ -6605,7 +6605,12 @@ own reserved namespace — a <code>Volatility:durable</code> tag that
 slipped past a case-sensitive filter and then won because the reader
 took the first match, and a junk <code>volatility:sometimes</code> that
 shadowed a real verdict. Both are fixed by hardening the readers; the
-namespace is still writable, in a system that ingests email.</li>
+namespace is still writable, in a system that ingests email. Both
+hardening fixes were applied at the site of the incident and not to the
+namespace next door: <code>status.ts</code> still stops at the first
+<code>status:</code>-prefixed tag and returns null when it is invalid,
+so a caller writing <code>status:xyz</code> ahead of a real
+<code>status:canonical</code> lowers the entry's recency floor.</li>
 <li>Most reusable component: the re-embedding migration's reasoning that
 its obvious progress marker would lie. Vector ids are derived from entry
 id and chunk count, so re-embedding into a fresh index reproduces them

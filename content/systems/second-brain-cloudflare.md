@@ -7,10 +7,14 @@ page_kind: system
 source_name: "rahilp/second-brain-cloudflare"
 source_url: https://github.com/rahilp/second-brain-cloudflare
 archive_name: "rahilp--second-brain-cloudflare"
-revision: 6a7766d4ab957c52ca642ce672f293420ce8ef46
-revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/6a7766d4ab957c52ca642ce672f293420ce8ef46
-analyzed_at: 2026-08-09
-capabilities: "trust_state, negative_eval"
+revision: 298864c0dd21e62848ce246a72f390f0eb544345
+revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345
+analyzed_at: 2026-09-11
+capabilities: "trust_state, scope_enforced, negative_eval"
+capability_evidence:
+  trust_state: "recall and graph expansion | src/memory/status.ts:12-15, src/recall/math.ts:34, src/graph/traverse.ts:119 | `status:` of canonical, draft or deprecated — deprecated filtered out of recall and traversal, canonical raising the recency floor | tests"
+  scope_enforced: "entry reads | src/capture/share.ts:26, src/capture/duplicate.ts:131, src/staleness/pass.ts:197 | `workspace_id` is a column on `entries` and a predicate on the read paths, with the deliberate exceptions annotated in place as `// scope-exempt: by-id:` | tests"
+  negative_eval: "recall | tests | committed cases asserting a deprecated entry is absent from a populated recall result | tests"
 stack_storage: ""
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -20,12 +24,12 @@ matrix:
   retrieval: "Vector search with graph expansion, MMR, and a volatility-dependent recency floor"
   write: "Capture with contradiction detection; the loser is deprecated and its vectors deleted"
   update_delete: "status canonical / draft / deprecated as a reserved tag namespace"
-  scoping: "One deployment per person in their own Cloudflare account; no key on the read path"
+  scoping: "A `workspace_id` column on entries, applied as a predicate on the read paths, with each deliberate exemption annotated in place; personal and team workspaces sit above it"
   integration: "MCP for Claude, ChatGPT and Cursor, a desktop app, calendar and email capture"
   background: "A nightly staleness pass writing volatility and stale:as-of tags"
   trust: "status:deprecated is filtered out of recall and graph expansion; canonical raises the floor"
   strengths: "A re-embedding migration that reasons about why its own progress marker would lie"
-  risks: "Reserved tag namespaces live in caller-writable tags[], which has already been exploited"
+  risks: "Reserved tag namespaces live in caller-writable `tags[]`; the two hardening fixes that followed the volatility incident were not carried across to `status:`, whose reader still stops at the first prefixed tag rather than the first valid one"
 ---
 
 ## 1. Executive Summary
@@ -262,8 +266,39 @@ And:
 > overwrite a verdict a caller had set. Nothing stops a caller writing raw tags
 > in this namespace, so reading has to tolerate it."
 
-Both are fixed. The last sentence is the one to carry away: *nothing stops a
-caller writing raw tags in this namespace*, so every reader has to be defensive.
+Both are fixed **in `volatility.ts`, and neither is fixed in its sibling.**
+`status:` is the other reserved namespace, it carries the mark this report
+awards, and `src/memory/status.ts` is fifteen lines that repeat both original
+mistakes:
+
+```ts
+export function getStatus(tags: string[]): MemoryStatus | null {
+  const tag = tags.find(t => t.startsWith(STATUS_PREFIX));
+  if (!tag) return null;
+  const value = tag.slice(STATUS_PREFIX.length) as MemoryStatus;
+  return (STATUS_VALUES as readonly string[]).includes(value) ? value : null;
+}
+```
+
+`find` stops at the first `status:`-prefixed tag and returns `null` when that one
+is invalid, which is exactly the shadowing the volatility comment describes —
+and the consequence is the same shape, because `recall/math.ts:34` raises the
+recency floor for `status:canonical`. A caller writing `status:xyz` into `tags[]`
+ahead of a real `status:canonical` makes the entry read as unclassified and
+lowers its floor. `withStatus` matches case-sensitively where `isVolatilityTag`
+was changed to lowercase first.
+
+The case half is latent rather than live: `captureEntry` lowercases at
+`entry.ts:83` before any `status:` reader runs on that path, and no caller-
+supplied tag list reaches `withStatus` ahead of it — whereas the MCP capture tool
+*does* hand raw caller tags to `withVolatility`, which is why that one bit. So
+the guard is weaker here and what saves it is an ordering property in another
+file that nothing asserts. The first-match half needs no such luck; it is live.
+
+The last sentence of the volatility comment is the one to carry away: *nothing
+stops a caller writing raw tags in this namespace*, so every reader has to be
+defensive. A hardening applied at the site of the incident and not to the
+namespace next door is the ordinary way that lesson gets half-learned.
 For a memory that ingests email and calendar entries — text an attacker can
 supply — a reserved namespace inside user-writable data is a standing hazard,
 and hardening the readers is a mitigation rather than a boundary. Storing system
@@ -393,6 +428,20 @@ constants `:20-22`, `MMR_LAMBDA` `:25-27`, `getRecencyFloor` `:29-37`,
 `:115-120`), `test/unit/capture-entry.test.ts` (contradiction resolution
 `:175-194`), `test/unit/staleness-pass.test.ts`, `test/unit/status-tags.test.ts`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| `workspace_id` is a read predicate | `grep -rn "workspace_id" --include="*.ts" src \| grep -iE "WHERE\|AND workspace_id"` | `share.ts:26`, `duplicate.ts:131`, `staleness/pass.ts:197`, plus the scope clause threaded through the capture reads |
+| Exemptions are annotated in place | `grep -rn "scope-exempt" --include="*.ts" src` | `capture/entry.ts:101` and `:172`, each naming why the id is already scope-checked |
+| The volatility reader is case-insensitive | `grep -n "isVolatilityTag" src/memory/volatility.ts` | `t.toLowerCase().startsWith(VOLATILITY_PREFIX)` |
+| The status reader is not | `sed -n '1,15p' src/memory/status.ts` | `t.startsWith(STATUS_PREFIX)` in both `getStatus` and `withStatus`, and `find` returning `null` on an invalid first match |
+| Nothing hands raw caller tags to `withStatus` | `grep -rn "withStatus(" --include="*.ts" src` | Nine call sites, all on stored or already-normalised tag arrays |
+
 ## History
+
+**2026-09-11** — [`298864c0dd21e62848ce246a72f390f0eb544345`](https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345) — re-read, 415 files and 82,252 insertions past the previous pin in a single commit. **`scope_enforced` is added.** The previous edition recorded *"one deployment per person in their own Cloudflare account; no key on the read path"*; `entries` now carries a `workspace_id` column with personal and team workspaces above it, and the read paths carry it as a predicate — `share.ts:26`, `duplicate.ts:131`, `staleness/pass.ts:197`. The detail that makes it convincing is the annotation convention: where a read deliberately skips the predicate, the line above it says `// scope-exempt: by-id:` and gives the reason, so the exceptions are enumerable rather than invisible. **The reserved-namespace finding sharpens, and not in the project's favour.** The two defects `volatility.ts` documents are fixed there and repeated in `status.ts`, the namespace that carries this report's `trust_state` mark: `getStatus` stops at the first `status:`-prefixed tag and returns `null` when it is invalid, which is the shadowing the volatility comment describes, and `recall/math.ts:34` raises the recency floor for `status:canonical`, so a caller writing `status:xyz` ahead of a real verdict lowers the entry's floor. The case-sensitivity half is latent — `captureEntry` lowercases before any `status:` reader runs on that path, and unlike `withVolatility` nothing hands `withStatus` raw caller tags — but what protects it is an ordering property in another file that nothing asserts. Screened before reading: eleven findings; nothing was installed or run.
 
 **2026-08-09** — [`6a7766d4ab957c52ca642ce672f293420ce8ef46`](https://github.com/rahilp/second-brain-cloudflare/commit/6a7766d4ab957c52ca642ce672f293420ce8ef46) — first reading. Screened before reading; the tree was read, never deployed, and no test was run.
