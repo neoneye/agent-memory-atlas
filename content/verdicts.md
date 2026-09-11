@@ -536,12 +536,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need trust state — and do not assume its `do_not_answer_from` tag does anything; it appears only in a test fixture.
 
 ### [`ctx`](../systems/ctx/)
-- Best idea: a write-scope guard on the consolidation pass, with one crossing gated on the disposition rather than the caller, plus refusals that carry a registered reason.
-- Biggest risk: correction is structural folding with no tombstone, so a dream can re-propose what a human folded away.
-- Most reusable component: `WriteScope`, and the corrupted-artifact regression corpus, which any system with an LLM rewrite path could adopt in an afternoon.
-- Maturity impression: dense tests in the packages that matter, an append-only ledger, and a 61,000-line CLI wrapped around them.
+- Best idea: the pass proposes and a person disposes. `dream` emits proposals into a gitignored notebook and never acts on them — its own type comment says so — and `accept`, `reject`, `amend` are three CLI verbs run against one proposal id, with `amend` letting the reviewer substitute an action for the one recommended. Every disposition lands in an append-only ledger. Beside it, a write-scope guard on the pass with one crossing gated on the disposition rather than the caller.
+- Biggest risk: the rejection record is one property short of a tombstone. It is durable and it is consulted — `PendingProposals` drops anything with a ledger entry, refusals included — but it is keyed on a `ProposalID` that no Go code produces, because the consolidation skill writes `proposals.json`. A refused claim that returns under a new id, from a file that also changed, is offered again.
+- Most reusable component: `WriteScope`, the four-value human decision recorded per proposal, and the corrupted-artifact regression corpus, which any system with an LLM rewrite path could adopt in an afternoon.
+- Maturity impression: 1,932 test functions across 428 files over 209,370 lines of Go, dense in the packages that matter, an append-only ledger — and a large CLI, desktop app and editor extension wrapped around a `internal/dream/` package that has not changed a byte in six weeks.
 - Study when: a background model pass can write into the user's own repository and you have no answer for where it may write.
-- Do not copy when: you need ranked retrieval — there is no ranker, only progressive disclosure over files.
+- Do not copy when: you need ranked retrieval — there is no ranker, only progressive disclosure over files — or a read boundary: nothing scopes a read, and the guard that exists authorises writes against a directory allowlist.
 
 ### [`optmem`](../systems/optmem/)
 - Best idea: no background work at all — consolidation is requested inline in the output of `note`, so write-to-readable lag is zero and nothing rewrites memory unobserved.

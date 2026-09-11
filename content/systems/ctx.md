@@ -7,10 +7,13 @@ page_kind: system
 source_name: ActiveMemory/ctx
 source_url: https://github.com/ActiveMemory/ctx
 archive_name: "ActiveMemory--ctx"
-revision: ce5a832885d66ba3608e02d2db85e5e90a455559
-revision_url: https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559
-analyzed_at: 2026-07-28
-capabilities: "scope_enforced, audit_log"
+revision: 43d0ba7c5d944562cb00b519a4915e7e9c3dad54
+revision_url: https://github.com/ActiveMemory/ctx/commit/43d0ba7c5d944562cb00b519a4915e7e9c3dad54
+analyzed_at: 2026-09-11
+capabilities: "audit_log, human_review"
+capability_evidence:
+  audit_log: "the dream ledger | internal/dream/ledger.go:104 and internal/dream/apply.go:33,:64,:92 | `AppendLedger` appends one JSON disposition per line to `dreams/ledger.md`, never rewriting, under a docstring calling the trail tamper-evident | internal/dream/ledger_test.go"
+  human_review: "proposal disposition | internal/cli/dream/core/dispose/dispose.go:30,:55,:82 | `accept`, `reject` and `amend` each take a proposal id and an optional human note, and `amend` substitutes an action the reviewer chooses for the one the model recommended; nothing reaches the tree unless a person disposes of it | internal/dream/apply_test.go"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -19,12 +22,12 @@ matrix:
   storage: "Files in the project tree; a dream ledger and journal alongside"
   retrieval: "Progressive disclosure — roots, themes, regions read by any tool that can read files"
   write: "Staged entries; `dream` proposes, a schema gate validates, apply writes within a guarded scope"
-  update_delete: "Proposal dispositions including promote; region folding; no value-level tombstone"
-  scoping: "Write scope enforced by path — dreams/ and ideas/, with specs/ only on promote"
+  update_delete: "Proposal dispositions including promote; region folding; no value-level tombstone — a rejection is durable and consulted, but keyed on the id the model emitted rather than on the content"
+  scoping: "None on the read path — progressive disclosure is any tool reading files. What exists is a write-scope guard by path: `dreams/` and `ideas/`, with `specs/` only on promote"
   integration: "CLI, MCP, VS Code extension, skills; any tool that can read files"
   background: "`dream` scan, propose, validate, apply, with a ledger and resume"
-  trust: "Provenance required on proposals; invalid proposals rejected rather than admitted"
-  strengths: "A write-scope guard on consolidation, and a corruption regression corpus from the literature"
+  trust: "Provenance required on proposals; invalid proposals rejected rather than admitted; and a four-value human decision — accepted, rejected, amended, skipped — recorded per proposal in the ledger"
+  strengths: "A per-proposal human gate whose every disposition lands in an append-only ledger, a write-scope guard on consolidation, and a corruption regression corpus from the literature"
   risks: "Correction is region folding; nothing records that a digested claim was wrong"
 ---
 
@@ -268,6 +271,44 @@ tool that can read files; no model or vendor lock-in", which is the same bet
 
 ## 9. Reliability, Safety, and Trust
 
+**`human_review` is the mark this system is built around, and it runs on every
+proposal.** `dream` never writes: it emits proposals into a gitignored `dreams/`
+notebook and stops, under a type comment saying so — *"The dream never acts on a
+proposal."* Three CLI verbs dispose of one: `accept` applies the recommendation,
+`reject` records a refusal with no mutation, and `amend` substitutes an action the
+person chooses in place of the model's, each taking an optional human note. All
+three append to the ledger, and `Decision` is a closed four-value set —
+`accepted | rejected | amended | skipped` — declared as *"the human's disposition
+recorded in the ledger"*. The `amend` path is the part most review surfaces in
+this atlas lack: the reviewer is not restricted to yes or no.
+
+**`scope_enforced` is not earned, and the guard is worth describing as what it
+is.** `WriteScope` resolves a target relative to the project root and allows it
+only under `dreams/` or `ideas/`, plus `specs/` when the action is
+`ActionPromote` — *"the one sanctioned boundary crossing (deliberate
+declassification into a tracked spec)"*. That is a write-authorization boundary on
+a directory, not a stored key applied as a filter on a read, and the read path has
+no scope at all: progressive disclosure means any tool that can read files can
+read everything. The guard is a good mechanism aimed at a different risk — a
+background pass writing outside its sanctioned area — and it belongs in the prose
+rather than in the mark.
+
+**The rejection ledger is one property short of a tombstone, and the missing
+property is where the id comes from.** `Seen(entries, proposalID)` reports whether
+the ledger already holds a disposition, `PendingProposals` drops anything it
+returns true for, and the docstring is explicit that this includes refusals:
+*"Rejections count as seen, by design — the dream does not re-nag a rejected
+disposition unless the source content changes."* So a refusal is durable and it
+*is* consulted before the next surfacing, which is more than most systems here
+manage. What it is keyed on is `ProposalID`, and no Go code produces one:
+`proposals.go` only unmarshals `proposals.json`, which the consolidation skill
+writes. The type comment asks for stability — *"Stable so v2 supersession is not
+foreclosed"* — and nothing verifies it or derives it from the content. The
+content-change half is handled separately and properly, by `DeltaSelect`
+comparing a per-path content hash, so a changed source file re-enters the scan.
+The gap is between those two: a rejected *claim* that reappears under a new
+proposal id, from a file that also changed, is offered again.
+
 Strengths:
 
 - **A write-scope guard on the consolidation pass**, with one disposition-gated
@@ -282,18 +323,20 @@ Strengths:
 
 Gaps:
 
-- **No trust state or tombstone**; correction is structural editing.
+- **No trust state or tombstone**; correction is structural editing, and the
+  rejection record is keyed on an identifier the model supplies.
 - **No ranker**, so recall depends on the reader knowing where to look.
 - **Very large surface**, dominated by a 61,000-line CLI.
-- **Filesystem-scoped**, with no multi-user story.
+- **Filesystem-scoped**, with no multi-user story and no scope key on any read.
 - **The guard protects the project tree, not the memory's meaning** — a dream may
   write a wrong thing inside `dreams/` all it likes.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Tests are dense in the small packages — `disclosure/` alone has apply, invariant,
-conserve, convention, firstrun and abort tests, and `dream/` has guard, ledger,
-resume, validate, proposals and the corrupted-corpus test.
+1,932 `Test` functions across 428 test files, over 209,370 lines of Go. Tests are
+dense in the small packages — `disclosure/` alone has apply, invariant, conserve,
+convention, firstrun and abort tests, and `dream/` has guard, ledger, resume,
+validate, proposals and the corrupted-corpus test.
 
 Nothing was run for this review, and no retrieval-quality benchmark exists —
 consistent with a design that has no ranker to benchmark. The measurement that
@@ -367,9 +410,31 @@ Do not copy:
   `state.go`, `scan.go`, `apply.go`.
 - Disclosure and regions: `internal/disclosure/addtheme.go`, `regions.go`,
   `invariant.go`, `split.go`, `move.go`, `validate.go`.
+- Human disposition: `internal/cli/dream/core/dispose/dispose.go` (`Accept`
+  `:30`, `Reject` `:55`, `Amend` `:82`), `internal/cli/dream/core/review/review.go`,
+  `internal/config/dream/types.go:85-100` (the four decisions).
+- Dedup-against-seen: `internal/dream/ledger.go:91-111` (`Seen`),
+  `proposals.go:98-122` (`PendingProposals`), `state.go:106-122`
+  (`DeltaSelect`, the per-path content hash).
 - Drift detection: `internal/drift/`.
-- History: `internal/journal/`.
+- History: `internal/journal/`, with `parser/codex_convert.go` and `codex_path.go`
+  reading Codex sessions.
+
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| No scope key on any read path | `grep -rniE "scope\|tenant\|user_id\|namespace\|owner" --include="*.go" internal/disclosure internal/dream` | Every hit is the write guard or a comment; no read filters on a stored key |
+| Nothing in Go produces a proposal id | `grep -rn "Proposal{" --include="*.go" internal cmd` and read `internal/dream/proposals.go` | Only zero-value literals in error returns; the run's proposals are unmarshalled from `proposals.json` |
+| A rejection is consulted before re-surfacing | read `Seen` at `internal/dream/ledger.go:104` and `PendingProposals` at `proposals.go:113` | `PendingProposals` drops any proposal with a ledger entry, rejections included |
+| The ledger is append-only | read `AppendLedger` at `internal/dream/ledger.go:104` | Opens for append, writes one JSON line per disposition, never rewrites |
+| The memory mechanism did not move | `git diff --stat <prev-pin>..HEAD -- internal/dream` | Empty |
+| Tree and suite size | `find . -name "*.go" \| xargs wc -l \| tail -1`; `grep -rh "^func Test" --include="*_test.go" . \| wc -l` | 209,370 lines; 1,932 test functions across 428 files |
 
 ## History
+
+**2026-09-11** — [`43d0ba7c5d944562cb00b519a4915e7e9c3dad54`](https://github.com/ActiveMemory/ctx/commit/43d0ba7c5d944562cb00b519a4915e7e9c3dad54) — re-read, 273 files and 29,287 insertions past the previous pin in a single commit — and **`internal/dream/`, the package this report is about, is byte-identical**. The growth is product surface: a Codex session parser in `internal/journal/parser/`, a Tauri desktop app, a VS Code extension, and three new skill assets. **Both mark changes are first-reading corrections.** `scope_enforced` is withdrawn: it rested on `WriteScope`, which authorises a *write* against a directory allowlist, and the atlas's mark is a stored key applied as a filter on a *read* — of which there is none here, since progressive disclosure is any tool reading files. `human_review` is added, and it should have been there at the first reading: `dream` emits proposals and never acts on them, and `accept`, `reject` and `amend` are three CLI verbs a person runs against one proposal id, with `amend` substituting the person's action for the model's recommendation and every disposition landing in the ledger. `audit_log` holds on that same ledger, unchanged. The rejection record is described precisely for the first time: it is durable and it *is* consulted — `PendingProposals` drops anything `Seen` returns true for, rejections included — but it is keyed on a `ProposalID` that no Go code produces, because the consolidation skill writes `proposals.json`; the content-change half is handled separately by `DeltaSelect` over a per-path hash. That is one property short of `tombstone`, and the missing property is named. Suite 1,932 test functions across 428 files over 209,370 lines of Go. Screened before reading: three context-injection surfaces, three build-time exec paths, eleven dependency manifests inside the cooldown; nothing was built or run.
 
 **2026-07-28** — [`ce5a832885d66ba3608e02d2db85e5e90a455559`](https://github.com/ActiveMemory/ctx/commit/ce5a832885d66ba3608e02d2db85e5e90a455559) — first reading.

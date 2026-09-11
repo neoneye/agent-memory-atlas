@@ -1432,20 +1432,36 @@ test fixture.</li>
 </ul>
 <h3 id="ctx"><a href="../systems/ctx/"><code>ctx</code></a></h3>
 <ul>
-<li>Best idea: a write-scope guard on the consolidation pass, with one
-crossing gated on the disposition rather than the caller, plus refusals
-that carry a registered reason.</li>
-<li>Biggest risk: correction is structural folding with no tombstone, so
-a dream can re-propose what a human folded away.</li>
-<li>Most reusable component: <code>WriteScope</code>, and the
-corrupted-artifact regression corpus, which any system with an LLM
-rewrite path could adopt in an afternoon.</li>
-<li>Maturity impression: dense tests in the packages that matter, an
-append-only ledger, and a 61,000-line CLI wrapped around them.</li>
+<li>Best idea: the pass proposes and a person disposes.
+<code>dream</code> emits proposals into a gitignored notebook and never
+acts on them — its own type comment says so — and <code>accept</code>,
+<code>reject</code>, <code>amend</code> are three CLI verbs run against
+one proposal id, with <code>amend</code> letting the reviewer substitute
+an action for the one recommended. Every disposition lands in an
+append-only ledger. Beside it, a write-scope guard on the pass with one
+crossing gated on the disposition rather than the caller.</li>
+<li>Biggest risk: the rejection record is one property short of a
+tombstone. It is durable and it is consulted —
+<code>PendingProposals</code> drops anything with a ledger entry,
+refusals included — but it is keyed on a <code>ProposalID</code> that no
+Go code produces, because the consolidation skill writes
+<code>proposals.json</code>. A refused claim that returns under a new
+id, from a file that also changed, is offered again.</li>
+<li>Most reusable component: <code>WriteScope</code>, the four-value
+human decision recorded per proposal, and the corrupted-artifact
+regression corpus, which any system with an LLM rewrite path could adopt
+in an afternoon.</li>
+<li>Maturity impression: 1,932 test functions across 428 files over
+209,370 lines of Go, dense in the packages that matter, an append-only
+ledger — and a large CLI, desktop app and editor extension wrapped
+around a <code>internal/dream/</code> package that has not changed a
+byte in six weeks.</li>
 <li>Study when: a background model pass can write into the user's own
 repository and you have no answer for where it may write.</li>
 <li>Do not copy when: you need ranked retrieval — there is no ranker,
-only progressive disclosure over files.</li>
+only progressive disclosure over files — or a read boundary: nothing
+scopes a read, and the guard that exists authorises writes against a
+directory allowlist.</li>
 </ul>
 <h3 id="optmem"><a
 href="../systems/optmem/"><code>optmem</code></a></h3>

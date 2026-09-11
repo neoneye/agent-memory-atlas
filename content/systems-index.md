@@ -117,7 +117,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/craft/"><span class="az-id">craft</span><span class="az-what">A harness that keeps its rulings</span><code class="az-repo">drobins25/craft</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/crewai/"><span class="az-id">CrewAI</span><span class="az-what">Hierarchical scope paths</span><code class="az-repo">crewAIInc/crewAI</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/csm/"><span class="az-id">CSM</span><span class="az-what">Deterministic continuity runtime</span><code class="az-repo">NovasPlace/CSM</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
-<li><a class="az-row" href="../systems/ctx/"><span class="az-id">ctx</span><span class="az-what">Guarded consolidation</span><code class="az-repo">ActiveMemory/ctx</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
+<li><a class="az-row" href="../systems/ctx/"><span class="az-id">ctx</span><span class="az-what">Guarded consolidation</span><code class="az-repo">ActiveMemory/ctx</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 </ul>
 
 ## D
