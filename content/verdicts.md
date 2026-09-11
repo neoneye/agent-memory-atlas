@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 420 reports.**
+**This page covers all 421 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3704,3 +3704,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: four commits by one author in September 2026, 13,968 lines of TypeScript with 4,880 of tests, no CI; the runtime tests are careful about the cache contract, and nothing covers forget through the runtime or memory in a Work run.
 - Study when: you inject memory into a system prompt and want a concrete, tested rule for keeping the provider's prefix cache warm.
 - Do not copy when: corrections must stick, agents must not read one another's memory, or facts arrive from peers and tool output as well as the user.
+
+### [`scope-recall-hermes`](../systems/scope-recall-hermes/)
+- Best idea: **one visibility predicate and one scope predicate, applied on every lane and re-applied to vector hits.** `ordinary_recall_lifecycle_visible_sql` keeps candidates, other scopes' scratch and terminal states out of the FTS, trigram, bigram, LIKE and exact-id lanes; each vector hit is re-read from SQLite under both predicates before it counts, and a companion row that disagrees marks the index for repair. Six marks.
+- Biggest risk: **the review gate is on the model's tool surface.** Digest output waits as `candidate` and the adjudicator will not promote it, but `scope_recall_memory` with `action: promote, dry_run: false` promotes it with no maintenance flag, and only an actor string tells that apart from a person's CLI review. A rejection is `archived`, which the digest's match and the store's dedupe skip by design, so a refused fact returns as a new candidate.
+- Most reusable component: `scripts/benchmark.negative_retrieval.py` and its release-gate validator — ten nonsense queries over populated neighbours scored up to 0.99 must leave thirty surfaces empty while six positives hit, re-run and compared byte for byte with a frozen fixture.
+- Maturity impression: 277 commits by four contributors between 14 May and 5 September 2026, 114,032 lines of package Python beside 140,124 of tests, CI on three operating systems with Hermes pinned by commit, a writer lease, a vector outbox with generations and a managed upgrade with rollback. `update` overwrites content with no audit event, and the published LoCoMo run bypasses the journal and candidate path.
+- Study when: you are building a provider for a multi-user gateway and want scope, lifecycle and vector-index consistency expressed as predicates rather than conventions.
+- Do not copy when: promotion must be a person's decision, or a rejected value must stay rejected.

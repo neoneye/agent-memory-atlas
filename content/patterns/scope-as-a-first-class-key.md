@@ -745,6 +745,8 @@ is in the paths the store's key does not govern.
 
 [Forgetful](../../systems/forgetful/) is the plain WHERE-clause instance across two hand-mirrored backends: every repository method takes `user_id`, every statement carries it, and the project filter is an `EXISTS` over an association table that reaches the one-hop walk only when the caller passes `strict_project_filter`. Its Postgres adapter also runs `set_config('app.current_user_id', …)` on every session *"with RLS context"*, and no policy in the tree reads the variable — the second layer the comment promises is the first layer restated. The key is real; the belt-and-braces is one belt.
 
+[Scope Recall](../../systems/scope-recall-hermes/) writes each scope component as `label:length:value`, so a delimiter inside a chat or user id cannot forge another scope, derives the key from the identity Hermes passes to `initialize`, and disables memory outright on a gateway runtime with no user id. The vector companion is searched once per accessible scope and each hit is re-read from SQLite under `scope_id IN (…)` before it counts, so a stale or mis-keyed companion row cannot cross the boundary; a committed test puts two users on one database and asserts one user's preference is absent from the other's prefetch and present in the owner's.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

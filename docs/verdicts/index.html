@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 420 reports.</strong></p>
+<p><strong>This page covers all 421 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14950,6 +14950,42 @@ concrete, tested rule for keeping the provider's prefix cache warm.</li>
 <li>Do not copy when: corrections must stick, agents must not read one
 another's memory, or facts arrive from peers and tool output as well as
 the user.</li>
+</ul>
+<h3 id="scope-recall-hermes"><a
+href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a></h3>
+<ul>
+<li>Best idea: <strong>one visibility predicate and one scope predicate,
+applied on every lane and re-applied to vector hits.</strong>
+<code>ordinary_recall_lifecycle_visible_sql</code> keeps candidates,
+other scopes' scratch and terminal states out of the FTS, trigram,
+bigram, LIKE and exact-id lanes; each vector hit is re-read from SQLite
+under both predicates before it counts, and a companion row that
+disagrees marks the index for repair. Six marks.</li>
+<li>Biggest risk: <strong>the review gate is on the model's tool
+surface.</strong> Digest output waits as <code>candidate</code> and the
+adjudicator will not promote it, but <code>scope_recall_memory</code>
+with <code>action: promote, dry_run: false</code> promotes it with no
+maintenance flag, and only an actor string tells that apart from a
+person's CLI review. A rejection is <code>archived</code>, which the
+digest's match and the store's dedupe skip by design, so a refused fact
+returns as a new candidate.</li>
+<li>Most reusable component:
+<code>scripts/benchmark.negative_retrieval.py</code> and its
+release-gate validator — ten nonsense queries over populated neighbours
+scored up to 0.99 must leave thirty surfaces empty while six positives
+hit, re-run and compared byte for byte with a frozen fixture.</li>
+<li>Maturity impression: 277 commits by four contributors between 14 May
+and 5 September 2026, 114,032 lines of package Python beside 140,124 of
+tests, CI on three operating systems with Hermes pinned by commit, a
+writer lease, a vector outbox with generations and a managed upgrade
+with rollback. <code>update</code> overwrites content with no audit
+event, and the published LoCoMo run bypasses the journal and candidate
+path.</li>
+<li>Study when: you are building a provider for a multi-user gateway and
+want scope, lifecycle and vector-index consistency expressed as
+predicates rather than conventions.</li>
+<li>Do not copy when: promotion must be a person's decision, or a
+rejected value must stay rejected.</li>
 </ul>
         </article>
       </div>

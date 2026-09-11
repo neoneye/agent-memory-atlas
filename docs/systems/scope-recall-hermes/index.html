@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Hermes memory provider that
+journals every turn, digests it by LLM into candidate rows ordinary
+recall cannot see, and serves scope-filtered hybrid recall from SQLite
+truth with a rebuildable vector companion — where the one way out of
+candidate is a per-id review the agent may perform on itself.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Scope
+Recall — Agent Memory Atlas">
+    <meta property="og:description" content="A Hermes memory provider
+that journals every turn, digests it by LLM into candidate rows ordinary
+recall cannot see, and serves scope-filtered hybrid recall from SQLite
+truth with a rebuildable vector companion — where the one way out of
+candidate is a per-id review the agent may perform on itself.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Scope
+Recall — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Hermes memory provider
+that journals every turn, digests it by LLM into candidate rows ordinary
+recall cannot see, and serves scope-filtered hybrid recall from SQLite
+truth with a rebuildable vector companion — where the one way out of
+candidate is a per-id review the agent may perform on itself.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Scope Recall — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Scope Recall",
+      "description": "A Hermes memory provider that journals every turn, digests it by LLM into candidate rows ordinary recall cannot see, and serves scope-filtered hybrid recall from SQLite truth with a rebuildable vector companion \u2014 where the one way out of candidate is a per-id review the agent may perform on itself.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Scoped Hermes provider with a review-gated
+digest</p>
+          <h1>Scope Recall</h1>
+          <p class="document-deck">A Hermes memory provider that
+journals every turn, digests it by LLM into candidate rows ordinary
+recall cannot see, and serves scope-filtered hybrid recall from SQLite
+truth with a rebuildable vector companion — where the one way out of
+candidate is a per-id review the agent may perform on itself.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/410979729/scope-recall-hermes">
+              <span>Source</span>
+              <strong>410979729/scope-recall-hermes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/410979729/scope-recall-hermes/commit/578b955802df753f2e2208e26eab6f71971285a0" title="578b955802df753f2e2208e26eab6f71971285a0">
+              <span>Analyzed revision</span>
+              <code>578b9558…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/410979729--scope-recall-hermes" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>410979729--scope-recall-hermes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Scope Recall is a memory provider for Hermes Agent. It appends every
+eligible turn to a journal in SQLite, lets a background LLM digest turn
+the journal into memory rows, and on each turn returns up to three hits
+for the current query from a scope-filtered hybrid search — FTS5 and
+BM25, CJK trigram and bigram lanes, and a vector companion that is
+LanceDB by default and is rebuilt from SQLite through a durable outbox.
+MIT-licensed, 277 commits by four contributors between 14 May and 5
+September 2026, 114,032 lines of Python in the package and 29,201 in
+scripts, beside 140,124 lines of tests. Its policy ideas come from
+OpenClaw's <a href="../memory-lancedb-pro/">memory-lancedb-pro</a> —
+current-turn recall, shared durable memory with local scratch — but the
+code is not a port.</p>
+<p>Two things are built with unusual care. <strong>Scope</strong> is a
+key on every row, derived from the identity Hermes supplies rather than
+from the model, and every read lane over the store carries the same
+<code>scope_id IN (…)</code> predicate; vector hits are re-read from
+SQLite under that predicate before they count, and a companion row that
+disagrees with truth marks the index for repair instead of reaching the
+prompt. <strong>Lifecycle</strong> is a state in each row's metadata,
+and one SQL predicate shared by every lane keeps <code>candidate</code>,
+other scopes' scratch and every terminal state out of ordinary recall.
+Digest output is written <code>candidate</code> by default. A scheduled
+adjudicator may archive low-value candidates but refuses to promote an
+unreviewed digest row, and a second-opinion LLM pass records advisory
+receipts and never changes a lifecycle.</p>
+<p>The weak points are about who stands at the gate and what the gate
+remembers. The one exit from <code>candidate</code> to recall is a
+per-id review, and the default tool profile gives it to the model:
+<code>scope_recall_memory</code> accepts
+<code>action: promote, dry_run: false</code> for any candidate in the
+writable scope, with no maintenance flag. A review is therefore whatever
+called promote — a person at the CLI or the agent — distinguished only
+by an actor string. A rejection is <code>archived</code>, and the write
+path deliberately ignores archived rows when deduplicating, so a
+forgotten value said again is a fresh candidate. The agent's own
+<code>scope_recall_store</code> writes are promoted at once, and
+<code>update</code> overwrites content in place with no prior version
+and no audit event.</p>
+<p>Marks: <code>trust_state</code>, <code>bitemporal</code> (a claim
+ledger with valid and transaction time, off by default),
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code> and <code>negative_eval</code>.
+<code>tombstone</code> is withheld. The README's LoCoMo result — 70.58%
+on 1,540 questions — was produced by storing each dialogue turn through
+<code>scope_recall_store</code> with the journal disabled, so it
+measures the retrieval stack and not the default capture path, and its
+raw rows are not in the tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two things are memory: a <code>memories</code> row, and the Hermes
+curated files <code>USER.md</code> and <code>MEMORY.md</code>, which
+Scope Recall reads live and never copies. A raw turn is not memory. It
+becomes a <code>journal_entries</code> row that ordinary recall never
+reads, and it enters the store only when a digest extracts a row from it
+and records the link in <code>memory_journal_sources</code>.</p>
+<p>A row's standing is its <code>lifecycle</code>. <code>promoted</code>
+rows are recalled; <code>candidate</code> rows exist, can be listed and
+inspected, and are withheld; <code>scratch</code> is the lifecycle of
+<code>general</code> rows, recalled only in the local scope that wrote
+them; <code>archived</code>, <code>superseded</code> and
+<code>obsolete</code> are hidden from everything but audit and review
+views. The agent's explicit store creates a promoted row unless the text
+carries a temporary marker. The background digest creates candidates. A
+candidate becomes a belief when someone calls promote on its id, and it
+stops being one when it is archived — by review, by the adjudicator's
+low-value lane, by <code>forget</code>, or by a privacy deny. Nothing
+records the value as refused, so the same fact extracted from a later
+conversation starts again as a candidate.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — digest output is withheld until someone promotes it by id, and the model is one of the parties allowed to; an archived value is not remembered as rejected, so saying it again produces a new candidate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: digest output is withheld until someone promotes it by id, and the model is one of the parties allowed to; an archived value is not remembered as rejected, so saying it again produces a new candidate
+flowchart TD
+  T[&quot;eligible turn: sanitized user and assistant text&quot;] --&gt; J[&quot;journal_entries: provenance, never recalled&quot;]
+  J --&gt;|&quot;background LLM digest, every 2 hours&quot;| D{&quot;automatic_digest_default_lifecycle&quot;}
+  D --&gt;|&quot;candidate, the default&quot;| C[&quot;candidate: hidden from ordinary recall&quot;]
+  D --&gt;|&quot;promoted, opt-in&quot;| P[&quot;promoted: recalled in the accessible scopes&quot;]
+  S[&quot;scope_recall_store by the agent&quot;] --&gt;|&quot;no temporary marker&quot;| P
+  S --&gt;|&quot;temporary, one-off, scratch&quot;| C
+  C --&gt;|&quot;adjudicator: summary, episodic, tool_trace&quot;| A[&quot;archived&quot;]
+  C --&gt;|&quot;adjudicator and LLM review: unreviewed digest row stays&quot;| C
+  C --&gt;|&quot;promote by id: a person at the CLI, or the agent via scope_recall_memory&quot;| P
+  C --&gt;|&quot;archive by id through the same two surfaces&quot;| A
+  P --&gt;|&quot;update: content overwritten, no audit row&quot;| P
+  P --&gt;|&quot;forget: soft archive, audited, reversible&quot;| A
+  A -.-&gt;|&quot;same fact said again: archived rows are not duplicates&quot;| J
+  P --&gt; R[&quot;prefetch: three items, 600 characters, scope_id IN accessible&quot;]</code></pre></details></figure>
+<p>A third representation exists behind two flags. With
+<code>fact_evolution.enabled</code> and an apply mode, the digest's
+structured <code>add</code>/<code>supersede</code>/<code>retract</code>
+proposals become <code>fact_claims</code> rows with a subject,
+predicate, value, cardinality, valid-time interval and record-time
+interval; a <code>single</code> slot admits one current claim per scope,
+enforced by a partial unique index, and superseding closes the old
+claim's interval rather than deleting it. With the flags off, as
+shipped, no claim is written.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Python package installed as an unpacked Hermes plugin under
+<code>$HERMES_HOME/plugins/scope-recall</code>, with its state under
+<code>$HERMES_HOME/scope-recall/</code>: <code>memory.sqlite3</code>
+holding truth, journal, audit, purge, relation, fact and outbox tables;
+<code>lancedb/</code> or <code>vector.sqlite3</code> for the companion;
+<code>config.json</code>. On Windows LanceDB runs in a private
+subprocess over anonymous pipes, and only vector protocol crosses that
+boundary.</p>
+<p>The default embedder is <code>gemini-embedding-001</code> at 3,072
+dimensions over an OpenAI-compatible endpoint, falling back to a
+deterministic 256-dimension <code>local-hash</code> when no key is
+available; <code>sentence-transformers</code> is an alternative. The
+journal digest uses the LLM configured in the Hermes profile, and by
+default does not fall back to its heuristic extractor when that model
+fails (<code>journal.allow_heuristic_fallback: false</code>), so on a
+machine with no model the journal accumulates and nothing is
+digested.</p>
+<p>Concurrency is handled by a cross-process truth-writer lease
+(<code>writer_lease.py</code>): the process holding it — usually the
+gateway — writes, and every other process runs read-only recall and says
+so in its system-prompt block. Vector writes are intents in
+<code>vector_outbox</code>, committed with the truth change and replayed
+afterwards against an immutable generation. Upgrades go through
+<code>hermes-scope-recall update</code>, which verifies a release
+manifest and archive hash and, by its README, restores the previous
+version when an activation fails and the saved evidence shows rollback
+is safe.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>pip install hermes-scope-recall</code> in the Hermes
+environment, then the plugin's installer. Nothing else has to run:
+lexical recall and the SQLite fallback companion work offline, and the
+vector arm degrades to the hash embedder. The default capture path does
+need a chat model for the digest and, for semantic vectors, an embedding
+key. The store is SQLite and repairable by hand, and a read-only browser
+(<code>hermes-scope-recall memories list|inspect</code>,
+<code>candidates list</code>) opens it with <code>mode=ro</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Turn capture.</strong> <code>sync_turn</code>
+(<code>provider.py:468-506</code>) sanitizes the user and assistant
+text, appends what passes the filters to the journal, and starts the
+background digest; per-turn extraction and raw <code>general</code>
+capture are off by default. <code>queue_prefetch</code> is a no-op
+(<code>:461-463</code>) so a previous turn's recall is never injected
+into the next topic, and <code>on_memory_write</code> observes Hermes
+curated writes without mirroring them (<code>:538-559</code>).</li>
+<li><strong>Digest to candidate.</strong> The journal and nightly
+digests call <code>automatic_admission_metadata</code>
+(<code>memory_admission.py:68-131</code>), which sets
+<code>lifecycle</code> from
+<code>automatic_digest_default_lifecycle</code>
+(<code>config.json:10</code>, default <code>candidate</code>), forces
+<code>candidate</code> and <code>needs_live_check</code> on text that
+asserts volatile current state, and stamps
+<code>automatic_admission</code> with its source and route.
+<code>_find_match</code> (<code>journal.py:213-267</code>) merges a
+candidate into an existing row with the same <code>dedup_key</code>, but
+reads only rows whose lifecycle is not terminal
+(<code>:221</code>).</li>
+<li><strong>Explicit store.</strong> <code>classify_memory</code>
+(<code>governance.py:174-281</code>) gives a non-<code>general</code>
+row <code>promoted</code> and a <code>general</code> row
+<code>scratch</code>, downgrading to <code>candidate</code> on a
+temporary marker (<code>:233-243</code>); <code>merge_metadata</code>
+lets a caller ask for <code>candidate</code> and nothing else
+(<code>:352-357</code>). Exact dedupe in <code>store_row</code> ignores
+archived rows by design: <em>"Archived history is not a live
+duplicate"</em> (<code>sql_store.py:1076-1099</code>).</li>
+<li><strong>Adjudication.</strong> After a successful background digest,
+<code>maybe_adjudicate</code> runs
+(<code>_internal/journal/runtime.py:214-218</code>), claiming a 24-hour
+schedule per writable-scope set. <code>run_auto_adjudication</code>
+(<code>auto_adjudication.py:454-684</code>) classifies each candidate
+with <code>quality_decision_for_memory</code>
+(<code>memory_quality.py:275-380</code>): noise types and stale progress
+are archived at once; an unreviewed <code>automatic_admission</code> or
+event-digest row is held (<code>:333-371</code>); only rows past those
+checks and 24 hours old are promoted. Held rows go to
+<code>_run_l4_advisory</code>
+(<code>auto_adjudication.py:193-451</code>), which sends the row and its
+journal evidence to an LLM and stores the verdict as a receipt —
+<em>"untrusted model output never owns memory lifecycle"</em>
+(<code>:12-14</code>).</li>
+<li><strong>Review.</strong> <code>review_candidate</code>
+(<code>candidate_review.py:268-366</code>) plans a <code>promote</code>,
+<code>archive</code> or <code>supersede</code>, returns
+<code>expected_updated_at</code> and <code>expected_lifecycle</code>,
+and applies through <code>transition_memory_lifecycle</code>
+(<code>lifecycle_service.py:382</code>), which checks the revision,
+writes the metadata, the audit event and the vector intent in one
+transaction. Two callers: <code>scripts/candidate.review.py</code>
+behind <code>hermes-scope-recall candidates …</code>
+(<code>cli.py:31-36</code>), and the model's
+<code>scope_recall_memory</code> (<code>tooling.py:727-736</code>,
+<code>memory_ops.py:581-614</code>).</li>
+<li><strong>Recall.</strong> <code>render_current_turn_recall</code>
+(<code>prompting.py:20-89</code>) gates short and trivial queries, runs
+<code>RecallService.search_memories</code>, drops anything recalled in
+the last eight turns, keeps three items within 600 characters, and
+renders a packet headed as untrusted data
+(<code>_internal/recall/compiler.py:614-646</code>). Lexical candidates
+come from <code>search_db_memories</code>
+(<code>storage_views.py:246-479</code>), vector candidates from
+<code>search_vector_memories_with_vector</code> (<code>:519-640</code>),
+curated entries from <code>search_curated_memories</code>
+(<code>:671-701</code>).</li>
+<li><strong>Forgetting.</strong> <code>scope_recall_forget</code>
+soft-archives by default and hard-deletes only in maintenance mode
+(<code>tooling.py:764-793</code>); hard deletes go through
+<code>hard_delete_memories</code>
+(<code>lifecycle_service.py:66</code>), which audits and enqueues the
+vector delete in the same transaction. The privacy purge is two-phase:
+<code>deny_privacy_purge</code> archives the rows and writes
+<code>privacy_purge_tombstones</code> keyed on a hash of scope and id
+(<code>privacy_purge.py:335-514</code>, <code>:52-53</code>), and erase
+redacts the journal entries the rows came from and the audit rows that
+named them.</li>
+<li><strong>Fact claims.</strong> <code>execute_pipeline_proposal</code>
+(<code>fact_evolution.py:327-460</code>) binds a digest proposal to the
+trusted scope and calls <code>execute_fact_plan</code>, which returns a
+preview without writing unless the mode is <code>auto_apply</code> or
+<code>reviewed_apply</code> (<code>fact_executor.py:766-798</code>);
+<code>evolution_policy_mode</code> returns <code>preview</code> whenever
+<code>fact_evolution.enabled</code> is not literally <code>true</code>
+(<code>fact_evolution.py:119-141</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories(id, scope_id, platform, user_id, chat_id, thread_id, gateway_session_key, agent_identity, agent_workspace, session_id, source, target, content, summary, created_at, updated_at, last_recalled_turn)</code>
+with <code>dedup_key</code> and <code>metadata</code> added by migration
+(<code>sql_store.py:482-500</code>, <code>:849-859</code>) and an FTS5
+table beside it. Lifecycle, memory type, confidence, importance, trust,
+sensitivity, tier, entities, tags and the admission and review stamps
+all live in the <code>metadata</code> JSON; the lifecycle predicates
+read it with <code>json_extract</code> and normalise whitespace and case
+identically in Python and SQL (<code>lifecycle_policy.py:14-21</code>,
+<code>:54-64</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>journal_entries</code>, <code>memory_journal_sources</code>,
+<code>journal_digest_runs</code>, <code>journal_rejections</code></td>
+<td>raw sanitized turns, the link from each digest row to its entries,
+run ledgers, and entries a run could not process</td>
+</tr>
+<tr>
+<td><code>governance_audit_events</code></td>
+<td>one row per lifecycle transition or hard delete: event type, action,
+scope, target, batch, before, after, reason, actor</td>
+</tr>
+<tr>
+<td><code>fact_claims</code>, <code>fact_claim_evidence</code>,
+<code>fact_action_receipts</code></td>
+<td>the bitemporal claim ledger, its evidence, and idempotency
+receipts</td>
+</tr>
+<tr>
+<td><code>privacy_purge_operations</code>,
+<code>privacy_purge_tombstones</code>,
+<code>privacy_purge_source_tombstones</code>,
+<code>privacy_purge_vector_intents</code></td>
+<td>the purge ledger, keyed on hashes of scope and id and of journal
+entry id</td>
+</tr>
+<tr>
+<td><code>memory_entities</code>, <code>memory_relations</code>,
+<code>memory_feedback</code></td>
+<td>entity index,
+<code>contradicts</code>/<code>supports</code>/<code>supersedes</code>
+edges, rating feedback</td>
+</tr>
+<tr>
+<td><code>task_episodes</code>, <code>procedural_playbooks</code>,
+<code>playbook_versions</code>, <code>experience_runs</code></td>
+<td>the procedural Experience layer, with its own candidate and review
+states</td>
+</tr>
+<tr>
+<td><code>vector_outbox</code>, <code>vector_generations</code>,
+<code>lexical_generations</code></td>
+<td>companion replay intent and index generations</td>
+</tr>
+</tbody>
+</table></div>
+<p>Scope is the <code>scope_id</code> string, built from
+<code>platform|workspace|agent|user</code> components each written
+<code>label:length:value</code> so a delimiter inside an identifier
+cannot forge another scope (<code>scope.py:33-34</code>,
+<code>:177-242</code>). <code>general</code> rows add the gateway
+session key, or chat and thread, to it. Durable targets
+<code>user</code>, <code>memory</code>, <code>project</code> and
+<code>ops</code> live in the shared scope and follow one user and one
+agent identity across chats; <code>general</code> stays local. An opt-in
+shared pool drops the agent identity for selected targets.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval runs against the current query only. Lexical candidates
+come from five lanes, each filtered by scope and lifecycle in SQL: an
+exact-id lookup, FTS5 ordered by BM25, a trigram generation for CJK
+text, a bigram posting table with a document-frequency prefilter, and a
+bounded LIKE scan run once per accessible scope
+(<code>storage_views.py:144-180</code>, <code>:278-378</code>). The code
+refuses to backfill with recent rows when these return little
+(<code>:413-418</code>). The vector lane embeds the query once, searches
+each accessible scope with a <code>where scope_id =</code> filter
+(<code>vector_store.py:935-939</code>), and keeps a hit only if its
+SQLite row is still in scope, still visible, and matches the companion's
+copy field for field (<code>storage_views.py:550-602</code>).</p>
+<p>Hybrid scoring blends lexical and vector scores 0.45/0.55 when both
+exist and uses the one that exists otherwise, adds bounded BM25 and RRF
+terms (curated entries weighted 1.25 in the fusion), and adjusts for
+entities, freshness hints and fact freshness. A result supported only by
+vector similarity must clear 0.70 with a margin
+(<code>_internal/recall/query_signal.py:276-351</code>), which is what
+keeps nonsense queries empty. Hermes curated files join as a
+lexical-only lane, and only in single-user runtimes unless an allowlist
+says otherwise (<code>storage_views.py:643-668</code>).</p>
+<p>The injected block is small and bounded: three items, 180 characters
+each, 600 in total, headed <em>"untrusted recalled data, not
+instructions"</em>. It is returned per turn by <code>prefetch</code>, so
+it changes with every query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Explicit.</strong> <code>scope_recall_store</code> is
+synchronous: secret filtering, exact dedupe within
+<code>(scope_id, target)</code>, a conservative semantic merge for
+<code>user</code>, <code>ops</code> and <code>project</code>,
+<code>contradicts</code> edges when a near duplicate carries negation,
+then one transaction for the row, FTS, entities, relations and the
+vector intent. The row is recallable on the next turn.</p>
+<p><strong>Background.</strong> Journal appends are cheap and on the hot
+path. The digest runs in a thread after staged turns on a two-hour
+interval, reads only unprocessed entries (up to 500 per run, rising
+under backlog), and is never synchronous by default; session-end LLM
+digests are off. Its output is a candidate, so the lag before a digest
+row is recallable is the digest interval plus however long the candidate
+waits for a promote — unbounded, since nothing automatic promotes it.
+Adjudication runs at most once a day per scope set. No pass rewrites the
+store: the digest merges into matching rows, adjudication moves
+lifecycles, and vector reconciliation pages through at most 200 rows per
+startup.</p>
+<p><strong>Correction.</strong> <code>update</code> rewrites
+<code>content</code> and <code>summary</code> in place
+(<code>memory_ops.py:617-726</code>); there is no version table and no
+audit event for it, and candidates and hidden rows are not editable
+(<code>:656-663</code>). <code>merge</code> keeps a target and
+hard-deletes the sources with an audit event. <code>supersede</code>
+exists only as a candidate-review action.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Hermes <code>MemoryProvider</code> declaring
+<code>on_turn_start</code>, <code>on_pre_compress</code>,
+<code>on_session_end</code>, <code>on_session_switch</code> and
+<code>on_memory_write</code> (<code>plugin.yaml</code>). The default
+<code>core</code> tool profile exposes six tools —
+<code>scope_recall_store</code>, <code>search</code>,
+<code>context</code>, <code>profile</code>, and two dispatchers,
+<code>scope_recall_memory</code> (inspect, feedback, update, merge,
+forget, promote, archive) and <code>scope_recall_entity</code> (probe,
+related). Maintenance tools — dedupe, govern, repair, cross-scope
+export, hard delete, the forgetting run — fail closed without
+<code>maintenance_tools_enabled</code>; secret-index, temporal-query,
+reflection and Experience tools each have their own flag. Subagents
+receive no tools and no capture, because both check
+<code>agent_context == "primary"</code>. A configured list of chat ids
+removes a chat from every memory surface, including its historical
+journal backlog.</p>
+<p>The pre-compression hook stages the messages about to be compressed
+into the journal rather than returning recalled context, so compaction
+feeds the same digest path as ordinary turns.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The review gate can be passed by the reviewed.</strong>
+<code>scope_recall_memory</code> is in the default profile and its
+<code>promote</code> applies when <code>dry_run</code> is
+<code>false</code> (<code>schemas.py:406-410</code>,
+<code>tooling.py:727-736</code>); <code>review_memory_candidate</code>
+checks scope, lifecycle and fact ownership, and nothing about who is
+calling (<code>memory_ops.py:581-614</code>). The dry-run and revision
+token make a model promote deliberate rather than accidental; they do
+not make it a person's decision. The record keeps
+<code>candidate_reviewed_by: scope_recall_memory</code> against
+<code>scope-recall:candidate-review</code> for the CLI, and nothing
+reads the difference. <a href="../argos/">Argos</a>, another Hermes
+plugin, draws this line in its storage layer by refusing the top state
+to anything but the tool path; here the tool path is the model's.</p>
+<p><strong>The scheduler's premise and its effect disagree.</strong>
+<code>auto_adjudication.py</code> opens with <em>"Memory auditing must
+not depend on a human reviewing items one by one"</em> and ends its lane
+list with <em>"humans read summaries, never queues"</em>
+(<code>:3</code>, <code>:16</code>). The quality contract it calls holds
+every unreviewed digest candidate as
+<code>automatic_digest_requires_operator_review</code>
+(<code>memory_quality.py:347-371</code>), so the default capture path
+produces exactly a queue that only one-by-one review drains. What the
+scheduler automates is the archive side.</p>
+<p><strong>A rejection is not remembered.</strong> Review's reject is
+<code>archive</code>, the same state forgetting and cleanup produce. The
+<code>rejected</code> lifecycle is in every hidden set and has no
+writer. The digest's merge and the store's dedupe both skip archived
+rows, the second with a comment saying so, and the adjudicator's
+conflict check reads only visible rows, so a value a person archived and
+the next conversation restates becomes a new candidate. It stays out of
+recall under the default config — which makes the candidate review the
+only thing between a rejected value and the prompt, and makes
+<code>automatic_digest_default_lifecycle: promoted</code> remove that
+last barrier. The privacy purge's tombstones are keyed on a hash of
+scope and row id; the table's <code>content_hash</code> column is
+written at deny time and read nowhere on a write path. That is why
+<code>tombstone</code> is withheld.</p>
+<p><strong>Scope holds against the model, and the CLI fallback is one
+user.</strong> The scope comes from the identity Hermes passes to
+<code>initialize</code>, not from a tool argument, and a gateway runtime
+with no user id is disabled rather than pooled
+(<code>scope.py:17-30</code>). The CLI uses a configured fallback user,
+<code>local</code> by default, so every CLI session on a profile shares
+one durable scope. Cross-platform sharing requires an explicit alias
+map, and legacy per-platform scopes are then readable but not writable
+(<code>scope.py:245-298</code>).</p>
+<p><strong>Edits leave no trace.</strong> A promoted row's text can be
+changed by the model through <code>update</code> with no prior version
+and no audit event, while an archive of the same row is audited with
+before and after. The audit log therefore answers <em>what changed
+state</em> and not <em>what changed content</em>.</p>
+<p><strong>The journal is kept.</strong> <code>retention_days: 0</code>
+disables pruning of processed journal entries
+(<code>config.json:48</code>, <code>journal_store.py:893-898</code>), so
+sanitized raw turns stay in the database indefinitely. The privacy purge
+is the tool for removing them, and it follows the provenance links to
+redact exactly the entries a purged row came from.</p>
+<p><strong>Declared but dark.</strong> Bitemporal claims, temporal
+queries, reflection, Experience auto-promotion and the shared pool are
+all off in the shipped <code>config.json</code> (<code>:106</code>,
+<code>:128</code>); the report credits the claim ledger because a user
+can turn it on and the writer and reader then exist.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>3,452 test functions in 308 files. CI runs <code>pytest</code> on
+Linux, Windows and macOS under three dependency constraint sets, with
+Hermes Agent pinned by commit, and runs the release gate
+<code>scripts/check.release.py</code>. The provider tests import
+Hermes's <code>plugins.memory</code> directly, so a run without Hermes
+fails at collection rather than skipping. I ran none of it;
+<code>pyproject.toml</code> changed inside the seven-day cooldown and
+has no lockfile beside it.</p>
+<p><code>negative_eval</code> rests on two cases, both with positive
+controls in the same run.
+<code>test_scope_isolation_uses_user_and_profile</code>
+(<code>tests/test_provider.py:2814-2850</code>) opens two providers on
+one database, stores a preference as one user, and asserts the other
+user's prefetch is empty and the owner's contains the text.
+<code>scripts/benchmark.negative_retrieval.py</code> runs ten nonsense,
+opaque-id, emoji and stop-word queries against a stubbed pool of five
+unrelated neighbours scored up to 0.99, and requires search, context and
+prefetch all empty — thirty surfaces — while six positive cases each
+return their row; the release gate re-runs it, validates each field
+against fixed counts and requires byte equality with
+<code>benchmarks/NEGATIVE_RETRIEVAL_BENCHMARK.json</code>
+(<code>scripts/check.release.py:1668-1700</code>,
+<code>:1743-1780</code>).
+<code>scripts/rehearse.candidate_isolation.py</code> does the same for
+the trust state: a stored candidate must be absent from ordinary search
+and profile and present in the candidate-inclusive profile. Its presence
+control is on a different surface from its absence check, and
+<code>test_candidate_lifecycle_stays_hidden</code>
+(<code>tests/test_recall_request_deadline_weights.py:230-243</code>)
+asserts an empty result with no control at all, so the rehearsal is the
+stronger of the two.</p>
+<p>One test name disagrees with its body:
+<code>test_l4_grounded_review_promotes_supported_and_archives_unsupported</code>
+(<code>tests/test_auto_adjudication.py:529-558</code>) asserts both
+candidates remain <code>candidate</code> and both verdicts are advisory
+— the body matches the code, and the name describes lifecycle changes
+the code does not make. No test re-extracts an archived value and
+asserts it is refused, and none asserts that the model's
+<code>promote</code> is distinguishable from a person's.</p>
+<p><strong>LoCoMo.</strong> The README reports 70.58% (1,087 of 1,540)
+on categories 1–4 with <code>gemini-embedding-001</code>, and
+<code>gpt-5.4-mini</code> as answerer, judge and query planner; the
+per-category counts in <code>docs/benchmarks/locomo-2026-08.md</code>
+sum to the totals. The raw rows are not committed — the receipt gives
+SHA-256 fingerprints of five artifacts — so the number cannot be
+recomputed from the tree. The harness stores every dialogue turn with
+<code>scope_recall_store</code> and disables the journal and its digest
+(<code>scripts/locomo_benchmark_lib.py:582-617</code>,
+<code>scripts/benchmark.locomo.py:378-389</code>), so the run measures
+lexical and vector retrieval over promoted raw turns. The journal, the
+digest, the candidate state and the review gate are not in it. The
+receipt calls itself legacy local evidence and disclaims cross-vendor
+ranking.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One visibility predicate, generated once, used
+everywhere.</strong> <code>ordinary_recall_lifecycle_visible_sql</code>
+is the single definition of <em>may this reach the model</em>, shared by
+lexical lanes, vector re-checks, FTS integrity counts and the benchmark
+rehearsal, with the Python twin held to the same strip-and-case
+rules.</li>
+<li><strong>Treat the vector index as a claim to verify.</strong>
+Re-read every vector hit from truth under the scope and lifecycle
+predicate, and when the companion disagrees, drop the hit and flag the
+index rather than trusting either copy.</li>
+<li><strong>An asymmetric automatic reviewer.</strong> Let the scheduler
+archive what is plainly low-value and forbid it to promote anything a
+model extracted; route the LLM's opinion into receipts, not state.</li>
+<li><strong>Negative gates re-run and frozen.</strong> A benchmark that
+recomputes its verdict from current code, validates each field against
+fixed counts, and must match a committed fixture byte for byte cannot
+quietly start passing on an empty result.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A review action the reviewed party can call.</strong> If
+promotion is the trust boundary, keep it off the model's tool surface or
+require a principal the model cannot be.</li>
+<li><strong>Rejection as archive.</strong> Record the refused value,
+keyed on its normalized content, and consult it in the digest's match
+and the store's dedupe; otherwise a review decision lasts until the fact
+is next mentioned.</li>
+<li><strong>In-place content updates beside an audited
+lifecycle.</strong> An audit log that sees archive and not edit tells a
+reader everything except what the memory used to say.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a Hermes deployment serving several people and chats from one
+gateway, this is a serious choice: the scope model, the writer lease,
+the upgrade path and the release gates are production engineering, and
+the default keeps automatic extraction out of the prompt. It assumes
+someone works the candidate queue — without that, digest output
+accumulates unread, and with the model doing it, the queue is a
+formality. A single developer who wants memory to simply accumulate
+should expect to either promote by hand or flip the default lifecycle
+and accept what that removes. The 114,000-line surface is large for a
+provider; adopt it as a product, not a library to fork.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How the candidate queue behaves in a real deployment: whether
+operators review it, whether the agent promotes on its own, and how
+large it grows under the two-hour digest.</li>
+<li>Whether the fact-claim ledger is meant to become the default:
+<code>recall_compiler.current_truth_enabled</code> is on in the shipped
+config, and has no claims to read unless the ledger is.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Provider and hooks: <code>provider.py</code>,
+<code>plugin.yaml</code>, <code>_internal/runtime/</code>. Scope:
+<code>scope.py</code>, <code>_internal/memory/scope.py</code>.</li>
+<li>Schema and truth writes: <code>sql_store.py</code>,
+<code>lifecycle_policy.py</code>, <code>lifecycle_registry.py</code>,
+<code>lifecycle_service.py</code>, <code>memory_ops.py</code>,
+<code>governance.py</code>.</li>
+<li>Journal and digest: <code>journal.py</code>,
+<code>journal_store.py</code>, <code>journal_extractors.py</code>,
+<code>nightly_digest.py</code>, <code>memory_admission.py</code>.</li>
+<li>Candidates: <code>candidate_review.py</code>,
+<code>candidate_promotion.py</code>, <code>memory_quality.py</code>,
+<code>auto_adjudication.py</code>, <code>adjudication_l4.py</code>,
+<code>scripts/candidate.review.py</code>, <code>cli.py</code>.</li>
+<li>Retrieval: <code>storage_views.py</code>, <code>recall.py</code>,
+<code>_internal/recall/</code>, <code>prompting.py</code>,
+<code>vector_store.py</code>, <code>sqlite_vector_store.py</code>.</li>
+<li>Facts: <code>temporal_facts.py</code>,
+<code>fact_repository.py</code>, <code>fact_executor.py</code>,
+<code>fact_evolution.py</code>, <code>temporal_query.py</code>.</li>
+<li>Purge: <code>privacy_purge.py</code>,
+<code>privacy_purge_schema.py</code>.</li>
+<li>Tests and gates: <code>tests/</code>,
+<code>scripts/check.release.py</code>,
+<code>scripts/benchmark.negative_retrieval.py</code>,
+<code>scripts/rehearse.candidate_isolation.py</code>,
+<code>benchmarks/</code>,
+<code>docs/benchmarks/locomo-2026-08.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -o &#39;target_state=&quot;[a-z_]+&quot;&#39; lifecycle_registry.py | sort | uniq -c            # archived, obsolete, promoted, superseded, active: no rejected, no in_progress
+rg -n &quot;lifecycle\W{1,6}(rejected|in_progress)&quot; --glob &#39;*.py&#39; --glob &#39;!tests/**&#39; .  # 0: neither state is written outside tests
+rg -n &#39;privacy_purge_tombstones|content_hash&#39; privacy_purge.py                   # content_hash inserted at :412-416, never read on a write path
+rg -n &#39;durable_lifecycle_visible_sql&#39; journal.py                                  # _find_match skips archived rows (:221)
+rg -n &#39;history is not a live duplicate&#39; sql_store.py                               # the store dedupe&#39;s stated exclusion (:1079-1082)
+rg -n &#39;audit|governance&#39; memory_ops.py | awk -F: &#39;$1&gt;=617 &amp;&amp; $1&lt;=726&#39;             # 0: update_memory writes no audit event
+rg -n &#39;(UPDATE|DELETE FROM)\s+governance_audit_events&#39; --glob &#39;!tests/**&#39; .        # one UPDATE, the purge redaction (privacy_purge.py:753)
+rg -n &#39;admission_reviewed_at|candidate_reviewed_at&#39; --glob &#39;*.py&#39; --glob &#39;!tests/**&#39; . | grep -v &#39;get(&#39;   # only candidate_review.py sets them
+rg -n &#39;maintenance|operator_mode&#39; tooling.py | awk -F: &#39;$1&gt;=708 &amp;&amp; $1&lt;=740&#39;       # 0: promote/archive in scope_recall_memory has no maintenance gate
+rg -n &#39;journal|scope_recall_store&#39; scripts/benchmark.locomo.py scripts/locomo_benchmark_lib.py   # journal disabled; turns stored through scope_recall_store
+rg -n -i &#39;arxiv|bibtex|@article|@misc|doi\.org|zenodo&#39; . --glob &#39;!tests/**&#39;; ls | grep -i citation   # 0: no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/410979729/scope-recall-hermes/commit/578b955802df753f2e2208e26eab6f71971285a0"><code class="commit-id" title="578b955802df753f2e2208e26eab6f71971285a0">578b9558…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration, one <code>conftest.py</code>, and
+<code>pyproject.toml</code> inside the seven-day cooldown with no
+lockfile beside it. Read only; nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

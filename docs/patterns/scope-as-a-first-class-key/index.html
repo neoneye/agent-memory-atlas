@@ -935,6 +935,16 @@ table that reaches the one-hop walk only when the caller passes
 <em>"with RLS context"</em>, and no policy in the tree reads the
 variable — the second layer the comment promises is the first layer
 restated. The key is real; the belt-and-braces is one belt.</p>
+<p><a href="../../systems/scope-recall-hermes/">Scope Recall</a> writes
+each scope component as <code>label:length:value</code>, so a delimiter
+inside a chat or user id cannot forge another scope, derives the key
+from the identity Hermes passes to <code>initialize</code>, and disables
+memory outright on a gateway runtime with no user id. The vector
+companion is searched once per accessible scope and each hit is re-read
+from SQLite under <code>scope_id IN (…)</code> before it counts, so a
+stale or mis-keyed companion row cannot cross the boundary; a committed
+test puts two users on one database and asserts one user's preference is
+absent from the other's prefetch and present in the owner's.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

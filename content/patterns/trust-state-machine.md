@@ -361,6 +361,8 @@ has ever superseded anything. A state machine whose interesting transitions have
 not run is a design, and the difference between a design and a mechanism is
 visible only in the data.
 
+[Scope Recall](../../systems/scope-recall-hermes/) binds its state to filtering in one place. `ordinary_recall_lifecycle_visible_sql` is generated once and used by every lexical lane, by the vector re-check and by the FTS integrity counts, and background digest output is written `candidate` by default; the scheduled adjudicator may archive it but not promote it. What it leaves open is the question this page asks first — who may set the state. The promote that moves a row from `candidate` to `promoted` is in the model's default tool profile, so the state withholds a memory until the agent decides to release it.
+
 ## Tests to require
 
 - Prove candidates cannot enter verified-only context.
