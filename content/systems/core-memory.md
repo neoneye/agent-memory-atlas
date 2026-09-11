@@ -7,10 +7,17 @@ page_kind: system
 source_name: JohnnyFiv3r/Core-Memory
 source_url: https://github.com/JohnnyFiv3r/Core-Memory
 archive_name: "JohnnyFiv3r--Core-Memory"
-revision: 1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
-revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6
-analyzed_at: 2026-08-06
+revision: b3857ff5c771d8c2b17ed2d19326de1fac19dbfd
+revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd
+analyzed_at: 2026-09-11
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "the confidence ladder | core_memory/schema/models.py:470-476 | `resolve_confidence_class` is monotonic and grounding caps it — speculative cannot rise past B however often it is recalled | tests"
+  bitemporal: "claim visibility | core_memory/temporal/resolution.py:46-57 and core_memory/retrieval/agent.py:800-812 | `claim_visible_as_of` filters `effective_from`/`effective_to` against an as-of, with `effective_to` exclusive, while `_filter_evidence_by_as_of` filters creation time against the same instant | tests"
+  scope_enforced: "every bead read | a `scope` field on the bead, applied across the retrieval surfaces | 291 scope references across the package outside tests | tests"
+  audit_log: "governance | core_memory/management | every governance action requires a reason and is recorded | tests"
+  human_review: "the dreamer | core_memory/runtime/dreamer | candidates are proposed for a human decision with a rejecter and a reason rather than applied | tests"
+  negative_eval: "the grounding cap | tests | committed cases asserting a speculative bead does not reach class A, including across an index rebuild | tests"
 stack_storage: "sqlite, graph, qdrant, files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -530,7 +537,21 @@ Do not copy:
 - Ceiling tests: `tests/test_external_versioning_and_confidence.py`
 - Negative retrieval cases: `tests/test_chunk_evidence_retrieval.py`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Grounding still caps the ladder | read `core_memory/schema/models.py:470-476` | The comment states it: *"speculative is capped at B"*, and `resolve_confidence_class` is monotonic |
+| Validity and record time are filtered separately | read `temporal/resolution.py:46-57` and `retrieval/agent.py:800-812` | `claim_visible_as_of` on `effective_from`/`effective_to`; `_filter_evidence_by_as_of` on creation time |
+| Supersession is record-keyed | `grep -rn "tombston\|rejected" --include="*.py" core_memory \| grep -iE "lookup\|check\|existing"` | One hit, a merged-state visibility comment; no write path consults a prior rejection by value |
+| The roadmap authors nothing | `head -5 core_memory/graph/roadmap.py` | *"It may sample, search, deduplicate, and cache structural facts, but it never authors associations or semantic meaning."* |
+| Tree and suite size | `find core_memory -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py \| wc -l` | 83,295 lines; 412 test files |
+
 ## History
+
+**2026-09-11** — [`b3857ff5c771d8c2b17ed2d19326de1fac19dbfd`](https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd) — re-read, 12 files and 888 insertions past the previous pin in a single commit, roughly half of it documentation. **All six marks re-verified and unchanged**, with `capability_evidence` records added where the report had none: the grounding cap is still stated in `schema/models.py:470-476` and still monotonic, and the two temporal filters are still separate — `claim_visible_as_of` over `effective_from`/`effective_to` with an exclusive end, `_filter_evidence_by_as_of` over creation time. **The stated risk holds**: supersession remains record-keyed, and no write path consults a prior rejection by value, so re-derivation is not blocked. **The addition is a junction roadmap**, `graph/roadmap.py`, which is worth noting for its discipline rather than its function — the module docstring fixes what a derived projection may do and what it may not: *"It may sample, search, deduplicate, and cache structural facts, but it never authors associations or semantic meaning."* A layer that states in its first sentence that it is not allowed to invent meaning is the right shape for something built on top of a grounding ladder, and `junction_roadmap_attribution` keeps the derivation traceable. Screened before reading: four findings; nothing was installed or run.
 
 **2026-08-06** — [`1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6`](https://github.com/JohnnyFiv3r/Core-Memory/commit/1ff0d4a4a9341c07a8c1e49739b95a82d23f47b6) — 8 commits on, all retrieval. A junction-and-roadmap layer arrives: junction identities derived from claims, worldlines and goals; a durable roadmap over observed causal segments with explicit expansion caps; and a query planner over both, under 1,900 lines of new tests. Both modules disclaim write authority in their opening docstrings, and a `sanctioned_deterministic_writers` allowlist with a committed baseline enforces it.
 
