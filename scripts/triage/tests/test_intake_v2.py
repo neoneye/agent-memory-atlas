@@ -180,6 +180,57 @@ class LegacyHoldTests(Base):
             "SELECT COUNT(*) FROM candidate WHERE source_hold='legacy_title_only'").fetchone()[0], 29)
 
 
+def build_v1_state(path: Path, timezone: str) -> dict:
+    """A database exactly as the v1 build left it, with real work in it: one
+    candidate selected on a frozen day, one accepted, one eligible and waiting."""
+    for suffix in ("", "-wal", "-shm"):
+        Path(str(path) + suffix).unlink(missing_ok=True)
+    c = sqlite3.connect(path); c.isolation_level = None; c.row_factory = sqlite3.Row
+    for stmt in db._statements(db.MIGRATIONS[0][1]):
+        c.execute(stmt)
+    c.execute("INSERT INTO meta VALUES ('schema_version', '1')")
+    c.execute("INSERT INTO meta VALUES ('policy_version', '2026-09-11.2')")
+    now = iso(utc_now()); day = civil_day(utc_now(), timezone)
+    def cand(name, triage, analysis):
+        cid = c.execute("INSERT INTO candidate(canonical_name, display_name, first_seen_at, last_seen_at, "
+                        "triage_status, analysis_status) VALUES (?,?,?,?,?,?)",
+                        (name, name, now, now, triage, analysis)).lastrowid
+        aid = c.execute("INSERT INTO assessment(uuid, candidate_id, assessed_commit, assessed_at, policy_version, "
+                        "outcome, score, facts) VALUES (?,?,?,?,?,?,?,?)",
+                        (str(uuid.uuid4()), cid, "a" * 40, now, "2026-09-11.2", triage, 70,
+                         dumps({"head_commit": "a" * 40}))).lastrowid
+        c.execute("UPDATE candidate SET latest_assessment=? WHERE id=?", (aid, cid))
+        return cid, aid
+    selected, sel_aid = cand("was/selected", "eligible", "selected")
+    accepted, _ = cand("was/accepted", "eligible", "accepted")
+    eligible, _ = cand("was/eligible", "eligible", "not_selected")
+    c.execute("INSERT INTO day_ledger(day, tz, frozen_at, admitted) VALUES (?, ?, ?, 1)",
+              (day, timezone, now))
+    sel_uuid = str(uuid.uuid4())
+    c.execute("INSERT INTO selection(uuid, day, tz, slot, candidate_id, assessment_id, selected_commit, created_at) "
+              "VALUES (?,?,?,1,?,?,?,?)", (sel_uuid, day, timezone, selected, sel_aid, "a" * 40, now))
+    c.close()
+    return {"selected": selected, "accepted": accepted, "eligible": eligible, "sel_uuid": sel_uuid}
+
+
+def v1_backup(path: Path, timezone: str, target: Path) -> dict:
+    """A backup as the v1 build's `export` wrote it: header at schema 1, and
+    rows carrying only v1 columns, including meta's own schema_version = 1."""
+    import __main__ as entry
+    ids = build_v1_state(path, timezone)
+    c = sqlite3.connect(path); c.row_factory = sqlite3.Row
+    lines = [dumps({"kind": "header", "schema_version": 1, "policy_version": "2026-09-11.2",
+                    "exported_at": iso(utc_now()), "source": "test"})]
+    for table in entry.EXPORT_TABLES:
+        for row in c.execute(f"SELECT * FROM {table}"):
+            lines.append(dumps({"kind": "row", "table": table, "row": {k: row[k] for k in row.keys()}}))
+    c.close()
+    for suffix in ("", "-wal", "-shm"):
+        Path(str(path) + suffix).unlink(missing_ok=True)
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return ids
+
+
 class ExistingStateTests(unittest.TestCase):
     """A v1 database with real work in it, upgraded and then fed the new feed."""
 
@@ -188,33 +239,9 @@ class ExistingStateTests(unittest.TestCase):
         self.addCleanup(self.h.close)
         self.h.connection.close()
         path = self.h.config.db_path
-        path.unlink()
-        for suffix in ("-wal", "-shm"):
-            Path(str(path) + suffix).unlink(missing_ok=True)
-        c = sqlite3.connect(path); c.isolation_level = None; c.row_factory = sqlite3.Row
-        for stmt in db._statements(db.MIGRATIONS[0][1]):
-            c.execute(stmt)
-        c.execute("INSERT INTO meta VALUES ('schema_version', '1')")
-        now = iso(utc_now()); day = civil_day(utc_now(), self.h.config.timezone)
-        def cand(name, triage, analysis):
-            cid = c.execute("INSERT INTO candidate(canonical_name, display_name, first_seen_at, last_seen_at, "
-                            "triage_status, analysis_status) VALUES (?,?,?,?,?,?)",
-                            (name, name, now, now, triage, analysis)).lastrowid
-            aid = c.execute("INSERT INTO assessment(uuid, candidate_id, assessed_commit, assessed_at, policy_version, "
-                            "outcome, score, facts) VALUES (?,?,?,?,?,?,?,?)",
-                            (str(uuid.uuid4()), cid, "a" * 40, now, "2026-09-11.2", triage, 70,
-                             dumps({"head_commit": "a" * 40}))).lastrowid
-            c.execute("UPDATE candidate SET latest_assessment=? WHERE id=?", (aid, cid))
-            return cid, aid
-        self.selected, sel_aid = cand("was/selected", "eligible", "selected")
-        self.accepted, _ = cand("was/accepted", "eligible", "accepted")
-        self.eligible, _ = cand("was/eligible", "eligible", "not_selected")
-        c.execute("INSERT INTO day_ledger(day, tz, frozen_at, admitted) VALUES (?, ?, ?, 1)",
-                  (day, self.h.config.timezone, now))
-        self.sel_uuid = str(uuid.uuid4())
-        c.execute("INSERT INTO selection(uuid, day, tz, slot, candidate_id, assessment_id, selected_commit, created_at) "
-                  "VALUES (?,?,?,1,?,?,?,?)", (self.sel_uuid, day, self.h.config.timezone, self.selected, sel_aid, "a" * 40, now))
-        c.close()
+        ids = build_v1_state(path, self.h.config.timezone)
+        self.selected, self.accepted, self.eligible = ids["selected"], ids["accepted"], ids["eligible"]
+        self.sel_uuid = ids["sel_uuid"]
         self.conn = db.connect(path)
         atlas.sync(self.conn, self.h.atlas_repo, Path(self.h.config.policy_file).parent / "exclusions.txt")
         self.h.connection = self.conn
@@ -266,6 +293,80 @@ class ExistingStateTests(unittest.TestCase):
         self.assertEqual(loads(restored.execute(
             "SELECT hints FROM candidate WHERE canonical_name='new/one'").fetchone()["hints"])["stars"], 12)
         self.assertEqual(restored.execute("SELECT uuid FROM selection").fetchone()["uuid"], self.sel_uuid)
+
+
+class RestoreTests(unittest.TestCase):
+    """A backup written by the v1 build, restored by this one, and then used."""
+
+    def setUp(self):
+        self.h = Harness()
+        self.addCleanup(self.h.close)
+        self.backup = self.h.root / "v1-backup.jsonl"
+        self.ids = v1_backup(self.h.root / "v1.sqlite3", self.h.config.timezone, self.backup)
+        self.fresh = self.h.root / "restored"
+
+    def cli(self, state_dir: Path, *argv: str) -> int:
+        import io
+        from contextlib import redirect_stderr, redirect_stdout
+        import __main__ as entry
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            return entry.main(["--state-dir", str(state_dir), "--atlas-repo", str(self.h.atlas_repo),
+                               "--json", *argv])
+
+    def test_a_v1_backup_restores_to_the_current_schema_and_reopens(self):
+        self.assertEqual(self.cli(self.fresh, "restore", "--input", str(self.backup)), 0)
+        # The next command opens it as every later run will. This is where a
+        # rerun of migration 2 against columns the restore had built used to fail.
+        self.assertEqual(self.cli(self.fresh, "status"), 0)
+        self.assertEqual(self.cli(self.fresh, "status"), 0)
+        conn = db.connect(self.fresh / "triage.sqlite3")
+        self.addCleanup(conn.close)
+        self.assertEqual(db.schema_version(conn), db.SCHEMA_VERSION)
+        rows = {r["canonical_name"]: r for r in conn.execute("SELECT * FROM candidate")}
+        self.assertEqual(rows["was/selected"]["analysis_status"], "selected")
+        self.assertEqual(rows["was/accepted"]["analysis_status"], "accepted")
+        self.assertEqual(rows["was/eligible"]["hints"], "{}", "v2 columns take their defaults")
+        self.assertIsNone(rows["was/eligible"]["source_hold"])
+        self.assertEqual(conn.execute("SELECT uuid FROM selection").fetchone()["uuid"], self.ids["sel_uuid"])
+        self.assertEqual(db.get_meta(conn, "policy_version"), "2026-09-11.2")
+        self.assertEqual(sorted(p.name for p in self.fresh.iterdir() if "restoring" in p.name), [])
+
+    def test_the_restored_ledger_takes_the_new_feed_like_an_upgraded_one(self):
+        self.assertEqual(self.cli(self.fresh, "restore", "--input", str(self.backup)), 0)
+        conn = db.connect(self.fresh / "triage.sqlite3")
+        self.addCleanup(conn.close)
+        self.h.feed([legacy("was/selected"), legacy("was/accepted"), legacy("was/eligible")])
+        result = ingest_module.run(self.h.config, conn, None)
+        self.assertEqual(result.status, "complete", result.failure)
+        row = conn.execute("SELECT * FROM candidate WHERE canonical_name='was/eligible'").fetchone()
+        self.assertEqual((row["source_hold"], row["source_hold_disposition"]),
+                         ("legacy_title_only", "assessed_before_hold"))
+
+    def test_a_failed_restore_leaves_the_existing_ledger_in_place(self):
+        existing = self.h.config.db_path
+        self.h.connection.execute("INSERT INTO meta(key, value) VALUES ('marker', 'kept')")
+        self.h.connection.close()
+        broken = self.h.root / "broken.jsonl"
+        lines = self.backup.read_text(encoding="utf-8").splitlines()
+        # A v1 backup cannot carry a v2 column; this one claims to.
+        lines.append(dumps({"kind": "row", "table": "candidate",
+                            "row": {"id": 99, "canonical_name": "x/y", "display_name": "x/y",
+                                    "first_seen_at": "t", "last_seen_at": "t", "hints": "{}"}}))
+        broken.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        self.assertEqual(self.cli(self.h.config.state_dir, "restore", "--force", "--input", str(broken)), 2)
+        conn = db.connect(existing)
+        self.addCleanup(conn.close)
+        self.assertEqual(db.get_meta(conn, "marker"), "kept")
+        leftovers = [p.name for p in existing.parent.iterdir() if "restoring" in p.name or "replaced" in p.name]
+        self.assertEqual(leftovers, [])
+
+    def test_a_header_without_a_schema_version_is_refused(self):
+        headless = self.h.root / "headless.jsonl"
+        lines = self.backup.read_text(encoding="utf-8").splitlines()
+        header = loads(lines[0]); header.pop("schema_version")
+        headless.write_text("\n".join([dumps(header), *lines[1:]]) + "\n", encoding="utf-8")
+        self.assertEqual(self.cli(self.fresh, "restore", "--input", str(headless)), 2)
+        self.assertFalse((self.fresh / "triage.sqlite3").exists())
 
 
 class ProvenanceTests(Base):
@@ -354,6 +455,28 @@ class SchedulingTests(Base):
         queue = assess_module.metadata_queue(self.conn, self.h.config, assess_module.AssessRun(), 10)
         self.assertEqual(queue, [], "a newer hinted push waits a day before it costs a request")
 
+    def test_atlas_members_never_take_a_metadata_slot(self):
+        # The member outranks the newcomer on every hint, and the allowance is
+        # one repository: it must go to the newcomer, every day.
+        self.ingest([modern("someone/already-read", description="agent memory recall persist",
+                            pushed_at=iso(utc_now()), stars=5000),
+                     modern("new/one", description="a web framework", stars=0)])
+        self.h.config.exploration_share = 0.0
+        for _ in range(2):
+            run = assess_module.AssessRun()
+            queue = assess_module.metadata_queue(self.conn, self.h.config, run, 1)
+            self.assertEqual([row["canonical_name"] for row, _ in queue], ["new/one"])
+            self.assertEqual(run.skipped_excluded, 1)
+        client = FakeClient(self.h.config, self.conn, self.day)
+        repo_routes(client, "new/one", commit=COMMIT, files={"README.md": "x"})
+        run = assess_module.AssessRun()
+        assess_module.collect_metadata(self.h.config, self.conn, client, self.day, run, limit=1)
+        self.assertEqual(run.metadata_collected, 1)
+        self.assertFalse(any("already-read" in url for url in client.calls))
+        import reports
+        self.assertEqual(reports.intake_summary(self.conn, self.h.config)["not_held_without_measurement"], 0,
+                         "a repository the atlas reports on is no one's backlog")
+
     def test_unknown_values_are_never_read_as_measured_zero(self):
         self.assertEqual(assess_module.prescore({"stars": 0, "size_kb": None}),
                          assess_module.prescore({"stars": 0}))
@@ -379,18 +502,64 @@ class GateIndependenceTests(Base):
 
 
 class TransportTests(Base):
-    def _client_with_feed(self, body: bytes, *, size=None, sha=None, raw: bytes | None = None):
+    URL = api_url("repos", "Daily-Nerd", "scout", "contents", "data", "candidates.jsonl", ref="main")
+
+    def _client_with_feed(self, body: bytes, *, size=None, sha=None, raw: bytes | None = None,
+                          inline: bytes | None = None):
+        """Answer the way GitHub does: up to 1 MiB the JSON form carries the file
+        as Base64 with a newline every 60 characters; above it, empty content."""
+        import base64
         cfg = self.h.config
         cfg.source_kind = "github"
         client = FakeClient(cfg, self.conn, self.day)
-        url = api_url("repos", "Daily-Nerd", "scout", "contents", "data", "candidates.jsonl", ref="main")
-        client.route(url, {"size": len(body) if size is None else size,
-                           "sha": ingest_module.git_blob_sha(body) if sha is None else sha},
-                     accept="application/vnd.github+json")
-        client.route(url, body if raw is None else raw, accept="application/vnd.github.raw")
+        meta = {"size": len(body) if size is None else size,
+                "sha": ingest_module.git_blob_sha(body) if sha is None else sha,
+                "content": "", "encoding": "none"}
+        carried = body if inline is None else inline
+        if len(body) <= ingest_module.INLINE_LIMIT:
+            encoded = base64.b64encode(carried).decode()
+            meta["content"] = "\n".join(encoded[i:i + 60] for i in range(0, len(encoded), 60)) + "\n"
+            meta["encoding"] = "base64"
+        client.route(self.URL, meta, accept="application/vnd.github+json")
+        client.route(self.URL, body if raw is None else raw, accept="application/vnd.github.raw")
         client.route(api_url("repos", "Daily-Nerd", "scout", "commits", path="data/candidates.jsonl",
                              sha="main", per_page=1), [{"sha": "51be06e0" + "0" * 32}])
         return client
+
+    def _feed_of(self, approx_bytes: int) -> bytes:
+        lines, total, i = [], 0, 0
+        while total < approx_bytes:
+            line = json.dumps(modern(f"owner{i % 97}/repo{i:05d}", description="agent memory " + "x" * 200))
+            lines.append(line); total += len(line) + 1; i += 1
+        return ("\n".join(lines) + "\n").encode()
+
+    def test_feeds_between_200_kib_and_1_mib_import_from_the_inline_content(self):
+        for approx in (220_575, 600 * 1024, 1000 * 1024):
+            with self.subTest(bytes=approx):
+                self.conn.execute("DELETE FROM candidate")
+                body = self._feed_of(approx)
+                self.assertLessEqual(len(body), ingest_module.INLINE_LIMIT)
+                client = self._client_with_feed(body)
+                result = ingest_module.run(self.h.config, self.conn, client)
+                self.assertEqual(result.status, "complete", result.failure)
+                self.assertEqual(result.verification, "blob-sha")
+                self.assertEqual(client.calls.count(self.URL), 1, "the inline bytes are used, not fetched twice")
+
+    def test_the_largest_inlined_file_fits_the_json_ceiling(self):
+        body = b"x" * (ingest_module.INLINE_LIMIT - 1) + b"\n"
+        client = self._client_with_feed(body)
+        payload, _ = client.routes[(self.URL, "application/vnd.github+json")]
+        self.assertLess(len(json.dumps(payload)), ingest_module.CONTENTS_JSON_BYTES)
+        snapshot = ingest_module.fetch(self.h.config, client)
+        self.assertEqual(snapshot.body, body)
+
+    def test_inline_content_that_disagrees_with_the_reported_sha_is_refused(self):
+        body = self._feed_of(300 * 1024)
+        other = body.replace(b"agent memory", b"agent-memory", 1)
+        result = ingest_module.run(self.h.config, self.conn, self._client_with_feed(body, inline=other))
+        self.assertEqual(result.status, "failed")
+        self.assertIn("git blob hash", result.failure)
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM candidate").fetchone()[0], 0)
 
     def _big_feed(self) -> bytes:
         lines = [json.dumps(modern(f"owner{i % 97}/repo{i:05d}", description="agent memory " + "x" * 400))

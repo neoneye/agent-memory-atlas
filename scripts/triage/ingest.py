@@ -92,16 +92,42 @@ def git_blob_sha(body: bytes) -> str:
     return hashlib.sha1(b"blob %d\0" % len(body) + body).hexdigest()
 
 
+#: The Contents API inlines a file of up to 1 MiB in its JSON response as
+#: Base64, which is 4/3 of the size plus a newline every 60 characters, so the
+#: JSON form of the largest inlined file is about 1.4 MiB. Anything larger
+#: comes back with empty `content` and costs a few hundred bytes.
+INLINE_LIMIT = 1024 * 1024
+CONTENTS_JSON_BYTES = 2 * 1024 * 1024
+
+
+def _inline_content(meta: object) -> bytes | None:
+    """The file's bytes when the JSON response carried them, else None."""
+    if not isinstance(meta, dict) or meta.get("encoding") != "base64":
+        return None
+    content = meta.get("content")
+    if not isinstance(content, str) or not content:
+        return None
+    import base64
+    import binascii
+    try:
+        return base64.b64decode("".join(content.split()), validate=True)
+    except (binascii.Error, ValueError):
+        # Undecodable inline content is not evidence of anything; the raw form
+        # is fetched and checked instead.
+        return None
+
+
 def fetch(config: Config, client: Client | None) -> Snapshot:
     """Get the configured feed. A local file is an explicit choice, not a fallback.
 
-    The feed passed 1 MiB on 11 September 2026, and the Contents API does not
-    inline a file that size as Base64. So the fetch is two requests to the same
-    endpoint: the JSON form, for the file's `size` and git blob `sha` at the ref,
-    then the raw form, for the bytes — which are checked against both. A body
-    that is short, long or different is refused before anything is imported,
-    which is what makes a truncated download a failure rather than a feed that
-    happens to have fewer rows.
+    The JSON form of the Contents API gives the file's `size` and git blob `sha`
+    at the ref. Up to 1 MiB it also carries the bytes, as Base64, and those are
+    used. The feed passed 1 MiB on 11 September 2026, above which the bytes come
+    from a second request for the raw form of the same endpoint. Either way the
+    body is checked against both size and sha. A body that is short, long or
+    different is refused before anything is imported, which is what makes a
+    truncated download a failure rather than a feed that happens to have fewer
+    rows.
 
     If the API is rate-limited, the same `repo@ref:path` is read from
     raw.githubusercontent.com and recorded as `unverified`. That is another
@@ -124,8 +150,9 @@ def fetch(config: Config, client: Client | None) -> Snapshot:
     owner, name = config.source_repo.split("/", 1)
     url = api_url("repos", owner, name, "contents", *config.source_path.split("/"),
                   ref=config.source_ref)
+    etag = None
     try:
-        meta = client.get(url, max_bytes=256 * 1024).json()
+        meta = client.get(url, max_bytes=CONTENTS_JSON_BYTES).json()
         expected_size = meta.get("size") if isinstance(meta, dict) else None
         expected_sha = meta.get("sha") if isinstance(meta, dict) else None
         if isinstance(expected_size, int) and expected_size > limits.feed_bytes:
@@ -133,8 +160,13 @@ def fetch(config: Config, client: Client | None) -> Snapshot:
                 f"the feed is {expected_size} bytes at {config.source_ref}, over the "
                 f"{limits.feed_bytes} ceiling"
             )
-        response = client.get(url, accept="application/vnd.github.raw",
-                              max_bytes=limits.feed_bytes, reject_binary=True)
+        body = _inline_content(meta)
+        if body is not None and b"\x00" in body[:8192]:
+            raise IngestStopped("the feed is binary content, nothing imported")
+        if body is None:
+            response = client.get(url, accept="application/vnd.github.raw",
+                                  max_bytes=limits.feed_bytes, reject_binary=True)
+            body, etag = response.body, response.headers.get("etag")
     except FetchError as error:
         if error.category not in ("rate_limit", "forbidden"):
             raise
@@ -144,7 +176,6 @@ def fetch(config: Config, client: Client | None) -> Snapshot:
         return Snapshot(response.body, config.source_identity, "github", "raw",
                         verification="unverified")
 
-    body = response.body
     if isinstance(expected_size, int) and len(body) != expected_size:
         raise IngestStopped(
             f"the feed arrived as {len(body)} bytes where the Contents API reports "
@@ -157,7 +188,7 @@ def fetch(config: Config, client: Client | None) -> Snapshot:
         )
     return Snapshot(
         body, config.source_identity, "github", "contents-api",
-        etag=response.headers.get("etag"),
+        etag=etag,
         blob_sha=expected_sha if isinstance(expected_sha, str) else None,
         upstream_commit=_upstream_commit(config, client),
         verification="blob-sha" if isinstance(expected_sha, str) else "size-only",

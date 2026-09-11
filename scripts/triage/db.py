@@ -285,10 +285,29 @@ def _apply(connection: sqlite3.Connection, version: int, script: str) -> None:
     )
 
 
-def connect(path: Path, *, create: bool = False) -> sqlite3.Connection:
+def migrate(connection: sqlite3.Connection, *, upto: int = SCHEMA_VERSION) -> int:
+    """Apply every migration above the recorded version, up to `upto`, inside
+    the caller's open transaction. Returns the version reached.
+
+    `restore` is the caller that needs this: it builds a database at the
+    backup's own schema, loads the rows into it, and only then migrates, in the
+    same transaction, so older data goes through the same steps a live database
+    of that age would.
+    """
+    current = schema_version(connection)
+    for version, script in MIGRATIONS:
+        if current < version <= upto:
+            _apply(connection, version, script)
+            current = version
+    return current
+
+
+def connect(path: Path, *, create: bool = False, upto: int = SCHEMA_VERSION) -> sqlite3.Connection:
     """Open the state database.
 
-    `create=False` and a missing file is an error, not an invitation.
+    `create=False` and a missing file is an error, not an invitation. `upto`
+    stops migration early; only `restore` asks for that, and it finishes the
+    migration itself.
     """
     if not path.exists():
         if not create:
@@ -316,7 +335,7 @@ def connect(path: Path, *, create: bool = False) -> sqlite3.Connection:
         raise StateCorrupt(f"{path} exists but carries no schema version; refusing to guess.")
 
     for version, script in MIGRATIONS:
-        if version > current:
+        if current < version <= upto:
             with transaction(connection):
                 _apply(connection, version, script)
             current = version

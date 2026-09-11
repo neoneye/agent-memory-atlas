@@ -688,6 +688,24 @@ def cmd_export(args, config: Config) -> int:
     return 0
 
 
+_SIDECARS = ("", "-wal", "-shm", "-journal")
+
+
+def _remove_database(path: Path) -> None:
+    for suffix in _SIDECARS:
+        Path(str(path) + suffix).unlink(missing_ok=True)
+
+
+def _move_database(source: Path, target: Path) -> None:
+    """Move a database with its sidecar files. A `-wal` left behind would be
+    replayed into whatever database next takes the old name."""
+    _remove_database(target)
+    for suffix in _SIDECARS:
+        origin = Path(str(source) + suffix)
+        if origin.exists():
+            origin.replace(Path(str(target) + suffix))
+
+
 def cmd_restore(args, config: Config) -> int:
     source = Path(args.input)
     if not source.is_file():
@@ -697,54 +715,87 @@ def cmd_restore(args, config: Config) -> int:
             f"{config.db_path} already exists. A restore replaces a ledger; it does not merge "
             f"into one. Move the existing state aside, or pass --force to replace it."
         )
-    if config.db_path.exists():
-        config.db_path.replace(config.db_path.with_suffix(".sqlite3.replaced"))
-
-    connection = open_state(config, create=True)
-    header, rows, skipped = None, 0, []
-    with transaction(connection):
-        for number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = loads(line)
-            except ValueError as error:
-                raise Exit(f"{source}:{number}: not JSON ({error}); nothing was restored") from None
-            if record.get("kind") == "header":
-                header = record
-                if int(record.get("schema_version", 0)) > db.SCHEMA_VERSION:
-                    raise Exit(
-                        f"backup is schema {record['schema_version']}; this build understands "
-                        f"{db.SCHEMA_VERSION}"
-                    )
-                continue
-            if record.get("kind") != "row":
-                skipped.append(f"line {number}: unknown kind {record.get('kind')!r}")
-                continue
-            table, payload = record.get("table"), record.get("row")
-            if table not in EXPORT_TABLES or not isinstance(payload, dict) or not payload:
-                skipped.append(f"line {number}: unknown or empty table {table!r}")
-                continue
-            # Column names are interpolated into SQL, so they are checked against
-            # the table's real columns rather than trusted from the file.
-            known = {
-                row["name"] for row in connection.execute(f"PRAGMA table_info({table})")
-            }
-            unknown = set(payload) - known
-            if unknown:
-                raise Exit(
-                    f"{source}:{number}: {table} has no column(s) {sorted(unknown)}; "
-                    f"nothing was restored"
-                )
-            columns = ", ".join(payload)
-            marks = ", ".join("?" for _ in payload)
-            connection.execute(
-                f"INSERT OR REPLACE INTO {table}({columns}) VALUES ({marks})",
-                tuple(payload.values()),
-            )
-            rows += 1
-    if header is None:
+    records: list[tuple[int, dict[str, Any]]] = []
+    for number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            records.append((number, loads(line)))
+        except ValueError as error:
+            raise Exit(f"{source}:{number}: not JSON ({error}); nothing was restored") from None
+    headers = [record for _, record in records if record.get("kind") == "header"]
+    if not headers:
         raise Exit(f"{source} has no header record; refusing to treat it as a backup")
+    header = headers[0]
+    try:
+        backup_schema = int(header.get("schema_version") or 0)
+    except (TypeError, ValueError):
+        backup_schema = 0
+    if backup_schema < 1:
+        raise Exit(f"{source}: the header carries no schema version; refusing to guess")
+    if backup_schema > db.SCHEMA_VERSION:
+        raise Exit(
+            f"backup is schema {backup_schema}; this build understands {db.SCHEMA_VERSION}"
+        )
+
+    # The rows go into a database built at the backup's own schema, then migrate
+    # forward in the same transaction, exactly as a live database of that age
+    # would. The work happens beside the ledger and replaces it only once it has
+    # succeeded, so a failed restore leaves the existing state where it was and
+    # never leaves an empty ledger in its place.
+    staging = config.db_path.with_name(config.db_path.name + ".restoring")
+    _remove_database(staging)
+    connection = db.connect(staging, create=True, upto=backup_schema)
+    rows, skipped = 0, []
+    try:
+        with transaction(connection):
+            for number, record in records:
+                if record.get("kind") == "header":
+                    continue
+                if record.get("kind") != "row":
+                    skipped.append(f"line {number}: unknown kind {record.get('kind')!r}")
+                    continue
+                table, payload = record.get("table"), record.get("row")
+                if table not in EXPORT_TABLES or not isinstance(payload, dict) or not payload:
+                    skipped.append(f"line {number}: unknown or empty table {table!r}")
+                    continue
+                if table == "meta" and payload.get("key") == "schema_version":
+                    # The database records its own schema; the backup's value
+                    # describes the rows, and the header already said it.
+                    continue
+                # Column names are interpolated into SQL, so they are checked
+                # against the table's real columns rather than trusted from the file.
+                known = {
+                    row["name"] for row in connection.execute(f"PRAGMA table_info({table})")
+                }
+                unknown = set(payload) - known
+                if unknown:
+                    raise Exit(
+                        f"{source}:{number}: {table} has no column(s) {sorted(unknown)} at "
+                        f"schema {backup_schema}; nothing was restored"
+                    )
+                columns = ", ".join(payload)
+                marks = ", ".join("?" for _ in payload)
+                connection.execute(
+                    f"INSERT OR REPLACE INTO {table}({columns}) VALUES ({marks})",
+                    tuple(payload.values()),
+                )
+                rows += 1
+            reached = db.migrate(connection)
+        if reached != db.SCHEMA_VERSION:
+            raise Exit(f"restore reached schema {reached}, not {db.SCHEMA_VERSION}; nothing was restored")
+    except BaseException:
+        connection.close()
+        _remove_database(staging)
+        raise
+    connection.close()
+
+    if config.db_path.exists():
+        _move_database(config.db_path, config.db_path.with_suffix(".sqlite3.replaced"))
+    _move_database(staging, config.db_path)
+    # Reopened the way every later command will open it, so a restore that
+    # could not be continued from fails here rather than on the next run.
+    connection = open_state(config)
 
     live = [
         dict(row) for row in connection.execute(
@@ -754,6 +805,8 @@ def cmd_restore(args, config: Config) -> int:
     emit({
         "restored_from": str(source),
         "exported_at": header.get("exported_at"),
+        "backup_schema": backup_schema,
+        "schema": db.schema_version(connection),
         "rows": rows,
         "skipped": skipped,
         "leases_needing_reconciliation": live,

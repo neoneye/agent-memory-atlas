@@ -204,10 +204,12 @@ feed hint reports a newer push — after a day, so a reimport cannot turn every
 hinted change into same-day work. Refreshing a measurement does not reopen an
 analysis rejection or anything running.
 
-The feed passed 1 MiB on 11 September 2026. The fetch reads the Contents API's
-JSON form for the file's size and git blob sha, then the raw bytes, and refuses
-a body that does not match both — so a truncated download is a failure, not a
-feed that happens to be shorter. The upstream commit that last touched the file
+The fetch reads the Contents API's JSON form for the file's size and git blob
+sha. Up to 1 MiB that response also carries the file as Base64, and those bytes
+are used. The feed passed 1 MiB on 11 September 2026, above which a second
+request fetches the raw bytes. Either way a body that does not match both size
+and sha is refused — so a truncated download is a failure, not a feed that
+happens to be shorter. The upstream commit that last touched the file
 is recorded with every ingestion; pin a snapshot with `--source-ref <sha>`.
 
 ### Handing work to the analysis
@@ -323,7 +325,11 @@ python3 scripts/triage restore --input backup.jsonl        # into an empty state
 The backup carries decisions, aliases, assessments, selections, attempts, budget
 use and the schema and policy versions needed to continue safely. It carries no
 credentials and no cached response bodies. A restore **replaces** a ledger; it
-never merges into one. An attempt restored as `running` holds a lease from before
+never merges into one. It builds the database at the backup's own schema
+version, loads the rows, migrates forward in the same transaction, and reopens
+the result before moving it into place — so a backup from an older build comes
+back at the current schema, and a restore that fails leaves the existing ledger
+untouched. An attempt restored as `running` holds a lease from before
 the backup and needs reconciling with whoever held it before it is reclaimed —
 `restore` lists those.
 
@@ -377,7 +383,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-172 tests, about three seconds, hermetic — a fake GitHub, temporary state
+180 tests, about four seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered

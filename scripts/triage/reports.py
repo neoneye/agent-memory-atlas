@@ -65,12 +65,19 @@ def intake_summary(connection: sqlite3.Connection, config: Config) -> dict[str, 
     ).fetchone()["n"])
     cutoff = f"-{int(config.metadata_max_age_days)} days"
     not_held = "(c.source_hold IS NULL OR c.source_hold != 'legacy_title_only')"
+    # Anything the atlas already reports on, under any name the candidate has
+    # carried, is the end of the road for triage and is no one's backlog.
+    not_member = (
+        "NOT EXISTS (SELECT 1 FROM atlas_member am WHERE am.canonical_name = c.canonical_name "
+        "OR am.canonical_name IN (SELECT canonical_name FROM alias WHERE candidate_id = c.id))"
+    )
     no_measurement = int(connection.execute(
         f"SELECT COUNT(*) AS n FROM candidate c LEFT JOIN metadata m ON m.candidate_id = c.id "
-        f"WHERE m.candidate_id IS NULL AND {not_held}").fetchone()["n"])
+        f"WHERE m.candidate_id IS NULL AND {not_held} AND {not_member}").fetchone()["n"])
     stale_measurement = int(connection.execute(
         f"SELECT COUNT(*) AS n FROM candidate c JOIN metadata m ON m.candidate_id = c.id "
-        f"WHERE julianday(m.collected_at) < julianday('now', ?) AND {not_held}", (cutoff,)
+        f"WHERE julianday(m.collected_at) < julianday('now', ?) AND {not_held} AND {not_member}",
+        (cutoff,)
     ).fetchone()["n"])
     return {
         "snapshot": {
@@ -91,18 +98,15 @@ def intake_summary(connection: sqlite3.Connection, config: Config) -> dict[str, 
         "holds": holds,
         "hold_dispositions": dispositions,
         "identities_without_hints": no_hints,
-        # Anything the atlas already reports on is excluded here as everywhere
-        # else: a report is the end of the road for triage.
         "eligible_unselected": {
             "available": int(connection.execute(
                 f"SELECT COUNT(*) AS n FROM candidate c WHERE triage_status = 'eligible' "
-                f"AND analysis_status = 'not_selected' AND {not_held} AND NOT EXISTS "
-                f"(SELECT 1 FROM atlas_member am WHERE am.canonical_name = c.canonical_name)"
+                f"AND analysis_status = 'not_selected' AND {not_held} AND {not_member}"
             ).fetchone()["n"]),
             "held": int(connection.execute(
-                "SELECT COUNT(*) AS n FROM candidate c WHERE triage_status = 'eligible' "
-                "AND analysis_status = 'not_selected' AND source_hold = 'legacy_title_only' "
-                "AND NOT EXISTS (SELECT 1 FROM atlas_member am WHERE am.canonical_name = c.canonical_name)"
+                f"SELECT COUNT(*) AS n FROM candidate c WHERE triage_status = 'eligible' "
+                f"AND analysis_status = 'not_selected' AND source_hold = 'legacy_title_only' "
+                f"AND {not_member}"
             ).fetchone()["n"]),
         },
         "not_held_without_measurement": no_measurement,

@@ -262,6 +262,12 @@ def metadata_queue(connection: sqlite3.Connection, config: Config, run: "AssessR
     ).fetchone()["n"])
     due: list[tuple[sqlite3.Row, str]] = []
     for row in assessable(connection, policy_version):
+        # Settled before ranking, not after: the queue is cut to the allowance,
+        # so an atlas member ranked into it would take a slot every day and
+        # spend none of it.
+        if duplicate_reason(connection, row):
+            run.skipped_excluded += 1
+            continue
         meta = connection.execute(
             "SELECT collected_at FROM metadata WHERE candidate_id = ?", (row["id"],)
         ).fetchone()
@@ -312,9 +318,6 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
         if spent >= allowance:
             run.budget_stopped = f"daily metadata budget of {allowance} repositories"
             break
-        if duplicate_reason(connection, row):
-            run.skipped_excluded += 1
-            continue
         owner, name = row["canonical_name"].split("/", 1)
         budget = RepoBudget()
         try:
