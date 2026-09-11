@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 413 reports.</strong></p>
+<p><strong>This page covers all 414 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14741,6 +14741,39 @@ memory onto Android storage and service lifecycles.</li>
 <li>Do not copy when: prompt-cache cost is why you wanted this design,
 or anything is multi-user — the specification removes scoping in its
 first section.</li>
+</ul>
+<h3 id="memora-engine"><a
+href="../systems/memora-engine/"><code>memora-engine</code></a></h3>
+<ul>
+<li>Best idea: <strong>supersession that keeps the loser, the reason and
+the direction.</strong> A contradiction the model classifies above 0.75
+confidence sets the older memory <code>SUPERSEDED</code> and records a
+<code>SUPERSEDES</code> edge carrying the model's stated reason, in one
+transaction, and a guard refuses to let an older memory supersede a
+newer one. Every read path — search, graph, reflection — filters on
+status.</li>
+<li>Biggest risk: <strong>deduplication looks only at the active
+set.</strong> A value that was superseded is not active, so when a later
+conversation repeats it, extraction stores it as a new memory; being the
+newer of the two, the age guard then allows it to supersede the
+correction. The supersession edge is keyed on memory ids, and nothing on
+the write path consults it.</li>
+<li>Most reusable component: the leak test in
+<code>tests/evaluation/evaluation.service.test.ts</code> — seed a
+realistic corpus with a superseded and an archived memory, run the
+production search with no score floor, assert no retired memory reaches
+any query's top five. One mark, <code>negative_eval</code>, and a test
+that fails if the status predicate is removed.</li>
+<li>Maturity impression: eleven commits by one author between 2 and 6
+September 2026, 5,230 lines of TypeScript with 3,760 lines of tests
+against a real Postgres, no CI and no licence. Clear modules,
+explainable ranking, an SDK exercised by a demo agent; no scope key and
+no request authentication.</li>
+<li>Study when: you are building a single-user memory service and want
+supersession done carefully, or you want a retrieval evaluation that
+tests exclusion as well as recall.</li>
+<li>Do not copy when: you need corrections to stay corrected under
+repetition, more than one user, or code you are licensed to reuse.</li>
 </ul>
         </article>
       </div>

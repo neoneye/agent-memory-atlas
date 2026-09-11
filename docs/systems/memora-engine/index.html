@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Fastify and Postgres memory
+service whose conflict pass marks a contradicted memory superseded and
+whose committed evaluation asserts that no superseded or archived memory
+reaches a populated top five — while deduplication checks only active
+memories, so a superseded value can return as a new one.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memora
+Engine — Agent Memory Atlas">
+    <meta property="og:description" content="A Fastify and Postgres
+memory service whose conflict pass marks a contradicted memory
+superseded and whose committed evaluation asserts that no superseded or
+archived memory reaches a populated top five — while deduplication
+checks only active memories, so a superseded value can return as a new
+one.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memora
+Engine — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Fastify and Postgres
+memory service whose conflict pass marks a contradicted memory
+superseded and whose committed evaluation asserts that no superseded or
+archived memory reaches a populated top five — while deduplication
+checks only active memories, so a superseded value can return as a new
+one.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memora Engine — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memora Engine",
+      "description": "A Fastify and Postgres memory service whose conflict pass marks a contradicted memory superseded and whose committed evaluation asserts that no superseded or archived memory reaches a populated top five \u2014 while deduplication checks only active memories, so a superseded value can return as a new one.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Supersession by LLM classification, with a
+leak test</p>
+          <h1>Memora Engine</h1>
+          <p class="document-deck">A Fastify and Postgres memory service
+whose conflict pass marks a contradicted memory superseded and whose
+committed evaluation asserts that no superseded or archived memory
+reaches a populated top five — while deduplication checks only active
+memories, so a superseded value can return as a new one.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Nikeshchaudhary52494/memora">
+              <span>Source</span>
+              <strong>Nikeshchaudhary52494/memora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065" title="4c3d1aa984c980ff1401d6ee42c6802d4c301065">
+              <span>Analyzed revision</span>
+              <code>4c3d1aa9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Nikeshchaudhary52494--memora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Nikeshchaudhary52494--memora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memora Engine is a TypeScript memory service — Fastify, Zod, Prisma
+over Postgres with pgvector — built by one author in eleven commits
+between 2 and 6 September 2026. The repository carries <strong>no
+licence file</strong> and GitHub reports none, so by default nothing in
+it is licensed for reuse; that is stated here so a reader knows what
+they may do with what they read, and it changes nothing about the
+analysis. A second, unrelated project of the same name is <a
+href="../memora/">Memora</a>.</p>
+<p>Its design turns on one idea done carefully: <strong>a memory that
+stops being true is marked, not removed.</strong> When extraction stores
+a new memory, a conflict pass asks a model to classify the new memory's
+relationship to its five nearest active neighbours —
+<code>supersedes</code>, <code>refines</code>, <code>coexists</code> —
+and a <code>supersedes</code> verdict above a 0.75 confidence threshold
+flips the older memory to <code>SUPERSEDED</code> and writes a
+<code>memory_relationships</code> row carrying the model's reason, both
+in one transaction. A guard refuses to let an older memory supersede a
+newer one. Search, graph expansion and reflection all read
+<code>ACTIVE</code> rows only.</p>
+<p>The part worth the atlas's <code>negative_eval</code> mark is the
+test that proves it. The committed evaluation seeds twenty-five memories
+for one fictional user — one already superseded, one archived — runs
+twenty-six queries through the production search path, and asserts that
+no superseded or archived memory reaches any query's top five. The
+result sets are populated by construction, and the case can fail: with
+the status filter removed, the stale memory ranks second for the query
+that asks what the user currently prefers.</p>
+<p>The gap sits one step upstream of all that care. Extraction's
+deduplication compares a candidate only against <em>active</em> memories
+of the same type. A superseded value is not active, so if the
+conversation repeats it, it is stored again as a fresh memory — and
+because it is now the newer of the two, the guard that stops an older
+memory superseding a newer one lets it supersede the correction. The
+supersession record exists, keyed on the memory rather than the value,
+and nothing on the write path consults it. That is the tombstone this
+design is one lookup away from, and why the mark is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is born <code>ACTIVE</code> with an origin of
+<code>USER_STATED</code>, extracted from a conversation. It can leave
+<code>ACTIVE</code> three ways: a conflict pass supersedes it, the
+lifecycle pass archives it for low strength and age, or a person
+archives it through the API. A restored memory returns to
+<code>ACTIVE</code>. A second origin, <code>LLM_DERIVED</code>, is
+reserved for reflections — patterns a model derives from several
+user-stated memories — and it is set by the reflection path only; the
+create and update APIs refuse it.</p>
+<p>Status and origin do different jobs, and it matters which. Status is
+what retrieval filters on: a <code>SUPERSEDED</code> or
+<code>ARCHIVED</code> memory is invisible to search, graph expansion and
+reflection. Origin is what reflection filters on: an inferred memory is
+never used as evidence for another inference. Origin does not withhold
+anything from search — a reflection is retrieved like any memory, and
+the evaluation asserts that it should be.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession keeps the loser and its reason, but deduplication looks only at active memories, so a superseded value re-extracted later is stored as new and, being newer, can supersede the correction</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession keeps the loser and its reason, but deduplication looks only at active memories, so a superseded value re-extracted later is stored as new and, being newer, can supersede the correction
+flowchart TD
+  C[&quot;Conversation&quot;] --&gt; X[&quot;LLM extraction&quot;]
+  X --&gt; D{&quot;Same normalised text among&lt;br/&gt;the 200 newest ACTIVE memories of this type?&quot;}
+  D --&gt;|yes| S[&quot;skipped as duplicate&quot;]
+  D --&gt;|no| N[&quot;new ACTIVE memory, USER_STATED&quot;]
+  N --&gt; K[&quot;conflict pass over 5 nearest ACTIVE memories&quot;]
+  K --&gt;|&quot;supersedes, confidence at least 0.75, source not older&quot;| T[&quot;older memory set SUPERSEDED, edge and reason recorded&quot;]
+  T --&gt; R[&quot;search, graph and reflection read ACTIVE only&quot;]
+  T -.-&gt;|&quot;not consulted by deduplication&quot;| D
+  L[&quot;pnpm memory:lifecycle&quot;] --&gt;|&quot;decayed strength below 0.25, older than 90 days, importance below 0.8&quot;| A[&quot;ARCHIVED&quot;]
+  A --&gt; R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Node service and one Postgres database with the pgvector
+extension. <code>docker-compose.yml</code> stands up both; Prisma
+migrations create the schema. The model calls — extraction, conflict
+classification, reflection, and the demo agent's chat — go to an
+OpenAI-compatible provider configured by environment, and embeddings to
+a 1,536-dimension provider. There is no queue, no worker and no
+scheduler: every mechanism runs inside a request, except decay and
+archival, which run when an operator invokes
+<code>pnpm memory:lifecycle</code>.</p>
+<p><code>src/modules/</code> is organised by capability —
+<code>memory-formation</code>, <code>memories</code> (CRUD, search,
+ranking, lifecycle), <code>conflicts</code>, <code>consolidation</code>,
+<code>reflection</code>, <code>graph</code>, <code>embeddings</code>,
+<code>agent</code> — each with a routes, service, repository and schema
+file. <code>src/sdk/</code> is a typed client with no business logic,
+and the demo agent under <code>src/modules/agent/</code> calls the
+service through it, which makes the SDK an exercised surface rather than
+a stub. <code>showcase/</code> is a static Next.js page describing the
+project, not a memory interface.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="formation">Formation</h3>
+<p><code>MemoryFormationService.extractAndSave</code>
+(<code>src/modules/memory-formation/memory-formation.service.ts:42-93</code>)
+extracts candidates with the model, drops any under five characters, and
+deduplicates each against the batch and against storage by
+<code>hasExistingDuplicate</code> (<code>:110-124</code>), which lists
+up to <code>DEDUP_SCAN_LIMIT = 200</code> memories of the same type with
+<code>status: 'active'</code> and compares lowercased,
+whitespace-collapsed text. Embeddings for every surviving candidate are
+generated and validated before anything is inserted, so an embedding
+failure leaves no partial batch. Each memory is then created and handed
+to the conflict pass inside a <code>try</code> that logs and continues:
+conflict analysis must never block formation.</p>
+<h3 id="conflict-resolution">Conflict resolution</h3>
+<p><code>ConflictService.analyzeAndPersist</code>
+(<code>src/modules/conflicts/conflict.service.ts:55-115</code>) fetches
+the <code>MEMORY_CONFLICT_CANDIDATE_LIMIT</code> (default 5) nearest
+active memories with <code>findSimilarMemories</code>, asks the model to
+classify each pairing, and keeps a relationship only if its confidence
+reaches <code>MEMORY_CONFLICT_CONFIDENCE_THRESHOLD</code> (default
+0.75), the id it names was among the candidates shown, and — for
+<code>supersedes</code> — the source is not older than the target
+(<code>:95-98</code>). <code>persistAcceptedRelationships</code>
+(<code>src/modules/conflicts/conflict.repository.ts:51-90</code>)
+upserts each edge and, for a <code>supersedes</code> edge, sets the
+target's status to <code>SUPERSEDED</code> inside the same transaction.
+<code>POST /memories/:id/resolve-conflicts</code> runs the same pass on
+demand for an existing memory.</p>
+<h3 id="search-and-ranking">Search and ranking</h3>
+<p><code>MemorySearchService.search</code>
+(<code>src/modules/memories/memory-search.service.ts:40-110</code>) runs
+a semantic arm — cosine distance over pgvector,
+<code>WHERE status = 'ACTIVE'</code>, ordered and limited to
+<code>MEMORY_CANDIDATE_LIMIT</code> (default 20), with an optional
+similarity floor — and a keyword arm over
+<code>to_tsvector('english', content) @@ plainto_tsquery(...)</code>,
+also <code>ACTIVE</code> only
+(<code>src/modules/memories/memory.repository.ts:185-230</code>).
+<code>mergeCandidates</code> unions them and <code>rankMemories</code>
+scores each by five weights that must sum to one: semantic 0.4, keyword
+0.2, importance 0.15, confidence 0.15, recency 0.1, with recency
+decaying over thirty days (<code>src/config/env.ts:17-23</code>). An
+optional <code>minScore</code> filters, the top <code>limit</code> are
+returned, and only those have their access recorded and strength
+reinforced (<code>:71-77</code>).</p>
+<h3 id="lifecycle">Lifecycle</h3>
+<p><code>LifecycleService.runMaintenance</code>
+(<code>src/modules/memories/lifecycle/lifecycle.service.ts:79</code>)
+evaluates every active memory against a pure policy: strength decays
+exponentially over <code>MEMORY_DECAY_DAYS</code> (30) from its last
+access, and a memory whose effective strength falls below 0.25 and whose
+age exceeds 90 days is archived — unless its importance is 0.8 or
+higher, which protects it outright
+(<code>src/modules/memories/lifecycle/lifecycle.policy.ts:40-58</code>).
+Its only callers are <code>scripts/lifecycle-maintenance.ts</code>,
+exposed as <code>pnpm memory:lifecycle</code>, and the lifecycle
+tests.</p>
+<h3 id="reflection-and-consolidation">Reflection and consolidation</h3>
+<p><code>POST /memories/reflect</code> expands a seed through the
+relationship graph, keeps only nodes that are <code>active</code> and
+<code>user_stated</code>
+(<code>src/modules/reflection/reflection.service.ts:115</code>), refuses
+outright if an explicitly named memory is <code>LLM_DERIVED</code>
+(<code>:43</code>), and stores the model's pattern as a new
+<code>LLM_DERIVED</code> memory with <code>DERIVED_FROM</code> edges to
+its evidence. <code>POST /memories/consolidate</code> merges several
+memories into one and records <code>CONSOLIDATES</code> edges back to
+the originals.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memoryType</code></td>
+<td><code>SEMANTIC</code>, <code>EPISODIC</code> or
+<code>PROCEDURAL</code>, set by extraction</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>the memory as text</td>
+</tr>
+<tr>
+<td><code>importance</code>, <code>confidence</code></td>
+<td>0–1 floats from extraction; ranking signals</td>
+</tr>
+<tr>
+<td><code>strength</code>, <code>accessCount</code>,
+<code>lastAccessedAt</code></td>
+<td>reinforced on retrieval, decayed by the lifecycle pass</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>ACTIVE</code>, <code>ARCHIVED</code> or
+<code>SUPERSEDED</code> — what every read path filters on</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td><code>USER_STATED</code> or <code>LLM_DERIVED</code> — what
+reflection filters on</td>
+</tr>
+<tr>
+<td><code>embedding</code></td>
+<td><code>vector(1536)</code>, nullable, backfilled by
+<code>pnpm memory:backfill</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>memory_relationships</code> holds one row per
+<code>(source, target, type)</code> with a confidence and a free-text
+<code>reason</code>, typed <code>SUPERSEDES</code>,
+<code>REFINES</code>, <code>COEXISTS</code>, <code>CONSOLIDATES</code>
+or <code>DERIVED_FROM</code>, and cascades on delete of either end.</p>
+<p>There is no user, tenant, agent or session key anywhere in the
+schema. One deployment holds one person's memory.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is always hybrid and always filtered to
+<code>ACTIVE</code>. The semantic arm has no similarity floor unless a
+caller passes <code>minSimilarity</code>, so over any non-empty corpus
+it returns its full candidate limit; the keyword arm returns only rows
+that match the query's lexemes. The two are merged by id, so a memory
+found by both carries both scores. Ranking is a weighted sum rather than
+a reranker, and <code>includeScores: true</code> returns the per-feature
+breakdown for every result, which is the design's answer to <em>why was
+this retrieved</em>.</p>
+<p>Graph retrieval — <code>GET /memories/:id/graph</code> and
+<code>/related</code> — walks relationship edges to a bounded depth and
+excludes <code>ARCHIVED</code> and <code>SUPERSEDED</code> neighbours,
+never expanding through them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write through <code>/extract-and-save</code> blocks the caller for
+one extraction call, one batched embedding call, the inserts, and one
+conflict-classification call per created memory. A memory is retrievable
+as soon as its insert commits, before its conflict pass has run; if the
+pass fails, the memory stays and the failure is logged. Supersession
+therefore lags the write by the duration of one model call, and a crash
+between the insert and the pass leaves two contradicting active memories
+until someone calls <code>resolve-conflicts</code>.</p>
+<p>No background pass rewrites the store. The lifecycle command changes
+status and strength on the rows its policy selects, and nothing
+else.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration surface is the REST API and the SDK. The demo agent
+(<code>src/modules/agent/</code>) is a real consumer:
+<code>POST /agent/chat</code> searches memory through the SDK, puts the
+retrieved memories into the model's context, answers, and returns
+<code>memoriesUsed</code> so a caller can see what grounded the reply.
+There is no MCP server and no framework adapter.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Supersession is a record of the memory, not of the
+value.</strong> The <code>SUPERSEDES</code> edge names two memory ids
+and a reason, and the loser's status is <code>SUPERSEDED</code>. That is
+everything a tombstone needs except the key. Deduplication asks <em>is
+this exact text among the active memories</em> —
+<code>status: 'active'</code> at
+<code>memory-formation.service.ts:119</code> — so the one place a
+rejected value could be refused on its way back in does not look where
+it is kept. The sequence the code permits: the user says they prefer
+MongoDB; later they switch to PostgreSQL and the conflict pass
+supersedes the MongoDB memory; later still, a conversation mentions
+preferring MongoDB in passing, extraction stores it as a new active
+memory, and the conflict pass — comparing it against the PostgreSQL
+memory, which is now the older of the two — is allowed by the age guard
+to classify the new MongoDB memory as superseding the correction.
+Whether the model does so is not certain; nothing in the tree prevents
+it.</p>
+<p><strong>The deduplication window is also bounded.</strong> It scans
+the 200 most recent memories of the candidate's type, and a comment in
+the file calls that a placeholder until indexed lookup exists. An exact
+duplicate older than that window is stored again.</p>
+<p><strong>Deletion is real and unrecorded.</strong>
+<code>DELETE /memories/:id</code> calls
+<code>prisma.memory.delete</code>
+(<code>memory.repository.ts:123-125</code>), and the relationship rows
+cascade with it, including any <code>SUPERSEDES</code> edge that
+explained why another memory is current. The README's statement that
+nothing is hard-deleted is true of the lifecycle; it is not true of the
+API.</p>
+<p><strong>No scope, and no authentication in the tree.</strong> There
+is no user key to filter on, and no route checks a caller's identity.
+Deployed as it stands, anyone who can reach the service can read and
+rewrite the memory.</p>
+<p><strong>Origin is provenance, not a trust state.</strong>
+<code>LLM_DERIVED</code> keeps an inference out of reflection's
+evidence, which is the design's promise that the system is honest about
+what it merely inferred. It does not keep an inference out of search or
+out of the demo agent's context, and nothing moves a memory from one
+origin to the other. That is why <code>trust_state</code> is withheld:
+there is no status at which a memory is held back from being treated as
+true.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Eighteen test files, 3,760 lines, under <code>tests/</code>, run by
+Vitest against a real Postgres that each file truncates between cases —
+which is why <code>vitest.config.ts</code> disables file parallelism.
+The repository has no <code>.github/</code> directory and so no CI. I
+did not run the suite; everything below is read from the committed
+files.</p>
+<p><strong>The evaluation is the strongest thing here.</strong>
+<code>src/evaluation/</code> holds a twenty-five-memory dataset for one
+fictional user and twenty-six queries across semantic, keyword,
+paraphrase, conflict, refinement, archival, reflection and unrelated
+categories, each with <code>relevantKeys</code> and, for four,
+<code>excludedKeys</code>. <code>pnpm evaluate</code> runs it with a
+deterministic fake embedder and prints recall@5, hit rate@5 and MRR for
+the hybrid path against a keyword-only baseline.
+<code>tests/evaluation/evaluation.service.test.ts</code> turns it into
+assertions: hybrid beats the keyword baseline on recall and MRR,
+recall@5 is at least 0.75, hit rate at least 0.85, MRR at least 0.65,
+and — the case the mark rests on — <code>leakedExcludedKeys</code> is
+empty for every query (<code>:42-49</code>). That last assertion is not
+vacuous. The search call passes no floor, so every query returns ranked
+active memories. And it discriminates: I reproduced the evaluation's
+scoring offline — the same hashing-trick embedder at 1,536 dimensions,
+the default weights, the seeded importances and the seeder's default
+confidence of 0.9, with recency tied because every memory is seeded
+within milliseconds — and with the <code>status = 'ACTIVE'</code>
+predicate removed the superseded <em>I prefer MongoDB for backend
+projects</em> ranks second for q4, <em>What database does the user
+currently prefer?</em>, and fourth for q5, <em>PostgreSQL</em>. The
+keyword arm contributes nothing to q4, because
+<code>plainto_tsquery</code> ANDs every lexeme and no memory contains
+all of them. That is a computation, not a run of the suite. A separate
+check in the same file drives the real conflict pass with a scripted
+model and asserts the older memory ends <code>SUPERSEDED</code>.</p>
+<p><strong>Several other exclusion tests are vacuous.</strong>
+<code>conflict.test.ts:258-268</code> seeds one memory, supersedes it,
+and asserts it is absent from <code>findSimilarMemories</code>;
+<code>lifecycle.test.ts:130-141</code> does the same for an archived
+memory and search; the graph tests at <code>graph.test.ts:176-196</code>
+and <code>:248-257</code> assert a graph of only the seed node and an
+empty related list. Each would pass against a read path that returned
+nothing. The reflection test at <code>reflection.test.ts:325-346</code>
+asserts archived and derived memories are absent from the reflection
+prompt without asserting the active neighbour is present. None is needed
+for the mark; each is one <code>expect(...).toContain(control)</code>
+from being a real case.</p>
+<p>No paper, no external benchmark. <code>scripts/evaluate-llm.ts</code>
+runs the dataset against a live model and embedder, and no output from
+it is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>The leak test.</strong> Seed a small realistic corpus with
+retired memories in it, run the production search path with no score
+floor, and assert no retired memory reaches the top <em>k</em> for any
+query. It costs one <code>it</code> block and it is the test most memory
+systems here do not have.</li>
+<li><strong>The age guard on supersession.</strong> A contradiction
+classifier will sometimes get direction wrong; refusing to let an older
+memory supersede a newer one bounds what that costs.</li>
+<li><strong>Keeping the reason.</strong> Every relationship edge stores
+the model's stated reason, so a supersession can be explained to the
+person it happened to.</li>
+<li><strong>Embedding the whole batch before inserting any of
+it</strong>, so a provider failure cannot leave half a conversation
+remembered.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deduplicating against the active set only.</strong> The
+check that decides whether a value is new must also ask whether it was
+superseded, or the correction can be undone by repetition. The
+supersession edge already holds what is needed; key a lookup on the
+normalised text of the loser.</li>
+<li><strong>A hard delete that takes the explanation with it.</strong>
+Cascading the <code>SUPERSEDES</code> edge on delete removes the record
+of why the surviving memory is current.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A clear, small, well-tested reference for a single-user memory
+service with supersession, and a good one to read before building one.
+Not something to deploy for more than one person — there is no scope key
+and no authentication — and not something to rely on for durable
+corrections until deduplication consults superseded memories. The
+absence of a licence means it is a design to learn from rather than code
+to take.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>How often, with a real model, the conflict pass classifies a
+repeated stale value as superseding its correction. The code permits it;
+frequency is empirical, and <code>evaluate-llm</code> would be the place
+to measure it.</li>
+<li>Whether the maintainer intends the lifecycle command to be
+scheduled; the tree ships it only as a manual script.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>prisma/schema.prisma</code>.</li>
+<li>Formation and deduplication:
+<code>src/modules/memory-formation/memory-formation.service.ts</code>.</li>
+<li>Conflict pass and supersession:
+<code>src/modules/conflicts/conflict.service.ts</code>,
+<code>conflict.repository.ts</code>.</li>
+<li>Search, ranking, repository SQL:
+<code>src/modules/memories/memory-search.service.ts</code>,
+<code>ranking/</code>, <code>memory.repository.ts</code>.</li>
+<li>Lifecycle: <code>src/modules/memories/lifecycle/</code>,
+<code>scripts/lifecycle-maintenance.ts</code>.</li>
+<li>Reflection, consolidation, graph:
+<code>src/modules/reflection/</code>,
+<code>src/modules/consolidation/</code>,
+<code>src/modules/graph/</code>.</li>
+<li>Configuration defaults: <code>src/config/env.ts</code>.</li>
+<li>Evaluation: <code>src/evaluation/</code>,
+<code>tests/evaluation/evaluation.service.test.ts</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;status: &#39;active&#39;&quot; src/modules/memory-formation/memory-formation.service.ts   # dedup reads ACTIVE only
+rg -n &quot;SUPERSEDED|superseded&quot; src/modules/memory-formation                          # 0: formation never consults supersession
+rg -n &quot;userId|user_id|tenant|agentId&quot; prisma/schema.prisma src/modules               # 0: no scope key
+rg -n &quot;setInterval|node-cron|cron\(|schedule\(&quot; src/modules src/server.ts src/app.ts  # 0: nothing schedules maintenance
+rg -n -i &quot;preHandler|onRequest|authenticate|@fastify/auth|jwt|bearer&quot; src/app.ts src/server.ts src/modules --glob &#39;!**/openai*&#39;   # 0: no request authentication
+ls .github                                                                           # absent: no CI</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065"><code class="commit-id" title="4c3d1aa984c980ff1401d6ee42c6802d4c301065">4c3d1aa9…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration and no build-time execution path; four
+dependency manifests inside the seven-day cooldown and two unpinned
+surfaces, in the service and the showcase. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

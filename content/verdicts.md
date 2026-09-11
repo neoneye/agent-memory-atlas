@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 413 reports.**
+**This page covers all 414 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3648,3 +3648,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0, a modified Termux created on 6 September 2026 whose inherited history carries Termux's contributors; the memory is a 731-line store (`AiMemoryStore`) with transcript search in a 1,631-line database class, and 401 lines of focused unit tests across two files pin batches, budgets, drift and strict UTF-8 reads. The load-time `[BLOCKED]` fence has no test, the one absence assertion in the suite passes on an empty result, and a rejected staged write is deleted without a record the review pass could consult.
 - Study when: you want a single-user mobile agent whose memory a person can read, edit and gate, or you are porting a Python agent's memory onto Android storage and service lifecycles.
 - Do not copy when: prompt-cache cost is why you wanted this design, or anything is multi-user — the specification removes scoping in its first section.
+
+### [`memora-engine`](../systems/memora-engine/)
+- Best idea: **supersession that keeps the loser, the reason and the direction.** A contradiction the model classifies above 0.75 confidence sets the older memory `SUPERSEDED` and records a `SUPERSEDES` edge carrying the model's stated reason, in one transaction, and a guard refuses to let an older memory supersede a newer one. Every read path — search, graph, reflection — filters on status.
+- Biggest risk: **deduplication looks only at the active set.** A value that was superseded is not active, so when a later conversation repeats it, extraction stores it as a new memory; being the newer of the two, the age guard then allows it to supersede the correction. The supersession edge is keyed on memory ids, and nothing on the write path consults it.
+- Most reusable component: the leak test in `tests/evaluation/evaluation.service.test.ts` — seed a realistic corpus with a superseded and an archived memory, run the production search with no score floor, assert no retired memory reaches any query's top five. One mark, `negative_eval`, and a test that fails if the status predicate is removed.
+- Maturity impression: eleven commits by one author between 2 and 6 September 2026, 5,230 lines of TypeScript with 3,760 lines of tests against a real Postgres, no CI and no licence. Clear modules, explainable ranking, an SDK exercised by a demo agent; no scope key and no request authentication.
+- Study when: you are building a single-user memory service and want supersession done carefully, or you want a retrieval evaluation that tests exclusion as well as recall.
+- Do not copy when: you need corrections to stay corrected under repetition, more than one user, or code you are licensed to reuse.
