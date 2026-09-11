@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 419 reports.</strong></p>
+<p><strong>This page covers all 420 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -14923,6 +14923,33 @@ one machine and want the isolation test to copy.</li>
 <li>Do not copy when: you need to find anything by meaning, or a
 boundary that holds against a client that lies about its session
 id.</li>
+</ul>
+<h3 id="nuum"><a href="../systems/nuum/"><code>nuum</code></a></h3>
+<ul>
+<li>Best idea: <strong>freeze the memory section per epoch and decide
+which writers may break it.</strong> A user-requested
+<code>update_state</code> write bumps the epoch so it shows on the next
+turn; the per-turn extractor does not, so the prefix cache survives —
+and <code>run.test.ts</code> pins both halves.</li>
+<li>Biggest risk: <strong>the prompt and the store drift after every
+extraction, deletions included.</strong> A fact the extractor removes
+stays in the frozen section until the next compaction or explicit write;
+its <code>remove:</code> lines must reproduce a recorded fact's wording
+without being shown the memory; and a removed value leaves no record, so
+the next exchange can extract it again.</li>
+<li>Most reusable component: <code>memory.ts</code> — the tiered
+Markdown store, cross-tier dedup on normalised text, a render that
+states how many dated entries did not fit and where to grep them, and a
+small-talk gate that estimates CJK tokens per character.</li>
+<li>Maturity impression: four commits by one author in September 2026,
+13,968 lines of TypeScript with 4,880 of tests, no CI; the runtime tests
+are careful about the cache contract, and nothing covers forget through
+the runtime or memory in a Work run.</li>
+<li>Study when: you inject memory into a system prompt and want a
+concrete, tested rule for keeping the provider's prefix cache warm.</li>
+<li>Do not copy when: corrections must stick, agents must not read one
+another's memory, or facts arrive from peers and tool output as well as
+the user.</li>
 </ul>
         </article>
       </div>

@@ -188,6 +188,12 @@ on how to write one.
   Anthropic path. Everything else in the Hermes store came across; the one
   property this pattern names did not, because the function that renders the
   block is called `systemPromptSnapshot` and holds no state.
+- **[Nuum](../../systems/nuum/)** — the frozen section with a rule for who may
+  break it. The memory render is kept per epoch in `prompt-cache.json`; an
+  explicit `update_state` write bumps the epoch, and the per-turn extractor
+  does not, both halves pinned in `run.test.ts`. The cost is the same boundary
+  seen from the store: a fact the extractor removes from disk stays in the
+  frozen prompt until compaction or the next explicit write.
 - **[Helm](../../systems/helm/)**, **[CSM](../../systems/csm/)**,
   **[RisuAI](../../systems/risuai/)**, **[SillyTavern](../../systems/sillytavern/)**
   — the counter-examples, each invalidating on every turn.

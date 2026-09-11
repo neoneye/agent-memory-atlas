@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 419 reports.**
+**This page covers all 420 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3696,3 +3696,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: forty-four commits by one author over two days in September 2026, 865 lines of Go with 450 of tests, no CI and no licence; an honest limitations list. The user scope is read on every query and written by nothing, and the one end-to-end test queries through the real embedder, gets nothing back by construction, and asserts only that the call succeeded.
 - Study when: you are designing scoped memory for several harnesses on one machine and want the isolation test to copy.
 - Do not copy when: you need to find anything by meaning, or a boundary that holds against a client that lies about its session id.
+
+### [`nuum`](../systems/nuum/)
+- Best idea: **freeze the memory section per epoch and decide which writers may break it.** A user-requested `update_state` write bumps the epoch so it shows on the next turn; the per-turn extractor does not, so the prefix cache survives — and `run.test.ts` pins both halves.
+- Biggest risk: **the prompt and the store drift after every extraction, deletions included.** A fact the extractor removes stays in the frozen section until the next compaction or explicit write; its `remove:` lines must reproduce a recorded fact's wording without being shown the memory; and a removed value leaves no record, so the next exchange can extract it again.
+- Most reusable component: `memory.ts` — the tiered Markdown store, cross-tier dedup on normalised text, a render that states how many dated entries did not fit and where to grep them, and a small-talk gate that estimates CJK tokens per character.
+- Maturity impression: four commits by one author in September 2026, 13,968 lines of TypeScript with 4,880 of tests, no CI; the runtime tests are careful about the cache contract, and nothing covers forget through the runtime or memory in a Work run.
+- Study when: you inject memory into a system prompt and want a concrete, tested rule for keeping the provider's prefix cache warm.
+- Do not copy when: corrections must stick, agents must not read one another's memory, or facts arrive from peers and tool output as well as the user.

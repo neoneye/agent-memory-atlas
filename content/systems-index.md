@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **419 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **420 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -360,6 +360,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/nova-ai/"><span class="az-id">Nova AI</span><span class="az-what">Symbolic memory, no model</span><code class="az-repo">Whooptie/NOVA_AI</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/no-human/"><span class="az-id">no_human</span><span class="az-what">A second brain with a daily cap</span><code class="az-repo">no-human-ai/no_human</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/npcpy/"><span class="az-id">npcpy</span><span class="az-what">Memory that waits for a yes</span><code class="az-repo">npc-worldwide/npcpy</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/nuum/"><span class="az-id">Nuum</span><span class="az-what">Per-agent Markdown memory behind a frozen prompt section</span><code class="az-repo">stevefunng/Nuum</code><span class="az-caps"></span></a></li>
 </ul>
 
 ## O

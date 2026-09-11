@@ -310,6 +310,14 @@ every provider request builder — once per tool step on the Anthropic
 path. Everything else in the Hermes store came across; the one property
 this pattern names did not, because the function that renders the block
 is called <code>systemPromptSnapshot</code> and holds no state.</li>
+<li><strong><a href="../../systems/nuum/">Nuum</a></strong> — the frozen
+section with a rule for who may break it. The memory render is kept per
+epoch in <code>prompt-cache.json</code>; an explicit
+<code>update_state</code> write bumps the epoch, and the per-turn
+extractor does not, both halves pinned in <code>run.test.ts</code>. The
+cost is the same boundary seen from the store: a fact the extractor
+removes from disk stays in the frozen prompt until compaction or the
+next explicit write.</li>
 <li><strong><a href="../../systems/helm/">Helm</a></strong>, <strong><a
 href="../../systems/csm/">CSM</a></strong>, <strong><a
 href="../../systems/risuai/">RisuAI</a></strong>, <strong><a
