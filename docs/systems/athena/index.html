@@ -113,14 +113,14 @@ mechanism raises agreement by 45%.</p>
               <strong>winstonkoh87/Athena-Public</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479" title="2e4898e3bd28a79a58dc1b17437ace050bea2479">
+            <a class="meta-pill revision-pill" href="https://github.com/winstonkoh87/Athena-Public/commit/b544b8801d6b3002c89d4942ce5428131d14ed39" title="b544b8801d6b3002c89d4942ce5428131d14ed39">
               <span>Analyzed revision</span>
-              <code>2e4898e3…</code>
+              <code>b544b880…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/winstonkoh87--Athena-Public" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -357,8 +357,12 @@ more instrumentation than most file-backed stores here carry.</p>
 <p><strong>Trust state — withheld, and the near-miss is the whole
 report.</strong> The three-label convention <em>is</em> an epistemic
 vocabulary, it is well-argued, and it is applied to documents rather
-than to memories, in about eight of 569 files, with the frontmatter form
-unused. A convention is not a field.</p>
+than to memories, in <strong>thirteen of 580 files</strong>, with the
+frontmatter form unused. A convention is not a field. The coverage moved
+with the corpus rather than ahead of it — five more documents carry a
+label across a commit that added eleven — so the ratio is the same shape
+it was: the labels describe the system's own mechanisms in the handful
+of documents about the system, and nothing in the memory it stores.</p>
 <p><strong>Scope, tombstone, bitemporal, human review, negative eval —
 no.</strong></p>
 <p><strong>The most valuable thing here for another builder is the
@@ -494,7 +498,69 @@ reference-versus-file comparison <code>:4-9</code>),
 <code>supabase/</code></p>
 <p><strong>References</strong> — <code>docs/REFERENCES.md</code>,
 <code>SAFETY.md</code>, <code>docs/CHANGELOG.md</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The convention's coverage</td>
+<td><code>find . -name '*.md' | wc -l</code> and
+<code>grep -rl 'code-enforced|agent-discretion|aspirational' --include='*.md' . | wc -l</code></td>
+<td>thirteen documents out of 580; individually 6, 7 and 8</td>
+</tr>
+<tr>
+<td>The auditors and recorder are live</td>
+<td><code>ls src/athena/auditors/</code>;
+<code>find src -name "flight_recorder*"</code></td>
+<td>Ten auditors plus <code>core/flight_recorder.py</code></td>
+</tr>
+<tr>
+<td>Retrieval weights are hand-set</td>
+<td><code>grep -n "RRF Weights" -A 10 src/athena/tools/search.py</code></td>
+<td>Per-intent tables of literal floats with justifying comments; no
+measurement beside them</td>
+</tr>
+<tr>
+<td>No scope key on a read</td>
+<td>the <code>scoping</code> matrix row, re-checked</td>
+<td>The store is one person's; nothing filters by owner</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/winstonkoh87/Athena-Public/commit/b544b8801d6b3002c89d4942ce5428131d14ed39"><code class="commit-id" title="b544b8801d6b3002c89d4942ce5428131d14ed39">b544b880…</code></a>
+— re-read, 268 files and 15,759 insertions past the previous pin in a
+single commit. <code>audit_log</code> re-verified: ten auditors and
+<code>core/flight_recorder.py</code>, still a health-and-coverage audit
+rather than a mutation log, which is the limit the report already
+states. <strong>The headline count is refreshed and the shape is
+unchanged</strong>: the three-label convention appears in thirteen of
+580 documents, against about eight of 569 at the previous pin — five
+more labels across eleven more files, so coverage grew with the corpus
+rather than ahead of it, and the frontmatter form is still unused.
+<strong>Retrieval gained a layer worth naming and worth doubting in the
+same breath.</strong> <code>search.py</code> now classifies a query into
+an intent and applies a per-intent RRF weight table, so
+<code>user_profile</code> is boosted to 4.0 for one intent while
+<code>system_doc</code> is explicitly <em>"Demoted"</em> to 0.8, and
+<code>protocol</code> moves from 2.0 to 3.5 depending on which table
+applies. The reasoning is written into the comments beside each number.
+What is not there is any measurement: these are hand-set constants in
+exactly the class the project's own convention would label
+<em>agent-discretion</em> or <em>aspirational</em>, in a file the
+convention does not reach. Also new:
+<code>tools/personalisation.py</code>, which frames retrieval results as
+a synthesis instruction grounding downstream reasoning in the user's
+stated constraints, and <code>intelligence/gto_engine.py</code>.
+Screened before reading: ten findings; nothing was installed or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479"><code class="commit-id" title="2e4898e3bd28a79a58dc1b17437ace050bea2479">2e4898e3…</code></a>
 — first reading. Screened before reading; the tree was read, never

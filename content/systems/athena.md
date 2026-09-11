@@ -7,17 +7,19 @@ page_kind: system
 source_name: "winstonkoh87/Athena-Public"
 source_url: https://github.com/winstonkoh87/Athena-Public
 archive_name: "winstonkoh87--Athena-Public"
-revision: 2e4898e3bd28a79a58dc1b17437ace050bea2479
-revision_url: https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479
-analyzed_at: 2026-08-09
+revision: b544b8801d6b3002c89d4942ce5428131d14ed39
+revision_url: https://github.com/winstonkoh87/Athena-Public/commit/b544b8801d6b3002c89d4942ce5428131d14ed39
+analyzed_at: 2026-09-11
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "the auditors and the recorder | src/athena/core/flight_recorder.py and src/athena/auditors/ | a durable operation record beside ten coverage and staleness auditors; a health-and-coverage audit rather than a mutation log, which is the limit the report states | unknown"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "A Markdown file on disk — session logs, insights, case studies, protocols — indexed into SQLite"
   storage: "Plain Markdown as the source of truth, with a files/tags/links index and an optional Supabase tier"
-  retrieval: "Chunk-level hybrid RAG with a cross-encoder reranker on by default, archive paths excluded"
+  retrieval: "Chunk-level hybrid RAG with a cross-encoder reranker on by default and archive paths excluded, over per-intent RRF weight tables that boost or demote each document kind by classified query intent"
   write: "Session-end capture through an /end loop, with generators producing insights and case studies"
   update_delete: "Curation by the user; a staleness auditor flags references older than the file they point at"
   scoping: "None on the read path; the store is one person's"
@@ -25,7 +27,7 @@ matrix:
   background: "Auditors for staleness, session coverage and graph coverage, plus a flight recorder and pulse checks"
   trust: "A three-value convention labelling every mechanism code-enforced, agent-discretion or aspirational"
   strengths: "The README grades its own claims by evidence level and names the incident its monitoring missed"
-  risks: "The convention that prevents self-mythologizing is applied inline in about eight of 569 documents"
+  risks: "The convention that prevents self-mythologizing is applied inline in thirteen of 580 documents, and the new intent-specific retrieval weights are hand-set constants with no evaluation behind them"
 ---
 
 ## 1. Executive Summary
@@ -221,8 +223,12 @@ Athena — and it is more instrumentation than most file-backed stores here carr
 
 **Trust state — withheld, and the near-miss is the whole report.** The
 three-label convention *is* an epistemic vocabulary, it is well-argued, and it is
-applied to documents rather than to memories, in about eight of 569 files, with
-the frontmatter form unused. A convention is not a field.
+applied to documents rather than to memories, in **thirteen of 580 files**, with
+the frontmatter form unused. A convention is not a field. The coverage moved with
+the corpus rather than ahead of it — five more documents carry a label across a
+commit that added eleven — so the ratio is the same shape it was: the labels
+describe the system's own mechanisms in the handful of documents about the
+system, and nothing in the memory it stores.
 
 **Scope, tombstone, bitemporal, human review, negative eval — no.**
 
@@ -345,6 +351,19 @@ comparison `:4-9`), `audit_session_coverage.py`, `audit_graph_coverage.py`,
 
 **References** — `docs/REFERENCES.md`, `SAFETY.md`, `docs/CHANGELOG.md`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The convention's coverage | `find . -name '*.md' \| wc -l` and `grep -rl 'code-enforced\|agent-discretion\|aspirational' --include='*.md' . \| wc -l` | thirteen documents out of 580; individually 6, 7 and 8 |
+| The auditors and recorder are live | `ls src/athena/auditors/`; `find src -name "flight_recorder*"` | Ten auditors plus `core/flight_recorder.py` |
+| Retrieval weights are hand-set | `grep -n "RRF Weights" -A 10 src/athena/tools/search.py` | Per-intent tables of literal floats with justifying comments; no measurement beside them |
+| No scope key on a read | the `scoping` matrix row, re-checked | The store is one person's; nothing filters by owner |
+
 ## History
+
+**2026-09-11** — [`b544b8801d6b3002c89d4942ce5428131d14ed39`](https://github.com/winstonkoh87/Athena-Public/commit/b544b8801d6b3002c89d4942ce5428131d14ed39) — re-read, 268 files and 15,759 insertions past the previous pin in a single commit. `audit_log` re-verified: ten auditors and `core/flight_recorder.py`, still a health-and-coverage audit rather than a mutation log, which is the limit the report already states. **The headline count is refreshed and the shape is unchanged**: the three-label convention appears in thirteen of 580 documents, against about eight of 569 at the previous pin — five more labels across eleven more files, so coverage grew with the corpus rather than ahead of it, and the frontmatter form is still unused. **Retrieval gained a layer worth naming and worth doubting in the same breath.** `search.py` now classifies a query into an intent and applies a per-intent RRF weight table, so `user_profile` is boosted to 4.0 for one intent while `system_doc` is explicitly *"Demoted"* to 0.8, and `protocol` moves from 2.0 to 3.5 depending on which table applies. The reasoning is written into the comments beside each number. What is not there is any measurement: these are hand-set constants in exactly the class the project's own convention would label *agent-discretion* or *aspirational*, in a file the convention does not reach. Also new: `tools/personalisation.py`, which frames retrieval results as a synthesis instruction grounding downstream reasoning in the user's stated constraints, and `intelligence/gto_engine.py`. Screened before reading: ten findings; nothing was installed or run.
 
 **2026-08-09** — [`2e4898e3bd28a79a58dc1b17437ace050bea2479`](https://github.com/winstonkoh87/Athena-Public/commit/2e4898e3bd28a79a58dc1b17437ace050bea2479) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
