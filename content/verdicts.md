@@ -1226,9 +1226,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`palazzo`](../systems/palazzo/)
 - Best idea: the write-ahead log is a *precondition* for a destructive operation, not a record of it. `log_strict` fails the delete when the audit entry cannot be durably appended, on the stated reasoning that the WAL is the only trail — and the entry carries a text preview, so it says what was removed.
-- Biggest risk: the README's stated differentiator over the generic Qdrant server is an "enum-validated palace schema", and `src/schema.rs` says the four tags are "deliberately free-text… never enforced". `validate_tag` trims and length-caps; there is no enum in the crate.
+- Biggest risk: the duplicate probe and the writer apply different rules. `do_check_duplicate` reports a duplicate on cosine `>= 0.95` alone; `exact_dup` short-circuits the write only when the score clears the same bar *and* the text matches exactly. So `palace_check_duplicate` tells an agent a paraphrase is already stored, and `palace_store` then stores it.
 - Most reusable component: `src/wal.rs` — 129 lines including its tests, no dependency on the rest of the crate, and the split between best-effort logging for writes and strict logging for destruction.
-- Maturity impression: 63 inline Rust tests, CI running clippy at deny-warnings across two feature sets plus `cargo audit`, and a committed benchmark note reporting its own loss with Wilson intervals and a stopping rule.
+- Maturity impression: 34 inline Rust tests over 6,279 lines, CI running clippy at deny-warnings across two feature sets plus `cargo audit`, and a committed benchmark note reporting its own loss with Wilson intervals and a stopping rule.
 - Study when: you want the audit-as-precondition variant, or an example of a duplicate probe that deliberately refuses to match superseded points — the collision [Empryo](../systems/empryo/) resolves the other way.
 - Do not copy when: recall is the requirement (its own pilot puts R@5 at 36% against the 96.6% it cites as the bar, diagnosed as ranking rather than coverage), or more than one person shares the store — there is no tenancy, no verified identity and no default scope.
 

@@ -7,10 +7,12 @@ page_kind: system
 source_name: "calibrae/palazzo"
 source_url: https://github.com/calibrae/palazzo
 archive_name: "calibrae--palazzo"
-revision: 9dd7228b8a502099522a900d647c57c99f127359
-revision_url: https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359
-analyzed_at: 2026-07-31
+revision: 07a788ac1f4c06343d697a149857e4df9a621a8a
+revision_url: https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a
+analyzed_at: 2026-09-11
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "every mutation | the append-only JSONL write-ahead log on local disk | a destructive operation aborts when its own audit entry cannot be written | unknown"
 stack_storage: "qdrant, files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -25,7 +27,7 @@ matrix:
   background: "None. Every operation is synchronous inside the tool call"
   trust: "`author` is a claimed, unverified email the code itself calls provenance rather than proof; nothing grades a memory's content"
   strengths: "A destructive operation that aborts when its own audit entry cannot be written, and a dedup probe that deliberately refuses to match superseded points"
-  risks: "The README's stated differentiator — an enum-validated schema — does not exist; the duplicate probe and the writer apply different rules; the human approval is a sentence addressed to the model"
+  risks: "The duplicate probe reports on cosine alone while the writer short-circuits only on cosine plus an exact text match, so the probe calls a paraphrase a duplicate and the writer stores it; the human approval is a sentence addressed to the model"
 ---
 
 ## 1. Executive Summary
@@ -69,10 +71,8 @@ LLM dependency the project exists to avoid. Systems in this atlas that benchmark
 themselves almost always publish a win. This one published a loss, with error
 bars, and changed no code as a result.
 
-**And the README's central claim about the schema is false.** It says palazzo
-*"starts from that interface and replaces the untyped metadata with an
-enum-validated palace schema"* — the whole stated reason to choose it over the
-generic Qdrant server. `src/schema.rs` opens by saying the opposite:
+**The taxonomy is free text and the README says so.** `src/schema.rs` opens with
+the design position:
 
 ```rust
 // category / wing / room / hall are deliberately free-text — the palace
@@ -80,10 +80,11 @@ generic Qdrant server. `src/schema.rs` opens by saying the opposite:
 // in the `palace_store` tool-arg descriptions but never enforced.
 ```
 
-`validate_tag` (`src/mcp.rs:1506`) trims, rejects empty, and caps the length.
-There is no enum in the crate; the four tags are `String`. The code is right and
-the README is wrong, which is the better direction for a reader to discover it —
-but that sentence is the differentiator, and it is on the landing page.
+`validate_tag` trims, rejects empty, and caps the length. There is no enum in the
+crate; the four tags are `String`. The landing page positions the project on
+opinionation rather than on typing — *"It is intentionally opinionated. If you
+want a generic `(text, metadata)` store, use `qdrant/mcp-server-qdrant`"* — which
+is what the code supports.
 
 ## 2. Mental Model
 
@@ -196,13 +197,13 @@ provenance, not proof."*
 | Audit as a precondition for deletion | `src/wal.rs:59` (`log_strict`) |
 | Append-only file handle | `src/wal.rs:80` |
 | Duplicate probe excludes superseded points | `src/mcp.rs:450` (`dedup_filter`) |
-| Store short-circuit: cosine **and** exact text | `src/mcp.rs:480` |
+| Store short-circuit: cosine **and** exact text | `src/mcp.rs:464-466` |
 | Supersede stamps the old points | `src/mcp.rs:930` |
 | Supersession hidden on the read path | `src/qdrant.rs:77` |
 | Taxonomy validation, such as it is | `src/mcp.rs:1506` (`validate_tag`) |
 | Count-echo guard on mass delete | `src/mcp.rs:1181` |
 | Recency re-rank | `src/mcp.rs:835` |
-| The probe's looser duplicate rule | `src/mcp.rs:1268` |
+| The probe's looser duplicate rule | `src/mcp.rs:1323` |
 | Attribution, explicitly not authentication | `src/auth.rs:1` |
 
 ## 5. Memory Data Model
@@ -268,11 +269,11 @@ append to the WAL, upsert to Qdrant, return. A memory is retrievable the moment
 
 The duplicate probe is the interesting part, and it is stricter than the
 documentation says. `do_store` short-circuits only when the top hit is **both**
-above 0.95 cosine **and** textually identical (`src/mcp.rs:480`). The vector
+above 0.95 cosine **and** textually identical (`src/mcp.rs:464-466`). The vector
 comparison is a cheap index lookup; the equality is the actual decision. A
 paraphrase is never deduped, whatever its cosine.
 
-`palace_check_duplicate` does not apply the second half (`src/mcp.rs:1268`):
+`palace_check_duplicate` does not apply the second half (`src/mcp.rs:1323`):
 
 ```rust
 let is_duplicate = top.as_ref().and_then(|m| m.score)
@@ -480,10 +481,11 @@ and no default scope, and the README says so before it says anything else.
 
 ## 12. Antipatterns / Risks
 
-- **The enum-validated schema does not exist.** README claim versus
-  `src/schema.rs`'s own comment and `validate_tag`.
-- **Probe and writer disagree on what a duplicate is** (`src/mcp.rs:1268` versus
-  `:480`).
+- **Probe and writer disagree on what a duplicate is.** `do_check_duplicate`
+  (`src/mcp.rs:1323`) reports a duplicate on cosine alone, `>= 0.95`; the writer's
+  `exact_dup` (`:464-466`) short-circuits only when the score clears the same bar
+  **and** `m.text == text`. So `palace_check_duplicate` tells an agent a
+  paraphrase is already stored and `palace_store` then stores it.
 - **Human approval is instruction text plus a self-set boolean**; the
   `expected_count` guard protects against a changed filter, not a missing person.
 - **`valid_from` and `valid_until` are always the clock**, so the bi-temporal
@@ -517,9 +519,6 @@ projects that resolve it the other way.
 
 ## 14. Open Questions
 
-- **Is the README's "enum-validated" line stale or aspirational?** An earlier
-  version with real enums would explain the sentence; nothing at this commit
-  does.
 - **Was `valid_from` meant to be a tool argument?** The doc comment describes
   caller-supplied temporal semantics no tool exposes, and the read filter is
   already written to compare against an arbitrary instant.
@@ -548,6 +547,20 @@ projects that resolve it the other way.
 | `inbox/palace_supersede-*.md` | The supersession RFC and its regression note |
 | `.github/workflows/ci.yml` | fmt, clippy across two feature sets, test, audit |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Both validity columns carry record time | `grep -n "valid_from\|valid_until" src/mcp.rs` | `valid_from: Some(now)` at write, `"valid_until": now` at supersede; no tool argument supplies either |
+| The probe and the writer disagree | read `exact_dup` at `src/mcp.rs:464-466` and `do_check_duplicate` at `:1323` | The writer requires `score >= 0.95 && m.text == text`; the probe reports on the score alone |
+| No enum on the taxonomy | `grep -n "enum" src/schema.rs` | None; the four tags are `String`, as the module comment states |
+| The README no longer claims one | `grep -oiE ".{60}enum.{60}" README.md` | Nothing |
+| Tree and suite size | `find . -name "*.rs" \| xargs wc -l \| tail -1`; `grep -rh "#\[test\]" --include="*.rs" src \| wc -l` | 6,279 lines; 34 test functions |
+
 ## History
+
+**2026-09-11** — [`07a788ac1f4c06343d697a149857e4df9a621a8a`](https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a) — re-read, 17 files past the previous pin in a single commit; the memory path is untouched and the change is auth, OAuth, rate limiting and MCP plumbing, plus six shipped inbox notes deleted. **The report's headline criticism is closed upstream.** The README's *"replaces the untyped metadata with an enum-validated palace schema"* — which section 1 called the whole stated reason to choose this over the generic Qdrant server — is gone; the landing page now positions on opinionation and points readers wanting a generic `(text, metadata)` store at `qdrant/mcp-server-qdrant`, which is what the code supports. That paragraph and the two bullets resting on it are replaced by a description of the free-text taxonomy as the design position it is. **`bitemporal` was re-examined and stays withheld**, and the previous edition's reason survives the check: `valid_from` is stamped `now` at write and `valid_until` is stamped `now` at supersede, so both columns carry record time under validity-time names, and no tool exposes a caller-supplied instant for either. The read filter *is* written to compare against an arbitrary instant — `exclude_superseded_before`, defaulting to `now_rfc3339()` with an `include_superseded` escape — which is why the columns read as one argument away from the mark rather than two. **The probe/writer disagreement holds** and its line numbers are re-pinned: `exact_dup` at `:464-466` requires cosine *and* exact text, `do_check_duplicate` at `:1323` reports on cosine alone. Screened before reading: two findings, neither an execution surface; nothing was built or run.
 
 **2026-07-31** — [`9dd7228b8a502099522a900d647c57c99f127359`](https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359) — first reading.

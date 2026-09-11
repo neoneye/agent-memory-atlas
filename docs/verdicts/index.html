@@ -3661,19 +3661,21 @@ destructive operation, not a record of it. <code>log_strict</code> fails
 the delete when the audit entry cannot be durably appended, on the
 stated reasoning that the WAL is the only trail — and the entry carries
 a text preview, so it says what was removed.</li>
-<li>Biggest risk: the README's stated differentiator over the generic
-Qdrant server is an "enum-validated palace schema", and
-<code>src/schema.rs</code> says the four tags are "deliberately
-free-text… never enforced". <code>validate_tag</code> trims and
-length-caps; there is no enum in the crate.</li>
+<li>Biggest risk: the duplicate probe and the writer apply different
+rules. <code>do_check_duplicate</code> reports a duplicate on cosine
+<code>&gt;= 0.95</code> alone; <code>exact_dup</code> short-circuits the
+write only when the score clears the same bar <em>and</em> the text
+matches exactly. So <code>palace_check_duplicate</code> tells an agent a
+paraphrase is already stored, and <code>palace_store</code> then stores
+it.</li>
 <li>Most reusable component: <code>src/wal.rs</code> — 129 lines
 including its tests, no dependency on the rest of the crate, and the
 split between best-effort logging for writes and strict logging for
 destruction.</li>
-<li>Maturity impression: 63 inline Rust tests, CI running clippy at
-deny-warnings across two feature sets plus <code>cargo audit</code>, and
-a committed benchmark note reporting its own loss with Wilson intervals
-and a stopping rule.</li>
+<li>Maturity impression: 34 inline Rust tests over 6,279 lines, CI
+running clippy at deny-warnings across two feature sets plus
+<code>cargo audit</code>, and a committed benchmark note reporting its
+own loss with Wilson intervals and a stopping rule.</li>
 <li>Study when: you want the audit-as-precondition variant, or an
 example of a duplicate probe that deliberately refuses to match
 superseded points — the collision <a

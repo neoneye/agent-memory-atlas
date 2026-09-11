@@ -110,14 +110,14 @@ system it cites as prior art.</p>
               <strong>calibrae/palazzo</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359" title="9dd7228b8a502099522a900d647c57c99f127359">
+            <a class="meta-pill revision-pill" href="https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a" title="07a788ac1f4c06343d697a149857e4df9a621a8a">
               <span>Analyzed revision</span>
-              <code>9dd7228b…</code>
+              <code>07a788ac…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/calibrae--palazzo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -178,19 +178,18 @@ vector or require the LLM dependency the project exists to avoid.
 Systems in this atlas that benchmark themselves almost always publish a
 win. This one published a loss, with error bars, and changed no code as
 a result.</p>
-<p><strong>And the README's central claim about the schema is
-false.</strong> It says palazzo <em>"starts from that interface and
-replaces the untyped metadata with an enum-validated palace schema"</em>
-— the whole stated reason to choose it over the generic Qdrant server.
-<code>src/schema.rs</code> opens by saying the opposite:</p>
+<p><strong>The taxonomy is free text and the README says so.</strong>
+<code>src/schema.rs</code> opens with the design position:</p>
 <pre class="rust"><code>// category / wing / room / hall are deliberately free-text — the palace
 // taxonomy is whatever the user makes of it. Conventional values are suggested
 // in the `palace_store` tool-arg descriptions but never enforced.</code></pre>
-<p><code>validate_tag</code> (<code>src/mcp.rs:1506</code>) trims,
-rejects empty, and caps the length. There is no enum in the crate; the
-four tags are <code>String</code>. The code is right and the README is
-wrong, which is the better direction for a reader to discover it — but
-that sentence is the differentiator, and it is on the landing page.</p>
+<p><code>validate_tag</code> trims, rejects empty, and caps the length.
+There is no enum in the crate; the four tags are <code>String</code>.
+The landing page positions the project on opinionation rather than on
+typing — <em>"It is intentionally opinionated. If you want a generic
+<code>(text, metadata)</code> store, use
+<code>qdrant/mcp-server-qdrant</code>"</em> — which is what the code
+supports.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is <strong>a verbatim sentence filed at an address</strong>.
 The address is four free-text tags — <code>category</code>,
@@ -333,7 +332,7 @@ Paths</h2>
 </tr>
 <tr>
 <td>Store short-circuit: cosine <strong>and</strong> exact text</td>
-<td><code>src/mcp.rs:480</code></td>
+<td><code>src/mcp.rs:464-466</code></td>
 </tr>
 <tr>
 <td>Supersede stamps the old points</td>
@@ -357,7 +356,7 @@ Paths</h2>
 </tr>
 <tr>
 <td>The probe's looser duplicate rule</td>
-<td><code>src/mcp.rs:1268</code></td>
+<td><code>src/mcp.rs:1323</code></td>
 </tr>
 <tr>
 <td>Attribution, explicitly not authentication</td>
@@ -432,11 +431,12 @@ queue and no indexing lag.</p>
 <p>The duplicate probe is the interesting part, and it is stricter than
 the documentation says. <code>do_store</code> short-circuits only when
 the top hit is <strong>both</strong> above 0.95 cosine
-<strong>and</strong> textually identical (<code>src/mcp.rs:480</code>).
-The vector comparison is a cheap index lookup; the equality is the
-actual decision. A paraphrase is never deduped, whatever its cosine.</p>
+<strong>and</strong> textually identical
+(<code>src/mcp.rs:464-466</code>). The vector comparison is a cheap
+index lookup; the equality is the actual decision. A paraphrase is never
+deduped, whatever its cosine.</p>
 <p><code>palace_check_duplicate</code> does not apply the second half
-(<code>src/mcp.rs:1268</code>):</p>
+(<code>src/mcp.rs:1323</code>):</p>
 <pre class="rust"><code>let is_duplicate = top.as_ref().and_then(|m| m.score)
     .map(|s| s &gt;= DUPLICATE_THRESHOLD).unwrap_or(false);</code></pre>
 <p>Its tool description tells the agent to <em>"call this before
@@ -641,11 +641,14 @@ verified identity and no default scope, and the README says so before it
 says anything else.</p>
 <h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
 <ul>
-<li><strong>The enum-validated schema does not exist.</strong> README
-claim versus <code>src/schema.rs</code>'s own comment and
-<code>validate_tag</code>.</li>
-<li><strong>Probe and writer disagree on what a duplicate is</strong>
-(<code>src/mcp.rs:1268</code> versus <code>:480</code>).</li>
+<li><strong>Probe and writer disagree on what a duplicate is.</strong>
+<code>do_check_duplicate</code> (<code>src/mcp.rs:1323</code>) reports a
+duplicate on cosine alone, <code>&gt;= 0.95</code>; the writer's
+<code>exact_dup</code> (<code>:464-466</code>) short-circuits only when
+the score clears the same bar <strong>and</strong>
+<code>m.text == text</code>. So <code>palace_check_duplicate</code>
+tells an agent a paraphrase is already stored and
+<code>palace_store</code> then stores it.</li>
 <li><strong>Human approval is instruction text plus a self-set
 boolean</strong>; the <code>expected_count</code> guard protects against
 a changed filter, not a missing person.</li>
@@ -683,9 +686,6 @@ committed file, is worth copying even by projects that resolve it the
 other way.</p>
 <h2 id="14-open-questions">14. Open Questions</h2>
 <ul>
-<li><strong>Is the README's "enum-validated" line stale or
-aspirational?</strong> An earlier version with real enums would explain
-the sentence; nothing at this commit does.</li>
 <li><strong>Was <code>valid_from</code> meant to be a tool
 argument?</strong> The doc comment describes caller-supplied temporal
 semantics no tool exposes, and the read filter is already written to
@@ -758,7 +758,82 @@ and the free-text comment</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Both validity columns carry record time</td>
+<td><code>grep -n "valid_from|valid_until" src/mcp.rs</code></td>
+<td><code>valid_from: Some(now)</code> at write,
+<code>"valid_until": now</code> at supersede; no tool argument supplies
+either</td>
+</tr>
+<tr>
+<td>The probe and the writer disagree</td>
+<td>read <code>exact_dup</code> at <code>src/mcp.rs:464-466</code> and
+<code>do_check_duplicate</code> at <code>:1323</code></td>
+<td>The writer requires
+<code>score &gt;= 0.95 &amp;&amp; m.text == text</code>; the probe
+reports on the score alone</td>
+</tr>
+<tr>
+<td>No enum on the taxonomy</td>
+<td><code>grep -n "enum" src/schema.rs</code></td>
+<td>None; the four tags are <code>String</code>, as the module comment
+states</td>
+</tr>
+<tr>
+<td>The README no longer claims one</td>
+<td><code>grep -oiE ".{60}enum.{60}" README.md</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find . -name "*.rs" | xargs wc -l | tail -1</code>;
+<code>grep -rh "#\[test\]" --include="*.rs" src | wc -l</code></td>
+<td>6,279 lines; 34 test functions</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a"><code class="commit-id" title="07a788ac1f4c06343d697a149857e4df9a621a8a">07a788ac…</code></a>
+— re-read, 17 files past the previous pin in a single commit; the memory
+path is untouched and the change is auth, OAuth, rate limiting and MCP
+plumbing, plus six shipped inbox notes deleted. <strong>The report's
+headline criticism is closed upstream.</strong> The README's
+<em>"replaces the untyped metadata with an enum-validated palace
+schema"</em> — which section 1 called the whole stated reason to choose
+this over the generic Qdrant server — is gone; the landing page now
+positions on opinionation and points readers wanting a generic
+<code>(text, metadata)</code> store at
+<code>qdrant/mcp-server-qdrant</code>, which is what the code supports.
+That paragraph and the two bullets resting on it are replaced by a
+description of the free-text taxonomy as the design position it is.
+<strong><code>bitemporal</code> was re-examined and stays
+withheld</strong>, and the previous edition's reason survives the check:
+<code>valid_from</code> is stamped <code>now</code> at write and
+<code>valid_until</code> is stamped <code>now</code> at supersede, so
+both columns carry record time under validity-time names, and no tool
+exposes a caller-supplied instant for either. The read filter
+<em>is</em> written to compare against an arbitrary instant —
+<code>exclude_superseded_before</code>, defaulting to
+<code>now_rfc3339()</code> with an <code>include_superseded</code>
+escape — which is why the columns read as one argument away from the
+mark rather than two. <strong>The probe/writer disagreement
+holds</strong> and its line numbers are re-pinned:
+<code>exact_dup</code> at <code>:464-466</code> requires cosine
+<em>and</em> exact text, <code>do_check_duplicate</code> at
+<code>:1323</code> reports on cosine alone. Screened before reading: two
+findings, neither an execution surface; nothing was built or run.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/calibrae/palazzo/commit/9dd7228b8a502099522a900d647c57c99f127359"><code class="commit-id" title="9dd7228b8a502099522a900d647c57c99f127359">9dd7228b…</code></a>
 — first reading.</p>
