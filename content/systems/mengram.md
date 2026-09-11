@@ -7,10 +7,13 @@ page_kind: system
 source_name: "alibaizhanov/mengram"
 source_url: https://github.com/alibaizhanov/mengram
 archive_name: "alibaizhanov--mengram"
-revision: 99bfd824c374d85f021290f6f78de357243ebf9a
-revision_url: https://github.com/alibaizhanov/mengram/commit/99bfd824c374d85f021290f6f78de357243ebf9a
-analyzed_at: 2026-08-09
+revision: 08d8c79cbd202625d20b7bcbefb2aea50a54bea2
+revision_url: https://github.com/alibaizhanov/mengram/commit/08d8c79cbd202625d20b7bcbefb2aea50a54bea2
+analyzed_at: 2026-09-11
 capabilities: "trust_state, scope_enforced"
+capability_evidence:
+  trust_state: "procedure retrieval | cloud/store/_profile.py:447,:487,:490 | `is_current = TRUE` as a predicate on every current-procedure read, with `metadata.status` of `needs_review` holding a revision out | benchmark/procinterfere"
+  scope_enforced: "procedure reads | cloud/store/_profile.py:487 | `WHERE user_id = %s` with `sub_user_id` beside it as arguments to every procedure read | unknown"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -22,10 +25,10 @@ matrix:
   update_delete: "A new version is promoted only if it breaks no dependent; otherwise quarantined"
   scoping: "user_id and sub_user_id are arguments to every procedure read"
   integration: "Python and npm SDKs, an MCP server, an Obsidian plugin, a VS Code extension"
-  background: "Procedure evolution from episodes, with an evolution log recording each diff"
+  background: "Procedure evolution from episodes, with an evolution log recording each diff and refusals written to a quarantine file for a person"
   trust: "metadata.status needs_review plus is_current false holds a revision out of retrieval"
   strengths: "The only system here that tests a correction against other memories before applying it"
-  risks: "Nothing surfaces the quarantine queue, so a gated revision waits indefinitely"
+  risks: "The quarantine queue is rendered but has no exit — no verb promotes or discards a gated revision, so it waits indefinitely once a person has read it"
 ---
 
 ## 1. Executive Summary
@@ -76,7 +79,7 @@ With the philosophy stated in the module header: *"ties go to safety
 and hopes nothing depended on the old one.** This is the only one that asks.
 
 **And it built the benchmark for the problem** — section 10 — along with the
-finding that nothing surfaces the quarantine it creates, section 9.
+finding that nothing resolves the quarantine it creates, section 9.
 
 ## 2. Mental Model
 
@@ -210,17 +213,21 @@ real.
 
 **Scope enforced — awarded**, per section 6.
 
-**Human review — withheld, and this is the gap that matters.** The gate
-quarantines "for review". Nothing in `api/`, `cloud/` or `sdk/` references
-`needs_review` outside the store that writes it: **no endpoint lists the
-quarantine queue, and no endpoint approves or rejects a gated revision.**
+**Human review — withheld, and the gap has narrowed to one verb.** The local
+path gained a destination: `local/evolve.py` writes a refused revision to
+`.mengram/quarantine.json` under a docstring saying where it goes and where it
+does not — *"a revision the gate refuses goes to `.mengram/quarantine.json` for a
+human, never to the agent"* — and `read_quarantine` feeds `local/map.py`, which
+renders the queue into the map a person reads (`cli.py:511-513`). So the queue is
+visible.
 
-The consequence is that the safe behaviour is also a dead end. A revision that
-trips the gate is stored, marked, and never seen again — while the old version
-stays authoritative indefinitely, including in the case where the revision was
-correct and the dependent procedure was the thing that needed updating. The
-mechanism's first half is the novel part and its second half is a listing
-endpoint.
+What is still missing is the exit. Nothing promotes a quarantined revision and
+nothing discards one: `evolve` returns a status of `promoted`,
+`revised_in_place`, `quarantined` or a failure, and no verb moves a revision out
+of the third state. A person can now read the list and still cannot act on it,
+which leaves the dead end where it was — the old version stays authoritative
+indefinitely, including when the revision was right and the dependent procedure
+was the thing that needed updating.
 
 **The gate fails open**, per section 7.
 
@@ -250,15 +257,15 @@ measuring**, and its framing is careful:
 
 The metric is **silent-regression rate** — "the % of memory revisions that break
 a dependent procedure and get promoted anyway, with no flag" — reported beside a
-**false-quarantine** rate, so over-flagging is measured too. 18 paired cases
-across 12 domains, `should_flag` marking the breaking ones, runnable with "no
+**false-quarantine** rate, so over-flagging is measured too. 20 paired cases
+across 12 domains — 12 breaking and 8 safe, `should_flag` marking the split, runnable with "no
 account, no key — the gate is pure deterministic code."
 
 The reported table is `latest-wins` 100% / `append-only` 100% / `mengram-gate`
 0% silent regression, all at 0% false quarantine.
 
 **That table is a specification check, not evidence of generalisation**, and the
-distinction matters. The 18 cases were authored alongside the rule they exercise,
+distinction matters. The 20 cases were authored alongside the rule they exercise,
 and the two baselines are described accurately as what they are — "the industry
 default: the newest version of a procedure always wins. No interference check" —
 so a rule that flags added preconditions will score 100% against a rule that
@@ -315,9 +322,10 @@ papers by arXiv id, is worth more than the stale status line costs.
 
 ### Avoid
 
-- **Do not quarantine into a queue nobody can read.** `needs_review` is written
-  and no endpoint lists or resolves it, so the gate's correct behaviour has no
-  exit. A listing endpoint and an approve/reject pair complete the mechanism.
+- **Do not quarantine into a queue with no exit.** The listing half is done —
+  refusals land in `.mengram/quarantine.json` and the map renders them — and the
+  acting half is not: no verb promotes or discards a gated revision. A queue a
+  person can read and cannot empty is a slower dead end than one nobody can see.
 - **Do not fail open on a safety check.** `except: logger.warning("regression
   gate skipped")` promotes the revision when the gate throws. An exception is not
   evidence of safety.
@@ -377,6 +385,20 @@ arXiv citations `:1-15`, the silent-regression metric `:17-21`, the results tabl
 `evals/extraction_cases.yaml`, `evals/run_extraction_evals.py`,
 `benchmarks/locomo_bench.py`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Refusals reach a file a person reads | `grep -rn "quarantine" --include="*.py" cli.py local/ cloud/` | `local/evolve.py:34` writes `.mengram/quarantine.json`; `read_quarantine` feeds `local/map.py`, rendered from `cli.py:511-513` |
+| No verb resolves a quarantined revision | the same search, filtered for `approve\|reject\|promote\|resolve` | `evolve` returns `promoted`, `revised_in_place`, `quarantined` or a failure; nothing moves a revision out of the third |
+| `is_current` is a read predicate | `grep -n "is_current" cloud/store/_profile.py` | `AND is_current = TRUE` on the current-procedure reads at `:447`, `:487`, `:490` |
+| The benchmark's baselines are definitional | read `latest_wins` and `append_only` in `benchmark/procinterfere/run.py` | Both are `return False` — "promotes unconditionally, never flags" |
+| Case split | `python3 -c` over `benchmark/procinterfere/cases.jsonl` | 20 cases, 12 breaking, 8 safe |
+
 ## History
+
+**2026-09-11** — [`08d8c79cbd202625d20b7bcbefb2aea50a54bea2`](https://github.com/alibaizhanov/mengram/commit/08d8c79cbd202625d20b7bcbefb2aea50a54bea2) — re-read, 97 files and 21,231 insertions past the previous pin in a single commit. Both marks re-verified, with `capability_evidence` records added where the report had none. **The quarantine criticism is half closed.** The previous edition's *"nothing surfaces the quarantine queue"* is no longer true on the local path: `local/evolve.py` writes a refused revision to `.mengram/quarantine.json` under a docstring stating where it goes and where it does not — *"for a human, never to the agent"* — and `read_quarantine` feeds the map view a person reads. What has not changed is the exit: `evolve` returns `promoted`, `revised_in_place`, `quarantined` or a failure, and no verb moves a revision out of the third state. A queue a person can read and cannot empty is a slower dead end than one nobody can see, and the Avoid bullet is rewritten to say that. The benchmark case count is corrected from 18 to 20 — twelve breaking, eight safe — and the report's assessment of that table as a specification check rather than evidence of generalisation stands: the two baselines are literally `return False`, so the comparison measures the definition of "does no check". Screened before reading: twenty-seven findings across twenty-eight files; nothing was installed or run.
 
 **2026-08-09** — [`99bfd824c374d85f021290f6f78de357243ebf9a`](https://github.com/alibaizhanov/mengram/commit/99bfd824c374d85f021290f6f78de357243ebf9a) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The gate described as unbuilt in the repository's own spec was found implemented and wired into `evolve_procedure`.
