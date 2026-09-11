@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Tauri desktop app that indexes
+Claude Code and Codex history into SQLite and keeps a small store of
+memories a person writes, scoped global, per project or per agent — and
+filters them by that scope when assembling a handoff package for the
+other agent.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ContextMeld — Agent Memory Atlas">
+    <meta property="og:description" content="A Tauri desktop app that
+indexes Claude Code and Codex history into SQLite and keeps a small
+store of memories a person writes, scoped global, per project or per
+agent — and filters them by that scope when assembling a handoff package
+for the other agent.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ContextMeld — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Tauri desktop app that
+indexes Claude Code and Codex history into SQLite and keeps a small
+store of memories a person writes, scoped global, per project or per
+agent — and filters them by that scope when assembling a handoff package
+for the other agent.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ContextMeld — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ContextMeld",
+      "description": "A Tauri desktop app that indexes Claude Code and Codex history into SQLite and keeps a small store of memories a person writes, scoped global, per project or per agent \u2014 and filters them by that scope when assembling a handoff package for the other agent.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Hand-written memory for a cross-agent
+handoff</p>
+          <h1>ContextMeld</h1>
+          <p class="document-deck">A Tauri desktop app that indexes
+Claude Code and Codex history into SQLite and keeps a small store of
+memories a person writes, scoped global, per project or per agent — and
+filters them by that scope when assembling a handoff package for the
+other agent.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Ste2027/ContextMeld">
+              <span>Source</span>
+              <strong>Ste2027/ContextMeld</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Ste2027/ContextMeld/commit/77d0acbdeda5769d181e7398dcea32be4e70edc9" title="77d0acbdeda5769d181e7398dcea32be4e70edc9">
+              <span>Analyzed revision</span>
+              <code>77d0acbd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Ste2027--ContextMeld" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Ste2027--ContextMeld</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ContextMeld is a desktop application — Tauri, with a Rust core over
+SQLite and a React interface — that indexes the session history Claude
+Code and OpenAI Codex already keep on disk, makes it searchable, and
+helps a person carry context from one agent to the other. MIT-licensed,
+fifty-nine commits by one author since 5 September 2026, about 4,500
+lines of Rust in the core and a React front end beside it.</p>
+<p>Its memory is the smallest part of it, and the most deliberate. A
+memory is something a person writes: a title, a Markdown body, tags, and
+a scope — <code>global</code>, <code>project</code> with a project path,
+or <code>agent</code> with a list of agents — constrained by a
+<code>CHECK</code> in the migration. No agent writes one and no model
+extracts one; the tree contains no model client at all. Memories are
+edited under optimistic concurrency, moved to a trash that can be
+restored, and exported or imported as versioned JSON archives.</p>
+<p>They reach an agent through one path: the handoff package. When a
+person exports a session's context for the other agent, the builder
+offers the memories that apply — global ones, ones scoped to that
+session's project, ones scoped to that session's source agent — and the
+person picks which to include. That filter is the atlas's
+<code>scope_enforced</code> mark, and a committed test that loads a page
+with another project's memory and a matching global one, and asserts the
+first is not offered while the second is, is the
+<code>negative_eval</code> mark.</p>
+<p>Both marks carry a caveat worth stating plainly. The predicate lives
+in the React component, not in the Rust query: the backend command
+returns every live memory and the webview filters. For a single-user
+desktop app with one consumer that is a reasonable place for it, and the
+report does not treat it as a leak. It does mean the boundary belongs to
+the screen rather than to the store, and anything else that reads the
+memory API — a second view, a future plugin, the MCP surface the app
+already manages — starts with no boundary at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nothing here becomes a belief by inference. A person decides
+something is worth keeping and writes it down; it is true until that
+person edits it or moves it to the trash. The one epistemic step in the
+design is not about truth but about applicability: <em>which of the
+things I wrote apply to this session</em>. That is what the scope
+answers, and what the handoff builder asks.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a person writes every memory with a scope; the handoff builder offers only the memories whose scope matches the session, the person selects from those, and the package is a file they carry to the other agent</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a person writes every memory with a scope; the handoff builder offers only the memories whose scope matches the session, the person selects from those, and the package is a file they carry to the other agent
+flowchart TD
+  P[&quot;Person writes a memory&quot;] --&gt; M[&quot;memories row: scope global, project or agent&quot;]
+  M --&gt;|&quot;trash sets deleted_at, restore clears it&quot;| M
+  H[&quot;Claude Code and Codex history on disk&quot;] --&gt; I[&quot;indexer and watcher: sessions, events, FTS5&quot;]
+  I --&gt; S[&quot;session chosen for handoff&quot;]
+  M --&gt; F{&quot;global, or project matches session, or agent matches source agent?&quot;}
+  S --&gt; F
+  F --&gt;|yes| O[&quot;offered in the package builder&quot;]
+  F --&gt;|no| X[&quot;not offered&quot;]
+  E[&quot;memory staged explicitly from the Memories page&quot;] --&gt; O
+  O --&gt; C[&quot;person selects and edits&quot;]
+  C --&gt; K[&quot;Markdown or JSON package written to a file&quot;]
+  K --&gt; A[&quot;person opens the other agent with it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A single desktop process. The Rust core (<code>src-tauri/src/</code>)
+owns the SQLite database, the adapters that read
+<code>~/.claude/projects</code> and <code>~/.codex/sessions</code>, a
+watcher that re-indexes when those files change, and commands for
+memories, skills and MCP configuration. The React front end
+(<code>src/</code>) calls those commands through Tauri. There is no
+server, no account, no network client for a model, and — by the README's
+statement and the absence of any such code — no telemetry.</p>
+<p>Two migrations define the store. <code>001_initial.sql</code> creates
+<code>settings</code>, <code>agents</code>, <code>projects</code>,
+<code>sessions</code>, <code>events</code>, <code>indexed_files</code>
+and an FTS5 <code>search_index</code> over transcript events.
+<code>002_memories.sql</code> adds <code>memories</code> and a second
+FTS5 table, <code>library_search</code>, which holds only memories and
+is maintained by triggers that index a memory while
+<code>deleted_at</code> is null and drop it when it is set.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="writing-a-memory">Writing a memory</h3>
+<p><code>MemoryDraft::validate</code>
+(<code>src-tauri/src/memories.rs:52-95</code>) trims and bounds the
+title at 240 characters and the body at 1 MiB, requires a known scope,
+requires a project for a project memory and clears it otherwise,
+restricts agents to six known names and requires at least one for an
+agent memory, and allows at most 64 tags, each up to 80 characters.
+<code>save_memory</code> inserts a new row or updates an existing one
+<code>WHERE id=? AND revision=? AND deleted_at IS NULL</code>,
+incrementing the revision; a zero-row update returns <em>"This memory
+changed or was deleted. Reload it before saving."</em></p>
+<h3 id="trash-and-restore">Trash and restore</h3>
+<p><code>trash_memory</code> flips <code>deleted_at</code> under the
+same revision check. The <code>library_search</code> triggers keep the
+FTS index in step, so a trashed memory disappears from search and
+returns on restore. There is no purge: a search of the tree for
+<code>DELETE FROM memories</code> finds nothing.</p>
+<h3 id="import-and-export">Import and export</h3>
+<p><code>export_memories</code> writes a
+<code>contextmeld.memories</code> v1 archive of live memories, capped at
+500 records and 3 MiB of content. <code>import_memories</code> validates
+every draft first, then inserts inside one transaction, skipping any
+draft whose title, body, scope, project, agents and tags all exactly
+match a live memory — so a second import of the same archive is a no-op,
+and <code>archive_import_is_atomic_and_idempotent</code> pins it.</p>
+<h3 id="the-handoff-builder">The handoff builder</h3>
+<p><code>ContextExport</code>
+(<code>src/features/ContextExport.tsx</code>) loads the session's
+context and the first page of live memories, filters that page to those
+whose scope matches (<code>:44-49</code>), adds any memory the person
+staged explicitly, and preselects only the staged ones. <em>Load
+more</em> fetches the next page and applies the same filter
+(<code>:77-81</code>). The person fills in the task and decisions,
+selects memories, chooses Markdown or JSON, and
+<code>exports::write_text</code> writes the file atomically, refusing a
+relative path or an executable extension.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID</td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td>incremented on every edit and trash; the concurrency token</td>
+</tr>
+<tr>
+<td><code>title</code>, <code>body</code></td>
+<td>the memory</td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td><code>global</code>, <code>project</code> or <code>agent</code>,
+constrained by <code>CHECK</code></td>
+</tr>
+<tr>
+<td><code>project</code></td>
+<td>a path, non-empty only for a project memory</td>
+</tr>
+<tr>
+<td><code>agents</code>, <code>tags</code></td>
+<td>JSON arrays</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>updated_at</code>,
+<code>deleted_at</code></td>
+<td>ISO timestamps; <code>deleted_at</code> is the trash</td>
+</tr>
+</tbody>
+</table></div>
+<p>There is no provenance field, because the provenance is always the
+person; no confidence, no status beyond the trash, and no link to the
+session a memory was written about.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A person searches through <code>library_search</code>, an FTS5 table
+with a <code>unicode61</code> tokenizer over title, body, and a labels
+column built from tags, project and agents; results exclude trashed
+memories and are ordered by FTS rank. The memory list filters by a
+substring of title, body, tags or project, by an optional scope, and by
+trash state, newest first, a hundred at a time.</p>
+<p>The retrieval that reaches an agent is the handoff builder's, and it
+is not a ranking at all: it is the scope predicate, followed by a
+person's selection.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is a person's, in the foreground, and takes effect on
+commit. There is no lag, no background pass and no automated writer to
+wait for. The indexer and watcher write to the transcript tables, never
+to <code>memories</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>ContextMeld does not integrate with an agent in the usual sense. It
+reads the agents' history files, and it writes a package that a person
+opens in the other agent. It never starts an agent, never executes a
+command found in a transcript, and never writes into an agent's own
+configuration on the memory path. The MCP and skills screens do edit
+agents' configuration files, deliberately and with their own validation,
+and they are outside this report.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The boundary is in the screen.</strong> The scope predicate
+that earns the mark runs in <code>ContextExport.tsx</code>.
+<code>Database::memories</code>, which the builder calls, returns every
+live memory when its scope argument is empty, and the builder passes it
+empty. The filter is correct and tested where it sits; it is also the
+only place it sits, and a second consumer of the same command inherits
+nothing. Moving the predicate into the Rust query — the session's
+project and agent are known on that side — would put it where the store
+is.</p>
+<p><strong>An explicit staging bypasses it, on purpose.</strong> A
+memory staged from the Memories page is offered and preselected whatever
+its scope. That is the person overriding the filter, and the
+preselection test pins that only staged memories are preselected.</p>
+<p><strong>Trash is forever.</strong> There is no way to remove a memory
+permanently from the app. For a store of things a person chose to write,
+that is a defensible default; for a person who wrote something they now
+want gone, it is a gap.</p>
+<p><strong>Transcripts are data.</strong> The adapters parse history
+files into events and never execute them, and the export writer refuses
+executable extensions and relative paths. A memory body is Markdown a
+person wrote and is rendered as such.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>CI (<code>.github/workflows/ci.yml</code>) runs
+<code>npm run check</code>, <code>cargo fmt --check</code>, the Rust
+tests, clippy with warnings as errors, and a debug desktop build. I did
+not run any of it; everything below is read from the committed
+tests.</p>
+<p><code>src-tauri/tests/memories.rs</code> has seven tests: a
+round-trip with scope filtering and FTS search; revision-conflict
+detection and FTS update on edit; trash removing a memory from search
+and restore returning it; atomic and idempotent archive import; scope
+and agent validation; a migration that preserves schema-one data; and
+atomic text export with destination validation. Two of its absence
+assertions are vacuous — <code>memories("", "agent", ...)</code> is
+asserted empty over a store holding one global memory, and search is
+asserted empty after trashing the only memory — and neither is what the
+mark rests on.</p>
+<p><code>src/test/Memories.test.tsx</code> covers editing with the saved
+revision, trash and restore, export, staging for context only on an
+explicit action, keeping unsaved edits across a conflict, and guarding a
+dirty editor. <code>src/test/Insights.test.tsx</code> covers the handoff
+builder, including the case the <code>negative_eval</code> mark rests on
+(<code>:112-152</code>): a project memory scoped to <code>/other</code>
+and a global memory arrive on two pages, and after loading both the test
+asserts the global memory is offered unchecked and the other project's
+is absent. The control is in the same test, and the scope predicate is
+the only thing that separates the two.</p>
+<p>There is no benchmark and no paper, and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A scope that is a closed set with a constraint.</strong>
+<code>CHECK(scope IN ('global','project','agent'))</code> plus
+validation that a project memory has a project and an agent memory has
+an agent makes the scope impossible to store wrong.</li>
+<li><strong>Revision numbers on hand-edited memory.</strong> A person
+editing in two windows gets a conflict and keeps their unsaved text,
+instead of a silent overwrite.</li>
+<li><strong>The exclusion test with its control.</strong> Load a page
+containing a memory that must not be offered and one that must, and
+assert both. It is the shape every scope filter should be tested
+with.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Enforcing the boundary in the view.</strong> Put the
+predicate in the query the view calls, so the next consumer of the store
+inherits it.</li>
+<li><strong>A trash with no bottom.</strong> Offer a purge, even behind
+a confirmation.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For a single developer who moves between Claude Code and Codex and
+wants a place to write down the decisions that should follow them, this
+is a small, careful, local tool, and its memory is exactly as
+trustworthy as the person writing it. It is not a memory system in the
+sense of anything learning or extracting; it is a scoped notebook with a
+handoff, and it should be judged as one.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the app will add adapters for the four other agents its
+memory model already accepts — Cursor, Gemini, OpenCode and Copilot are
+valid agent associations, and only Claude and Codex have history
+adapters at this commit.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory model, validation, CRUD, trash, import and export:
+<code>src-tauri/src/memories.rs</code>; commands:
+<code>src-tauri/src/memory_commands.rs</code>.</li>
+<li>Schema and FTS triggers:
+<code>src-tauri/migrations/001_initial.sql</code>,
+<code>002_memories.sql</code>.</li>
+<li>Session context and search: <code>src-tauri/src/insights.rs</code>,
+<code>src-tauri/src/database.rs</code>.</li>
+<li>History adapters and watcher: <code>src-tauri/src/adapters/</code>,
+<code>src-tauri/src/watcher.rs</code>,
+<code>src-tauri/src/indexer.rs</code>.</li>
+<li>Handoff builder: <code>src/features/ContextExport.tsx</code>; memory
+editor: <code>src/features/memories/</code>.</li>
+<li>Tests: <code>src-tauri/tests/memories.rs</code>,
+<code>src/test/Memories.test.tsx</code>,
+<code>src/test/Insights.test.tsx</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;DELETE FROM memories|purge&quot; src-tauri src                 # 0: no purge
+rg -n -i &quot;api\.openai\.com|api\.anthropic\.com|reqwest&quot; src-tauri/src src-tauri/Cargo.toml   # 0: no model client in the core
+rg -n &quot;scope&quot; src-tauri/src/memories.rs                           # the query takes scope only as an optional listing filter
+rg -n &quot;\.memories\(|search_memories\(&quot; src-tauri/src src         # the builder calls memories(&quot;&quot;, &quot;&quot;, false, offset) and filters itself</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Ste2027/ContextMeld/commit/77d0acbdeda5769d181e7398dcea32be4e70edc9"><code class="commit-id" title="77d0acbdeda5769d181e7398dcea32be4e70edc9">77d0acbd…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration, one build-time execution path in
+<code>src-tauri/build.rs</code>, four manifests inside the seven-day
+cooldown and one unpinned surface. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

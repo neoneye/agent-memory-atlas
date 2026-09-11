@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 414 reports.**
+**This page covers all 415 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3656,3 +3656,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: eleven commits by one author between 2 and 6 September 2026, 5,230 lines of TypeScript with 3,760 lines of tests against a real Postgres, no CI and no licence. Clear modules, explainable ranking, an SDK exercised by a demo agent; no scope key and no request authentication.
 - Study when: you are building a single-user memory service and want supersession done carefully, or you want a retrieval evaluation that tests exclusion as well as recall.
 - Do not copy when: you need corrections to stay corrected under repetition, more than one user, or code you are licensed to reuse.
+
+### [`contextmeld`](../systems/contextmeld/)
+- Best idea: **scope as a closed set, filtered at the one read path that reaches an agent.** Every memory is `global`, `project` with a path, or `agent` with a list, held in by a `CHECK` and by validation that refuses a project memory without a project; the handoff builder offers a memory only if it applies to the session being handed off. Two marks, `scope_enforced` and `negative_eval`, the second on a test that shows the other project's memory absent beside a global one present.
+- Biggest risk: **the boundary is in the view.** The backend command returns every live memory and the React component filters, so the next consumer of the same API — a second screen, a plugin, the MCP surface the app already manages — starts with no boundary.
+- Most reusable component: optimistic concurrency on hand-edited memory — `UPDATE … WHERE id=? AND revision=?`, a conflict that keeps the person's unsaved text, and FTS triggers that drop a trashed memory from search and restore it on undo.
+- Maturity impression: MIT, fifty-nine commits by one author since 5 September 2026, about 4,500 lines of Rust in the core with Rust and React tests and a CI that runs them, clippy and a desktop build. Every memory is hand-written; there is no model client in the tree and no purge for the trash.
+- Study when: you want to carry decisions between coding agents without letting any model write your memory, or you want a small, correct scope model to copy.
+- Do not copy when: you want memory that learns — nothing here extracts, ranks or decays — or you need the boundary enforced beneath the interface.
