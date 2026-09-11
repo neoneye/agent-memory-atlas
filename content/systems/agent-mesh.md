@@ -1,20 +1,20 @@
 ---
 title: "Agent Mesh"
 eyebrow: "A decision ledger that validates before it appends"
-description: "A hash-chained event log whose decisions carry tiers, supersession and executable verification commands, validated at append so a malformed event never lands and executed through argv rather than a shell — while seven payload fields, the reviewer quorum among them, are hardcoded empty by both write paths with no verb that can fill them, and the grounding packet an agent receives never reads the decision store at all."
+description: "A hash-chained event log whose decisions carry tiers, supersession and executable verification commands, with a reviewer quorum that gates promotion — a decision_accepted event that misses quorum lands in the log and leaves the record proposed — while the changed-path check is advisory and read-only by committed contract, and the grounding packet an agent receives still never reads the decision store at all."
 root: ../..
 page_kind: system
 source_name: "cbalgeman/agent-mesh"
 source_url: https://github.com/cbalgeman/agent-mesh
 archive_name: "cbalgeman--agent-mesh"
-revision: 43bfe5cc376c71754c4a627286401825f4599062
-revision_url: https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062
-analyzed_at: 2026-08-17
+revision: a8187089dab47539c21c4d2b2d761779428a59b9
+revision_url: https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9
+analyzed_at: 2026-09-11
 capabilities: "trust_state, audit_log, human_review"
 capability_evidence:
-  trust_state: "the decision store, one status column over the projected `decisions` table | src/agent_mesh/store/rebuild.py | `_project_decision_event` promotes to `accepted` or `in_force` only through `decision_accepted`, `_ensure_supersede_target_valid` refuses a supersession target that is not accepted or in force, and `_project_decision_metadata_updated` clears `accepted_utc` when a revision folds `status` back to `proposed` | tests/public/test_public_contract.py::test_invalid_decision_transition_never_reaches_the_log — the accepted_utc clear itself is untested"
+  trust_state: "the decision store, one status column over the projected `decisions` table | src/agent_mesh/store/rebuild.py:3728, :4380 | `_project_decision_event` promotes to `accepted` or `in_force` only through `decision_accepted` and only when `_decision_quorum_reached` passes, returning without promotion otherwise; `_ensure_supersede_target_valid` refuses a supersession target that is not accepted or in force, and `_project_decision_metadata_updated` clears `accepted_utc` when a revision folds `status` back to `proposed` | tests/public/test_public_contract.py::test_invalid_decision_transition_never_reaches_the_log — the accepted_utc clear itself is untested"
   audit_log: "the event log, which is the store rather than a sidecar | src/agent_mesh/core/events.py | `append_event` assigns `event_seq` and `prev_event_hash` from the tail and writes one canonical SHA-256-chained line per mutation; `_append_decision_log` keeps the per-decision trail `agent-q decisions log` prints | tests/public/test_public_contract.py::test_hash_chain_detects_tampering"
-  human_review: "the Workbench Decisions tab, over the same decision store | src/agent_mesh/workbench.py | the edit path raises `WorkbenchError` without a `revision_reason`, then emits `decision_revisited` with `status: [old, \"proposed\"]`; `_decision_actor` refuses an actor outside `config.participants` | none"
+  human_review: "the Workbench Decisions tab and the reviewer quorum, over the same decision store | src/agent_mesh/workbench.py, src/agent_mesh/core/decision_schema.py:286-327, src/agent_mesh/store/rebuild.py:3728 | `review_policy` carries `required_reviewers` and an `approval_quorum` validated to lie between 1 and the reviewer count, written by both propose paths and in `DECISION_REVISION_AUTHORITY_FIELDS`; approvals are counted only from `decision_accepted` events whose `approved_revision_sha` matches the current revision, and the projector refuses to promote until quorum; the edit path raises `WorkbenchError` without a `revision_reason` and `_decision_actor` refuses an actor outside `config.participants` | tests/public/test_public_contract.py::test_durable_dispatch_and_review_assurance_public_contract_is_published"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -27,16 +27,16 @@ matrix:
   scoping: "One `.agent-mesh/` per repository; the multi-repo Workbench resolves an opaque repo ID to a store, but no scope key is stored on a record or applied as a filter"
   integration: "Two CLIs (`agent-mesh`, `agent-q`), a loopback Workbench UI with a supervised background service, and a versioned contract block installed into `AGENTS.md` and `CLAUDE.md`"
   background: "None over memory. A user-level service (launchd, systemd, Task Scheduler) supervises the Workbench server; nothing re-reads or rewrites the store on a schedule"
-  trust: "A six-value `status` column — proposed, accepted, in_force, rejected, superseded, retired — with tier-driven promotion and re-approval forced by editing an accepted record. The reviewer quorum beside it is projected but unreachable: both write paths hardcode `review_policy` empty and no verb amends it, so `_decision_quorum_reached` returns `True` on every acceptance"
+  trust: "A six-value `status` column — proposed, accepted, in_force, rejected, superseded, retired — with tier-driven promotion, re-approval forced by editing an accepted record, and a reviewer quorum that gates promotion: a `decision_accepted` event that misses quorum is logged and the record stays proposed"
   strengths: "Editing an accepted decision emits `decision_revisited`, clears `accepted_utc` and returns the record to proposed, so a revision cannot silently inherit its predecessor's approval"
-  risks: "The grounding packet never auto-reads the decision store (it regexes posted result bodies), `enforcement_mode` is printed but gates nothing, and seven payload fields — `assumptions`, `evidence`, `review_policy`, `rejected_alternatives`, `consequences`, `exemptions`, `generated_artifact_paths` — are hardcoded empty at both write paths with no verb that can fill them"
+  risks: "The grounding packet an agent receives is thread-scoped and reads no decision at all, `would_block` and `evaluation_status` are constants asserted by contract so the enforcement mode never blocks, and two payload fields — `rejected_alternatives` and `consequences` — are still hardcoded empty at both write paths"
 ---
 
 ## 1. Executive Summary
 
 Agent Mesh is a project-local coordination substrate for human-plus-agent teams:
-24,653 lines of Python across `src/agent_mesh/`, MIT, release v0.3.0 (PyPI
-`my-agent-mesh`), eight commits on a repository whose first commit is
+59,028 lines of Python across `src/agent_mesh/`, MIT, release v0.4.2 (PyPI
+`my-agent-mesh`), on a repository whose first commit is
 `chore: publish clean agent-mesh surface` — a curated publish of work developed
 elsewhere, which is why the history says nothing about how the design arrived.
 It has **no third-party dependencies**: `pyproject.toml` declares an empty
@@ -63,46 +63,79 @@ Workbench requires a reason, emits a `decision_revisited` event, and sets
 inherit the approval of the thing it replaced. Very little in this atlas closes
 that loop.
 
-**Seven fields of the decision payload have no producer, and the collections
-that do have one are the collections that execute.** `cmd_decision_propose`
-(`cli/mail.py`) and `create_decision`
-(`workbench.py`) both fill `verification`, `required_checks`,
-`affected_code_globs` and `tags` from their arguments, `decision amend` edits
-those four after the fact, and `agent-q decisions verify` executes what they
-hold: authoring parses each command into argv and rejects shell operators and
-env-assignments (`core/decision_schema.py`, `reject_unsafe=True`), execution is
-`subprocess.Popen(argv, …, shell=False)` (`q.py:1324`), and a verification on a
-decision that is not `accepted`/`in_force` is refused. Both propose payloads then
-hardcode seven further fields to an empty value — `rejected_alternatives`,
-`consequences`, `exemptions`, `generated_artifact_paths`, `assumptions`,
-`evidence` and `review_policy` — and no `amend` flag, Workbench form field or
-other event reaches any of them. Five have a projection waiting: `exemptions` and
-`generated_artifact_paths` are two of the three kinds in `decision_globs`,
-`assumptions` and `evidence` have tables of their own, and `review_policy` has a
-gate.
+**Two fields of the decision payload have no producer.** `cmd_decision_propose`
+(`cli/mail.py`) and `create_decision` (`workbench.py`) both fill `verification`,
+`required_checks`, `affected_code_globs` and `tags` from their arguments,
+`decision amend` edits those four after the fact, and `agent-q decisions verify`
+executes what they hold: authoring parses each command into argv and rejects
+shell operators and env-assignments (`core/decision_schema.py`,
+`reject_unsafe=True`), execution is `subprocess.Popen(argv, …, shell=False)`, and
+a verification on a decision that is not `accepted`/`in_force` is refused.
 
-**The reviewer quorum is one of the seven, which makes it decoration.**
-`_decision_quorum_reached` reads `review_policy.required_reviewers`, computes an
-`approval_quorum`, and counts distinct accepting actors against it — and returns
-`True` immediately when the required list is empty, which it always is, because
-`review_policy` arrives `{}` from both write paths and the string `quorum` does
-not appear in the README or `docs/` at all. Every `decision_accepted` event in a
-store built by shipped commands passes a check that never had anything to
-enforce.
+The same two payloads also carry `exemptions`, `generated_artifact_paths`,
+`assumptions`, `evidence` and `review_policy` from real arguments, normalized
+through `core/decision_schema.py`, and all five sit in
+`DECISION_REVISION_AUTHORITY_FIELDS` — the set whose revision forces
+re-approval. What remains hardcoded is exactly `"rejected_alternatives": []` and
+`"consequences": []`, at `workbench.py:2245-2246` and `cli/mail.py:2275-2276`.
+Both are projected (`store/rebuild.py:3883-3884`) and both are rendered by
+`agent-q decisions show` and the Workbench detail view, so a reader is shown two
+sections that nothing can fill. Neither appears in the revision-authority set,
+which is consistent: there is nothing to revise.
 
-Two further findings follow from reading the read path rather than the schema.
-The dispatch grounding packet that an agent actually receives has a section
-called `prior-decisions`, and it is not the decision store: `prior_decisions_text`
-regex-matches `APPROVE|REJECT|GO|NO-GO` and friends against the bodies of
-`res_posted` messages in the same thread. **No decision record reaches an agent's
+**The reviewer quorum is a gate on promotion, and it binds to a revision.**
+`review_policy` is authored at both write paths and normalized by
+`normalize_decision_review_policy`, which rejects an `approval_quorum` without
+reviewers and requires the quorum to lie between 1 and the number of reviewers.
+`_decision_quorum_reached` (`store/rebuild.py:4380`) counts distinct
+`decision_accepted` actors that appear in `required_reviewers`, and the projector
+that consumes it does the load-bearing thing: when the quorum is not met it
+`return`s before the `UPDATE decisions SET status=…`, so the acceptance is in the
+log and the record is still `proposed`. Partial approval is durable and visible
+without being effective, which is the property a two-of-three review needs.
+
+The binding is the careful part. Approvals count only when their
+`approved_revision_sha` matches the revision being approved, so an approval of an
+earlier draft does not carry forward; `decision_review_progress` surfaces
+`approved_reviewers`, `remaining_reviewers` and an `approval_binding` that reads
+`legacy_pre_authoring_digest` when an approval predates that binding. Combined
+with the revision rule below — editing an accepted decision returns it to
+`proposed` — an approval in this store is an approval of a specific version by a
+named participant, and nothing inherits it. Section 9 has the caveat on who a
+participant may be.
+
+**The gap is between the ledger and the agent.** `dispatch/grounding.py`
+assembles a section called `prior-decisions`, and it is not the decision store: `prior_decisions_text` regex-matches a verdict
+pattern against the summary and first two hundred characters of `res_posted`
+message bodies in the same thread. Beside it, `message_packet.py` builds the
+packet an agent receives over HTTP, and the string `decision` does not occur in
+that file at all — it is body, thread, and a `grounding` block declaring
+`"default_scope": "thread"` with the instruction "Use this packet/body/thread
+data for automated dispatch grounding." **No decision record reaches an agent's
 context through any automatic path**; the contract installed into `AGENTS.md`
-tells the model to go and look. And every `agent-q` read calls
-`rebuild_all`, which does `reset_schema` and replays the entire log —
-`projection_is_current` exists and is called from exactly one place, the
-Workbench refresh.
+tells the model to go and look.
 
-The published tree ships one test file: `tests/public/test_public_contract.py`, a
-four-test behaviour contract, with CI.
+**Enforcement is advisory by construction, and a test says so.**
+`decision_applicability.py` computes an `effective_enforcement` from the stored
+`enforcement_mode`, and the first rule it applies is
+`if configured == "required": effective = "advisory"` — nothing is ever
+enforcing — with a further downgrade to `none` for an invalid context or a
+decision still at `proposed`. Beside it in the same payload,
+`"evaluation_status": "not_run"` and `"would_block": None` are assigned once and
+never reassigned anywhere in the package. `check decisions` therefore reports
+which decisions touch the changed paths and declines to say whether they would
+block, which `test_changed_path_decision_check_is_complete_advisory_and_read_only`
+pins: it asserts both constants and then asserts the event log and database are
+byte-identical before and after the check. Testing that a read path does not
+write is two lines and it is the kind of assertion most suites leave implicit.
+
+The read path has been rebuilt around a new module: `store/read_model.py`,
+"mutation-free reads over one verified canonical event-log snapshot", entered at
+thirty-two call sites inside `cli/` and warmed on a thread for the Workbench's
+decision view. Section 6 has the shape of what that leaves behind.
+
+The published tree ships one test file, `tests/public/test_public_contract.py`,
+a fourteen-test behaviour contract, with CI.
 
 ## 2. Mental Model
 
@@ -121,11 +154,12 @@ form, which puts Agent Mesh at the far explicit end of
 [zero-LLM capture](../../patterns/zero-llm-capture/).
 
 The state machine is a `status` column and it is real. `decision_proposed`
-inserts at `proposed`. `decision_accepted` first checks a reviewer quorum
-(`_decision_quorum_reached`, which returns `True` when `required_reviewers` is
-empty — and it is empty in every store the shipped verbs can build), then promotes to
-`in_force` if the tier is `architecture_contract`, `production_invariant` or
-`compliance_security`, and to `accepted` otherwise. `decision_rejected` and
+inserts at `proposed`. `decision_accepted` first checks the reviewer quorum
+(`_decision_quorum_reached`, which passes trivially when `required_reviewers` is
+empty and otherwise blocks promotion until enough named reviewers have accepted
+*this* revision), then promotes to `in_force` if the tier is
+`architecture_contract`, `production_invariant` or `compliance_security`, and to
+`accepted` otherwise. `decision_rejected` and
 `decision_retired` are terminal marks; `decision_superseded` points the old
 record at a successor and the successor back at the old one, after
 `_ensure_supersede_target_valid` refuses a target that is not `accepted` or
@@ -154,10 +188,11 @@ clear derived SQLite rows before reprojection. `body_fidelity` admits the value
 would describe.
 
 ```mermaid
-%% caption: the decision lifecycle, with rejection keyed on the record rather than the value, a quorum check that passes on a hardcoded empty review policy, and an enforcement mode no read path consults
+%% caption: the decision lifecycle, where a quorum that is not reached logs the acceptance and leaves the record proposed, rejection is keyed on the record rather than the value, and the enforcement mode is downgraded to advisory before any read path sees it
 stateDiagram-v2
-    [*] --> Proposed: decision_proposed — verification, checks and globs from arguments, while assumptions, evidence and review_policy are hardcoded empty
-    Proposed --> Accepted: decision_accepted, ordinary tier — the quorum check passes on an empty review_policy
+    [*] --> Proposed: decision_proposed — verification, checks, globs, assumptions, evidence and review_policy from arguments, while rejected_alternatives and consequences are hardcoded empty
+    Proposed --> Proposed: decision_accepted below quorum — appended to the log, no promotion
+    Proposed --> Accepted: decision_accepted, ordinary tier — quorum reached for this revision_sha
     Proposed --> InForce: decision_accepted — architecture_contract, production_invariant or compliance_security
     Proposed --> Rejected: decision_rejected
     Accepted --> InForce: status set through decision_metadata_updated
@@ -175,10 +210,10 @@ stateDiagram-v2
     end note
 
     note right of InForce
-        enforcement_mode is computed from
-        the tier, stored, and printed in a
-        rendered Markdown view. No read path
-        consults it.
+        enforcement_mode is stored per tier,
+        then required is downgraded to advisory
+        before any consumer sees it, and
+        would_block stays None by construction.
     end note
 ```
 
@@ -365,14 +400,18 @@ records as [the guidance was already in
 context](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-the-guidance-was-already-in-context.md)
 — an instruction to consult standing in for a mechanism that consults.
 
-The other retrieval cost is structural. Twenty-one `agent-q` commands begin with
-`_rebuild_all_locked`, which calls `rebuild_all` unconditionally: wipe the
-schema, read the whole log, replay every event. `projection_is_current` compares
-the log's SHA-256 against the value stamped in the projection's `meta` table and
-would let a reader skip all of that; it is called from one line in
-`workbench.py`. The optimisation exists, is correct, and was applied to one of
-the two readers — the interactive one, in the commit titled `perf: reduce
-Workbench refresh work`. Every command-line read still pays for the full history.
+The other retrieval cost is structural, and it is the part of the system that has
+moved furthest. `store/read_model.py` — "mutation-free reads over one verified
+canonical event-log snapshot" — is the path most `agent-q` reads take:
+`open_read_model` is entered twenty-nine times in `cli/q.py` alone, against two
+remaining `_rebuild_all_locked` call sites, where the wipe-and-replay was once
+the default. The full replay is not gone — `rebuild_all` is mentioned
+twenty-five times in `q.py` and thirty-one in `cli/mail.py` — and
+`projection_is_current`, which compares the log's SHA-256 against the value
+stamped in the projection's `meta` table and would let a reader skip a replay
+entirely, has exactly one caller, the Workbench refresh at `workbench.py:4594`.
+Three read strategies coexist: a verified snapshot, an unconditional full
+replay, and a staleness check used once.
 
 ## 7. Write Mechanics
 
@@ -402,31 +441,32 @@ replay health. Validating at the write boundary as well as the replay boundary i
 the standard defence, and it is a defence a store this shape needs, because the
 replay-only version of it is a durable denial of service against yourself.
 
-The other write-side finding is the one in this report's title. Both propose
-paths hardcode the same seven values:
+The other write-side finding is narrower than the payload shape suggests. Both
+propose paths hardcode exactly two values:
 
 ```python
 "rejected_alternatives": [],
 "consequences": [],
-"exemptions": [],
-"generated_artifact_paths": [],
-"assumptions": [],
-"evidence": {},
-"review_policy": {},
 ```
 
-The one later mutation event covers title, owner, tier, body, human ID, status,
-tags and the four collections `amend` exposes; five of the seven above sit in its
-`meta_fields` set and no caller ever puts them in `fields_changed`, and the
-remaining two are reachable only from `decision_proposed`, which hardcodes them.
-The tables, the projection code, the assumption-violation transition, the quorum
-gate and the drift event all exist for data no shipped command can create. The
+Everything else the payload declares is authored. `exemptions`,
+`generated_artifact_paths`, `assumptions`, `evidence` and `review_policy` all
+arrive from arguments through `core/decision_schema.py`, which normalizes and
+validates each — a `review_policy` with an `approval_quorum` and no reviewers is
+rejected, and a quorum outside `1..len(reviewers)` is rejected. All five sit in
+`DECISION_REVISION_AUTHORITY_FIELDS`, so revising any of them returns an accepted
+decision to `proposed`.
+
+The two that remain are projected into the `decisions` meta
+(`store/rebuild.py:3883-3884`), listed in the metadata-update `meta_fields` set,
+and rendered as "Rejected Alternatives" and "Consequences" sections by both
+`agent-q decisions show` and the Workbench detail view. So the reader is shown
+two headings that no shipped command can fill, and neither field appears in the
+revision-authority set — consistent, because there is nothing to revise. The
 honest framing is that the substrate is a library — the README says
 *"Project-specific importers should live in the consumer repository"* — so a
-consumer can import `append_event` and construct a fuller payload. But a reader
-who installs the package and follows the documented flow gets a decision whose
-argument, alternatives, assumptions and evidence are all empty, and an acceptance
-that no reviewer policy can gate.
+consumer can import `append_event` and construct a fuller payload. What is
+missing is two rendered sections, not the argument of the decision itself.
 
 Input handling on the fields that *are* writable is careful, and the shape of the
 residual risk is worth keeping in view. `agent-q decisions verify` parses each
@@ -491,15 +531,27 @@ forgery. For a project-local file that is a reasonable place to stop, but
 "tamper-evident" in the README is doing work that a signature would do properly.
 
 **Trust states** are genuine and applied. `status` gates supersession
-(`_ensure_supersede_target_valid`), drives the tier promotion, and is reset by the
-revision path. What is absent is any gate on *reading*: an agent that queries
-`decisions search` gets proposed records beside in-force ones, and
-`enforcement_mode` — computed per tier, stored on every row, and non-null by
-schema — is consulted by no code path in the package. It is printed in a rendered
-Markdown view. A field named for enforcement that enforces nothing is worth
-saying plainly, and it is one of a pair: `enforcement_mode` is read by nothing,
-`review_policy` is written by nothing, and between them the two fields that would
-make acceptance mean something are each disconnected at a different end.
+(`_ensure_supersede_target_valid`), drives the tier promotion, is reset by the
+revision path, and gates the promotion itself: a `decision_accepted` event that
+does not reach the configured quorum is appended and the record stays
+`proposed`. What is absent is any gate on *reading*: an agent that queries
+`decisions search` gets proposed records beside in-force ones.
+
+`enforcement_mode` is the field that does not do what its name says. It is
+stored per tier, and
+`core/decision_applicability.py` reads it into an `effective_enforcement` —
+which is the first real consumer — but the first rule applied is
+`if configured == "required": effective = "advisory"`, with a further downgrade
+to `none` for an invalid context or a proposed decision. Nothing is ever
+enforcing. In the same payload, `"evaluation_status": "not_run"` and
+`"would_block": None` are assigned at one line each and reassigned nowhere in the
+package, so the two fields that would say whether a decision blocks a change are
+constants — and that is a pinned contract rather than a gap a reader discovers.
+`test_changed_path_decision_check_is_complete_advisory_and_read_only` asserts both
+constants, and asserts that running the check leaves `events.jsonl` and the
+SQLite file byte-identical. A read path tested not to mutate the store is rare,
+and pinning the non-enforcement as a contract is the honest way to ship a field
+you have not wired.
 
 **Audit** is the capability this system has most completely. The event log is not
 a sidecar record of mutations; it *is* the store, append-only, ordered,
@@ -508,12 +560,23 @@ it. `_append_decision_log` additionally keeps a per-decision event trail, and
 `agent-q decisions log` prints it. Nothing in this corpus makes the mutation
 record more load-bearing.
 
-**Human review** exists as a place: the Workbench Decisions tab creates proposals,
-appends revisions with a required reason, and records acceptance, with the
-re-approval rule enforced in code. The caveats are real and they compound — an
-agent in the participant list can accept, the CLI does not check even that, and
-the quorum that would require a second acceptance cannot be configured — but a
-person inspecting and adjudicating memory content has somewhere to do it.
+**Human review** is a place and a rule. The Workbench Decisions tab
+creates proposals, appends revisions with a required reason, and records
+acceptance, with the re-approval rule enforced in code. Beside it,
+`review_policy` names required reviewers and a quorum, both write paths author
+it, and the projector refuses to promote a decision until enough of those
+reviewers have accepted **this revision** — approvals are matched on
+`approved_revision_sha`, so an approval of a superseded draft does not carry.
+`decision_review_progress` reports `approved_reviewers`, `remaining_reviewers`
+and an `approval_binding` that flags `legacy_pre_authoring_digest` where an
+approval predates the binding.
+
+Two caveats survive. `_decision_actor` refuses an actor outside
+`config.participants`, and that list routinely includes agents, so "a reviewer"
+is not necessarily a person; and the CLI accept path does not apply the
+participant check the Workbench does. The mark is for a durable, per-revision,
+multi-party adjudication surface, which this is — not for a guarantee that a
+human was on the other end of it.
 
 **The reference scanner checks the inverse of what the schema suggests.**
 `agent-mesh decision refs` walks the tree for `D001`-shaped tokens and reports
@@ -630,14 +693,12 @@ through the recovery path.
   can hold a state your reader will never accept — and in an append-only log with
   no delete, that state is permanent. Validate at both boundaries, or make the
   replay skip and quarantine rather than abort.
-- **Do not ship a consumer with no producer.** Seven payload fields here have
-  projections, side-tables, a status transition and a gate, and no write surface
-  — `review_policy` is the one that stings, because the code that reads it is a
-  quorum check that therefore always passes. A reader inspecting the schema
-  concludes acceptance can require reviewers; a reader tracing the write path
-  finds nothing that can name one. If a field is not writable yet, the honest
-  shapes are to leave the reader out or to make it fail loudly, not to have it
-  return the permissive answer on empty input.
+- **Do not ship a consumer with no producer.** Two payload fields here —
+  `rejected_alternatives` and `consequences` — are projected, listed in the
+  metadata-update field set, and rendered as headings by two views, with `[]`
+  hardcoded at both write paths. A reader sees two empty sections and cannot tell
+  whether the author had no alternatives or no way to record them. If a field is
+  not writable yet, leave the reader out or make it fail loudly.
 - **Do not execute memory through a shell.** A stored field a maintenance command
   runs is a memory store with a code-execution path, and the writer of that field
   is whoever can append an event. The defence here is worth copying in both
@@ -649,9 +710,13 @@ through the recovery path.
   correctness argument for full replay is good and the cost is unbounded in
   history. The skip check here is written and correct; it is simply not called
   from the reader that runs most often.
-- **Do not write an enforcement field nothing reads.** `enforcement_mode` is
-  computed, stored, non-null and printed. Either a read path consults it or the
-  column is documentation with a schema constraint.
+- **Do not let a field's name outrun its wiring — and if you must, pin it.**
+  `enforcement_mode` is computed, stored and non-null, and the one consumer that
+  reads it downgrades `required` to `advisory` unconditionally while shipping
+  `would_block: None` and `evaluation_status: "not_run"` as constants. The
+  redeeming move is the test: a public contract asserting both constants, and
+  asserting the check leaves the log and the database byte-identical, turns an
+  unfinished feature into a documented posture a caller can rely on.
 
 ### Fit
 
@@ -668,13 +733,15 @@ It is not a memory layer for an agent's working knowledge, and reading it as one
 will disappoint. Nothing is retrieved automatically, nothing is ranked, nothing
 is summarised, and the only thing standing between a decision and the model that
 should honour it is an instruction to go and query. Walk away entirely if you
-need multi-user or multi-tenant boundaries, if you need to delete or redact
-anything you have stored, or if you need an approval that more than one person
-has to give — the quorum is schema and projection, with no way to configure it.
-At v0.3.0, with an eight-commit published history and four tests against a
-24,653-line surface, the right posture is to read the design for its ideas —
-several of which are better than what surrounds them — rather than to adopt it
-for guarantees that are mostly asserted by docstrings.
+need multi-user or multi-tenant boundaries, or if you need to delete or redact
+anything you have stored. An approval that more than one person has to give is
+available: `review_policy` names reviewers and a quorum, and the projector
+withholds promotion until they have accepted the current revision — with the
+caveat that the participant list which bounds "a reviewer" routinely contains
+agents. At v0.4.2, with fourteen contract tests against a 59,028-line surface,
+the right posture is to read the design for its ideas — several of which
+are better than what surrounds them — while checking any specific guarantee
+against the code rather than the docstring.
 
 ## 12. Open Questions
 
@@ -682,18 +749,19 @@ for guarantees that are mostly asserted by docstrings.
   implies? The seam is exported for a harness that is not in the published tree,
   whose history is eight commits beginning with a curated publish, so this cannot
   be settled from what is here.
-- What was the intended producer for `review_policy`, `assumptions` and
-  `evidence` — a richer Workbench form, a consumer-side importer, or a command
-  that was not part of the published surface? The quorum check is the one that
-  matters, because a reviewer requirement that cannot be set is a security
-  property a reader will assume is available.
-- What happens to a project whose log already contains a stop-line-violating
-  event written before `append_event` checked for one, or written by a consumer
-  that bypassed it? `agent-q decisions diagnose` reports replay health; whether
-  an operator has a route back needs the tool run against a constructed log,
-  which this reading did not do.
+- What is the intended producer for `rejected_alternatives` and `consequences`?
+  Both are rendered as headings and neither can be written by a shipped command,
+  which is the remaining instance of a pattern the rest of the payload has
+  grown out of.
+- The route back for a log that stricter validation now rejects exists and is
+  deliberately walled off: `store/decision_recovery.py` is "reviewed migrations
+  for narrowly identified legacy decision events … deliberately not part of
+  normal append or replay … for operator-authorized recovery when stricter
+  replay validation identifies an already-canonical legacy event and no valid log
+  backup is available." Whether an operator can actually complete that recovery
+  needs the tool run against a constructed log, which this reading did not do.
 - `_decision_quorum_reached` counts distinct accepting actors and the
-  participant list routinely includes agents. If the quorum were configurable,
+  participant list routinely includes agents. With the quorum configurable,
   would two agents accepting satisfy it?
 
 ## Appendix: File Index
@@ -704,8 +772,38 @@ for guarantees that are mostly asserted by docstrings.
 - **Schema and projection** — `store/sqlite.py`, `store/rebuild.py`.
 - **Decision model** — `_project_decision_proposed` and
   `_project_decision_metadata_updated` in `store/rebuild.py`;
-  `enforcement_for_tier`, `_decision_quorum_reached`,
-  `_ensure_supersede_target_valid`, `_ensure_no_supersede_cycle`.
+  `enforcement_for_tier`, `_decision_quorum_reached` (`:4380`, gating the
+  promotion at `:3728`), `_ensure_supersede_target_valid`,
+  `_ensure_no_supersede_cycle`; `core/decision_schema.py`
+  (`normalize_decision_review_policy` `:286-327`, `decision_review_progress`
+  `:355-400`); `workbench.py:203-222`
+  (`DECISION_REVISION_AUTHORITY_FIELDS`), `:2245-2246` and `cli/mail.py:2275-2276`
+  (the two hardcoded fields).
+- **Read path and recovery** — `store/read_model.py` ("mutation-free reads over
+  one verified canonical event-log snapshot", entered at thirty-two call sites in
+  `cli/`), `store/decision_recovery.py` (operator-authorized legacy migration,
+  outside normal append and replay), `store/rebuild.py:1063`
+  (`projection_is_current`, one caller).
+- **Enforcement** — `core/decision_applicability.py:284-312` (the
+  `required` → `advisory` downgrade, `evaluation_status` and `would_block` as
+  constants), `tests/public/test_public_contract.py::test_changed_path_decision_check_is_complete_advisory_and_read_only`.
+
+**Recorded searches.** Run from a checkout at
+`a8187089dab47539c21c4d2b2d761779428a59b9`.
+
+- **Only two payload fields lack a writer.**
+  `for f in assumptions evidence review_policy rejected_alternatives consequences exemptions generated_artifact_paths; do grep -rn "\"$f\"" --include="*.py" src; done`
+  — five resolve to `core/decision_schema.py` normalizers and authored Workbench
+  fields; `rejected_alternatives` and `consequences` resolve only to `[]`
+  literals, projection reads and renderers.
+- **Nothing decides whether a decision blocks.**
+  `grep -rn "would_block\|evaluation_status" --include="*.py" src` — one
+  assignment each, both in `core/decision_applicability.py`, neither reassigned.
+- **The grounding packet holds no decision.**
+  `grep -n "decision" src/agent_mesh/message_packet.py` — nothing.
+- **The skip check has one caller.**
+  `grep -rn "projection_is_current" --include="*.py" src` — the definition, one
+  import, and `workbench.py:4594`.
 - **Provenance** — `core/provenance.py`.
 - **Write surface** — `cli/mail.py`, `workbench.py`.
 - **Read surface** — `cli/q.py`, `message_packet.py`, `views/rendering.py`,
@@ -719,6 +817,8 @@ for guarantees that are mostly asserted by docstrings.
   `docs/migration.md`, `docs/privacy.md`.
 
 ## History
+
+**2026-09-11** — [`a8187089dab47539c21c4d2b2d761779428a59b9`](https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9) — re-read at v0.4.2, eighty-one files and 40,943 insertions past the previous pin. Screened before reading: no auto-run surface, `pyproject.toml` two days old inside the cooldown and declaring dependencies with no lockfile beside it. The tree was read, never installed, and nothing was run. Marks unchanged at `trust_state`, `audit_log` and `human_review`, and the evidence records for `trust_state` and `human_review` were rewritten, because this report's central criticism is closed. `review_policy` is authored at both write paths through a normalizer that rejects a quorum without reviewers and a quorum outside `1..len(reviewers)`; it sits in `DECISION_REVISION_AUTHORITY_FIELDS`; approvals count only when their `approved_revision_sha` matches the revision being approved; and `_decision_quorum_reached` gates the projector, which returns before the promotion `UPDATE` when the quorum is not met — so a `decision_accepted` event below quorum is logged and the record stays `proposed`. Of the seven fields the previous reading found hardcoded empty, five are now authored and two remain: `rejected_alternatives` and `consequences`, still `[]` at `workbench.py:2245-2246` and `cli/mail.py:2275-2276`, still rendered as headings by two views. `enforcement_mode` gained its first consumer in `core/decision_applicability.py`, which downgrades `required` to `advisory` unconditionally and ships `evaluation_status` and `would_block` as constants — pinned by a contract test that also asserts the check leaves the event log and database byte-identical. Two new store modules: `read_model.py` for mutation-free reads over a verified snapshot, entered at thirty-two call sites in `cli/`, and `decision_recovery.py`, an operator-authorized legacy migration deliberately outside normal append and replay. The grounding claim was re-run and holds: `dispatch/grounding.py` still derives `prior-decisions` from a verdict regex over thread messages, and `message_packet.py` mentions no decision at all. Counts corrected to 59,028 lines of Python and fourteen contract tests.
 
 **2026-08-17** — [`43bfe5cc376c71754c4a627286401825f4599062`](https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062) — read again at the same commit: upstream `main` has not moved, there are no other branches, and `v0.3.0` is still the only tag. Screened again before reading — `pyproject.toml` inside the seven-day cooldown, no auto-run surface, nothing installed or run; the dependency list it declares is empty, so the cooldown has nothing to hold back. Two published claims were wrong and are corrected in the body. **The reviewer quorum has no producer**: `review_policy` is hardcoded `{}` by `cmd_decision_propose` (`cli/mail.py:1568`) and `create_decision` (`workbench.py:655`), `decision amend` has no flag for it, no Workbench field sets it, and `_decision_quorum_reached` returns `True` on an empty `required_reviewers` — so acceptance is single-actor in every store the shipped verbs can build, and the previous entry's "optional reviewer quorum" overstated a gate that cannot be switched on. The same check applied to the whole payload puts the count of fields with a projection and no write surface at seven, not four. Second: `.gitignore` was read as evidence of a suite held back in an internal repository; its only test-related line is `.pytest_cache/`, an artifact path, at this commit and at the first reading's. Three sections still carried the pre-v0.3.0 state beside the corrected summary — `Tests. None.` in the path list, "decision stop lines are not checked here" on `append_event`, a code block listing `verification` and `required_checks` among the hardcoded-empty fields, and "the Workbench cannot create the globs it needs" — all four are rewritten to the current tree. Marks unchanged and now carrying evidence records. Verified afresh at this pin: `enforcement_mode` is stored, projected and rendered by `views/rendering.py:169` and read by nothing; `assumptions` and `evidence` reach `decision_assumptions`/`decision_evidence` only from `decision_proposed`, which hardcodes both; `events.py:150,428-468` and `q.py:1324` are still the validator and the `shell=False` executor. No paper, no `CITATION.cff`.
 

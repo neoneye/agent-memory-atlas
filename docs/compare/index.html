@@ -6434,22 +6434,19 @@ contract block installed into <code>AGENTS.md</code> and
 Scheduler) supervises the Workbench server; nothing re-reads or rewrites
 the store on a schedule</td>
 <td>A six-value <code>status</code> column — proposed, accepted,
-in_force, rejected, superseded, retired — with tier-driven promotion and
-re-approval forced by editing an accepted record. The reviewer quorum
-beside it is projected but unreachable: both write paths hardcode
-<code>review_policy</code> empty and no verb amends it, so
-<code>_decision_quorum_reached</code> returns <code>True</code> on every
-acceptance</td>
+in_force, rejected, superseded, retired — with tier-driven promotion,
+re-approval forced by editing an accepted record, and a reviewer quorum
+that gates promotion: a <code>decision_accepted</code> event that misses
+quorum is logged and the record stays proposed</td>
 <td>Editing an accepted decision emits <code>decision_revisited</code>,
 clears <code>accepted_utc</code> and returns the record to proposed, so
 a revision cannot silently inherit its predecessor's approval</td>
-<td>The grounding packet never auto-reads the decision store (it regexes
-posted result bodies), <code>enforcement_mode</code> is printed but
-gates nothing, and seven payload fields — <code>assumptions</code>,
-<code>evidence</code>, <code>review_policy</code>,
-<code>rejected_alternatives</code>, <code>consequences</code>,
-<code>exemptions</code>, <code>generated_artifact_paths</code> — are
-hardcoded empty at both write paths with no verb that can fill them</td>
+<td>The grounding packet an agent receives is thread-scoped and reads no
+decision at all, <code>would_block</code> and
+<code>evaluation_status</code> are constants asserted by contract so the
+enforcement mode never blocks, and two payload fields —
+<code>rejected_alternatives</code> and <code>consequences</code> — are
+still hardcoded empty at both write paths</td>
 </tr>
 <tr>
 <td><code>agent-working-memory</code></td>
@@ -28082,7 +28079,7 @@ rather than reproduced</li>
 <li><a
 href="https://github.com/cbalgeman/agent-mesh">cbalgeman/agent-mesh</a>
 at <a
-href="https://github.com/cbalgeman/agent-mesh/commit/43bfe5cc376c71754c4a627286401825f4599062"><code class="commit-id" title="43bfe5cc376c71754c4a627286401825f4599062">43bfe5cc…</code></a>
+href="https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9"><code class="commit-id" title="a8187089dab47539c21c4d2b2d761779428a59b9">a8187089…</code></a>
 — read only; no third-party dependencies to install, and the two shipped
 examples were read rather than run</li>
 <li><a href="https://github.com/SmythOS/sre">SmythOS/sre</a> at <a
