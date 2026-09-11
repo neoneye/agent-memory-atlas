@@ -106,14 +106,14 @@ question unanswerable instead of picking a side.</p>
               <strong>vbcherepanov/claude-total-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09" title="616d9a6f8b507c16b4cdfef4e823af59d949cc09">
+            <a class="meta-pill revision-pill" href="https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86" title="14ccb6ca95567e58fd2a12b59096a818039f6d86">
               <span>Analyzed revision</span>
-              <code>616d9a6f…</code>
+              <code>14ccb6ca…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vbcherepanov--claude-total-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -355,18 +355,35 @@ stated <code>skip_reason</code>, is better practice than most of this
 corpus manages. The self-reported numbers are
 <code>r_at_5_recall_any</code> 0.9617, <code>r_at_5_recall_all</code>
 0.8447, nDCG@5 0.8244, 38.8 ms average, over 470 questions.</p>
-<p><strong>The comparative claim is where to be careful.</strong> The
-README badge and <code>docs/vs-competitors.md</code> headline
-"<strong>+10.8 pp over Supermemory's published 85.4%</strong> on the
-same dataset". That subtracts this project's <code>recall_any@5</code> —
-at least one required fragment in the top five — from another project's
-overall headline figure, and nothing in the repository establishes that
-the two numbers measure the same quantity.</p>
+<p><strong>The project found a worse problem than the one this report
+named, and fixed it by publishing a smaller number.</strong> Until v13
+the LongMemEval runner carried its own self-contained BM25 / RRF / MMR /
+CrossEncoder stack — so the 96.2% it had been publishing measured
+<em>that stack</em>, not the software anyone installs. A
+<code>--modes store</code> path was added and made the default: it
+ingests each haystack into a real <code>Store</code> and queries
+<code>Recall.search</code>. Re-measured through the product, the figure
+is <strong>95.1% R@5</strong> at 27.6 ms per query, and the README badge
+carries that number. The reasoning is stated outright — <em>"We would
+rather publish the smaller number that is about the product."</em></p>
+<p>That is the rarest correction in this corpus. A benchmark harness
+that reimplements the retrieval it is supposed to be measuring is an
+easy mistake to leave standing, because the published figure only gets
+better for it, and nobody outside can see the substitution. Finding it,
+naming it in the document, and revising the headline down is a stronger
+signal about the project than any number in the table.</p>
+<p><strong>The comparative claim is still where to be careful.</strong>
+<code>docs/vs-competitors.md</code> carries "<strong>+9.7 pp over
+Supermemory's published 85.4%</strong> on the same dataset", which
+subtracts this project's <code>recall_any@5</code> — at least one
+required fragment in the top five — from another project's overall
+headline figure, and nothing in the repository establishes that the two
+measure the same quantity.</p>
 <p>To the project's credit, the caveat is printed directly underneath:
 it defines both recall variants and states that its own strict
 <code>recall_all@5</code> is 84.5%, which is <em>below</em> the 85.4% it
 is being compared against. The document calls that "still at parity". A
-reader who takes the badge without the footnote gets a different
+reader who takes the bolded line without the note gets a different
 impression than a reader who takes both.</p>
 <p>The other detail: the 30 skipped questions are the
 <strong>abstention</strong> type, "excluded by bench (not a recall
@@ -416,10 +433,22 @@ reason. A badge is a claim; this is evidence.</li>
 <h3 id="avoid">Avoid</h3>
 <ul>
 <li><strong>Do not headline a cross-system delta between
-differently-defined metrics.</strong> The footnote here is honest and
-the badge is not, and the badge is what gets read. If the like-for-like
-number is 84.5% against 85.4%, that is the comparison, and the honest
-headline is "comparable".</li>
+differently-defined metrics.</strong> The note here is honest and the
+bolded line is not, and the bolded line is what gets read. If the
+like-for-like number is 84.5% against 85.4%, that is the comparison, and
+the honest headline is "comparable".</li>
+</ul>
+<p>And one to steal, which belongs in this section because it is the
+opposite of the mistake above: <strong>check whether your benchmark
+harness is measuring your product.</strong> This one was not — the
+LongMemEval runner had its own BM25 / RRF / MMR / CrossEncoder stack, so
+the published number described an algorithm nobody installs. The fix was
+a <code>--modes store</code> path driving the real
+<code>Recall.search</code>, a headline revised downward from 96.2% to
+95.1%, and a sentence saying why. If your eval imports anything the
+shipped read path does not, you are publishing a number about the
+eval.</p>
+<ul>
 <li><strong>Do not let closing an assertion stand in for rejecting a
 value.</strong> <code>valid_to</code> plus <code>superseded_by</code>
 records that a belief ended; nothing prevents the same wrong text being
@@ -471,7 +500,7 @@ is guaranteed in storage or only in what the agent sees.</li>
 (append and close <code>:58-115</code>, invalidate
 <code>:144-165</code>, as-of query <code>:201-210</code>)</p>
 <p><strong>Verification</strong> — <code>src/ai_layer/verifier.py</code>
-(<code>_decide</code> <code>:385-432</code>),
+(<code>_decide</code> <code>:408</code>),
 <code>src/ai_layer/answerability.py</code>,
 <code>src/contradiction_detector.py</code></p>
 <p><strong>Queues and workers</strong> —
@@ -490,10 +519,82 @@ is guaranteed in storage or only in what the agent sees.</li>
 <code>evals/embedding-ab-2026-04-27.json</code>,
 <code>evals/longmemeval-v8-baseline-2026-04-24.json</code></p>
 <p><strong>Claims</strong> — <code>docs/vs-competitors.md</code> (the
-benchmark table <code>:95-101</code>, the "+10.8 pp" line
-<code>:119</code>, the "How to read this" note
-<code>:121-125</code>)</p>
+benchmark table <code>:95-101</code>, the "+9.7 pp" line
+<code>:124</code>, the "How to read this" note <code>:126-129</code>,
+and the v13 re-measurement note <code>:139-145</code>)</p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Validity time is queried, not merely stored</td>
+<td>read <code>src/temporal_kg.py:201-207</code></td>
+<td><code>valid_from &lt;= timestamp AND (valid_to IS NULL OR valid_to &gt; timestamp)</code></td>
+</tr>
+<tr>
+<td>Every current-assertion read carries the project key</td>
+<td><code>grep -n "valid_to IS NULL AND project" src/temporal_kg.py</code></td>
+<td><code>:84</code>, <code>:106</code>, <code>:146</code></td>
+</tr>
+<tr>
+<td>Closing an assertion is not refusing a value</td>
+<td><code>grep -rn "superseded_by" --include="*.py" src</code></td>
+<td>Set on the prior row at write time; no lookup keyed on the value
+precedes an ingest</td>
+</tr>
+<tr>
+<td>No human gate on memory content</td>
+<td><code>grep -rniE "approve|reviewed_by|human" --include="*.py" src</code></td>
+<td>Nothing on the memory path</td>
+</tr>
+<tr>
+<td>The benchmark now drives the product</td>
+<td><code>grep -n "modes store|Recall.search" README.md docs/vs-competitors.md</code></td>
+<td><code>README.md:57-60</code>,
+<code>vs-competitors.md:139-145</code></td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find . -name "*.py" | xargs wc -l | tail -1</code>;
+<code>ls tests/*.py | wc -l</code></td>
+<td>112,233 lines; 159 test files</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86"><code class="commit-id" title="14ccb6ca95567e58fd2a12b59096a818039f6d86">14ccb6ca…</code></a>
+— re-read, 88 files past the previous pin in a single commit, of which
+the memory paths account for 467 insertions; the bulk is vendored plugin
+and skill-pack material. <strong>All three marks re-verified and
+unchanged</strong>, with <code>capability_evidence</code> records added
+where the report had none. The source changes are caching and packaging
+— a shared concept-extractor per connection, a warm node-name cache with
+a 60-second TTL, a pinnable model cache — and touch no memory semantics.
+<strong>The benchmark story changed for the better, on a problem larger
+than the one this report named.</strong> The LongMemEval runner had
+carried its own BM25 / RRF / MMR / CrossEncoder stack, so the 96.2% it
+published described that stack rather than the shipped software; a
+<code>--modes store</code> path was added and defaulted, driving a real
+<code>Store</code> and <code>Recall.search</code>, and the headline was
+revised <strong>down to 95.1%</strong> with the reason printed — <em>"We
+would rather publish the smaller number that is about the product."</em>
+The cross-system comparison remains a <code>recall_any</code> against
+another project's differently-defined headline, now stated as +9.7 pp
+rather than +10.8, with both recall variants and the caveat still
+printed beneath it. Appendix anchors re-pinned: <code>_decide</code>
+moved to <code>verifier.py:408</code>, and the
+<code>vs-competitors.md</code> line numbers shifted. Screened before
+reading: five auto-run surfaces including twenty hook scripts, two
+dependency manifests inside the cooldown, sixteen unpinned ranges;
+nothing was installed or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09"><code class="commit-id" title="616d9a6f8b507c16b4cdfef4e823af59d949cc09">616d9a6f…</code></a>
 — first reading. Screened before reading; the tree was read, never

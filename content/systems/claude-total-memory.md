@@ -7,10 +7,14 @@ page_kind: system
 source_name: "vbcherepanov/claude-total-memory"
 source_url: https://github.com/vbcherepanov/claude-total-memory
 archive_name: "vbcherepanov--claude-total-memory"
-revision: 616d9a6f8b507c16b4cdfef4e823af59d949cc09
-revision_url: https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09
-analyzed_at: 2026-08-09
+revision: 14ccb6ca95567e58fd2a12b59096a818039f6d86
+revision_url: https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86
+analyzed_at: 2026-09-11
 capabilities: "bitemporal, scope_enforced, negative_eval"
+capability_evidence:
+  bitemporal: "the temporal knowledge graph | src/temporal_kg.py:201-207 | `valid_from <= timestamp AND (valid_to IS NULL OR valid_to > timestamp)` as an as-of read over an append-only assertion log | tests/test_temporal_kg.py::test_add_fact_supersedes_previous_object"
+  scope_enforced: "every assertion read | src/temporal_kg.py:84,:106,:146 | `AND valid_to IS NULL AND project = ?` on each current-assertion query, with the same predicate through the procedural store | tests/test_temporal_kg.py"
+  negative_eval: "the current view | tests/test_temporal_kg.py:90-107 | after a supersession `get_current` is asserted to hold exactly one row carrying the new object, while `timeline` is asserted to hold both — the superseded value present in history and absent from the view | test_add_fact_supersedes_previous_object"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -25,7 +29,7 @@ matrix:
   background: "Enrichment, triple-extraction and representation queues plus a consolidation daemon"
   trust: "NLI entail/neutral/contradict with two calibration profiles; confidence is a float on the assertion"
   strengths: "A deliberate second retrieval for contradicting evidence, aimed at producing IDK"
-  risks: "The headline +10.8pp is its recall_any against another system's differently-defined headline"
+  risks: "The cross-system delta still subtracts a `recall_any` from another project's differently-defined headline, though both variants and the caveat are printed beside it; and closing an assertion is not refusing a value, so the same wrong text can be re-asserted by the next ingest"
 ---
 
 ## 1. Executive Summary
@@ -249,17 +253,33 @@ better practice than most of this corpus manages. The self-reported numbers are
 `r_at_5_recall_any` 0.9617, `r_at_5_recall_all` 0.8447, nDCG@5 0.8244, 38.8 ms
 average, over 470 questions.
 
-**The comparative claim is where to be careful.** The README badge and
-`docs/vs-competitors.md` headline "**+10.8 pp over Supermemory's published
-85.4%** on the same dataset". That subtracts this project's `recall_any@5` — at
-least one required fragment in the top five — from another project's overall
-headline figure, and nothing in the repository establishes that the two numbers
-measure the same quantity.
+**The project found a worse problem than the one this report named, and fixed
+it by publishing a smaller number.** Until v13 the LongMemEval runner carried its
+own self-contained BM25 / RRF / MMR / CrossEncoder stack — so the 96.2% it had
+been publishing measured *that stack*, not the software anyone installs. A
+`--modes store` path was added and made the default: it ingests each haystack
+into a real `Store` and queries `Recall.search`. Re-measured through the product,
+the figure is **95.1% R@5** at 27.6 ms per query, and the README badge carries
+that number. The reasoning is stated outright — *"We would rather publish the
+smaller number that is about the product."*
+
+That is the rarest correction in this corpus. A benchmark harness that
+reimplements the retrieval it is supposed to be measuring is an easy mistake to
+leave standing, because the published figure only gets better for it, and nobody
+outside can see the substitution. Finding it, naming it in the document, and
+revising the headline down is a stronger signal about the project than any
+number in the table.
+
+**The comparative claim is still where to be careful.** `docs/vs-competitors.md`
+carries "**+9.7 pp over Supermemory's published 85.4%** on the same dataset",
+which subtracts this project's `recall_any@5` — at least one required fragment in
+the top five — from another project's overall headline figure, and nothing in the
+repository establishes that the two measure the same quantity.
 
 To the project's credit, the caveat is printed directly underneath: it defines
 both recall variants and states that its own strict `recall_all@5` is 84.5%,
 which is *below* the 85.4% it is being compared against. The document calls that
-"still at parity". A reader who takes the badge without the footnote gets a
+"still at parity". A reader who takes the bolded line without the note gets a
 different impression than a reader who takes both.
 
 The other detail: the 30 skipped questions are the **abstention** type,
@@ -304,9 +324,18 @@ itself.
 ### Avoid
 
 - **Do not headline a cross-system delta between differently-defined metrics.**
-  The footnote here is honest and the badge is not, and the badge is what gets
-  read. If the like-for-like number is 84.5% against 85.4%, that is the
+  The note here is honest and the bolded line is not, and the bolded line is what
+  gets read. If the like-for-like number is 84.5% against 85.4%, that is the
   comparison, and the honest headline is "comparable".
+
+And one to steal, which belongs in this section because it is the opposite of
+the mistake above: **check whether your benchmark harness is measuring your
+product.** This one was not — the LongMemEval runner had its own BM25 / RRF /
+MMR / CrossEncoder stack, so the published number described an algorithm nobody
+installs. The fix was a `--modes store` path driving the real `Recall.search`,
+a headline revised downward from 96.2% to 95.1%, and a sentence saying why. If
+your eval imports anything the shipped read path does not, you are publishing a
+number about the eval.
 - **Do not let closing an assertion stand in for rejecting a value.** `valid_to`
   plus `superseded_by` records that a belief ended; nothing prevents the same
   wrong text being re-asserted by the next ingest.
@@ -351,7 +380,7 @@ notes `:1-58`, `THRESHOLD_SOFT` / `THRESHOLD_HARD`, `negative_retrieve`),
 **Temporal store** — `src/temporal_kg.py` (append and close `:58-115`,
 invalidate `:144-165`, as-of query `:201-210`)
 
-**Verification** — `src/ai_layer/verifier.py` (`_decide` `:385-432`),
+**Verification** — `src/ai_layer/verifier.py` (`_decide` `:408`),
 `src/ai_layer/answerability.py`, `src/contradiction_detector.py`
 
 **Queues and workers** — `src/deep_enrichment_queue.py`,
@@ -365,8 +394,23 @@ invalidate `:144-165`, as-of query `:201-210`)
 `evals/longmemeval-v8-baseline-2026-04-24.json`
 
 **Claims** — `docs/vs-competitors.md` (the benchmark table `:95-101`, the
-"+10.8 pp" line `:119`, the "How to read this" note `:121-125`)
+"+9.7 pp" line `:124`, the "How to read this" note `:126-129`, and the v13 re-measurement note `:139-145`)
+
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Validity time is queried, not merely stored | read `src/temporal_kg.py:201-207` | `valid_from <= timestamp AND (valid_to IS NULL OR valid_to > timestamp)` |
+| Every current-assertion read carries the project key | `grep -n "valid_to IS NULL AND project" src/temporal_kg.py` | `:84`, `:106`, `:146` |
+| Closing an assertion is not refusing a value | `grep -rn "superseded_by" --include="*.py" src` | Set on the prior row at write time; no lookup keyed on the value precedes an ingest |
+| No human gate on memory content | `grep -rniE "approve\|reviewed_by\|human" --include="*.py" src` | Nothing on the memory path |
+| The benchmark now drives the product | `grep -n "modes store\|Recall.search" README.md docs/vs-competitors.md` | `README.md:57-60`, `vs-competitors.md:139-145` |
+| Tree and suite size | `find . -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py \| wc -l` | 112,233 lines; 159 test files |
 
 ## History
+
+**2026-09-11** — [`14ccb6ca95567e58fd2a12b59096a818039f6d86`](https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86) — re-read, 88 files past the previous pin in a single commit, of which the memory paths account for 467 insertions; the bulk is vendored plugin and skill-pack material. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. The source changes are caching and packaging — a shared concept-extractor per connection, a warm node-name cache with a 60-second TTL, a pinnable model cache — and touch no memory semantics. **The benchmark story changed for the better, on a problem larger than the one this report named.** The LongMemEval runner had carried its own BM25 / RRF / MMR / CrossEncoder stack, so the 96.2% it published described that stack rather than the shipped software; a `--modes store` path was added and defaulted, driving a real `Store` and `Recall.search`, and the headline was revised **down to 95.1%** with the reason printed — *"We would rather publish the smaller number that is about the product."* The cross-system comparison remains a `recall_any` against another project's differently-defined headline, now stated as +9.7 pp rather than +10.8, with both recall variants and the caveat still printed beneath it. Appendix anchors re-pinned: `_decide` moved to `verifier.py:408`, and the `vs-competitors.md` line numbers shifted. Screened before reading: five auto-run surfaces including twenty hook scripts, two dependency manifests inside the cooldown, sixteen unpinned ranges; nothing was installed or run.
 
 **2026-08-09** — [`616d9a6f8b507c16b4cdfef4e823af59d949cc09`](https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.
