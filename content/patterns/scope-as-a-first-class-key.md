@@ -747,6 +747,8 @@ is in the paths the store's key does not govern.
 
 [Scope Recall](../../systems/scope-recall-hermes/) writes each scope component as `label:length:value`, so a delimiter inside a chat or user id cannot forge another scope, derives the key from the identity Hermes passes to `initialize`, and disables memory outright on a gateway runtime with no user id. The vector companion is searched once per accessible scope and each hit is re-read from SQLite under `scope_id IN (…)` before it counts, so a stale or mis-keyed companion row cannot cross the boundary; a committed test puts two users on one database and asserts one user's preference is absent from the other's prefetch and present in the owner's.
 
+[dsh-ai-memory](../../systems/dsh-ai-memory/) puts the key where a model-supplied scope fails: at session open. The plugin passes its configured `projectId` to `HostSession`, no tool schema has a project field, and `recall` filters `WHERE m.project_id = ?` before scoring; a test through that same host API asserts another project's matching ticket stays out of a populated pack. The key is only as narrow as its default, though: `projectId` is `dsh` in both the plugin config and its bundled patch, so every chat in a profile shares one project.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

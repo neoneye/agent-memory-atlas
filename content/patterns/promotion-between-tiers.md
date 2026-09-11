@@ -172,6 +172,8 @@ promotion produces: reflection records are "22% of rows yet ~1% of both read
 channels". A fifth of that store is distilled material that retrieval essentially
 never surfaces. Promotion succeeded; usefulness did not follow.
 
+[dsh-ai-memory](../../systems/dsh-ai-memory/) shows both ways a tier rule fails without any model involved. Its `chat` preset expires a working note at the same age it would promote it, and `consolidate` checks the TTL first, so under the preset the plugin ships nothing ever moves from working to episodic — while the type's own doc comment says to set retention longer than the promote delay. Its episodic-to-profile bar is two accesses, counted by `recall`, and the per-prompt prefetch calls `recall` for 128 hits with no floor, so being injected twice is being accessed twice and the untimed profile tier fills with whatever lasted a week. NOOA's rule that injected memories are not reinforced is the fix.
+
 ## Tests to require
 
 - State the rule, then compute it by hand for ten promoted records and ten that

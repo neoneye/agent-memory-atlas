@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 422 reports.**
+**This page covers all 423 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3720,3 +3720,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 228 commits since 29 May 2026, 57,559 lines of Rust, 706 tests with 34 ignored for needing the model, clippy and the suite in CI, `cargo mutants` on release pull requests. The integration edge is thin: the pi hook passes a flag the CLI rejects, the Hermes hook misreads the JSON or filters at 0.40 against fused scores that cannot exceed 0.244, the dream's contradiction edges and the MCP edge tool fail a foreign key, and a lock timeout deletes a running process's index files.
 - Study when: you want a local hybrid retriever with published, recomputable numbers and a supersession you can undo.
 - Do not copy when: you need to know what was believed last month, why a fact changed, or that a retracted value stays retracted — or when thresholds are applied to fused scores.
+
+### [`dsh-ai-memory`](../systems/dsh-ai-memory/)
+- Best idea: **bind the project at session open and keep it out of every tool schema.** The model has no field in which to name another project, the predicate is in the SQL, and two tests assert over populated results — one through the host API the plugin calls — that another project's matching row stays out. Two marks, `scope_enforced` and `negative_eval`.
+- Biggest risk: **the preset the plugin ships cannot promote a working note.** `chat` sets the working TTL to one hour and inherits a one-hour promotion delay; consolidate checks expiry first, so a note is hidden from recall at sixty minutes and deleted by the next consolidate. The type's doc comment warns against exactly this, and every test and example showing `chat` promotion overrides the delay to zero. Separately, the per-prompt prefetch increments the access count that decides promotion to the untimed profile tier.
+- Most reusable component: `ContextPack::from_hits_budgeted` — pins first, then score, whole lines or the longest prefix that fits, and the rendered string's own estimate reported back.
+- Maturity impression: ten commits by one author on 10 and 11 September 2026, 3,403 lines of Rust with 1,730 of integration tests and 61 Rust test functions, no CI. There is no injectable clock, so no test can age a row, and the only embedder is a 64-dimension token hash.
+- Study when: you want a small, local, explicitly driven store per project under a harness that owns its loop, and a budgeted pack to copy.
+- Do not copy when: you need memory that outlives an hour without the model tiering, pinning or compacting on purpose, recall by meaning, or text in Chinese.

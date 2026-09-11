@@ -945,6 +945,15 @@ from SQLite under <code>scope_id IN (…)</code> before it counts, so a
 stale or mis-keyed companion row cannot cross the boundary; a committed
 test puts two users on one database and asserts one user's preference is
 absent from the other's prefetch and present in the owner's.</p>
+<p><a href="../../systems/dsh-ai-memory/">dsh-ai-memory</a> puts the key
+where a model-supplied scope fails: at session open. The plugin passes
+its configured <code>projectId</code> to <code>HostSession</code>, no
+tool schema has a project field, and <code>recall</code> filters
+<code>WHERE m.project_id = ?</code> before scoring; a test through that
+same host API asserts another project's matching ticket stays out of a
+populated pack. The key is only as narrow as its default, though:
+<code>projectId</code> is <code>dsh</code> in both the plugin config and
+its bundled patch, so every chat in a profile shares one project.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

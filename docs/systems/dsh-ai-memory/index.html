@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust and SQLite memory crate
+wrapped as a DeepSeek Harness plugin: project-scoped recall packed into
+a token-budgeted system-prompt section before every model call, under a
+default policy whose one-hour working TTL equals its promotion delay —
+so a working note leaves recall after an hour and consolidate deletes it
+instead of promoting it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="dsh-ai-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust and SQLite memory
+crate wrapped as a DeepSeek Harness plugin: project-scoped recall packed
+into a token-budgeted system-prompt section before every model call,
+under a default policy whose one-hour working TTL equals its promotion
+delay — so a working note leaves recall after an hour and consolidate
+deletes it instead of promoting it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dsh-ai-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust and SQLite memory
+crate wrapped as a DeepSeek Harness plugin: project-scoped recall packed
+into a token-budgeted system-prompt section before every model call,
+under a default policy whose one-hour working TTL equals its promotion
+delay — so a working note leaves recall after an hour and consolidate
+deletes it instead of promoting it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>dsh-ai-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "dsh-ai-memory",
+      "description": "A Rust and SQLite memory crate wrapped as a DeepSeek Harness plugin: project-scoped recall packed into a token-budgeted system-prompt section before every model call, under a default policy whose one-hour working TTL equals its promotion delay \u2014 so a working note leaves recall after an hour and consolidate deletes it instead of promoting it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Budgeted project memory for DeepSeek
+Harness</p>
+          <h1>dsh-ai-memory</h1>
+          <p class="document-deck">A Rust and SQLite memory crate
+wrapped as a DeepSeek Harness plugin: project-scoped recall packed into
+a token-budgeted system-prompt section before every model call, under a
+default policy whose one-hour working TTL equals its promotion delay —
+so a working note leaves recall after an hour and consolidate deletes it
+instead of promoting it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zzjzzb/ai-memory">
+              <span>Source</span>
+              <strong>zzjzzb/ai-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zzjzzb/ai-memory/commit/9208281522612ebb349dff2e1b7e07a9c7683def" title="9208281522612ebb349dff2e1b7e07a9c7683def">
+              <span>Analyzed revision</span>
+              <code>92082815…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zzjzzb--ai-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>zzjzzb--ai-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>dsh-ai-memory is a local memory layer for agent harnesses: a Rust
+crate named <code>ai-memory</code> over one SQLite file, and a <a
+href="../deepseek-harness/">DeepSeek Harness</a> plugin — published from
+the repository root as the npm package <code>dsh-ai-memory</code> — that
+registers memory tools and injects a token-budgeted memory section into
+the system prompt before every model call. It is unrelated to <a
+href="../ai-memory/">ai-memory</a>, a different project of the same
+name; the slug takes the plugin's name to keep the two apart. Licensed
+MIT or Apache-2.0, ten commits by one author between 10 and 11 September
+2026, 3,403 lines of Rust under <code>src/</code> with 1,730 lines of
+integration tests, and 544 lines for the plugin and its napi
+binding.</p>
+<p><strong>The design states what it will not do, and the code keeps to
+it.</strong> There is no LLM call, no network client and no background
+job in the tree. The model writes a memory by calling
+<code>memory_remember</code>; each memory has a tier —
+<code>working</code>, <code>episodic</code> or <code>profile</code> —
+that decides how long it lives and nothing else; and before each model
+call the plugin recalls up to 128 hits for the latest user message and
+packs them into at most 8,192 estimated tokens, pinned rows first.
+Consolidation (TTL deletes and tier promotion) and compaction (folding
+old working notes into one episodic note) happen only when a tool call
+asks for them.</p>
+<p><strong>Project isolation is the strongest part.</strong> Every row
+carries a <code>project_id</code>, every query over
+<code>memories</code> filters on it in SQL, and the project is bound
+when the session opens rather than passed by the model. Two committed
+tests assert over populated results that another project's matching row
+stays out, one of them through the same <code>HostSession</code> API the
+plugin calls. That earns <code>scope_enforced</code> and
+<code>negative_eval</code>. The caveat is the default: the plugin's
+<code>projectId</code> is <code>dsh</code>, so every chat in a dsh
+profile shares one project unless the profile's patch changes it.</p>
+<p><strong>The weakest part is the lifecycle the plugin ships
+with.</strong> Its default policy is <code>chat</code>, which sets the
+working-tier TTL to one hour and leaves the working-to-episodic
+promotion delay at its default of one hour; <code>consolidate</code>
+checks expiry first, so under this preset no working note is ever
+promoted — recall hides it at sixty minutes and the next consolidate
+deletes it. The policy's own doc comment and <code>docs/USAGE.md</code>
+both warn against exactly this configuration, and every test and example
+that shows <code>chat</code> promoting first sets the delay to zero. An
+untiered note is <code>working</code> unless it contains one of a few
+English phrases. The one frequency signal the lifecycle uses,
+<code>access_count</code>, is incremented for every hit the per-prompt
+prefetch returns, so appearing in two prompts meets the bar for the
+untimed <code>profile</code> tier. And retrieval under the plugin is
+lexical in all but name: the only embedder is a 64-dimension hash of
+whole tokens, <code>HostSession</code> offers no way to inject another,
+and the tokenizer treats an unpunctuated run of Chinese characters as
+one token.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever text the model passes to
+<code>memory_remember</code>, or harness code passes to
+<code>remember</code>. It is stored verbatim, never extracted, merged or
+rewritten, and treated as ground truth: the pack renders it into the
+system prompt as <code>- [tier id=… score=…] text</code> under
+<code>## Memory (project: …)</code>, with no source, confidence or
+date.</p>
+<p>Its state is a tier, a pinned flag and an age. A working row younger
+than its tier's TTL is live; past the TTL and unpinned it is
+<em>expired</em> — still in the table, invisible to recall and to
+default listing — until a consolidate deletes it. Consolidate also
+promotes working to episodic after
+<code>working_to_episodic_after</code>, and episodic to profile after
+<code>episodic_to_profile_after</code> once <code>access_count</code>
+reaches <code>episodic_to_profile_min_accesses</code>. Compact deletes
+every live working row except the pinned ones and the newest eight, and
+writes their snippets into one new episodic row.
+<code>memory_forget</code> deletes a row outright. Nothing supersedes,
+corrects or contradicts; the only correction is to forget and remember
+again.</p>
+<p>Every move is made by whoever calls the tools — in dsh, the model —
+and nothing runs on a clock.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — under the plugin's default chat preset a working note has one hour — then recall hides it and consolidate deletes it, because expiry is checked before a promotion due at the same age; an episodic note that lasts a week becomes a permanent profile row on access counts every prompt's prefetch increments</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: under the plugin&#39;s default chat preset a working note has one hour — then recall hides it and consolidate deletes it, because expiry is checked before a promotion due at the same age; an episodic note that lasts a week becomes a permanent profile row on access counts every prompt&#39;s prefetch increments
+flowchart TD
+  M[&quot;memory_remember from the model: text, optional tier&quot;] --&gt; TI{&quot;tier given?&quot;}
+  TI --&gt;|no| IT[&quot;infer_tier: English phrases only, otherwise working&quot;]
+  TI --&gt;|yes| ROW[&quot;row in memories, keyed by project_id&quot;]
+  IT --&gt; ROW
+  ROW --&gt; WK{&quot;working, under the chat preset&quot;}
+  WK --&gt;|&quot;memory_compact within the hour&quot;| FOLD[&quot;one extractive episodic note, sources deleted&quot;]
+  WK --&gt;|&quot;age reaches 60 minutes&quot;| HID[&quot;expired: hidden from recall, still stored&quot;]
+  HID --&gt;|&quot;memory_consolidate&quot;| DEL[&quot;deleted: TTL checked before the 60-minute promotion&quot;]
+  ROW --&gt; PRE[&quot;every prompt: prefetch_within_budget on the last user message&quot;]
+  PRE --&gt; REC[&quot;recall: project_id predicate, 2048 newest, TTL filter, prune to 256, score&quot;]
+  REC --&gt; TOP[&quot;top 128 hits, access_count + 1 on each&quot;]
+  TOP --&gt; PACK[&quot;pinned first, then score, packed to 8192 estimated tokens in the system prompt&quot;]
+  FOLD --&gt; EP{&quot;episodic, 7 days old, access_count at least 2?&quot;}
+  TOP -.-&gt;|&quot;two prompts meet the bar&quot;| EP
+  EP --&gt;|&quot;yes, on consolidate&quot;| PROF[&quot;profile: no TTL, kept until forgotten&quot;]
+  EP --&gt;|&quot;no, 30 days old, on consolidate&quot;| DEL2[&quot;deleted&quot;]
+  ROW --&gt; FG[&quot;memory_forget: hard delete, nothing kept&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A Rust library whose store, <code>SqliteStore</code>, implements a
+backend-neutral <code>MemoryStore</code> trait
+(<code>src/store.rs:12-42</code>), with a small host API,
+<code>HostSession</code> (<code>src/host.rs</code>), that opens a
+database, creates the project if it is absent and dispatches named
+operations to a <code>{ok, name, data, error}</code> JSON envelope. Two
+thin wrappers expose it: a napi addon, <code>ai-memory-node</code>,
+which the plugin loads in process, and the <code>ai-memory</code> CLI,
+which the plugin spawns once per operation when the addon is missing
+(<code>integrations/dsh-ai-memory/src/bridge.js:65-126</code>). Under
+the CLI bridge every tool call and every prompt's prefetch is a process
+start, a database open and a schema check.</p>
+<p>Storage is one SQLite file per configured path, opened with WAL,
+<code>synchronous = NORMAL</code>, foreign keys on and a five-second
+busy timeout (<code>src/sqlite.rs:812-827</code>), behind a single
+mutex-guarded connection per store. Vectors are little-endian
+<code>f32</code> blobs scored by brute-force cosine in process; the
+optional <code>sqlite-vec</code> feature replaces that with one
+<code>vec_distance_cosine</code> query per candidate on a separate
+in-memory connection (<code>src/sqlite_vec_index.rs:50-75</code>) — the
+same brute force by another route, and not reachable from
+<code>HostSession</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Nothing has to be running: the store is a file under
+<code>~/.local/share/ai-memory/</code>, no key is required and nothing
+leaves the machine. Installation into dsh is
+<code>dsh plugin add github:zzjzzb/ai-memory#&lt;commit&gt;</code>,
+whose <code>prepare</code> lifecycle script
+(<code>package.json:35</code>) runs <code>cargo build --release</code>
+for the CLI and the addon
+(<code>integrations/dsh-ai-memory/scripts/build-native.mjs:98</code>,
+<code>:109</code>), so the user needs a Rust toolchain and must allow
+the build in pnpm. No lockfile is committed — <code>Cargo.lock</code> is
+in <code>.gitignore</code> — so each install resolves
+<code>rusqlite 0.32</code> (with bundled SQLite), <code>napi 2.16</code>
+and the rest to whatever is newest within those ranges that day. The
+store is inspectable with <code>sqlite3</code>; neither the CLI nor the
+tools offer a list operation
+(<code>src/bin/ai-memory.rs:120-123</code>), so a person cannot
+enumerate memories through the product.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>remember_many</code>
+(<code>src/sqlite.rs:278-357</code>) trims the text, takes the given
+tier or <code>infer_tier</code> (<code>:296</code>), embeds it
+(<code>:297</code>), and inserts the memory and embedding rows in one
+transaction. The tool path is <code>dispatch_tool</code> →
+<code>store.remember</code>
+(<code>src/harness/tools.rs:152-170</code>).</li>
+<li><strong>Recall.</strong> <code>recall</code>
+(<code>src/sqlite.rs:467-616</code>) selects the project's rows with
+<code>WHERE m.project_id = ?</code> (<code>:477-482</code>), ordered
+<code>pinned DESC, created_at DESC</code> with
+<code>LIMIT scan_limit</code> (<code>:506-511</code>); drops expired
+unpinned rows in Rust (<code>:516-524</code>); if more than
+<code>candidate_prune</code> remain, keeps the top 256 by keyword
+overlap plus recency, pinned first (<code>:527-549</code>); loads their
+embeddings and scores cosine through the <code>VectorIndex</code>
+(<code>:558-569</code>); combines recency, keyword and vector with the
+policy's weights (<code>:571-591</code>); sorts, truncates to the limit,
+and increments <code>access_count</code> and
+<code>last_accessed_at</code> — and overwrites <code>updated_at</code> —
+on every returned hit (<code>:593-613</code>).</li>
+<li><strong>Pack.</strong> <code>prefetch_within_budget</code>
+(<code>src/harness/session.rs:83-100</code>) recalls
+<code>prefetch_hit_limit(max_tokens)</code> hits —
+<code>max_tokens / 24</code> clamped to 16..128, so 128 at the plugin's
+8,192 (<code>src/harness/tokens.rs:42-44</code>) — and
+<code>ContextPack::from_hits_budgeted</code>
+(<code>src/harness/context.rs:39-76</code>) sorts pinned first, then
+score, then recency, adds each hit whole if it fits under
+<code>ceil(chars / 4)</code>, otherwise the longest prefix that fits by
+binary search (<code>:132-173</code>), and skips it if none does.</li>
+<li><strong>Consolidate.</strong> <code>consolidate</code>
+(<code>src/sqlite.rs:618-699</code>) walks every row in the project; an
+unpinned row at or past its tier's TTL is marked expired and skipped
+(<code>:649-657</code>), and only a row that survives that check can be
+promoted (<code>:659-670</code>). Deletes and tier updates are
+individual statements, not one transaction.</li>
+<li><strong>Compact.</strong> <code>compact_working_with</code>
+(<code>src/harness/session.rs:129-167</code>) lists live working rows,
+lets <code>ExtractiveCompactor</code> keep pinned rows and the eight
+newest unpinned (<code>src/harness/compact.rs:66-89</code>), writes one
+episodic row of up to 240 characters per folded row with metadata
+<code>{"compacted": true, "source_ids": [...]}</code>, then forgets each
+source one statement at a time (<code>session.rs:149-160</code>).</li>
+<li><strong>Forget.</strong> <code>forget</code>
+(<code>src/sqlite.rs:449-465</code>) deletes by project and id; the
+embedding row goes by <code>ON DELETE CASCADE</code>.</li>
+<li><strong>Plugin.</strong> <code>apply</code>
+(<code>integrations/dsh-ai-memory/src/index.js:27-66</code>) opens the
+bridge with the resolved config, registers the six tools, listens on
+<code>agent/pre-step</code> for the latest user message, and registers
+the <code>ai-memory:pack</code> system-prompt section, whose
+<code>text()</code> calls <code>prefetch_within_budget</code> on every
+assembly (<code>:51-65</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>projects</code></td>
+<td><code>id</code>, <code>policy_json</code> (retention, promotion and
+recall weights), <code>created_at</code></td>
+</tr>
+<tr>
+<td><code>memories</code></td>
+<td><code>id</code>, <code>project_id</code> → <code>projects</code> on
+delete cascade, <code>tier</code>
+<code>CHECK IN ('working','episodic','profile')</code>,
+<code>text</code>, <code>metadata_json</code>, <code>created_at</code>,
+<code>updated_at</code>, <code>last_accessed_at</code>,
+<code>access_count</code>, <code>pinned</code></td>
+</tr>
+<tr>
+<td><code>embeddings</code></td>
+<td><code>memory_id</code> → <code>memories</code> on delete cascade,
+<code>dim</code>, <code>vector</code></td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td><code>schema_version = '1'</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The schema is created with <code>CREATE TABLE IF NOT EXISTS</code>
+and has no migration path (<code>src/sqlite.rs:751-794</code>). A
+project's policy is written once, when the project is created; the
+plugin's <code>policy</code> setting has no effect on a project that
+exists.</p>
+<p><code>created_at</code> drives TTL, recency and the time-window
+filters; <code>updated_at</code> is rewritten by every recall that
+returns the row (<code>src/sqlite.rs:603-608</code>), so it records the
+last read, not the last edit. <code>metadata_json</code> is stored and
+returned, never rendered into the pack, and read by nothing in the tree
+— including the <code>source_ids</code> compaction writes, which name
+rows it deletes a moment later. There is no owner, agent, session,
+source or validity time on a row.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Three terms, one signal.</strong> The score is
+<code>w_t · recency + w_k · keyword + w_v · cosine</code>, weights
+L1-normalised (<code>src/policy.rs:171-181</code>); the
+<code>chat</code> preset sets them to 0.15, 0.25 and 0.60
+(<code>:21-29</code>). Recency halves every seven days on
+<code>created_at</code>. Keyword is the fraction of distinct query
+tokens present in the text (<code>:206-217</code>). The vector is
+<code>HashEmbedder</code>: each token hashed with FNV-1a into two of 64
+signed buckets, then L2-normalised (<code>src/embedder.rs:37-57</code>)
+— a second measure of token overlap with collision noise.
+<code>HashEmbedder</code> is the only <code>Embedder</code>
+implementation, and <code>HostSession::open</code> builds the store with
+it (<code>src/host.rs:35</code>), so every dsh and CLI user retrieves
+this way; a real model can be injected only by Rust code using
+<code>SqliteStore::builder()</code>. Tier plays no part in ranking.</p>
+<p><strong>Tokens decide everything, and the tokenizer is
+whitespace-and-punctuation.</strong> <code>tokenize</code> lowercases,
+splits on every non-alphanumeric character and drops tokens of one byte
+(<code>src/util.rs:34-40</code>). CJK ideographs are alphanumeric, so an
+unpunctuated Chinese clause is a single token. Reimplementing
+<code>tokenize</code> and <code>HashEmbedder</code> offline:
+<code>用户喜欢深色模式</code> against the query <code>深色模式</code>
+scores 0.00 on both keyword and cosine, and matches only when the query
+repeats the stored clause exactly; <code>theme preference</code> against
+<code>User prefers dark mode</code> scores keyword 0.00 and cosine 0.31,
+from bucket collisions alone.</p>
+<p><strong>No floor.</strong> Prefetch passes no <code>min_score</code>,
+so until a project has more than 128 live rows every live row is a hit,
+and the pack fills with them, pins first and then by score, until the
+budget runs out. A small project's whole store is in every prompt;
+relevance only matters once the store outgrows the pack. A pin is
+guaranteed a candidate slot but not a hit: <code>recall</code> sorts by
+score alone before truncating to the limit
+(<code>src/sqlite.rs:593-599</code>), and only the pack puts pins first,
+so past 128 live rows a low-scoring pin can miss the prompt.</p>
+<p><strong>A bounded window.</strong> The candidate SQL takes the 2,048
+newest rows, pinned first, <em>before</em> the TTL filter runs in Rust.
+Rows older than that window are never candidates — including profile
+facts, and with expired-but-unconsolidated working rows occupying slots
+in it. The documentation's <em>"the store can grow without bound"</em>
+(<code>docs/ARCHITECTURE.md:42</code>) is true of the store; recall
+reaches its newest 2,048 rows and its pins. Inside the window, the
+256-row prune ranks by keyword and recency only, so the vector arm
+cannot rescue a row the prune dropped.</p>
+<p><strong>The query is the last user message.</strong> The section
+reads the newest <code>user/message</code> event from the assembly
+context, falling back to the last text the model passed to
+<code>memory_recall</code> or <code>memory_remember</code>
+(<code>integrations/dsh-ai-memory/src/prompt.js:21-42</code>,
+<code>index.js:79-80</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous: one transaction, an in-process
+hash embedding cached in a 2,048-entry LRU
+(<code>src/embed_cache.rs</code>), and the row is recallable on the next
+call. There is no extraction, deduplication or content check — the same
+text remembered twice is two rows, both of which compete for the pack.
+The plugin writes nothing on its own: <code>listenForUserTurns</code>
+records the user's text only as the next query
+(<code>index.js:87-106</code>), and the flagship scenario's instructions
+are to <em>"ask the model to <code>memory_remember</code> the note"</em>
+after each turn
+(<code>scenarios/dsh-support-agent/README.md:83</code>).</p>
+<p><code>infer_tier</code> (<code>src/heuristic.rs:6-45</code>) assigns
+<code>profile</code> to text containing phrases such as
+<code>i prefer</code>, <code>lives in</code> or
+<code>user prefers</code>, <code>episodic</code> to phrases such as
+<code>today</code>, <code>this morning</code> or <code>we went</code>,
+and <code>working</code> to everything else. The phrases are English
+only, so any note written in another language without an explicit tier
+is working — which under <code>chat</code> means an hour of
+visibility.</p>
+<p>Compaction is not atomic: the fold is written, then each source is
+forgotten in its own statement, so a failure midway leaves the fold and
+some of its sources both in the store.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>No model call anywhere, so the write path costs a hash and an insert.
+The read path runs on every prompt: one recall over at most 2,048 rows
+and up to 128 <code>UPDATE</code>s to touch the hits — a read that
+writes — then a pack of at most 8,192 tokens estimated as
+<code>ceil(chars / 4)</code>. That estimator is fixed on the
+<code>HostSession</code> path (<code>src/harness/session.rs:88</code>);
+for Chinese text, where tokenizers commonly spend about a token per
+character, it can undercount by several times, so the real pack can be
+several times the budget — an inference, not measured here. The
+section's text changes whenever the latest message does, at
+<code>sectionOrder</code> 40 in dsh's system prompt
+(<code>integrations/dsh-ai-memory/src/config.js:4-12</code>); whether
+the host keeps a cacheable prefix ahead of it is dsh's decision and was
+not read. Nothing rewrites the store in the background.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The plugin registers six tools — <code>memory_remember</code>,
+<code>memory_recall</code>, <code>memory_forget</code>,
+<code>memory_pin</code>, <code>memory_consolidate</code> and
+<code>memory_compact</code>
+(<code>integrations/dsh-ai-memory/src/tools.js:61-106</code>) — and the
+<code>ai-memory:pack</code> section. The Rust crate exposes the first
+five as JSON-schema <code>ToolSpec</code>s with OpenAI and Anthropic
+renderings (<code>src/harness/tools.rs:26-45</code>), for any harness
+that runs its own loop, and <code>HostSession</code> plus the CLI for
+any process that can speak JSON.</p>
+<p>The model has full agency and full responsibility: it decides what to
+remember and at which tier, what to pin, what to forget, and whether
+consolidation and compaction ever happen. The only automatic behaviour
+is the per-prompt pack. There is no session-start, compaction-boundary
+or end-of-session hook; the consolidate tool's description says
+<em>"Explicit — never automatic"</em>, and nothing tells the model when
+to call it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The shipped preset cannot promote a working note.</strong>
+<code>MemoryPolicy::chat()</code> sets <code>retention.working</code> to
+one hour (<code>src/policy.rs:24</code>) and inherits
+<code>working_to_episodic_after = 3600</code> seconds
+(<code>:93</code>). <code>consolidate</code> evaluates
+<code>age &gt;= ttl</code> first and <code>continue</code>s
+(<code>src/sqlite.rs:649-657</code>), so the promotion arm at
+<code>:660</code> is reachable only for a row younger than an hour,
+where <code>age &gt;= 3600</code> is false. Under <code>chat</code>,
+which is the plugin's default and the CLI's
+(<code>src/host.rs:132-136</code>,
+<code>src/bin/ai-memory.rs:65</code>), a working note is recallable for
+an hour, hidden after it, and deleted by the next consolidate. The
+type's doc comment says <em>"Set retention <strong>longer</strong> than
+the corresponding promote delay, or items expire before they can move up
+a tier"</em> (<code>src/policy.rs:44-46</code>). What survives is what
+the model pinned, tiered as episodic or profile at write time, or
+compacted within the hour.</p>
+<p><strong>Promotion counts injections, not use.</strong>
+<code>episodic_to_profile_min_accesses = 2</code> reads
+<code>access_count</code>, and <code>recall</code> increments it for
+every hit it returns. The per-prompt prefetch requests 128 hits and
+applies no floor, so in a project with 128 or fewer live rows every row
+is touched on every prompt. An episodic row — a compaction fold included
+— that survives seven days becomes <code>profile</code> on the next
+consolidate, and <code>profile</code> has no TTL
+(<code>src/policy.rs:57-65</code>). The permanent tier fills with
+whatever lasted a week, not with what was used.</p>
+<p><strong>The boundary is real, and the default puts every chat inside
+it.</strong> The project predicate is on every query and the model has
+no parameter to cross it, which is the right shape. But
+<code>projectId</code> defaults to <code>dsh</code> in both the plugin's
+config and its bundled patch
+(<code>integrations/dsh-ai-memory/src/config.js:6</code>,
+<code>cordis.patch.yml:7</code>), so every chat in a dsh profile writes
+to and reads from one project — the "cross-chat global bag of facts"
+that <code>docs/INTEGRATION_DSH.md:57</code> sets
+<code>project_id</code> isolation against. Nothing authenticates a
+caller: any local process that names a project can read it.</p>
+<p><strong>Stored text is replayed into the system prompt.</strong>
+Whatever the model remembers — including text it lifted from a web page
+or a tool result — is rendered into the system prompt of every later
+turn in the project that ranks it, ahead of everything else if pinned,
+with nothing marking where it came from. There is no filter on what may
+be written.</p>
+<p><strong>Forgetting leaves no trace.</strong>
+<code>memory_forget</code> is a hard delete; nothing records that a
+value was removed, and remembering it again succeeds. Compaction's fold
+text quotes the ids of the rows it deleted, so an id in the pack can
+name a row that no longer exists.</p>
+<p><strong>Marks withheld, and why.</strong> <code>tombstone</code>: a
+forget keeps nothing keyed on the value, and compaction's
+<code>source_ids</code> name deleted rows, not rejected content, and are
+read by nothing. <code>trust_state</code>: the tier is a retention class
+and <code>pinned</code> a retention and ordering flag; neither withholds
+a row from being treated as true. <code>bitemporal</code>:
+<code>created_at</code> is the only time with meaning, and
+<code>updated_at</code> is overwritten by reads. <code>audit_log</code>:
+no event table exists and a mutation leaves no record.
+<code>human_review</code>: no surface lists, approves or edits memories
+— the CLI dispatches the same operations the model has, with no list
+among them.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Sixty-one Rust test functions and twenty-seven Node tests. I ran none
+of them; there is no CI configuration in the tree, and the manifests are
+inside the seven-day cooldown.</p>
+<p>The marks rest on two cases.
+<code>multi_project_recall_never_crosses</code>
+(<code>tests/mvp.rs:19-71</code>) writes one row to each of two
+projects, both containing <code>secret token</code>, and asserts that
+<code>alpha</code>'s recall is non-empty, entirely <code>alpha</code>,
+and free of beta's phrase; since recall has no score floor, the beta row
+would be returned if the predicate were missing.
+<code>sme_support_seed_remember_budgeted_prefetch_pins_and_isolation</code>
+(<code>tests/dsh_support_scenario.rs:134-213</code>) seeds two projects
+through <code>HostSession</code> on a file database and asserts that the
+HR pack for <code>sidebar overlap invoice</code> lacks
+<code>T-1042</code> and contains the HR handbook note
+(<code>:204-211</code>); the support ticket's turns contain every query
+token, so a leak would place them in the pack. The Node scenario test
+repeats the same assertions through the plugin's bridge and its
+<code>ai-memory:pack</code> section
+(<code>scenarios/dsh-support-agent/lib/driver.mjs</code>).</p>
+<p>Two other isolation tests would pass on an empty result:
+<code>harness_sessions_do_not_cross_projects</code>
+(<code>tests/harness.rs:22-49</code>) asserts only <code>all(...)</code>
+predicates, and <code>budgeted_pack_stays_in_project</code>
+(<code>tests/budget.rs:87-114</code>) asserts that the pack lacks
+<code>mango</code> and that every block belongs to <code>alpha</code>,
+with no assertion that anything was packed. The budget and pin tests are
+sound: a pack's estimated tokens never exceed the budget, and a pinned
+fact survives a budget that excludes the rest.</p>
+<p>What the suite cannot see is time. <code>now_ms()</code> and
+<code>SystemTime::now()</code> are called directly
+(<code>src/util.rs:16-21</code>, <code>src/sqlite.rs:516</code>,
+<code>:621</code>) with no clock to inject, so every TTL and promotion
+test sets a duration to zero, and every test and example that shows
+<code>chat</code> promoting first overrides the delay to zero
+(<code>tests/sdk.rs:358-359</code>,
+<code>examples/two_projects.rs:14-16</code>,
+<code>examples/assistant_sim.rs:24-25</code>). No test runs the
+unmodified <code>chat</code> preset against a row older than an hour,
+which is the path the plugin ships. Recall-quality tests use English
+sentences with shared tokens, and
+<code>dispatch_remember_prefetch_roundtrip</code>
+(<code>src/host.rs:164-180</code>) finds <code>dark mode</code> for the
+query <code>theme preference</code> because the store holds one row and
+prefetch has no floor. No test exceeds <code>scan_limit</code>.</p>
+<p>No paper, no benchmark result and no evaluation harness are
+committed; <code>benches/memory_hot_path.rs</code> holds criterion
+microbenchmarks with no recorded output.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Bind the scope at session open and leave it out of the tool
+schema.</strong> The model cannot ask for another project because no
+tool has a field for one, and the predicate sits in the SQL rather than
+in a post-filter.</li>
+<li><strong>A pack that is a function of a budget.</strong> Pins first,
+then score, whole lines if they fit, the longest prefix otherwise, and
+the rendered string's own estimate reported back — so "never exceeds the
+budget" is a checkable property with a test.</li>
+<li><strong>Say what the layer will not do, in the code as well as the
+README.</strong> No model client, no network and no background job means
+the whole write and read cost is a hash, an insert and a scan.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A TTL equal to the promotion delay, with expiry checked
+first.</strong> Validate the invariant the doc comment states —
+<code>retention &gt; promote delay</code> for each tier — in
+<code>MemoryPolicy::validate</code>, and test the shipped presets
+against aged rows through an injected clock.</li>
+<li><strong>Counting injections as accesses.</strong> If the per-prompt
+prefetch increments the counter that decides promotion, promotion
+measures rank, not use. Touch only what the model asked for, or only
+what made it into the pack.</li>
+<li><strong>A candidate window taken before filtering.</strong> Apply
+the TTL in SQL, or the window fills with rows recall will discard and
+older live facts fall out of reach.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A clean skeleton for a harness that wants a small, local, explicitly
+driven store per project and is willing to drive consolidation itself —
+and to replace the hash embedder, which only a Rust integration can do.
+As the dsh plugin at this commit, it is closer to a one-hour scratchpad
+than to long-term memory: unless the model tiers, pins or compacts
+deliberately, what a session learns is gone after an hour, and every
+chat in a profile shares one project. Teams writing in Chinese should
+expect recall by exact clause and a token estimate likely to
+undercount.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the <code>chat</code> preset's equal TTL and promotion delay
+is intended as "working never promotes", or is the error its own doc
+comment warns about.</li>
+<li>Where dsh places cache breakpoints relative to a section at order 40
+whose text changes with every user message.</li>
+<li>How large a real pack of Chinese text is in DeepSeek's tokenizer at
+the nominal 8,192.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store and schema: <code>src/sqlite.rs</code>,
+<code>src/store.rs</code>, <code>src/types.rs</code>. Policy, scoring
+and TTL: <code>src/policy.rs</code>. Tier heuristic:
+<code>src/heuristic.rs</code>.</li>
+<li>Embedding and similarity: <code>src/embedder.rs</code>,
+<code>src/embed_cache.rs</code>, <code>src/vector.rs</code>,
+<code>src/sqlite_vec_index.rs</code>, <code>src/util.rs</code>.</li>
+<li>Session, pack, compaction and tools:
+<code>src/harness/session.rs</code>, <code>context.rs</code>,
+<code>compact.rs</code>, <code>tokens.rs</code>,
+<code>tools.rs</code>.</li>
+<li>Host API and CLI: <code>src/host.rs</code>,
+<code>src/bin/ai-memory.rs</code>.</li>
+<li>dsh plugin: <code>integrations/dsh-ai-memory/src/index.js</code>,
+<code>bridge.js</code>, <code>config.js</code>, <code>prompt.js</code>,
+<code>tools.js</code>; napi binding
+<code>integrations/dsh-ai-memory/native/src/lib.rs</code>; install build
+<code>integrations/dsh-ai-memory/scripts/build-native.mjs</code>; bundle
+<code>package.json</code>, <code>index.js</code>,
+<code>cordis.patch.yml</code>.</li>
+<li>Tests: <code>tests/*.rs</code>,
+<code>integrations/dsh-ai-memory/test/</code>,
+<code>scenarios/dsh-support-agent/</code>. Benchmarks:
+<code>benches/memory_hot_path.rs</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;impl Embedder for&quot; src                                   # HashEmbedder and the cache wrapper only
+rg -n &quot;open\(db_path\)|open_in_memory\(\)&quot; src/host.rs           # HostSession builds the default store; no embedder parameter
+rg -n -i &quot;reqwest|hyper|https?://|TcpStream&quot; src integrations/dsh-ai-memory/src integrations/dsh-ai-memory/native/src   # 0: no network client
+rg -n -i &quot;audit|tombstone|verified|trust|valid_from|supersed&quot; src integrations/dsh-ai-memory/src   # 0
+rg -n &quot;source_ids|compacted&quot; --type rust --type js .             # written by compact_working, read by nothing
+rg -n -i &quot;dedup|duplicate|ON CONFLICT|UNIQUE&quot; src                # one comment in util.rs: no duplicate check on write
+rg -n &#39;\p{Han}&#39; src                                               # 0: infer_tier&#39;s phrases are English only
+rg -n &quot;memory_remember|consolidate|compact&quot; integrations/dsh-ai-memory/src/index.js   # the tool execute only: the plugin never writes, consolidates or compacts on its own
+rg -n &quot;fn list|list_memories&quot; src/bin src/host.rs src/harness/tools.rs   # 0: no list operation for a person or the model
+rg -n &quot;working_to_episodic_after&quot; tests examples                 # every chat promotion shown sets the delay to 0
+rg -n &quot;scan_limit&quot; tests                                         # one test, 33 rows under a limit of 64
+rg -n &quot;fn .*clock|Clock&quot; src                                     # 0: no injectable clock
+ls .github                                                       # absent: no CI</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/zzjzzb/ai-memory/commit/9208281522612ebb349dff2e1b7e07a9c7683def"><code class="commit-id" title="9208281522612ebb349dff2e1b7e07a9c7683def">92082815…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration; three build-time execution paths — the root
+and plugin <code>prepare</code> scripts, which compile the crate with
+cargo at install, and the napi crate's <code>build.rs</code>; five
+manifests inside the seven-day cooldown and no unpinned surface counted,
+though no lockfile is committed. Read only; nothing was installed, built
+or run. The tokenizer and hash-embedding figures were computed offline
+by reimplementing <code>tokenize</code> and <code>HashEmbedder</code>,
+not by running the crate.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
