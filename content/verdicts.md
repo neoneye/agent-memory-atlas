@@ -1701,7 +1701,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`vestige`](../systems/vestige/)
 
 - Best idea: Fellegi-Sunter record linkage classifying every merge candidate as `match`, `possible` or `non_match`, with the two uncertain classes requiring an explicit `confirm=true` — the header's argument being that a single cosine threshold "over-merges and destroys the audit trail".
-- Biggest risk: the headline benchmark lives on a different branch, so none of Silent Rotation's numbers — 20/23 converged correct against 0/25 with no memory — can be checked at the pinned commit.
+- Biggest risk: none of the published numbers is a head-to-head win, and the project says so itself at greater length than it states the results. The harness reader is a concatenator, so answer accuracy is a retrieval proxy; the structural contradiction metric scores 0 for every control by construction rather than by measured deficit, and the page forbids presenting it as a win.
 - Most reusable component: `merge_operations`, described in its own migration as "the git reflog for your agent's memory", where `undo_payload` carries everything needed to reverse an applied merge and `signals` records why the memories combined.
 - Maturity impression: 97,000 lines of Rust in a 25MB single binary, AGPL-3.0, 1,088 test functions, twenty-five-plus tables — and a deprecated table labelled in the schema as "designed for bi-temporal edge support but was never wired … Do NOT add queries against this table", which is the correct handling of a defect four other systems here ship silently.
 - Study when: your automatic merge or supersede has one similarity threshold and you have never asked what it does at the boundary.

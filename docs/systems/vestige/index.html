@@ -110,14 +110,14 @@ operation carries its own undo payload.</p>
               <strong>samvallad33/vestige</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e" title="a8b0a75661faaa396fa4519c82fcc369f0ddef8e">
+            <a class="meta-pill revision-pill" href="https://github.com/samvallad33/vestige/commit/548ccae20961db1a176a09242931459363ee5d83" title="548ccae20961db1a176a09242931459363ee5d83">
               <span>Analyzed revision</span>
-              <code>a8b0a756…</code>
+              <code>548ccae2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/samvallad33--vestige" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -171,17 +171,21 @@ memories are invalidated, never deleted."</p>
 a memory against auto-merge, supersede and forget — an explicit opt-out
 from every automatic lifecycle mechanism, which is a thing this atlas
 asks for and rarely finds.</p>
-<p>The caveat a reader needs first: the benchmark the README leads with,
-<strong>Silent Rotation</strong>, is not in this tree. It lives on a
-separate branch (<code>benchmark/silent-rotation</code>), and the
-reported result — 20/23 converged correct for Vestige against 0/25 for
-no memory and 4/23 for dense cosine RAG, across 6 models, 25 trials and
-246 published transcripts — <strong>cannot be verified from the pinned
-commit</strong>. What can be said from here is that the README publishes
-its own losses ("the trials where a plain cosine baseline ties Vestige
-and the trial Vestige loses") and separates the theoretical claim it
-borrows from the measurement it made, which is better practice than most
-benchmark sections in this corpus.</p>
+<p><strong>The benchmark story is the thing to read here, and it opens
+with a retraction.</strong> <code>docs/BENCHMARKS.md</code> withdraws
+the project's own prior benchmark in its first paragraph:</p>
+<blockquote>
+<p>"Vestige previously advertised a benchmark called
+<strong>CauseBench</strong>. It is <strong>formally withdrawn</strong>.
+Its harness no longer exists, its repro command 404'd, and its published
+numbers are retracted. <strong>CauseBench must never be cited</strong>,
+in release notes, READMEs, issues, launch posts, or conversation — not
+even as 'an earlier result'."</p>
+</blockquote>
+<p>A separate LongMemEval run is invalidated in the same notice. The
+page then says why it is written the way it is: <em>"After a retraction,
+a number that cannot be reproduced by a stranger is worse than no number
+at all."</em> Section 10 has what replaced it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <code>knowledge_node</code> carrying an unusual amount
 of cognitive state: FSRS-6 stability, difficulty, reps and lapses; the
@@ -473,14 +477,72 @@ after the papers in the code, which makes them checkable in a way
 screen flagged <code>server.json</code> as an auto-run manifest and
 twelve dependency manifests inside the seven-day cooldown including
 <code>Cargo.lock</code> and <code>pnpm-lock.yaml</code>.</p>
-<p><strong>The benchmark is not at this commit.</strong> Silent Rotation
-lives on the <code>benchmark/silent-rotation</code> branch. Nothing
-about its numbers can be confirmed from the pinned tree, and this report
-does not confirm them. What the README's description shows is a
-well-designed <em>shape</em> of benchmark: a fact that exists only in
-the memory layer, a planted decoy, and three outcome classes where
-"converged wrong" — tests pass, merge is clean, production breaks — is
-named as the dangerous one rather than folded into a failure rate.</p>
+<p><strong>The benchmarks are in the tree, and the methodology page is
+unusually rigorous.</strong> <code>benchmarks/</code> holds five
+harnesses — <code>memconflict</code>, <code>agent-memory-eval</code>,
+<code>before-you-change-that</code>, <code>memoryarena</code> and
+<code>task-cost</code> — and <code>docs/BENCHMARKS.md</code> documents
+the one the project says it stands behind. Six things there are worth
+copying whole.</p>
+<p><strong>It retracts its own prior benchmark and forbids citing
+it.</strong> CauseBench is "formally withdrawn", its numbers retracted,
+and the prohibition is explicit — <em>"not even as 'an earlier
+result'"</em>. So is a separate invalidated LongMemEval run. Almost
+nothing in this corpus retracts a number it published.</p>
+<p><strong>It corrects the field's reading of the paper it
+borrows.</strong> MemConflict (<a
+href="https://arxiv.org/abs/2605.20926">arXiv:2605.20926</a>) is quoted
+from the PDF rather than a summary, and the page separates two columns
+the ecosystem conflates: the widely-repeated
+<code>0.5539 / 0.4871 / …</code> list is <strong>Answer
+Accuracy</strong>, not Conflict Recognition Score. <em>"Calling them CRS
+overstates the field by roughly a factor of two."</em> The best CRS any
+of the six systems reaches is <strong>0.2501</strong>, and the page
+quotes the paper saying so. Correcting a mistake that flatters everyone,
+including the systems you are measured against, is unusual.</p>
+<p><strong>Four arms run every time and none is optional.</strong>
+<code>nomem</code> is the floor — <em>"anything scoring above ~0 here is
+measuring the judge, not memory"</em> — <code>random</code> is a
+blob-inflation control at a fixed seed, <code>bm25</code> is the
+earned-complexity bar, and <code>vestige</code> is the system under
+test. The justification cites MemDelta (<a
+href="https://arxiv.org/abs/2606.29914">arXiv:2606.29914</a>): agent
+memory routinely loses to controlled baselines, and changing the
+embedding model alone moved accuracy 6.2pp at p=0.004, enough to reverse
+rankings. The rule follows: <em>"A memory system that cannot beat naive
+BM25 on the same corpus, with the same reader and the same judge, has
+not earned its complexity. The harness prints that verdict
+explicitly."</em></p>
+<p><strong>The structural metric cannot be gamed by wording.</strong>
+<code>CRS-struct</code> scores whether
+<code>recall(mode="contradictions")</code> returned a contradiction
+pair, read from <code>contradictionsFound</code> — <em>"never by
+keyword-matching the response, so the metric cannot be satisfied by the
+server merely emitting the word 'contradiction'."</em> The lexical
+variant beside it uses upstream's exact keyword rule, applied
+identically to every arm.</p>
+<p><strong>The limits section is longer than the results
+section</strong>, nine numbered items, and it disqualifies the project's
+own favourable readings: its numbers are not comparable to the paper's
+table because the judge and reader differ; only cross-arm differences
+within one run mean anything; the reader is a concatenator so AA is a
+retrieval proxy rather than task accuracy; and — the one most systems
+would leave out — <em>"CRS-struct is not a head-to-head win. BM25 and
+the random/no-memory controls have no contradiction channel at all, so
+they are structurally 0 by construction, not by measured deficit… and
+must never be presented as such."</em></p>
+<p><strong>It refuses to estimate what the public data cannot
+support.</strong> The paper's SEH@K and SRS need gold supporting-memory
+ids; the released questions do not carry them, so those metrics are not
+reported — <em>"We will not estimate them."</em> The page also records
+that the released 30 instances are an expansion of the paper's ~12, so
+its sample is not the paper's sample.</p>
+<p>The recorded-agent package is framed with the same discipline:
+<em>"Treat it as one inspectable observation, not a causal win or
+product ranking"</em>, and it discloses that the competing arm was cut
+off at a 900-second limit <strong>even though its recorded final
+application also passes 21/21</strong> — publishing the fact that the
+competitor would have passed.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -520,10 +582,23 @@ measurably ranks 7th of 8 under both dense and lexical retrieval.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Do not put your headline benchmark on another
-branch.</strong> A reader pinning the main line cannot check any of it,
-and a claim that cannot be checked at the commit is a claim about a
-different artifact.</li>
+<li><strong>Retract a number you cannot reproduce, and say it may never
+be cited.</strong> The CauseBench notice is four sentences and it is
+worth more to a reader than any result on the page.</li>
+<li><strong>Read the paper you are citing, not the summary of
+it.</strong> The Answer-Accuracy-versus-CRS correction here fixes a
+claim the whole field was repeating, and it makes every competitor look
+<em>better</em> than the summary did.</li>
+<li><strong>Run the floor and the cheap baseline every time, and print
+the verdict.</strong> A no-memory arm tells you whether you are
+measuring the judge; a BM25 arm tells you whether the complexity was
+earned.</li>
+<li><strong>Score a capability structurally, not lexically.</strong> A
+metric satisfied by the system emitting a word is a metric about the
+word.</li>
+<li><strong>Write the limits section longer than the results
+section</strong>, and put the item that disqualifies your best number in
+it.</li>
 <li><strong>Do not mistake availability states for trust
 states.</strong> <code>silent</code> and <code>unavailable</code> say a
 memory lost a competition or was suppressed; neither says it is wrong,
@@ -602,10 +677,95 @@ tools, with the folding history in comments),
 <p><strong>Tests</strong> — 1,088 test functions in
 <code>crates/</code>, plus <code>tests/e2e</code>,
 <code>tests/hooks</code>, <code>tests/phase_1</code></p>
-<p><strong>Not in this tree</strong> —
-<code>benchmarks/silent-rotation/</code> lives on the
-<code>benchmark/silent-rotation</code> branch</p>
+<p><strong>Benchmarks</strong> — <code>docs/BENCHMARKS.md</code> (the
+CauseBench retraction <code>:7-19</code>, the Answer-Accuracy-versus-CRS
+correction <code>:58-98</code>, the four arms <code>:106-118</code>, the
+metric definitions <code>:127-134</code>, the nine-item limits section
+<code>:140-180</code>), <code>benchmarks/memconflict/</code>
+(<code>longmemeval.py</code>, <code>LONGMEMEVAL.lock.json</code>),
+<code>benchmarks/before-you-change-that/</code>,
+<code>benchmarks/agent-memory-eval/</code>,
+<code>benchmarks/memoryarena/</code>,
+<code>benchmarks/task-cost/</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The benchmarks are in the tree</td>
+<td><code>ls benchmarks/</code></td>
+<td>Five harnesses: <code>agent-memory-eval</code>,
+<code>before-you-change-that</code>, <code>memconflict</code>,
+<code>memoryarena</code>, <code>task-cost</code></td>
+</tr>
+<tr>
+<td>The prior benchmark is retracted</td>
+<td><code>sed -n '7,19p' docs/BENCHMARKS.md</code></td>
+<td>CauseBench formally withdrawn, its numbers retracted, citation
+forbidden</td>
+</tr>
+<tr>
+<td>The upstream revision is pinned</td>
+<td><code>grep -n "Pinned revision" docs/BENCHMARKS.md</code></td>
+<td><code class="commit-id" title="ec51d5d36e87f7665d1337f3a88cbde95fc2a964">ec51d5d3…</code></td>
+</tr>
+<tr>
+<td><code>domains</code> is indexed but not filtered</td>
+<td><code>grep -rn "domains" --include="*.rs" crates | grep -iE "WHERE.*domains|LIKE"</code></td>
+<td>One hit, a migration comment deferring the filter to a later phase;
+no read path uses it</td>
+</tr>
+<tr>
+<td>No scope key reaches a read</td>
+<td>the <code>scoping</code> matrix row, re-checked</td>
+<td>Tags and connector cursors only</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/samvallad33/vestige/commit/548ccae20961db1a176a09242931459363ee5d83"><code class="commit-id" title="548ccae20961db1a176a09242931459363ee5d83">548ccae2…</code></a>
+— re-read, 1,135 files and 195,125 insertions past the previous pin in a
+single commit. <strong>All three marks re-verified and
+unchanged</strong>, with <code>capability_evidence</code> records added
+where the report had none. <strong>The report's stated risk is not
+merely closed — the benchmark it was about was retracted by its own
+author.</strong> The previous edition said the headline benchmark lived
+on another branch and none of its numbers were checkable. At this commit
+five harnesses sit in <code>benchmarks/</code>, and
+<code>docs/BENCHMARKS.md</code> opens by formally withdrawing CauseBench
+— <em>"Its harness no longer exists, its repro command 404'd, and its
+published numbers are retracted. CauseBench must never be cited… not
+even as 'an earlier result'"</em> — together with a separately
+invalidated LongMemEval run, and states the principle behind the
+rewrite: <em>"After a retraction, a number that cannot be reproduced by
+a stranger is worse than no number at all."</em> What replaced it is
+documented carefully: an external benchmark with a pinned upstream
+revision; a correction to the field's reading of that paper (the
+six-number list everyone quotes is Answer Accuracy, not Conflict
+Recognition Score — <em>"calling them CRS overstates the field by
+roughly a factor of two"</em>, with the best CRS at 0.2501); four
+mandatory arms including a no-memory floor and a BM25 bar, justified by
+MemDelta's finding that a single embedding-model change moved accuracy
+6.2pp at p=0.004; a structural contradiction metric that <em>"cannot be
+satisfied by the server merely emitting the word 'contradiction'"</em>;
+a nine-item limits section longer than the results, which disqualifies
+the project's own best framing — <em>"CRS-struct is not a head-to-head
+win… and must never be presented as such"</em>; and a refusal to
+estimate the two white-box metrics the public data cannot support. The
+recorded-agent package discloses that the competing arm was cut off at
+its time limit <strong>even though its final application also passes
+21/21</strong>. Section 10 is rewritten around this and five bullets
+were added to <em>Steal</em>; the <em>Avoid</em> bullet about putting a
+headline benchmark on another branch is removed as answered. Screened
+before reading: twenty-five findings; nothing was built or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/samvallad33/vestige/commit/a8b0a75661faaa396fa4519c82fcc369f0ddef8e"><code class="commit-id" title="a8b0a75661faaa396fa4519c82fcc369f0ddef8e">a8b0a756…</code></a>
 — first reading. Screened before reading: one auto-run surface
