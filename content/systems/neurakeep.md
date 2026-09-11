@@ -7,10 +7,16 @@ page_kind: system
 source_name: "dominiclachance/neurakeep"
 source_url: https://github.com/dominiclachance/neurakeep
 archive_name: "dominiclachance--neurakeep"
-revision: 1ed0d84c83cede37e81593cb6529d3ce68069c78
-revision_url: https://github.com/dominiclachance/neurakeep/commit/1ed0d84c83cede37e81593cb6529d3ce68069c78
-analyzed_at: 2026-08-12
+revision: 57f1afa22ef0f3bca363b06cfcb21285bff60129
+revision_url: https://github.com/dominiclachance/neurakeep/commit/57f1afa22ef0f3bca363b06cfcb21285bff60129
+analyzed_at: 2026-09-11
 capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  bitemporal: "the fact tier | src/memory/governor-audit.ts:51,:80 and src/mcp/http.ts:1498 | `valid_from`/`valid_until` beside `created_at`, with a supersession setting `valid_until` and `review_after` on the losing row | tests/phases3to7.test.ts"
+  scope_enforced: "section search | src/search/fts.ts:134 and :198 | `AND (? IS NULL OR sections.space = ?)` on the optional path and `WHERE space = ?` on the mandatory one | tests"
+  audit_log: "the governor audit | src/memory/governor-audit.ts | a JSONL record of every governed mutation, supporting a real undo, beside the append-only `hosted_audit_events` table | tests"
+  human_review: "the proposal queue | src/memory/proposals.ts:192 | a proposal the governor blocks raises rather than applying, and the review queue is the only path to durability | tests/milestone2.test.ts"
+  negative_eval: "the governor | src/memory/governor.ts | committed cases asserting an uncited or do-not-remember item does not reach durable memory | tests/phases3to7.test.ts"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -20,7 +26,7 @@ matrix:
   retrieval: "BM25 over an FTS5 index, re-ranked by eight named components whose breakdown is returned with every hit"
   write: "An extractor proposes; a governor blocks uncited or do-not-remember items; nothing durable is applied without review"
   update_delete: "Facts carry `supersedes_json`, `valid_from`/`valid_until` and a `review_after` date; the audit supports a real undo"
-  scoping: "A `space` column on every table, applied on the read path — mandatory for failures, optional for sections"
+  scoping: "A `space` column on every table, applied on the read path as `(? IS NULL OR space = ?)` — mandatory for failures, optional for sections — beneath a new hosted tenant layer whose isolation is a separate vault per tenant"
   integration: "An MCP server over stdio and HTTP, a CLI, and a local web review app"
   background: "A self-memory loop that files the agent's own daily notes as a proposal rather than applying them"
   trust: "Three discrete trust levels plus a poisoning scan that downgrades to `untrusted`, used as a ranking boost rather than a gate"
@@ -298,6 +304,19 @@ Do not reach for it if memory must accumulate unattended, if you need semantic r
 - Evaluation: `src/eval/harness.ts`, the `eval_cases` table.
 - Tests cited: `tests/phases3to7.test.ts`, `tests/next-phases.test.ts`.
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| An omitted space matches every space | read `src/search/fts.ts:134` | `AND (? IS NULL OR sections.space = ?)` |
+| The MCP tool passes the space as optional | `grep -n "space" src/mcp/server.ts` | `:98` — `space: optionalString(args.space) as never` |
+| The hosted audit table is append-only | `grep -rn "hosted_audit_events" --include="*.ts" src \| grep -iE "INSERT\|UPDATE\|DELETE"` | Nothing outside the schema; the table has no update or delete path in the tree |
+| Tenant isolation is a separate vault | `grep -rn "tenantIsolation" --include="*.ts" src` | Two sites, both reporting a status string in an info payload; the vault root is resolved per caller in `src/core/paths.ts:23` |
+
 ## History
+
+**2026-09-11** — [`57f1afa22ef0f3bca363b06cfcb21285bff60129`](https://github.com/dominiclachance/neurakeep/commit/57f1afa22ef0f3bca363b06cfcb21285bff60129) — re-read, 51 files and 3,646 insertions past the previous pin in a single commit. **All five marks re-verified and unchanged, and the stated risk holds verbatim**: `src/search/fts.ts:134` still reads `AND (? IS NULL OR sections.space = ?)`, and `src/mcp/server.ts:98` still passes `optionalString(args.space)`, so an omitted space matches every space. The commit's substance is a hosted multi-tenant layer — `hosted_tenants`, `hosted_spaces`, `hosted_memberships`, `hosted_subscriptions`, `hosted_organizations` and a `hosted_audit_events` table with no update or delete path in the tree. Worth being precise about what that changes for scope: the tenant boundary is a **separate vault per tenant**, reported as `dedicated_vault` or `organization_space_vault` in an info payload, which is a partition rather than a predicate. The predicate that earns `scope_enforced` is still the `space` column inside a vault, with the same optional behaviour, so the new layer sits above the gap rather than closing it. Screened before reading: five findings; nothing was installed or run.
 
 **2026-08-12** — [`1ed0d84c83cede37e81593cb6529d3ce68069c78`](https://github.com/dominiclachance/neurakeep/commit/1ed0d84c83cede37e81593cb6529d3ce68069c78) — first reading, on the `main` default branch, at the third commit of a repository whose first commit is dated 4 July 2026. Screened before reading: 1 auto-run surface (`server.json`, an MCP manifest declaring a published npm package and a stdio transport — read and judged benign), 1 build-time exec (`prepublishOnly`), 1 unpinned manifest, and both `package.json` and `package-lock.json` changed within the seven-day cooldown; nothing was installed and nothing was executed. The product has a commercial hosted tier, and the local core reviewed here makes no network call to it.
