@@ -7,10 +7,15 @@ page_kind: system
 source_name: "quixiai/hexis"
 source_url: https://github.com/quixiai/hexis
 archive_name: "quixiai--hexis"
-revision: fdf24f317ad81db7be2315c23e711a95386175c9
-revision_url: https://github.com/quixiai/hexis/commit/fdf24f317ad81db7be2315c23e711a95386175c9
-analyzed_at: 2026-08-09
-capabilities: "trust_state, human_review, audit_log"
+revision: 7423622a276382f617196b5d8925bdcd7c8311ff
+revision_url: https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff
+analyzed_at: 2026-09-11
+capabilities: "trust_state, bitemporal, human_review, audit_log"
+capability_evidence:
+  bitemporal: "the memory table and its history functions | db/migrations/0234_temporal_memory_history.sql and db/46c_functions_memory_supersessions.sql:66,:158 | `memory_epistemic_state_as_of(p_as_of)` reconstructs which memories were valid and which supersessions were in force at an instant, over `valid_from`/`valid_until` that a caller may set through `p_superseded_at` rather than the clock | tests/db/test_temporal_memory_history.py"
+  trust_state: "the memory table | db/00_tables.sql | two CHECK-constrained axes, `status` and `review_status`, filtered on the read path | tests/db/test_memory_triage.py"
+  human_review: "triage | `review_status` of pending_review, approved, rejected or superseded | a person adjudicates a proposed memory before it becomes current | tests/db/test_memory_triage.py"
+  audit_log: "supersessions | db/46c_functions_memory_supersessions.sql | an append-only supersession record carrying who, when and the reverting resolution | tests/db/test_memory_supersessions.py"
 stack_storage: "postgres"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -25,7 +30,7 @@ matrix:
   background: "A maintenance worker running subconscious observation, reconsolidation sweeps and scheduling"
   trust: "status is active, superseded or rejected; review_status is pending_review, approved, rejected or superseded"
   strengths: "A belief transformation triggers re-evaluation of what that belief had caused to be rejected"
-  risks: "The reconsolidation verdict is an LLM call batched eight memories at a time, with no committed evaluation"
+  risks: "The reconsolidation verdict is an LLM call batched eight memories at a time; the committed benchmark measures the behaviour it produces on 25 synthetic cases rather than the verdict itself"
 ---
 
 ## 1. Executive Summary
@@ -234,16 +239,42 @@ exists for claims does not cover it.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper.** `evals/retrieval/` exists with a `conftest.py`, and 252 test files
-across the tree.
+**No paper. I ran nothing.** The screen flagged build-time execution in three
+files and two dependency manifests inside the cooldown.
 
-**I ran nothing.** The screen flagged build-time execution in three files and
-two dependency manifests inside the cooldown.
+**There is a committed benchmark, and its design is the part to read.**
+`evals/memory_benchmark/` holds a public, vendor-neutral suite of 25 synthetic
+cases — five each across `provenance_accuracy`, `contradiction_detection`,
+`six_month_recall`, `cross_session_continuity` and `stale_belief_resistance` —
+with the corpus, the JSON schemas, the adapters, the scorer and a dated result
+shipped together, and the dataset pinned by `EXPECTED_DATASET_SHA256`.
 
-No committed evaluation result was found — no retrieval score, no
-reconsolidation accuracy, nothing measuring whether the sweep's verdicts are
-right. For the mechanism this report is about, that is the gap that matters:
-reconsolidation is a *correction* mechanism whose correctness is unmeasured.
+Three choices make it worth copying. **It has no judge**: scoring is exact
+answer strings and evidence event ids, so there is no model, hidden prompt or
+rubric — *"hard to inflate with a favorable evaluator"*. **It runs baselines and
+labels them honestly**: an append-only transcript and a 30-day recent window,
+each tagged `reference_baseline_not_a_product`, which is the right way to say
+"this is a floor, not a competitor". And **it states the limit that hurts**: an
+open corpus *"can of course be trained against"*, so v1 is *"a small public
+contract, not a complete measure of memory or intelligence"*.
+
+The published run (2026-08-28) is:
+
+| System | Overall | Contradiction detection | Stale-belief resistance |
+| --- | --- | --- | --- |
+| `hexis-memory-v1` | 96.33 | 85.0 | 100.0 |
+| `append-only-transcript` | 82.33 | 55.0 | 60.0 |
+| `recent-window-30d` | 32.0 | 10.0 | 30.0 |
+
+The two dimensions worth reading are the ones nearest this report's subject. A
+plain append-only transcript already scores 55 on contradiction detection and 60
+on stale-belief resistance, so those are the numbers the reconsolidation
+machinery has to beat, and the margin it wins by — 30 and 40 points — is the
+measurement the previous edition of this report said did not exist. What is still
+unmeasured is the verdict *itself*: the benchmark scores the behaviour the sweep
+produces, not whether an individual reconsolidation call was right, and
+contradiction detection at 85 on five cases has wide error bars the project does
+not paper over.
 
 The repository does carry an unusual amount of self-directed documentation —
 `MISSION.md`, `MISSION_PROGRESS.md`, `HEXIS_EXPERIENCE_BAR.md` and a file named
@@ -351,6 +382,20 @@ array), `db/06_functions_graph_helpers.sql`,
 **Its own defect list** — `why_i_suck_and_how_to_fix_it.md`,
 `MISSION_PROGRESS.md`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| An as-of query reconstructs the epistemic state | `grep -iE "p_as_of\|valid_until" db/migrations/0234_temporal_memory_history.sql` | `memory_epistemic_state_as_of(p_as_of)` filtering `valid_from`/`valid_until` and the supersession state, including supersessions later reverted |
+| Validity time is caller-supplied | read `db/46c_functions_memory_supersessions.sql:66` and `:95` | `effective_at := COALESCE(p_superseded_at, CURRENT_TIMESTAMP)`, with a guard raising when it precedes `valid_from` |
+| The benchmark has no judge | read `evals/memory_benchmark/README.md` | *"exact answer strings and evidence event IDs … no model judge, hidden prompt, or subjective rubric"* |
+| The baselines are labelled as floors | `python3 -c` over `evals/memory_benchmark/results/2026-08-28.json` | Both carry `kind: reference_baseline_not_a_product` |
+| The corpus is hash-pinned | `grep -n "EXPECTED_DATASET_SHA256" evals/memory_benchmark/model.py` | Declared and checked against `dataset_sha256()` |
+
 ## History
+
+**2026-09-11** — [`7423622a276382f617196b5d8925bdcd7c8311ff`](https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff) — re-read, 673 files and 129,866 insertions past the previous pin in a single commit. **`bitemporal` is added.** Two new migrations build it: `0213_memory_supersessions.sql` gives `memories` a `valid_from`/`valid_until` pair under a `CHECK (valid_until IS NULL OR valid_until >= valid_from)`, and `0234_temporal_memory_history.sql` adds `memory_epistemic_state_as_of(p_as_of)`, which reconstructs at an instant both which memories were valid and which supersessions were in force — including the clause for a supersession later reverted, `(s.status = 'reverted' AND s.resolved_at > p_as_of)`. The validity clock is genuinely separate from the record clock: `effective_at := COALESCE(p_superseded_at, CURRENT_TIMESTAMP)` lets a caller say when a belief *stopped being true* rather than when the row was written, and a guard raises if that instant precedes `valid_from`. The query-side `COALESCE(valid_from, created_at)` is a fallback in the read, not a collapse at the write, which is the correct shape. **The evaluation gap this report led on is largely closed.** The previous edition said *"no committed evaluation result was found … reconsolidation is a correction mechanism whose correctness is unmeasured."* `evals/memory_benchmark/` now ships 25 cases across five dimensions with no model judge, two baselines labelled `reference_baseline_not_a_product`, a hash-pinned corpus and a dated result: 96.33 overall against 82.33 for an append-only transcript and 32.0 for a 30-day window, with contradiction detection at 85 against 55 and stale-belief resistance at 100 against 60. What remains unmeasured is the individual verdict rather than the behaviour it produces, and five cases per dimension is a wide error bar the project states rather than hides. Screened before reading: nine findings; nothing was installed or run.
 
 **2026-08-09** — [`fdf24f317ad81db7be2315c23e711a95386175c9`](https://github.com/quixiai/hexis/commit/fdf24f317ad81db7be2315c23e711a95386175c9) — first reading. Screened before reading: no auto-run surface, build-time execution in two `conftest.py` files and an npm manifest, two dependency manifests inside the seven-day cooldown. The tree was read, never installed, and no test was run.
