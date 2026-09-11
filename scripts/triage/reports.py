@@ -1,16 +1,20 @@
-"""The day's two artifacts: a JSONL record and a Markdown digest.
+"""The day's two artifacts: a JSON document and a Markdown digest.
 
-`scout/YYYY-MM-DD.jsonl` is the machine-readable one, and it is shaped so the
-scout-to-triage path can be checked afterwards. Its first line is a `meta`
-record carrying the source snapshot's hash, how many repositories were newly
-imported as against how many were already in the backlog, how many were actually
-inspected, and what stopped the run. Every line after it is one selected
-candidate with the evidence that selected it. Six weeks of those files answer
-"is this working" without anyone having to reason about a database.
+`scout/YYYY-MM-DD.json` is the machine-readable one, and it is shaped so the
+scout-to-triage path can be checked afterwards. One object: the run — the source
+snapshot's hash, how many repositories were newly imported as against how many
+were already in the backlog, how many were actually inspected, what stopped the
+run, the day's capacity and disk use — and a `shortlist` array holding one
+object per selected candidate with the evidence that selected it. Six weeks of
+those files answer "is this working" without anyone having to reason about a
+database.
 
-The `kind` discriminator mirrors Scout's own record shape on purpose: the file
-is a statement about a feed that uses `kind`, and reading them side by side
-should not require two mental models.
+Not JSON Lines. A file of two lines carrying two different record shapes is a
+stream format used where there is no stream: a day's report is one document, it
+is read whole, and `json.load` should be the whole of reading it.
+
+It is pretty-printed with sorted keys so that a diff between two days shows what
+changed rather than how the serializer felt.
 
 Both files are written from the committed selection transaction with a temporary
 file and an atomic rename. If writing fails, the selection still happened and
@@ -19,16 +23,17 @@ rerunning regenerates the identical file — it does not admit anything new.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 from typing import Any
 
 from config import Config
-from util import atomic_write, directory_bytes, dumps, human_bytes, iso, utc_now
+from util import atomic_write, directory_bytes, human_bytes, iso, utc_now
 
 
 def paths(config: Config, day: str) -> tuple[Path, Path]:
-    return config.output_dir / f"{day}.jsonl", config.output_dir / f"{day}.md"
+    return config.output_dir / f"{day}.json", config.output_dir / f"{day}.md"
 
 
 def disk_usage(config: Config, connection: sqlite3.Connection) -> dict[str, Any]:
@@ -49,13 +54,11 @@ def disk_usage(config: Config, connection: sqlite3.Connection) -> dict[str, Any]
     }
 
 
-def _entry_record(day: str, entry: dict[str, Any]) -> dict[str, Any]:
+def _entry_record(entry: dict[str, Any]) -> dict[str, Any]:
     facts = entry.get("facts") or {}
     tests = facts.get("test_evidence") or {}
     inspection = facts.get("inspection") or {}
     return {
-        "kind": "selection",
-        "day": day,
         "rank": entry["rank"],
         "selection_id": entry["selection_id"],
         "repo": entry["name"],
@@ -107,9 +110,8 @@ def _entry_record(day: str, entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def build(config: Config, connection: sqlite3.Connection, shortlist, batch: dict[str, Any],
-          source: dict[str, Any]) -> list[dict[str, Any]]:
-    meta = {
-        "kind": "meta",
+          source: dict[str, Any]) -> dict[str, Any]:
+    return {
         "day": shortlist.day,
         "timezone": shortlist.tz,
         "generated_at": iso(utc_now()),
@@ -126,13 +128,13 @@ def build(config: Config, connection: sqlite3.Connection, shortlist, batch: dict
         "notes": shortlist.notes + batch.get("notes", []),
         "limitations": batch.get("limitations", []),
         "disk": disk_usage(config, connection),
+        "shortlist": [_entry_record(entry) for entry in shortlist.entries],
     }
-    return [meta] + [_entry_record(shortlist.day, entry) for entry in shortlist.entries]
 
 
-def write(config: Config, records: list[dict[str, Any]], day: str) -> tuple[Path, Path]:
-    jsonl_path, digest_path = paths(config, day)
-    usage = records[0].get("disk", {})
+def write(config: Config, report: dict[str, Any], day: str) -> tuple[Path, Path]:
+    json_path, digest_path = paths(config, day)
+    usage = report.get("disk", {})
     if usage.get("state_over_ceiling"):
         raise RuntimeError(
             f"state directory is {human_bytes(usage.get('state_bytes'))}, over the "
@@ -140,14 +142,15 @@ def write(config: Config, records: list[dict[str, Any]], day: str) -> tuple[Path
             f"export and archive state deliberately. Decisions, results and selections are "
             f"never deleted to make room."
         )
-    atomic_write(jsonl_path, "\n".join(dumps(record) for record in records) + "\n", mode=0o644)
-    atomic_write(digest_path, digest(records), mode=0o644)
-    return jsonl_path, digest_path
+    atomic_write(json_path, json.dumps(report, indent=2, sort_keys=True,
+                                       ensure_ascii=False) + "\n", mode=0o644)
+    atomic_write(digest_path, digest(report), mode=0o644)
+    return json_path, digest_path
 
 
-def digest(records: list[dict[str, Any]]) -> str:
-    meta = records[0]
-    entries = records[1:]
+def digest(report: dict[str, Any]) -> str:
+    meta = report
+    entries = report.get("shortlist") or []
     lines: list[str] = []
     add = lines.append
 

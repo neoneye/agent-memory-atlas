@@ -1,4 +1,4 @@
-"""The day's JSONL and digest: shape, honesty, and regeneration."""
+"""The day's JSON document and digest: shape, honesty, and regeneration."""
 
 from __future__ import annotations
 
@@ -61,23 +61,23 @@ class ReportTests(unittest.TestCase):
                 (int(assessment.lastrowid), candidate_id))
         self.shortlist = selection_module.finalize(self.h.connection, self.h.config)
 
-    def records(self):
-        return reports.build(self.h.connection and self.h.config, self.h.connection,
+    def report(self):
+        return reports.build(self.h.config, self.h.connection,
                              self.shortlist, {"policy_version": "2026-09-11.1"},
                              {"status": "complete", "identity": "github:Daily-Nerd/scout@main",
                               "content_hash": "f" * 64, "bytes": 211000, "transport": "contents-api"})
 
-    def test_the_first_line_is_a_meta_record(self):
-        records = self.records()
-        self.assertEqual(records[0]["kind"], "meta")
-        self.assertEqual(records[0]["selected"], 1)
-        self.assertIn("capacity", records[0])
-        self.assertIn("disk", records[0])
-        self.assertEqual(records[0]["source"]["content_hash"], "f" * 64)
+    def test_the_report_is_one_object_describing_the_run(self):
+        report = self.report()
+        self.assertIsInstance(report, dict)
+        self.assertEqual(report["selected"], 1)
+        self.assertIn("capacity", report)
+        self.assertIn("disk", report)
+        self.assertEqual(report["source"]["content_hash"], "f" * 64)
+        self.assertEqual(len(report["shortlist"]), 1)
 
     def test_each_selection_carries_its_evidence(self):
-        entry = self.records()[1]
-        self.assertEqual(entry["kind"], "selection")
+        entry = self.report()["shortlist"][0]
         self.assertEqual(entry["repo"], "good/mem")
         self.assertEqual(entry["url"], "https://github.com/good/mem")
         self.assertEqual(entry["pinned_commit"], "e" * 40)
@@ -87,52 +87,62 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(entry["test_evidence"]["files"][0]["path"], "tests/test_recall.py")
 
     def test_an_unknown_metric_is_null_not_zero(self):
-        entry = self.records()[1]
+        entry = self.report()["shortlist"][0]
         self.assertIsNone(entry["metrics"]["merged_external_pulls"])
         self.assertEqual(entry["metrics"]["stars"], 41)
 
     def test_ci_configuration_is_never_reported_as_a_run(self):
-        entry = self.records()[1]
+        report = self.report()
+        entry = report["shortlist"][0]
         self.assertTrue(entry["test_evidence"]["ci_configured"])
         self.assertFalse(entry["test_evidence"]["ci_run_observed"])
-        digest = reports.digest(self.records())
+        digest = reports.digest(report)
         self.assertIn("configures a test runner", digest)
 
+    def test_the_file_is_one_readable_json_document(self):
+        path, _ = reports.write(self.h.config, self.report(), self.shortlist.day)
+        self.assertTrue(path.name.endswith(".json"))
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(loaded["day"], self.shortlist.day)
+        self.assertEqual(loaded["shortlist"][0]["repo"], "good/mem")
+        # Pretty-printed with sorted keys, so a diff between two days is readable.
+        text = path.read_text(encoding="utf-8")
+        self.assertIn('\n  "day": ', text)
+        self.assertLess(text.index('"capacity"'), text.index('"day"'))
+
     def test_writing_is_atomic_and_regenerating_is_byte_identical(self):
-        records = self.records()
-        jsonl, digest_path = reports.write(self.h.config, records, self.shortlist.day)
-        first = jsonl.read_bytes()
+        report = self.report()
+        path, digest_path = reports.write(self.h.config, report, self.shortlist.day)
+        first = path.read_bytes()
         self.assertTrue(digest_path.exists())
-        leftovers = [p.name for p in jsonl.parent.iterdir() if p.name.startswith(".")]
+        leftovers = [p.name for p in path.parent.iterdir() if p.name.startswith(".")]
         self.assertEqual(leftovers, [])
-        again = list(records)
-        again[0] = dict(again[0], generated_at=records[0]["generated_at"])
-        reports.write(self.h.config, again, self.shortlist.day)
-        self.assertEqual(jsonl.read_bytes(), first)
+        reports.write(self.h.config, dict(report), self.shortlist.day)
+        self.assertEqual(path.read_bytes(), first)
 
     def test_the_digest_names_the_day_and_the_uncertainty(self):
-        digest = reports.digest(self.records())
+        digest = reports.digest(self.report())
         self.assertIn(f"# Candidate shortlist — {self.shortlist.day}", digest)
         self.assertIn("not a claim to have assessed every repository", digest)
         self.assertIn("structural rules", digest)
 
     def test_an_empty_day_distinguishes_its_reasons(self):
         self.shortlist.entries = []
-        records = reports.build(self.h.config, self.h.connection, self.shortlist,
-                                {"assessment": {"budget_stopped": "daily inspection budget of 100"}},
-                                {"status": "complete"})
-        digest = reports.digest(records)
+        report = reports.build(self.h.config, self.h.connection, self.shortlist,
+                               {"assessment": {"budget_stopped": "daily inspection budget of 100"}},
+                               {"status": "complete"})
+        digest = reports.digest(report)
         self.assertIn("exhausted budget, not a judgement", digest)
 
-        records = reports.build(self.h.config, self.h.connection, self.shortlist, {},
-                                {"status": "failed", "failure": "connection reset"})
-        digest = reports.digest(records)
+        report = reports.build(self.h.config, self.h.connection, self.shortlist, {},
+                               {"status": "failed", "failure": "connection reset"})
+        digest = reports.digest(report)
         self.assertIn("source failure, not a judgement", digest)
 
     def test_writing_refuses_over_the_state_ceiling(self):
         self.h.config.limits.state_bytes = 1
         with self.assertRaises(RuntimeError) as caught:
-            reports.write(self.h.config, self.records(), self.shortlist.day)
+            reports.write(self.h.config, self.report(), self.shortlist.day)
         self.assertIn("never deleted to make room", str(caught.exception))
 
 

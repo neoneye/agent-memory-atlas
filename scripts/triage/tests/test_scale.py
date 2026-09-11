@@ -121,12 +121,12 @@ class ScaleTests(unittest.TestCase):
         assess_module.run_stage_c(self.h.config, self.h.connection, self.client, self.policy,
                                   self.day, run, {})
         shortlist = selection_module.finalize(self.h.connection, self.h.config)
-        records = reports.build(self.h.config, self.h.connection, shortlist,
-                                {"policy_version": self.policy.version,
-                                 "import": {"repo_records": TOTAL, "imported_new": TOTAL},
-                                 "assessment": {"inspected": run.inspected}},
-                                {"status": "complete", "identity": "fixture"})
-        jsonl, digest = reports.write(self.h.config, records, shortlist.day)
+        report = reports.build(self.h.config, self.h.connection, shortlist,
+                               {"policy_version": self.policy.version,
+                                "import": {"repo_records": TOTAL, "imported_new": TOTAL},
+                                "assessment": {"inspected": run.inspected}},
+                               {"status": "complete", "identity": "fixture"})
+        day_file, digest = reports.write(self.h.config, report, shortlist.day)
 
         scratch = Scratch(self.h.config.scratch_root, self.h.config.state_dir,
                           max_bytes=self.h.config.limits.scratch_bytes)
@@ -140,10 +140,10 @@ class ScaleTests(unittest.TestCase):
         db_bytes = self.h.config.db_path.stat().st_size
         self.assertLess(db_bytes, 8 * 1024 * 1024)
 
-        lines = jsonl.read_text().splitlines()
-        meta = json.loads(lines[0])
-        self.assertEqual(meta["import"]["repo_records"], TOTAL)
-        self.assertLessEqual(meta["selected"], self.h.config.daily_admissions)
+        written = json.loads(day_file.read_text(encoding="utf-8"))
+        self.assertEqual(written["import"]["repo_records"], TOTAL)
+        self.assertLessEqual(written["selected"], self.h.config.daily_admissions)
+        self.assertEqual(len(written["shortlist"]), written["selected"])
         self.assertTrue(digest.read_text().startswith("# Candidate shortlist"))
 
     def test_newly_imported_is_reported_separately_from_the_backlog(self):

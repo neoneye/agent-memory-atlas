@@ -115,7 +115,7 @@ proving it.
 GITHUB_TOKEN="$(gh auth token)" python3 scripts/triage run
 ```
 
-Ingest, assess, select, write `scout/YYYY-MM-DD.jsonl` and `scout/YYYY-MM-DD.md`.
+Ingest, assess, select, write `scout/YYYY-MM-DD.json` and `scout/YYYY-MM-DD.md`.
 Bounded by a hundred inspections and three thousand API requests a day; safe to
 run twice.
 
@@ -137,12 +137,17 @@ the database commit and the file write costs nothing. Showing an older day
 
 ### The day's output
 
-`scout/YYYY-MM-DD.jsonl` is the machine-readable record, one JSON object per
-line. The first is a `meta` record — source hash, newly imported against
-backlog, what was inspected, what stopped the run, capacity, disk. Each line
-after it is one selected candidate with the evidence that selected it. The `kind`
-discriminator mirrors Scout's own record shape, so the two files read the same
-way. `scout/YYYY-MM-DD.md` is the same content as a digest to read.
+`scout/YYYY-MM-DD.json` is the machine-readable record: one object describing the
+run — source hash, newly imported against backlog, what was inspected, what
+stopped the run, capacity, disk — with a `shortlist` array holding one object per
+selected candidate and the evidence that selected it. Pretty-printed with sorted
+keys, so a diff between two days shows what changed.
+
+It is deliberately not JSON Lines. A day's report is read whole and is usually a
+handful of records; a stream format would mean two different record shapes in a
+two-line file, and `json.load` should be the whole of reading it.
+
+`scout/YYYY-MM-DD.md` is the same content as a digest to read.
 
 These files are committed to this repository on purpose: six weeks of them answer
 "is the scout-to-triage path working" without anyone having to reason about a

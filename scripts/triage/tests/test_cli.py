@@ -126,20 +126,19 @@ class CliTests(unittest.TestCase):
         payload = json.loads(out)
         files = payload["files"]
         self.assertIsNotNone(files)
-        jsonl = Path(files["jsonl"])
-        self.assertTrue(jsonl.exists())
-        self.assertTrue(jsonl.name.endswith(".jsonl"))
-        records = [json.loads(line) for line in jsonl.read_text().splitlines()]
-        self.assertEqual(records[0]["kind"], "meta")
-        self.assertEqual(records[0]["import"]["imported_new"], 1)
-        self.assertEqual(records[0]["selected"], 0)
-        before = jsonl.read_bytes()
+        day_file = Path(files["json"])
+        self.assertTrue(day_file.exists())
+        self.assertTrue(day_file.name.endswith(".json"))
+        report = json.loads(day_file.read_text(encoding="utf-8"))
+        self.assertEqual(report["import"]["imported_new"], 1)
+        self.assertEqual(report["selected"], 0)
+        self.assertEqual(report["shortlist"], [])
 
         # A rerun regenerates the identical committed list without admitting more.
         run_cli(*self.base(), "select")
-        after = json.loads(Path(files["jsonl"]).read_text().splitlines()[0])
+        after = json.loads(day_file.read_text(encoding="utf-8"))
         self.assertEqual(after["capacity"]["admitted_today"], 0)
-        self.assertEqual(after["day"], records[0]["day"])
+        self.assertEqual(after["day"], report["day"])
 
         code, out, _ = run_cli(*self.base(), "cleanup")
         self.assertEqual(code, 0)

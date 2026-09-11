@@ -306,10 +306,10 @@ def _write_day(config: Config, connection: sqlite3.Connection, shortlist,
         "failure": last["failure"] if last else None,
         "unchanged": batch.get("unchanged"),
     } if last else {"status": "never fetched"}
-    records = reports.build(config, connection, shortlist, batch, source)
+    report = reports.build(config, connection, shortlist, batch, source)
     if getattr(shortlist, "frozen", False) or shortlist.entries:
-        jsonl_path, digest_path = reports.write(config, records, shortlist.day)
-        return {"jsonl": str(jsonl_path), "digest": str(digest_path)}
+        json_path, digest_path = reports.write(config, report, shortlist.day)
+        return {"json": str(json_path), "digest": str(digest_path)}
     return None
 
 
@@ -731,7 +731,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--state-dir", help="where triage keeps its own state")
     parser.add_argument("--atlas-repo", help="the atlas checkout to read existing reports from")
-    parser.add_argument("--output-dir", help="where the daily jsonl and digest are written")
+    parser.add_argument("--output-dir", help="where the daily JSON report and digest are written")
     parser.add_argument("--source-repo", help="owner/repo holding the candidate feed")
     parser.add_argument("--source-ref", help="branch or tag of the candidate feed")
     parser.add_argument("--source-path", help="path to the candidate feed within that repository")
