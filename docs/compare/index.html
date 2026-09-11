@@ -20086,9 +20086,10 @@ when the context window crosses a fill band, a quality threshold or a
 milestone</td>
 <td>JSON and Markdown under ~/.openclaw/token-optimizer/checkpoints, one
 directory per session</td>
-<td>Keyword topic scoring of the new session's first prompt against each
-checkpoint, above a relevance threshold, highest score then newest
-wins</td>
+<td>Two paths — an automatic SessionStart pointer, and a model-invokable
+pull skill that scores the user's continuation prompt against each
+checkpoint with IDF weighting and returns one fenced block or a one-line
+no-match</td>
 <td>A policy fires on context fill at 20/35/50/65/80 percent, on quality
 dropping through 80/70/50/40, or on a milestone; no model decides</td>
 <td>None. Checkpoints accumulate and age out of consideration after a
@@ -20096,14 +20097,18 @@ maximum look-back in days</td>
 <td>The current working directory filters another project's decisions
 out of the injected hint, and same-session checkpoints are skipped twice
 over</td>
-<td>An OpenClaw plugin returning a same-turn prompt contribution at
-agent_turn_prepare, once per session</td>
+<td>An OpenClaw plugin contributing at agent_turn_prepare, a Claude Code
+plugin with SessionStart/PreCompact/Stop hooks, an OpenCode build, and a
+<code>resume-checkpoint</code> skill the model calls on demand</td>
 <td>None. Everything runs inside a hook or a turn</td>
 <td>Recovered content is fenced as data with a treat-as-context-only
-sentinel and stripped of C0 control characters before injection</td>
-<td>Injecting recovered memory as data rather than instructions, and
-disclosing that a cross-project filter removed something rather than
-silently shortening the block</td>
+sentinel, stripped of C0 controls including CR, and has forged copies of
+that sentinel bracket-swapped so a crafted checkpoint cannot close the
+fence</td>
+<td>Injecting recovered memory as data rather than instructions,
+defanging forged copies of its own fence, and disclosing that a
+cross-project filter removed something rather than silently shortening
+the block</td>
 <td>PolyForm Noncommercial; nothing is ever corrected or deleted; and
 the topic match is keyword overlap, so the wrong session's decisions are
 one vocabulary coincidence away</td>
@@ -28073,7 +28078,7 @@ were not read, and the project publishes on npm as
 <li><a
 href="https://github.com/alexgreensh/token-optimizer">alexgreensh/token-optimizer</a>
 at <a
-href="https://github.com/alexgreensh/token-optimizer/commit/8ef7257490025646114b29f0c37ebaed826524de"><code class="commit-id" title="8ef7257490025646114b29f0c37ebaed826524de">8ef72574…</code></a>
+href="https://github.com/alexgreensh/token-optimizer/commit/856244132d302182b1b40ccd80fd49e4eec67704"><code class="commit-id" title="856244132d302182b1b40ccd80fd49e4eec67704">85624413…</code></a>
 — PolyForm Noncommercial 1.0.0; the OpenClaw TypeScript half, not the
 40,314-line Python core</li>
 <li><a
