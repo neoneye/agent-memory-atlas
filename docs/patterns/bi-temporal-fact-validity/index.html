@@ -347,6 +347,23 @@ future; comparing against the query instant is the correct predicate. It
 still earns the mark, because the engine's edges carry a model-extracted
 validity that can precede their row, and the wrapper reads that axis on
 every search.</p>
+<p><a href="../../systems/utopia/">Utopia</a> is the fullest version of
+this pattern here, and its discipline is on the read side.
+<code>valid_from</code>/<code>valid_to</code> carry a precision column
+<em>per endpoint</em>, replacing a single default that made a fact with
+no date at all look measured to the day, and the end precision admits
+<code>unknown</code>, so <em>"former CEO"</em> — an ending stated
+without a date — is distinguishable from <em>still holding</em>. Every
+read predicate for both axes is assembled in two modules,
+<code>world_axis.rs</code> and <code>record_axis.rs</code>, on the
+stated argument that a defence spread across fifty read sites fails
+silently when one is missed; both take an instant, and the record axis
+is reversed for chunks, documents and entity merges as well, so a replay
+at a past date sees the graph as it stood, merges undone and deleted
+documents back. The textbook indeterminate-instant trick is explicitly
+refused: filling <code>valid_to</code> with the document's date would
+put a confident-looking timestamp in a column every reader would have to
+check the precision of first.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision
@@ -387,6 +404,20 @@ guide's example schema, written by the user's own Cypher and read by no
 engine code, and the guide's examples set it to the same
 <code>datetime()</code> as <code>valid_from</code> in the same
 committing statement.</li>
+<li><strong>Said, but not queryable.</strong> <a
+href="../../systems/utopia/">Utopia</a> carries
+<code>attested_from</code> and <code>attested_to</code>: the date of the
+<em>document</em> that attested the fact, set at insert, moved only
+earlier when the same assertion is observed again, with separate anchors
+at each end so a bare open fact closed by a later <em>"no longer
+serving"</em> takes its start from the first evidence and its end from
+the document that said so. Helm's diagnostic half-passes: a writer sets
+it independently of both other clocks, and a read path does query it —
+<code>facts_holds_from</code> reads a fact's lower bound as
+<code>COALESCE(valid_from, attested_from)</code>. But it is consumed as
+a <em>bound on the world axis</em>, never as an axis of its own: there
+is no as-said parameter anywhere. A third column doing real work, and
+still two clocks.</li>
 </ul>
 <p>The diagnostic is Helm's, applied once more: <strong>can a writer set
 the third time independently of the other two, and does any read path

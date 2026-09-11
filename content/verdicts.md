@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 425 reports.**
+**This page covers all 426 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3744,3 +3744,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 78,201 lines of Rust, 1,277 test functions plus 58 in `codewitness`, fmt, clippy `-D warnings` and `cargo test --locked` on every push, `cargo audit` weekly, and mutation testing on five modules of the smaller crate. Not one committed eval gate runs automatically, including the two that need no private data; the health suite reports a green twenty on an empty database, and the only dream integration test returns early and passes when `git` is unavailable.
 - Study when: you are building staleness detection for code-anchored memory, or you want to see a pre-registered benchmark published against its author's own flagship mechanism.
 - Do not copy when: a retracted value has to stay out of a result, a person has to be able to delete something, or more than one person shares the machine.
+
+### [`utopia`](../systems/utopia/)
+- Best idea: **gate autonomy on reversibility, not on confidence.** `execution_gate::hold` asks what an automatic merge would irreversibly emit — a contradiction the consistency check would open, derived facts that would be rewritten, an answer already handed to a user in conversation — and holds it for a person whenever any of those is non-empty, however sure the model is. Beside it, `rejected_facts`: four columns keyed on the triple rather than the row, consulted by `pending::propose` before every proposal, so rejecting a remembered fact is a durable constraint on future extraction rather than a UI event. All seven marks.
+- Biggest risk: **the nod covers one path, and it is the narrow one.** `await_nod` is true only for the per-base memory log, so bulk document ingest writes facts straight to the ledger and never consults `rejected_facts`; a triple a person rejected in the queue is re-asserted by any document that states it. The key also has no `object_value` column, so attribute corrections — a salary, a title — are never blocked at all.
+- Most reusable component: `world_axis.rs` and `record_axis.rs` — every temporal read predicate for facts, derived facts, chunks, documents, violations, conflicts and entity merges, each a one-function SQL fragment taking a bind index, so fifty read sites cannot each forget one.
+- Maturity impression: v0.1, 86,064 lines of Rust in eight crates, 33,475 of TypeScript, 49 forward-only migrations each named for the property it adds, 38 numbered decision records, 612 test functions with one `#[ignore]`. CI replays every migration twice on a fresh database and runs the whole store suite with the database required, so a missing Postgres fails the job instead of skipping it green. Every design comment is in Chinese.
+- Study when: you are building a bitemporal store and want the read side specified as carefully as the write side, or you need a worked answer to when an agent may act without asking.
+- Do not copy when: you want a drop-in memory layer for one coding agent — there is no SDK, no automatic injection, no per-agent scope, and the queue that makes the write path safe assumes a person who attends to it.

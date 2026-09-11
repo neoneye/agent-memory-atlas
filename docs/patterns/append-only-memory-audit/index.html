@@ -606,6 +606,24 @@ because a process that did not would lose them. A retention setting
 deletes old rows lazily on read; nothing rewrites one. The declared
 <code>system</code> and <code>llm-maintenance</code> actors have no
 writer, so every row says <code>user</code>.</p>
+<p><a href="../../systems/utopia/">Utopia</a> defends its ledger at
+three levels and is candid about what each buys. The application only
+inserts; two triggers raise on UPDATE, DELETE and TRUNCATE, the second
+present because a statement-level TRUNCATE does not fire row triggers;
+and the compose file can provision a restricted role with those
+privileges revoked on that one table while migrations run under the
+owner on a separate connection. The migration's own comment states the
+ceiling — a superuser can still <code>DROP TRIGGER</code>, so the
+mechanism raises tampering from <em>trivial</em> to <em>requires
+DDL</em>, and DDL lands in the database's log — and names the hash chain
+that would close the gap and does not exist at this commit.
+<code>kb_id</code> and <code>actor_id</code> deliberately carry no
+foreign key, so deleting a knowledge base does not delete the record of
+deleting it, and an actor's email is snapshotted into the row so a
+retired account does not turn its history into bare UUIDs. The unusual
+part is the consumer: an optional governance agent reads past human
+verdicts out of the ledger as <em>precedent</em> before adjudicating a
+duplicate pair and cites the events it relied on.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

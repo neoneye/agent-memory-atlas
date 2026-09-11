@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust and Postgres knowledge
+substrate that turns uploaded documents and agent-recorded sentences
+into ontology-typed entities and bitemporal facts, serves eleven read
+tools and one write tool over MCP, and routes every interactively
+remembered fact through a confirmation queue whose rejections are keyed
+on the triple so the next extraction cannot re-assert them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Utopia — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust and Postgres
+knowledge substrate that turns uploaded documents and agent-recorded
+sentences into ontology-typed entities and bitemporal facts, serves
+eleven read tools and one write tool over MCP, and routes every
+interactively remembered fact through a confirmation queue whose
+rejections are keyed on the triple so the next extraction cannot
+re-assert them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Utopia — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust and Postgres
+knowledge substrate that turns uploaded documents and agent-recorded
+sentences into ontology-typed entities and bitemporal facts, serves
+eleven read tools and one write tool over MCP, and routes every
+interactively remembered fact through a confirmation queue whose
+rejections are keyed on the triple so the next extraction cannot
+re-assert them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Utopia — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Utopia",
+      "description": "A Rust and Postgres knowledge substrate that turns uploaded documents and agent-recorded sentences into ontology-typed entities and bitemporal facts, serves eleven read tools and one write tool over MCP, and routes every interactively remembered fact through a confirmation queue whose rejections are keyed on the triple so the next extraction cannot re-assert them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A bitemporal fact ledger where a remembered
+sentence waits for a nod</p>
+          <h1>Utopia</h1>
+          <p class="document-deck">A Rust and Postgres knowledge
+substrate that turns uploaded documents and agent-recorded sentences
+into ontology-typed entities and bitemporal facts, serves eleven read
+tools and one write tool over MCP, and routes every interactively
+remembered fact through a confirmation queue whose rejections are keyed
+on the triple so the next extraction cannot re-assert them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/deeplethe/utopia">
+              <span>Source</span>
+              <strong>deeplethe/utopia</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/deeplethe/utopia/commit/cb3235665c51b8a7c2b81604b825bb946239da1d" title="cb3235665c51b8a7c2b81604b825bb946239da1d">
+              <span>Analyzed revision</span>
+              <code>cb323566…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/deeplethe--utopia" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>deeplethe--utopia</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Utopia is a knowledge substrate for agents and the people who
+supervise them: one Rust binary and one Postgres that ingest documents
+and recorded sentences, extract entities and facts against an editable
+ontology, keep every fact on two clocks, and serve the result to an
+agent over MCP. 86,064 lines of Rust across eight crates, 33,475 lines
+of TypeScript in the console, 49 forward-only migrations and 38 numbered
+decision records. Apache-2.0. Source comments and decision records are
+in Chinese; identifiers, API and UI strings are in English.</p>
+<p><strong>It clears the memory bar on a narrow, deliberate path, and
+the rest is the substrate that path writes into.</strong>
+<code>remember</code> is the one write tool exposed over MCP
+(<code>crates/utopia-server/src/api/mcp.rs:63</code>). It appends the
+sentence as a chunk on a per-base <em>Memory log</em> document
+(<code>crates/utopia-store/src/memory.rs:76</code>), a background job
+extracts triples from it, and because that document belongs to the
+implicit <code>memory</code> source, the extractor diverts every triple
+into <code>pending_facts</code> instead of the graph
+(<code>crates/utopia-server/src/extraction.rs:1027</code>). The agent is
+told, in the tool result itself, to say the sentence was recorded and
+the facts await confirmation. Eleven read tools — chunk search, entity
+facts, neighbours, timeline, paths, and a <code>changes</code> tool that
+windows the belief axis — are how it reads memory back.</p>
+<p><strong>The three mechanisms worth the read.</strong> First,
+<code>rejected_facts</code>
+(<code>migrations/0018_a_fact_awaiting_a_nod.sql:60</code>): rejecting a
+queued fact stores the <em>triple</em>, not the row, and every
+subsequent proposal looks it up first, so re-extracting the same
+sentence does not re-ask. Second, the two clocks are read as well as
+written — <code>record_axis.rs</code> and <code>world_axis.rs</code> are
+the only two places a temporal predicate is assembled, and both take an
+instant, so "who led this in March" and "what did we believe in March"
+are different queries with different answers. Third, the execution gate
+(<code>crates/utopia-store/src/execution_gate.rs:97</code>): an
+automatic merge is held for a person not when confidence is low but when
+undoing it could not recall what it had already sent outside the graph —
+a contradiction a consistency check would open, derived facts that would
+be rewritten, or an answer already given in a conversation.</p>
+<p><strong>Where it is weakest is the boundary of that narrow
+path.</strong> The nod, and therefore the rejected-triple key, applies
+only to memory documents. Bulk ingest writes facts optimistically and
+reviews afterwards, so a triple a person rejected in the queue can be
+re-asserted by any document that states it. <code>rejected_facts</code>
+has no <code>object_value</code> column, so attribute facts — a salary,
+a title — are never blocked, which the source argues for and which is
+still a hole a reader should know about. The lexical arm indexes only
+the current chunk version, so a record-time search finds the right
+things and misses the ones that have since been replaced; the module
+says so at the top. And nothing works without an OpenAI-compatible chat
+and embedding endpoint: with no model configured, retrieval degrades to
+BM25 and extraction does not run at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a <strong>fact</strong>: subject, predicate, object
+— or a literal value, since attributes are relations whose range is a
+literal and share the same table. The predicate is a
+<code>relation_type</code> from the base's ontology, and it can be null,
+which is the system saying <em>the extractor found an edge the
+vocabulary has no word for</em>; the original wording survives on the
+evidence row as <code>proposed_predicate</code> and the display falls
+back to it through a SQL function so the same fact is never named two
+different things on two pages.</p>
+<p>A fact does not carry a status column. <strong>Status is which table
+it is in</strong>, and the source argues that choice explicitly:
+fifty-odd queries select live facts by
+<code>invalidated_at IS NULL</code>, so a status column would fail in
+the direction of <em>an unconfirmed fact silently reaching the
+graph</em>, while a separate table fails in the direction of <em>the
+queue is not displayed</em>. Four tables, four epistemic positions:</p>
+<ul>
+<li><code>pending_facts</code> — recorded, shown to a person beside the
+sentence it came from, <strong>not on the graph, not in retrieval, not a
+premise for inference</strong>.</li>
+<li><code>facts</code> — asserted. Live while
+<code>invalidated_at IS NULL</code>.</li>
+<li><code>derived_facts</code> — concluded by forward chaining from
+ontology axioms. Deliberately second class: no <code>supersedes</code>,
+never permitted to close an asserted fact, invalidated rather than
+deleted when a premise disappears, and excluded from the confirm/reject
+queue because confirming a deduction is meaningless and rejecting one
+only makes it return.</li>
+<li><code>rejected_facts</code> — a refused triple, keyed on the
+triple.</li>
+</ul>
+<p>Movement between them is a person's act. <code>confirm</code> runs
+the fact down the same path an extraction would — insert, attach
+evidence pointing back at the sentence, then temporal reconciliation —
+and deletes the queue row; <code>reject</code> writes the triple key and
+deletes the queue row
+(<code>crates/utopia-store/src/pending.rs:227</code>,
+<code>:343</code>). Confidence is not touched by either, and the comment
+says why: a person's verdict is not a float, it is in the ledger.</p>
+<p>Correction is by supersession, never by overwrite. When a new fact
+arrives on a relation the ontology marks <code>functional</code> or
+<code>inverse_functional</code> and whose temporal kind is
+<code>state</code>, <code>reconcile_new_fact</code> finds the
+open-interval fact on the other side, invalidates it, and writes a
+replacement whose <code>valid_to</code> is the new fact's
+<code>valid_from</code>, linked by <code>supersedes</code>
+(<code>crates/utopia-store/src/temporal.rs:51</code>). If the timing is
+ambiguous or the new fact scores under 0.75, nothing is rewritten and a
+<code>fact_conflicts</code> row opens for a person with three named
+outcomes: close the old one, keep both, or reject the new one.</p>
+<p>Death is graded. A fact is invalidated (record axis remembers it), a
+document is deleted as an <em>event</em> that invalidates only the facts
+whose every evidence chunk is gone and records the exact list so a
+restore revives those and nothing else, and a purge is final — content
+erased, document row kept as a tombstone, facts left invalidated, the
+deletion ledger row preserved.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two write paths into one ledger — bulk extraction asserts optimistically and is reviewed afterwards, while a remembered sentence is proposed first and only a person's confirmation puts it on the graph; the rejected triple is keyed on subject, predicate and object and consulted on that second path only</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two write paths into one ledger — bulk extraction asserts optimistically and is reviewed afterwards, while a remembered sentence is proposed first and only a person&#39;s confirmation puts it on the graph; the rejected triple is keyed on subject, predicate and object and consulted on that second path only
+flowchart TD
+  M[&quot;remember over MCP or chat, one sentence&quot;] --&gt; EP[&quot;append_episode: a chunk on the per-base Memory log document&quot;]
+  EP --&gt; J[&quot;memory_ingest job: embed, index, extract&quot;]
+  D[&quot;document upload, or a scheduled source sync&quot;] --&gt; PJ[&quot;process_document then extract_document&quot;]
+  J --&gt; X[&quot;extraction: entities resolved, triples typed against the ontology&quot;]
+  PJ --&gt; X
+  X --&gt; Q{&quot;is_memory_document?&quot;}
+  Q --&gt;|&quot;no, bulk ingest&quot;| F
+  Q --&gt;|&quot;yes, interactive&quot;| P{&quot;propose: already asserted? already queued? rejected before?&quot;}
+  P --&gt;|&quot;rejected_facts hit on the triple&quot;| R[&quot;dropped, and never asked again&quot;]
+  P --&gt;|&quot;new&quot;| PF[&quot;pending_facts: off the graph, out of retrieval, not a premise&quot;]
+  PF --&gt;|&quot;a person with editor role confirms&quot;| F[&quot;facts: the append-only bitemporal ledger&quot;]
+  PF --&gt;|&quot;a person rejects&quot;| RF[&quot;rejected_facts, keyed on subject, predicate, object&quot;]
+  RF -.-&gt;|&quot;read by the next propose&quot;| P
+  F --&gt; T[&quot;temporal reconcile: a functional relation closes the old interval, or opens a conflict for a person&quot;]
+  F --&gt; RD[&quot;derived_facts: forward chaining, never closes an asserted fact&quot;]
+  F --&gt; AU[&quot;audit_events: append-only, UPDATE and DELETE refused by trigger&quot;]
+  AU -.-&gt;|&quot;read as precedent&quot;| GA[&quot;the governance agent&#39;s own decisions table&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Eight crates in one workspace. <code>utopia-core</code> holds the
+models, config and credential sealing; <code>utopia-store</code> is the
+entire SQL surface (21,795 lines) with one module per concern —
+<code>graph</code>, <code>temporal</code>, <code>resolution</code>,
+<code>reasoning</code>, <code>ontology</code>, <code>governance</code>,
+<code>pending</code>, <code>audit</code>, <code>jobs</code>;
+<code>utopia-server</code> (33,681 lines) is the axum API, the
+extraction pipeline, the chat loop and the tools;
+<code>utopia-extract</code>, <code>utopia-reason</code>,
+<code>utopia-ingest</code>, <code>utopia-search</code> and
+<code>utopia-llm</code> are the prompt builder, the rule engine, the
+parsers and RDF importer, the Tantivy wrapper and the OpenAI-compatible
+client.</p>
+<p><strong>Runtime: one process.</strong> An axum server on
+<code>:1516</code> that runs migrations at startup, serves the built SPA
+when <code>UTOPIA_WEB_DIST</code> exists, and runs the job worker as
+tokio tasks in the same process. The queue is a Postgres table consumed
+with <code>FOR UPDATE SKIP LOCKED</code>, woken by
+<code>LISTEN</code>/<code>NOTIFY</code>, with
+<code>30s * attempts²</code> backoff and a <code>Terminal</code> marker
+a handler can attach to make a failure final
+(<code>crates/utopia-store/src/jobs.rs</code>). Job kinds are registered
+in one match (<code>crates/utopia-server/src/main.rs:383</code>):
+<code>process_document</code>, <code>memory_ingest</code>,
+<code>extract_document</code>, <code>explore_mappings</code>,
+<code>materialize_inferences</code>, <code>bootstrap_ontology</code>,
+<code>embed_ontology</code>, <code>build_vector_index</code>,
+<code>govern</code>.</p>
+<p><strong>Persistence: one Postgres with pgvector, plus a data
+directory.</strong> The graph, the ontology, documents and chunks, all
+four queues, the audit ledger and the job queue are tables. Embeddings
+are <code>vector</code> columns of unfixed dimension — the dimension
+follows whichever model the workspace chose, so HNSW indexes are built
+by a background job once a dimension is first written rather than
+declared in the schema. Outside Postgres: original files under
+<code>data/files/</code> addressed by SHA-256, and the Tantivy index
+under <code>data/index/</code>.</p>
+<p><strong>Retrieval stack.</strong> Tantivy with the jieba tokenizer
+for BM25, pgvector for dense recall, reciprocal-rank fusion in
+<code>utopia-search</code>. One Tantivy index for all bases with
+<code>kb_id</code> as a filter field.</p>
+<p><strong>External dependencies.</strong> Any OpenAI-compatible chat
+and embedding endpoint, named in the README as DeepSeek, Qwen, GLM,
+Ollama or vLLM; nothing else. Optional mounted analytical databases for
+the text-to-SQL path — Postgres, MySQL and the wire-compatible engines,
+Trino, Databricks, Snowflake — which are a query surface, not a memory
+store, and are not exposed over MCP.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><code>docker compose --profile app up -d</code> brings up Postgres
+and the published image; the first account registered becomes the system
+administrator and an open base readable by everyone is created with it.
+Local development runs Postgres in Docker and the server under
+<code>cargo run</code>. There is no API key requirement to
+<em>store</em> anything — a document can be uploaded and chunked without
+a model — but nothing is extracted into the graph and nothing is
+embedded until chat and embedding endpoints are configured under
+Administration → Models, so a keyless deployment is a full-text document
+store with an empty graph. The whole thing runs air-gapped against a
+local model server.</p>
+<p>Two operational details are better than usual. Credentials — LLM
+keys, connection strings, source tokens — are sealed with AES-256-GCM
+under a key kept in the data directory and never in the database, with a
+backfill pass on every start that seals anything still plaintext
+(<code>crates/utopia-store/src/sealing.rs</code>). And the compose file
+can provision a restricted <code>utopia_app</code> role that has UPDATE,
+DELETE and TRUNCATE revoked on <code>audit_events</code> while
+migrations run under the owner on a separate connection, so an
+application-level bug or a leaked connection string cannot rewrite the
+ledger.</p>
+<p>The store is Postgres, so it is inspectable and repairable by hand.
+Migrations roll forward only — there are no down migrations — and the
+README says to pin a version and back up both the database and the data
+directory before upgrading.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture — interactive.</strong> <code>tools::remember</code>
+(<code>crates/utopia-server/src/api/tools.rs:587</code>) parses an
+optional <code>occurred_at</code> at year, month, day or RFC3339
+precision, calls <code>memory::append_episode</code>
+(<code>crates/utopia-store/src/memory.rs:76</code>) which
+finds-or-creates the base's <code>memory</code> source and its
+<code>memory-log.md</code> document and inserts one chunk with the
+timestamp inlined as the first token of the text, then enqueues
+<code>memory_ingest</code> carrying <code>proposed_by</code> and
+<code>proposed_token</code>. It returns immediately; the tool text
+instructs the model to tell the user the sentence is recorded and the
+facts await confirmation, and not to claim anything entered the
+graph.</p>
+<p><strong>Capture — bulk.</strong>
+<code>pipeline::process_document</code> parses (PDF, DOCX, PPTX, XLSX,
+XLS, ODS, CSV, TSV, Markdown, HTML, text, with legacy encodings detected
+by <code>chardetng</code>), chunks, indexes into Tantivy, embeds in
+batches of 16 with at most 4 batches in flight, and marks the document
+ready; extraction is a separate job. Scheduled sources — web pages, RSS,
+GitHub, Jira, Notion, WebDAV, S3-compatible buckets — land in the same
+pipeline.</p>
+<p><strong>Extraction and consolidation.</strong>
+<code>crates/utopia-server/src/extraction.rs</code>, 4,120 lines, is the
+single largest file. Per chunk it builds a prompt from ontology
+candidates (the full vocabulary when it fits, otherwise a per-chunk
+vector retrieval over class and relation embeddings, with ancestors
+added so a generalising base class is always present), resolves each
+mentioned entity, and writes facts. <code>await_nod</code> at
+<code>:1027</code> is the one branch that decides between the two
+destinations. Every triple the extractor drops — subject type unknown,
+attribute domain mismatch, value not matching the datatype, confidence
+too low — is recorded in <code>extraction_drops</code> with a reason
+code, a detail and an example, keyed by document so a re-extraction
+resets the counts.</p>
+<p><strong>Retrieval.</strong>
+<code>crates/utopia-server/src/retrieval.rs:25</code> runs BM25 on a
+blocking thread and the vector arm concurrently, fuses by RRF and
+re-fetches through <code>documents::chunks_by_ids</code>. Graph reads go
+through <code>graph::entity_detail</code> (<code>:1000</code>) and
+<code>graph::graph_changes</code> (<code>:1603</code>).</p>
+<p><strong>Context assembly.</strong> There is no automatic injection of
+memories into a prompt. The chat loop
+(<code>crates/utopia-server/src/api/chat.rs</code>) carries at most 20
+prior turns, exposes the tool schema, runs at most 6 tool rounds, and
+streams deltas and step frames over SSE with citation numbers stable
+within a conversation.</p>
+<p><strong>Update, delete, forget.</strong>
+<code>temporal::reconcile_new_fact</code> for supersession;
+<code>review_routes::close_fact</code>, <code>confirm_fact</code>,
+<code>reject_fact</code>, <code>resolve_conflict</code>,
+<code>revert_merge</code>, <code>manual_merge</code>,
+<code>decide_violation</code>, <code>decide_defect</code>,
+<code>decide_pending</code> for the human verdicts;
+<code>documents::delete</code> / <code>restore</code> /
+<code>purge</code> for the document lifecycle;
+<code>pending::confirm</code> / <code>reject</code> for the queue.</p>
+<p><strong>Schema.</strong> 49 migrations, each one named for the
+property it adds — <code>a_fact_awaiting_a_nod</code>,
+<code>deleting_is_an_event</code>, <code>purge_is_final</code>,
+<code>a_contradiction_points_upstream</code>,
+<code>an_unknown_date_is_not_an_open_one</code> — and each carrying a
+long comment arguing the choice, usually against the version that was
+tried first.</p>
+<p><strong>MCP.</strong>
+<code>crates/utopia-server/src/api/mcp.rs</code>, one route,
+<code>POST /api/v1/kbs/{kb_id}/mcp</code>, JSON-RPC 2.0 over Streamable
+HTTP, stateless so every call re-authenticates.</p>
+<p><strong>Tests.</strong> 612 test functions; 73 integration files
+under <code>crates/utopia-store/tests/</code> named for the property
+each one pins.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>facts</code> (<code>migrations/0003_graph.sql:219</code>) is
+the ledger: <code>subject_id</code>, a nullable
+<code>predicate_id</code>, either <code>object_id</code> or a JSONB
+<code>object_value</code>, <code>valid_from</code>/<code>valid_to</code>
+with <strong>a precision column per endpoint</strong>,
+<code>recorded_at</code>, <code>invalidated_at</code>,
+<code>confidence</code>, <code>derived_by_rule</code> and
+<code>supersedes</code>. The per-endpoint precision is a correction of a
+single <code>valid_precision NOT NULL DEFAULT 'day'</code> that made a
+fact with no date at all look measured to the day; the end precision
+additionally admits <code>unknown</code>, so <em>"former CEO of Weta
+Digital"</em> — an ending the source states without a date — is
+representable as distinct from <em>still holding</em>, and two CHECK
+constraints keep date and precision in step, one of them written to
+defeat three-valued logic's habit of passing a NULL comparison.</p>
+<p>There is a <strong>third time column</strong>, and it is worth naming
+precisely because the atlas keeps finding claimed ones that are not.
+<code>attested_from</code> and <code>attested_to</code> hold the date of
+the <em>document</em> that attested the fact — the evidence's own date,
+set from <code>doc_time</code> at insert and only ever moved earlier
+when the same assertion is observed again
+(<code>crates/utopia-store/src/graph.rs:591-596</code>). A read path
+does query it: <code>world_axis::facts_holds_from</code> reads a fact's
+lower bound as <code>COALESCE(valid_from, attested_from)</code>, so a
+fact with no stated start holds from the first evidence rather than from
+the beginning of time, and a fact that ended on an unknown date holds
+until the document that said so. But there is no <code>as_said</code>
+parameter anywhere — the third column feeds the world axis as a bound
+and is not an axis a query can travel. Two clocks, one anchor.</p>
+<p><code>fact_evidence</code> is one row per (fact, chunk) with the
+quote, the document id and version, and the model's original wording.
+Placing <code>proposed_predicate</code> on the evidence rather than the
+fact is the right call for a reason the comment states: facts
+deduplicate on (kb, subject, predicate, object), so two chunks saying
+"runs on" and "optimized for" merge into one fact, and a column on the
+fact would be first-writer-wins.</p>
+<p><code>entities</code> carries <code>canonical_name</code>, an alias
+array, a nullable <code>type_id</code> (null is <em>not yet judged</em>
+or <em>a person judged that no class fits</em> — the sentinel
+<code>concept</code> row it replaced was silently hijacked by SKOS's
+<code>skos:Concept</code> on import), a profile embedding that is the
+incremental centroid of its evidence chunks, <code>merged_into</code>,
+and a <code>type_source</code> of <code>extracted</code> /
+<code>inferred</code> / <code>human</code> whose three-way split exists
+because conflating engine and human decisions once made every
+engine-typed entity immune to re-resolution.</p>
+<p><strong>Scoping</strong> runs base → workspace → organisation.
+<code>kb_members</code> gives owner/admin/editor/viewer; a base marked
+<code>open</code> is readable by any member of its workspace, a
+<code>restricted</code> base with no membership row returns
+<code>NotFound</code> rather than <code>Forbidden</code> so its
+existence is not leaked
+(<code>crates/utopia-store/src/access.rs:12</code>). Personal tokens
+carry an optional base list and a read-or-write scope, and the MCP
+handler intersects them with the holder's role on every call.</p>
+<p>The queues are separate tables with their own state machines:
+<code>resolution_reviews</code> (<code>adjudicating</code> →
+<code>human</code>, <code>pending</code> →
+<code>merged</code>/<code>kept</code>), <code>fact_conflicts</code>
+(<code>open</code>/<code>resolved</code> with a resolution of
+<code>closed</code>/<code>kept_both</code>/<code>rejected_new</code>),
+<code>axiom_violations</code>, <code>ontology_defects</code>,
+<code>concept_mappings</code>
+(<code>proposed</code>/<code>confirmed</code>/<code>rejected</code>),
+<code>pending_facts</code>, and <code>agent_decisions</code>.</p>
+<p>Separation of kinds is by role rather than by store: everything is a
+fact on the same ledger, and the distinction between an episodic
+sentence and a semantic fact is which document the evidence points at.
+That is the design's economy and also its blunt edge — a Memory log
+grows one chunk per <code>remember</code> on a single document forever,
+and nothing prunes it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Chunks.</strong> BM25 over Tantivy with jieba, 24 candidates;
+pgvector cosine over the chunks of the base, 24 candidates; RRF fusion.
+The vector arm degrades silently to BM25-only when no embedding model is
+configured or the embedding request fails, while a failure of the vector
+<em>query</em> is a real error so that a broken database is not
+disguised as an unconfigured model. Channel order in the fusion list is
+fixed rather than arrival order, on the argument that the RRF at this
+commit ignores order and a future per-channel weighting would not.</p>
+<p><strong>Both arms take <code>as_of</code></strong> — a record-time
+instant — and the vector arm and the final fetch apply it through
+<code>record_axis::chunk_live_at</code> and
+<code>document_live_at</code>. The lexical arm cannot: Tantivy holds
+only the current version of a document's chunks, so a historical search
+returns correct hits and misses chunks that have since been replaced.
+The module head states this as a known incompleteness rather than
+leaving it to be discovered.</p>
+<p><strong>Graph.</strong> <code>entity_facts</code> takes both
+<code>at</code> (world) and <code>as_of</code> (record) and a predicate
+filter; <code>timeline</code> returns one entity's dated facts in world
+order; <code>neighbors</code> and <code>paths_between</code> walk the
+graph; <code>changes</code> windows the record axis and answers <em>what
+did we learn or revise between these dates</em>, classifying each event
+as asserted, corrected, rejected or merged with the document it came
+from. The tool descriptions in <code>chat.rs</code> go to unusual
+lengths to keep the two axes apart in the model's head, including an
+explicit instruction that <code>entity_facts(at)</code> asks what was
+true on a date while <code>changes</code> asks what we changed our mind
+about.</p>
+<p><strong>Ranking and budgeting.</strong> No reranker, no LLM judge, no
+learned ranking. RRF only, with fixed per-channel recall of 24 and a
+top-k the caller supplies. There is no token budget on retrieved
+context: the budget is the six-round tool loop and each tool's own
+limit.</p>
+<p><strong>Failure modes.</strong> Under-recall on record-time lexical
+search, as above. Over-recall is bounded by the tool loop rather than by
+scoring. The sharper risk is entity resolution: same-name entities are
+allowed to coexist by design (<em>split rather than merge</em>), so a
+query that names an entity may reach the wrong one of two — the temporal
+benchmark's own notes flag exactly this as a known noise source in its
+numbers, since the script takes the first entity matching a name.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Facts are created by extraction, by a person in the console, by the
+confirmation of a queued proposal, or by the rule engine. The extraction
+prompt lives in <code>crates/utopia-extract/src/lib.rs</code> and is
+built per chunk from the ontology candidates, the document date, the
+filename and the entities already recognised in this document — handles
+rather than repeated names, so a later bare mention resolves against a
+document-local list and an ambiguous one gets its own provisional entity
+instead of a guess.</p>
+<p><strong>Deduplication</strong> happens at three levels:
+<code>insert_fact</code> deduplicates live facts on (subject, predicate,
+object) and adds evidence to the existing row; entity resolution runs
+exact name or alias, then embedding similarity against the profile
+centroid, then a batched model verdict on the grey pairs, with anything
+still doubtful going to <code>resolution_reviews</code>; and
+<code>propose</code> refuses a proposal that is already asserted,
+already queued, or already rejected.</p>
+<p><strong>Update is never in place for a fact.</strong> Supersession
+only, as in section 2. Entities <em>are</em> mutable rows, so an
+undoable retype is recorded in <code>entity_retypes</code> with the
+previous type, and a merge is recorded in <code>entity_merges</code>
+with the facts moved and a profile snapshot so <code>revert_merge</code>
+restores exactly what it changed.</p>
+<p><strong>Malicious and noisy input.</strong> The confused-deputy
+problem is named in the source and the mitigation is structural rather
+than filtering: decision 0014 initially withheld <code>remember</code>
+from MCP because an agent reading a poisoned document could be told to
+record something and would do so with the user's full authority; 0015's
+queue is what made exposing it acceptable, because a proposal that
+nobody confirms never enters the graph. Rule-writing tools are
+deliberately read-only over MCP on the grounds that a tool call cannot
+distinguish <em>the person dictated this</em> from <em>the model
+invented it</em>. <code>query_data</code> is withheld from MCP
+entirely.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p><strong>The interactive write does not block the agent.</strong>
+<code>remember</code> inserts one chunk in a transaction and enqueues;
+the tool returns before any model call. Extraction of that sentence then
+runs in the worker: one chat completion plus, on a new base, an
+embedding call — so the lag from <em>recorded</em> to <em>queued for
+confirmation</em> is one model round trip, seconds to tens of seconds,
+and the lag from <em>recorded</em> to <em>retrievable as a fact</em> is
+unbounded, because it is however long the person takes to click confirm.
+The sentence itself becomes searchable as soon as the ingest job embeds
+and indexes it, which is the same round trip.</p>
+<p><strong>Bulk writes are heavy and the repository says so.</strong>
+One chat completion per chunk, batched embeddings 16 at a time. Loading
+a 965-class ontology embeds about 2,600 rows and takes six to eight
+minutes, which is why it is a job rather than a request.</p>
+<p><strong>A background pass rewrites derived state, not the
+store.</strong> <code>materialize_inferences</code> recomputes
+forward-chained facts per base on a schedule; it is off by default
+because a wrong axiom derives wrong facts. Type resolution and mapping
+exploration are similar: they re-read the ontology and the entity set
+rather than the whole corpus. Nothing re-reads every document on a
+schedule, so the recurring token bill scales with the day's activity,
+not with the corpus — with the honourable exception of a manual full
+re-extraction.</p>
+<p><strong>On the read path</strong>, nothing is injected per turn. The
+model spends tokens on tool calls it chooses, up to six rounds; the
+system prompt is stable across a conversation, so the prompt prefix is
+not invalidated by memory.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One MCP route per base, JSON-RPC 2.0 over Streamable HTTP, protocol
+version <code>2025-06-18</code>, <code>application/json</code> responses
+rather than SSE because the tools are request-response. Statelessness is
+the security property: every POST re-authenticates, so revoking a token
+takes effect on the next call rather than at the next handshake.</p>
+<p>Authorisation is two narrowings, and the code comments insist on the
+distinction: the token says <em>who this is and which bases this key can
+reach</em>, the membership says <em>what this person may do in this
+base</em>, and <code>can_write</code> is the conjunction — a
+write-scoped token in a viewer's hands is still read-only
+(<code>crates/utopia-server/src/api/mcp.rs:107</code>).
+<code>tools/list</code> varies with that computation, so a token that
+cannot write never sees <code>remember</code> advertised. A call to a
+tool that exists but is not exposed returns two distinguishable
+messages: <em>needs a write-scoped token held by an editor</em> versus
+<em>not exposed over MCP in this version</em>.</p>
+<p>The tool schema is generated from the same function the in-app chat
+uses, deliberately, so the MCP contract cannot drift from the executor;
+the source notes the cost, which is that <code>search_chunks</code>'s
+description still mentions citation numbers an MCP client has no way to
+render.</p>
+<p>Every MCP tool call writes an audit row naming the tool and the
+token. A proposal arriving over MCP carries <code>proposed_token</code>
+(<code>migrations/0026_an_agent_records_over_mcp.sql</code>) so the
+review card can distinguish a memory recorded by a code assistant from
+one recorded by a meeting-notes agent, the argument being that <em>which
+agent said it</em> is the only thing a person can adjudicate on.</p>
+<p>Adapting this for another agent is a matter of pointing an MCP client
+at a base URL with a personal token. There is no SDK, no framework
+plugin and no session lifecycle to manage: there are no sessions, and
+compaction boundaries are not a concept here because nothing is injected
+automatically.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is a first-class join, not a metadata
+field.</strong> Every fact has evidence rows pointing at chunks, each
+with the quote, the document and the version, and a fact whose every
+evidence chunk was superseded is counted in the <em>unconfirmed</em>
+review queue by a predicate shared between the counter and the list so
+the badge and the page cannot disagree.</p>
+<p><strong>The ledger is defended at three levels.</strong> Application
+code only inserts; two triggers refuse UPDATE, DELETE and TRUNCATE; and
+the optional restricted role has those privileges revoked, so the
+DROP-TRIGGER path requires ownership, which requires DDL, which the
+database's own log records. The comment is candid that this raises the
+bar from <em>trivial</em> to <em>requires DDL</em> rather than making
+tampering impossible, and names the hash chain as the missing piece.
+<strong>That chain does not exist at this commit</strong> —
+<code>prev_hash</code> and <code>hash_chain</code> appear nowhere in the
+tree.</p>
+<p><strong>The ledger is also an input.</strong> The governance agent
+reads past human verdicts out of <code>audit_events</code> as precedent
+before adjudicating a duplicate pair, cites the events it relied on in
+<code>agent_decisions.precedents</code>, and a fresh human verdict on a
+related pair marks its outstanding proposal <code>superseded</code> and
+returns that pair to the queue. The ledger is therefore load-bearing
+twice over: forensic for a person, and an input to the next automatic
+decision.</p>
+<p><strong>Withheld marks, and why — none.</strong> All seven are
+awarded, so the discipline moves to naming the limit of each rather than
+the absence:</p>
+<ul>
+<li><strong><code>tombstone</code> covers one path.</strong> The triple
+key is consulted by <code>pending::propose</code> and nowhere else, and
+only memory documents reach <code>propose</code>. A rejected triple
+restated by an uploaded PDF is asserted. The table has no
+<code>object_value</code> column so attribute facts are never keyed —
+the comment argues this, correctly, on the grounds that keying on
+(subject, predicate) would turn <em>this salary is wrong</em> into
+<em>never mention salary again</em>, but the consequence is that the
+only corrections the key protects are entity-to-entity ones.</li>
+<li><strong><code>trust_state</code> is a table, not a column.</strong>
+If a reader's definition requires a field, this is a near miss; what it
+is not is a confidence score doing double duty, and the separation is
+enforced in the direction that fails safe.</li>
+<li><strong><code>bitemporal</code>, with one arm missing.</strong> The
+record axis is complete on the vector arm, the chunk fetch, the graph
+and the entity-merge view; it is incomplete on the lexical arm, which
+has no historical index.</li>
+<li><strong><code>scope_enforced</code> is base-level, not
+agent-level.</strong> The predicate is <code>kb_id</code>. Two agents
+sharing one base share one memory; the only per-agent record is
+<code>proposed_token</code> on a queued proposal, which nothing filters
+on.</li>
+<li><strong><code>audit_log</code> records mutations, not
+reads,</strong> apart from <code>mcp.tool_called</code>, and
+<code>record</code> is called as <code>let _ =</code> at every site, so
+a ledger write failing never fails the operation it was recording.</li>
+<li><strong><code>human_review</code> is a surface, and this one has a
+lot of queues</strong> — pending facts, duplicates, conflicts,
+unconfirmed, low confidence, mappings, violations, defects, merges,
+agent decisions. Whether anyone drains ten queues is not something code
+can establish.</li>
+<li><strong><code>negative_eval</code>'s unit-level case is about
+chunks, not facts.</strong> The fact-level negative assertions live in
+the benchmark question set, which needs a running server and a
+model.</li>
+</ul>
+<p><strong>Uncertainty is representable and the schema fights for
+it.</strong> Three distinguishable end states (<em>continuing</em>,
+<em>ended on an unknown date</em>, <em>ended then</em>); a null
+predicate meaning <em>no word for this edge</em>; a null entity type
+meaning <em>not judged</em> or <em>judged to have no class</em>;
+<code>unknown</code> verdicts in entity resolution; <code>unsure</code>
+rows in agent decisions, kept so a person can see the agent looked and
+could not tell. The textbook indeterminate-instant trick — filling
+<code>valid_to</code> with the document's date as an upper bound — is
+explicitly rejected, on the grounds that it puts a confident-looking
+timestamp in a column every reader would have to check the precision of
+first.</p>
+<p><strong>Data loss and recovery.</strong> Deleting a document is
+revertible from a recorded list; merges revert from a snapshot; type
+changes revert from the previous type; adoption batches revert. Purge is
+the one irreversible operation and is only reachable on an
+already-deleted document. There is no backup or restore command — the
+README's answer is to back up Postgres and the data directory, and the
+roadmap lists backup and restore as unbuilt.</p>
+<p><strong>Concurrency.</strong> The queue's <code>SKIP LOCKED</code>
+consumption is standard. Extraction guards against a superseding run
+with an epoch check before each chunk's model call, so a re-triggered
+extraction takes over rather than racing. <code>pending::confirm</code>
+deliberately runs without a transaction and argues idempotence instead:
+<code>insert_fact</code> deduplicates and the queue row is deleted last,
+so a crash mid-confirm leaves a confirmable row.</p>
+<p><strong>What is not defended.</strong> Nothing constrains what an
+agent may record — <code>remember</code> accepts any sentence from any
+writer with the scope, and the queue is the entire defence. A person
+clicking through the queue without reading is the failure mode the
+design cannot see.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>612 test functions, one <code>#[ignore]</code>.</strong> The
+integration suite is 72 files under
+<code>crates/utopia-store/tests/</code>, each named for the property it
+pins, each building its own organisation and tearing it down, each
+hitting real Postgres.</p>
+<p><strong>The skip-is-not-a-pass problem is solved here, and that is
+worth reading.</strong> <code>crates/utopia-store/src/test_db.rs</code>
+returns <code>None</code> when <code>UTOPIA_DATABASE_URL</code> is unset
+so a local <code>cargo test</code> does not need a database — the exact
+shape that makes a CI run green having asserted nothing. The module head
+says so, and the fix is <code>UTOPIA_TEST_REQUIRE_DB</code>: set it, and
+a missing database panics. CI sets it on the job that has Postgres
+(<code>.github/workflows/ci.yml</code>), runs the whole
+<code>utopia-store</code> suite there rather than the one test that used
+to run, pipes the output under <code>set -o pipefail</code>, and writes
+the passed/failed counts into the job summary with the sentence <em>a
+missing database fails this job instead of skipping</em>. The migrations
+job additionally runs every migration twice on a fresh database and
+fails on duplicate version numbers, because two pull requests each
+adding <code>0025</code> merge cleanly and then will not boot.</p>
+<p><strong>The bitemporal question set is the substantive eval and it is
+committed.</strong> <code>scripts/bench/temporal/</code> holds a corpus
+and 37 questions over a fictional company, loaded in three waves so that
+record-time questions refer to instants the system actually passed
+through — <em>"what the product really walked: a real ingest, a real
+extraction, a real deletion, not a scene produced by UPDATE"</em>. Each
+question names an axis (<code>world</code> with <code>at</code>, or
+<code>record</code> with <code>as_of</code>), an expected value or
+<code>null</code>, and a <code>not</code> list; scoring requires the
+expectation present and every <code>not</code> value absent
+(<code>scripts/bench/temporal.mjs:317-318</code>). Scenarios include a
+three-way handover, a salary correction, a hire attested by a later
+document, a document deletion, a human edit to a fact's start date, and
+a human merge of two spellings — each asked on both axes. Two questions
+are flagged <code>known_gap</code> and excluded from the headline, with
+the reasoning that a main score permanently carrying a known defect
+stops being looked at.</p>
+<p>The numbers reported in <code>scripts/bench/README.md</code> for a
+2026-09-05 run are 35/35 with uniqueness axioms declared, 28/35 when the
+ontology grows on its own, and 34/35 when axioms are declared afterwards
+and reconciled — the gap falling precisely on the questions needing
+automatic closure, because <code>functional</code> and
+<code>inverse_functional</code> are never inferred. <strong>These are
+the project's own reported runs; no result file is committed and the
+harness needs a running server and a model, so nothing here was
+re-run.</strong></p>
+<p><strong>They found and documented their own vacuous test.</strong>
+The chat-path scorer originally parsed only <code>data:</code> lines and
+got an empty string for every answer; an empty string contains none of
+the <code>not</code> names, so all eight <code>expect: null</code>
+questions were recorded as passing. The comment at
+<code>scripts/bench/temporal.mjs:498-501</code> records it. A residual
+weakness remains on the ledger path: an <code>expect: null</code>
+question passes whenever the subject's fact list comes back empty for
+any reason, and only a <em>missing subject</em> is separated out as
+<code>absent</code>.</p>
+<p><strong>Three more measurement stands, all with committed ground
+truth.</strong> A recall stand (<code>recall.mjs</code>) against four
+real SEC filings, scored against 52 items a person read out of the
+documents by hand — deliberately not against the system's own drop
+signals, because those see <em>extracted then blocked</em> and not
+<em>never extracted</em>, and the latter is the larger share; the README
+reports a run improving from 33/52 to 49/52 across six changes,
+including one change that regressed to 29/52 and exposed a separate bug.
+A governance stand (<code>govern.mjs</code>) against 411 hand-labelled
+name pairs. A mapping and question-answering stand for the text-to-SQL
+path, whose ground truth is a business definition plus a gold SQL,
+scored by running the proposal and comparing numbers rather than
+comparing names.</p>
+<p><strong>The methodology notes are better than the numbers.</strong>
+The directory's first rule — <em>a new base for every run</em> — exists
+because three consecutive tuning rounds shared a base that carried the
+previous rounds' retypes, and two code changes were made on incomparable
+figures. The answer keys are versioned with a rule that a wrong key is
+fixed only after the results are in and with a written reason,
+<em>otherwise this key becomes a record of what the system answered that
+time and measures nothing</em>. One answer key is generated from
+Wikidata P31 through a committed mapping table so that human judgement
+enters at exactly one place.</p>
+<p><strong>No paper.</strong> No <code>CITATION.cff</code>, no arXiv or
+DOI reference anywhere in the tree. The one external result the README
+cites belongs to a <strong>different repository</strong>: Ontology2SQL
+on the BIRD Mini-Dev leaderboard, at 70.20% exact match on SQLite and
+65.80% on PostgreSQL, added by a DeepLethe-affiliated submission merged
+into the leaderboard site on 1 September 2026. The PR is a listing
+rather than a verified re-run — nothing in it documents a checking step
+— and no BIRD harness, dataset or result is committed to this tree.</p>
+<p><strong>What is missing before trusting it.</strong> No test asserts
+that a rejected triple stays out when the same claim arrives through a
+<em>document</em>, which is the boundary most likely to surprise an
+adopter. Nothing measures the lexical arm's record-time under-recall,
+which is acknowledged in prose and unquantified. And the temporal
+benchmark's own note that it takes the first entity matching a name
+means its figures carry an unmeasured entity-resolution term.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Key the refusal on the value, and consult it on the write
+path.</strong> <code>rejected_facts</code> is four columns and one
+lookup, and it converts <em>the user said no</em> from a UI event into a
+durable constraint on future extraction. The generalisable form:
+whatever your extractor produces, hash or key its identity independently
+of the row it produced, and check that key before proposing.</p>
+<p><strong>Gate autonomy on reversibility, not on confidence.</strong>
+The execution gate asks what a merge would <em>irreversibly emit</em> —
+a contradiction a checker will raise, derived facts that get rewritten,
+an answer already handed to a user — and holds for a person when any of
+those is non-empty, however sure the model is. This is the sharpest idea
+in the repository and it transfers to any agent that takes consequential
+automatic actions.</p>
+<p><strong>Assemble temporal predicates in exactly one module per
+axis.</strong> Fifty read sites hand-writing
+<code>invalidated_at IS NULL</code> is fifty chances to forget one, and
+forgetting one is silent — no SQL error, no compiler complaint. Two
+files, one function per table, every read path calling in.</p>
+<p><strong>Choose the failure direction, then pick the schema.</strong>
+The recurring argument for a separate table over a status column is that
+a missed <code>UNION</code> means <em>the queue is invisible</em> while
+a missed <code>WHERE</code> means <em>an unconfirmed fact is on the
+graph</em>, and only one of those is discovered by looking. Decide which
+mistake you can afford before deciding where the field goes.</p>
+<p><strong>Store what was embedded, not when.</strong> Class rows keep
+<code>embedded_text</code> and <code>embedded_model</code> beside the
+vector, so the backfill job can tell a stale embedding from a current
+one by comparing, rather than requiring every writer that edits a
+description to remember to invalidate.</p>
+<p><strong>Make a skipped test fail where it matters.</strong> A
+<code>let Some(url) = ... else { return }</code> guard is right locally
+and catastrophic in CI. One environment variable turns the skip into a
+panic on the job that has the database.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let a default value invent precision.</strong> A
+<code>NOT NULL DEFAULT 'day'</code> on a precision column makes
+<em>never measured</em> and <em>measured to the day</em>
+indistinguishable, and every renderer downstream will state the false
+one confidently. The same trap catches a CHECK constraint written
+without an <code>IS NOT NULL</code> guard, where three-valued logic
+passes the row you meant to reject.</p>
+<p><strong>Do not encode "no value" as a named sentinel row.</strong> A
+placeholder class called <code>concept</code> was quietly taken over by
+an imported <code>skos:Concept</code> whose derived key collided,
+silently reclassifying every unclassified entity. A NULL has no name to
+collide with, and forgetting to handle it raises rather than passes.</p>
+<p><strong>Do not let a mechanism's guard live on one write
+path.</strong> A direction check applied at extraction and not at
+adoption or merge took the violation rate from zero to 12.3%; the fix
+was one shared judgement function plus a ledger-level backstop that
+finds violations whichever path produced them.</p>
+<p><strong>Do not conflate who triggered an action with whose judgement
+it was.</strong> Passing the operator's user id down into an
+engine-decided retype marked every engine decision as human and
+permanently exempted those rows from re-resolution.</p>
+<h3 id="fit">Fit</h3>
+<p>This is a product, not a library, and adopting it means adopting an
+ontology practice. The design's whole leverage comes from relations
+declaring <code>functional</code>, <code>inverse_functional</code>,
+<code>temporal</code> kind, domain and range — and the temporal
+benchmark measures exactly what happens when they are not declared: the
+automatic closure that makes <em>Mira handed over to Devin</em> work
+stops firing, and the score drops 7 points out of 35. A team that will
+not curate a vocabulary gets a document store with a graph-shaped
+index.</p>
+<p>The operational floor is one Postgres, one binary and a model
+endpoint, which is genuinely low for what is on offer, and it runs
+air-gapped. The ceiling is unproven: v0.1, no rollback in migrations, no
+backup command, and the roadmap's own "benchmarks at 100k documents"
+says the scale question is open.</p>
+<p><strong>Who should walk away.</strong> Anyone wanting a drop-in
+memory layer for a single coding agent: there is no SDK, no automatic
+injection, no per-agent scope, and the confirmation queue that makes the
+write path safe assumes a person who will attend to it. Anyone who needs
+the correction guarantee to hold across bulk ingest, since the triple
+key does not reach that path. And anyone who will not be reading
+Chinese, because every design argument in this repository — which is
+where its value density actually sits — is in the comments and the
+decision records, and both are Chinese only.</p>
+<p><strong>Who should read it anyway.</strong> Anyone building a
+bitemporal store. The read-side predicates, the per-endpoint precision,
+the three end states and the refusal to fabricate an upper bound are a
+better specification of the problem than most published treatments, and
+they are 950 lines of <code>temporal.rs</code> plus two small axis
+modules rather than a framework.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>How often is the queue actually drained?</strong> The whole
+safety argument for exposing <code>remember</code> over MCP rests on a
+person confirming, and nothing in the tree bounds how long a proposal
+waits or what happens when the queue reaches thousands. Running the
+product would answer it; code cannot.</li>
+<li><strong>Does the rejected-triple key survive entity
+resolution?</strong> The key is on entity ids. If a rejected triple's
+subject is later merged into another entity, the key still names the
+merged-away id, and <code>propose</code> looks up the resolved id.
+Whether the key follows a merge is not tested and was not established by
+reading.</li>
+<li><strong>What is the Memory log's growth behaviour?</strong> One
+chunk per <code>remember</code> on a single per-base document, with no
+pruning path and a <code>chunk_count</code> that only increments. At
+what volume does the document panel, the re-extraction path or the seq
+subquery become a problem?</li>
+<li><strong>Do the reported benchmark figures reproduce?</strong> They
+need a server, a database and a model endpoint. The harness and the
+ground truth are committed, which is most of what reproducibility
+requires, but no run output is.</li>
+<li><strong>Is <code>governance</code> ever turned on in
+practice?</strong> It defaults off with the stated reason that the
+agent's hit rate has not been measured on any real base, and the one
+comparison in the README is on a synthetic corpus.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>migrations/0001_core.sql</code> …
+<code>0049_a_relation_declares_its_qualifiers.sql</code>; the
+memory-relevant ones are <code>0003_graph.sql</code> (facts, evidence,
+conflicts), <code>0005_resolution.sql</code> (entity resolution and
+merges), <code>0007_audit.sql</code> (ledger and immutability triggers),
+<code>0010_least_privilege_role.sql</code>,
+<code>0013_reasoning.sql</code> (rules and derived facts),
+<code>0018_a_fact_awaiting_a_nod.sql</code> (pending and rejected
+facts), <code>0019_a_signature_holds_on_every_path.sql</code>,
+<code>0022_deleting_is_an_event.sql</code>,
+<code>0023_purge_is_final.sql</code>,
+<code>0026_an_agent_records_over_mcp.sql</code>,
+<code>0035_governance_reads_the_ledger.sql</code>.</li>
+<li>Store: <code>crates/utopia-store/src/graph.rs</code>,
+<code>temporal.rs</code>, <code>world_axis.rs</code>,
+<code>record_axis.rs</code>, <code>pending.rs</code>,
+<code>memory.rs</code>, <code>resolution.rs</code>,
+<code>reasoning.rs</code>, <code>audit.rs</code>,
+<code>access.rs</code>, <code>review.rs</code>,
+<code>review_summary.rs</code>, <code>execution_gate.rs</code>,
+<code>jobs.rs</code>, <code>documents.rs</code>,
+<code>sealing.rs</code>, <code>test_db.rs</code>.</li>
+<li>Server: <code>crates/utopia-server/src/extraction.rs</code>,
+<code>pipeline.rs</code>, <code>retrieval.rs</code>,
+<code>governance.rs</code>, <code>adjudication.rs</code>,
+<code>type_resolution.rs</code>, <code>main.rs</code>.</li>
+<li>Agent surface: <code>crates/utopia-server/src/api/mcp.rs</code>,
+<code>tools.rs</code>, <code>tools_graph.rs</code>,
+<code>chat.rs</code>, <code>review_routes.rs</code>,
+<code>mod.rs</code>.</li>
+<li>Search and extraction: <code>crates/utopia-search/src/lib.rs</code>,
+<code>crates/utopia-extract/src/lib.rs</code>,
+<code>crates/utopia-reason/src/derive.rs</code>,
+<code>rules.rs</code>.</li>
+<li>Console: <code>web/src/pages/Review.tsx</code>.</li>
+<li>Tests:
+<code>crates/utopia-store/tests/a_fact_awaits_a_nod.rs</code>,
+<code>a_search_reads_the_base_as_it_was.rs</code>,
+<code>derived_facts_are_second_class.rs</code>,
+<code>the_second_clock_can_be_rewound.rs</code>,
+<code>a_merge_rewinds_with_the_second_clock.rs</code>,
+<code>a_deletion_is_an_event.rs</code>,
+<code>a_purge_is_final.rs</code>,
+<code>an_automatic_merge_is_gated_by_what_it_can_undo.rs</code>,
+<code>a_relation_points_only_inside_its_own_kb.rs</code>,
+<code>an_agent_can_record.rs</code>;
+<code>crates/utopia-server/src/api/mcp_tests.rs</code>.</li>
+<li>Benchmarks: <code>scripts/bench/README.md</code>,
+<code>scripts/bench/temporal.mjs</code>,
+<code>scripts/bench/temporal/{corpus,questions}.json</code>,
+<code>recall.mjs</code>, <code>govern.mjs</code>,
+<code>mappings.mjs</code>, <code>ask.mjs</code>,
+<code>truth/</code>.</li>
+<li>Decisions:
+<code>docs/decisions/0014-identity-from-the-person-scope-from-the-token.md</code>,
+<code>0015-recording-a-sentence-is-not-asserting-a-fact.md</code>,
+<code>0019-the-second-clock-can-be-rewound.md</code>,
+<code>0020-an-auditor-reads-it-without-us.md</code>,
+<code>0022-an-unknown-date-is-not-an-open-one.md</code>,
+<code>0025-governance-reads-the-ledger-before-it-decides.md</code>,
+<code>0027-an-automatic-merge-is-gated-by-what-it-can-undo.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &#39;rejected_facts&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .   # writer pending.rs:351, sole reader pending.rs:95, no other consumer
+grep -n &#39;pending::propose&#39; crates/utopia-server/src/extraction.rs                                   # four sites, all behind await_nod at :1027
+grep -rni &#39;prev_hash\|hash_chain&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; --include=&#39;*.md&#39; .             # 2 hits, both prose in migrations/0007_audit.sql: no chain exists
+grep -rn &#39;DELETE FROM audit_events\|UPDATE audit_events&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; .       # 0
+grep -rn &#39;CREATE POLICY\|ROW LEVEL SECURITY&#39; migrations/ crates/                                    # 0: the boundary is a kb_id predicate, not RLS
+grep -rniE &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; --include=&#39;*.toml&#39; .  # one hit, the README&#39;s &quot;inline citations&quot; UI copy
+find . -iname &#39;CITATION*&#39; -not -path &#39;./.git/*&#39;                                                     # 0
+find . \( -iname &#39;CLAUDE.md&#39; -o -iname &#39;AGENTS.md&#39; -o -iname &#39;.cursorrules&#39; \) -not -path &#39;./.git/*&#39; # 0: no agent-directed instruction file
+grep -rn &#39;BIRD&#39; --include=&#39;*.rs&#39; --include=&#39;*.mjs&#39; --include=&#39;*.sql&#39; --include=&#39;*.ts&#39; .             # 1 comment in temporal.mjs; no harness, dataset or result committed
+find . -path ./.git -prune -o -iname &#39;*bird*&#39; -print -o -iname &#39;*mini*dev*&#39; -print                  # 0
+grep -rn &#39;confidence &lt;\|confidence &gt;\|MIN_CONFIDENCE&#39; --include=&#39;*.rs&#39; crates                       # auto-close gate and review queues only; no retrieval filter
+grep -rn &#39;attested_from\|attested_to&#39; --include=&#39;*.rs&#39; crates                                       # written in graph.rs, read only by world_axis as a bound: no as-said query parameter
+grep -rn &#39;#\[ignore&#39; --include=&#39;*.rs&#39; crates | wc -l                                                # 1
+ls migrations/ | grep -c down                                                                       # 0: forward-only migrations</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/deeplethe/utopia/commit/cb3235665c51b8a7c2b81604b825bb946239da1d"><code class="commit-id" title="cb3235665c51b8a7c2b81604b825bb946239da1d">cb323566…</code></a>
+— first reading. Screened before reading with
+<code>scripts/screen_repo.py</code>: no auto-running configuration and
+no build-time execution surface (no <code>build.rs</code>, no
+devcontainer, no <code>.envrc</code>, and a <code>.gitattributes</code>
+carrying only line-ending and binary rules, no <code>filter=</code>);
+twelve manifests read as inside the seven-day cooldown because a depth-1
+clone dates every file to the pinned commit; one unpinned surface,
+<code>web/package.json</code> with 26 floating ranges, made reproducible
+by <code>web/pnpm-lock.yaml</code> beside it; no <code>CLAUDE.md</code>,
+<code>AGENTS.md</code> or <code>.cursorrules</code>. Nothing was
+installed, built or run — no <code>cargo</code>, no <code>pnpm</code>,
+no database. Every figure here comes from reading the tree; the
+benchmark numbers are the project's own reported runs, attributed as
+such, and the linked BIRD Mini-Dev submission was opened and read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

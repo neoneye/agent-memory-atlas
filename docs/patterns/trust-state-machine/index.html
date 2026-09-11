@@ -540,6 +540,24 @@ asks first — who may set the state. The promote that moves a row from
 <code>candidate</code> to <code>promoted</code> is in the model's
 default tool profile, so the state withholds a memory until the agent
 decides to release it.</p>
+<p><a href="../../systems/utopia/">Utopia</a> is the version of this
+pattern where the states are tables rather than an enum column, and the
+reasoning is worth reading before choosing either. A claim sits in
+<code>pending_facts</code>, <code>facts</code>,
+<code>derived_facts</code> or <code>rejected_facts</code>; confirm and
+reject move it. The source rejects the status-column version explicitly:
+roughly fifty queries select live facts by
+<code>invalidated_at IS NULL</code>, so a forgotten predicate would put
+an unconfirmed fact on the graph, while a forgotten <code>UNION</code>
+only makes the queue invisible — <em>"failing in the direction where the
+mistake is visible"</em>. The same judgement was made once before for
+derived facts, after a first attempt with a flag on <code>facts</code>
+let the low-confidence review queue offer deductions for confirmation
+and let the temporal engine close a human assertion with a machine
+conclusion. Beside the states sits a <code>confidence</code> float that
+gates automatic interval closing and fills the low-confidence queue and
+filters no retrieval result at all — with a comment saying a person's
+verdict is not expressed as a number, it goes in the ledger.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Prove candidates cannot enter verified-only context.</li>

@@ -205,6 +205,8 @@ comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
 [Janus-Graph](../../systems/janus-graph/) is Graphiti seen from a caller, and both of its temporal defects live in the wrapper rather than the engine. It dates every episode by the sweep that processed it — the worker's `reference_time` falls back to now because it reads a `created_at` the queue's claim never sets — so relative dates in a delayed or dead-letter-replayed episode resolve against the wrong day, and no caller can supply the time. And its recall filter is `invalid_at IS NULL`, which keeps closed facts out but also hides a fact whose extracted end date lies in the future; comparing against the query instant is the correct predicate. It still earns the mark, because the engine's edges carry a model-extracted validity that can precede their row, and the wrapper reads that axis on every search.
 
+[Utopia](../../systems/utopia/) is the fullest version of this pattern here, and its discipline is on the read side. `valid_from`/`valid_to` carry a precision column *per endpoint*, replacing a single default that made a fact with no date at all look measured to the day, and the end precision admits `unknown`, so *"former CEO"* — an ending stated without a date — is distinguishable from *still holding*. Every read predicate for both axes is assembled in two modules, `world_axis.rs` and `record_axis.rs`, on the stated argument that a defence spread across fifty read sites fails silently when one is missed; both take an instant, and the record axis is reversed for chunks, documents and entity merges as well, so a replay at a past date sees the graph as it stood, merges undone and deleted documents back. The textbook indeterminate-instant trick is explicitly refused: filling `valid_to` with the document's date would put a confident-looking timestamp in a column every reader would have to check the precision of first.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal
@@ -234,6 +236,17 @@ thing to settle when a system claims one:
   third is an `asserted_at` property in a user guide's example schema, written by
   the user's own Cypher and read by no engine code, and the guide's examples set
   it to the same `datetime()` as `valid_from` in the same committing statement.
+- **Said, but not queryable.** [Utopia](../../systems/utopia/) carries
+  `attested_from` and `attested_to`: the date of the *document* that attested the
+  fact, set at insert, moved only earlier when the same assertion is observed
+  again, with separate anchors at each end so a bare open fact closed by a later
+  *"no longer serving"* takes its start from the first evidence and its end from
+  the document that said so. Helm's diagnostic half-passes: a writer sets it
+  independently of both other clocks, and a read path does query it —
+  `facts_holds_from` reads a fact's lower bound as `COALESCE(valid_from,
+  attested_from)`. But it is consumed as a *bound on the world axis*, never as an
+  axis of its own: there is no as-said parameter anywhere. A third column doing
+  real work, and still two clocks.
 
 The diagnostic is Helm's, applied once more: **can a writer set the third time
 independently of the other two, and does any read path query it?** A third clock

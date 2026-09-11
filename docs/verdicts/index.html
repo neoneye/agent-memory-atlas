@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 425 reports.</strong></p>
+<p><strong>This page covers all 426 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15137,6 +15137,46 @@ its author's own flagship mechanism.</li>
 <li>Do not copy when: a retracted value has to stay out of a result, a
 person has to be able to delete something, or more than one person
 shares the machine.</li>
+</ul>
+<h3 id="utopia"><a
+href="../systems/utopia/"><code>utopia</code></a></h3>
+<ul>
+<li>Best idea: <strong>gate autonomy on reversibility, not on
+confidence.</strong> <code>execution_gate::hold</code> asks what an
+automatic merge would irreversibly emit — a contradiction the
+consistency check would open, derived facts that would be rewritten, an
+answer already handed to a user in conversation — and holds it for a
+person whenever any of those is non-empty, however sure the model is.
+Beside it, <code>rejected_facts</code>: four columns keyed on the triple
+rather than the row, consulted by <code>pending::propose</code> before
+every proposal, so rejecting a remembered fact is a durable constraint
+on future extraction rather than a UI event. All seven marks.</li>
+<li>Biggest risk: <strong>the nod covers one path, and it is the narrow
+one.</strong> <code>await_nod</code> is true only for the per-base
+memory log, so bulk document ingest writes facts straight to the ledger
+and never consults <code>rejected_facts</code>; a triple a person
+rejected in the queue is re-asserted by any document that states it. The
+key also has no <code>object_value</code> column, so attribute
+corrections — a salary, a title — are never blocked at all.</li>
+<li>Most reusable component: <code>world_axis.rs</code> and
+<code>record_axis.rs</code> — every temporal read predicate for facts,
+derived facts, chunks, documents, violations, conflicts and entity
+merges, each a one-function SQL fragment taking a bind index, so fifty
+read sites cannot each forget one.</li>
+<li>Maturity impression: v0.1, 86,064 lines of Rust in eight crates,
+33,475 of TypeScript, 49 forward-only migrations each named for the
+property it adds, 38 numbered decision records, 612 test functions with
+one <code>#[ignore]</code>. CI replays every migration twice on a fresh
+database and runs the whole store suite with the database required, so a
+missing Postgres fails the job instead of skipping it green. Every
+design comment is in Chinese.</li>
+<li>Study when: you are building a bitemporal store and want the read
+side specified as carefully as the write side, or you need a worked
+answer to when an agent may act without asking.</li>
+<li>Do not copy when: you want a drop-in memory layer for one coding
+agent — there is no SDK, no automatic injection, no per-agent scope, and
+the queue that makes the write path safe assumes a person who attends to
+it.</li>
 </ul>
         </article>
       </div>
