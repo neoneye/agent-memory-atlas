@@ -111,14 +111,14 @@ each dated fact has its own delete control.</p>
               <strong>juggler-ai/juggler</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa" title="bf81e61087a6e6af24e5ffd225d66c74135a4faa">
+            <a class="meta-pill revision-pill" href="https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df" title="1e570ec310cf38f02b943dcf1e6865ef9c0aa6df">
               <span>Analyzed revision</span>
-              <code>bf81e610…</code>
+              <code>1e570ec3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/juggler-ai--juggler" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -194,10 +194,10 @@ what the assistant is told.</p>
 corrected fact is a deletion and an insertion with a new date rather
 than an edit. The old text is gone; only the transcript remembers it
 existed.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — `forget` removes every line matching a substring and leaves no receipt of what went, while the file itself stays a plain git-ignored markdown a person can open and edit</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: `forget` removes every line matching a substring and leaves no receipt of what went, while the file itself stays a plain git-ignored markdown a person can open and edit
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — `forget` removes every line matching a substring and returns the list of what went, the pin deletes one entry by exact date and text, and the file itself stays a plain git-ignored markdown a person can open and edit</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: `forget` removes every line matching a substring and returns the list of what went, the pin deletes one entry by exact date and text, and the file itself stays a plain git-ignored markdown a person can open and edit
 flowchart TB
     M[&quot;Model&quot;] --&gt;|&quot;memory tool&lt;br/&gt;action: remember&quot;| Add[&quot;append &#39;- [YYYY-MM-DD] fact&#39;&quot;]
-    M --&gt;|&quot;action: forget&lt;br/&gt;match: substring&quot;| Del[&quot;remove EVERY matching line&lt;br/&gt;no receipt of what went&quot;]
+    M --&gt;|&quot;action: forget&lt;br/&gt;match: substring&quot;| Del[&quot;remove EVERY matching line&lt;br/&gt;returns the list it took&quot;]
     Add --&gt; F[(&quot;&amp;lt;project&amp;gt;/.juggler/MEMORY.md&lt;br/&gt;git-ignored: private to this checkout&quot;)]
     Del --&gt; F
     F --&gt;|&quot;loose edit tidied back&lt;br/&gt;to canonical shape on next write&quot;| F
@@ -250,13 +250,29 @@ any action that is not one of the two and rejects a <code>forget</code>
 with no match string. Seeding is best-effort with an explicit comment
 that a failed seed <em>"must never fail the remember/forget
 tool"</em>.</p>
-<p><strong>The substring match is the risk.</strong> <code>forget</code>
-with <code>match: "build"</code> removes every line containing "build",
-and the tool returns without a record of what it took. The transcript
-shows the call; it does not necessarily show the three unrelated facts
-that matched. A deletion primitive whose blast radius is decided by a
+<p><strong>The substring match is still the risk, and the receipt is the
+mitigation.</strong> <code>forget</code> with
+<code>match: "build"</code> removes every line containing "build". What
+changed is that <code>removeMatching</code> collects the text of each
+entry it drops and the tool returns it —
+<code>{ action: 'forget', match, removed, entryCount }</code> — so the
+transcript that already showed the call now shows the three unrelated
+facts that matched with it. That does not narrow the blast radius; it
+makes it visible at the moment it happens, to the person who can still
+retype what was lost. A deletion primitive whose reach is decided by a
 model's choice of substring is the one place this otherwise careful
-design trusts the model with something sharp.</p>
+design trusts the model with something sharp, and a receipt is the
+cheapest thing that makes the trust recoverable.</p>
+<p><strong>There is now a precise deletion path beside the fuzzy
+one.</strong> <code>pins/memory-pin.js</code> renders the file as a card
+with a delete control per entry, and that control calls
+<code>removeEntry</code>, which matches on date <em>and</em> exact text
+rather than on a substring — one bullet, named exactly. The card
+re-reads the file before each write, under a comment giving the reason:
+<em>"Each deletion reads the file again before writing, so it preserves
+changes made since the card was drawn."</em> For a memory that is a file
+two processes and a human can all edit, that is the correct amount of
+care, and it is where <code>human_review</code> now rests.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>The memory tool is one context item among Juggler's extension
 surface, following the <code>plan</code> plugin's idiom for tool-action
@@ -383,7 +399,70 @@ in a shape the formatter does not recognise was not established.</li>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>forget</code> is still a substring match</td>
+<td>read <code>removeMatching</code> at
+<code>web/extensions/juggler-core/lib/memory-format.js:138-151</code></td>
+<td><code>e.text.toLowerCase().includes(needle)</code></td>
+</tr>
+<tr>
+<td>The tool returns what it removed</td>
+<td>read <code>memory-context-item.js:382-385</code></td>
+<td><code>{ action: 'forget', match, removed, entryCount }</code></td>
+</tr>
+<tr>
+<td>The pin deletes by exact match</td>
+<td>read <code>removeEntry</code> at
+<code>memory-format.js:122-130</code></td>
+<td><code>entry.date === targetDate &amp;&amp; entry.text === targetText</code></td>
+</tr>
+<tr>
+<td>The pin re-reads before each write</td>
+<td>read <code>pins/memory-pin.js:72-73</code> and
+<code>:182</code></td>
+<td>The comment states it; <code>removeEntry</code> is called on freshly
+read content</td>
+</tr>
+<tr>
+<td>Nothing else records a deletion</td>
+<td><code>grep -rn "removed" --include="*.js" web/extensions/juggler-core | grep -v _tests</code></td>
+<td>The tool return value only; no durable log</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df"><code class="commit-id" title="1e570ec310cf38f02b943dcf1e6865ef9c0aa6df">1e570ec3…</code></a>
+— re-read, 1,348 files and 210,633 insertions past the previous pin in a
+single commit; the memory paths took about a thousand of those.
+<strong><code>human_review</code> re-verified and its basis
+strengthened.</strong> The previous edition's <em>"nothing records what
+it removed"</em> is stale: <code>removeMatching</code> collects the text
+of every entry it drops and <code>memory-context-item.js:385</code>
+returns it as <code>removed</code> alongside the match string, so a
+substring <code>forget</code> that takes three unrelated facts says so
+in the transcript. The substring semantics are unchanged, so the reach
+is still the model's choice; what changed is that the over-reach is
+visible at the moment it happens. <strong>A precise deletion path was
+added beside the fuzzy one</strong>: <code>pins/memory-pin.js</code>
+renders the file as a card with a per-entry delete that calls
+<code>removeEntry</code>, matching date <em>and</em> exact text, and
+re-reads the file before each write under a comment giving the reason —
+<em>"so it preserves changes made since the card was drawn."</em> For a
+memory that is a file two processes and a person can all edit, that is
+the right amount of care, and it is where the mark now rests. Screened
+before reading: ten findings; nothing was installed or run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa"><code class="commit-id" title="bf81e61087a6e6af24e5ffd225d66c74135a4faa">bf81e610…</code></a>
 — first reading.</p>

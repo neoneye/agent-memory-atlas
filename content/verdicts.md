@@ -916,7 +916,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`juggler`](../systems/juggler/)
 - Best idea: separating the file the user writes from the file the assistant writes, with a canonical line format the writer re-tidies on every save — so the two never fight over formatting.
-- Biggest risk: `forget` matches by substring, so one careless match string removes more than it names and nothing records what it removed.
+- Biggest risk: `forget` matches by substring, so one careless match string removes more than it names and nothing records what it removed. The tool now returns the text of every entry it dropped, so an over-reaching match is visible in the transcript rather than silent, and a memory pin adds a per-entry delete that matches on date and exact text instead.
 - Most reusable component: a per-fact delete control in the UI, and showing every write in the transcript so the user sees the memory change as it happens.
 - Maturity impression: 43 test cases against 772 lines, with separate suites for the item, the format, the seed and the **system prompt** — testing the text the model is told about a tool is rare here and exactly right for this design.
 - Study when: you are building a single-developer coding assistant where memory is a handful of project conventions and the user is present to correct it.

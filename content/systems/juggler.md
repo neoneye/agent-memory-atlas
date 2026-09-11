@@ -7,10 +7,12 @@ page_kind: system
 source_name: "juggler-ai/juggler"
 source_url: https://github.com/juggler-ai/juggler
 archive_name: "juggler-ai--juggler"
-revision: bf81e61087a6e6af24e5ffd225d66c74135a4faa
-revision_url: https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa
-analyzed_at: 2026-07-30
+revision: 1e570ec310cf38f02b943dcf1e6865ef9c0aa6df
+revision_url: https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df
+analyzed_at: 2026-09-11
 capabilities: "human_review"
+capability_evidence:
+  human_review: "the memory pin | web/extensions/juggler-core/pins/memory-pin.js:172-190 | a per-entry delete control that calls `removeEntry` on an exact date-and-text match, re-reading the file before each write so a concurrent change is preserved | web/extensions/juggler-core/_tests/memory-pin-test.js"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -19,13 +21,13 @@ matrix:
   storage: "`<project>/.juggler/MEMORY.md`, a plain Markdown file, git-ignored so it never leaves the checkout"
   retrieval: "The whole file is a context item on each conversation; there is no search, ranking or selection"
   write: "One `memory` tool with two actions, `remember` and `forget`; the assistant is prompted to use it only for facts that outlive the session"
-  update_delete: "`forget` removes every entry matching a case-insensitive substring; revision is forget-then-remember"
+  update_delete: "`forget` removes every entry matching a case-insensitive substring and returns the list of what it took; the pin deletes one entry on an exact date-and-text match; revision is forget-then-remember"
   scoping: "One file per project checkout, per machine — partition rather than a filter"
   integration: "A context item in the Juggler UI, plus a seeded system prompt; every write appears in the conversation transcript"
   background: "None"
   trust: "None. A bullet is a fact because the assistant wrote it or the user left it there"
-  strengths: "A canonical format the writer re-tidies, a per-fact delete control in the UI, and 43 committed test cases against 772 lines of implementation"
-  risks: "`forget` matches by substring, so one careless match string removes more than it names, and nothing records what it removed"
+  strengths: "A canonical format the writer re-tidies, a per-fact delete control in the UI, and 68 committed test cases against 1,087 lines of implementation"
+  risks: "`forget` still matches by substring, so one careless match string removes more than it names — the tool result now lists every entry it took, so the over-reach is visible in the transcript rather than silent"
 ---
 
 ## 1. Executive Summary
@@ -82,10 +84,10 @@ insertion with a new date rather than an edit. The old text is gone; only the
 transcript remembers it existed.
 
 ```mermaid
-%% caption: `forget` removes every line matching a substring and leaves no receipt of what went, while the file itself stays a plain git-ignored markdown a person can open and edit
+%% caption: `forget` removes every line matching a substring and returns the list of what went, the pin deletes one entry by exact date and text, and the file itself stays a plain git-ignored markdown a person can open and edit
 flowchart TB
     M["Model"] -->|"memory tool<br/>action: remember"| Add["append '- [YYYY-MM-DD] fact'"]
-    M -->|"action: forget<br/>match: substring"| Del["remove EVERY matching line<br/>no receipt of what went"]
+    M -->|"action: forget<br/>match: substring"| Del["remove EVERY matching line<br/>returns the list it took"]
     Add --> F[("&lt;project&gt;/.juggler/MEMORY.md<br/>git-ignored: private to this checkout")]
     Del --> F
     F -->|"loose edit tidied back<br/>to canonical shape on next write"| F
@@ -142,12 +144,25 @@ action that is not one of the two and rejects a `forget` with no match string.
 Seeding is best-effort with an explicit comment that a failed seed *"must never
 fail the remember/forget tool"*.
 
-**The substring match is the risk.** `forget` with `match: "build"` removes every
-line containing "build", and the tool returns without a record of what it took.
-The transcript shows the call; it does not necessarily show the three unrelated
-facts that matched. A deletion primitive whose blast radius is decided by a
-model's choice of substring is the one place this otherwise careful design
-trusts the model with something sharp.
+**The substring match is still the risk, and the receipt is the mitigation.**
+`forget` with `match: "build"` removes every line containing "build". What
+changed is that `removeMatching` collects the text of each entry it drops and the
+tool returns it — `{ action: 'forget', match, removed, entryCount }` — so the
+transcript that already showed the call now shows the three unrelated facts that
+matched with it. That does not narrow the blast radius; it makes it visible at
+the moment it happens, to the person who can still retype what was lost. A
+deletion primitive whose reach is decided by a model's choice of substring is
+the one place this otherwise careful design trusts the model with something
+sharp, and a receipt is the cheapest thing that makes the trust recoverable.
+
+**There is now a precise deletion path beside the fuzzy one.**
+`pins/memory-pin.js` renders the file as a card with a delete control per entry,
+and that control calls `removeEntry`, which matches on date *and* exact text
+rather than on a substring — one bullet, named exactly. The card re-reads the
+file before each write, under a comment giving the reason: *"Each deletion reads
+the file again before writing, so it preserves changes made since the card was
+drawn."* For a memory that is a file two processes and a human can all edit, that
+is the correct amount of care, and it is where `human_review` now rests.
 
 ## 8. Agent Integration
 
@@ -243,6 +258,20 @@ deleted, or anything a second person should see.
 | `web/extensions/juggler-core/context-items/memory/memory-format.js` | 135 | Formatting and re-tidying |
 | `web/js-tests/unit-tests/memory-seed-test.js` | 114 | Seeding |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| `forget` is still a substring match | read `removeMatching` at `web/extensions/juggler-core/lib/memory-format.js:138-151` | `e.text.toLowerCase().includes(needle)` |
+| The tool returns what it removed | read `memory-context-item.js:382-385` | `{ action: 'forget', match, removed, entryCount }` |
+| The pin deletes by exact match | read `removeEntry` at `memory-format.js:122-130` | `entry.date === targetDate && entry.text === targetText` |
+| The pin re-reads before each write | read `pins/memory-pin.js:72-73` and `:182` | The comment states it; `removeEntry` is called on freshly read content |
+| Nothing else records a deletion | `grep -rn "removed" --include="*.js" web/extensions/juggler-core \| grep -v _tests` | The tool return value only; no durable log |
+
 ## History
+
+**2026-09-11** — [`1e570ec310cf38f02b943dcf1e6865ef9c0aa6df`](https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df) — re-read, 1,348 files and 210,633 insertions past the previous pin in a single commit; the memory paths took about a thousand of those. **`human_review` re-verified and its basis strengthened.** The previous edition's *"nothing records what it removed"* is stale: `removeMatching` collects the text of every entry it drops and `memory-context-item.js:385` returns it as `removed` alongside the match string, so a substring `forget` that takes three unrelated facts says so in the transcript. The substring semantics are unchanged, so the reach is still the model's choice; what changed is that the over-reach is visible at the moment it happens. **A precise deletion path was added beside the fuzzy one**: `pins/memory-pin.js` renders the file as a card with a per-entry delete that calls `removeEntry`, matching date *and* exact text, and re-reads the file before each write under a comment giving the reason — *"so it preserves changes made since the card was drawn."* For a memory that is a file two processes and a person can all edit, that is the right amount of care, and it is where the mark now rests. Screened before reading: ten findings; nothing was installed or run.
 
 **2026-07-30** — [`bf81e61087a6e6af24e5ffd225d66c74135a4faa`](https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa) — first reading.
