@@ -1773,10 +1773,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 - Best idea: the audit chain runs on its own sqlite connection, "not shared DB manager — for independence — audit must survive even if the main DB is corrupted". Every other hash-chained log in this atlas shares a fate with the store it audits.
 - Biggest risk: ABAC defaults to allow-all with a deny-list, so an unconfigured deployment of a system sold on governance has no access control at all.
-- Most reusable component: `compliance/retention.py` — named rules bound to a profile, tagged by framework, with three actions where `notify` deliberately changes nothing and only surfaces the count.
+- Most reusable component: `compliance/retention.py` — named rules bound to a profile, tagged by framework, with three actions where `notify` deliberately changes nothing and only surfaces the count. Newly beside it, the bitemporal filter: two independent clocks, bounded to the retrieved candidate pool, returning the empty set when no `as_of` is supplied so adding it demoted nothing, and failing open so a validity lookup cannot break retrieval.
 - Maturity impression: 399,000 lines of Python across twenty-eight subpackages with nine framework integration packages, AGPL-3.0 — and an EU AI Act module whose docstring refuses to certify compliance, plus four temporal columns no read path filters on.
 - Study when: you have a compliance obligation and need the audit trail to survive the incident it is evidence about.
-- Do not copy when: you want a small component; the surface is the largest here relative to what one user needs.
+- Do not copy when: you want a small component; the surface is the largest here relative to what one user needs. Nor when a refusal has to stick: `projection_tombstones` is consulted on the store path, but keyed on a UUID, so the same sentence re-asserted mints a new id and passes.
 
 ### [`nornicdb`](../systems/nornicdb/)
 

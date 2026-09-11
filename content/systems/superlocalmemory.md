@@ -7,10 +7,14 @@ page_kind: system
 source_name: "qualixar/superlocalmemory"
 source_url: https://github.com/qualixar/superlocalmemory
 archive_name: "qualixar--superlocalmemory"
-revision: f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
-revision_url: https://github.com/qualixar/superlocalmemory/commit/f47c9c3b826caf0db6e3bb5c74f48f3df14e959d
-analyzed_at: 2026-08-09
-capabilities: "audit_log, scope_enforced"
+revision: 07a431ed3894ad6b28f144db8a1a8c7d8c839a86
+revision_url: https://github.com/qualixar/superlocalmemory/commit/07a431ed3894ad6b28f144db8a1a8c7d8c839a86
+analyzed_at: 2026-09-11
+capabilities: "bitemporal, audit_log, scope_enforced"
+capability_evidence:
+  bitemporal: "the recall pipeline | src/superlocalmemory/storage/database.py:2536-2700 | `get_strict_temporal_inadmissible_fact_ids` takes `known_as_of` (transaction time) and `valid_at` (event time) as independent clocks, and a second filter excludes candidates outside the half-open `[valid_from, valid_until)` window at an `as_of` | unknown"
+  audit_log: "the audit database | a separate SQLite connection from the one it audits | an append-only mutation chain that survives corruption of the database it records | unknown"
+  scope_enforced: "every fact read | `profile_id` NOT NULL on every fact and index | 1,074 `profile_id` predicates across the Python sources, including the temporal filters | unknown"
 stack_storage: "sqlite, files"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -19,13 +23,13 @@ matrix:
   storage: "SQLite with a separate audit database, JSON-encoded embeddings, and a profile-scoped schema"
   retrieval: "Multi-channel — entity, vector and community summaries — with contradiction and supersedes edge types"
   write: "A trust gate enforces a minimum trust score before any write or delete; reads always pass and are logged"
-  update_delete: "Named retention rules per profile move expired facts to archived, with tombstoned flagged purgeable"
+  update_delete: "Named retention rules per profile move expired facts to archived, with tombstoned flagged purgeable and a `projection_tombstones` table consulted on the store path — keyed on `fact_id`, which is a UUID"
   scoping: "profile_id is NOT NULL on every fact, on every index, and in the read-path queries, beside an ABAC layer"
   integration: "An MCP server, a CLI, nine framework integration packages and a browser dashboard"
   background: "A compliance scheduler, lifecycle transitions, Fisher-weighted maintenance and evolution passes"
   trust: "A trust scorer with signals and a provenance module, gating operations rather than labelling memories"
   strengths: "The audit chain uses its own connection so it survives corruption of the database it audits"
-  risks: "Four temporal columns are stored and no read path filters on the interval"
+  risks: "A tombstone keyed on a UUID rather than on the value, so an erased fact re-asserted verbatim gets a new id and passes the check; and a governance surface far larger than the memory it governs"
 ---
 
 ## 1. Executive Summary
@@ -62,10 +66,10 @@ A compliance feature whose first act is to say what it cannot conclude is rarer
 than it should be, and it is the same distinction this atlas draws when it
 declines to issue a conformance statement of its own.
 
-The weakness is on the temporal axis. `atomic_facts` carries `observation_date`,
-`referenced_date`, `interval_start` and `interval_end` under a comment calling it
-a "3-date model", and no read path filters on the interval. The columns are
-written and nothing asks about them.
+The temporal axis carries two clocks and both are queryable, independently:
+`known_as_of` asks *what this instance had learned by* a timestamp, `valid_at`
+asks *what was true at* one, and the docstring states the separation outright —
+*"The axes are independent and may be supplied separately or together."*
 
 ## 2. Mental Model
 
@@ -179,10 +183,29 @@ reasonable default for a local single-user tool and the wrong one for the
 compliance posture the README describes. Anyone deploying this for a team should
 treat writing policies as step one.
 
-**No read path filters the temporal interval.** `interval_start` and
-`interval_end` are written and no query compares against them, so the four-date
-model informs nothing at read time. `bitemporal` is withheld on that basis, and
-the columns are one predicate away from earning it.
+**The read path filters on both clocks, and the design decisions around it are
+the interesting part.** `get_strict_temporal_inadmissible_fact_ids` takes
+`known_as_of` and `valid_at`, and a companion filter excludes any candidate whose
+event-time window fails to contain the reference instant — expired when
+`valid_until <= ref`, not-yet-valid when `valid_from > as_of`, with a comment
+naming the half-open interval `[valid_from, valid_until)` and the boundary bug it
+fixes. Four properties are worth copying together:
+
+- **Bounded, never a scan.** Both filters operate only on the already-retrieved
+  candidate pool, keyed on the `fact_id` primary key and chunked at 900 to stay
+  under SQLite's bound-parameter limit.
+- **Zero-regression by default.** A fact with `valid_until = NULL` is open-ended
+  and never returned; a fact with no temporal row at all is never returned. With
+  `as_of=None` the filter returns the empty set, so adding it demoted nothing.
+- **Legacy is explicit, not silent.** A fact predating the write invariant is
+  `legacy_unknown`, and strict time-travel *excludes* it unless the caller asks
+  for unknown history — the safe direction, and named.
+- **Fail-open.** A database error logs a warning and returns an empty set, so
+  retrieval cannot break because a validity lookup did.
+
+The filter is wired through `engine.py:1108` into `recall_pipeline.py:1197` and
+the recall worker, so the parameter reaches the query from the public surface.
+`bitemporal` is earned.
 
 ## 7. Write Mechanics
 
@@ -227,10 +250,18 @@ the confusion the mark exists to separate.
 only surfaces the count so an operator can act", which is a display, and the
 compliance dashboard configures rules rather than adjudicating facts.
 
-**Bitemporal — withheld**, per section 6.
+**Bitemporal — awarded**, per section 6.
 
-**Tombstone — no.** `archive_status = 'tombstoned'` marks a row purgeable; it is
-keyed on the row and consulted by a purge job.
+**Tombstone — no, and the near-miss is now a real one.** Two mechanisms wear the
+name. `archive_status = 'tombstoned'` marks a row purgeable and is consulted by a
+purge job, which is housekeeping. The second is closer: `projection_tombstones`
+is read on the store path by `_fact_is_tombstoned`
+(`core/store_pipeline.py:427-437`), so an erased fact genuinely is checked for
+before it is re-projected. What it is keyed on is `fact_id`, and a fact id is a
+UUID — `uuid.uuid4().hex[:16]` in the consolidator, v4 elsewhere. Re-asserting
+the same sentence mints a new id and passes the check. The mark wants the key to
+be the value; here it is the row, which makes this a durable record of *which
+row* was erased rather than of *what* was refused.
 
 **Negative eval — no**, among the test suites found.
 
@@ -349,6 +380,20 @@ the CHECK constraints, the profile indexes)
 **Dynamics** — `src/superlocalmemory/dynamics/`, `math/`, `learning/`,
 `evolution/`, `optimize/`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Both clocks reach a query | read `src/superlocalmemory/storage/database.py:2536-2700` | `known_as_of` and `valid_at` as independent parameters; a half-open `[valid_from, valid_until)` exclusion beside them |
+| The filter is wired from the public surface | `grep -rn "known_as_of" --include="*.py" src` | `engine.py:1108`, `recall_pipeline.py:1197`, `recall_worker.py:80`, `worker_pool.py:105` |
+| The tombstone is keyed on a row, not a value | `grep -rn "fact_id = \|uuid" --include="*.py" src \| grep -i "fact_id"` | `uuid.uuid4().hex[:16]` in the consolidator; v4 elsewhere; no content hash |
+| Scope reaches every read | `grep -rn "profile_id" --include="*.py" . \| grep -icE "WHERE profile_id\|AND profile_id"` | 1,074 predicates |
+| Tree and suite size | `find src -name "*.py" \| xargs wc -l \| tail -1`; `find . -name "test_*.py" \| wc -l` | 203,891 lines under `src/`; 924 test files |
+
 ## History
+
+**2026-09-11** — [`07a431ed3894ad6b28f144db8a1a8c7d8c839a86`](https://github.com/qualixar/superlocalmemory/commit/07a431ed3894ad6b28f144db8a1a8c7d8c839a86) — re-read, 857 files and 101,066 insertions past the previous pin in a single commit. **`bitemporal` added, closing the risk the previous edition led on.** That edition said *"Four temporal columns are stored and no read path filters on the interval"* and that the columns were *"one predicate away"* from the mark. They are past it: `get_strict_temporal_inadmissible_fact_ids` takes `known_as_of` for transaction time and `valid_at` for event time as independent clocks, a companion filter excludes candidates outside the half-open `[valid_from, valid_until)` window at a reference instant, and both are wired from `engine.py:1108` through the recall pipeline and worker. The engineering around it is careful in ways worth recording: bounded to the retrieved candidate pool and chunked at 900 parameters, returning the empty set when no `as_of` is supplied so adding it demoted nothing, treating a fact with no temporal row as `legacy_unknown` and excluding it from strict time-travel unless asked, and failing open so a validity lookup cannot break retrieval. `audit_log` and `scope_enforced` re-verified. **`tombstone` stays withheld, on a sharper near-miss than before**: `projection_tombstones` *is* consulted on the store path by `_fact_is_tombstoned`, so an erased fact is genuinely checked for — but the key is `fact_id`, and a fact id is a UUID, so the same sentence re-asserted mints a new id and passes. Tree 203,891 lines under `src/` with 924 test files. Screened before reading: a plugin manifest, a configured smudge filter in `.gitattributes`, and several `conftest.py` files executing on collection; nothing was installed or run.
 
 **2026-08-09** — [`f47c9c3b826caf0db6e3bb5c74f48f3df14e959d`](https://github.com/qualixar/superlocalmemory/commit/f47c9c3b826caf0db6e3bb5c74f48f3df14e959d) — first reading. Screened before reading: one auto-run surface, build-time execution in eighteen `conftest.py` files plus a `Makefile` and an npm manifest, and fifteen dependency manifests inside the seven-day cooldown. The tree was read, never installed, and no test was run.
