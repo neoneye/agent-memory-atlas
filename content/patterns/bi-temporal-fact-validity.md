@@ -201,6 +201,42 @@ wrong then or the retrieval was. The single-axis version is genuinely useful and
 much cheaper; the distinction is worth drawing explicitly, because a reader
 comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
+## A third clock
+
+Two clocks answer *what was true* and *what did we believe*. The temporal
+database literature names a third, decision time: when an assertion was made in
+the world, apart from when it held and when it was recorded. In agent memory the
+useful form is *when the source said it*. A Friday conversation about Tuesday's
+deploy, ingested by Sunday's batch, has three answers to "when", and the middle
+one is what you need when two sources disagree and the question is which spoke
+later.
+
+The third clocks in the atlas do not mean the same thing, which is the first
+thing to settle when a system claims one:
+
+- **Said.** [Gini](../../systems/gini-agent/) has all three columns —
+  `occurred_start`/`occurred_end`, `mentioned_at` (*"when it was said"*) and
+  `created_at` — and its temporal recall channel filters on the occurred window.
+- **Last seen.** [Veracium](../../systems/veracium/) keeps `observed_at` beside a
+  `valid_from` that is *"first-known and immutable"*; `confirm_edge` advances the
+  one and never the other. [ELAI](../../systems/elai/)'s `last_observed_at`
+  starts equal to `ingested_at` and `valid_from`, is bumped by `update_trust`
+  during recall, and recall sorts by it. That is recency, not assertion.
+- **Three columns, two axes.** [memv](../../systems/memv/) carries `valid_at`,
+  `invalid_at` and `expired_at`: an interval on one clock and an end on the other.
+- **Claimed, not built.** [NornicDB](../../systems/nornicdb/)'s README advertises
+  "tritemporal facts". Its temporal procedures take one interval, named by two
+  property names the caller chooses, and an MVCC version: two axes per call. The
+  third is an `asserted_at` property in a user guide's example schema, written by
+  the user's own Cypher and read by no engine code, and the guide's examples set
+  it to the same `datetime()` as `valid_from` in the same committing statement.
+
+The diagnostic is Helm's, applied once more: **can a writer set the third time
+independently of the other two, and does any read path query it?** A third clock
+always stamped with the insert time, or one nothing filters on, is metadata. That
+does not make it wrong to keep — a said-at column costs one field and makes a
+later disagreement tractable — but it does not make the store tritemporal.
+
 ## Tests to require
 
 - Backfilled old events ingested today.

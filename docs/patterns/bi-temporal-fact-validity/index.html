@@ -323,6 +323,53 @@ was. The single-axis version is genuinely useful and much cheaper; the
 distinction is worth drawing explicitly, because a reader comparing
 feature lists will see <code>as_of</code> and <code>valid_to</code> and
 assume the pair.</p>
+<h2 id="a-third-clock">A third clock</h2>
+<p>Two clocks answer <em>what was true</em> and <em>what did we
+believe</em>. The temporal database literature names a third, decision
+time: when an assertion was made in the world, apart from when it held
+and when it was recorded. In agent memory the useful form is <em>when
+the source said it</em>. A Friday conversation about Tuesday's deploy,
+ingested by Sunday's batch, has three answers to "when", and the middle
+one is what you need when two sources disagree and the question is which
+spoke later.</p>
+<p>The third clocks in the atlas do not mean the same thing, which is
+the first thing to settle when a system claims one:</p>
+<ul>
+<li><strong>Said.</strong> <a href="../../systems/gini-agent/">Gini</a>
+has all three columns —
+<code>occurred_start</code>/<code>occurred_end</code>,
+<code>mentioned_at</code> (<em>"when it was said"</em>) and
+<code>created_at</code> — and its temporal recall channel filters on the
+occurred window.</li>
+<li><strong>Last seen.</strong> <a
+href="../../systems/veracium/">Veracium</a> keeps
+<code>observed_at</code> beside a <code>valid_from</code> that is
+<em>"first-known and immutable"</em>; <code>confirm_edge</code> advances
+the one and never the other. <a href="../../systems/elai/">ELAI</a>'s
+<code>last_observed_at</code> starts equal to <code>ingested_at</code>
+and <code>valid_from</code>, is bumped by <code>update_trust</code>
+during recall, and recall sorts by it. That is recency, not
+assertion.</li>
+<li><strong>Three columns, two axes.</strong> <a
+href="../../systems/memv/">memv</a> carries <code>valid_at</code>,
+<code>invalid_at</code> and <code>expired_at</code>: an interval on one
+clock and an end on the other.</li>
+<li><strong>Claimed, not built.</strong> <a
+href="../../systems/nornicdb/">NornicDB</a>'s README advertises
+"tritemporal facts". Its temporal procedures take one interval, named by
+two property names the caller chooses, and an MVCC version: two axes per
+call. The third is an <code>asserted_at</code> property in a user
+guide's example schema, written by the user's own Cypher and read by no
+engine code, and the guide's examples set it to the same
+<code>datetime()</code> as <code>valid_from</code> in the same
+committing statement.</li>
+</ul>
+<p>The diagnostic is Helm's, applied once more: <strong>can a writer set
+the third time independently of the other two, and does any read path
+query it?</strong> A third clock always stamped with the insert time, or
+one nothing filters on, is metadata. That does not make it wrong to keep
+— a said-at column costs one field and makes a later disagreement
+tractable — but it does not make the store tritemporal.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Backfilled old events ingested today.</li>

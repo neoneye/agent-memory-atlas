@@ -308,6 +308,25 @@ not stranded at the storage layer — it is reachable through the system's
 primary query language, and absent from its similarity search. A memory
 client that speaks Cypher has both clocks; one that only calls the
 vector endpoint has neither.</p>
+<p><strong>"Tritemporal facts" is the two clocks and a
+property.</strong> The README claims tritemporal facts three times
+(<code>README.md:78</code>, <code>:223</code>, <code>:232</code>); the
+canonical graph ledger guide is where the third clock would come from, a
+<code>FactVersion</code> that carries <code>asserted_at</code> and
+<code>asserted_by</code> beside <code>valid_from</code> and
+<code>valid_to</code>. The engine gives that property no meaning. The
+temporal procedures take one interval — two property names the caller
+chooses — and the MVCC selectors, so a call has two axes whichever
+properties it names, and nothing selects among versions by assertion
+time. Outside the docs and the tests, the only file that writes
+<code>asserted_at</code> is
+<code>neural/scripts/generate_nornicdb_cypher_dataset.py</code>, a
+generator of example Cypher. The guide's own examples set
+<code>valid_from</code> and <code>asserted_at</code> to
+<code>datetime()</code> in the same committing statement, so as written
+all three read one instant. An assertion time here is a property any
+graph could hold, reachable with <code>WHERE</code> and nothing more;
+the mark is <code>bitemporal</code>.</p>
 <p>MVCC retention is handled with an explicit safety posture: pruning
 "preserves the current head and a retained floor per logical key;
 requests below that retained floor fail safely with
@@ -521,6 +540,16 @@ call reaches it only when a system version was supplied.</li>
 <li><strong>The search arm does not.</strong>
 <code>grep -n -i "current search paths are intentionally separate" README.md</code>
 — <code>README.md:97</code>, unchanged.</li>
+<li><strong>"Tritemporal" is a README word.</strong>
+<code>grep -rniE "tri-?temporal" . --exclude-dir=.git</code> —
+<code>README.md:78</code>, <code>:223</code>, <code>:232</code>, and
+nothing else.</li>
+<li><strong>The third clock has no engine writer or reader.</strong>
+<code>grep -rliE "asserted_?at" . --exclude-dir=.git --exclude-dir=docs --exclude="*_test.go" --exclude="*.md"</code>
+— <code>neural/scripts/generate_nornicdb_cypher_dataset.py</code> only;
+the same search over tests alone finds seven <code>_test.go</code>
+files, and <code>pkg/cypher/call_temporal.go</code> mentions no
+assertion or decision time.</li>
 </ul>
 <p><strong>Kalman / anti-sycophancy</strong> —
 <code>pkg/knowledgepolicy/kalman_accumulator.go</code>
@@ -581,7 +610,11 @@ withholding rested on the README's "search remains current-state
 focused", which is true of the hybrid and vector arm and not of the
 Cypher procedure surface — the mark names the read path that carries the
 predicate, as the scope marks in this corpus do. <code>audit_log</code>
-and <code>scope_enforced</code> unchanged.</p>
+and <code>scope_enforced</code> unchanged. The README's "tritemporal
+facts" was checked at the same pin: the engine's temporal procedures
+take one caller-named interval and an MVCC version, and the guide's
+third clock, <code>asserted_at</code>, is a property no engine code
+writes or reads, so the mark stays <code>bitemporal</code>.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa"><code class="commit-id" title="a5f623399830d76e3e22e56264548c613ba897aa">a5f62339…</code></a>
 — first reading. Screened before reading: one auto-run surface

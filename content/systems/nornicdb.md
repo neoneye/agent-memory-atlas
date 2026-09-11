@@ -201,6 +201,20 @@ system's primary query language, and absent from its similarity search. A memory
 client that speaks Cypher has both clocks; one that only calls the vector
 endpoint has neither.
 
+**"Tritemporal facts" is the two clocks and a property.** The README claims
+tritemporal facts three times (`README.md:78`, `:223`, `:232`); the canonical
+graph ledger guide is where the third clock would come from, a `FactVersion` that
+carries `asserted_at` and `asserted_by` beside `valid_from` and `valid_to`. The
+engine gives that property no meaning. The temporal procedures take one interval
+— two property names the caller chooses — and the MVCC selectors, so a call has
+two axes whichever properties it names, and nothing selects among versions by
+assertion time. Outside the docs and the tests, the only file that writes
+`asserted_at` is `neural/scripts/generate_nornicdb_cypher_dataset.py`, a generator
+of example Cypher. The guide's own examples set `valid_from` and `asserted_at` to
+`datetime()` in the same committing statement, so as written all three read one
+instant. An assertion time here is a property any graph could hold, reachable
+with `WHERE` and nothing more; the mark is `bitemporal`.
+
 MVCC retention is handled with an explicit safety posture: pruning "preserves the
 current head and a retained floor per logical key; requests below that retained
 floor fail safely with `ErrNotFound`". A historical read that has aged out
@@ -397,6 +411,13 @@ whether the search-path separation blocks what they need.
   reaches it only when a system version was supplied.
 - **The search arm does not.** `grep -n -i "current search paths are
   intentionally separate" README.md` — `README.md:97`, unchanged.
+- **"Tritemporal" is a README word.** `grep -rniE "tri-?temporal" .
+  --exclude-dir=.git` — `README.md:78`, `:223`, `:232`, and nothing else.
+- **The third clock has no engine writer or reader.** `grep -rliE "asserted_?at" .
+  --exclude-dir=.git --exclude-dir=docs --exclude="*_test.go" --exclude="*.md"` —
+  `neural/scripts/generate_nornicdb_cypher_dataset.py` only; the same search over
+  tests alone finds seven `_test.go` files, and `pkg/cypher/call_temporal.go`
+  mentions no assertion or decision time.
 
 **Kalman / anti-sycophancy** — `pkg/knowledgepolicy/kalman_accumulator.go`
 (`ProcessKalmanMutation`), `kalman_anti_sycophancy_test.go`,
@@ -424,6 +445,6 @@ whether the search-path separation blocks what they need.
 
 ## History
 
-**2026-09-11** — [`5c03eb157216c421b234202f2a12587a81bd3706`](https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706) — re-read. Screened before reading: a committed `.githooks/pre-commit` (harmless unless `core.hooksPath` points at it), an `AGENTS.md` addressed to a reading agent, five dependency manifests inside the cooldown, four floating ranges, two build-time execution hooks. The tree was read, never built, and nothing was run. 785 files and 73,886 insertions past the previous pin, most of it a knowledge-policy admin UI and a localization catalogue for storage-validation messages. **`bitemporal` awarded**, and it is a correction rather than drift: `systemSequence` was already in `call_temporal.go` at the previous pin. `CALL db.temporal.asOf` takes a validity instant and, optionally, an MVCC commit timestamp and sequence, as separate arguments; supplying the system version makes the call skip its current-state fast path and read `GetNodesByLabelVisibleAt(label, version)` before filtering the validity window. `TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, and asserts the validity instant 2024-01-15 returns nothing without a system time and returns the node with one. The previous withholding rested on the README's "search remains current-state focused", which is true of the hybrid and vector arm and not of the Cypher procedure surface — the mark names the read path that carries the predicate, as the scope marks in this corpus do. `audit_log` and `scope_enforced` unchanged.
+**2026-09-11** — [`5c03eb157216c421b234202f2a12587a81bd3706`](https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706) — re-read. Screened before reading: a committed `.githooks/pre-commit` (harmless unless `core.hooksPath` points at it), an `AGENTS.md` addressed to a reading agent, five dependency manifests inside the cooldown, four floating ranges, two build-time execution hooks. The tree was read, never built, and nothing was run. 785 files and 73,886 insertions past the previous pin, most of it a knowledge-policy admin UI and a localization catalogue for storage-validation messages. **`bitemporal` awarded**, and it is a correction rather than drift: `systemSequence` was already in `call_temporal.go` at the previous pin. `CALL db.temporal.asOf` takes a validity instant and, optionally, an MVCC commit timestamp and sequence, as separate arguments; supplying the system version makes the call skip its current-state fast path and read `GetNodesByLabelVisibleAt(label, version)` before filtering the validity window. `TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, and asserts the validity instant 2024-01-15 returns nothing without a system time and returns the node with one. The previous withholding rested on the README's "search remains current-state focused", which is true of the hybrid and vector arm and not of the Cypher procedure surface — the mark names the read path that carries the predicate, as the scope marks in this corpus do. `audit_log` and `scope_enforced` unchanged. The README's "tritemporal facts" was checked at the same pin: the engine's temporal procedures take one caller-named interval and an MVCC version, and the guide's third clock, `asserted_at`, is a property no engine code writes or reads, so the mark stays `bitemporal`.
 
 **2026-08-09** — [`a5f623399830d76e3e22e56264548c613ba897aa`](https://github.com/orneryd/NornicDB/commit/a5f623399830d76e3e22e56264548c613ba897aa) — first reading. Screened before reading: one auto-run surface (`.githooks/`), build-time execution in two `Makefile`s, and five dependency manifests inside the seven-day cooldown including `go.mod` and `go.sum`. The tree was read, never built, and no test was run. The licence is MIT per the README badge and `LICENSE.md`; there is no plain `LICENSE` file.
