@@ -749,6 +749,8 @@ is in the paths the store's key does not govern.
 
 [dsh-ai-memory](../../systems/dsh-ai-memory/) puts the key where a model-supplied scope fails: at session open. The plugin passes its configured `projectId` to `HostSession`, no tool schema has a project field, and `recall` filters `WHERE m.project_id = ?` before scoring; a test through that same host API asserts another project's matching ticket stays out of a populated pack. The key is only as narrow as its default, though: `projectId` is `dsh` in both the plugin config and its bundled patch, so every chat in a profile shares one project.
 
+[RushDB](../../systems/rushdb/) shows the key doing something the pattern does not usually buy: changing the query plan. Its memory contract builds every read through `buildScopeWhere`, which refuses a blank agent, profile or participant hash and emits five equalities — agent, profile, privacy scope, a salted participant hash and a sandbox flag — into the `where` of both recall arms. Server-side that filter is load-bearing twice over: `canUseVectorIndex = !hasWhere && !hasMultiLabels`, so carrying a scope key disqualifies the approximate index and forces a Cypher plan that applies the predicate before similarity scores anything, which is the difference between a scoped result and a post-filtered neighbour list. The boundary is still caller-chosen — the API token authorizes a project, not a participant, and an adopter who calls the record API directly gets no predicate — and its committed isolation tests assert the project boundary, not the five-field one.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

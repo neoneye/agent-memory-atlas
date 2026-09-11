@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 310 of 427 screened at the report's current pin.**
+**Progress: 311 of 428 screened at the report's current pin.**
 
 12 further record(s) describe a revision the report has since moved
 off, and 105 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 125 |
+| Repositories with an auto-run surface (`RUNS`) | 126 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 152 |
-| Repositories with build-time execution (`EXEC`) | 230 |
+| Repositories with build-time execution (`EXEC`) | 231 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -135,6 +135,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
+| [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`second-brain-cloudflare`](../../content/systems/second-brain-cloudflare.md) | `.cursor/rules/` |
 | [`shodh-memory`](../../content/systems/shodh-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, `hooks/` |

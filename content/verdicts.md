@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 427 reports.**
+**This page covers all 428 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3760,3 +3760,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 57,117 lines of TypeScript against 314 test files, 80,844 lines and 5,470 `it()` cases, with per-file coverage thresholds each pull request appends to, plus duplicate detection, CodeQL, a Windows smoke subset and a static audit in CI. The skill-mining worker is excluded from coverage by name and its end-to-end matrix script is recorded as living in the author's worktree, uncommitted. The LoCoMo headline in the README has no harness, dataset or result file in the tree; what is committed is the regression fixtures the losing answers produced.
 - Study when: you want memory the agent reaches with ordinary shell commands, or a correction signal derived from human reaction outside a training loop.
 - Do not copy when: a shared skill library needs review before it propagates, when memory must work without an account, or when you need "forget that" to survive — pruning deletes the sessions and leaves the skills mined from them standing.
+
+### [`rushdb`](../systems/rushdb/)
+- Best idea: **the presence of a filter chooses the search plan.** `canUseVectorIndex = !hasWhere && !hasMultiLabels`, so an unfiltered query uses the graph's approximate index and any scoped query falls to Cypher that narrows candidates first and scores every survivor exactly — a scoped recall is never a post-filtered neighbour list. Beside it, an event id that is a published SHA-256 over canonical JSON with a cross-language fixture that recomputes, and a `DETACH DELETE` that takes the embedding with the record because the vector lives on a relationship rather than in a sidecar.
+- Biggest risk: **half the memory design is specified here and implemented elsewhere.** The durable outbox, the fail-open recall timeout, the capture exclusions and the deactivation of a superseded fact are obligations in the skills package; no code writes a fact inactive, the supersession field occurs once as its own declaration, and the two harness adapters are named in a reference file and are not in this repository. A corrected fact hashes to a new id and the old row stays active.
+- Most reusable component: `packages/agent-memory-contract/src/scope.ts` with `src/canonical.ts` — a five-field scope predicate that every read builds through one function, and a deterministic identity with a fixture anyone can reimplement.
+- Maturity impression: 34,689 lines of TypeScript in the server under the Elastic License 2.0 with Apache-2.0 client packages, changesets releases, CI that builds, lints and runs the contract's six cases plus the Cypher-parser unit tests. The end-to-end suite carrying the isolation assertions is not in CI, the memory contract is at 0.2.0 with two changesets, and a swallowed embedding-queue rejection leaves a record permanently unembedded with nothing to notice.
+- Study when: you want a graph and vector store in one transaction boundary and a worked protocol for putting agent memory on top of it.
+- Do not copy when: memory must survive a crash, a correction or a hostile input without you writing the adapter — or when isolation must be per-user rather than per-project.

@@ -195,6 +195,8 @@ columns does this pass have no input for, and what happens to them.
 
 [Janus-Graph](../../systems/janus-graph/) builds almost every piece of this pattern and shows two failures it cannot see. The input is durable before extraction — an `add_episode` is one SQLite insert and payloads are kept after `done` — and the sweep has a reaper for stuck rows, an attempt cap and a dead-letter table with a replay verb. But a schema-repair wrapper between the model and Graphiti answers a malformed item with an empty list, so the job *succeeds* with nothing extracted and is marked done, and nothing distinguishes an empty success from a real one. And the nightly run labelled DLQ auto-repair requeues every dead-lettered episode without resetting its attempt count or closing its dead-letter row, so a poison input costs one model pass a night indefinitely. A dead-letter path that re-feeds itself is as unread as one nobody opens.
 
+[RushDB](../../systems/rushdb/) has the failure this pattern exists to prevent, in one line. A record write is synchronous, then the embedding work is queued fire-and-forget with an empty catch at all three write paths. The once-a-minute backfill only ever reads indexes already flagged pending, so a rejected mark is not retried, not logged and not reconciled — the record is stored, queryable by `where`, and permanently invisible to semantic recall. The contract package's bounded in-process cache of recent episodes papers over the ordinary one-minute lag and dies with the process, and it holds episodes only, so a newly written fact is unrecallable until the cron catches up.
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.

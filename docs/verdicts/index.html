@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 427 reports.</strong></p>
+<p><strong>This page covers all 428 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15225,6 +15225,47 @@ training loop.</li>
 propagates, when memory must work without an account, or when you need
 "forget that" to survive — pruning deletes the sessions and leaves the
 skills mined from them standing.</li>
+</ul>
+<h3 id="rushdb"><a
+href="../systems/rushdb/"><code>rushdb</code></a></h3>
+<ul>
+<li>Best idea: <strong>the presence of a filter chooses the search
+plan.</strong>
+<code>canUseVectorIndex = !hasWhere &amp;&amp; !hasMultiLabels</code>,
+so an unfiltered query uses the graph's approximate index and any scoped
+query falls to Cypher that narrows candidates first and scores every
+survivor exactly — a scoped recall is never a post-filtered neighbour
+list. Beside it, an event id that is a published SHA-256 over canonical
+JSON with a cross-language fixture that recomputes, and a
+<code>DETACH DELETE</code> that takes the embedding with the record
+because the vector lives on a relationship rather than in a
+sidecar.</li>
+<li>Biggest risk: <strong>half the memory design is specified here and
+implemented elsewhere.</strong> The durable outbox, the fail-open recall
+timeout, the capture exclusions and the deactivation of a superseded
+fact are obligations in the skills package; no code writes a fact
+inactive, the supersession field occurs once as its own declaration, and
+the two harness adapters are named in a reference file and are not in
+this repository. A corrected fact hashes to a new id and the old row
+stays active.</li>
+<li>Most reusable component:
+<code>packages/agent-memory-contract/src/scope.ts</code> with
+<code>src/canonical.ts</code> — a five-field scope predicate that every
+read builds through one function, and a deterministic identity with a
+fixture anyone can reimplement.</li>
+<li>Maturity impression: 34,689 lines of TypeScript in the server under
+the Elastic License 2.0 with Apache-2.0 client packages, changesets
+releases, CI that builds, lints and runs the contract's six cases plus
+the Cypher-parser unit tests. The end-to-end suite carrying the
+isolation assertions is not in CI, the memory contract is at 0.2.0 with
+two changesets, and a swallowed embedding-queue rejection leaves a
+record permanently unembedded with nothing to notice.</li>
+<li>Study when: you want a graph and vector store in one transaction
+boundary and a worked protocol for putting agent memory on top of
+it.</li>
+<li>Do not copy when: memory must survive a crash, a correction or a
+hostile input without you writing the adapter — or when isolation must
+be per-user rather than per-project.</li>
 </ul>
         </article>
       </div>

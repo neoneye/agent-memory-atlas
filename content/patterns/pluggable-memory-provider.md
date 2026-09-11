@@ -134,6 +134,8 @@ Read against this page's own tally, two things stand out.
 
 The record schema is the sharper version of the same point. `model/gen-ai/gen-ai-memory-records.json` defines a `MemoryRecord` as `content` (the only required field), `id`, `score`, and an opaque `metadata` object. No validity interval, no trust state, no provenance, no supersession pointer — every mechanism the [tombstone](../rejected-value-tombstone/), [bi-temporal validity](../bi-temporal-fact-validity/) and [trust state machine](../trust-state-machine/) pages are about falls into `metadata`, where it is by construction not comparable across implementations. That is not a criticism of a development-stage spec, which is right to standardise the common shape first. It is a statement about what the common shape currently is: **a scored string with an id**.
 
+[RushDB](../../systems/rushdb/) ships the contract without the providers. Its agent-memory contract package is provider-neutral by design — a versioned event schema, deterministic ids, a conformance fixture for other languages, and an eight-step adapter skill with a lifecycle matrix covering pre-inference recall, completed-turn capture, compaction, session end and shutdown. The two runtimes it names are first-class in the protocol's own enum and absent from the repository, occurring in exactly two lines of a reference file. Every hard part of the contract — the durable outbox, the fail-open timeout, the capture exclusions, deactivating a superseded fact — is an adapter obligation, so the conformance matrix is a promise made on an unreviewable implementation's behalf.
+
 ## Tests to require
 
 - Delete a memory through the host and prove it is gone from the mounted provider, not just from the host's own store.

@@ -333,6 +333,17 @@ labelled DLQ auto-repair requeues every dead-lettered episode without
 resetting its attempt count or closing its dead-letter row, so a poison
 input costs one model pass a night indefinitely. A dead-letter path that
 re-feeds itself is as unread as one nobody opens.</p>
+<p><a href="../../systems/rushdb/">RushDB</a> has the failure this
+pattern exists to prevent, in one line. A record write is synchronous,
+then the embedding work is queued fire-and-forget with an empty catch at
+all three write paths. The once-a-minute backfill only ever reads
+indexes already flagged pending, so a rejected mark is not retried, not
+logged and not reconciled — the record is stored, queryable by
+<code>where</code>, and permanently invisible to semantic recall. The
+contract package's bounded in-process cache of recent episodes papers
+over the ordinary one-minute lag and dies with the process, and it holds
+episodes only, so a newly written fact is unrecallable until the cron
+catches up.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>
