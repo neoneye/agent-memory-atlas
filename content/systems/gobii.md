@@ -7,10 +7,12 @@ page_kind: system
 source_name: "gobii-ai/gobii-platform"
 source_url: https://github.com/gobii-ai/gobii-platform
 archive_name: "gobii-ai--gobii-platform"
-revision: 26844673ac9f134e2ad3851a12dd26762d94c3a9
-revision_url: https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9
-analyzed_at: 2026-07-30
+revision: c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb
+revision_url: https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the summary tier, not the SQLite tier | api/agent/core/prompt_context.py:4995,:5000 and api/agent/core/history_compaction.py:38,:51 | `PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` carry an `agent` foreign key on the row and every read filters `.filter(agent=agent)`; the per-agent SQLite file is a partition guarded by an authorizer, which is a different boundary | tests"
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -20,7 +22,7 @@ matrix:
   retrieval: "SQL. The agent is shown a generated schema prompt capped at 30,000 bytes and 25 tables, then writes queries against it"
   write: "SQL, through a batch tool with autocorrect, query-quality checks and recovery; the file is validated and re-uploaded after the cycle"
   update_delete: "`UPDATE` and `DELETE FROM`, written by the model. No framework-level correction, no record of what was removed"
-  scoping: "One database file per agent UUID, with `ATTACH`/`DETACH` denied by a `sqlite3` authorizer so SQL cannot reach another agent's file; Django models are foreign-keyed to the agent"
+  scoping: "Two boundaries of different kinds — one SQLite file per agent UUID with `ATTACH`/`DETACH` denied by an authorizer, which is a guarded partition; and an `agent` foreign key on the summary tables, filtered on every read, which is the predicate the mark tracks"
   integration: "A Django platform — persistent agents with email, SMS, Discord and web endpoints, MCP servers, schedules, a browser-use agent, skills and a kanban plan"
   background: "Celery. Comms and step snapshot chains summarise history incrementally, each linked to its predecessor with an inclusive cut-off"
   trust: "None. A row is true because the model inserted it; there is no status, confidence or provenance column unless the model invented one"
@@ -191,17 +193,29 @@ subsystem inside it, reachable only through the agent's own tool calls.
 
 ## 9. Reliability, Safety, and Trust
 
-**The authorizer is the scope mechanism, and it is the right place for it.**
+**Two boundaries of different kinds sit here, and only one of them is what the
+mark measures.** The per-agent SQLite file is a partition: one file per agent
+UUID, with no scope column inside it and no predicate on any query the model
+writes. An authorizer hardens that partition, which is real and is not the same
+thing as a key. What earns `scope_enforced` is the other tier — the Django
+summary tables that carry the memory between cycles.
+`PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` each hold an
+`agent` foreign key as a column on the row, and every read filters on it:
+`prompt_context.py:4995` and `:5000` assembling the prompt,
+`history_compaction.py:38` and `:51` walking the chain. That is a stored key
+applied on a memory read path, and it is where the mark rests.
+
+**The authorizer is the partition's guard, and it is the right place for one.**
 `_sqlite_authorizer` denies `SQLITE_ATTACH` and `SQLITE_DETACH`, so no query can
 mount another agent's database file; denies `load_extension`, `readfile`,
 `writefile`, `edit` and `fts3_tokenizer`, closing the filesystem escapes SQL
 offers; and denies the `database_list`, `key`, `rekey`, `temp_store` and
-`temp_store_directory` pragmas. Isolation is therefore **partition plus
+`temp_store_directory` pragmas. Isolation on that tier is therefore **partition plus
 capability** — one file per agent UUID, and no SQL verb that can reach across —
-rather than a `WHERE` clause. On the Django side every model is foreign-keyed to
-the agent and filtered on read. `scope_enforced` is earned, and the shape is
-worth naming because it is the only instance in the corpus where the boundary is
-enforced by an authorizer callback rather than by a query predicate.
+rather than a `WHERE` clause. The shape is worth naming because an authorizer
+callback is an unusual way to hold a boundary, and because it is aimed at the
+right threat: the model writes the SQL, so the enforcement has to sit below the
+SQL rather than in it.
 
 **No tombstone, and the reason is the schema.** Correction is whatever `DELETE
 FROM` the model writes. Nothing records that a value was rejected, and nothing
@@ -335,6 +349,20 @@ again once an agent has filed it under a name only it chose.
 | `console/agent_chat/plan_events.py` | — | The kanban activity feed |
 | `tests/unit/test_sqlite_*.py` | 381 tests | Schema prompt, recovery, batch, coordination |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The summary tier carries a scope key on the row | read `api/models.py:12951` and `:12993` | Both snapshot models declare `agent = models.ForeignKey("PersistentAgent", ...)` |
+| Every summary read filters on it | `grep -rn "PersistentAgentStepSnapshot.objects\|PersistentAgentCommsSnapshot.objects" --include="*.py" api \| grep -v evals` | `prompt_context.py:4995`, `:5000`; `history_compaction.py:38`, `:51` |
+| The SQLite tier has no scope column | read `api/agent/tools/sqlite_state.py` | The schema is model-authored; isolation is one file per agent UUID plus the authorizer |
+| The ephemeral contract is stated per table | `grep -n "BUILTIN_TABLE_NOTES" -A 10 api/agent/tools/sqlite_state.py` | Seven built-in tables, each annotated with its own mortality |
+| No platform-level correction is expressible | `grep -rn "DELETE FROM" --include="*.py" api \| grep -i agent_db` | Nothing generic; deletion is whatever SQL the model writes |
+
 ## History
+
+**2026-09-11** — [`c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb`](https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb) — re-read, 598 files and 71,496 insertions past the previous pin in a single commit. **The mark holds and its basis is corrected.** The previous edition awarded `scope_enforced` on the SQLite side, describing the boundary as *"partition plus capability … rather than a `WHERE` clause"* — which is accurate, and is the shape the atlas does not count: one file per agent UUID, no scope column on a row, no predicate on a query. What does earn the mark is the tier that carries memory between cycles: `PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` hold an `agent` foreign key as a column, and every read filters on it — `prompt_context.py:4995` and `:5000` when assembling the prompt, `history_compaction.py:38` and `:51` when walking the chain. The authorizer paragraph is kept and reframed as what it is, a guard on a partition, aimed correctly at a threat where the model writes the SQL. The built-in ephemeral contract grew to seven tables, each still annotated with its own mortality in the prompt — a `messages` snapshot, a `files` index and an `agent_skills` mirror joined the list. The tombstone finding is unchanged and remains the sharpest instance of its kind here: deletion is not expressible at the platform level, because the tables differ per agent and were invented by a model. Screened before reading: twelve findings; nothing was installed or run.
 
 **2026-07-30** — [`26844673ac9f134e2ad3851a12dd26762d94c3a9`](https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9) — first reading.

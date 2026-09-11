@@ -901,7 +901,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`gobii`](../systems/gobii/)
 - Best idea: an explicit persistence contract — eight built-in tables declared ephemeral and dropped before save, with each one's mortality stated in the prompt the model reads, so the agent knows what survives.
 - Biggest risk: the schema is model-authored, so nobody can write a query to correct or erase a subject without first discovering what tables the agent invented.
-- Most reusable component: `sqlite3.set_authorizer` as a real sandbox if you let a model write SQL, and mounting the platform's own state as tables the agent can join against.
+- Most reusable component: `sqlite3.set_authorizer` as a real sandbox if you let a model write SQL, and mounting the platform's own state as tables the agent can join against. The scope mark itself rests on the other tier: the Django snapshot tables carry an `agent` foreign key on the row and every read filters on it, while the per-agent SQLite file is a partition the authorizer guards.
 - Maturity impression: 381 test functions across the SQLite suites alone, covering the schema prompt, digest, recovery, batch behaviour and cross-process coordination, plus an eval framework in the platform proper.
 - Study when: your agent's memory is genuinely tabular — scraped listings, tracked prices, pipelines — where the useful question is an aggregate and SQL beats every retrieval mechanism here.
 - Do not copy when: memory is a set of beliefs about a person that may turn out to be wrong. There is nowhere to record a rejection and no operator-level way to find a value an agent filed under a name only it chose.

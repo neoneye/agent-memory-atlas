@@ -2627,7 +2627,11 @@ query to correct or erase a subject without first discovering what
 tables the agent invented.</li>
 <li>Most reusable component: <code>sqlite3.set_authorizer</code> as a
 real sandbox if you let a model write SQL, and mounting the platform's
-own state as tables the agent can join against.</li>
+own state as tables the agent can join against. The scope mark itself
+rests on the other tier: the Django snapshot tables carry an
+<code>agent</code> foreign key on the row and every read filters on it,
+while the per-agent SQLite file is a partition the authorizer
+guards.</li>
 <li>Maturity impression: 381 test functions across the SQLite suites
 alone, covering the schema prompt, digest, recovery, batch behaviour and
 cross-process coordination, plus an eval framework in the platform

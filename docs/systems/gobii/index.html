@@ -114,14 +114,14 @@ prompt.</p>
               <strong>gobii-ai/gobii-platform</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9" title="26844673ac9f134e2ad3851a12dd26762d94c3a9">
+            <a class="meta-pill revision-pill" href="https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb" title="c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb">
               <span>Analyzed revision</span>
-              <code>26844673…</code>
+              <code>c9929bf8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gobii-ai--gobii-platform" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -313,8 +313,23 @@ scheduled. Memory is one subsystem inside it, reachable only through the
 agent's own tool calls.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>The authorizer is the scope mechanism, and it is the right
-place for it.</strong> <code>_sqlite_authorizer</code> denies
+<p><strong>Two boundaries of different kinds sit here, and only one of
+them is what the mark measures.</strong> The per-agent SQLite file is a
+partition: one file per agent UUID, with no scope column inside it and
+no predicate on any query the model writes. An authorizer hardens that
+partition, which is real and is not the same thing as a key. What earns
+<code>scope_enforced</code> is the other tier — the Django summary
+tables that carry the memory between cycles.
+<code>PersistentAgentStepSnapshot</code> and
+<code>PersistentAgentCommsSnapshot</code> each hold an
+<code>agent</code> foreign key as a column on the row, and every read
+filters on it: <code>prompt_context.py:4995</code> and
+<code>:5000</code> assembling the prompt,
+<code>history_compaction.py:38</code> and <code>:51</code> walking the
+chain. That is a stored key applied on a memory read path, and it is
+where the mark rests.</p>
+<p><strong>The authorizer is the partition's guard, and it is the right
+place for one.</strong> <code>_sqlite_authorizer</code> denies
 <code>SQLITE_ATTACH</code> and <code>SQLITE_DETACH</code>, so no query
 can mount another agent's database file; denies
 <code>load_extension</code>, <code>readfile</code>,
@@ -322,14 +337,13 @@ can mount another agent's database file; denies
 <code>fts3_tokenizer</code>, closing the filesystem escapes SQL offers;
 and denies the <code>database_list</code>, <code>key</code>,
 <code>rekey</code>, <code>temp_store</code> and
-<code>temp_store_directory</code> pragmas. Isolation is therefore
-<strong>partition plus capability</strong> — one file per agent UUID,
-and no SQL verb that can reach across — rather than a <code>WHERE</code>
-clause. On the Django side every model is foreign-keyed to the agent and
-filtered on read. <code>scope_enforced</code> is earned, and the shape
-is worth naming because it is the only instance in the corpus where the
-boundary is enforced by an authorizer callback rather than by a query
-predicate.</p>
+<code>temp_store_directory</code> pragmas. Isolation on that tier is
+therefore <strong>partition plus capability</strong> — one file per
+agent UUID, and no SQL verb that can reach across — rather than a
+<code>WHERE</code> clause. The shape is worth naming because an
+authorizer callback is an unusual way to hold a boundary, and because it
+is aimed at the right threat: the model writes the SQL, so the
+enforcement has to sit below the SQL rather than in it.</p>
 <p><strong>No tombstone, and the reason is the schema.</strong>
 Correction is whatever <code>DELETE FROM</code> the model writes.
 Nothing records that a value was rejected, and nothing <em>could</em>
@@ -516,7 +530,74 @@ skills</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The summary tier carries a scope key on the row</td>
+<td>read <code>api/models.py:12951</code> and <code>:12993</code></td>
+<td>Both snapshot models declare
+<code>agent = models.ForeignKey("PersistentAgent", ...)</code></td>
+</tr>
+<tr>
+<td>Every summary read filters on it</td>
+<td><code>grep -rn "PersistentAgentStepSnapshot.objects|PersistentAgentCommsSnapshot.objects" --include="*.py" api | grep -v evals</code></td>
+<td><code>prompt_context.py:4995</code>, <code>:5000</code>;
+<code>history_compaction.py:38</code>, <code>:51</code></td>
+</tr>
+<tr>
+<td>The SQLite tier has no scope column</td>
+<td>read <code>api/agent/tools/sqlite_state.py</code></td>
+<td>The schema is model-authored; isolation is one file per agent UUID
+plus the authorizer</td>
+</tr>
+<tr>
+<td>The ephemeral contract is stated per table</td>
+<td><code>grep -n "BUILTIN_TABLE_NOTES" -A 10 api/agent/tools/sqlite_state.py</code></td>
+<td>Seven built-in tables, each annotated with its own mortality</td>
+</tr>
+<tr>
+<td>No platform-level correction is expressible</td>
+<td><code>grep -rn "DELETE FROM" --include="*.py" api | grep -i agent_db</code></td>
+<td>Nothing generic; deletion is whatever SQL the model writes</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb"><code class="commit-id" title="c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb">c9929bf8…</code></a>
+— re-read, 598 files and 71,496 insertions past the previous pin in a
+single commit. <strong>The mark holds and its basis is
+corrected.</strong> The previous edition awarded
+<code>scope_enforced</code> on the SQLite side, describing the boundary
+as <em>"partition plus capability … rather than a <code>WHERE</code>
+clause"</em> — which is accurate, and is the shape the atlas does not
+count: one file per agent UUID, no scope column on a row, no predicate
+on a query. What does earn the mark is the tier that carries memory
+between cycles: <code>PersistentAgentStepSnapshot</code> and
+<code>PersistentAgentCommsSnapshot</code> hold an <code>agent</code>
+foreign key as a column, and every read filters on it —
+<code>prompt_context.py:4995</code> and <code>:5000</code> when
+assembling the prompt, <code>history_compaction.py:38</code> and
+<code>:51</code> when walking the chain. The authorizer paragraph is
+kept and reframed as what it is, a guard on a partition, aimed correctly
+at a threat where the model writes the SQL. The built-in ephemeral
+contract grew to seven tables, each still annotated with its own
+mortality in the prompt — a <code>messages</code> snapshot, a
+<code>files</code> index and an <code>agent_skills</code> mirror joined
+the list. The tombstone finding is unchanged and remains the sharpest
+instance of its kind here: deletion is not expressible at the platform
+level, because the tables differ per agent and were invented by a model.
+Screened before reading: twelve findings; nothing was installed or
+run.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/gobii-ai/gobii-platform/commit/26844673ac9f134e2ad3851a12dd26762d94c3a9"><code class="commit-id" title="26844673ac9f134e2ad3851a12dd26762d94c3a9">26844673…</code></a>
 — first reading.</p>
