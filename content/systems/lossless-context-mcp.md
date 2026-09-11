@@ -7,9 +7,9 @@ page_kind: system
 source_name: "NORTHTEKDevs/lossless-context-mcp"
 source_url: https://github.com/NORTHTEKDevs/lossless-context-mcp
 archive_name: "NORTHTEKDevs--lossless-context-mcp"
-revision: 47440a012e701fd8eddd4167fb5c3fa7faa44fdb
-revision_url: https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/47440a012e701fd8eddd4167fb5c3fa7faa44fdb
-analyzed_at: 2026-08-19
+revision: 1ef5bf9e1168b3717a4e08e2e0424721f652da51
+revision_url: https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/1ef5bf9e1168b3717a4e08e2e0424721f652da51
+analyzed_at: 2026-09-11
 capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the archive — a per-writer append-only event log beside a content-addressed blob store | src/archive.ts | every read, edit and write is appended as an `ArchiveEvent` carrying timestamp, session, path, repo, content SHA-256, git blob sha1, byte and token counts, source and op; each process appends only to its own `events/<writer>.jsonl` so the log is multi-process safe with no locking, and a denied path still gets its event with `excluded: true` | test/archive.test.ts"
@@ -294,7 +294,20 @@ worth more than the 72.1% row it sits beside, and the document says why.
 | `test/archive.test.ts` | Deny-list cases, the near-miss, the glob, and the symlink |
 | `BENCHMARK.md` | Two mandatory metrics, three workloads, and the negative headline |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| A subagent gets its own seen-state | read `guardStateKey` at `src/guard.ts:226-232` | `agentId ? \`${sessionId}.agent-${agentId}\` : sessionId` |
+| Cursors are per transcript path | read the `offsets` doc comment in `src/guard.ts` | Keyed by normalized path; the legacy scalar is retained for old state files and never consulted |
+| Only a tool result marks a file seen | `grep -n "Intent-based marks" src/guard.ts` | *"ONLY for this server's read tools (never guarded tools)"*, and *"only tool RESULTS may mark a file as seen"* |
+| Suite size | `grep -c "it(\|test(" test/*.test.ts` summed | 156 cases across ten files |
+
 ## History
+
+**2026-09-11** — [`1ef5bf9e1168b3717a4e08e2e0424721f652da51`](https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/1ef5bf9e1168b3717a4e08e2e0424721f652da51) — re-read, 7 files and 323 insertions past the previous pin in a single commit, almost all of it the guard and its tests. Both marks re-verified and unchanged. **The commit fixes a failure mode worth recording, because the guard's whole value is that it denies an edit the model should not make, and this made it deny edits it should have allowed.** A single scalar byte cursor was applied across every transcript in a session — and a session has more than one, because *"Claude Code gives every subagent its own file while keeping the parent's session_id"*. When the parent's cursor exceeded a subagent transcript's size, the reader took its truncated-or-rotated branch, returned nothing, and *"the agent's own Read calls were never recorded — the guard then denied edits to files that agent had just read."* The fix is a cursor per normalized path, with the old scalar retained so existing state files still load and explicitly never consulted for reads, plus `guardStateKey` giving a subagent its own state file under the parent session, on the reasoning that *"a subagent has its own context window: the parent's Reads are not in it, and its Reads are not in the parent's."* Two committed test files cover the multi-transcript and per-agent cases. One further distinction in the same change deserves naming: only a tool **result** may mark a file as seen, never an intent, and intent-based marks are accepted only for this server's own read tools — so an agent announcing it read something does not earn the right to edit it. Screened before reading: seven findings; nothing was installed or run.
 
 **2026-08-19** — [`47440a012e701fd8eddd4167fb5c3fa7faa44fdb`](https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/47440a012e701fd8eddd4167fb5c3fa7faa44fdb)
 — first reading. Screened before reading: two auto-run surfaces — the `hooks/`
