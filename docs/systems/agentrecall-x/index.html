@@ -107,14 +107,14 @@ heeded is demoted out of its own veto by its measured precision.</p>
               <strong>Goldentrii/AgentRecall-X</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd" title="a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd">
+            <a class="meta-pill revision-pill" href="https://github.com/Goldentrii/AgentRecall-X/commit/270e7a47106537333133e85a3f98063e08ee7db2" title="270e7a47106537333133e85a3f98063e08ee7db2">
               <span>Analyzed revision</span>
-              <code>a113cf69…</code>
+              <code>270e7a47…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Goldentrii--AgentRecall-X" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -605,7 +605,14 @@ and less fine as a fully autonomous loop.</p>
 <h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
 <ul>
 <li><strong><code>heeded_count</code> is self-reported</strong>, and the
-veto demotion depends on it.</li>
+veto demotion depends on it. The path that records it is now
+instrumented rather than merely guarded: the catch around outcome
+tracking calls <code>recordHookFailure</code>, under a comment naming
+the incident it answers — a systemic failure <em>"silently meant every
+correction's heeded/recurred verdict for this session went unrecorded,
+with zero trace anywhere."</em> Self-reporting that fails loudly is
+still self-reporting, and it is a different risk from self-reporting
+that fails silently.</li>
 <li><strong>Keyword matching can silently fail to fire</strong> a
 correction that should block.</li>
 <li><strong>No corrections table in the Supabase schema</strong> — the
@@ -700,7 +707,75 @@ the repository.</li>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The veto still gates on <code>authoritative</code></td>
+<td>read
+<code>packages/core/src/tools-logic/check-action.ts:382</code></td>
+<td><code>rec.authoritative !== false &amp;&amp; rec.severity === "p0" &amp;&amp; !isNoiseCandidate</code></td>
+</tr>
+<tr>
+<td>Outcome tracking failures are recorded</td>
+<td><code>grep -rn "recordHookFailure" --include="*.ts" packages | wc -l</code></td>
+<td>43 call sites across 9 files, including the <code>session_end</code>
+outcome catch</td>
+</tr>
+<tr>
+<td>The eval corpus is pinned by hash</td>
+<td>read <code>scripts/eval/fixtures/corpus-v1.lock.json</code></td>
+<td><code>n = 26</code>, <code>n_counted = 23</code>, provenance
+<em>"synthetic, hand-audited, secrets-free"</em>, with a
+<code>corpus_hash</code> over a canonical JSON tree</td>
+</tr>
+<tr>
+<td>The baseline separates what it could measure from what it did</td>
+<td>read
+<code>scripts/eval/baselines/correction-transfer-real-2026-07-03.json</code></td>
+<td><code>denominators: {theoretical: 5, achievable: 4}</code></td>
+</tr>
+<tr>
+<td>Tree size</td>
+<td><code>find packages -name "*.ts" -not -path "*/node_modules/*" | xargs wc -l | tail -1</code></td>
+<td>43,664 lines</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Goldentrii/AgentRecall-X/commit/270e7a47106537333133e85a3f98063e08ee7db2"><code class="commit-id" title="270e7a47106537333133e85a3f98063e08ee7db2">270e7a47…</code></a>
+— re-read, 175 files and 25,149 insertions past the previous pin in a
+single commit, a large share of it dated build and review reports under
+<code>reports/</code>. <strong>Both marks re-verified and
+unchanged</strong>, with <code>capability_evidence</code> records added
+where the report had none; <code>check-action.ts:382</code> still gates
+the veto on <code>authoritative !== false</code> and a <code>p0</code>
+severity. <strong>The outcome loop, which this report names as the risk
+the whole trust ladder rests on, is now instrumented.</strong> The catch
+around outcome tracking in <code>session-end.ts</code> calls
+<code>recordHookFailure</code> into a JSONL health log, under a comment
+giving the incident behind it: a systemic failure <em>"silently meant
+every correction's heeded/recurred verdict for this session went
+unrecorded, with zero trace anywhere."</em> There are 43 such call sites
+across nine files. That does not make <code>heeded_count</code> less
+self-reported — it makes the absence of a report detectable, which is
+the difference between a loop that is wrong and a loop that is quietly
+not running. Also worth recording: the eval corpus is pinned by a
+<code>corpus_hash</code> over a canonical JSON tree at
+<code>n = 26</code>, <code>n_counted = 23</code>, and the baseline
+reports <code>denominators: {theoretical: 5, achievable: 4}</code> —
+separating what the benchmark could measure from what it did, which very
+few benchmarks in this corpus do. Screened before reading: fifteen
+findings; nothing was installed or run.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd"><code class="commit-id" title="a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd">a113cf69…</code></a>
 — first reading.</p>
