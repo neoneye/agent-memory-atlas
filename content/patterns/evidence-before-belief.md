@@ -275,6 +275,8 @@ pinning the intentional *non*-redaction of the question line as *"intended
 behavior, not a conceded leak"* — which is the sentence that stops a later
 contributor from finishing the job.
 
+**[Claude Self-Reflect](../../systems/claude-self-reflect/) keeps the evidence in a form a later pass can re-check rather than re-derive.** Its `witness_ledger` is insert-and-query only by module contract — *"a witness that no longer holds is superseded by inserting a NEW row … never by mutating or removing the old one"* — and each row is a BLAKE3 stamp of a symbol span anchored to a commit oid. The belief layered on top, a `witness_verdicts` event saying an anchor is obsolete, superseded or reinstated, is a pure function of those stamps and git commit-graph ancestry, so any reader can recompute it, and the verdict carries the commit that proves it into the search-facing annotation. The raw material is never consumed either: the transcripts stay where the harness wrote them and a lost database is rebuilt by re-import. What it does not keep is the other direction — a `<private>` tag applied after the fact cannot reach a chunk already stored, because nothing in the tree deletes one.
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

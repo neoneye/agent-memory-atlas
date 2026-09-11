@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single Rust binary that indexes
+Claude Code's own conversation transcripts into SQLite with FTS5 and an
+HNSW vector index, injects past context through six session hooks and
+fifteen MCP tools, and marks a hit stale only when a content-hash
+witness at a git commit proves it — demoting and annotating within the
+page, never deleting.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Claude
+Self-Reflect — Agent Memory Atlas">
+    <meta property="og:description" content="A single Rust binary that
+indexes Claude Code's own conversation transcripts into SQLite with FTS5
+and an HNSW vector index, injects past context through six session hooks
+and fifteen MCP tools, and marks a hit stale only when a content-hash
+witness at a git commit proves it — demoting and annotating within the
+page, never deleting.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude
+Self-Reflect — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single Rust binary that
+indexes Claude Code's own conversation transcripts into SQLite with FTS5
+and an HNSW vector index, injects past context through six session hooks
+and fifteen MCP tools, and marks a hit stale only when a content-hash
+witness at a git commit proves it — demoting and annotating within the
+page, never deleting.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Claude Self-Reflect — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Claude Self-Reflect",
+      "description": "A single Rust binary that indexes Claude Code's own conversation transcripts into SQLite with FTS5 and an HNSW vector index, injects past context through six session hooks and fifteen MCP tools, and marks a hit stale only when a content-hash witness at a git commit proves it \u2014 demoting and annotating within the page, never deleting.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Transcript memory with git-receipt
+staleness verdicts</p>
+          <h1>Claude Self-Reflect</h1>
+          <p class="document-deck">A single Rust binary that indexes
+Claude Code's own conversation transcripts into SQLite with FTS5 and an
+HNSW vector index, injects past context through six session hooks and
+fifteen MCP tools, and marks a hit stale only when a content-hash
+witness at a git commit proves it — demoting and annotating within the
+page, never deleting.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ramakay/claude-self-reflect">
+              <span>Source</span>
+              <strong>ramakay/claude-self-reflect</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ramakay/claude-self-reflect/commit/e9c18ae74f1d54323953de3a9b289d25f9e8ef64" title="e9c18ae74f1d54323953de3a9b289d25f9e8ef64">
+              <span>Analyzed revision</span>
+              <code>e9c18ae7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ramakay--claude-self-reflect" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ramakay--claude-self-reflect</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Claude Self-Reflect indexes Claude Code's own JSONL transcripts and
+serves them back as memory. A single Rust binary —
+<code>csr-engine</code>, MIT-licensed, 78,201 lines across 104 source
+files in <code>csr-engine/src</code> and <code>codewitness/src</code>,
+of which 30,886 fall at or after the first <code>#[cfg(test)]</code>
+marker in their file, beside 5,317 lines of integration tests — runs an
+MCP stdio server with fifteen tools, installs six Claude Code hooks,
+stores chunks in SQLite with FTS5, and keeps a 384-dimension HNSW index
+in files next to the database. Nothing else has to be running: no
+container, no vector service, no API key. The <code>CHANGELOG.md</code>
+runs from 1.0.0 on 14 January 2025 to 10.1.0 on 8 August 2026; the
+pinned commit is dated 18 August 2026.</p>
+<p><strong>The interesting mechanism is how a memory stops being treated
+as current.</strong> Most conversation-memory systems either never mark
+staleness or ask a model whether a remembered claim still holds. CSR
+does neither. <code>codewitness</code> stamps a BLAKE3 hash of a
+function or type span at a git commit into an append-only
+<code>witness_ledger</code>; a "dream" cycle joins those stamps by
+commit-graph ancestry and emits <code>anchor_obsolete</code>,
+<code>superseded_by</code> or <code>anchor_reinstated</code> events into
+an append-only <code>witness_verdicts</code>; and search binds those
+verdicts to chunks by symbol. Zero LLM, zero wall-clock time, and an
+explicit abstention for every case ancestry cannot settle — a successor
+on a never-merged branch, a HEAD behind the witness, an incomparable
+pair.</p>
+<p><strong>The second interesting thing is the evaluation, and what it
+concluded.</strong> The repository commits a pre-registration
+(<code>docs/plans/saga-t3-preregistration.md</code>, registered 27 July
+2026, with a pre-committed failure interpretation), sealed question
+rosters whose SHA-256 seals verify against <code>SEAL.sha256</code>, and
+result files that report the project's own flagship retrieval mechanism
+losing. On 396 receipt-lookup queries, hybrid kNN+FTS beat the
+reinstatement walk 0.813 to 0.581
+(<code>docs/plans/saga-t3-results.md:111-119</code>); on 27 sealed
+multi-hop questions the two arms were indistinguishable. An amendment in
+the same file then corrects the project's own published explanation of
+why. That is unusually honest, and it is not what the README's summary
+of the paper says.</p>
+<p><strong>Where it is strongest</strong> is hygiene against its own
+reflexivity. A memory system that indexes the transcripts of sessions in
+which it is used will index its own retrieval output;
+<code>import/mod.rs</code> binds each suppressed CSR
+<code>tool_use</code> id to its <code>tool_result</code> and drops both,
+scrubs CSR's own <code>&lt;system-reminder&gt;</code> blocks out of user
+messages only, and counts both kinds of scrub into
+<code>import_state</code> columns surfaced by
+<code>csr-engine status</code>. The unit tests for that path all carry
+positive controls.</p>
+<p><strong>Where it is weakest</strong> is that nothing ever leaves.
+There is no forget, no delete and no redaction on any user-reachable
+path — the fifteen MCP tools declared between
+<code>mcp/mod.rs:256</code> and <code>:675</code> include no delete, and
+the CLI subcommand list at <code>main.rs:52-253</code> includes no
+purge. Every correction mechanism is a demotion inside the returned page
+plus a text label, and on the <code>UserPromptSubmit</code> injection
+path the label is not rendered at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>A memory is a chunk of transcript, and it is believed on
+arrival.</strong> <code>ConversationChunk</code>
+(<code>import/mod.rs:39-60</code>) is roughly 900 characters of message
+text (<code>CHUNK_CHAR_BUDGET</code>, <code>import/mod.rs:511</code>),
+with a deterministic UUIDv5 id, a <code>project_name</code>, a
+timestamp, a sequence index, an <code>is_sidechain</code> flag, and an
+<code>author</code> that is the highest-authority speaker among its
+messages. There is no extraction step producing facts, no confidence, no
+candidate state. A second unit, the <code>reflections</code> row, holds
+agent-written insights, generated session stories and episode JSON. Both
+are searchable the moment they are written.</p>
+<p><strong>Two things can change a chunk's standing, and neither removes
+it.</strong> The first is a verdict an agent asserts:
+<code>csr_resolve</code> appends <code>resolved</code>,
+<code>still_open</code> or <code>regressed</code> to
+<code>resolution_ledger</code> with mandatory cited evidence, latest row
+wins, and a later <code>regressed</code> row re-opens a
+<code>resolved</code> chunk. The second is a verdict the repository
+proves: the dream cycle compares a witness's BLAKE3 stamp against the
+stamp at the live HEAD, and where ancestry allows, emits
+<code>anchor_obsolete</code> (the symbol is gone),
+<code>superseded_by</code> (a HEAD-path descendant carries the current
+content) or <code>anchor_reinstated</code> (exact stamp equality
+restored — a revert). The paper's own framing for the difference is
+worth the quote: the ledger records <em>"asserted state, not inferred
+state"</em>, after a pre-registered attempt to infer closure from
+conversation prose died at ρ ≈ 0.036.</p>
+<p><strong>Neither verdict is a filter.</strong>
+<code>apply_validity_partition</code>
+(<code>mcp/tools.rs:1861-1898</code>) splits results into kept and
+demoted and ends <code>kept.extend(demoted)</code>;
+<code>apply_resolutions</code> (<code>mcp/tools.rs:1905-1943</code>)
+splits into unresolved and resolved and ends
+<code>unresolved.extend(resolved)</code>. A chunk the dream cycle has
+proven false at HEAD is still returned, at the bottom of the page,
+carrying
+<code>[stale anchor] {symbol} no longer in current code (receipt {oid})</code>
+(<code>mcp/tools.rs:1675-1686</code>). A <code>Demote</code> is only
+ever assigned when no witness of that symbol is intact at the observed
+HEAD; ordinary evolution produces <code>[evolved] … as of {oid}</code>
+with no rank effect at all, because symbol-level binding cannot tell an
+A-era chunk from a B-era one
+(<code>storage/chunk_binding.rs:23-31</code>).</p>
+<p><strong>The epistemics are therefore two-tier and deliberately
+shallow.</strong> Retrieval stays similarity-based and complete; state
+is layered on top as annotation and ordering, and the decision about
+what to do with a label belongs to the reading model. That is a
+defensible division of labour — it preserves the history that regression
+detection needs — and it is also why this system carries no
+<code>trust_state</code> mark: there is a discrete status, it is read on
+every search, and no read of it excludes a row.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a transcript chunk is believed on arrival and never removed; two append-only verdict streams — one an agent asserts, one the git graph proves — change only where it sits in the page and what label it carries, and the hook injection path renders neither label</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a transcript chunk is believed on arrival and never removed; two append-only verdict streams — one an agent asserts, one the git graph proves — change only where it sits in the page and what label it carries, and the hook injection path renders neither label
+flowchart TD
+  JSONL[&quot;Claude Code writes ~/.claude/projects/*.jsonl&quot;] --&gt; HOOK[&quot;Stop and SessionEnd hooks import the live transcript&quot;]
+  HOOK --&gt; SAN[&quot;sanitizer: CSR tool_use blocks dropped with their bound tool_result; CSR system-reminder blocks scrubbed from user messages only; counters persisted&quot;]
+  SAN --&gt; CH[&quot;chunk row: ~900 chars, UUIDv5 id, project_name, author, seq, is_sidechain — immutable, believed, never deleted&quot;]
+  CH --&gt; IDX[&quot;chunks_fts row plus a 384-dim vector in the HNSW graph&quot;]
+  IDX --&gt; READ[&quot;retrieval: vector arm filtered by project id, FTS arm only when the top semantic score is under 0.5&quot;]
+
+  AG[&quot;agent calls csr_resolve with cited evidence&quot;] --&gt; RL[&quot;resolution_ledger append-only: resolved, still_open, regressed; source hardcoded &#39;agent&#39;&quot;]
+  TASK[&quot;Stop hook matches a completed task to a still-open verdict&quot;] --&gt; PROP[&quot;resolution_proposals: invisible to search until csr_resolve promotes it&quot;]
+  PROP -.-&gt;|&quot;never auto-promoted&quot;| RL
+
+  STAMP[&quot;codegraph stamp-spans: BLAKE3 of a symbol span at a commit oid&quot;] --&gt; WL[&quot;witness_ledger append-only; INSERT and QUERY only&quot;]
+  WL --&gt; DREAM[&quot;dream cycle every 6h: compare stamps, compare commit ancestry, abstain when unprovable&quot;]
+  DREAM --&gt; WV[&quot;witness_verdicts append-only: anchor_obsolete, superseded_by, anchor_reinstated&quot;]
+
+  RL --&gt; READ
+  WV --&gt; BIND[&quot;chunk_binding: symbol to chunk, Demote only when no witness is intact at HEAD&quot;]
+  BIND --&gt; READ
+
+  READ --&gt; OUT[&quot;MCP result page: resolved and demoted hits appended to the tail, annotated &#39;[stale anchor]&#39; or &#39;[evolved]&#39; with a commit receipt&quot;]
+  READ --&gt; INJ[&quot;UserPromptSubmit injection: 500-token budget, top 5, no resolution note rendered&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One process, one file, no services.</strong>
+<code>csr-engine</code> is a Clap CLI whose default mode is an rmcp
+stdio server (<code>main.rs</code>). Storage is a single SQLite database
+at <code>~/.claude-self-reflect/</code> opened through
+<code>rusqlite</code> with the bundled amalgamation; the schema is
+created and migrated by <code>storage/migrations.rs</code>, which runs
+on every <code>Storage::open</code> and is shape-probed rather than
+versioned (two shadow tables, <code>local_bindings</code> and
+<code>edge_scope_chains</code>, are dropped and recreated only when a
+legacy primary key is detected —
+<code>migrations.rs:631-639,:707-715</code>, a repair for an
+unconditional drop that had been wiping witness rows on every process
+start).</p>
+<p><strong>Embeddings and the vector index are in-process.</strong>
+<code>embeddings/mod.rs</code> wraps FastEmbed's
+<code>AllMiniLML6V2</code> at 384 dimensions behind a
+<code>Mutex</code>, downloading the model on first run.
+<code>search/mod.rs</code> builds an <code>hnsw_rs</code> graph with
+<code>M = 16</code>, <code>ef_construction = 200</code>,
+<code>ef_search = 100</code> (<code>search/mod.rs:42-45</code>),
+persists it as <code>chunks.hnsw.{data,graph}</code> and
+<code>reflections.hnsw.{data,graph}</code> under
+<code>&lt;db_dir&gt;/index/</code> with an <code>fs2</code> advisory
+lock, and bypasses HNSW entirely below
+<code>EXACT_SCAN_THRESHOLD = 256</code> points because <em>"HNSW is
+approximate and has misbehaved on near-empty indexes (CI: 1-point search
+returned no neighbours)"</em> (<code>search/mod.rs:48-50</code>).
+Startup loads the cached graph and backfills additively; only negative
+drift — rows having disappeared — forces a full rebuild
+(<code>search/mod.rs:501-527</code>,
+<code>engine.rs:126-196</code>).</p>
+<p><strong>A second crate carries the evidence layer.</strong>
+<code>codewitness/</code> (4,353 lines) is a standalone library and CLI:
+<code>Anchor</code>, <code>Auditor::stamp</code>,
+<code>Auditor::try_audit</code>, <code>causal::compare</code>,
+<code>Verdict</code>, with <code>gix</code> for commit-graph ancestry.
+Its own module doc states the contract — <em>"Zero LLM. Zero wall-clock
+time."</em> — and <code>SupersessionBasis</code> distinguishes
+<code>GraphOrdered</code> from <code>ContentOnly</code>, so a squash or
+cherry-pick successor is never read as graph-proven.</p>
+<p><strong>The background work is optional and layered.</strong>
+<code>csr-engine daemon</code> runs a <code>notify</code> file watcher,
+a plans importer on a 30-minute loop, a <code>history.jsonl</code>
+registry spine on a 10-minute loop, a heuristic consolidation pass, an
+optional <code>claude -p</code> narrative and ratification pass, an
+hourly release-ancestry refresh, and the dream cycle on
+<code>DEFAULT_INTERVAL_SECS = 6 * 60 * 60</code>
+(<code>daemon/dream_cadence.rs:58</code>). Every expensive lane has a
+kill switch: <code>CSR_NO_AI_NARRATIVES</code>,
+<code>CSR_NO_RATIFICATION</code>, <code>CSR_NO_DREAMING</code>,
+<code>CSR_NO_RECAP</code>, <code>CSR_NO_VALIDITY_PARTITION</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p><strong>What has to be running: nothing.</strong> The hooks shell out
+to the binary per event; the MCP server is spawned by Claude Code; the
+daemon is opt-in and is the only component that needs network access,
+and only for the Anthropic Batch API narratives.
+<code>csr-engine setup</code> imports transcripts, registers the MCP
+server and writes six hook entries into <code>settings.json</code>
+(<code>hooks/install.rs:57-85</code>), merging beside existing hooks
+rather than replacing them.</p>
+<p><strong>Install is consent-first and checksum-verified.</strong>
+<code>installer/postinstall.js</code> downloads a release tarball and
+verifies its SHA-256 against the release's own
+<code>checksums.txt</code> (<code>postinstall.js:295-312</code>) —
+integrity against a corrupted download, not against a compromised
+release, since both come from the same origin. Activation is a separate
+step: nothing touches <code>~/.claude</code> unless
+<code>CSR_AUTO_SETUP=1</code> is set or <code>csr-engine setup</code> is
+run (<code>postinstall.js:6-14,:201</code>). Prebuilt binaries cover
+macOS on Apple Silicon and Linux x86_64 and ARM64; Intel macOS builds
+from source.</p>
+<p><strong>The store is repairable by hand.</strong> It is one SQLite
+file with ordinary tables and text timestamps;
+<code>csr-engine status</code> emits JSON including a cached
+<code>integrity_check</code>, per-adapter <code>aux_schema_miss:*</code>
+counters, and today's narrative token spend. Uninstall is
+<code>rm -rf ~/.claude-self-reflect/</code>, which is also the only way
+to forget anything.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>hooks/stop.rs</code> and
+<code>hooks/session_end.rs</code> call
+<code>super::import_current_transcript</code>, which parses the JSONL
+through <code>import::mod</code>'s sanitizer and chunker.
+<code>CsrMessageSanitizer</code> (<code>import/mod.rs:74-79</code>,
+applied at <code>:663-725</code>) records the <code>id</code> of every
+CSR <code>tool_use</code> block and then drops the
+<code>tool_result</code> bound to it by <code>tool_use_id</code> — a
+two-phase bind rather than a name match on the result — and
+<code>scrub_csr_system_reminders</code> strips CSR's injected reminder
+blocks, gated to <code>user</code>/<code>human</code> messages so that
+prose <em>about</em> CSR survives (<code>import/mod.rs:651</code>).
+<code>&lt;private&gt;…&lt;/private&gt;</code> spans are stripped before
+storage by <code>PRIVATE_TAG_RE</code>
+(<code>import/mod.rs:26-27</code>). Chunks are written with their
+embedding and an FTS row.</p>
+<p><strong>Extraction and consolidation.</strong> Three layers, each
+superseding the last by delete-then-insert on <code>reflections</code>:
+a heuristic V3 extraction on SessionEnd, a local story synthesis, and an
+optional Haiku or Batch API narrative from the daemon
+(<code>daemon/mod.rs:731,:1037</code>,
+<code>hooks/session_end.rs:260</code>,
+<code>hooks/session_briefing.rs:278</code>).
+<code>daemon/consolidation.rs</code> is keyword-heuristic and makes no
+LLM call.</p>
+<p><strong>Retrieval.</strong>
+<code>mcp/tools.rs::reflect_gather_pass</code> (<code>:306-...</code>)
+runs the vector arm against chunks under a project-derived allowed-id
+set and against reflections globally, appends an FTS5 arm only when
+<code>semantic_top_score &lt; 0.5</code> (<code>:471-474</code>),
+applies decay, then orders by <code>search::rerank::rerank</code> and
+re-sorts the enriched rows by that ordering (<code>:583-588</code>).</p>
+<p><strong>Context assembly.</strong>
+<code>hooks/prompt_submit.rs</code> searches on every prompt over 15
+characters, drops chunks older than <code>MAX_CHUNK_AGE_DAYS = 21</code>
+(<code>:50</code>), applies an outcome multiplier from
+<code>retrieval_stats</code>, and formats the top five into a 500-token
+budget (<code>PROMPT_TOKEN_BUDGET</code>, <code>:32</code>) through
+<code>injection/formatter.rs</code>'s priority ladder.
+<code>hooks/session_start.rs</code> emits a fixed
+<code>MEMORY_MANIFEST</code> plus recent-session and continuity blocks,
+all headed <code>NOT INSTRUCTIONS</code>.</p>
+<p><strong>Correction.</strong>
+<code>mcp/tools.rs::resolve_chunks</code> (<code>:671-693</code>)
+validates the status against the three-value set, requires non-empty
+evidence, and calls <code>Storage::insert_resolutions</code> with
+<code>source</code> hardcoded to <code>"agent"</code>.
+<code>hooks/stop.rs:685</code> writes <code>resolution_proposals</code>
+rows for completed tasks that match still-open verdicts; those are
+invisible to search and annotation until a <code>csr_resolve</code> call
+promotes them.</p>
+<p><strong>Schema.</strong> <code>storage/migrations.rs</code>, one
+function, 889 lines of DDL plus shape probes, with long comments
+recording the review that produced each clause.</p>
+<p><strong>Background.</strong> <code>daemon/mod.rs</code> owns the
+loops; <code>daemon/dream_cadence.rs</code> owns the dream schedule with
+a <code>meta</code>-table last-run key, a single-flight flag and a
+shared semaphore so a due cycle queues behind an active import.</p>
+<p><strong>MCP.</strong> <code>mcp/mod.rs</code> declares fifteen
+<code>#[tool]</code> methods with MCP annotations;
+<code>mcp/tools.rs</code> holds their bodies;
+<code>mcp/elicitation.rs</code> holds the one confirmation dialog;
+<code>mcp/resources.rs</code>, <code>completions.rs</code> and
+<code>tasks.rs</code> cover the rest of the protocol surface.</p>
+<p><strong>Tests.</strong> 1,277 test functions in
+<code>csr-engine</code> and 58 in <code>codewitness</code>, plus four
+integration files and <code>csr-engine/eval-kit/</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong><code>chunks</code> is the trunk</strong>
+(<code>migrations.rs:8-20</code>): <code>id</code>,
+<code>conversation_id</code>, <code>project_name</code>,
+<code>timestamp</code>, <code>content</code>,
+<code>message_count</code>, <code>created_at</code>, later joined by
+<code>summary</code>, <code>seq</code>, <code>is_sidechain</code> and
+<code>source</code>. <code>source</code> defaults to
+<code>'conversation'</code> and carries <code>'sidechain'</code>,
+<code>'plan'</code> and <code>'codex_rollout'</code>; the migration
+deliberately adds no index on it, with the reason written down — a
+two-value column with no consuming query, where a
+<code>CREATE INDEX</code> would scan the whole table on every
+<code>Storage::open</code> (<code>migrations.rs:505-514</code>).</p>
+<p><strong>Provenance is one row per chunk</strong>
+(<code>migrations.rs:148-154</code>): <code>author</code>,
+<code>source_conv_id</code>, <code>supersedes</code>.
+<code>provenance::Speaker</code> is <code>User</code>,
+<code>Assistant</code> or <code>ToolResult</code>, with a module doc
+that names the design intent — <em>"only <code>Speaker::User</code> text
+may be treated as a decision or correction"</em>. Two findings sit on
+this table. First, <code>supersedes</code> has no production writer:
+<code>rg -n 'supersedes: Some' csr-engine/src</code> returns four hits,
+all in test or eval fixtures, and every production construction site
+passes <code>supersedes: None</code> — <code>engine.rs:336</code>,
+<code>import/plans.rs:418</code>, <code>import/watcher.rs:236</code>,
+<code>import/codex_rollout.rs:656</code>,
+<code>daemon/ratification.rs:694,:704</code>,
+<code>search/reinstatement.rs:688</code>,
+<code>storage/queries.rs:2649</code> — so the
+<code>W_SUPERSEDES = 0.20</code> boost the reranker pays
+(<code>search/rerank.rs:38,:89-95</code>) is applied to a field that is
+always empty. The project knows: this exact question is a sealed
+benchmark item in its own roster, with the grep in the ground-truth key
+(<code>eval-kit/t3/questions.sealed.json:59-63</code>). Second, the
+named gate <code>Speaker::is_authoritative</code>
+(<code>provenance.rs:38-40</code>) has no caller outside its own unit
+test; the poisoning defence is implemented instead as scoring terms in
+<code>rerank.rs</code> — <code>+0.50</code> for a user author under the
+recall policy, <code>−0.60</code> for a <code>ToolResult</code> whose
+text matches an authority-claim marker.</p>
+<p><strong>Scoping is a single column.</strong>
+<code>project_name</code> on <code>chunks</code>, derived from Claude
+Code's dash-encoded project directory. Reflections carry a
+<code>project_*</code> tag instead, and legacy reflections without one
+are admitted by design (<code>hooks/prompt_submit.rs:828-835</code>).
+There is no user, tenant or agent dimension anywhere; sidechain subagent
+transcripts are re-attributed to the parent project and linked through
+<code>chunk_provenance.source_conv_id</code>.</p>
+<p><strong>Temporal fields are wall-clock on the memory and commit-graph
+on the evidence.</strong> A chunk has <code>timestamp</code> and
+<code>created_at</code> and nothing else;
+<code>rg -n 'valid_from|valid_to|valid_at|as_of' csr-engine/src</code>
+returns nothing. The witness layer is where a second coordinate appears:
+<code>witness_ledger.at_oid</code> is the commit at which a span's
+content hash held, <code>witness_verdicts.observed_head_oid</code> is
+the HEAD the cycle saw, and <code>receipt_oid</code> is the commit
+proving a verdict — all explicitly <em>"never wall-clock time"</em>
+(<code>migrations.rs:814-818</code>).
+<code>codegraph stamp-spans --at &lt;rev&gt;</code> writes a historical
+<code>at_oid</code> with a present <code>created_at</code>, which is a
+genuine record-time/validity-time split, and the read path resolves
+verdicts by ancestry over those oids rather than by insertion order.</p>
+<p><strong>Other tables worth naming.</strong>
+<code>retrieval_events</code> and <code>retrieval_stats</code> hold the
+outcome feedback loop. <code>code_nodes</code>, <code>code_edges</code>,
+<code>code_evolution</code> and <code>episode_anchors</code> hold the
+AST and co-edit graph. <code>derivation_ledger</code> is scoped
+<code>{repo, branch, user}</code> with the reason in a comment —
+<em>"the same fact id in a different scope is a distinct row, never a
+clobber"</em>. <code>session_registry</code> is a spine that is never
+embedded and never injected. <code>ratification_scores</code> holds the
+output of the hypothesis that failed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The hybrid is a fallback, not a fusion.</strong> The FTS5 arm
+runs only when the best semantic candidate scores below 0.5
+(<code>mcp/tools.rs:471-474</code>), and when it runs, every hit enters
+at a constant 0.45 — 0.40 if the timestamp will not parse — before decay
+(<code>mcp/tools.rs:1757-1799</code>). FTS5's own <code>rank</code> is
+used for <code>ORDER BY</code> and <code>LIMIT</code> inside SQL and
+then discarded, so BM25 never reaches the score. There is no
+reciprocal-rank fusion, no weighted sum and no score normalisation:
+<code>rg -n -i 'rrf|reciprocal|fuse' csr-engine/src</code> finds nothing
+in the search path. The project's own T3 ablation measured what this
+costs — its <em>baseline</em> arm, built for the benchmark with RRF over
+vector top-20 and FTS top-20, scored 0.813 where FTS alone scored 0.162
+and vector alone 0.697, so fusion added roughly twelve points that the
+shipped path does not take.</p>
+<p><strong>Ranking is deterministic feature weighting, with no model in
+the loop.</strong> <code>search/rerank.rs</code> adds
+<code>W_USER = 0.50</code>, <code>W_SUPERSEDES = 0.20</code> and
+<code>W_PRIMACY = 0.15</code>, and subtracts
+<code>W_MECHANIC_PENALTY = 0.50</code>,
+<code>W_POISON_PENALTY = 0.60</code> and
+<code>W_SCAFFOLD_PENALTY = 0.30</code>. Two policies share every signal
+but the mechanic demotion: <code>Recall</code> for
+<code>csr_reflect_on_past</code>, <code>Provenance</code> for
+<code>csr_why</code>, the latter dropping <code>W_USER</code> because
+the reinstatement pool is wide enough that flat boosts promoted weakly
+relevant user chunks over strong evidence. The primacy boost is the
+subtle one — among user-authored, non-scaffold candidates within
+<code>PRIMACY_BAND = 0.05</code> of the best <em>eligible</em> cosine,
+the earliest conversation wins, because <em>"later comparably-relevant
+user chunks are restatements"</em>. Anchoring the band at the best
+eligible rather than the best raw candidate is the point: scaffold
+echoes routinely carry the top raw score precisely because they quote
+the query back.</p>
+<p><strong>Decay has two clocks, and one of them is the release
+graph.</strong> <code>search/decay.rs</code> applies
+<code>score * ((1 - w) + w * 2^(-age_days / scale))</code> with
+<code>w = 0.3</code> and a 90-day half-life on search, so at most 30% of
+a score is time-dependent. TAD then moves the half-life by session
+outcomes — <code>effective_half_life = base * 2^reinforcement</code>,
+reinforcement clamped to ±2, so the half-life swings between about 22
+and 360 days. TAD v2 adds a second axis:
+<code>conversation_ancestry_cache</code> labels a conversation
+<code>shipped</code> or <code>unreleased</code> with a
+<code>releases_behind</code> count refreshed hourly by the daemon, and
+the read path multiplies effective age by
+<code>ANCESTRY_RELEASE_STEP = 0.25</code> per release behind, floored at
+<code>ANCESTRY_MIN_HALF_LIFE_RATIO = 0.25</code>
+(<code>mcp/tools.rs:1730-1795</code>,
+<code>hooks/prompt_submit.rs:466-481</code>). Git is consulted only by
+the refresh; retrieval performs an indexed lookup and never shells
+out.</p>
+<p><strong><code>csr_why</code> is a two-hop walk with three parallel
+traces.</strong> <code>search/reinstatement.rs</code> seeds with a
+2×-overfetched kNN, picks seeds with <code>select_seed_indexes</code> —
+which partitions candidates into non-echo and echo and takes non-echo
+first, because an echo seed launches hop two from the session that
+<em>asked</em> rather than the one that decided — and then runs three
+hops per seed: a Rocchio-style blend at
+<code>blend_query_weight = 0.65</code>, a code-graph spread over
+<code>files_for_session</code> → <code>sessions_for_file</code> capped
+at <code>graph_cap_per_seed = 6</code> with
+<code>graph_boost = 1.10</code>, and an episode-chain hop through
+<code>prev_episode_id</code>. Depth is hard-coded at two; the pool is
+statically bounded at about 46 candidates. A verbatim-echo demotion of
+<code>W_QUERY_ECHO = 0.35</code> applies before rerank.</p>
+<p><strong>The failure mode is documented by the project itself, in its
+own benchmark.</strong> Those echo defences invert on exact-key lookup:
+<code>prefer_non_echo_seeds</code> deprioritises the chunk that contains
+the query verbatim, which on a commit-hash lookup <em>is</em> the gold,
+and the echo plus scaffold demotions stack on receipt-shaped chunks.
+<code>saga-t3-results.md:125-150</code> traces 103 failures — 63 to the
+first and 40 to the second, and concludes that the walk scores twelve
+points below its own seed channel.</p>
+<p><strong>Two known leaks on the read path.</strong> Reflections are
+never project-filtered; a cross-project reflection is multiplied by 0.3
+and returned if nothing local beats it. And
+<code>search_by_recency</code>, <code>get_recent_work</code> and
+<code>get_timeline</code> never call
+<code>normalize_project_scope</code> at all, so with no
+<code>project</code> argument they span every project while
+<code>csr_reflect_on_past</code> with no argument scopes to the current
+one — two defaults on one server. <code>csr_search_by_file</code> is
+internally split: the ledger lookup uses the normalised project, the FTS
+fallback four lines later passes the raw argument
+(<code>mcp/tools.rs:878-892</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are hook-driven and the agent never blocks on
+them.</strong> Every hook handler is wrapped in a catch-all that returns
+<code>Ok(())</code> — <code>hooks/session_start.rs:49-59</code> is
+explicit: <em>"ALWAYS returns Ok(()) to never block Claude Code (C-1
+fix)"</em>, printing <code>CSR engine ready (degraded mode).</code> on
+failure and keeping error details on stderr so internal paths do not
+leak into context. The Stop and SessionEnd hooks import the transcript
+synchronously within the hook's own process, so a memory is retrievable
+as soon as that hook returns; only the session-briefing hook is given a
+timeout, 150 seconds (<code>hooks/install.rs:66</code>).</p>
+<p><strong>Chunking is mechanical.</strong> Messages accumulate to
+<code>CHUNK_CHAR_BUDGET = 900</code>; tool results are truncated at
+<code>MAX_TOOL_RESULT_CHARS = 4000</code>; the chunk id is a UUIDv5 over
+a fixed namespace and the sequence index, so re-importing the same
+transcript overwrites in place rather than duplicating. Aux sources —
+plan documents and Codex rollouts — reimport whole documents through
+<code>delete_chunks_for_conversation</code>, because the source can
+shrink and overwriting by id alone would orphan stale tail chunks in
+search forever (<code>storage/queries.rs:256-290</code>).</p>
+<p><strong>There is no deduplication and no consolidation of
+chunks.</strong> The only merge-like behaviour is layered supersession
+of <code>reflections</code>, where Layer 2 deletes Layer 1's row by id
+and Layer 3 deletes Layer 2's.</p>
+<p><strong>Delete, forget and TTL do not exist on a user-reachable
+path.</strong> <code>delete_reflection</code>
+(<code>storage/queries.rs:873-880</code>) is documented <em>"for layer
+supersession"</em> and its five callers are all layer transitions. No
+MCP tool and no CLI subcommand removes a chunk, a reflection or a
+conversation. The closest thing to forgetting is
+<code>CSR_ACTIVE_FORGETTING=1</code>, off by default, which multiplies a
+demoted chunk's effective age by 3.0 (<code>mcp/tools.rs:24</code>) —
+with it off, <code>apply_chunk_decay</code> returns a demoted chunk's
+score unchanged.</p>
+<p><strong>Conflict handling is the resolution ledger, and it is
+append-only by design.</strong> The schema comment states why proposals
+are not auto-promoted: <em>"automatic writes to
+<code>resolution_ledger</code> would be indistinguishable from human
+verdicts at read time"</em> (<code>migrations.rs:569-573</code>). The
+column that would make them distinguishable, <code>source</code>, has
+exactly one production writer, and it passes the literal
+<code>"agent"</code> (<code>mcp/tools.rs:692</code>), so the distinction
+the design reasons about is not in fact recorded.</p>
+<p><strong>Noisy and hostile input is handled by two different
+mechanisms of very different strength.</strong> Transcript text gets the
+provenance reranker's <code>−0.60</code> for a tool result asserting
+authority, matched against a six-marker literal list
+(<code>rerank.rs:221-232</code>). LLM-generated narratives get
+<code>api/sanitize.rs::sanitize_narrative</code>, a case-insensitive
+denylist of eleven phrases replaced with <code>[REDACTED]</code>, a
+control-character filter and a 5,000-character cap. That function has
+exactly one caller, <code>api/mod.rs:207</code> — the Batch API
+narrative path. The content actually injected into the model's context
+on every prompt, raw transcript text, does not pass through it.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p><strong>The hot path costs one embedding and one HNSW query per
+prompt</strong>, plus an FTS5 query only in the weak-score case. Cached
+startup is claimed at about 150 ms and search p95 under 1 ms in
+<code>README.md:181-186</code>; neither figure has a committed harness
+in this tree, and <code>benches/spike_bench.rs</code> measures embedding
+and HNSW latency over LCG-random synthetic vectors, not over a real
+index.</p>
+<p><strong>Lag to retrievability is one hook.</strong> A chunk is in
+SQLite, in FTS5 and in the HNSW graph before the Stop hook returns.
+Enrichment layers arrive later and only change the
+<code>reflections</code> rows.</p>
+<p><strong>No background pass rewrites the whole store.</strong> The
+daemon's narrative work is per-conversation and debounced, and the dream
+cycle walks only anchors with committed-tier witnesses at more than one
+distinct <code>at_oid</code>. The token bill that does scale with the
+corpus is the optional narrative layer at roughly $0.012 per
+conversation on the Batch API (<code>README.md:243</code>), and
+<code>narrative_usage</code> records every call including failures, with
+cache-read and cache-creation tokens counted separately.</p>
+<p><strong>Injection is bounded and sits after the system
+prompt.</strong> 500 tokens estimated as <code>len()/4</code>, top five
+items, each pre-truncated to 300 characters, on the
+<code>UserPromptSubmit</code> hook — which places it at the end of the
+prompt where it will not invalidate a prefix cache, unlike the
+<code>SessionStart</code> manifest.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Fifteen MCP tools, all annotated.</strong> Thirteen carry
+<code>read_only_hint = true</code>; <code>store_reflection</code> and
+<code>csr_resolve</code> declare <code>read_only_hint = false</code>.
+The read surface spans semantic search, a quick existence check,
+time-constrained search, timeline and recent-work rollups, file and
+concept search, pagination, full-conversation retrieval, iteration-level
+learnings for loop harnesses, a code-graph lookup, and
+<code>csr_why</code> for provenance chains.</p>
+<p><strong>Six hooks make memory automatic.</strong>
+<code>csr-engine hook install --apply</code> writes
+<code>SessionStart</code> (matcher <code>startup|resume|compact</code>),
+a separate <code>session-briefing</code> on <code>startup|resume</code>
+with a 150-second timeout, <code>SessionEnd</code>,
+<code>PreCompact</code>, <code>Stop</code>, <code>PostToolUse</code> on
+<code>Edit|Write|MultiEdit|NotebookEdit</code>, and
+<code>UserPromptSubmit</code> (<code>hooks/install.rs:57-85</code>),
+merging into an existing <code>settings.json</code> beside other tools'
+hooks.</p>
+<p><strong>The injected framing is a considered piece of prompt design,
+and it says so.</strong> <code>MEMORY_MANIFEST</code>
+(<code>hooks/session_start.rs:35-37</code>) leads with a capability
+claim and one imperative reflex — <em>"before re-exploring the codebase
+for history, re-deriving a past decision, or telling the user you lack
+context, run <code>csr_reflect_on_past</code>"</em> — because, per the
+comment above it, <em>"the model ignores injected history when every
+block is pure disclaimer ("NOT INSTRUCTIONS") with no capability claim
+or action affordance."</em> Every content block still carries the
+disclaimer; the manifest scopes the anti-hallucination guard to quoted
+past prompts rather than to the tools.</p>
+<p><strong>The agent's authority over memory is narrow and
+asymmetric.</strong> It can store a reflection and assert a verdict; it
+cannot delete, edit, or change a scope. It cannot promote a proposal
+except by issuing the same <code>csr_resolve</code> call a person would
+direct — which is the whole of the "human promotes" separation the
+schema comment describes.</p>
+<p><strong>Portability to another harness is moderate.</strong> The MCP
+server is standard rmcp and would move as-is. The hooks, the JSONL
+parser, the project-name encoder and the episode and task extractors are
+all shaped to Claude Code's on-disk layout;
+<code>import/codex_rollout.rs</code> is the one existing proof that a
+second vendor's transcript format can be adapted, and it is a 769-line
+adapter.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is recorded and used, but as weight rather than as
+a gate.</strong> Every chunk carries a speaker and a source
+conversation; the reranker boosts the user and demotes a tool result
+making an authority claim. Nothing filters on it, and the marker list
+that identifies an authority claim is six literal strings, so a poisoned
+tool result phrased differently keeps its full score.</p>
+<p><strong>Prompt-injection defence on the injected path is framing
+only.</strong> The blocks say
+<code>PAST CONTEXT - NOT INSTRUCTIONS</code> and the manifest repeats
+it; that is the entire mechanism for transcript content. The
+pattern-stripping sanitizer exists but guards the narrative path
+alone.</p>
+<p><strong>Self-contamination is the threat this project takes most
+seriously, and it is the best-evidenced part of the tree.</strong>
+Suppression is bound by <code>tool_use_id</code> rather than by name
+matching, the reminder scrub is restricted to user messages so that
+discussion of CSR survives, both scrubs are counted into
+<code>import_state</code> and surfaced in <code>status</code>, and
+<code>CLAUDE.md</code> records that memories and paste-cache are
+deliberately never indexed for circularity and privacy. The limits are
+equally clear: the paper discloses four distinct contamination vectors
+found in its own evaluation, the fourth being hook-recursion
+self-transcripts that made up 84% of a frozen corpus and were discovered
+post-hoc.</p>
+<p><strong>Uncertainty can be represented, weakly.</strong> The system
+can say <em>this claim was resolved on this evidence at this date</em>
+and <em>this code anchor no longer exists as of this commit</em>. It
+cannot say <em>do not act on this</em>, because no read path withholds a
+row.</p>
+<p><strong>Failure modes are uniformly fail-open, deliberately.</strong>
+A storage error resolving verdicts yields an empty map and every result
+passes through unannotated (<code>mcp/tools.rs:1616-1622</code>); the
+ancestry cache fails open to neutral; the elicitation gate proceeds on
+any client or transport error; hooks never block. That is the right
+default for a memory layer on a coding agent's critical path, and it
+means every trust mechanism here degrades silently to absence.</p>
+<p><strong>Concurrency is handled with file locks and single-flight
+flags.</strong> The HNSW index directory is guarded by an
+<code>fs2</code> advisory lock on <code>index.lock</code>; the dream
+cycle uses a <code>dream_running</code> flag cleared on every outcome
+path; <code>witness_generations</code> gives re-derivation an explicit
+atomic publication boundary rather than inferring completeness from row
+order.</p>
+<p><strong>Backup and privacy.</strong> There is no backup or sync
+mechanism. <code>PreCompact</code> backs up state before compaction;
+<code>~/.claude/projects/</code> is untouched and remains the source of
+truth, so a lost database is rebuildable by re-import — which also means
+a <code>&lt;private&gt;</code> tag applied after the fact has no
+retroactive effect, and a deleted database is the only delete there
+is.</p>
+<p><strong>Withheld marks, and why.</strong></p>
+<ul>
+<li><strong><code>tombstone</code> — no, and the near-miss is unusually
+interesting.</strong> <code>anchor_obsolete</code> is a durable negative
+record keyed on a BLAKE3 content stamp, which is the "keyed on the
+value" half the mark asks for. It fails the other half twice over: the
+value it is keyed on is a <em>code span</em>, not a memory a user or an
+agent rejected; and the design's explicit intent is that the value may
+come back — <code>anchor_reinstated</code> fires on exact stamp
+equality, which is a deliberate, receipted re-assertion rather than a
+suppression. Nothing in the tree ever removes a chunk, so there is no
+re-assertion for a tombstone to guard against.</li>
+<li><strong><code>trust_state</code> — no, and this is the sharpest
+withholding here.</strong> <code>resolution_ledger.status</code> is a
+real three-value discrete field, agent-asserted with mandatory evidence,
+kept out of any automatic write path, read on every search, rendered
+into the result, and used to reorder. Every read of it is a rank or a
+label: <code>apply_resolutions</code> ends
+<code>unresolved.extend(resolved)</code>,
+<code>apply_validity_partition</code> ends
+<code>kept.extend(demoted)</code>, and the only <code>filter</code> on
+the path (<code>mcp/tools.rs:572-575</code>) excludes demoted rows from
+the <em>reranker's input</em> to avoid stacking two penalties, then
+re-appends them. The paper states the intent plainly — <em>"nothing is
+dropped or deleted"</em> — so this is a designed position, not an
+oversight. The mark asks for a state that withholds a memory from being
+treated as true, and demotion inside a page that the model still reads
+is not that.</li>
+<li><strong><code>bitemporal</code> — no.</strong> The memory itself has
+one clock: a chunk carries <code>timestamp</code> and
+<code>created_at</code> and nothing else, and
+<code>rg -n 'valid_from|valid_to|valid_at|as_of' csr-engine/src</code>
+returns nothing. The second coordinate exists one layer out, on the
+witness ledger, where <code>at_oid</code> is independent of
+<code>created_at</code> and is queried on the decision path — but a
+witness records the hash a file had at a commit, which cannot turn out
+to be false, and what it time-indexes is the repository, not the memory.
+"What did we believe last March" is not answerable about this
+corpus.</li>
+<li><strong><code>negative_eval</code> — no.</strong> The one exclusion
+assertion on a read path,
+<code>sessions_for_file_filters_by_project</code>
+(<code>storage/queries.rs:2833-2846</code>), asserts over a result its
+own comment says is empty — <em>"Only other-project row exists, so
+filtered result is empty"</em> — with the fixture's liveness established
+by a sibling test rather than a control row in the same case. The
+strongest must-not assertions in the tree, the import sanitizer's
+suppression tests, do carry real positive controls but keep material out
+of the <em>stored corpus</em>, which is a write-path assertion. Three
+further negative assertions in <code>tests/integration.rs</code>
+(<code>:339-346</code>, <code>:1188-1191</code>,
+<code>:1346-1352</code>) iterate over result vectors that may be empty
+with nothing asserting they are not.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>The unit surface is large and mostly honest.</strong> 1,277
+test functions in <code>csr-engine</code> across 84
+<code>#[cfg(test)]</code> modules and four integration files, plus 58 in
+<code>codewitness</code>. CI
+(<code>.github/workflows/ci.yml:21-28</code>) runs
+<code>cargo fmt --check</code>,
+<code>cargo clippy -- -D warnings</code>,
+<code>cargo test --locked</code> and <code>npm pack --dry-run</code> on
+every push and pull request to <code>main</code>. A second workflow adds
+<code>cargo-mutants</code> over five <code>codewitness</code> modules
+and fails if <code>missed.txt</code> is non-empty — the strongest
+verification signal in the repository, and it covers the smaller crate
+only, on a path filter that excludes ordinary <code>csr-engine</code>
+changes.</p>
+<p><strong>This codebase is unusually vacuity-aware, and says so in
+code.</strong> <code>eval/codegraph.rs:428-438</code> carries an
+explicit guard attributed to a review — if the renderer's separator
+changes, <em>"zero lines parse and <code>leaked</code> stays empty while
+asserting nothing"</em>, so the gate requires at least one parsed
+call-target line before it may pass.
+<code>eval/codegraph.rs:88-96</code> seeds its fixture with two
+deliberately unbindable edges because without them the gates would
+measure <code>0/0</code>. <code>extraction/resolver.rs:277</code>
+documents why an <code>.all()</code> over a vector is not vacuous
+there.</p>
+<p><strong>Three shapes still get through.</strong> The vacuous negative
+assertions listed in section 9. A family of computed-and-unasserted
+numbers in the health suite: <code>eval/mod.rs:411-427</code> returns
+<code>pass</code> with <em>"{count} chunks with embeddings"</em> for any
+count including zero, and <code>test_search_accuracy</code> and
+<code>test_semantic_search</code> return
+<code>pass(…, "SKIP: no data indexed")</code> — so
+<code>csr-engine eval --full</code> on an empty database reports a green
+twenty. And one self-skipping suite:
+<code>tests/dream_integration.rs:88-94</code> is the only test in the
+file and returns early with an <code>eprintln!</code> if
+<code>git</code> is unavailable, so the whole dream supersession
+integration path reports <code>ok</code> on a machine without git. To
+the project's credit, <code>test_tool_count</code> records the class
+being fixed in a comment — a hardcoded expectation of 14 while the
+server shipped 15 tools, <em>"silently-inert eval"</em>.</p>
+<p><strong><code>csr-engine eval</code> is a health check, not a quality
+gate, and it needs the operator's own database.</strong>
+<code>main.rs:372</code> constructs the real <code>Engine</code> before
+dispatching; only <code>--continuity</code> and <code>--codegraph</code>
+without <code>--live</code> run against committed fixtures — a
+14-document in-code corpus with a grep baseline in
+<code>eval/continuity.rs:211-330</code>, and an in-memory fixture
+repository with named thresholds
+(<code>RESOLUTION_RATE_MIN = 0.70</code>,
+<code>WITNESS_CLOSURE_MIN = 0.90</code>,
+<code>INTERNAL_BINDING_MIN = 0.70</code>) in
+<code>eval/codegraph.rs:35-63</code>.
+<code>rg -n 'eval' .github/workflows/</code> returns nothing: not one of
+these gates runs automatically, including the two that need no private
+data.</p>
+<p><strong>The research artifacts are the most interesting part of the
+repository, and they are unusually well disciplined.</strong>
+<code>docs/plans/saga-t3-preregistration.md</code> is registered 27 July
+2026 with arms, metrics, gates, a corpus freeze, reporting commitments,
+a no-post-hoc-exclusion rule and a pre-committed interpretation of every
+outcome including failure. The sealed rosters carry SHA-256 seals that
+verify against their <code>SEAL.sha256</code> files
+(<code>eval-kit/t3/</code>, <code>eval-kit/relitigation/</code>).
+Judging was blind and cross-vendor with no Claude-family judge. An
+answer-generation contamination incident was caught, the whole batch
+deleted and regenerated in a clean room, and recorded as a deviation
+<em>before</em> results were interpreted.</p>
+<p><strong>And the result went against the project.</strong>
+<code>saga-t3-results.md:10-14</code> opens <em>"Gate M: FAIL. Gate D:
+NULL."</em> — the reinstatement walk does not beat flat retrieval, and
+the pre-registered failure interpretation is applied rather than argued
+with. A later amendment discloses a fourth contamination vector — 4,346
+hook-recursion self-transcripts, 84% of the frozen snapshot — re-runs
+both gates on a scrubbed corpus, and reports that both verdicts
+replicate. A second amendment declares the project's own published
+mechanism explanation <em>"wrong"</em> per an ablation showing FTS alone
+at 0.162 and the walk twelve points below its own seed channel. Memory
+against no memory was the one decisive win: 0 of 27 for the no-memory
+arm.</p>
+<p><strong>What can be recomputed from this tree, and what
+cannot.</strong> <code>eval-kit/h1/</code> commits per-query MRR and
+nDCG for five arms over twenty queries, the 10,000-resample bootstrap
+script and its CI output, so the paper's confidence intervals are
+re-derivable without private data. <code>eval-kit/t4/</code> runs
+against this repository's own git history between tags
+<code>v8.0.0</code> and <code>v9.5.0</code> and is the one end-to-end
+reproducible eval — though its own README notes that
+<code>recall(stale) = 1.0</code> holds by construction, so only
+precision is empirically meaningful, and <code>t4/labels.json:2</code>
+leaks an absolute operator home path. Everything else requires the
+operator's private conversation database:
+<code>git ls-files | rg '\.(db|sqlite)$'</code> returns nothing, and
+<code>eval-kit/README.md:3-8</code> states the exclusion as a deliberate
+privacy position — the corpus is <em>"private by construction and is not
+included"</em>. So +53%, +47%, ρ ≈ 0 and the 0.813-versus-0.581 reversal
+are all aggregate numbers in markdown with committed protocol and gold
+ids behind them, and no committed raw data from which the numbers
+recompute.</p>
+<p><strong>One headline has no harness at all.</strong> The 9.3×
+enrichment claim and its <code>0.074 → 0.691</code> scores appear in
+<code>README.md:92,241</code> and in the documentation site;
+<code>rg -n '0\.074|0\.691' --glob '!docs-site/**' .</code> finds them
+in exactly one other place, <code>CHANGELOG.md:415-420</code> under
+version 7.0.0 dated 28 October 2025 — the Python and Docker era that the
+Rust binary replaced. There is no query set, no gold file, no scorer and
+no result file anywhere in the tree that produces those numbers, and
+they do not appear in the paper.</p>
+<p><strong>The paper is committed, in source form, and is not on a
+preprint server.</strong>
+<code>docs/plans/annaswamy-2026-similarity-drowns-intent.pdf</code>
+ships beside its Typst source, so it is diffable against the code —
+which is how its claims can be checked at all, since
+<code>rg -n -i 'arxiv\.org|doi\.org' --glob '!docs-site/**' .</code>
+returns nothing and there is no <code>CITATION.cff</code>. Two
+discrepancies between the paper and the README are worth naming, and
+they run in opposite directions. The paper's abstract reports the T3
+reversal explicitly, <em>"a decisive reversal on 396 exact
+receipt-lookup queries, where hybrid kNN+FTS beats the walk 0.813 to
+0.581"</em>; the README's summary of the same paper keeps the walk's
+<code>+53%</code> and <code>+47%</code> coverage results and its
+pre-registered gates and blind judging, and does not mention that the
+mechanism lost the later pre-registered benchmark. And the paper's own
+limitations section is more candid than anything a reader would infer
+from either: twelve hand-written queries, one corpus, one operator, LLM
+judges with hypothesis-aligned instructions, and ground truth that
+shares plumbing with the arm being measured.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Decide staleness from receipts, not from a model or a
+clock.</strong> A content hash of a span, anchored to a commit id, plus
+commit-graph ancestry, answers "does this claim still hold" without a
+token budget and without a heuristic that degrades as the corpus ages.
+The part worth copying is the abstention list: a candidate successor on
+a never-merged branch, a HEAD that is an ancestor of the witness, an
+incomparable pair, a file with no resolvable repository — each is a
+named counter rather than a guess, and <code>SupersessionBasis</code>
+keeps a squash or cherry-pick from being read as graph-proven.</p>
+<p><strong>Keep a dead hypothesis as a shadow signal, fetched after
+ordering is fixed.</strong> <code>reinstatement.rs:504-509</code>
+retrieves ratification scores <em>after</em> sort, rerank and truncate,
+with the comment <em>"Never used for ranking, filtering, or score
+mutation"</em>, and logs them to a dedicated tracing target. That is how
+you keep collecting evidence about an idea your own gate rejected
+without letting it touch behaviour — and it is strictly better than
+either deleting the code or shipping the weight.</p>
+<p><strong>Bind a suppression by id, not by name.</strong> The two-phase
+sanitizer records the <code>tool_use</code> id it dropped and then drops
+the <code>tool_result</code> carrying that <code>tool_use_id</code>. A
+name regex on the result would have missed exactly the cases that
+matter, and the test that proves it is
+<code>bare_csr_name_requires_matching_server_identity</code>, where an
+identically named tool from a different server must survive.</p>
+<p><strong>Count your scrubs and surface the counters.</strong>
+<code>csr_tool_blocks_suppressed</code> and
+<code>csr_hook_wrappers_scrubbed</code> are columns on
+<code>import_state</code> and fields in <code>status</code>, so a
+sanitizer that silently stops firing is visible instead of invisible.
+The same file adds <code>aux_schema_miss:*</code> counters for adapter
+parse failures, which is how the project found that a vendor rename had
+been silently emptying its episodes.</p>
+<p><strong>Pre-register, and pre-commit the interpretation of
+failure.</strong> The T3 protocol names, before any arm runs, what a
+passing gate, a failing gate and a split result each mean, and forbids
+cherry-picking the passing one. It is the reason the published negative
+result is credible rather than a rationalisation.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not pay a ranking weight for a field nothing
+writes.</strong> <code>W_SUPERSEDES = 0.20</code> is live on every
+scored candidate and its input is hardcoded <code>None</code> at every
+production call site. The generalisable version: any scoring term whose
+input has no producer is a term that will look load-bearing in review
+and do nothing in production, and the cheapest check is a grep for
+non-default assignments outside tests.</p>
+<p><strong>Do not let a scope default fail open.</strong> Resolving
+scope from an environment variable and falling through to <em>every
+scope</em> when the variable is absent inverts the safe default. Two
+entry points on the same server here disagree about what "no project
+given" means, and no test covers the fallback branch.</p>
+<p><strong>Do not treat demotion as containment.</strong> Appending a
+flagged item to the tail of a page a model will read in full is a
+presentation choice, not an exclusion. If a state is meant to stop a
+memory being acted on, some read path has to drop the row — and if by
+design nothing drops, say so where the state is defined, so that a later
+reader does not mistake the field for a gate.</p>
+<p><strong>Do not annotate on one read path and not the other.</strong>
+The MCP surface renders <code>[stale anchor]</code> with a commit
+receipt; the <code>UserPromptSubmit</code> injection path renders no
+resolution note at all, so the same chunk reaches the model marked on
+one route and unmarked on the other — and the unmarked route is the
+automatic one.</p>
+<p><strong>Do not let a hybrid arm run only in the weak case.</strong>
+Gating FTS on the semantic top score being below 0.5, and then entering
+its hits at a constant, throws away the lexical signal exactly when a
+strong-but-wrong semantic match is the problem. The project's own
+ablation measured roughly twelve points of recall in the fusion its
+shipped path does not perform.</p>
+<h3 id="fit">Fit</h3>
+<p><strong>This suits one developer who lives in Claude Code and wants
+their own history back, and almost nobody else yet.</strong> The install
+is a binary and a consent prompt, the store is a single SQLite file they
+can inspect and delete, nothing leaves the machine unless they start the
+daemon, and the failure mode of every component is silence rather than a
+broken session. Against that, the entire published evaluation runs on
+one person's conversations with one agent stack, and the project says so
+in its own limitations; there is no multi-user story, no scope dimension
+beyond the project directory, and no delete — which makes it a poor fit
+for a shared machine, for anything under a retention obligation, or for
+a team that needs to answer where a remembered claim came from and
+remove it.</p>
+<p><strong>Walk away if you need memory you can correct.</strong>
+Everything here is additive by design, and the design reasons for that
+are good ones. But "correct" in this system means appending a verdict
+that moves a row down a page, and if your requirement is that a
+retracted value stays out of a result, none of the machinery in this
+repository does it.</p>
+<p><strong>Read it anyway if you are building staleness
+detection.</strong> <code>codewitness/</code> is 4,353 lines, has no
+dependency on the rest of the system, carries a mutation-testing gate,
+and is the most transferable idea in the tree.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Does the elicitation gate ever fire?</strong> It depends on
+the MCP client implementing elicitation, and the code proceeds without
+confirmation whenever the call errors. Nothing in this tree establishes
+whether Claude Code supports it, and no test drives the decline path end
+to end.</li>
+<li><strong>What does the dream cycle's annotation do to a model's
+behaviour?</strong> The paper states the end-task retrieval effect is
+unmeasured. <code>[stale anchor]</code> is a string in a result; whether
+a reading model demotes it, ignores it, or treats it as a fact about the
+code is unknown.</li>
+<li><strong>How often does <code>Demote</code> fire in real use, given
+it requires no witness intact at HEAD?</strong> The verdict is
+conversation-grained: one stale symbol flags every chunk of that
+conversation (<code>mcp/tools.rs:1478-1484</code>). Running the cycle on
+a large personal corpus would answer both the rate and the
+over-flagging.</li>
+<li><strong>Does the project-scope fallback leak in practice?</strong>
+That turns on whether Claude Code sets <code>MCP_CLIENT_CWD</code> for a
+stdio server, which cannot be read from this repository.</li>
+<li><strong>What is in the private corpora?</strong> Every headline
+retrieval number rests on databases that are, by a stated and defensible
+policy, not committed. Independent replication needs a second operator
+to run the kit on their own history.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Schema and storage:</strong>
+<code>csr-engine/src/storage/migrations.rs</code>,
+<code>storage/mod.rs</code>, <code>storage/queries.rs</code>,
+<code>storage/witness_ledger.rs</code>,
+<code>storage/witness_verdicts.rs</code>,
+<code>storage/chunk_binding.rs</code>, <code>storage/ancestry.rs</code>,
+<code>storage/recap_feeds.rs</code>,
+<code>storage/codegraph.rs</code>.</li>
+<li><strong>Write path:</strong>
+<code>csr-engine/src/import/mod.rs</code>,
+<code>import/watcher.rs</code>, <code>import/plans.rs</code>,
+<code>import/registry.rs</code>, <code>import/codex_rollout.rs</code>,
+<code>import/backfill.rs</code>,
+<code>csr-engine/src/provenance.rs</code>.</li>
+<li><strong>Retrieval:</strong>
+<code>csr-engine/src/search/mod.rs</code>,
+<code>search/rerank.rs</code>, <code>search/decay.rs</code>,
+<code>search/reinstatement.rs</code>,
+<code>search/cross_project.rs</code>, <code>search/code_rank.rs</code>,
+<code>csr-engine/src/embeddings/mod.rs</code>.</li>
+<li><strong>Context assembly:</strong>
+<code>csr-engine/src/hooks/session_start.rs</code>,
+<code>hooks/prompt_submit.rs</code>, <code>hooks/stop.rs</code>,
+<code>hooks/session_end.rs</code>, <code>hooks/recap.rs</code>,
+<code>csr-engine/src/injection/formatter.rs</code>,
+<code>injection/predictor.rs</code>,
+<code>injection/anti_pattern.rs</code>,
+<code>csr-engine/src/format/mod.rs</code>.</li>
+<li><strong>Staleness and background:</strong>
+<code>csr-engine/src/dream/mod.rs</code>, <code>dream/report.rs</code>,
+<code>csr-engine/src/daemon/mod.rs</code>,
+<code>daemon/dream_cadence.rs</code>,
+<code>daemon/ratification.rs</code>,
+<code>daemon/consolidation.rs</code>,
+<code>codewitness/src/</code>.</li>
+<li><strong>MCP and CLI:</strong>
+<code>csr-engine/src/mcp/mod.rs</code>, <code>mcp/tools.rs</code>,
+<code>mcp/elicitation.rs</code>, <code>csr-engine/src/main.rs</code>,
+<code>csr-engine/src/status.rs</code>,
+<code>csr-engine/src/api/sanitize.rs</code>,
+<code>installer/postinstall.js</code>.</li>
+<li><strong>Tests, evals and research artifacts:</strong>
+<code>csr-engine/tests/</code>, <code>csr-engine/src/eval/</code>,
+<code>csr-engine/eval-kit/</code>,
+<code>csr-engine/examples/saga_*.rs</code>,
+<code>docs/plans/saga-t3-preregistration.md</code>,
+<code>docs/plans/saga-t3-results.md</code>,
+<code>docs/plans/saga-e{1,2,3}-results.md</code>,
+<code>docs/plans/annaswamy-2026-similarity-drowns-intent.typ</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &#39;supersedes: Some&#39; csr-engine/src                      # 4 hits, all test/eval fixtures; 21 `supersedes: None` are the live paths
+rg -n &#39;is_authoritative&#39; csr-engine/src                      # definition at provenance.rs:38 and its own test only
+rg -n &#39;valid_from|valid_to|valid_at|effective_at|as_of&#39; csr-engine/src   # 0: no validity interval on any memory row
+rg -n -i &#39;rrf|reciprocal|normali[sz]e_score|fuse&#39; csr-engine/src         # 0 in the search path
+rg -n &#39;name = &quot;&#39; csr-engine/src/mcp/mod.rs                   # 15 tools, none deletes or forgets
+rg -n -i &#39;delete|purge|forget|erase&#39; csr-engine/src/main.rs  # 2 hits, both doc comments; no subcommand removes anything
+rg -n &#39;DELETE FROM&#39; csr-engine/src                           # chunks only via delete_chunks_for_conversation (aux reimport); reflections only via layer supersession
+rg -n &#39;sanitize_narrative&#39; csr-engine/src                    # one production caller, api/mod.rs:207
+rg -n &#39;for_injection&#39; csr-engine/src                         # DecayConfig::for_injection has no caller outside decay.rs:274
+rg -n &#39;eval&#39; .github/workflows/                              # 0: no eval gate in CI
+rg -n -i &#39;arxiv\.org|doi\.org|CITATION\.cff&#39; --glob &#39;!docs-site/**&#39; .   # 0: the paper ships as PDF plus Typst source only
+rg -n &#39;0\.074|0\.691|9\.3x&#39; --glob &#39;!docs-site/**&#39; .         # README and CHANGELOG 7.0.0 (2025-10-28) only; no harness, gold or result file
+git ls-files | rg &#39;\.(db|sqlite|sqlite3)$&#39;                   # 0: no corpus database is committed
+rg -n &#39;assert!\(\s*!.*\.any\(&#39; csr-engine                    # 1 hit, import/plans.rs:674, not a retrieval assertion
+rg -o &#39;#\[ignore&#39; --glob &#39;*.rs&#39; .                            # 2: an opt-in self-bench and one CI runs explicitly</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/ramakay/claude-self-reflect/commit/e9c18ae74f1d54323953de3a9b289d25f9e8ef64"><code class="commit-id" title="e9c18ae74f1d54323953de3a9b289d25f9e8ef64">e9c18ae7…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>
+before any file was read: three auto-run surfaces (a
+<code>.claude-plugin/plugin.json</code> marketplace manifest whose
+<code>postInstall</code> runs
+<code>csr-engine hook install --apply</code>, a committed
+<code>.githooks/pre-commit</code> that runs <code>cargo fmt</code>,
+<code>clippy</code> and <code>cargo test --lib</code> and is inert
+unless <code>core.hooksPath</code> points at it, and an empty
+<code>.mcp.json</code>), one build-time execution path
+(<code>npm postinstall</code> running
+<code>installer/postinstall.js</code>, which downloads a
+checksum-verified release binary and does not activate without
+<code>CSR_AUTO_SETUP=1</code>), eleven floating ranges in the
+documentation site's <code>package.json</code> against a present
+lockfile, three lockfiles unchanged for 23 days, and a
+<code>CLAUDE.md</code> addressed to a reading agent, read as data.
+Nothing was installed, built or run; the tree was read, and the
+committed <code>eval-kit/h1/results.json</code> and
+<code>eval-kit/t3/mech_pairs.frozen.csv</code> were inspected rather
+than regenerated.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

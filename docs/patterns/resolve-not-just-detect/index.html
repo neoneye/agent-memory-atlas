@@ -368,6 +368,23 @@ degrade when nobody is looking, and <strong>a blocker is
 retirable</strong> — an earlier transient block is cleared by a later
 non-blocked same-key answer rather than needing a human to remember it
 exists.</p>
+<p><strong><a href="../../systems/claude-self-reflect/">Claude
+Self-Reflect</a> has four of the five requirements and deliberately
+declines the fifth.</strong> Its <code>csr_resolve</code> tool writes
+<code>resolved</code>, <code>still_open</code> or <code>regressed</code>
+into an append-only <code>resolution_ledger</code> with mandatory cited
+evidence, latest row wins, and a later <code>regressed</code> row
+re-opens a settled chunk — a named disposition, an actor, a reason and a
+durable record. The schema comment even reasons about who may write:
+task-derived candidates land in <code>resolution_proposals</code>,
+invisible to search and annotation, because <em>"automatic writes to
+<code>resolution_ledger</code> would be indistinguishable from human
+verdicts at read time"</em>. Two gaps follow. The <code>source</code>
+column that would record that distinction has one production writer,
+passing the literal <code>"agent"</code>. And the disposition never
+removes anything: resolved chunks are sorted to the tail of the page and
+annotated, so the verdict is advice to the reading model rather than a
+state that withholds a memory.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Detect a contradiction, resolve it every available way, and assert

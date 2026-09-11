@@ -245,6 +245,8 @@ deterministic and free**, so it does not degrade when nobody is looking, and **a
 blocker is retirable** — an earlier transient block is cleared by a later
 non-blocked same-key answer rather than needing a human to remember it exists.
 
+**[Claude Self-Reflect](../../systems/claude-self-reflect/) has four of the five requirements and deliberately declines the fifth.** Its `csr_resolve` tool writes `resolved`, `still_open` or `regressed` into an append-only `resolution_ledger` with mandatory cited evidence, latest row wins, and a later `regressed` row re-opens a settled chunk — a named disposition, an actor, a reason and a durable record. The schema comment even reasons about who may write: task-derived candidates land in `resolution_proposals`, invisible to search and annotation, because *"automatic writes to `resolution_ledger` would be indistinguishable from human verdicts at read time"*. Two gaps follow. The `source` column that would record that distinction has one production writer, passing the literal `"agent"`. And the disposition never removes anything: resolved chunks are sorted to the tail of the page and annotated, so the verdict is advice to the reading model rather than a state that withholds a memory.
+
 ## Tests to require
 
 - Detect a contradiction, resolve it every available way, and assert retrieval

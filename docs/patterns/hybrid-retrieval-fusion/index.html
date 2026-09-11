@@ -429,6 +429,19 @@ thresholds written for cosine, so <code>--strict</code> at 0.5, the
 Hermes hook at 0.40 and the pi hook at 0.45 exclude every memory. RRF's
 virtue of not pretending incomparable scores share a scale lasts only
 until something downstream pretends again.</p>
+<p><strong><a href="../../systems/claude-self-reflect/">Claude
+Self-Reflect</a> is the case for fusion, made accidentally by a system
+that does not fuse.</strong> Its FTS5 arm runs only when the best
+semantic candidate scores below 0.5, and when it runs every hit enters
+at a constant 0.45 — FTS5's own <code>rank</code> orders the SQL and is
+then discarded, so BM25 never reaches the score. The project's own
+pre-registered benchmark built a proper fusion arm for comparison and
+measured all three: reciprocal-rank fusion over vector top-20 and FTS
+top-20 scored 0.813 over 396 receipt-lookup queries, vector alone 0.697,
+and FTS alone 0.162. Lexical exactness was the weakest single channel
+and worth roughly twelve points in combination — the shape this page
+predicts, published by a system whose shipped read path leaves those
+points on the table.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Exact identifiers, paraphrases, dates, negation, and typo

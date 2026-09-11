@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 424 reports.**
+**This page covers all 425 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3736,3 +3736,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 25 commits between 28 August and 7 September 2026, 6,416 lines of Python with 2,705 of tests and CI; every test that reaches Graphiti mocks it. Dream mode's clustering, deduplication and pruning phases set "DONE" without running and the committed test asserts the strings; the README's exponential backoff has no caller; the dream-run and entity-merge undo tables are declared and never written.
 - Study when: you run Graphiti for one agent and want a queue and dead-letter path in front of its ingest.
 - Do not copy when: you need to know an extraction failed, need per-user or per-session scope inside one deployment, or need the graph backed up — the snapshot covers the SQLite queue only.
+
+### [`claude-self-reflect`](../systems/claude-self-reflect/)
+- Best idea: **staleness proved by receipts instead of guessed by a model or a clock.** A standalone `codewitness` crate stamps a BLAKE3 hash of a symbol span at a commit oid into an append-only ledger, and a six-hourly join over git commit-graph ancestry emits `anchor_obsolete`, `superseded_by` or `anchor_reinstated` — with a named abstention for a successor on a never-merged branch, a HEAD behind the witness, an incomparable pair or an unresolvable repo, and a `SupersessionBasis` that keeps a squash or cherry-pick from reading as graph-proven. Beside it, a failed pre-registered hypothesis kept as a shadow signal fetched *after* sort, rerank and truncate, under the comment "Never used for ranking, filtering, or score mutation".
+- Biggest risk: **every correction is a label on a row that still comes back.** `apply_validity_partition` ends `kept.extend(demoted)` and `apply_resolutions` ends `unresolved.extend(resolved)`, so a chunk the dream cycle proved stale at HEAD is returned at the tail of the page; on the prompt-injection path no resolution note is rendered at all, so the automatic route is the unmarked one. No MCP tool and no CLI subcommand deletes anything, the project scope falls open to every project when the client working directory is absent, and the supersession boost the reranker pays is applied to a field every production call site sets to `None`.
+- Most reusable component: `codewitness/` — 4,353 lines, no dependency on the rest of the system, a `cargo-mutants` gate in CI, and the one eval in the tree that reproduces against this repository's own git history.
+- Maturity impression: 78,201 lines of Rust, 1,277 test functions plus 58 in `codewitness`, fmt, clippy `-D warnings` and `cargo test --locked` on every push, `cargo audit` weekly, and mutation testing on five modules of the smaller crate. Not one committed eval gate runs automatically, including the two that need no private data; the health suite reports a green twenty on an empty database, and the only dream integration test returns early and passes when `git` is unavailable.
+- Study when: you are building staleness detection for code-anchored memory, or you want to see a pre-registered benchmark published against its author's own flagship mechanism.
+- Do not copy when: a retracted value has to stay out of a result, a person has to be able to delete something, or more than one person shares the machine.

@@ -225,6 +225,8 @@ between a retriever that degrades and one that degrades silently.
 
 [Uteke](../../systems/uteke/) tunes the fusion and then leaves its scale. The default recall fuses two complete rankings — vector at weight 1.7 and a vector-plus-FTS5 RRF at 1.0, `k = 60` — with the tuning set and plateau written in the constant's comment, and the committed LongMemEval-S raw output recomputes the published 98.4% recall_any@5. After fusion a memory's score is the RRF sum, at most `2.7 / 61 ≈ 0.044`; the default path then adds `0.1 × salience + 0.1 × recency` and applies thresholds written for cosine, so `--strict` at 0.5, the Hermes hook at 0.40 and the pi hook at 0.45 exclude every memory. RRF's virtue of not pretending incomparable scores share a scale lasts only until something downstream pretends again.
 
+**[Claude Self-Reflect](../../systems/claude-self-reflect/) is the case for fusion, made accidentally by a system that does not fuse.** Its FTS5 arm runs only when the best semantic candidate scores below 0.5, and when it runs every hit enters at a constant 0.45 — FTS5's own `rank` orders the SQL and is then discarded, so BM25 never reaches the score. The project's own pre-registered benchmark built a proper fusion arm for comparison and measured all three: reciprocal-rank fusion over vector top-20 and FTS top-20 scored 0.813 over 396 receipt-lookup queries, vector alone 0.697, and FTS alone 0.162. Lexical exactness was the weakest single channel and worth roughly twelve points in combination — the shape this page predicts, published by a system whose shipped read path leaves those points on the table.
+
 ## Tests to require
 
 - Exact identifiers, paraphrases, dates, negation, and typo cases.
