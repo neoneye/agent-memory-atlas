@@ -221,7 +221,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/joplin/"><span class="az-id">Joplin</span><span class="az-what">Notes an assistant may edit, one tool at a time</span><code class="az-repo">laurent22/joplin</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/juggler/"><span class="az-id">Juggler</span><span class="az-what">A gitignored notebook with a delete button</span><code class="az-repo">juggler-ai/juggler</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
-<li><a class="az-row" href="../systems/jumbo/"><span class="az-id">Jumbo Context</span><span class="az-what">Event-sourced project memory</span><code class="az-repo">jumbocontext/jumbo.cli</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/jumbo/"><span class="az-id">Jumbo Context</span><span class="az-what">Event-sourced project memory</span><code class="az-repo">jumbocontext/jumbo.cli</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## K

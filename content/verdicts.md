@@ -1845,11 +1845,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`jumbo`](../systems/jumbo/)
 
 - Best idea: full event sourcing done plainly — one JSON file per event in a per-aggregate stream directory, zero-padded sequence and event type in the filename, written to a temp path and renamed so an interrupted or concurrent write cannot corrupt it. Every table in the database is named `*_views`, so a reader can see at a glance that nothing in it is authoritative.
-- Biggest risk: `BaseEvent` declares `loggedBy?: "human" | "machine"` and a search of the whole tree returns exactly one line — the declaration. In a system whose entire value is a trustworthy history, the field that would separate a person's decision from an agent's is never set.
-- Most reusable component: the goal state machine's small guards — `reviewIssues` cleared on resubmission so a stale rejection cannot outlive the thing it was about, and `lastWaitingStatus` so unblocking returns to the real prior state rather than a default.
-- Maturity impression: 150,000 lines of TypeScript with 587 test files, twelve domain aggregates each with an event index, layered domain/application/infrastructure separation, and `StoredEvent` explicitly confined to the infrastructure layer.
+- Biggest risk: `BaseEvent` declares `loggedBy?: "human" | "machine"` and a search of the whole tree returns exactly one line — the declaration. It matters more than it looks: `jumbo work review --agent <id>` is a shipped daemon that polls submitted goals and delegates the QA verdict to an agent subprocess, so the approvals in the log were cast by a machine by design, and the field that would say so is never set.
+- Most reusable component: `Codex01534HookContract` — a test-only port of the harness's own output parser, citing the upstream commit and the four functions it mirrors, recording how the port was validated against the compiled Rust, and stating which version it covers and what it does not.
+- Maturity impression: 79,759 lines of TypeScript under `src/` against 72,618 under `tests/` across 664 test files, thirteen domain aggregates each with an event index, layered domain/application/infrastructure separation, and `StoredEvent` explicitly confined to the infrastructure layer.
 - Study when: you want the log-and-projection shape with nothing mutable left to compromise it.
-- Do not copy when: you need to know who wrote a memory — the log answers what and when, and never who.
+- Do not copy when: you need a person in the approval loop — three daemons walk a goal from definition to closure through agent subprocesses, and the log answers what and when, never who.
 
 ### [`neuroca`](../systems/neuroca/)
 

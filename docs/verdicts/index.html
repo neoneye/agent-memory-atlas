@@ -6057,23 +6057,27 @@ database is named <code>*_views</code>, so a reader can see at a glance
 that nothing in it is authoritative.</li>
 <li>Biggest risk: <code>BaseEvent</code> declares
 <code>loggedBy?: "human" | "machine"</code> and a search of the whole
-tree returns exactly one line — the declaration. In a system whose
-entire value is a trustworthy history, the field that would separate a
-person's decision from an agent's is never set.</li>
-<li>Most reusable component: the goal state machine's small guards —
-<code>reviewIssues</code> cleared on resubmission so a stale rejection
-cannot outlive the thing it was about, and
-<code>lastWaitingStatus</code> so unblocking returns to the real prior
-state rather than a default.</li>
-<li>Maturity impression: 150,000 lines of TypeScript with 587 test
-files, twelve domain aggregates each with an event index, layered
+tree returns exactly one line — the declaration. It matters more than it
+looks: <code>jumbo work review --agent &lt;id&gt;</code> is a shipped
+daemon that polls submitted goals and delegates the QA verdict to an
+agent subprocess, so the approvals in the log were cast by a machine by
+design, and the field that would say so is never set.</li>
+<li>Most reusable component: <code>Codex01534HookContract</code> — a
+test-only port of the harness's own output parser, citing the upstream
+commit and the four functions it mirrors, recording how the port was
+validated against the compiled Rust, and stating which version it covers
+and what it does not.</li>
+<li>Maturity impression: 79,759 lines of TypeScript under
+<code>src/</code> against 72,618 under <code>tests/</code> across 664
+test files, thirteen domain aggregates each with an event index, layered
 domain/application/infrastructure separation, and
 <code>StoredEvent</code> explicitly confined to the infrastructure
 layer.</li>
 <li>Study when: you want the log-and-projection shape with nothing
 mutable left to compromise it.</li>
-<li>Do not copy when: you need to know who wrote a memory — the log
-answers what and when, and never who.</li>
+<li>Do not copy when: you need a person in the approval loop — three
+daemons walk a goal from definition to closure through agent
+subprocesses, and the log answers what and when, never who.</li>
 </ul>
 <h3 id="neuroca"><a
 href="../systems/neuroca/"><code>neuroca</code></a></h3>
