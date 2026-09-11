@@ -3062,19 +3062,24 @@ add.</li>
 <h3 id="pydantic-ai-harness"><a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a></h3>
 <ul>
-<li>Best idea: an idempotency id derived from the run and the tool call,
-so a retried write is a replay rather than a second append — one of
-three answers to concurrent writes in the whole corpus.</li>
+<li>Best idea: a scope key the model can neither name nor see —
+<code>{namespace}/{agent_name}</code> is composed from run context,
+appears in no tool signature, and is kept out of the injected block by a
+separate <code>heading</code> field, with committed tests asserting the
+storage segment is absent from a populated block and from the rendered
+instructions.</li>
 <li>Biggest risk: the delete is content-free by design, and the only
 table recording mutations has its payload cleared — so the audit cannot
 answer what was removed.</li>
-<li>Most reusable component: budgeting the injection and degrading to a
-pointer, and returning <code>scanned</code> and <code>truncated</code>
-from search so a caller knows the answer was partial.</li>
-<li>Maturity impression: 2,498 lines of tests against 2,452 of
-implementation — the highest ratio in this atlas at this size — and the
-content is better than the ratio, because the suite asserts what must
-<strong>not</strong> happen.</li>
+<li>Most reusable component: an idempotency id derived from the run and
+the tool call, so a retried write is a replay rather than a second
+append — one of three answers to concurrent writes in the whole
+corpus.</li>
+<li>Maturity impression: 2,650 lines of tests against 2,483 of
+implementation, and the content is better than the ratio because the
+suite asserts what must <strong>not</strong> happen; automatic snapshot
+loading is a journaled durable operation whose failure path returns an
+exception type rather than inheriting the engine's retry policy.</li>
 <li>Study when: you are on Pydantic AI, your memory is notebook-shaped,
 and multi-tenant safety matters more than recall quality.</li>
 <li>Do not copy when: memory must hold <em>claims</em> you will later

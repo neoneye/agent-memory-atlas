@@ -1037,10 +1037,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: your requirement is corrective memory, or you want a library — twelve modules, an unreadable companion crate, a Tauri shell and GPL-3.0 make this a codebase you join rather than a dependency you add.
 
 ### [`pydantic-ai-harness`](../systems/pydantic-ai-harness/)
-- Best idea: an idempotency id derived from the run and the tool call, so a retried write is a replay rather than a second append — one of three answers to concurrent writes in the whole corpus.
+- Best idea: a scope key the model can neither name nor see — `{namespace}/{agent_name}` is composed from run context, appears in no tool signature, and is kept out of the injected block by a separate `heading` field, with committed tests asserting the storage segment is absent from a populated block and from the rendered instructions.
 - Biggest risk: the delete is content-free by design, and the only table recording mutations has its payload cleared — so the audit cannot answer what was removed.
-- Most reusable component: budgeting the injection and degrading to a pointer, and returning `scanned` and `truncated` from search so a caller knows the answer was partial.
-- Maturity impression: 2,498 lines of tests against 2,452 of implementation — the highest ratio in this atlas at this size — and the content is better than the ratio, because the suite asserts what must **not** happen.
+- Most reusable component: an idempotency id derived from the run and the tool call, so a retried write is a replay rather than a second append — one of three answers to concurrent writes in the whole corpus.
+- Maturity impression: 2,650 lines of tests against 2,483 of implementation, and the content is better than the ratio because the suite asserts what must **not** happen; automatic snapshot loading is a journaled durable operation whose failure path returns an exception type rather than inheriting the engine's retry policy.
 - Study when: you are on Pydantic AI, your memory is notebook-shaped, and multi-tenant safety matters more than recall quality.
 - Do not copy when: memory must hold *claims* you will later mark uncertain, correct with provenance, or prove you deleted. There is no unit below the file to attach that to.
 

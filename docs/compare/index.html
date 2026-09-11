@@ -17866,18 +17866,19 @@ call</td>
 <code>delete_memory</code> removes a file and the main notebook is
 protected. No record of what a delete removed</td>
 <td><code>{namespace}/{agent_name}</code> composed by application code,
-never exposed as a tool argument, and the toolset raises if the backend
-returns a path outside it</td>
+absent from every tool signature and from the prompt, with three call
+sites raising if the backend returns a path outside it</td>
 <td>A Pydantic AI capability —
 <code>Agent(..., capabilities=[Memory(FileStore(...))])</code> —
 contributing four tools and a user-role context part</td>
-<td>None. Writes are synchronous tool calls; crash recovery replays an
-incomplete operation from its receipt</td>
+<td>None. Writes are synchronous tool calls; snapshot loading is a
+journaled durable operation; crash recovery replays an incomplete
+operation from its receipt</td>
 <td>None. A memory is a line in a Markdown file; there is no status,
 confidence, provenance or source on any of it</td>
-<td>Scope the model cannot name and the toolset re-checks; idempotent
-writes under optimistic concurrency; 2,498 lines of tests to 2,452 of
-code, asserting what must not reach the prompt</td>
+<td>Scope the model can neither name nor see, re-checked on return;
+idempotent writes under optimistic concurrency; 2,650 lines of tests to
+2,483 of code, asserting what must not reach the prompt</td>
 <td>Delete is content-free by design, so nothing records that a value
 was rejected; the operations table clears its own payload on success, so
 it audits nothing</td>
@@ -27001,7 +27002,7 @@ href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5
 <li><a
 href="https://github.com/pydantic/pydantic-ai-harness">pydantic/pydantic-ai-harness</a>
 at <a
-href="https://github.com/pydantic/pydantic-ai-harness/commit/39ee7e08101c54b1ddf9c1e3a7f603f09ae34555"><code class="commit-id" title="39ee7e08101c54b1ddf9c1e3a7f603f09ae34555">39ee7e08…</code></a></li>
+href="https://github.com/pydantic/pydantic-ai-harness/commit/5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221"><code class="commit-id" title="5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221">5dd1e0e3…</code></a></li>
 <li><a href="https://github.com/camel-ai/camel">camel-ai/camel</a> at <a
 href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8"><code class="commit-id" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">ec48f997…</code></a></li>
 <li><a
