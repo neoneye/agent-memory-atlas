@@ -110,14 +110,14 @@ path voids.</p>
               <strong>varun29ankuS/shodh-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f" title="cac4c0b387d55e0549636e031811fd3a7eec4d5f">
+            <a class="meta-pill revision-pill" href="https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394" title="3a3395f1e80d4a145a208066098f59c2ebc72394">
               <span>Analyzed revision</span>
-              <code>cac4c0b3…</code>
+              <code>3a3395f1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/varun29ankuS--shodh-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -188,12 +188,15 @@ fails".</li>
 <code>CoOccurs</code> with <strong>no PMI gate, no hub cap, no
 selectivity skip, no fragment mask and no typing</strong>. Every PMI
 guarantee is void for upsert and webhook traffic."</li>
-<li><strong>A layer that returns zero on every call.</strong> The
-mem↔︎mem co-activation function reads a flag defaulting to true; in that
-mode it only strengthens edges found through an index whose only writer
-is the branch the flag disables. "Default on ⇒ no key is ever written ⇒
-the strengthen branch never finds anything ⇒ the function returns 0 for
-every call."</li>
+<li><strong>A quality gate the write path bypasses, with an attestation
+trail.</strong> The ungated edges the upsert path mints do at least
+carry a <code>ProvenanceRecord</code> at birth — source episode, mention
+count, first and last observed, confidence and
+<code>typed_by: CoOccurrence</code> — under a comment saying this is
+<em>"the primary ingest path (the majority of edges), so populating it
+here gives most of the graph a real attestation trail + confidence at
+edge birth."</em> An ungated edge you can trace is better than an
+ungated edge you cannot; it is not a gate.</li>
 <li><strong>Silent skips.</strong> Typing uses <code>try_read</code>; if
 a writer holds the user lock, "typing is skipped entirely for that
 memory, <strong>silently</strong>".</li>
@@ -513,7 +516,90 @@ in-memory deques), <code>:503-570</code>
 <code>src/server.rs</code>, <code>src/handlers/router.rs</code>,
 <code>src/zenoh_transport/</code>, <code>src/integrations/</code>,
 <code>src/cli.rs</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The retrieval path no longer mints all-pairs edges</td>
+<td>read <code>record_memory_coactivation</code> at
+<code>src/graph_memory.rs:6667-6677</code></td>
+<td><code>SHODH_COACT_STRENGTHEN_ONLY</code> defaults on; the legacy
+flood is opt-in</td>
+</tr>
+<tr>
+<td>The outcome path is the only minter</td>
+<td>read <code>record_memory_coactivation_outcome</code> at
+<code>:6699</code></td>
+<td>Called only with a set the caller has evidence for;
+<code>strengthen_only = false</code></td>
+</tr>
+<tr>
+<td>The upsert path still skips the PMI gate</td>
+<td><code>grep -n "CoOccurs" src/memory/mod.rs</code></td>
+<td><code>:9677</code> mints a <code>CoOccurs</code> edge with a
+provenance record and no PMI, hub-cap or fragment-mask check</td>
+</tr>
+<tr>
+<td>Edge validity is a boolean skip, not a clock</td>
+<td><code>grep -rn "invalidated_at" --include="*.rs" src</code></td>
+<td><code>.is_some()</code> skips at <code>:6092</code> and
+<code>:6266</code>; set to <code>Utc::now()</code> at <code>:6391</code>
+— record time</td>
+</tr>
+<tr>
+<td>Scope is a partition, not a predicate</td>
+<td>the matrix <code>scoping</code> row, re-checked</td>
+<td>One RocksDB instance per user; no scope key on a record and no
+predicate on a query</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394"><code class="commit-id" title="3a3395f1e80d4a145a208066098f59c2ebc72394">3a3395f1…</code></a>
+— re-read, 219 files and 52,576 insertions past the previous pin in a
+single commit. <code>audit_log</code> re-verified and unchanged;
+<code>scope_enforced</code> correctly absent, since one RocksDB instance
+per user is a partition rather than a key on a record.</p>
+<p><strong>The co-activation criticism is closed, and the way it was
+closed is the best thing in this re-read.</strong> The previous edition
+quoted the project's own audit: the mem↔︎mem layer <em>"returns 0 for
+every call"</em>. It does not now, and the fix is not a repair of the
+old path but a split of it into two with different rules.
+<code>record_memory_coactivation</code>, which fires on the retrieval
+path, is <strong>strengthen-only</strong> by default: it reinforces
+edges that already exist and never mints an all-pairs
+<code>CoRetrieved</code> edge, because unbounded minting there was
+<em>"~80% of the graph and the OOM driver"</em>.
+<code>record_memory_coactivation_outcome</code> mints, and is called
+only with memories <em>"an answer actually cited"</em>. The reasoning
+for the split is measured and stated in the docstring: un-gated
+co-retrieval cost <strong>6.7pp of p@1 (0.4100 → 0.4767 with the L5
+boost disabled) while recall@10 stayed bit-identical</strong> — <em>"it
+was not finding worse memories, it was ordering them worse.
+Rich-get-richer, unsupervised by usefulness."</em> A Hebbian association
+layer measured against ranking rather than assumed, found to be an
+unsupervised popularity loop, and split into an unsupervised
+reinforcement path and a reward-gated minting path, is a pattern almost
+nothing else in this corpus does.</p>
+<p><strong>The PMI criticism stands.</strong>
+<code>src/memory/mod.rs:9677</code> still mints <code>CoOccurs</code> on
+the upsert path with no PMI gate, hub cap or fragment mask. What is new
+is that the edge now carries a <code>ProvenanceRecord</code> at birth —
+source episode, mention count, first and last observed, confidence,
+<code>typed_by</code> — under a comment noting this is the majority of
+the graph and so is where an attestation trail buys the most. Traceable
+ungated edges are an improvement on untraceable ones and are not a gate.
+Screened before reading: thirty-two findings across thirty files;
+nothing was built or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f"><code class="commit-id" title="cac4c0b387d55e0549636e031811fd3a7eec4d5f">cac4c0b3…</code></a>
 — first reading. Screened before reading: three auto-run surfaces

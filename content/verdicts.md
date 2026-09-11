@@ -1710,9 +1710,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`shodh-memory`](../systems/shodh-memory/)
 
 - Best idea: `docs/graph-construction-audit.md` — a 677-line self-audit whose evidence rules are this atlas's own ("Doc comments in this codebase are frequently stale, so nothing here rests on one"), every claim carrying a `file:line`, finding a resolver with zero production callers, a header contradicting its own code, and a PMI gate the upsert path voids entirely.
-- Biggest risk: those findings are real and unfixed at this commit — the co-activation layer "returns 0 for every call" by default, typing is skipped silently under lock contention, and the audit's own section 2.6 is titled "The read path filters nothing".
+- Biggest risk: the upsert endpoint still mints `CoOccurs` edges with no PMI gate, no hub cap and no fragment mask, so every guarantee the ingest gates provide is void for upsert and webhook traffic — the edges now carry a provenance record at birth, which makes them traceable rather than gated. Against that, the audit's other headline finding is closed: the co-activation layer that "returns 0 for every call" was split into a strengthen-only retrieval path and an outcome-gated minting path, on a measurement that un-gated co-retrieval cost 6.7pp of p@1 while recall@10 stayed bit-identical.
 - Most reusable component: `src/decay.rs` — exponential decay for the first three days and power-law after, with the cliff that pure exponential produces written out in numbers.
-- Maturity impression: 153,000 lines of Rust with no LLM anywhere, published to four registries, an in-tree recall harness with NDCG/MRR/MAP and dedicated forgetting, lineage and multi-hop suites — and no committed benchmark result.
+- Maturity impression: 239,548 lines of Rust with no LLM anywhere, published to four registries, an in-tree recall harness with NDCG/MRR/MAP and dedicated forgetting, lineage and multi-hop suites — and no committed benchmark result.
 - Study when: you want an associative memory with zero inference cost, or you want to see what a project auditing itself to this standard produces.
 - Do not copy when: you need correction semantics — a wrong memory here fades if nothing reinforces it and strengthens if something does.
 

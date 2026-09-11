@@ -5579,14 +5579,19 @@ comments in this codebase are frequently stale, so nothing here rests on
 one"), every claim carrying a <code>file:line</code>, finding a resolver
 with zero production callers, a header contradicting its own code, and a
 PMI gate the upsert path voids entirely.</li>
-<li>Biggest risk: those findings are real and unfixed at this commit —
-the co-activation layer "returns 0 for every call" by default, typing is
-skipped silently under lock contention, and the audit's own section 2.6
-is titled "The read path filters nothing".</li>
+<li>Biggest risk: the upsert endpoint still mints <code>CoOccurs</code>
+edges with no PMI gate, no hub cap and no fragment mask, so every
+guarantee the ingest gates provide is void for upsert and webhook
+traffic — the edges now carry a provenance record at birth, which makes
+them traceable rather than gated. Against that, the audit's other
+headline finding is closed: the co-activation layer that "returns 0 for
+every call" was split into a strengthen-only retrieval path and an
+outcome-gated minting path, on a measurement that un-gated co-retrieval
+cost 6.7pp of p@1 while recall@10 stayed bit-identical.</li>
 <li>Most reusable component: <code>src/decay.rs</code> — exponential
 decay for the first three days and power-law after, with the cliff that
 pure exponential produces written out in numbers.</li>
-<li>Maturity impression: 153,000 lines of Rust with no LLM anywhere,
+<li>Maturity impression: 239,548 lines of Rust with no LLM anywhere,
 published to four registries, an in-tree recall harness with
 NDCG/MRR/MAP and dedicated forgetting, lineage and multi-hop suites —
 and no committed benchmark result.</li>

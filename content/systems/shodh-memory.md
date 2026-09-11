@@ -7,10 +7,12 @@ page_kind: system
 source_name: "varun29ankuS/shodh-memory"
 source_url: https://github.com/varun29ankuS/shodh-memory
 archive_name: "varun29ankuS--shodh-memory"
-revision: cac4c0b387d55e0549636e031811fd3a7eec4d5f
-revision_url: https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f
-analyzed_at: 2026-08-09
+revision: 3a3395f1e80d4a145a208066098f59c2ebc72394
+revision_url: https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394
+analyzed_at: 2026-09-11
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "the shared column-family database | a RocksDB column family separate from the per-user instances, with a rotation pass | an append-only audit of cross-user state beside the per-user stores it records | unknown"
 stack_storage: "kv"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -19,13 +21,13 @@ matrix:
   storage: "RocksDB — one instance per user, plus a shared column-family database for audit and cross-user state"
   retrieval: "Vector plus lexical hybrid with spreading activation over the graph; no model call at query time"
   write: "Fire-and-forget ingest — NER, YAKE keywords, a fourteen-gate entity filter and a PMI edge gate, all local"
-  update_delete: "Hebbian strengthening and hybrid exponential-then-power-law decay; pruning by weight, no rejected-value record"
+  update_delete: "Hebbian strengthening split into a strengthen-only retrieval path and an outcome-gated minting path, hybrid exponential-then-power-law decay, pruning by weight, no rejected-value record"
   scoping: "A separate RocksDB instance per user rather than a scope predicate on a shared store"
   integration: "MCP, an HTTP API, a TUI, Zenoh/ROS2 transport for robotics, and crates.io, npm, PyPI and Docker packaging"
   background: "Consolidation, edge aging on a six-hour cadence, audit rotation and index compaction"
   trust: "Edge tiers with promotion rules and an implicit feedback system inferring usefulness from agent behaviour"
   strengths: "A committed self-audit written to the standard this atlas uses, reporting its own dead code and broken gates"
-  risks: "That audit says the PMI gate is void on the upsert path and the co-activation layer returns zero on every call"
+  risks: "The upsert path still mints ungated `CoOccurs` edges, so every PMI guarantee is void for upsert and webhook traffic — though those edges now carry a provenance record at birth"
 ---
 
 ## 1. Executive Summary
@@ -71,11 +73,13 @@ spends its time finding in others:
   second path that "mints pure `CoOccurs` with **no PMI gate, no hub cap, no
   selectivity skip, no fragment mask and no typing**. Every PMI guarantee is
   void for upsert and webhook traffic."
-- **A layer that returns zero on every call.** The mem↔mem co-activation
-  function reads a flag defaulting to true; in that mode it only strengthens
-  edges found through an index whose only writer is the branch the flag
-  disables. "Default on ⇒ no key is ever written ⇒ the strengthen branch never
-  finds anything ⇒ the function returns 0 for every call."
+- **A quality gate the write path bypasses, with an attestation trail.** The
+  ungated edges the upsert path mints do at least carry a `ProvenanceRecord` at
+  birth — source episode, mention count, first and last observed, confidence and
+  `typed_by: CoOccurrence` — under a comment saying this is *"the primary ingest
+  path (the majority of edges), so populating it here gives most of the graph a
+  real attestation trail + confidence at edge birth."* An ungated edge you can
+  trace is better than an ungated edge you cannot; it is not a gate.
 - **Silent skips.** Typing uses `try_read`; if a writer holds the user lock,
   "typing is skipped entirely for that memory, **silently**".
 
@@ -384,6 +388,24 @@ one)
 **Integration** — `src/mcp.rs`, `src/server.rs`, `src/handlers/router.rs`,
 `src/zenoh_transport/`, `src/integrations/`, `src/cli.rs`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The retrieval path no longer mints all-pairs edges | read `record_memory_coactivation` at `src/graph_memory.rs:6667-6677` | `SHODH_COACT_STRENGTHEN_ONLY` defaults on; the legacy flood is opt-in |
+| The outcome path is the only minter | read `record_memory_coactivation_outcome` at `:6699` | Called only with a set the caller has evidence for; `strengthen_only = false` |
+| The upsert path still skips the PMI gate | `grep -n "CoOccurs" src/memory/mod.rs` | `:9677` mints a `CoOccurs` edge with a provenance record and no PMI, hub-cap or fragment-mask check |
+| Edge validity is a boolean skip, not a clock | `grep -rn "invalidated_at" --include="*.rs" src` | `.is_some()` skips at `:6092` and `:6266`; set to `Utc::now()` at `:6391` — record time |
+| Scope is a partition, not a predicate | the matrix `scoping` row, re-checked | One RocksDB instance per user; no scope key on a record and no predicate on a query |
+
 ## History
+
+**2026-09-11** — [`3a3395f1e80d4a145a208066098f59c2ebc72394`](https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394) — re-read, 219 files and 52,576 insertions past the previous pin in a single commit. `audit_log` re-verified and unchanged; `scope_enforced` correctly absent, since one RocksDB instance per user is a partition rather than a key on a record.
+
+**The co-activation criticism is closed, and the way it was closed is the best thing in this re-read.** The previous edition quoted the project's own audit: the mem↔mem layer *"returns 0 for every call"*. It does not now, and the fix is not a repair of the old path but a split of it into two with different rules. `record_memory_coactivation`, which fires on the retrieval path, is **strengthen-only** by default: it reinforces edges that already exist and never mints an all-pairs `CoRetrieved` edge, because unbounded minting there was *"~80% of the graph and the OOM driver"*. `record_memory_coactivation_outcome` mints, and is called only with memories *"an answer actually cited"*. The reasoning for the split is measured and stated in the docstring: un-gated co-retrieval cost **6.7pp of p@1 (0.4100 → 0.4767 with the L5 boost disabled) while recall@10 stayed bit-identical** — *"it was not finding worse memories, it was ordering them worse. Rich-get-richer, unsupervised by usefulness."* A Hebbian association layer measured against ranking rather than assumed, found to be an unsupervised popularity loop, and split into an unsupervised reinforcement path and a reward-gated minting path, is a pattern almost nothing else in this corpus does.
+
+**The PMI criticism stands.** `src/memory/mod.rs:9677` still mints `CoOccurs` on the upsert path with no PMI gate, hub cap or fragment mask. What is new is that the edge now carries a `ProvenanceRecord` at birth — source episode, mention count, first and last observed, confidence, `typed_by` — under a comment noting this is the majority of the graph and so is where an attestation trail buys the most. Traceable ungated edges are an improvement on untraceable ones and are not a gate. Screened before reading: thirty-two findings across thirty files; nothing was built or run.
 
 **2026-08-09** — [`cac4c0b387d55e0549636e031811fd3a7eec4d5f`](https://github.com/varun29ankuS/shodh-memory/commit/cac4c0b387d55e0549636e031811fd3a7eec4d5f) — first reading. Screened before reading: three auto-run surfaces (`.claude/hooks/`, `.claude/settings.json`, `.mcp.json`), build-time execution in `front/build.rs` and an npm manifest, and fifteen dependency manifests inside the seven-day cooldown including `Cargo.lock`. The tree was read, never built, and no test or harness was run.
