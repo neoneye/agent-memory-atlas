@@ -7,10 +7,14 @@ page_kind: system
 source_name: "nubaeon/empirica"
 source_url: https://github.com/nubaeon/empirica
 archive_name: "nubaeon--empirica"
-revision: d64b6416e8850e867bff3ee5ed0402dc842128d2
-revision_url: https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2
-analyzed_at: 2026-08-09
+revision: 2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
+revision_url: https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
+analyzed_at: 2026-09-11
 capabilities: "trust_state, scope_enforced, audit_log"
+capability_evidence:
+  trust_state: "artifact resolution | empirica/data/resolution_kind.py:25 | a closed four-value `stale | superseded | retracted | mistyped` vocabulary beside `is_resolved`, which the read paths filter on and `core/derived_confidence.py:89` reads | tests/test_artifact_visibility.py"
+  scope_enforced: "the artifact repositories | empirica/data/repositories/breadcrumbs.py | `project_id` as a foreign key on every artifact table and a predicate in the repository queries | unknown"
+  audit_log: "artifact mutation | empirica/data/repositories/breadcrumbs.py and the lifecycle audit columns | an append-only record per artifact mutation, with a regression suite added since the previous pin asserting the delete path actually writes it | tests/test_delete_artifacts_qdrant_audit_integrity.py"
 stack_storage: "sqlite, qdrant"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -371,6 +375,26 @@ each scoped by `project_id`)
 **Integration** — `empirica-mcp/`, `empirica/cli/`, `empirica/api/`,
 `empirica/integrations/`, `empirica/core/ecosystem.py`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Source tagging is still the primitive only | `sed -n '1,25p' empirica/data/epistemic_source.py` | The module docstring: *"This is v0 — the data primitive only. The routing rule ... is deferred until calibration history accumulates."* |
+| The tag is normalised on every write | `grep -rn "normalize_epistemic_source" --include="*.py" empirica` | Seven call sites in `data/repositories/breadcrumbs.py` |
+| No sentinel route consumes the source ratio | `grep -rn "epistemic_source" --include="*.py" empirica \| grep -iE "sentinel\|gate\|route"` | Only the sources-table routing comments; no gate decision reads it |
+| The resolution vocabulary is closed | `grep -n "RESOLUTION_KINDS" empirica/data/resolution_kind.py` | `("stale", "superseded", "retracted", "mistyped")` |
+| Tree and suite size | `find empirica -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py tests/*/*.py \| wc -l` | 217,802 lines; 524 test files |
+
 ## History
+
+**2026-09-11** — [`2584d2a8dd94ff674fb254f9acd3770ac9ea89ed`](https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed) — re-read, 344 files and 38,476 insertions past the previous pin in a single commit, the bulk of it tests. **All three marks re-verified and unchanged, and the report's stated risk holds verbatim**: `empirica/data/epistemic_source.py` still closes with *"This is v0 — the data primitive only. The routing rule (gate route to 'investigate' when claims are high but evidence is all-intuition) is deferred until calibration history accumulates"*, and no gate decision reads the source ratio. The tag is now normalised at seven repository call sites and validated on the batch path, so the primitive is firmer while the rule it exists for is still absent.
+
+**What is worth reading here is two new regression suites, because each documents a silent failure in a mechanism this report credits.** `test_delete_artifacts_qdrant_audit_integrity.py` records that `delete-artifacts --apply` returned `{"ok": true, "deleted": 1}` while doing none of three things: the vector was never removed (writers derive the point id from a 15-hex md5 prefix, the deleter used 16 digits plus a modulo, so it addressed a point that does not exist), the eidetic mirror was never touched, and the promised audit row was never written because the `INSERT` named `project_decisions`, *"a table that exists nowhere in the schema"*. All three were invisible because Qdrant answers the delete of an absent point with `status: completed` and every failure path was a bare `except Exception: pass`. The suite's closing line is the lesson: *"These tests assert against the storage layer and the returned report — never against the fact that the call did not raise."* `empirica/core/retrieval_telemetry.py:25-35` now carries the same warning as a module comment, naming both traps — `mistakes_made` rather than `mistakes`, and `project_decisions` which does not exist — and observing that either *"produces a clean, exception-free, zero-row UPDATE"*.
+
+`test_sentinel_wedge_is_recoverable.py` records the other half: a PREFLIGHT returned `ok: true` without writing the `active_transaction*.json` the Sentinel reads, because that write sat behind `except Exception -> logger.debug("...non-fatal...")` — the test's comment is *"It is not non-fatal"* — leaving the gate pinned to a stale closed transaction and denying every call with *"Epistemic loop closed. Run new PREFLIGHT"*, the thing the practitioner had just done. And the escape was itself gated: the tier lists match literal prefixes with `startswith`, so `empirica --verbose preflight-submit` was denied while the identical payload without `--verbose` was allowed. As the file puts it, *"the gate selected against the person debugging it."* A blocking gate needs its own remedy on the allowlist, and that is a design rule worth more than the incident.
+
+Screened before reading: fourteen findings; nothing was installed or run.
 
 **2026-08-09** — [`d64b6416e8850e867bff3ee5ed0402dc842128d2`](https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2) — first reading. Screened before reading; the tree was read, never installed, and no test was run.

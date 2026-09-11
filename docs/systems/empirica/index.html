@@ -110,14 +110,14 @@ practitioner does not reach for.</p>
               <strong>nubaeon/empirica</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2" title="d64b6416e8850e867bff3ee5ed0402dc842128d2">
+            <a class="meta-pill revision-pill" href="https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed" title="2584d2a8dd94ff674fb254f9acd3770ac9ea89ed">
               <span>Analyzed revision</span>
-              <code>d64b6416…</code>
+              <code>2584d2a8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/nubaeon--empirica" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -495,7 +495,101 @@ and siblings, each scoped by <code>project_id</code>)</p>
 <code>empirica/cli/</code>, <code>empirica/api/</code>,
 <code>empirica/integrations/</code>,
 <code>empirica/core/ecosystem.py</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source tagging is still the primitive only</td>
+<td><code>sed -n '1,25p' empirica/data/epistemic_source.py</code></td>
+<td>The module docstring: <em>"This is v0 — the data primitive only. The
+routing rule ... is deferred until calibration history
+accumulates."</em></td>
+</tr>
+<tr>
+<td>The tag is normalised on every write</td>
+<td><code>grep -rn "normalize_epistemic_source" --include="*.py" empirica</code></td>
+<td>Seven call sites in
+<code>data/repositories/breadcrumbs.py</code></td>
+</tr>
+<tr>
+<td>No sentinel route consumes the source ratio</td>
+<td><code>grep -rn "epistemic_source" --include="*.py" empirica | grep -iE "sentinel|gate|route"</code></td>
+<td>Only the sources-table routing comments; no gate decision reads
+it</td>
+</tr>
+<tr>
+<td>The resolution vocabulary is closed</td>
+<td><code>grep -n "RESOLUTION_KINDS" empirica/data/resolution_kind.py</code></td>
+<td><code>("stale", "superseded", "retracted", "mistyped")</code></td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find empirica -name "*.py" | xargs wc -l | tail -1</code>;
+<code>ls tests/*.py tests/*/*.py | wc -l</code></td>
+<td>217,802 lines; 524 test files</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed"><code class="commit-id" title="2584d2a8dd94ff674fb254f9acd3770ac9ea89ed">2584d2a8…</code></a>
+— re-read, 344 files and 38,476 insertions past the previous pin in a
+single commit, the bulk of it tests. <strong>All three marks re-verified
+and unchanged, and the report's stated risk holds verbatim</strong>:
+<code>empirica/data/epistemic_source.py</code> still closes with
+<em>"This is v0 — the data primitive only. The routing rule (gate route
+to 'investigate' when claims are high but evidence is all-intuition) is
+deferred until calibration history accumulates"</em>, and no gate
+decision reads the source ratio. The tag is now normalised at seven
+repository call sites and validated on the batch path, so the primitive
+is firmer while the rule it exists for is still absent.</p>
+<p><strong>What is worth reading here is two new regression suites,
+because each documents a silent failure in a mechanism this report
+credits.</strong>
+<code>test_delete_artifacts_qdrant_audit_integrity.py</code> records
+that <code>delete-artifacts --apply</code> returned
+<code>{"ok": true, "deleted": 1}</code> while doing none of three
+things: the vector was never removed (writers derive the point id from a
+15-hex md5 prefix, the deleter used 16 digits plus a modulo, so it
+addressed a point that does not exist), the eidetic mirror was never
+touched, and the promised audit row was never written because the
+<code>INSERT</code> named <code>project_decisions</code>, <em>"a table
+that exists nowhere in the schema"</em>. All three were invisible
+because Qdrant answers the delete of an absent point with
+<code>status: completed</code> and every failure path was a bare
+<code>except Exception: pass</code>. The suite's closing line is the
+lesson: <em>"These tests assert against the storage layer and the
+returned report — never against the fact that the call did not
+raise."</em> <code>empirica/core/retrieval_telemetry.py:25-35</code> now
+carries the same warning as a module comment, naming both traps —
+<code>mistakes_made</code> rather than <code>mistakes</code>, and
+<code>project_decisions</code> which does not exist — and observing that
+either <em>"produces a clean, exception-free, zero-row UPDATE"</em>.</p>
+<p><code>test_sentinel_wedge_is_recoverable.py</code> records the other
+half: a PREFLIGHT returned <code>ok: true</code> without writing the
+<code>active_transaction*.json</code> the Sentinel reads, because that
+write sat behind
+<code>except Exception -&gt; logger.debug("...non-fatal...")</code> —
+the test's comment is <em>"It is not non-fatal"</em> — leaving the gate
+pinned to a stale closed transaction and denying every call with
+<em>"Epistemic loop closed. Run new PREFLIGHT"</em>, the thing the
+practitioner had just done. And the escape was itself gated: the tier
+lists match literal prefixes with <code>startswith</code>, so
+<code>empirica --verbose preflight-submit</code> was denied while the
+identical payload without <code>--verbose</code> was allowed. As the
+file puts it, <em>"the gate selected against the person debugging
+it."</em> A blocking gate needs its own remedy on the allowlist, and
+that is a design rule worth more than the incident.</p>
+<p>Screened before reading: fourteen findings; nothing was installed or
+run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2"><code class="commit-id" title="d64b6416e8850e867bff3ee5ed0402dc842128d2">d64b6416…</code></a>
 — first reading. Screened before reading; the tree was read, never
