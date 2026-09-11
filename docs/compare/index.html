@@ -21021,26 +21021,27 @@ summary outlives the interactions it was derived from</td>
 <td><code>yantrikdb</code></td>
 <td>A memory with text, certainty, importance, valence, domain, source
 and an emotional state</td>
-<td>A Rust server over SQLite with an HNSW vector index, a per-tenant
-commit log and pack files</td>
+<td>A Rust server over SQLite with a per-tenant commit log and pack
+files, wrapped around an engine crate in a separate repository</td>
 <td>Multi-signal scoring — vector similarity, temporal decay, importance
 and graph structure — scoped by namespace</td>
-<td>Every mutation flows through one commit substrate with a canonical
-grammar, idempotent on op_id</td>
-<td>correct tombstones the original and mints a corrected version,
-transferring entity relationships</td>
-<td>tenant_id and namespace throughout, with a per-tenant commit log
-that does not share indices</td>
+<td>Four routes append to one commit substrate idempotent on op_id; the
+applier wires four of the seven mutation variants and refuses three by
+name</td>
+<td>correct updates the row in place under the same rid and archives the
+prior state in record_revisions; the gateway returns 501</td>
+<td>namespace is the read-path predicate in the engine recall SQL; a
+tenant is its own SQLite file</td>
 <td>An MCP server, an HTTP API, a Python client, a WASM build and an
 embeddable crate</td>
-<td>A think loop doing consolidation and conflict scanning, plus
-retention, packing and reconciliation</td>
-<td>A certainty float per memory; conflict detection is a background
-scan rather than a state machine</td>
-<td>Restore-no-resurrect: a tombstone stays in the log until every
-replica has seen it</td>
-<td>The crypto-shred erasure path has no caller and no encryption layer
-beneath it, as its own header says</td>
+<td>A think loop doing consolidation and conflict scanning, plus packing
+and reconciliation; no compactor trims the log</td>
+<td>A certainty float per memory; the engine three-value claim grounding
+is read by a gate that ships in shadow mode</td>
+<td>Nine write routes return a 501 naming the missing replication path
+rather than a direct call that would diverge</td>
+<td>Crypto-shred destroys per-tenant keys nothing encrypts with, while
+the shipped at-rest layer uses one server-wide master key</td>
 </tr>
 <tr>
 <td><code>yesmem</code></td>
@@ -27342,8 +27343,8 @@ href="https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e944
 <li><a
 href="https://github.com/yantrikos/yantrikdb-server">yantrikos/yantrikdb-server</a>
 at <a
-href="https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773"><code class="commit-id" title="f8378f98bb0d25128f473ab4e7c5cac829c22773">f8378f98…</code></a>
-— AGPL-3.0</li>
+href="https://github.com/yantrikos/yantrikdb-server/commit/45d052ec1dc47ca16c2a42aa938be9e6d176b711"><code class="commit-id" title="45d052ec1dc47ca16c2a42aa938be9e6d176b711">45d052ec…</code></a>
+— Apache-2.0</li>
 <li><a
 href="https://github.com/haagndaazer/vibe-cognition">haagndaazer/vibe-cognition</a>
 at <a

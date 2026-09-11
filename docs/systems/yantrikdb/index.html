@@ -6,26 +6,26 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="Four published benchmark
 conclusions withdrawn in a CORRECTIONS file, because the condition
-labelled 'structured memory' had been a 120-line simulator — and a
-deletion story with restore-no-resurrect that says which parts are not
-wired yet.">
+labelled 'structured memory' had been a 120-line simulator — and module
+headers that name what is not built, three of which have gone stale
+around the code they describe.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="YantrikDB — Agent Memory Atlas">
     <meta property="og:description" content="Four published benchmark
 conclusions withdrawn in a CORRECTIONS file, because the condition
-labelled 'structured memory' had been a 120-line simulator — and a
-deletion story with restore-no-resurrect that says which parts are not
-wired yet.">
+labelled 'structured memory' had been a 120-line simulator — and module
+headers that name what is not built, three of which have gone stale
+around the code they describe.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="YantrikDB — Agent Memory Atlas">
     <meta name="twitter:description" content="Four published benchmark
 conclusions withdrawn in a CORRECTIONS file, because the condition
-labelled 'structured memory' had been a 120-line simulator — and a
-deletion story with restore-no-resurrect that says which parts are not
-wired yet.">
+labelled 'structured memory' had been a 120-line simulator — and module
+headers that name what is not built, three of which have gone stale
+around the code they describe.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>YantrikDB — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -47,7 +47,7 @@ wired yet.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "YantrikDB",
-      "description": "Four published benchmark conclusions withdrawn in a CORRECTIONS file, because the condition labelled 'structured memory' had been a 120-line simulator \u2014 and a deletion story with restore-no-resurrect that says which parts are not wired yet.",
+      "description": "Four published benchmark conclusions withdrawn in a CORRECTIONS file, because the condition labelled 'structured memory' had been a 120-line simulator \u2014 and module headers that name what is not built, three of which have gone stale around the code they describe.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -105,22 +105,23 @@ wired yet.">
           <h1>YantrikDB</h1>
           <p class="document-deck">Four published benchmark conclusions
 withdrawn in a CORRECTIONS file, because the condition labelled
-'structured memory' had been a 120-line simulator — and a deletion story
-with restore-no-resurrect that says which parts are not wired yet.</p>
+'structured memory' had been a 120-line simulator — and module headers
+that name what is not built, three of which have gone stale around the
+code they describe.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/yantrikos/yantrikdb-server">
               <span>Source</span>
               <strong>yantrikos/yantrikdb-server</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773" title="f8378f98bb0d25128f473ab4e7c5cac829c22773">
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb-server/commit/45d052ec1dc47ca16c2a42aa938be9e6d176b711" title="45d052ec1dc47ca16c2a42aa938be9e6d176b711">
               <span>Analyzed revision</span>
-              <code>f8378f98…</code>
+              <code>45d052ec…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrikdb-server" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -144,11 +145,28 @@ with restore-no-resurrect that says which parts are not wired yet.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>YantrikDB is a memory database in Rust — about 63,000 lines across
-six crates, AGPL-3.0 — that positions itself against vector databases on
+<p>YantrikDB is a memory database in Rust — 64,508 lines across six
+crates, Apache-2.0 — that positions itself against vector databases on
 lifecycle rather than retrieval: "Vector databases store memories. They
 don't manage them." It ships as an embeddable crate, a server, an MCP
 endpoint, a Python client and a WASM build.</p>
+<p><strong>Those six crates are the smaller half.</strong> The memory
+row, recall, decay, extraction, <code>correct</code>, the claim lane and
+the as-of query all live in <code>yantrikos/yantrikdb</code>, a
+different repository pinned by tag in
+<code>crates/yantrikdb-server/Cargo.toml:35</code> — 195,589 lines of
+Rust against this repository's 64,508. This report's subject is the
+server; where a claim needs the engine it names the engine's file at tag
+<code>v0.22.0</code>. The memory data model in section 5 cannot be read
+from this repository alone, and neither can what <code>correct</code>
+does.</p>
+<p><strong>The project relicensed.</strong> Every crate manifest carries
+<code>Apache-2.0</code> and a <code>NOTICE</code> names the copyright
+holder; <code>crates/yql</code> is MIT and was MIT under the old licence
+too. The old licence was AGPL-3.0-only, and <code>CHANGELOG.md</code> —
+which does record four engine releases, a pack-mount fix and a
+SQLite-safety refusal over the same span — does not mention the
+change.</p>
 <p><strong>The first thing to read is <code>CORRECTIONS.md</code>, and
 it is why this report exists.</strong></p>
 <p>On 2026-04-19 the project withdrew four published conclusions from
@@ -175,20 +193,37 @@ conclusions were ones that made the project look worse. The file's own
 justification is the sentence this atlas would write: "Preserved
 publicly because the audit trail matters more than a clean-looking
 repo."</p>
-<p><strong>The second thing is the deletion design.</strong>
-<code>commit/retention.rs</code> implements what RFC 011 calls
-<strong>restore-no-resurrect</strong>: "a memory that was tombstoned and
-whose tombstone has propagated to all replicas must not [come back]",
-enforced by keeping tombstone entries in the log "at least until every
-[replica has seen them]" and gating watermark advancement on it. Beside
-it, <code>forget/crypto_shred.rs</code> destroys a tenant's
+<p><strong>The second thing is the deletion design, and it is a
+design.</strong> <code>commit/retention.rs</code> implements what RFC
+011 calls <strong>restore-no-resurrect</strong>: "a memory that was
+tombstoned and whose tombstone has propagated to all replicas must not
+[come back]", computed as the minimum across four contributors —
+follower lag, HNSW source-log watermark, backup manifest, tombstone
+window. Nothing outside the module constructs the registry that collects
+them. The compactor that would consume the watermark, in the module's
+own words, "lives in a future PR"; <code>purge_below</code> appears
+exactly once in the repository and that occurrence is inside the
+sentence deferring it; and no <code>DELETE</code> or <code>UPDATE</code>
+against <code>memory_commit_log</code> exists anywhere in the tree.
+Nothing that was committed has ever been removed, so the invariant holds
+— by the absence of a compactor, not by the watermark arithmetic.</p>
+<p>Beside it, <code>forget/crypto_shred.rs</code> destroys a tenant's
 data-encryption key so that "every encrypted blob (live + backup)
-becomes ciphertext nobody can decrypt".</p>
-<p>And that module's header says, under a heading of its own, exactly
-what is not built: wiring the shredder into the tenant-delete path, the
-encryption layer that would produce the blobs needing that key, and the
-admin <code>DELETE</code> endpoint that would call it. "RFC 011 PR-4
-substrate is just the destruction orchestrator."</p>
+becomes ciphertext nobody can decrypt". Its header lists three missing
+pieces, and one of the three is no longer missing in the form stated.
+<strong>There is an at-rest encryption layer.</strong>
+<code>TenantPool::get_engine</code> opens every engine through
+<code>YantrikDB::new_encrypted</code> when a <code>master.key</code> is
+present (<code>tenant_pool.rs:73-77</code>), and
+<code>/v1/health/deep</code> reports it as AES-256-GCM
+(<code>http_gateway.rs:605-610</code>). What does not exist is an
+encryption layer keyed on the per-tenant DEK the shredder destroys: one
+server-wide key encrypts every tenant, <code>KeyProvider::get_key</code>
+is called from nothing but the shredder's own test module, and
+destroying a tenant's DEK therefore renders nothing unreadable. The
+other two — the tenant-delete caller and the admin <code>DELETE</code>
+endpoint — are absent; <code>CryptoShredder::new</code> and
+<code>LocalKeyProvider::new</code> have no production caller either.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory carries text, <code>certainty</code>,
 <code>importance</code>, <code>valence</code>, <code>domain</code>,
@@ -200,29 +235,56 @@ namespace inside a tenant.</p>
 distinguishing one — an operator-invoked consolidation and conflict-scan
 pass rather than a background daemon, so a caller decides when the
 database thinks about what it holds.</p>
-<p><code>correct</code> is the interesting mutation. It does not edit in
-place: the original is tombstoned, a new version is created, "entity
-relationships are transferred to the new memory", and an optional
-<code>correction_note</code> records why.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one mutation grammar idempotent on op_id feeds both the applier and an invalidation bus, and a tombstone is retained until every replica watermark passes it so a restore cannot resurrect it
+<p><code>correct</code> is the interesting mutation, and it edits in
+place. The engine keeps the <code>rid</code>, keeps
+<code>created_at</code>, <code>UPDATE</code>s the row, and appends the
+prior text, metadata, importance and valence to
+<code>record_revisions</code> in the same transaction — "preserving
+<code>rid</code> (no new memory minted)", so inbound graph edges and
+replication entries keep resolving without any transfer step
+(<code>engine/lifecycle.rs:840-869</code> at <code>v0.22.0</code>). A
+non-empty <code>reason</code> is required: "the audit trail is
+load-bearing: it is what gives <code>correct()</code> its semantic value
+over a bare UPDATE". Changing the embedding is explicitly not supported,
+because HNSW cannot update a vector in place, and callers who need that
+are told to use <code>forget()</code> then <code>record()</code> — which
+the doc comment names as "the v0.7.19-and- earlier behaviour" of
+<code>correct</code> itself.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — four routes append to one commit log that nothing ever trims, the applier wires four of the grammar's seven mutation variants and rejects three by name, correct is an in-place update outside the log entirely, and the crypto-shred destroys a per-tenant key that no encryption layer has ever used</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: four routes append to one commit log that nothing ever trims, the applier wires four of the grammar&#39;s seven mutation variants and rejects three by name, correct is an in-place update outside the log entirely, and the crypto-shred destroys a per-tenant key that no encryption layer has ever used
 flowchart TD
-    R[&quot;remember / correct / forget / relate&quot;] --&gt; CL[&quot;commit substrate — one mutation grammar,&lt;br/&gt;idempotent on op_id, per-tenant log_index&quot;]
-    CL --&gt; AP[&quot;applier → storage + HNSW index&quot;]
+    R[&quot;POST /v1/remember · /v1/remember/batch&lt;br/&gt;/v1/forget · /v1/relate&quot;] --&gt; CL[&quot;memory_commit_log — one grammar,&lt;br/&gt;idempotent on op_id, per-tenant log_index&quot;]
+    CL --&gt; AP[&quot;EngineApplier&quot;]
     CL --&gt; IB[&quot;invalidation bus&quot;]
-    IB --&gt; TD[&quot;time-decay index drops the tombstoned rid&quot;]
-    CO[&quot;correct(rid, new_text)&quot;] --&gt; T1[&quot;original tombstoned&quot;]
-    CO --&gt; T2[&quot;corrected version created,&lt;br/&gt;entity relations transferred&quot;]
-    T1 --&gt; RET[&quot;retention: tombstone kept in the log until&lt;br/&gt;every replica watermark has passed it&quot;]
-    RET --&gt; RNR[&quot;restore cannot resurrect it&quot;]
-    T1 -.-&gt;|&quot;snapshots already shipped to S3&quot;| CS[&quot;crypto-shred: destroy the tenant DEK&quot;]
-    CS -.-&gt;|&quot;no caller, no encryption layer — stated in the header&quot;| GAP[&quot;not wired at this commit&quot;]</code></pre></details></figure>
-<p>The dotted path is the one the module documents as incomplete, drawn
-where its own header puts it.</p>
+    AP --&gt; WIRED[&quot;UpsertMemory · TombstoneMemory&lt;br/&gt;UpsertEntityEdge · DeleteEntityEdge&lt;br/&gt;→ engine&quot;]
+    AP --&gt; UNWIRED[&quot;UpdateMemoryPatch · PurgeMemory&lt;br/&gt;TenantConfigPatch → NotYetWired,&lt;br/&gt;each naming its planned RFC&quot;]
+    IB --&gt; TD[&quot;time-decay index drops the rid from&lt;br/&gt;every namespace — no back-index&quot;]
+    UNWIRED --&gt; C501[&quot;POST /v1/correct → 501&lt;br/&gt;not_yet_available_over_http&quot;]
+    C501 -.-&gt;|&quot;the same mutation, reached in-process&quot;| CORR[&quot;engine correct(rid, reason)&quot;]
+    CORR --&gt; UPD[&quot;UPDATE memories in place, same rid,&lt;br/&gt;prior state into record_revisions&quot;]
+    UPD --&gt; ASOF[&quot;recall_as_of walks record_revisions&lt;br/&gt;back to a past record time&quot;]
+    WIRED --&gt; RET[&quot;RetentionRegistry: min over follower lag,&lt;br/&gt;HNSW, backup manifest, tombstone window&quot;]
+    RET --&gt; NOC[&quot;no compactor, no purge_below,&lt;br/&gt;no DELETE on the log —&lt;br/&gt;nothing committed is ever removed&quot;]
+    NOC -.-&gt;|&quot;the erasure story for blobs already shipped&quot;| KP[&quot;KeyProvider per-tenant DEK&lt;br/&gt;ChaCha20-Poly1305, designed&quot;]
+    KP --&gt; CS[&quot;CryptoShredder::shred destroys it&quot;]
+    CS --&gt; NOCALL[&quot;no production caller,&lt;br/&gt;no admin DELETE route&quot;]
+    NOCALL -.-&gt;|&quot;and the layer that does encrypt&quot;| ENC[&quot;TenantPool master.key&lt;br/&gt;AES-256-GCM, shipped&quot;]
+    ENC --&gt; ALLT[&quot;one key for every tenant,&lt;br/&gt;never the DEK the shredder destroys&quot;]</code></pre></details></figure>
+<p>The three dotted edges are the seams. <code>correct</code> does not
+enter the commit log at all: the route that would put it there returns
+501, and the mutation happens in-process instead, so the in-place update
+and the log are separate stories. Crypto-shred hangs off a retention
+path that never runs. And the layer that actually encrypts is a fourth
+thing again — one server-wide key, reached from a different module, with
+no edge to the key the shredder destroys.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>Six crates: <code>yantrikdb-server</code> (59,700 lines) holds
-everything, with <code>yantrikdb-protocol</code>, <code>yql</code> (a
-query language), <code>yantrikdb-witness</code>,
-<code>yantrikdb-wasm</code> and <code>yantrikdb-ml</code> around it.</p>
+<p>Six crates: <code>yantrikdb-server</code> (61,066 lines) holds the
+server, with <code>yantrikdb-protocol</code>, <code>yql</code> (a query
+language), <code>yantrikdb-witness</code>, <code>yantrikdb-wasm</code>
+and <code>yantrikdb-ml</code> around it. The engine they wrap is the
+<code>yantrikdb</code> crate from <code>yantrikos/yantrikdb</code>,
+pinned by git tag — <code>v0.13.1</code> at <code>v0.22.0</code>, with a
+schema that migrates from v42 to v54 on first open.
+<code>http_gateway.rs</code> alone is 9,858 lines.</p>
 <p>The server is organised by concern in a way that reads like a
 database rather than a memory library: <code>admission</code> (with a
 circuit breaker), <code>auth</code>, <code>backup</code>,
@@ -241,10 +303,20 @@ call". Commits are idempotent on <code>op_id</code> so clients can
 retry, and <code>log_index</code> is monotonic <strong>per
 tenant</strong> — multi-tenant servers "do NOT share log indices (avoids
 cross-tenant leakage…)".</p>
-<p><code>LocalSqliteCommitter</code> is the single-node implementation
-and an openraft-backed <code>RaftCommitter</code> is named as the
-cluster one, both behind the same trait, so "the API handlers don't
-change between modes".</p>
+<p><code>LocalSqliteCommitter</code> is the single-node implementation.
+<strong>The cluster one is not called what the code says it is.</strong>
+Thirteen doc comments across seven files name <code>RaftCommitter</code>
+as the cluster implementation arriving in "RFC 010 PR-4"; no type by
+that name exists, openraft is gone — <code>Cargo.toml:123</code> records
+it "removed in Phase D (saga 239)" and
+<code>config/mod.rs:518-536</code> refuses a
+<code>raft_mode = "openraft"</code> config at load with a migration
+message — and the third <code>impl MutationCommitter</code> is
+<code>YrpCommitter</code> at <code>yrp/runtime.rs:1142</code>, over RFC
+028's own replication protocol. The trait boundary the comments claim is
+real; the name on the far side of it is a ghost. This is the first of
+three places where a header outlived the code it describes, and it is
+why section 9's reading of the project's candour has changed.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Write</strong> — API handler →
@@ -253,7 +325,14 @@ Paths</h2>
 bus.</p>
 <p><strong>Correct</strong> — <code>memory_correct</code>
 (<code>src/yantrikdb/mcp/tools.py:264</code>) → <code>db.correct</code>
-→ tombstone plus new version plus relation transfer.</p>
+→ an in-place <code>UPDATE</code> under the same <code>rid</code> plus a
+<code>record_revisions</code> row, in one transaction. The Python
+FastAPI app exposes the same call at
+<code>POST /memories/{rid}/correct</code>
+(<code>src/yantrikdb/api.py:228</code>) and its docstring still says
+"tombstones original, creates corrected version", which the engine
+stopped doing at v0.7.20. The Rust gateway's
+<code>POST /v1/correct</code> returns 501.</p>
 <p><strong>Forget</strong> — <code>memory_forget</code> →
 <code>db.forget</code> → a tombstone mutation, an
 <code>InvalidationEvent::Tombstoned { tenant_id, rid }</code> on the
@@ -261,27 +340,55 @@ bus, and the time-decay index dropping the row
 (<code>retrieval/time_decay.rs:332</code>).</p>
 <p><strong>Retention</strong> — <code>commit/retention.rs</code>
 reconciles four watermarks (source log, backup manifest, tombstone,
-replica) before archiving or truncating.</p>
+replica) into a <code>SafePurgeWatermark</code>. Nothing reads it.
+<code>RetentionRegistry</code>, <code>SafePurgeWatermark</code> and all
+four contributors are re-exported from <code>commit/mod.rs:72-74</code>
+and constructed nowhere else in the tree, and
+<code>MutationCommitter</code> has no purge or compact method to call
+(<code>commit/trait_def.rs:275-326</code>).</p>
 <p><strong>Think</strong> — <code>/v1/think</code> runs consolidation
 and the conflict scan; <code>socratic/</code> holds the evidence and
 operator layer behind it.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
-<p>The memory row is small and the interesting fields are affective and
-epistemic rather than structural: <code>certainty</code> (a float),
+<p>The memory row is defined in the engine, not here.
+<code>crates/yantrikdb-core/src/base/schema.rs:31</code> at tag
+<code>v0.22.0</code> is the <code>CREATE TABLE memories</code>. Beside
+the affective and epistemic fields — <code>certainty</code>,
 <code>importance</code>, <code>valence</code> (−1 to 1),
-<code>emotional_state</code>, <code>domain</code>,
-<code>source</code>.</p>
+<code>emotional_state</code>, <code>domain</code>, <code>source</code> —
+it carries a <code>consolidation_status</code> of
+<code>active | consolidated | tombstoned</code>, and two migrations
+added <code>event_time_min</code> and <code>event_time_max</code>
+(<code>schema.rs:3196-3197</code>) with an index over them.</p>
 <p>Around it sit the database's own structures — the commit log with
 <code>op_id</code> and per-tenant <code>log_index</code>, the pack
 store, the HNSW index, and the time-decay index which "materializes that
 sort" per <code>(tenant_id, namespace)</code> so the most-decayed-first
 query does not scan.</p>
-<p>There is no status field, no validity interval and no supersession
-pointer on the row. Correction is expressed as a <em>pair of mutations
-in the log</em> — tombstone the old, insert the new — rather than as
-state on the record. That is a database's answer rather than a memory
-system's, and it has a real consequence: the history lives in the log
-and the row shows only the present.</p>
+<p>So the row carries a status field and a validity interval, and
+supersession is a <code>supersedes</code> edge in
+<code>record_links</code> that <code>recall</code> can be asked to
+include. Correction is not a pair of mutations: it is an in-place
+<code>UPDATE</code> plus a <code>record_revisions</code> row carrying
+the prior text, metadata, importance and valence with an
+<code>applied_at</code>.</p>
+<p>The history, then, does not live in the commit log —
+<code>correct</code> never reaches the log — it lives in
+<code>record_revisions</code>, per record, and <code>recall_as_of</code>
+reconstructs a past state by walking it. Three of those structures reach
+a caller: the status as the active/consolidated/tombstoned/archived
+counts reported by the MCP stats tool and the CLI
+(<code>cli.py:59</code>), supersession through the wire protocol's
+<code>include_superseded</code> flag (<code>command.rs:42</code>,
+forwarded at <code>handler.rs:172</code>), and the revisions through
+<code>POST /v1/temporal/as_of</code>. The fourth reaches nobody.
+<code>event_time_min</code> and <code>event_time_max</code> are the
+engine's <strong>valid-time</strong> axis, and both of the server's
+<code>db.recall</code> call sites pass <code>None</code> for
+<code>event_after</code> and <code>event_before</code>
+(<code>handler.rs:173-174</code>, <code>:193-194</code>) under a comment
+calling the forwarding "a separate change". See section 9 for what that
+costs.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Multi-signal scoring over an HNSW vector index, blending similarity,
 temporal decay, importance and graph structure, with namespace-scoped
@@ -293,28 +400,77 @@ with commit-log mutations by subscribing to the invalidation bus. A
 tombstone published on the bus removes the row from the index; the
 comment notes the coarse-grained approach is acceptable because
 "tombstones are rare and per-tenant scoping [bounds the cost]".</p>
-<p>Scope is <code>tenant_id</code> plus <code>namespace</code>
-throughout, reinforced by the per-tenant log and the tenant pool. The
-rerun harness in <code>docs/phase3e/</code> uses "namespace-scoped
-recall for per-experiment isolation", which is the same mechanism used
-as an experimental control.</p>
+<p>Scope has two tiers and only one of them is a filter. A tenant is a
+database record whose engine <code>TenantPool::get_engine</code> opens
+at its own <code>&lt;tenant&gt;/yantrik.db</code> — a separate file,
+which is a partition. A namespace is a column: both
+<code>db.recall</code> call sites in <code>handler.rs</code> forward it,
+and the engine's recall SQL appends <code>AND m.namespace = ?N</code> at
+sixteen points in <code>recall.rs</code>, and a namespace predicate
+appears ninety-three times across the engine core. The read-path
+predicate is the namespace, and that is where the scope mark sits.</p>
+<p>One path does not carry it. The time-decay index's invalidation
+subscriber removes a tombstoned rid "across all namespaces (we don't
+know which namespace it was in without a back-index, so we walk all)"
+(<code>time_decay.rs:313-317</code>). The rid is a UUIDv7 primary key so
+the effect is benign, but the maintenance path is namespace-blind by its
+own admission.</p>
+<p>The rerun harness in <code>docs/phase3e/</code> uses
+"namespace-scoped recall for per-experiment isolation", which is the
+same mechanism used as an experimental control.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>The single-committer design is the strongest architectural choice
-here. Because every mutation — including tenant config changes — goes
-through one grammar and one log, the questions this atlas usually has to
-answer by tracing several subsystems ("does forget also update the
-index?", "can a background pass undo a correction?") reduce to "what
-does the applier do with this mutation".</p>
-<p>Idempotency on <code>op_id</code> means a retried write returns the
+here, and its reach is narrower than the design contract sounds. One
+grammar and one log do mean that "does forget also update the index?"
+reduces to "what does the applier do with this mutation" — but the
+answer, for three of the grammar's seven variants, is that it refuses.
+<code>EngineApplier</code> applies <code>UpsertMemory</code>,
+<code>TombstoneMemory</code>, <code>UpsertEntityEdge</code> and
+<code>DeleteEntityEdge</code>; <code>UpdateMemoryPatch</code>,
+<code>PurgeMemory</code> and <code>TenantConfigPatch</code> each return
+<code>ApplyError::NotYetWired</code> naming the RFC that would land them
+— "RFC 011-A correct semantics", "RFC 011 PR-3", "RFC 021 PR-2"
+(<code>commit/applier.rs:459-469</code>). None of the three has a
+production constructor: every
+<code>MemoryMutation::UpdateMemoryPatch</code>,
+<code>::PurgeMemory</code> and <code>::TenantConfigPatch</code> in the
+tree is a match arm, a wire-format round-trip test, or a unit-test
+fixture. So tenant config changes do not go through the log; nothing
+puts them there.</p>
+<p>What the log does carry, it carries well.
+<code>INSERT INTO memory_commit_log</code> at
+<code>commit/local.rs:315</code> is the only statement that writes the
+table, no <code>UPDATE</code> or <code>DELETE</code> against it exists
+anywhere, and four production routes reach it — <code>remember</code>,
+<code>remember/batch</code>, <code>forget</code>, <code>relate</code>.
+Idempotency on <code>op_id</code> means a retried write returns the
 original receipt rather than duplicating, which is the correctness
 property most memory systems here leave to chance.</p>
-<p><strong>No rejected-value record exists.</strong> The tombstone is
-keyed on <code>rid</code>. Its guarantees are about durability and
-replication — that a delete survives a restore, that it propagates
-before the log truncates — not about refusing a re-assertion of the same
-content. <code>correct</code> produces a new memory whose text is
-whatever the caller supplied; nothing compares it against previously
-tombstoned values.</p>
+<p><strong>No rejected-value record governs a memory write.</strong> The
+tombstone is keyed on <code>rid</code>. Its guarantees are about
+durability and replication — that a delete survives a restore, that it
+propagates — not about refusing a re-assertion of the same content.
+<code>correct</code> writes whatever text the caller supplied into the
+existing row; nothing compares it against previously tombstoned
+values.</p>
+<p>Two structures come close to closing that gap and neither does.</p>
+<p><code>extraction_refusals</code> (<code>schema.rs:1239</code>)
+durably records every relation the extractor declined to bind — the
+trigger, the reason, the flanking tokens, the extractor version. It is
+read in exactly one place: a
+<code>SELECT rel_type, reason, COUNT(*)</code> for a diagnostic summary
+(<code>engine/reextract.rs:407</code>), beside a per-record
+<code>DELETE</code>. A refusal ledger nothing consults.</p>
+<p><code>record_links.selection_state</code> is the closer one. Losing
+<code>supersedes</code> candidates are kept as
+<code>rejected_conflict</code> rather than dropped, so the selected
+projection is recomputed deterministically from the whole candidate set
+on every arrival — which is what makes the result independent of arrival
+order across replicas (<code>engine/links.rs:674-700</code>). That is a
+durable rejection consulted on a later write, which is most of the
+definition. But a rejected candidate can win the next fold, and a
+rejection that un-rejects itself is a projection state, not a
+tombstone.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>An MCP server with <code>memory_remember</code>,
 <code>memory_recall</code>, <code>memory_forget</code>,
@@ -327,36 +483,120 @@ idea.</p>
 <code>/v1/think</code>), a Python client, an embeddable crate and a WASM
 build. Client-side embeddings are supported and used in the rerun
 harness.</p>
+<p><strong>The best thing in this repository is a refusal.</strong> RFC
+032 (<code>docs/rfcs/rfc_032_http_tool_parity.md</code>) starts from a
+gap: six MCP tool families — <code>category</code>,
+<code>conversation</code>, <code>procedure</code>, <code>task</code>,
+<code>temporal</code>, <code>trigger</code> — had engine functions and
+no HTTP route, so a client assuming parity got a bare 404. The obvious
+fix is to wire them. The RFC's reconnaissance found the reason not to:
+only <code>MemoryMutation</code> replicates through YRP, and
+"replication happens because a write went through
+<code>execute_cmd</code>/propose — <strong>not</strong> because of which
+table it touched". A <code>task</code> or <code>category</code> write
+wired as a direct engine call "makes it land only on the node that
+served the request and silently not replicate".</p>
+<p>So the writes that cannot replicate ship as
+<code>501 not_yet_available_over_http</code> with a body that says why —
+"This is a cluster-global write with no replication path yet; exposing
+it as a direct engine call would silently diverge across the cluster.
+Available in embedded (single-node) mode" — from eight handlers: two
+each for <code>category</code> and <code>procedure</code>, three for
+<code>task</code>, one for <code>correct</code> (the helper at
+<code>http_gateway.rs:6206-6219</code>, the handlers at
+<code>:6440-6546</code> and <code>:6704</code>). Reads ship everywhere,
+because "reads never diverge". Writes that are legitimately per-node —
+the conversation ring buffer, trigger lifecycle state — ship with
+<code>"node_local": true</code> in the response body.
+<code>docs/operations/http-embedded-parity.md</code> is the resulting
+parity table, one row per family, with the semantic spelled out.</p>
+<p>The seventh deferral is the one that stings:
+<code>POST /v1/correct</code> is 501 because <code>correct</code> maps
+to <code>UpdateMemoryPatch</code>, and the applier does not wire it. The
+system's signature mutation is reachable in-process and refused over the
+gateway's own protocol, and the RFC says so in its own decision section
+rather than leaving it to a reader.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>Scope — awarded.</strong> <code>tenant_id</code> and
-<code>namespace</code> reach the storage layer, the time-decay index,
-the invalidation bus and the commit log, and the log's design contract
-names cross-tenant leakage as the thing per-tenant indices prevent.</p>
-<p><strong>Audit log — awarded.</strong> <code>memory_commit_log</code>
-is the durable record of every mutation, append-only, idempotent on
-<code>op_id</code>, with retention gated on watermarks rather than time
-alone. It is a database write-ahead log doing double duty as the memory
-audit trail, which is a legitimate and unusually rigorous way to get
-one.</p>
+<p><strong>Scope — awarded, on the namespace, not the tenant.</strong>
+The distinction matters because the two boundaries are different kinds
+of thing. A tenant gets its own <code>yantrik.db</code> file from
+<code>TenantPool::get_engine</code>, which is a partition: no query
+crosses it because no query can see it. A namespace is a stored column
+that both <code>db.recall</code> call sites forward and the engine's
+recall SQL turns into <code>AND m.namespace = ?N</code>. The read-path
+predicate is the namespace, and that is what the mark names. Section 6
+records the one maintenance path that walks every namespace on
+purpose.</p>
+<p><strong>Audit log — awarded, over the memory path and no
+wider.</strong> <code>memory_commit_log</code> is append-only in the
+strong sense: one <code>INSERT</code> statement writes it, no
+<code>UPDATE</code> or <code>DELETE</code> against it exists in the
+tree, and the compactor that would trim it has not been built. It
+records four routes' mutations — remember, batch remember, forget,
+relate. It is not a record of <em>every</em> mutation:
+<code>correct</code> never reaches it, <code>TenantConfigPatch</code>
+has no writer, and the six tool families in section 8 write to tables
+with no <code>Command</code> variant at all. A memory audit trail, then,
+not a system one.</p>
 <p><strong>Tombstone — withheld</strong>, for the reason in section 7.
-What YantrikDB has instead is the best <em>deletion durability</em>
-story in this atlas, and it is a different axis: restore-no-resurrect,
-tombstone propagation watermarks, and a crypto-shred design for
-backups.</p>
-<p><strong>Trust state — no.</strong> <code>certainty</code> is a float;
-conflict detection is a scan.</p>
-<p><strong>Bitemporal, human review, negative eval — no.</strong>
-<code>ShredPlan</code> is the nearest thing to a review surface — it is
+The two structures that come closest are a refusal ledger nothing
+consults and a rejected-edge set that can un-reject.</p>
+<p><strong>Trust state — withheld, and this is the closest call in the
+report.</strong> The engine stores <code>claims.grounding</code>, a
+three-value epistemic status — 0 the binding was never validated, 1 the
+writer stated it cooperatively, 2 the extractor bound both arguments
+occurrence-locally — and <code>engine/claims_lane.rs</code> has a gate
+that filters the claim chain on it. The gate has three modes and every
+install is seeded <code>shadow</code> (<code>engine/mod.rs:1180</code>),
+which "admits exactly what <code>off</code> admits" and only counts what
+<code>enforce</code> would refuse; a test asserts "shadow changes no
+admission". <code>ChainGateMode::Enforce</code> is passed to
+<code>set_claim_chain_gate_mode</code> in two places and both are that
+test file. The Python binding exposes the setter
+(<code>py_engine/mod.rs:801</code>), so an embedder can turn it on; the
+server has no route, no config key and no call. A discrete status with a
+filter that ships dark is a design for the mark, not the mark.</p>
+<p><strong>Bitemporal — withheld, and the reason is a missing argument
+rather than a missing structure.</strong> Two clocks exist.
+<code>recall_as_of</code> (<code>engine/bitemporal.rs:55</code>) is a
+genuine as-of query, and its module header is unusually candid about
+what it cannot do — it excludes records whose <code>created_at</code> is
+after <code>t</code>, excludes only supersessions whose <em>edge</em>
+predates <code>t</code> so "a later supersession does not rewrite what
+was believed then", rolls corrected records back through
+<code>record_revisions</code>, and then states its limits: ranking is
+present-day, forgotten records stay forgotten, access stats are
+untouched because "archaeology must not masquerade as usage". But every
+clock it filters on is a <strong>record</strong> time. The
+<strong>valid</strong> time — the engine's
+<code>event_time_min</code>/<code>event_time_max</code>, and
+<code>claims.valid_from</code>/<code>valid_to</code> compared against an
+as-of in <code>claims_lane.rs:277-281</code> — is the second axis, and
+the server never binds it: <code>event_after</code> and
+<code>event_before</code> are <code>None</code> at both
+<code>db.recall</code> call sites, and <code>recall_as_of</code> passes
+no event bounds either. The two axes exist in the same database and no
+query in this repository uses both.</p>
+<p><strong>Human review, negative eval — no.</strong>
+<code>ShredPlan</code> is the nearest thing to a review surface —
 "returned by <code>prepare()</code> before any destructive op runs, so
 operators (or the admin API) can preview + confirm" — and it belongs to
-an unwired path.</p>
-<p><strong>The candour is the safety property.</strong> Two modules in
-this tree state their own incompleteness in their headers: crypto-shred
-lists three missing pieces under "What's NOT here (deferred)", and the
-commit module names which implementation lands in which PR. A reader can
-tell what runs from what is planned without reading the code, which is
-the opposite of the situation in several other reports here.</p>
+a path with no caller.</p>
+<p><strong>The candour is real and the headers have gone stale.</strong>
+Modules here do state their own incompleteness, and RFC 032 turns that
+habit into a runtime behaviour: a 501 whose body names the missing
+replication path is a header comment a client can read. But three of
+those statements no longer describe the code they sit on. Crypto-shred
+says there is no encryption layer; there is one, just not the one it
+needs. The commit module says the cluster implementation is an openraft
+<code>RaftCommitter</code>; openraft was removed and the implementation
+is <code>YrpCommitter</code>. <code>temporal_as_of</code>'s doc comment
+says "we pin 0.13.1"; the manifest two files away pins 0.22.0. A project
+that documents its gaps has to revisit the documentation when it closes
+them, and this one has not — a milder failure than not documenting them,
+and a more misleading one, because the reader who trusts the header
+stops checking.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><strong>No paper</strong>, and an unusual amount of committed
@@ -366,7 +606,12 @@ referenced throughout the code, and <code>docs/phase3*/</code> holding
 the benchmark work.</p>
 <p><strong>I did not run anything.</strong> The screen flagged ten
 dependency manifests inside the seven-day cooldown including
-<code>Cargo.lock</code> and <code>uv.lock</code>; the tree was read.</p>
+<code>Cargo.lock</code> and <code>uv.lock</code>, the freshest three
+days old. The tree was read. The release commit's own message reports
+"930 server tests pass" on Windows with one pre-existing
+<code>yrp::chaos_test</code> failure it attributes to the platform and
+defers to Linux CI; that is the maintainer's measurement, not this
+report's.</p>
 <p>The benchmark story is the report. Phases 3A–3D are published, then
 withdrawn in part; Phase 3E is the rerun against the real engine over
 HTTP with client-side MiniLM-L6-v2 embeddings, <code>/v1/think</code>
@@ -388,25 +633,46 @@ rerun.</strong> <code>CORRECTIONS.md</code> names four withdrawn
 conclusions, the file that produced them, and what that file lacked.
 "Preserved publicly because the audit trail matters more than a
 clean-looking repo" is the whole argument.</li>
-<li><strong>Route every mutation through one committer.</strong> One
-grammar, one log, one trait, idempotent on <code>op_id</code>, and
-suddenly "does forget update the index" has a single answer instead of
-six.</li>
+<li><strong>Route every mutation through one committer — and finish the
+applier before you claim you did.</strong> One grammar, one log, one
+trait, idempotent on <code>op_id</code>, and "does forget update the
+index" has a single answer instead of six. The contract is only worth
+what the applier implements: here it covers four of seven variants and
+refuses three by name.</li>
 <li><strong>Give each tenant its own log index.</strong> Sharing a
 monotonic counter across tenants leaks ordering information and couples
 their retention; separating them costs nothing.</li>
-<li><strong>Keep a tombstone in the log until every replica has seen
-it.</strong> Restore-no-resurrect is the property every backup story
-needs and almost none states, and it is a watermark comparison.</li>
-<li><strong>Reconcile watermarks before truncating.</strong> Source log,
-backup manifest, tombstone and follower position — truncate on the
-minimum, not on age.</li>
+<li><strong>Reconcile watermarks before truncating, and write the
+reconciler first.</strong> Source log, backup manifest, tombstone and
+follower position — truncate on the minimum, not on age.
+<code>commit/retention.rs</code> states that contract more carefully
+than anything else in this atlas, and the compactor that would obey it
+does not exist yet, so take the contract and supply your own
+caller.</li>
+<li><strong>Refuse the write you cannot replicate, in the response
+body.</strong> A <code>501</code> with
+<code>{"error": "not_yet_available_over_http", "reason": "…would silently diverge across the cluster", "deferred": true}</code>
+is strictly better than a 404, better than a direct engine call that
+lands on one node, and better than a header comment, because a client
+can branch on it. Eight handlers do this.</li>
+<li><strong>Mark node-local writes node-local in the payload.</strong>
+<code>"node_local": true</code> on a response is one key, and it is the
+difference between a per-node ring buffer being a documented semantic
+and being a bug someone finds in production.</li>
 <li><strong>Materialise the decayed ordering per scope and maintain it
 from the mutation bus.</strong> Computing decay at query time over the
 whole corpus is the common design and it does not survive scale.</li>
-<li><strong>Say what is not wired, in the header, with a list.</strong>
-Two modules here do it; it turns a gap from a defect a reader discovers
-into a decision the author recorded.</li>
+<li><strong>Say what is not wired, in the header, with a list — then
+re-read the list when you wire something.</strong> Several modules here
+do the first half, and it turns a gap from a defect a reader discovers
+into a decision the author recorded. The second half is where this
+repository slipped: three headers still describe absences that have been
+filled, or names that have been deleted.</li>
+<li><strong>Reject an error variant by name, with the RFC that will land
+it.</strong>
+<code>ApplyError::NotYetWired { variant: "TenantConfigPatch", planned_pr: "RFC 021 PR-2" }</code>
+tells a caller what failed, that it is not their fault, and where to
+watch — from inside the type system rather than a comment.</li>
 <li><strong>Return a plan before a destructive operation.</strong>
 <code>ShredPlan</code> previews what is about to be destroyed so an
 operator can confirm, and <code>ShredOutcome</code> records what
@@ -419,70 +685,167 @@ actually happened including the idempotent already-gone case.</li>
 four conclusions across four experiment phases. If the condition is your
 product, run your product.</li>
 <li><strong>Do not read the crypto-shred as shipped erasure.</strong>
-The orchestrator exists; the encryption layer, the caller and the
-endpoint do not, and the header says so.</li>
-<li><strong>Do not expect a correction to prevent re-assertion.</strong>
-<code>correct</code> tombstones the original and inserts whatever text
-the caller supplies; the log records both and refuses neither.</li>
+The orchestrator exists and so does an at-rest encryption layer, but
+they are not connected: one server-wide <code>master.key</code> encrypts
+every tenant under AES-256-GCM, while the key the shredder destroys is a
+per-tenant DEK that <code>get_key</code> hands to nobody outside a test.
+The caller and the admin endpoint are missing too.</li>
+<li><strong>Do not trust a "what's missing" header without grepping for
+the thing it says is missing.</strong> It is the most useful kind of
+comment in this repository and the most likely to be stale, because the
+person who fills the gap is rarely the person who wrote the list.</li>
+<li><strong>Do not expect a correction to mint a new record.</strong>
+<code>correct</code> updates the row under the same <code>rid</code> and
+files the prior state in <code>record_revisions</code>; the text is
+whatever the caller supplied and nothing compares it against
+anything.</li>
 <li><strong>Do not read n=2 preliminary numbers as a result.</strong>
 The project labels them; a reader skimming the table is the risk.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits a team that wants agent memory with database properties —
-a commit log, tenancy, replication, retention, backup and restore — and
-is willing to run a Rust server and accept AGPL-3.0. It is the most
-operationally serious system in this batch and the least opinionated
-about cognition: <code>certainty</code> and <code>valence</code> are
-fields, not mechanisms.</p>
+a commit log, tenancy, replication, backup and restore — and is willing
+to run a Rust server. Apache-2.0 across the crates, with
+<code>yql</code> at MIT, is a posture a copyleft-averse shop can adopt.
+It is operationally serious and the least opinionated about cognition of
+the database-shaped systems here: <code>certainty</code> and
+<code>valence</code> are fields, not mechanisms.</p>
+<p>Budget for the seam. The server is one repository and the engine is
+another, pinned by tag, and three times as large; the memory semantics
+you care about — what <code>correct</code> does to a row, whether a
+namespace filters, what an as-of query reconstructs — are answered
+there, not here. A reader who stops at this repository will get the data
+model wrong.</p>
 <p>Anyone building a memory <em>store</em> rather than a memory
-<em>layer</em> should read <code>commit/mod.rs</code> and
-<code>commit/retention.rs</code>. They are the clearest statement in
-this atlas of what deletion has to mean once replicas and backups
-exist.</p>
+<em>layer</em> should read <code>commit/mod.rs</code>,
+<code>commit/retention.rs</code> and RFC 032. The first two are the
+clearest statement in this atlas of what deletion has to mean once
+replicas and backups exist; the third is the clearest statement of what
+to do about a write you cannot yet replicate.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
+<p>Three things a reader might expect to be open are settled, and the
+answer to each is no. <code>RaftCommitter</code> was never implemented;
+openraft was removed in Phase D and <code>YrpCommitter</code> is the
+cluster committer. Crypto-shred is not wired, and the encryption layer
+its header asks for does not exist in the form it needs, though a
+different one does. Phase 3E is a draft:
+<code>docs/phase3e/FINDINGS_POST_DRAFT.md</code> opens "DRAFT — NOT
+PUBLISHED YET … Do not publish before one sleep + morning review", dated
+2026-04-19, against a README that promised the corrected findings for
+2026-04-20.</p>
+<p>What is open:</p>
 <ul>
-<li><strong>Is the Phase 3E rerun finished?</strong> The README promised
-"full corrected findings post coming 2026-04-20"; what is committed is
-preliminary at n=2.</li>
-<li><strong>Has crypto-shred been wired since?</strong> Three pieces are
-listed as deferred; a later commit may have landed them, and at this one
-the erasure claim rests on logical tombstones only.</li>
 <li><strong>What does the <code>think</code> loop do with a detected
-conflict?</strong> <code>socratic/</code> holds evidence and an
-operator; whether a conflict resolves automatically, surfaces, or waits
-was not traced.</li>
-<li><strong>Is <code>RaftCommitter</code> implemented?</strong> The
-header names it as landing in PR-4; which committer a real deployment
-runs decides whether restore-no-resurrect is exercised at all.</li>
+conflict?</strong> Not traced here. <code>socratic/</code> holds
+evidence and an operator; whether a conflict resolves automatically,
+surfaces, or waits was not followed into the engine.</li>
+<li><strong>Will the claim gate ever leave shadow?</strong> Every
+install seeds <code>shadow</code>, the Python binding can set
+<code>enforce</code>, and the server exposes no way to. A gate whose
+enforcing mode has only ever run in tests is one release from being a
+trust filter and one abandonment from being dead schema.</li>
+<li><strong>Who calls the compactor when it exists?</strong> The
+watermark contract names four contributors and the registry is
+constructed nowhere; whichever PR adds the loop also has to add the
+wiring, and RFC 010-C shipped the contract without it.</li>
+<li><strong>Does the valid-time axis reach a client?</strong>
+<code>event_after</code>/<code>event_before</code> are <code>None</code>
+at every server call site with a comment calling the forwarding "a
+separate change". If that change lands, the bitemporal question in
+section 9 reopens.</li>
+<li><strong>How much of YantrikDB is in the other repository?</strong>
+The engine is three times the size of the server and moves faster: this
+commit's own message crosses four engine releases in one bump. A pin on
+the server is a pin on the smaller, slower half.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
+<p>Two repositories. Paths without a prefix are
+<code>yantrikos/yantrikdb-server</code> at
+<code class="commit-id" title="45d052ec1dc47ca16c2a42aa938be9e6d176b711">45d052ec…</code>; paths marked
+<strong>engine</strong> are <code>yantrikos/yantrikdb</code> at tag
+<code>v0.22.0</code>, the version this commit pins.</p>
 <p><strong>The correction</strong> — <code>CORRECTIONS.md</code> (what
-was wrong <code>:9</code>, where it was cited <code>:35</code>, how it
-was caught <code>:45</code>, the rerun <code>:53</code>), the README
-notice <code>:3-9</code>, <code>docs/phase3e/</code>
-(<code>FINDINGS_POST_DRAFT.md</code>, the raw harness logs)</p>
+was wrong <code>:11</code>, where it was cited <code>:33</code>, how it
+was caught <code>:44</code>, what the correction looks like
+<code>:52</code>, what's pending <code>:82</code>, the lesson
+<code>:116</code>), the README notice <code>:3-9</code>,
+<code>docs/phase3e/</code> (<code>FINDINGS_POST_DRAFT.md</code>, still
+headed "DRAFT — NOT PUBLISHED YET", the raw harness logs)</p>
+<p><strong>The licence</strong> — <code>LICENSE</code> (Apache-2.0; the
+file carried the AGPL-3.0 text before the relicence),
+<code>NOTICE</code>, <code>crates/yantrikdb-server/Cargo.toml:6</code>,
+<code>crates/yql/Cargo.toml:6</code> (MIT),
+<code>pyproject.toml:10</code></p>
+<p><strong>HTTP parity</strong> —
+<code>docs/rfcs/rfc_032_http_tool_parity.md</code>,
+<code>docs/operations/http-embedded-parity.md</code>,
+<code>crates/yantrikdb-server/src/http_gateway.rs</code>
+(<code>deferred_over_http</code> <code>:6206-6219</code>,
+<code>correct_deferred</code> <code>:6704</code>,
+<code>temporal_as_of</code> <code>:6326</code>, the router
+<code>:6747-6785</code>)</p>
 <p><strong>Commit substrate</strong> —
 <code>crates/yantrikdb-server/src/commit/mod.rs</code> (the design
-contract <code>:16-25</code>), <code>local.rs</code>,
-<code>applier.rs</code>, <code>mutation.rs</code>,
-<code>submitter.rs</code>, <code>trait_def.rs</code>,
-<code>tenant_pool.rs</code></p>
+contract <code>:16-25</code>, the re-exports <code>:65-74</code>),
+<code>local.rs</code> (the only log <code>INSERT</code>
+<code>:315</code>), <code>applier.rs</code> (<code>EngineApplier</code>
+<code>:228</code>, the three unwired variants <code>:459-469</code>),
+<code>mutation.rs</code> (the <code>MemoryMutation</code> grammar
+<code>:94</code>), <code>submitter.rs</code>, <code>trait_def.rs</code>
+(<code>MutationCommitter</code> <code>:275-326</code>, no purge method),
+<code>tenant_pool.rs</code> (<code>is_encrypted</code> <code>:56</code>,
+<code>new_encrypted</code> <code>:73-77</code>),
+<code>yrp/runtime.rs</code>
+(<code>impl MutationCommitter for YrpCommitter</code>
+<code>:1142</code>)</p>
 <p><strong>Deletion</strong> —
-<code>crates/yantrikdb-server/src/commit/retention.rs</code>
-(restore-no-resurrect <code>:45-50</code>),
+<code>crates/yantrikdb-server/src/commit/retention.rs</code> (what the
+module does not own, including the compactor <code>:30-37</code>,
+restore-no-resurrect <code>:45-50</code>),
 <code>crates/yantrikdb-server/src/forget/crypto_shred.rs</code> (the
-rationale <code>:16-23</code>, the deferred list <code>:25-33</code>),
+rationale <code>:15-22</code>, the deferred list <code>:24-33</code>,
+<code>CryptoShredder::new</code> <code>:131</code>, <code>prepare</code>
+<code>:136</code>, <code>shred</code> <code>:167</code>),
+<code>crates/yantrikdb-server/src/key_provider/mod.rs</code>
+(<code>KeyPurpose</code> <code>:55-62</code>, <code>destroy</code>
+<code>:220-226</code>), <code>local.rs</code> (the impl
+<code>:167</code>, the contract test <code>:286</code>),
 <code>crates/yantrikdb-server/src/restore/</code>,
 <code>backup/</code></p>
 <p><strong>Correction and forget</strong> —
-<code>src/yantrikdb/mcp/tools.py:248</code>
+<code>src/yantrikdb/mcp/tools.py:249</code>
 (<code>memory_forget</code>), <code>:264</code>
-(<code>memory_correct</code>), <code>src/yantrikdb/cli.py:59</code></p>
+(<code>memory_correct</code>), <code>src/yantrikdb/api.py:228</code>
+(the FastAPI route whose docstring still describes the pre-v0.7.20
+behaviour), <code>src/yantrikdb/cli.py:59</code>,
+<strong>engine</strong>
+<code>crates/yantrikdb-core/src/engine/lifecycle.rs:840-869</code>
+(<code>correct</code>, in place, <code>record_revisions</code>, reason
+required)</p>
+<p><strong>The engine's memory model</strong> — <strong>engine</strong>
+<code>crates/yantrikdb-core/src/base/schema.rs</code>
+(<code>memories</code> <code>:31</code>, <code>record_links</code>
+<code>:923</code>, <code>extraction_refusals</code> <code>:1239</code>,
+<code>event_time_min</code>/<code>event_time_max</code>
+<code>:3196-3197</code>),
+<code>crates/yantrikdb-core/src/engine/bitemporal.rs</code> (the
+honest-limits header <code>:1-36</code>, <code>recall_as_of</code>
+<code>:55</code>), <code>engine/claims_lane.rs</code> (the three gate
+modes <code>:129-137</code>, the valid-time comparison
+<code>:277-281</code>), <code>engine/mod.rs:1180</code> (the
+<code>shadow</code> seed), <code>engine/links.rs:674-700</code> (the
+supersedes refold), <code>engine/reextract.rs:407</code> (the only read
+of the refusal ledger)</p>
 <p><strong>Retrieval</strong> —
 <code>crates/yantrikdb-server/src/retrieval/time_decay.rs</code> (the
-materialised index <code>:13</code>, the invalidation subscriber
-<code>:314-340</code>), <code>crates/yantrikdb-server/src/index/</code>,
-<code>crates/yql/</code></p>
+materialised index <code>:13</code>, the namespace-blind invalidation
+subscriber <code>:313-340</code>),
+<code>crates/yantrikdb-server/src/handler.rs:158-196</code> (both
+<code>db.recall</code> call sites,
+<code>event_after</code>/<code>event_before</code> <code>None</code>),
+<code>crates/yantrikdb-server/src/index/</code>,
+<code>crates/yql/</code>, <strong>engine</strong>
+<code>crates/yantrikdb-core/src/engine/recall.rs</code></p>
 <p><strong>Conflict</strong> —
 <code>crates/yantrikdb-server/src/socratic/</code>
 (<code>evidence.rs</code>, <code>operator.rs</code>)</p>
@@ -494,8 +857,116 @@ persistence uncertainty), <code>key_provider/</code>,
 <code>pack_reconciler.rs</code></p>
 <p><strong>Documentation</strong> — <code>DESIGN.md</code>,
 <code>CONCURRENCY.md</code>, <code>ROADMAP.md</code>,
-<code>MCP_REDESIGN.md</code>, <code>SERVER_README.md</code></p>
+<code>MCP_REDESIGN.md</code>, <code>SERVER_README.md</code>,
+<code>CHANGELOG.md</code> (the 0.18.0 entry, which records four engine
+releases and no relicence)</p>
+<h2 id="appendix-searches">Appendix: Searches</h2>
+<p>Run from a checkout of <code>yantrikos/yantrikdb-server</code> at
+<code class="commit-id" title="45d052ec1dc47ca16c2a42aa938be9e6d176b711">45d052ec…</code> unless marked
+<strong>engine</strong>, which is <code>yantrikos/yantrikdb</code> at
+tag <code>v0.22.0</code>. Each one backs a statement above that says
+something is absent.</p>
+<ul>
+<li><strong>The shredder has no caller.</strong>
+<code>grep -rn "CryptoShredder::new\|LocalKeyProvider" --include="*.rs" crates | grep -v "forget/crypto_shred.rs\|key_provider/"</code>
+— nothing. The only mention outside those two modules is the re-export
+line <code>forget/mod.rs:51</code>, which names the type and constructs
+none.</li>
+<li><strong>Nothing encrypts with the DEK.</strong>
+<code>grep -rn "get_key" --include="*.rs" crates | grep -v "src/key_provider/"</code>
+— every hit is inside <code>crypto_shred.rs</code>, and every hit inside
+it is in its <code>#[cfg(test)]</code> module.</li>
+<li><strong>An at-rest layer does exist.</strong>
+<code>grep -rn "new_encrypted\|is_encrypted\|master.key" --include="*.rs" crates</code>
+— <code>tenant_pool.rs:56,74</code>,
+<code>main.rs:578-586,680-689</code>, <code>http_gateway.rs:605</code>,
+<code>config/mod.rs:76-171</code>.</li>
+<li><strong>No type called <code>RaftCommitter</code>.</strong>
+<code>grep -rn "struct RaftCommitter" --include="*.rs" crates</code> —
+nothing. <code>grep -rn "RaftCommitter" --include="*.rs" crates</code> —
+thirteen comments in seven files.
+<code>grep -rn "impl MutationCommitter for" --include="*.rs" crates</code>
+— <code>LocalSqliteCommitter</code>, <code>LocalSqliteSubmitter</code>,
+<code>YrpCommitter</code>.</li>
+<li><strong>Nothing consumes the retention watermark.</strong>
+<code>grep -rn "RetentionRegistry\|SafePurgeWatermark\|purge_below" --include="*.rs" crates</code>
+— every hit is <code>commit/retention.rs</code> or the re-export at
+<code>commit/mod.rs:72-74</code>, and every
+<code>RetentionRegistry::new()</code> is past the
+<code>#[cfg(test)]</code> at <code>retention.rs:545</code>.
+<code>grep -rn "purge_below" . | grep -v "^./.git/"</code> returns one
+line for the whole checkout: the doc comment at
+<code>retention.rs:34</code> deferring the compactor to a future
+PR.</li>
+<li><strong>The commit log is never mutated or trimmed.</strong>
+<code>grep -rn "DELETE FROM memory_commit_log\|UPDATE memory_commit_log" . | grep -v "^./.git/"</code>
+— nothing, across the whole checkout, not only the Rust sources.
+<code>grep -rn "INSERT INTO memory_commit_log" --include="*.rs" crates/yantrikdb-server/src</code>
+— three hits, of which
+<code>migrations/m001_memory_commit_log.rs:150</code> and
+<code>forget/tombstone.rs:429</code> are past their files'
+<code>#[cfg(test)]</code>, leaving
+<code>commit/local.rs:315</code>.</li>
+<li><strong>Three mutation variants have no producer.</strong>
+<code>for v in TenantConfigPatch UpdateMemoryPatch PurgeMemory; do grep -rn "MemoryMutation::$v" --include="*.rs" crates; done</code>
+— match arms in <code>mutation.rs</code> and <code>applier.rs</code>,
+<code>tests/wire_format_v1_0.rs</code>, and <code>#[cfg(test)]</code>
+fixtures in <code>commit/local.rs</code> and
+<code>forget/tombstone.rs</code>. No handler, no route.</li>
+<li><strong>The server never binds the valid-time filter.</strong>
+<code>grep -rn "event_after\|event_before" --include="*.rs" --include="*.py" crates src</code>
+— <code>handler.rs:173,193</code> and two test files, every one of them
+<code>None</code>.</li>
+<li><strong>The claim gate never leaves shadow outside tests.</strong>
+<strong>engine</strong>
+<code>grep -rn "ChainGateMode::Enforce\|set_claim_chain_gate_mode" --include="*.rs" crates</code>
+— the setter in <code>engine/mod.rs:2108</code>, the Python binding at
+<code>yantrikdb-python/src/py_engine/mod.rs:801</code>, and
+<code>Enforce</code> only in
+<code>engine/tests/claim_chain_gate.rs</code>.</li>
+<li><strong>The refusal ledger is never consulted.</strong>
+<strong>engine</strong>
+<code>grep -rn "extraction_refusals" --include="*.rs" crates</code> —
+the DDL, one <code>SELECT … COUNT(*)</code> in
+<code>engine/reextract.rs:407</code>, one per-record <code>DELETE</code>
+in <code>engine/stats.rs:1539</code>.</li>
+<li><strong>The relicence is not in the changelog.</strong>
+<code>grep -n -i "licen\|apache\|agpl" CHANGELOG.md</code> — one hit, an
+sdist path fix from an earlier release.</li>
+</ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/yantrikos/yantrikdb-server/commit/45d052ec1dc47ca16c2a42aa938be9e6d176b711"><code class="commit-id" title="45d052ec1dc47ca16c2a42aa938be9e6d176b711">45d052ec…</code></a>
+— re-read. Screened again: no auto-run surface, no build-time execution,
+ten dependency manifests three days old inside the seven-day cooldown
+including <code>Cargo.lock</code> and <code>uv.lock</code>. The tree was
+read, never built, and no test or benchmark was run. Twenty-nine files
+changed since the previous pin: the licence moved from AGPL-3.0-only to
+Apache-2.0 with a <code>NOTICE</code> added, the engine dependency moved
+from tag <code>v0.13.1</code> to <code>v0.22.0</code>, and RFC 032 added
+HTTP routes for six MCP tool families with eight cluster-global write
+operations returning a 501 that names the missing replication path.
+Marks unchanged at <code>scope_enforced</code> and
+<code>audit_log</code>; <code>capability_evidence</code> records added
+for both, and the scope record now names the namespace predicate rather
+than the per-tenant file. Four corrections to the first reading, all of
+them things the first reading could have checked: <code>correct</code>
+updates the row in place under the same <code>rid</code> and files the
+prior state in <code>record_revisions</code> rather than tombstoning and
+minting a new memory; the memory row has a status field, a valid-time
+interval and a supersedes edge, none of which the first reading found
+because it never opened the engine crate the server depends on;
+<code>RaftCommitter</code> is a name in thirteen comments and no type,
+openraft having been removed before either pin; and the crypto-shred's
+"no encryption layer" is wrong — there is an AES-256-GCM at-rest layer
+on one server-wide master key, which is not the per-tenant DEK the
+shredder destroys. The retention watermark and its four contributors are
+constructed nowhere outside their own tests and the compactor that would
+read them does not exist, so restore-no-resurrect holds because nothing
+trims the log. Section 9 records the two withheld marks that came
+closest: a claim-grounding gate seeded <code>shadow</code> on every
+install, and a valid-time axis the server passes <code>None</code> for
+at both recall call sites.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773"><code class="commit-id" title="f8378f98bb0d25128f473ab4e7c5cac829c22773">f8378f98…</code></a>
 — first reading. Screened before reading: no auto-run surface, no

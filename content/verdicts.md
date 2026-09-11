@@ -1747,11 +1747,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`yantrikdb`](../systems/yantrikdb/)
 
 - Best idea: `CORRECTIONS.md` — four published benchmark conclusions withdrawn because the condition labelled "structured memory" was a 120-line Python dict with word-overlap retrieval, with the maintainer's own words quoted ("the core functionality did not run at all") and the four-word reply "Correct observation. No defense." The correction was published before the favourable rerun was finished.
-- Biggest risk: the crypto-shred erasure path is an orchestrator with no caller, no encryption layer beneath it and no admin endpoint — stated in its own header under "What's NOT here (deferred)", so the GDPR story at this commit rests on logical tombstones alone.
-- Most reusable component: `commit/retention.rs` — restore-no-resurrect, where a tombstone stays in the log until every replica watermark has passed it, so a restore cannot bring a deleted memory back.
-- Maturity impression: 63,000 lines of Rust across six crates, AGPL-3.0, every mutation through one commit substrate idempotent on `op_id` with per-tenant log indices, and a rerun harness committed with raw logs at n=2.
+- Biggest risk: the crypto-shred destroys a per-tenant data-encryption key that nothing encrypts with — the shipped at-rest layer is one server-wide `master.key` under AES-256-GCM, `KeyProvider::get_key` is called from nothing but the shredder's own tests, and `CryptoShredder::new` has no production caller, so the GDPR story rests on logical tombstones alone.
+- Most reusable component: RFC 032's refusal — eight cluster-global write operations return a `501 not_yet_available_over_http` whose body says exposing them as direct engine calls "would silently diverge across the cluster", instead of a bare 404 or a write that lands on one node.
+- Maturity impression: 64,500 lines of Rust across six crates under Apache-2.0, wrapped around an engine crate three times that size in a separate repository; four routes append to one commit substrate idempotent on `op_id` with per-tenant log indices, and a rerun harness committed with raw logs at n=2.
 - Study when: your deletion story stops at the primary and you have replicas or backups.
-- Do not copy when: you want cognition — `certainty` and `valence` here are fields, not mechanisms.
+- Do not copy when: you want cognition — `certainty` and `valence` here are fields, not mechanisms, and the one discrete epistemic status in the tree sits behind a gate every install seeds in shadow mode.
 
 ### [`vibe-cognition`](../systems/vibe-cognition/)
 
