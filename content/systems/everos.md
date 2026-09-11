@@ -268,8 +268,8 @@ same query as each, and asserts `c_ids.isdisjoint(m_ids)` together with
 `all(ep["user_id"] == …)` on both sides — a denial plus the positive control that
 proves the denial is targeted rather than a blanket empty result. A second test
 does the same for two *agent* owners sharing a hot keyword. That earns
-`negative_eval`, and makes EverOS the fifth system in the atlas to carry it —
-again from access-control discipline rather than from memory research.
+`negative_eval` — from access-control discipline rather than from memory
+research.
 
 **Correction reaches the read path and stops there.** A deprecated row is
 excluded from results, which is more than many systems here manage. What is

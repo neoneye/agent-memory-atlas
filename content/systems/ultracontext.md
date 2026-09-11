@@ -1,7 +1,7 @@
 ---
 title: "UltraContext"
 eyebrow: "Every read carries the project key except the one that forks"
-description: "An Apache-2.0 context layer that tails the session transcripts of five coding agents into one git-like store of linked nodes — every change a new version head recording its operation and the ids it touched — and can write a session back out in another agent's own format so work started in Claude Code continues in Codex."
+description: "A context layer that tails the session transcripts of five coding agents into one git-like store of linked nodes — every change a new version head recording its operation and the ids it touched — and can write a session back out in another agent's own format so work started in Claude Code continues in Codex."
 root: ../..
 page_kind: system
 source_name: "ultracontext/ultracontext"
@@ -34,9 +34,8 @@ matrix:
 
 ## 1. Executive Summary
 
-UltraContext is the fourth project in this corpus to notice that coding agents
-already write their sessions to disk, and the first to try writing them back.
-A local daemon tails the session files of Claude Code, Codex, Cursor, Gemini and
+UltraContext takes the sessions coding agents already write to disk and writes
+them back out. A local daemon tails the session files of Claude Code, Codex, Cursor, Gemini and
 OpenClaw, normalises each line, and appends it to a shared store; an MCP server
 hands any agent another agent's context; and a pair of *writers* can emit a
 session in Claude Code's or Codex's own on-disk format, so the pitch — *"start on

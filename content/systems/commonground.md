@@ -1,7 +1,7 @@
 ---
 title: "CommonGround Kernel"
 eyebrow: "A ledger of who did what, and the payloads live elsewhere"
-description: "An Apache-2.0 Postgres kernel that records multi-agent work as an append-only ledger — every row carrying an actor, a subject and the cause that produced it, with a companion index keyed by scope — where each of twenty-six repository reads is keyed on the project taken from the caller's header, and where the content those rows point at lives in a Cardbox submodule this repository does not contain."
+description: "A Postgres kernel that records multi-agent work as an append-only ledger — every row carrying an actor, a subject and the cause that produced it, with a companion index keyed by scope — where each of twenty-six repository reads is keyed on the project taken from the caller's header, and where the content those rows point at lives in a Cardbox submodule this repository does not contain."
 root: ../..
 page_kind: system
 source_name: "Intelligent-Internet/CommonGround"

@@ -1,7 +1,7 @@
 ---
 title: "continuity v2"
 eyebrow: "The third answer to a transcript already on disk"
-description: "An MIT Python index over the Claude Code JSONL transcripts and a claude.ai export, giving one SQLite file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO edges and a BFS thread walk that returns the conversation around a hit rather than the hit alone — with two read-only drift checks between the index and its source, no tests, no redaction and no epistemic layer of any kind."
+description: "A Python index over the Claude Code JSONL transcripts and a claude.ai export, giving one SQLite file FTS5 search, MiniLM embeddings, TEMPORAL and SIMILAR_TO edges and a BFS thread walk that returns the conversation around a hit rather than the hit alone — with two read-only drift checks between the index and its source, no tests, no redaction and no epistemic layer of any kind."
 root: ../..
 page_kind: system
 source_name: "Haustorium12/continuity-v2"

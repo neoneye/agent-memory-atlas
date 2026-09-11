@@ -1,7 +1,7 @@
 ---
 title: "ShisaD"
 eyebrow: "Trust is a triple the runtime derives, never a field a caller sets"
-description: "An Apache-2.0 security-first agent daemon whose memory assigns every entry a trust band by looking up a validated triple of where it came from, which channel carried it and how it was confirmed — a lookup that raises on an unknown combination rather than guessing — admits only elevated entries to the identity surface, refuses an owner-scoped read that names a user without a workspace, and appends every lifecycle event to a SQLite event store keyed to the entry it describes."
+description: "A security-first agent daemon whose memory assigns every entry a trust band by looking up a validated triple of where it came from, which channel carried it and how it was confirmed — a lookup that raises on an unknown combination rather than guessing — admits only elevated entries to the identity surface, refuses an owner-scoped read that names a user without a workspace, and appends every lifecycle event to a SQLite event store keyed to the entry it describes."
 root: ../..
 page_kind: system
 source_name: "shisa-ai/shisad"

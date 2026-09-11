@@ -1,7 +1,7 @@
 ---
 title: "Caura"
 eyebrow: "A rejected skill is remembered by its fingerprint"
-description: "An Apache-2.0 Postgres memory layer for multi-agent fleets where a memory carries a tenant, a fleet, an agent and one of three visibility tiers applied by a single shared clause builder written after the same predicate leaked from one copy to the next, one of eight statuses of which only three are live on the read path, and a validity window a `valid_at` parameter queries; where every mutation appends to a per-tenant tamper-evident hash chain; and where a person rejecting a candidate skill writes its cluster fingerprint to a poison table the next distillation run consults before it proposes anything."
+description: "A Postgres memory layer for multi-agent fleets where a memory carries a tenant, a fleet, an agent and one of three visibility tiers applied by a single shared clause builder written after the same predicate leaked from one copy to the next, one of eight statuses of which only three are live on the read path, and a validity window a `valid_at` parameter queries; where every mutation appends to a per-tenant tamper-evident hash chain; and where a person rejecting a candidate skill writes its cluster fingerprint to a poison table the next distillation run consults before it proposes anything."
 root: ../..
 page_kind: system
 source_name: "caura-ai/caura"

@@ -1,7 +1,7 @@
 ---
 title: "deja-vu"
 eyebrow: "The memory was already on disk; nobody had indexed it"
-description: "An MIT Go binary that treats the session transcripts Claude Code, Codex, Cursor and other agents already wrote to disk as the corpus rather than recording forward from empty — redacting secrets as it indexes, serving recall through hooks at session start and before an edit, and telling a reader in prose when a session's own text says an approach was backed out rather than promoting that to a recorded state."
+description: "A Go binary that treats the session transcripts Claude Code, Codex, Cursor and other agents already wrote to disk as the corpus rather than recording forward from empty — redacting secrets as it indexes, serving recall through hooks at session start and before an edit, and telling a reader in prose when a session's own text says an approach was backed out rather than promoting that to a recorded state."
 root: ../..
 page_kind: system
 source_name: "vshulcz/deja-vu"

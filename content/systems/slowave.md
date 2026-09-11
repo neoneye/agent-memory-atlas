@@ -1,7 +1,7 @@
 ---
 title: "Slowave"
 eyebrow: "A human forget that consolidation cannot undo"
-description: "An AGPL local memory layer for coding agents whose whole core runs without an LLM call — raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a forget that consolidation is written to respect: a schema a person suppressed is found again by embedding on the next pass and skipped rather than reinforced or recreated."
+description: "A local memory layer for coding agents whose whole core runs without an LLM call — raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a forget that consolidation is written to respect: a schema a person suppressed is found again by embedding on the next pass and skipped rather than reinforced or recreated."
 root: ../..
 page_kind: system
 source_name: "slowave-ai/slowave"

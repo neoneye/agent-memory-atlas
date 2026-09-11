@@ -1,7 +1,7 @@
 ---
 title: "Memspec"
 eyebrow: "A claim about code, accountable to the code"
-description: "An MIT TypeScript store whose memories are markdown files under version control, each a typed claim anchored to the git blob SHAs of the files it depends on, so a code change flags the claim for review instead of letting it rot — with a three-state lifecycle that keeps superseded records out of search, world-state validity queried separately from the review schedule, a scope predicate applied inside the FTS query and as a hard wall on graph expansion, and removal reserved to an interactive operator prompt."
+description: "A TypeScript store whose memories are markdown files under version control, each a typed claim anchored to the git blob SHAs of the files it depends on, so a code change flags the claim for review instead of letting it rot — with a three-state lifecycle that keeps superseded records out of search, world-state validity queried separately from the review schedule, a scope predicate applied inside the FTS query and as a hard wall on graph expansion, and removal reserved to an interactive operator prompt."
 root: ../..
 page_kind: system
 source_name: "siimvene/memspec"

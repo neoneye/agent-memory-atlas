@@ -1,7 +1,7 @@
 ---
 title: "MCP Memory Service"
 eyebrow: "Quarantine tags the contradiction and recall returns it anyway"
-description: "An Apache-2.0 MCP memory server over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose consolidation package derives beliefs, detects contradictions and quarantines the memory that disagrees with an active belief — writing a metadata flag and a tag that a listing tool reads, that a release tool clears, and that no retrieval path consults, so a quarantined memory is still returned by search."
+description: "An MCP memory server over SQLite-vec, Cloudflare, Milvus or a hybrid of them, whose consolidation package derives beliefs, detects contradictions and quarantines the memory that disagrees with an active belief — writing a metadata flag and a tag that a listing tool reads, that a release tool clears, and that no retrieval path consults, so a quarantined memory is still returned by search."
 root: ../..
 page_kind: system
 source_name: "doobidoo/mcp-memory-service"

@@ -1,7 +1,7 @@
 ---
 title: "Statewave"
 eyebrow: "Compile once, then serve the same bytes"
-description: "An Apache-2.0 Postgres memory runtime that treats query-time retrieval as a source of noise — raw episodes are append-only, memories are compiled from them once per subject change and carry a validity interval separate from their record time, every read is keyed on a subject and optionally a tenant with an AST fitness function failing CI when a repository helper forgets the tenant, and a context bundle is assembled inside a token budget and stamped with a receipt that names every entry it selected so a later diff can say which of them survived."
+description: "A Postgres memory runtime that treats query-time retrieval as a source of noise — raw episodes are append-only, memories are compiled from them once per subject change and carry a validity interval separate from their record time, every read is keyed on a subject and optionally a tenant with an AST fitness function failing CI when a repository helper forgets the tenant, and a context bundle is assembled inside a token budget and stamped with a receipt that names every entry it selected so a later diff can say which of them survived."
 root: ../..
 page_kind: system
 source_name: "smaramwbc/statewave"

@@ -1,7 +1,7 @@
 ---
 title: "LWC"
 eyebrow: "Recall hands back the replacement, not the superseded memory"
-description: "An Apache-2.0 Rust CLI holding two stores at once — a source-grounded wiki whose pages carry an ordered provenance from source-grounded down to hypothesis, and a temporal memory of fingerprinted events with typed fragments, an FTS5 recall bounded by event time, and a supersession chain the read path walks so a replaced memory returns its successor unless the caller asks for the history."
+description: "A Rust CLI holding two stores at once — a source-grounded wiki whose pages carry an ordered provenance from source-grounded down to hypothesis, and a temporal memory of fingerprinted events with typed fragments, an FTS5 recall bounded by event time, and a supersession chain the read path walks so a replaced memory returns its successor unless the caller asks for the history."
 root: ../..
 page_kind: system
 source_name: "JanYork/llm-wiki-cli"

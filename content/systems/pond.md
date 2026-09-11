@@ -1,7 +1,7 @@
 ---
 title: "pond"
 eyebrow: "Harness scaffolding is stored and kept out of the index"
-description: "An Apache-2.0 Rust archiver that ingests every agent session on the machine losslessly into Lance columnar storage the user owns — a local directory or their own S3 — records each message part's provenance as conversational or injected, and lets only the conversational parts contribute to the searchable text, so the scaffolding a harness inserted is preserved on disk and cannot be retrieved as something a person said."
+description: "A Rust archiver that ingests every agent session on the machine losslessly into Lance columnar storage the user owns — a local directory or their own S3 — records each message part's provenance as conversational or injected, and lets only the conversational parts contribute to the searchable text, so the scaffolding a harness inserted is preserved on disk and cannot be retrieved as something a person said."
 root: ../..
 page_kind: system
 source_name: "tenequm/pond"

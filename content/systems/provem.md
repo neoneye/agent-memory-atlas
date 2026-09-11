@@ -1,7 +1,7 @@
 ---
 title: "Provem"
 eyebrow: "Governance as the product"
-description: "A GDPR-native governance layer over agent memory, the second system here to carry all seven marks, whose replay script asserts every published number and passes on a clean clone."
+description: "A GDPR-native governance layer over agent memory that carries all seven marks, and whose replay script asserts every published number and passes on a clean clone."
 root: ../..
 page_kind: system
 source_name: "BernhardJackiewicz/provem"
@@ -44,9 +44,9 @@ isolation, injection defense and a tamper-evident audit, able to run over Mem0 o
 Graphiti or as its own store. Its README states the thesis in a sentence: the
 hard question is no longer *"can I find it?"* but *"am I allowed to use it?"*
 
-It carries **all seven capability marks**, the second system in this atlas to do
-so after [Verel](../verel/) — and unlike Verel, which arrived at them under
-red-team pressure, Provem arrived at them because a regulation names each one.
+It carries **all seven capability marks**. Where [Verel](../verel/) arrived at
+them under red-team pressure, Provem arrived at them because a regulation names
+each one.
 
 **The evidence practice is the most disciplined in the corpus.** The repository
 ships `scripts/verify_repro.sh`, described in its own header as a *"self-checking

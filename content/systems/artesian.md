@@ -1,7 +1,7 @@
 ---
 title: "Artesian"
 eyebrow: "The gate is the context; the memory is underneath"
-description: "An Apache-2.0 Rust workspace of fourteen crates that governs one agent loop's committed context and keeps a durable store beneath it — where a memory's identity is a hash of its content and its routing keys, a stored scope key is applied as a read-path filter by every backend, a three-state lifecycle lets a person retract a memory out of recall without deleting it, an eviction pass appends its archive and delete decisions to a JSONL log, and a CI gate proves one project's private memory does not reach another's query while two controls in the same result prove the query was not simply empty."
+description: "A Rust workspace of fourteen crates that governs one agent loop's committed context and keeps a durable store beneath it — where a memory's identity is a hash of its content and its routing keys, a stored scope key is applied as a read-path filter by every backend, a three-state lifecycle lets a person retract a memory out of recall without deleting it, an eviction pass appends its archive and delete decisions to a JSONL log, and a CI gate proves one project's private memory does not reach another's query while two controls in the same result prove the query was not simply empty."
 root: ../..
 page_kind: system
 source_name: "aquifer-labs/artesian"

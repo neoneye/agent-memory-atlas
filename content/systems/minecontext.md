@@ -1,7 +1,7 @@
 ---
 title: "MineContext"
 eyebrow: "Prospective memory, inferred"
-description: "Seven context types over passive screen and file capture, and the second system in the atlas to remember commitments — except it infers them from what it watched you do."
+description: "Seven context types over passive screen and file capture, and a memory of commitments — except it infers them from what it watched you do."
 root: ../..
 page_kind: system
 source_name: "volcengine/MineContext"
