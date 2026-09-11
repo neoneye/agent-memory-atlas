@@ -9,8 +9,10 @@ source_url: https://github.com/oceanbase/powermem
 archive_name: "oceanbase--powermem"
 revision: 9d1b48449345b1ec7af1144aa1b81bb776478851
 revision_url: https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the storage adapter | src/powermem/storage/adapter.py:386-447 | `_build_db_filters` composes `user_id`, `agent_id` and `run_id` into `effective_filters`, passed into every store read | tests/unit/test_agent_memory_search_filters.py, tests/unit/test_list_memory_filters.py"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -36,6 +38,18 @@ forgetting curve governing what stays reachable, and a two-layer "Experience +
 Skill" distillation above the fact layer. It ships a Python SDK, an HTTP server,
 an MCP server, a CLI, a VS Code extension and a Claude Code plugin, with 128 test
 files behind them.
+
+**This report describes the commit it is pinned to, and the project has since
+become something else.** `oceanbase/powermem` at its head is **PowerContext** —
+package `powercontext`, published to PyPI under that name, and introduced by its
+own README as *"the successor to PowerMem"* with a different premise: *"Context
+for work that humans and agents hand off and continue."* The replacement is not
+cosmetic. Across the 311 Python files of the successor there is no `retention`,
+no `ebbinghaus` and no `decay`; `agent_id` is gone entirely and `user_id`
+survives in two files. So the forgetting curve this report is largely about, and
+the four scope keys it credits, are not carried forward. A reader wanting the
+mechanism described below needs this commit; a reader wanting the project's
+current direction needs a different report, which this is not.
 
 **The best thing here is the retention model.** `EbbinghausAlgorithm` is the most
 complete implementation of [decay and reinforcement](../../patterns/decay-and-reinforcement/)
@@ -475,6 +489,21 @@ retention model that is the main reason to choose this.
 **Tests/benchmarks** — `tests/unit/test_oceanbase_graph.py`,
 `tests/unit/test_sqlite_fts.py`, `benchmark/locomo/`, `benchmark/server/main.py`
 
+## Appendix: Recorded Searches
+
+Run at the pinned commit, and — where noted — at the repository head for
+comparison.
+
+| Claim | Command | Result |
+| --- | --- | --- |
+| The mechanism exists at the pin | `git ls-tree -r --name-only <pin> \| grep -ciE "ebbinghaus\|retention"` | 11 paths |
+| It does not exist at head | `for t in retention ebbinghaus decay; do grep -rli "$t" --include="*.py" src \| wc -l; done` | 0, 0, 0 across 311 files |
+| The scope keys do not survive | the same sweep for `user_id`, `agent_id`, `run_id` | 2 files, 0 files, 12 files |
+| The package was renamed | `grep -n "^name" pyproject.toml` at both commits | `powermem` at the pin, `powercontext` at head |
+| The succession is stated | `grep -n "successor" README.md` at head | *"PowerContext is the successor to PowerMem"* |
+
 ## History
+
+**2026-09-11** — re-read at the same pin, [`9d1b48449345b1ec7af1144aa1b81bb776478851`](https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851), because the subject is not at the head of the branch any more. `oceanbase/powermem` has become **PowerContext** — `pyproject.toml` names the package `powercontext`, the README calls it *"the successor to PowerMem"*, and the premise changed from persistent memory for agents to context for work handed off between people and agents. The replacement is thorough: across the successor's 311 Python files there is no `retention`, no `ebbinghaus` and no `decay`, `agent_id` appears nowhere and `user_id` in two files, so the forgetting curve this report calls the atlas's most complete and the four scope keys it credits are both absent from the current tree. The report keeps its pin and its slug rather than following the rename, because the successor is a different system rather than the same one under a new name — attaching this analysis to the PowerContext name would misdescribe both. Section 1 states the succession so a reader arriving from a search does not go looking for `EbbinghausAlgorithm` in a tree that has never heard of it. No mark changes: everything this report credits is verified at the commit it describes, which the archive fork preserves. Screened before reading: forty-four findings across fifty files at the head; nothing was installed or run.
 
 **2026-07-29** — [`9d1b48449345b1ec7af1144aa1b81bb776478851`](https://github.com/oceanbase/powermem/commit/9d1b48449345b1ec7af1144aa1b81bb776478851) — first reading.
