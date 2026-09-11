@@ -111,14 +111,14 @@ instead.</p>
               <strong>fozikio/cortex-engine</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445" title="6045c41933b1d496d43ac10bad67560c87cf1445">
+            <a class="meta-pill revision-pill" href="https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0" title="233561b486d0e10bb52df32dea7d22d374086ab0">
               <span>Analyzed revision</span>
-              <code>6045c419…</code>
+              <code>233561b4…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fozikio--cortex-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -477,7 +477,79 @@ column migration <code>:391</code>, <code>putBelief</code>
 list, the security section, the REST blocklist),
 <code>docs/concurrency.md</code>, <code>docs/storage-backends.md</code>,
 <code>docs/tools-reference.md</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The belief log commits with the update</td>
+<td>read <code>src/tools/believe.ts:55</code> and
+<code>src/tools/forget.ts:50</code></td>
+<td>Both comments state the transaction: <em>"Memory update + belief log
+must commit together"</em></td>
+</tr>
+<tr>
+<td>No retrieval evaluation exists</td>
+<td><code>find . -iname "*eval*" -o -iname "*bench*"</code> outside
+<code>node_modules</code></td>
+<td>One hit, <code>src/tools/retrieval-audit.ts</code>, which inspects a
+single query rather than scoring a corpus</td>
+</tr>
+<tr>
+<td>The acceptance gate is grounding-first</td>
+<td>read <code>src/engines/thought-quality.ts:1-30</code> and
+<code>:274-276</code></td>
+<td>Grounding is the threshold; a single generic marker only matters
+within 0.15 of it</td>
+</tr>
+<tr>
+<td>The gate is tested in both directions</td>
+<td><code>grep -c "it(" src/engines/thought-quality.test.ts</code></td>
+<td>29 cases, including three separating a memory <em>about</em> memory
+from a definition <em>of</em> the memory</td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find src -name "*.ts" | xargs wc -l | tail -1</code></td>
+<td>32,142 lines; 326 test cases</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0"><code class="commit-id" title="233561b486d0e10bb52df32dea7d22d374086ab0">233561b4…</code></a>
+— re-read, 23 files and 796 insertions past the previous pin in a single
+commit. <code>audit_log</code> re-verified — the belief log and the
+memory update still commit in one transaction, in both
+<code>believe</code> and <code>forget</code>, each with a comment saying
+why. <strong>The stated risk narrows rather than closes</strong>: there
+is still no evaluation of retrieval quality, and
+<code>src/tools/retrieval-audit.ts</code> inspects one query rather than
+scoring a corpus. What did get measured is the acceptance gate on
+model-generated thoughts, and the change there is worth recording.
+<code>src/engines/thought-quality.ts</code> replaces a string blocklist
+with a structural check, and its docstring gives the argument:
+<em>"Blocklists are brittle: they encode one model's failure vocabulary
+and say nothing about whether the thought is grounded in the evidence it
+claims to derive from."</em> Grounding is now the threshold — the
+fraction of the thought's content words appearing in the evidence it was
+generated from, so <em>"generic LLM filler … shares almost no vocabulary
+with real evidence and scores near zero regardless of which model
+produced it"</em> — and the old marker list survives only as a weak
+signal that cannot veto a well-grounded thought alone. The empirical
+provenance is dated in the source: the markers were derived from
+dream-contamination incidents with Gemini and Ollama 14B on 2026-04-02.
+Twenty-nine committed cases cover it in both directions, including three
+that separate a legitimate memory <em>about</em> memory corruption from
+a refinement that defines the memory instead of its subject. Screened
+before reading: eleven findings; nothing was installed or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445"><code class="commit-id" title="6045c41933b1d496d43ac10bad67560c87cf1445">6045c419…</code></a>
 — first reading. Screened before reading; the tree was read, never

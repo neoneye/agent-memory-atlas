@@ -7,10 +7,12 @@ page_kind: system
 source_name: "fozikio/cortex-engine"
 source_url: https://github.com/fozikio/cortex-engine
 archive_name: "fozikio--cortex-engine"
-revision: 6045c41933b1d496d43ac10bad67560c87cf1445
-revision_url: https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445
-analyzed_at: 2026-08-09
+revision: 233561b486d0e10bb52df32dea7d22d374086ab0
+revision_url: https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0
+analyzed_at: 2026-09-11
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "belief revision | src/tools/believe.ts:55 and src/tools/forget.ts:50 | the belief log and the memory update commit in one transaction, so a revision cannot land without its record | src/engines"
 stack_storage: "sqlite, files"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -25,7 +27,7 @@ matrix:
   background: "Two-phase dream consolidation, wander, evolve, goal-directed prediction error"
   trust: "A confidence float penalised in proportion to adjudicator confidence"
   strengths: "Contradiction adjudicated into five outcomes, with supersession routed away from penalty"
-  risks: "Many neuroscience-named mechanisms with no evaluation of any of them"
+  risks: "Many neuroscience-named mechanisms and still no evaluation of retrieval quality; the one gate that is measured is the structural acceptance check on generated thoughts"
 ---
 
 ## 1. Executive Summary
@@ -346,6 +348,20 @@ Fiedler value), `src/tools/goal.ts`, `src/tools/dream.ts`
 blocklist), `docs/concurrency.md`, `docs/storage-backends.md`,
 `docs/tools-reference.md`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The belief log commits with the update | read `src/tools/believe.ts:55` and `src/tools/forget.ts:50` | Both comments state the transaction: *"Memory update + belief log must commit together"* |
+| No retrieval evaluation exists | `find . -iname "*eval*" -o -iname "*bench*"` outside `node_modules` | One hit, `src/tools/retrieval-audit.ts`, which inspects a single query rather than scoring a corpus |
+| The acceptance gate is grounding-first | read `src/engines/thought-quality.ts:1-30` and `:274-276` | Grounding is the threshold; a single generic marker only matters within 0.15 of it |
+| The gate is tested in both directions | `grep -c "it(" src/engines/thought-quality.test.ts` | 29 cases, including three separating a memory *about* memory from a definition *of* the memory |
+| Tree and suite size | `find src -name "*.ts" \| xargs wc -l \| tail -1` | 32,142 lines; 326 test cases |
+
 ## History
+
+**2026-09-11** — [`233561b486d0e10bb52df32dea7d22d374086ab0`](https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0) — re-read, 23 files and 796 insertions past the previous pin in a single commit. `audit_log` re-verified — the belief log and the memory update still commit in one transaction, in both `believe` and `forget`, each with a comment saying why. **The stated risk narrows rather than closes**: there is still no evaluation of retrieval quality, and `src/tools/retrieval-audit.ts` inspects one query rather than scoring a corpus. What did get measured is the acceptance gate on model-generated thoughts, and the change there is worth recording. `src/engines/thought-quality.ts` replaces a string blocklist with a structural check, and its docstring gives the argument: *"Blocklists are brittle: they encode one model's failure vocabulary and say nothing about whether the thought is grounded in the evidence it claims to derive from."* Grounding is now the threshold — the fraction of the thought's content words appearing in the evidence it was generated from, so *"generic LLM filler … shares almost no vocabulary with real evidence and scores near zero regardless of which model produced it"* — and the old marker list survives only as a weak signal that cannot veto a well-grounded thought alone. The empirical provenance is dated in the source: the markers were derived from dream-contamination incidents with Gemini and Ollama 14B on 2026-04-02. Twenty-nine committed cases cover it in both directions, including three that separate a legitimate memory *about* memory corruption from a refinement that defines the memory instead of its subject. Screened before reading: eleven findings; nothing was installed or run.
 
 **2026-08-09** — [`6045c41933b1d496d43ac10bad67560c87cf1445`](https://github.com/fozikio/cortex-engine/commit/6045c41933b1d496d43ac10bad67560c87cf1445) — first reading. Screened before reading; the tree was read, never installed, and no test was run. The REST destructive-tool blocklist is recorded as documented rather than verified in source.
