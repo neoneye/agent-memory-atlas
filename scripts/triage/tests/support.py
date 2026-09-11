@@ -78,8 +78,12 @@ class FakeClient(Client):
         self.routes: dict[str, object] = routes or {}
         self.calls: list[str] = []
 
-    def route(self, url: str, payload, *, headers: dict[str, str] | None = None) -> None:
-        self.routes[url] = (payload, headers or {})
+    def route(self, url: str, payload, *, headers: dict[str, str] | None = None,
+              accept: str | None = None) -> None:
+        """Answer `url`; with `accept`, only requests sending that Accept header.
+        The feed fetch asks one Contents URL twice — once for JSON metadata, once
+        raw — so the two must be routable apart."""
+        self.routes[(url, accept) if accept else url] = (payload, headers or {})
 
     def get(self, url, *, accept="application/vnd.github+json", max_bytes=None, cache=False,
             reject_binary=False, repo_budget=None, hops=0) -> Response:
@@ -97,9 +101,10 @@ class FakeClient(Client):
         if repo_budget is not None:
             repo_budget.requests += 1
 
-        if url not in self.routes:
+        key = (url, accept) if (url, accept) in self.routes else url
+        if key not in self.routes:
             raise FetchError(NOT_FOUND, f"{url}: HTTP 404 (no route)", status=404)
-        payload, headers = self.routes[url]
+        payload, headers = self.routes[key]
         if isinstance(payload, FetchError):
             raise payload
         body = payload if isinstance(payload, bytes) else json.dumps(payload).encode("utf-8")

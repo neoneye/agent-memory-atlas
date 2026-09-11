@@ -145,6 +145,13 @@ def cmd_ingest(args, config: Config) -> int:
         "malformed_or_invalid": result.malformed + result.invalid_names,
         "newly_imported": result.imported_new,
         "already_known": result.duplicates,
+        "source_shapes": result.shapes,
+        "observations_added": result.observations_added,
+        "legacy_holds_applied": result.holds_applied,
+        "legacy_holds_cleared_by_payload": result.holds_cleared,
+        "hold_not_applied": result.dispositions,
+        "verification": result.verification,
+        "upstream_commit": result.upstream_commit,
         "quarantine": result.quarantine,
         "atlas_inventory": inventory,
     }
@@ -193,7 +200,10 @@ def _assess_summary(run, policy: Policy) -> dict:
     return {
         "policy_version": policy.version,
         "metadata_collected": run.metadata_collected,
+        "metadata_refreshed": run.metadata_refreshed,
         "metadata_failed": run.metadata_failed,
+        "backlog_stale_metadata": run.backlog_stale_metadata,
+        "legacy_held_not_spent_on": run.held_skipped,
         "inspected": run.inspected,
         "eligible": run.eligible,
         "rejected": run.rejected,
@@ -268,11 +278,15 @@ def _batch_from_state(connection: sqlite3.Connection, config: Config, day: str) 
             "deferred": outcomes.get("deferred", 0),
             "metadata_collected": budgets.get("metadata_repos", 0),
             "github_requests": budgets.get("github_requests", 0),
+            # Held legacy identities are not backlog: nothing will be spent on
+            # them until a payload arrives or the maintainer releases them.
             "backlog_without_metadata": int(connection.execute(
                 "SELECT COUNT(*) AS n FROM candidate c LEFT JOIN metadata m "
-                "ON m.candidate_id = c.id WHERE m.candidate_id IS NULL").fetchone()["n"]),
+                "ON m.candidate_id = c.id WHERE m.candidate_id IS NULL "
+                "AND (c.source_hold IS NULL OR c.source_hold != 'legacy_title_only')").fetchone()["n"]),
             "backlog_assessable": int(connection.execute(
-                "SELECT COUNT(*) AS n FROM candidate WHERE triage_status = 'unassessed'"
+                "SELECT COUNT(*) AS n FROM candidate WHERE triage_status = 'unassessed' "
+                "AND (source_hold IS NULL OR source_hold != 'legacy_title_only')"
             ).fetchone()["n"]),
             "scope_judged_by": (
                 f"{config.classifier_provider}:{config.classifier_model}"
@@ -442,6 +456,7 @@ def cmd_status(args, config: Config) -> int:
         "triage_status": counts,
         "analysis_status": analysis,
         "atlas_inventory": atlas.count(connection),
+        "intake": reports.intake_summary(connection, config),
         "capacity": room.as_dict(),
         "outstanding": attempts.outstanding(connection),
         "budgets_today": {
@@ -506,8 +521,15 @@ def cmd_explain(args, config: Config) -> int:
         "github_repo_id": row["github_repo_id"],
         "aliases": aliases(connection, int(row["id"])),
         "first_seen": row["first_seen_at"],
-        "last_seen_in_feed": row["last_seen_at"],
-        "provenance": loads(row["provenance"]),
+        "last_ingested": row["last_seen_at"],
+        "upstream_hints": {
+            "note": "what Scout said, of unknown age; not measurements, never read by a gate",
+            "observed_upstream_at": row["hints_observed_at"],
+            **loads(row["hints"] or "{}"),
+        },
+        "source_hold": row["source_hold"],
+        "source_hold_disposition": row["source_hold_disposition"],
+        "observations": loads(row["provenance"]).get("observations", []),
         "triage_status": row["triage_status"],
         "triage_reason": row["triage_reason"],
         "analysis_status": row["analysis_status"],
@@ -566,6 +588,34 @@ def cmd_result(args, config: Config) -> int:
         except attempts.ResultRefused as error:
             raise Exit(str(error)) from None
     emit(result, as_json=args.json)
+    return 0
+
+
+def cmd_legacy(args, config: Config) -> int:
+    """List the held legacy identities, or release some deliberately.
+
+    Release is a decision recorded once: a released identity is not held again
+    by a later import, and its ordinary assessment resumes under the normal
+    budgets. There is no daily sweep of the held set.
+    """
+    connection = open_state(config)
+    if args.action == "list":
+        rows = connection.execute(
+            "SELECT display_name, triage_status, source_hold, source_hold_disposition, "
+            "source_hold_changed_at FROM candidate WHERE source_hold IS NOT NULL "
+            "ORDER BY source_hold, first_seen_at, canonical_name LIMIT ?",
+            (args.limit,),
+        ).fetchall()
+        total = connection.execute(
+            "SELECT COUNT(*) AS n FROM candidate WHERE source_hold = 'legacy_title_only'"
+        ).fetchone()["n"]
+        emit({"held_total": total, "shown": [dict(row) for row in rows]}, as_json=args.json)
+        return 0
+    if not args.repos and not args.batch:
+        raise Exit("name repositories to release, or pass --batch N (at most 50)")
+    with scratch_module.application_lock(config.lock_path, wait=args.wait):
+        released = ingest_module.release_holds(connection, names=args.repos, batch=args.batch)
+    emit({"released": released, "count": len(released)}, as_json=args.json)
     return 0
 
 
@@ -800,6 +850,13 @@ def build_parser() -> argparse.ArgumentParser:
     result.add_argument("--reason", help="structured reason, for a rejected result")
     result.add_argument("--retryable", action="store_true", help="for a technical error")
     result.set_defaults(func=cmd_result)
+
+    legacy = sub.add_parser("legacy", help="list or deliberately release held legacy identities")
+    legacy.add_argument("action", choices=["list", "release"])
+    legacy.add_argument("repos", nargs="*", help="OWNER/REPO to release")
+    legacy.add_argument("--batch", type=int, help="release this many, oldest first (at most 50)")
+    legacy.add_argument("--limit", type=int, default=50, help="how many to list")
+    legacy.set_defaults(func=cmd_legacy)
 
     cleanup = sub.add_parser("cleanup", help="remove abandoned scratch and evict caches")
     cleanup.set_defaults(func=cmd_cleanup)

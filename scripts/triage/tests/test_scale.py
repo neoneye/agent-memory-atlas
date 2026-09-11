@@ -59,8 +59,9 @@ class ScaleTests(unittest.TestCase):
         records.append({"kind": "post", "id": "t3_x", "author": "someone"})
         self.h.feed(records)
 
-        # Enough routed repositories to satisfy every inspection the budget allows.
-        for index in range(80):
+        # Every repository routed: the metadata queue orders by hints and rotates
+        # an exploration share, so which ones it reaches is not the first N by id.
+        for index in range(TOTAL):
             repo_routes(self.client, f"owner{index % 50}/project{index:04d}", commit=COMMIT,
                         files=FILES, repo_id=5000 + index)
 

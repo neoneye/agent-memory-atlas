@@ -12,7 +12,9 @@ issue. The expensive analysis is a separate program; the contract with it is
 `claim` and `result`.
 
 The specification this implements is
-[`notes/2026-09-11-candidate-triage.md`](../../notes/2026-09-11-candidate-triage.md).
+[`notes/2026-09-11-candidate-triage.md`](../../notes/2026-09-11-candidate-triage.md),
+adapted to Scout's 11 September feed by
+[`notes/2026-09-11-candidate-triage-v2.md`](../../notes/2026-09-11-candidate-triage-v2.md).
 
 ---
 
@@ -152,6 +154,61 @@ two-line file, and `json.load` should be the whole of reading it.
 These files are committed to this repository on purpose: six weeks of them answer
 "is the scout-to-triage path working" without anyone having to reason about a
 database.
+
+### What Scout sends, and what triage does with it
+
+Scout's feed carries two shapes of repository record. **Modern** records carry a
+`latest` payload — description, stars, push date, licence, the terms that
+matched, sometimes topics and a cached README size — beside `sources`,
+`source_urls` and Scout's first and last sighting. **Legacy** records are the
+initial issue batch Scout retracted as a discovery misfire
+([issue 1256](https://github.com/Daily-Nerd/scout/issues/1256)): `title_only:
+true`, an issue number, nothing else. A third shape, a bare name with a status,
+is ordinary older input and is treated as such.
+
+Everything in `latest` is stored as a **hint**, validated and capped, and shown
+by `explain` under *upstream hints*. A hint is another program's observation of
+unknown age. It decides which repository has its metadata fetched first. It is
+never copied into the measured facts, never read by a gate, and never part of
+the atlas score. A missing hint is neutral; only a measured zero — a README
+size of 0 — counts against. Scout's own A/B/C tiers and scores are not in the
+feed; if a later feed exports them they are kept as `upstream_*` hints, read by
+nothing that decides.
+
+**The legacy batch is held.** A title-only record with no payload is imported
+and kept, and held out of the daily metadata and inspection budgets. The hold
+is about the source, not the project: it is not a rejection, it is separate
+from `analysis_status`, and a new policy version does not lift it. Two things
+do: a later snapshot that carries a payload for that identity, which clears the
+hold even if the `title_only` flag was left stale; or the maintainer.
+
+```bash
+python3 scripts/triage legacy list                    # what is held, and why
+python3 scripts/triage legacy release owner/repo      # revisit one, deliberately
+python3 scripts/triage legacy release --batch 20      # or a bounded batch (at most 50)
+```
+
+A released identity is not held again by a later import. There is no daily
+sweep of the held set.
+
+Work that already exists outranks the hold. An identity that is selected,
+running, accepted or rejected by an analysis, or that a person assessed by
+hand, is never held; its disposition says `analysis_precedence` or
+`manually_assessed`. An identity triage had already assessed keeps its evidence
+and its status and is held with the disposition `assessed_before_hold` — which
+means it is not offered for admission until released.
+
+**Measurements go stale.** A metadata row older than `metadata_max_age_days`
+(14) is due for a refresh under the same daily budget, and so is one whose
+feed hint reports a newer push — after a day, so a reimport cannot turn every
+hinted change into same-day work. Refreshing a measurement does not reopen an
+analysis rejection or anything running.
+
+The feed passed 1 MiB on 11 September 2026. The fetch reads the Contents API's
+JSON form for the file's size and git blob sha, then the raw bytes, and refuses
+a body that does not match both — so a truncated download is a failure, not a
+feed that happens to be shorter. The upstream commit that last touched the file
+is recorded with every ingestion; pin a snapshot with `--source-ref <sha>`.
 
 ### Handing work to the analysis
 
@@ -320,7 +377,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-143 tests, under two seconds, hermetic — a fake GitHub, temporary state
+172 tests, about three seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered

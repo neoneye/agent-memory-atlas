@@ -94,20 +94,33 @@ def find(connection: sqlite3.Connection, *, name: str | None = None,
     ).fetchone()
 
 
-def upsert(connection: sqlite3.Connection, name: str, provenance: dict) -> tuple[int, bool]:
-    """Insert or touch a candidate by name. Returns `(candidate_id, is_new)`.
+OBSERVATION_CAP = 20
 
-    Provenance accumulates: the same repository observed again through a second
-    Reddit post adds an observation, it does not replace the first one.
+
+def upsert(connection: sqlite3.Connection, name: str, provenance: dict, *,
+           hints: dict | None = None,
+           hints_observed_at: str | None = None) -> tuple[int, bool, bool]:
+    """Insert or touch a candidate by name. Returns `(candidate_id, is_new, added)`.
+
+    Observations accumulate only when something meaningful changed. A repeated
+    or reordered snapshot produces the same fingerprint as the observation it
+    repeats, and touches `last_seen_at` — the local ingestion time — instead of
+    appending a copy. A second Reddit post, a new star count or a new push date
+    is a different fingerprint and is kept, within a bounded list.
+
+    `hints` replace the stored hints: they are the current snapshot's view, and
+    the history of what Scout said lives in the bounded observations.
     """
     key = canonical(name)
     now = iso(utc_now())
     row = find(connection, name=key)
+    hints_json = dumps(hints) if hints is not None else None
     if row is None:
         cursor = connection.execute(
-            "INSERT INTO candidate(canonical_name, display_name, first_seen_at, last_seen_at, provenance) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (key, display(name), now, now, dumps({"observations": [provenance]})),
+            "INSERT INTO candidate(canonical_name, display_name, first_seen_at, last_seen_at, "
+            "provenance, hints, hints_observed_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (key, display(name), now, now, dumps({"observations": [provenance]}),
+             hints_json or "{}", hints_observed_at),
         )
         candidate_id = int(cursor.lastrowid)
         connection.execute(
@@ -115,21 +128,30 @@ def upsert(connection: sqlite3.Connection, name: str, provenance: dict) -> tuple
             "VALUES (?, ?, ?, 1)",
             (key, candidate_id, now),
         )
-        return candidate_id, True
+        return candidate_id, True, True
 
     candidate_id = int(row["id"])
     stored = loads(row["provenance"] or "{}")
     observations = stored.get("observations", [])
-    if provenance not in observations:
+    fp = provenance.get("fingerprint")
+    known = {item.get("fingerprint") for item in observations if isinstance(item, dict)}
+    added = False
+    if fp is None:
+        # A v1 caller without fingerprints: fall back to value equality.
+        if provenance not in observations:
+            observations.append(provenance)
+            added = True
+    elif fp not in known:
         observations.append(provenance)
-        # Bounded: a repository mentioned in a hundred Reddit threads should not
-        # grow one database row without limit.
-        stored["observations"] = observations[-20:]
+        added = True
+    stored["observations"] = observations[-OBSERVATION_CAP:]
     connection.execute(
-        "UPDATE candidate SET last_seen_at = ?, provenance = ? WHERE id = ?",
-        (now, dumps(stored), candidate_id),
+        "UPDATE candidate SET last_seen_at = ?, provenance = ?, "
+        "hints = COALESCE(?, hints), hints_observed_at = COALESCE(?, hints_observed_at) "
+        "WHERE id = ?",
+        (now, dumps(stored), hints_json, hints_observed_at, candidate_id),
     )
-    return candidate_id, False
+    return candidate_id, False, added
 
 
 def bind_repo_id(connection: sqlite3.Connection, candidate_id: int, repo_id: int,

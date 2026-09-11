@@ -29,11 +29,85 @@ from pathlib import Path
 from typing import Any
 
 from config import Config
-from util import atomic_write, directory_bytes, human_bytes, iso, utc_now
+from util import atomic_write, directory_bytes, human_bytes, iso, loads, utc_now
 
 
 def paths(config: Config, day: str) -> tuple[Path, Path]:
     return config.output_dir / f"{day}.json", config.output_dir / f"{day}.md"
+
+
+def intake_summary(connection: sqlite3.Connection, config: Config) -> dict[str, Any]:
+    """The intake split, read back out of state so every command reports it alike.
+
+    Two vocabularies are kept apart on purpose. *Hints* are what Scout said —
+    another program's observation of unknown age. *Measurements* are what this
+    program fetched from GitHub itself, with a collection time. A missing hint
+    and a missing measurement are different gaps and are counted separately.
+    """
+    last = connection.execute(
+        "SELECT * FROM ingestion WHERE status = 'complete' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    shapes = loads(last["source_shapes"]) if last is not None and last["source_shapes"] else {}
+    total = int(connection.execute("SELECT COUNT(*) AS n FROM candidate").fetchone()["n"])
+    holds = {
+        row["source_hold"] or "none": int(row["n"])
+        for row in connection.execute(
+            "SELECT source_hold, COUNT(*) AS n FROM candidate GROUP BY source_hold")
+    }
+    dispositions = {
+        row["source_hold_disposition"]: int(row["n"])
+        for row in connection.execute(
+            "SELECT source_hold_disposition, COUNT(*) AS n FROM candidate "
+            "WHERE source_hold_disposition IS NOT NULL GROUP BY source_hold_disposition")
+    }
+    no_hints = int(connection.execute(
+        "SELECT COUNT(*) AS n FROM candidate WHERE hints NOT LIKE '%\"has_latest\":true%'"
+    ).fetchone()["n"])
+    cutoff = f"-{int(config.metadata_max_age_days)} days"
+    not_held = "(c.source_hold IS NULL OR c.source_hold != 'legacy_title_only')"
+    no_measurement = int(connection.execute(
+        f"SELECT COUNT(*) AS n FROM candidate c LEFT JOIN metadata m ON m.candidate_id = c.id "
+        f"WHERE m.candidate_id IS NULL AND {not_held}").fetchone()["n"])
+    stale_measurement = int(connection.execute(
+        f"SELECT COUNT(*) AS n FROM candidate c JOIN metadata m ON m.candidate_id = c.id "
+        f"WHERE julianday(m.collected_at) < julianday('now', ?) AND {not_held}", (cutoff,)
+    ).fetchone()["n"])
+    return {
+        "snapshot": {
+            "bytes": last["content_bytes"] if last else None,
+            "sha256": last["content_hash"] if last else None,
+            "git_blob": last["blob_sha"] if last else None,
+            "upstream_commit": last["upstream_commit"] if last else None,
+            "verification": last["verification"] if last else None,
+            "ingested_at": last["fetched_at"] if last else None,
+        },
+        "newly_imported": last["imported_new"] if last else None,
+        "accumulated_identities": total,
+        "source_records": {
+            "with_hints": shapes.get("modern"),
+            "legacy_title_only": shapes.get("legacy"),
+            "without_hints_not_legacy": shapes.get("minimal"),
+        },
+        "holds": holds,
+        "hold_dispositions": dispositions,
+        "identities_without_hints": no_hints,
+        # Anything the atlas already reports on is excluded here as everywhere
+        # else: a report is the end of the road for triage.
+        "eligible_unselected": {
+            "available": int(connection.execute(
+                f"SELECT COUNT(*) AS n FROM candidate c WHERE triage_status = 'eligible' "
+                f"AND analysis_status = 'not_selected' AND {not_held} AND NOT EXISTS "
+                f"(SELECT 1 FROM atlas_member am WHERE am.canonical_name = c.canonical_name)"
+            ).fetchone()["n"]),
+            "held": int(connection.execute(
+                "SELECT COUNT(*) AS n FROM candidate c WHERE triage_status = 'eligible' "
+                "AND analysis_status = 'not_selected' AND source_hold = 'legacy_title_only' "
+                "AND NOT EXISTS (SELECT 1 FROM atlas_member am WHERE am.canonical_name = c.canonical_name)"
+            ).fetchone()["n"]),
+        },
+        "not_held_without_measurement": no_measurement,
+        "not_held_with_stale_measurement": stale_measurement,
+    }
 
 
 def disk_usage(config: Config, connection: sqlite3.Connection) -> dict[str, Any]:
@@ -124,7 +198,9 @@ def build(config: Config, connection: sqlite3.Connection, shortlist, batch: dict
         "capacity": shortlist.capacity,
         "selected": len(shortlist.entries),
         "eligible_pool": shortlist.eligible_pool,
+        "eligible_held": getattr(shortlist, "held_eligible", 0),
         "stale_skipped": shortlist.stale_skipped,
+        "intake": intake_summary(connection, config),
         "notes": shortlist.notes + batch.get("notes", []),
         "limitations": batch.get("limitations", []),
         "disk": disk_usage(config, connection),
@@ -185,10 +261,41 @@ def digest(report: dict[str, Any]) -> str:
         add(f"- {imported['malformed']} line(s) could not be read and were quarantined")
     add("")
 
+    intake = meta.get("intake") or {}
+    if intake:
+        records = intake.get("source_records") or {}
+        snap = intake.get("snapshot") or {}
+        holds = intake.get("holds") or {}
+        add("## Intake")
+        add("")
+        add(f"- Snapshot: {snap.get('bytes')} bytes, sha256 `{(snap.get('sha256') or '')[:16]}`, "
+            f"git blob `{(snap.get('git_blob') or 'unknown')[:12]}`, upstream commit "
+            f"`{(snap.get('upstream_commit') or 'unknown')[:12]}`, checked by {snap.get('verification')}, "
+            f"ingested {snap.get('ingested_at')}")
+        add(f"- {intake.get('newly_imported')} identities new in this snapshot, "
+            f"{intake.get('accumulated_identities')} accumulated")
+        add(f"- Source records: {records.get('with_hints')} carry Scout hints, "
+            f"{records.get('legacy_title_only')} are the title-only legacy batch, "
+            f"{records.get('without_hints_not_legacy')} have neither")
+        add(f"- Held from automatic intake: {holds.get('legacy_title_only', 0)} legacy identities; "
+            f"{holds.get('released', 0)} released by the maintainer")
+        add(f"- Gaps: {intake.get('identities_without_hints')} identities have no Scout hints; of the "
+            f"identities not held, {intake.get('not_held_without_measurement')} have no measurement "
+            f"of their own and {intake.get('not_held_with_stale_measurement')} have a stale one")
+        waiting = intake.get("eligible_unselected") or {}
+        add(f"- Eligible and not selected: {waiting.get('available', 0)} available for a later "
+            f"day, {waiting.get('held', 0)} held as legacy with their evidence kept")
+        add("")
+        add("Scout's hints order which repositories get fetched first. They are never an atlas "
+            "score, and Scout's own tiers are not a triage result.")
+        add("")
+
     add("## What was looked at")
     add("")
-    add(f"- {assessment.get('metadata_collected', 0)} repositories gained cheap metadata; "
-        f"{assessment.get('backlog_without_metadata', 0)} still have none")
+    add(f"- {assessment.get('metadata_collected', 0)} repositories measured"
+        + (f", {assessment['metadata_refreshed']} of them refreshes of stale measurements"
+           if assessment.get("metadata_refreshed") else "")
+        + f"; {assessment.get('backlog_without_metadata', 0)} still have none")
     # The exploration share is a counter from the run that did the inspecting. A
     # regenerated report does not have it, and reporting zero there would be a
     # claim rather than a gap.

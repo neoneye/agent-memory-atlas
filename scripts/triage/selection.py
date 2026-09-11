@@ -75,6 +75,7 @@ class Shortlist:
     notes: list[str] = field(default_factory=list)
     eligible_pool: int = 0
     stale_skipped: int = 0
+    held_eligible: int = 0
 
 
 def capacity(connection: sqlite3.Connection, config: Config, day: str) -> Capacity:
@@ -108,7 +109,11 @@ def eligible_pool(connection: sqlite3.Connection, config: Config) -> tuple[list[
         "       a.assessed_commit, a.assessed_at, a.components, a.facts, a.reasons, "
         "       a.policy_version, a.classifier_version "
         "FROM candidate c JOIN assessment a ON a.id = c.latest_assessment "
-        "WHERE c.triage_status = 'eligible' AND c.analysis_status = 'not_selected'"
+        "WHERE c.triage_status = 'eligible' AND c.analysis_status = 'not_selected' "
+        # A held legacy identity keeps its evidence and its eligible status, and
+        # is not admitted automatically: an admission spends one of the day's
+        # twenty analyses. `triage legacy release` returns it to the pool.
+        "AND (c.source_hold IS NULL OR c.source_hold != 'legacy_title_only')"
     ).fetchall()
 
     fresh, stale = [], 0
@@ -146,6 +151,13 @@ def eligible_pool(connection: sqlite3.Connection, config: Config) -> tuple[list[
     # canonical name. Two runs over the same state produce the same order.
     fresh.sort(key=lambda item: (-item["score"], item["first_seen_at"], item["canonical"]))
     return fresh, stale
+
+
+def held_eligible(connection: sqlite3.Connection) -> int:
+    return int(connection.execute(
+        "SELECT COUNT(*) AS n FROM candidate WHERE triage_status = 'eligible' "
+        "AND analysis_status = 'not_selected' AND source_hold = 'legacy_title_only'"
+    ).fetchone()["n"])
 
 
 def existing(connection: sqlite3.Connection, day: str) -> list[dict[str, Any]]:
@@ -214,6 +226,7 @@ def finalize(connection: sqlite3.Connection, config: Config, *, day: str | None 
     shortlist = Shortlist(day=target, tz=config.timezone, frozen=False, created=False)
     shortlist.eligible_pool = len(pool)
     shortlist.stale_skipped = stale
+    shortlist.held_eligible = held_eligible(connection)
     if stale:
         shortlist.notes.append(
             f"{stale} eligible candidate(s) were skipped for an assessment older than "

@@ -63,6 +63,9 @@ class AssessRun:
     budget_stopped: str | None = None
     backlog_unassessed: int = 0
     backlog_no_metadata: int = 0
+    metadata_refreshed: int = 0
+    backlog_stale_metadata: int = 0
+    held_skipped: int = 0
     exploration_slots: int = 0
     notes: list[str] = field(default_factory=list)
     classifier_state: str = "not configured"
@@ -125,10 +128,14 @@ def assessable(connection: sqlite3.Connection,
     version changes — new rules, new weights — it is due again regardless of its
     date, because the reason it was set aside may have been the rules.
     """
+    # The legacy source hold is applied here, before the policy-version check,
+    # so a new policy cannot reopen the held batch: that takes a later payload
+    # or the maintainer's `legacy release`.
     rows = connection.execute(
         "SELECT c.*, a.policy_version AS decided_under FROM candidate c "
         "LEFT JOIN assessment a ON a.id = c.latest_assessment "
-        "WHERE c.analysis_status NOT IN ('selected','running','accepted') ORDER BY c.id"
+        "WHERE c.analysis_status NOT IN ('selected','running','accepted') "
+        "AND (c.source_hold IS NULL OR c.source_hold != 'legacy_title_only') ORDER BY c.id"
     ).fetchall()
     out = []
     for row in rows:
@@ -174,9 +181,122 @@ def prescore(facts: dict[str, Any]) -> int:
             pass
     stars = facts.get("stars") or 0
     score += min(int(stars ** 0.5), 15)
-    if (facts.get("size_kb") or 0) < 20:
+    size = facts.get("size_kb")
+    if size is not None and size < 20:
+        # Only a measured small size counts against; an unknown one is unknown.
         score -= 10
     return score
+
+
+def hint_priority(hints: dict[str, Any]) -> int:
+    """Which missing or stale metadata to fetch next, from Scout's hints.
+
+    Not a score of the project, and never read by a gate or by the rubric. Every
+    term is neutral when its hint is missing: a Reddit discovery with no
+    description or a record with no topics sorts in the middle, not the bottom,
+    and a measured README size of zero is the only size that counts against.
+    Stars are a capped square root, so volume cannot dominate.
+    """
+    if not hints or not hints.get("has_latest") and hints.get("origin") != "top_level":
+        return 0
+    score = 0
+    haystack = " ".join(filter(None, [
+        str(hints.get("description") or ""),
+        " ".join(hints.get("topics") or []),
+        " ".join(hints.get("matched_terms") or []),
+    ]))
+    hits = len(set(match.group(0).lower() for match in PRESCORE_TERMS.finditer(haystack)))
+    score += min(hits * 10, 40)
+    pushed = hints.get("pushed_at")
+    if pushed:
+        try:
+            age = (utc_now() - parse_iso(str(pushed).replace("Z", "+00:00"))).days
+            score += 20 if age <= 30 else (10 if age <= 180 else 0)
+        except ValueError:
+            pass
+    stars = hints.get("stars")
+    if stars is not None:
+        score += min(int(stars ** 0.5), 15)
+    readme = hints.get("readme_bytes")
+    if readme is not None:
+        score += 5 if readme > 0 else -5
+    return score
+
+
+def _metadata_due(row: sqlite3.Row, meta: sqlite3.Row | None, config: Config) -> str | None:
+    """`missing`, `stale`, or None. Row existence is not freshness."""
+    if meta is None:
+        return "missing"
+    try:
+        collected = parse_iso(meta["collected_at"])
+    except (TypeError, ValueError):
+        return "stale"
+    age_days = (utc_now() - collected).total_seconds() / 86400
+    if age_days > config.metadata_max_age_days:
+        return "stale"
+    # A newer push in the feed is a reason to look again, but only after a day,
+    # so a reimport cannot turn every hinted change into same-day work.
+    pushed = loads(row["hints"] or "{}").get("pushed_at") if "hints" in row.keys() else None
+    if pushed and age_days > 1:
+        try:
+            if parse_iso(str(pushed).replace("Z", "+00:00")) > collected:
+                return "stale"
+        except ValueError:
+            pass
+    return None
+
+
+def metadata_queue(connection: sqlite3.Connection, config: Config, run: "AssessRun",
+                   allowance: int, policy_version: str | None = None) -> list[tuple[sqlite3.Row, str]]:
+    """Held identities never enter; the rest are ordered by hints, with a share
+    by deterministic rotation.
+
+    `1 - exploration_share` of the allowance goes to the best-hinted identities
+    whose metadata is missing or stale, never-fetched before refreshed within a
+    tie. The rest walks everything else by candidate id from a persisted cursor,
+    so a candidate with no hints at all — an old minimal record, a sparse Reddit
+    find — is reached in bounded time instead of waiting behind every hinted one.
+    """
+    run.held_skipped = int(connection.execute(
+        "SELECT COUNT(*) AS n FROM candidate WHERE source_hold = 'legacy_title_only'"
+    ).fetchone()["n"])
+    due: list[tuple[sqlite3.Row, str]] = []
+    for row in assessable(connection, policy_version):
+        meta = connection.execute(
+            "SELECT collected_at FROM metadata WHERE candidate_id = ?", (row["id"],)
+        ).fetchone()
+        reason = _metadata_due(row, meta, config)
+        if reason is not None:
+            due.append((row, reason))
+    run.backlog_no_metadata = sum(1 for _, reason in due if reason == "missing")
+    run.backlog_stale_metadata = sum(1 for _, reason in due if reason == "stale")
+
+    explore = int(allowance * config.exploration_share)
+    ranked_count = max(allowance - explore, 0)
+
+    def key(item):
+        row, reason = item
+        return (-hint_priority(loads(row["hints"] or "{}")), 0 if reason == "missing" else 1,
+                row["first_seen_at"], row["canonical_name"])
+
+    ranked = sorted(due, key=key)[:ranked_count]
+    taken = {int(row["id"]) for row, _ in ranked}
+    remainder = sorted((item for item in due if int(item[0]["id"]) not in taken),
+                       key=lambda item: int(item[0]["id"]))
+    cursor_row = connection.execute(
+        "SELECT cursor FROM rotation WHERE name = 'metadata_exploration'"
+    ).fetchone()
+    cursor = int(cursor_row["cursor"]) if cursor_row else 0
+    explored: list[tuple[sqlite3.Row, str]] = []
+    if remainder and explore:
+        start = next((i for i, (row, _) in enumerate(remainder) if int(row["id"]) > cursor), 0)
+        explored = (remainder[start:] + remainder[:start])[:explore]
+        connection.execute(
+            "INSERT INTO rotation(name, cursor) VALUES ('metadata_exploration', ?) "
+            "ON CONFLICT(name) DO UPDATE SET cursor = excluded.cursor",
+            (int(explored[-1][0]["id"]),),
+        )
+    return ranked + explored
 
 
 def collect_metadata(config: Config, connection: sqlite3.Connection, client: Client,
@@ -186,15 +306,9 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
     collector = Collector(client)
     allowance = limit if limit is not None else config.metadata_budget
     spent = budget_used(connection, day, "metadata_repos")
-    pending = [
-        row for row in assessable(connection, policy_version)
-        if connection.execute(
-            "SELECT 1 FROM metadata WHERE candidate_id = ?", (row["id"],)
-        ).fetchone() is None
-    ]
-    run.backlog_no_metadata = len(pending)
+    pending = metadata_queue(connection, config, run, max(allowance - spent, 0), policy_version)
 
-    for row in pending:
+    for row, reason in pending:
         if spent >= allowance:
             run.budget_stopped = f"daily metadata budget of {allowance} repositories"
             break
@@ -240,7 +354,20 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
                 (row["id"], iso(utc_now()), dumps(facts), dumps(coverage), prescore(facts)),
             )
         run.metadata_collected += 1
-        run.backlog_no_metadata -= 1
+        if reason == "stale":
+            run.metadata_refreshed += 1
+            run.backlog_stale_metadata -= 1
+        else:
+            run.backlog_no_metadata -= 1
+
+    # The queue is cut to the allowance, so a full day usually ends by running
+    # out of queue rather than by tripping the check above. Either way it was the
+    # budget, and the report says which one.
+    requests = budget_used(connection, day, "github_requests")
+    if requests >= client.limits.requests_per_day:
+        run.budget_stopped = f"daily GitHub request ceiling of {client.limits.requests_per_day}"
+    elif spent >= allowance and (run.backlog_no_metadata + run.backlog_stale_metadata) > 0:
+        run.budget_stopped = run.budget_stopped or f"daily metadata budget of {allowance} repositories"
 
 
 def _defer(connection: sqlite3.Connection, candidate_id: int, *, days: int, reason: str) -> None:

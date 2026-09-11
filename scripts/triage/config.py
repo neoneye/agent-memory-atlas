@@ -80,6 +80,8 @@ class Config:
     outstanding_capacity: int = 20
     inspection_budget: int = 100
     metadata_budget: int = 400
+    # Measured metadata older than this is due for a refresh under the same budget.
+    metadata_max_age_days: int = 14
     exploration_share: float = 0.20
     minimum_score: int = 60
     assessment_max_age_days: int = 7
@@ -140,7 +142,7 @@ class Config:
 
 _PATHS = {"state_dir", "output_dir", "atlas_repo", "source_file", "policy_file"}
 _INTS = {
-    "daily_admissions", "outstanding_capacity", "inspection_budget", "metadata_budget",
+    "daily_admissions", "outstanding_capacity", "inspection_budget", "metadata_budget", "metadata_max_age_days",
     "minimum_score", "assessment_max_age_days", "lease_seconds",
 }
 _FLOATS = {"exploration_share"}

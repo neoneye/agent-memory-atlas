@@ -17,7 +17,7 @@ from typing import Iterator
 
 from util import iso, utc_now
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class StateMissing(RuntimeError):
@@ -224,6 +224,32 @@ MIGRATIONS: list[tuple[int, str]] = [
             name   TEXT PRIMARY KEY,
             cursor INTEGER NOT NULL DEFAULT 0
         );
+        """,
+    ),
+    (
+        2,
+        """
+        -- v2 (11 September 2026): Scout's feed now carries nested `latest`
+        -- payloads beside a retracted, title-only legacy batch. Additive only,
+        -- so a v1 database upgrades in place and nothing it held is reset.
+
+        -- The current snapshot's validated hints for this identity. Labelled
+        -- hints, never measurements: `metadata.facts` stays the atlas's own.
+        ALTER TABLE candidate ADD COLUMN hints TEXT NOT NULL DEFAULT '{}';
+        -- Scout's own observation time for those hints, distinct from
+        -- `last_seen_at`, which is when this program last ingested the row.
+        ALTER TABLE candidate ADD COLUMN hints_observed_at TEXT;
+        -- A hold on automated intake, not a judgement about the project:
+        -- NULL, 'legacy_title_only', or 'released' by the maintainer.
+        ALTER TABLE candidate ADD COLUMN source_hold TEXT;
+        ALTER TABLE candidate ADD COLUMN source_hold_disposition TEXT;
+        ALTER TABLE candidate ADD COLUMN source_hold_changed_at TEXT;
+        CREATE INDEX candidate_source_hold ON candidate(source_hold);
+
+        -- Snapshot provenance for reproducible comparisons.
+        ALTER TABLE ingestion ADD COLUMN upstream_commit TEXT;
+        ALTER TABLE ingestion ADD COLUMN verification TEXT;
+        ALTER TABLE ingestion ADD COLUMN source_shapes TEXT;
         """,
     ),
 ]
