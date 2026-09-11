@@ -334,6 +334,19 @@ filters <code>deprecated = 0</code> in SQL, so a memory retired after
 the requested time is missing from the answer about that time. The
 predicate that would keep it is correct and never receives such a
 row.</p>
+<p><a href="../../systems/janus-graph/">Janus-Graph</a> is Graphiti seen
+from a caller, and both of its temporal defects live in the wrapper
+rather than the engine. It dates every episode by the sweep that
+processed it — the worker's <code>reference_time</code> falls back to
+now because it reads a <code>created_at</code> the queue's claim never
+sets — so relative dates in a delayed or dead-letter-replayed episode
+resolve against the wrong day, and no caller can supply the time. And
+its recall filter is <code>invalid_at IS NULL</code>, which keeps closed
+facts out but also hides a fact whose extracted end date lies in the
+future; comparing against the query instant is the correct predicate. It
+still earns the mark, because the engine's edges carry a model-extracted
+validity that can precede their row, and the wrapper reads that axis on
+every search.</p>
 <h2 id="a-third-clock">A third clock</h2>
 <p>Two clocks answer <em>what was true</em> and <em>what did we
 believe</em>. The temporal database literature names a third, decision

@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP memory service that queues
+agent episodes in SQLite and feeds them to Graphiti on an embedded
+FalkorDB; the schema-repair layer it puts between the model and Graphiti
+answers a malformed extraction with an empty list, and its nightly
+consolidation reports four phases done while running one.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Janus-Graph — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP memory service that
+queues agent episodes in SQLite and feeds them to Graphiti on an
+embedded FalkorDB; the schema-repair layer it puts between the model and
+Graphiti answers a malformed extraction with an empty list, and its
+nightly consolidation reports four phases done while running one.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Janus-Graph — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP memory service that
+queues agent episodes in SQLite and feeds them to Graphiti on an
+embedded FalkorDB; the schema-repair layer it puts between the model and
+Graphiti answers a malformed extraction with an empty list, and its
+nightly consolidation reports four phases done while running one.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Janus-Graph — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Janus-Graph",
+      "description": "An MCP memory service that queues agent episodes in SQLite and feeds them to Graphiti on an embedded FalkorDB; the schema-repair layer it puts between the model and Graphiti answers a malformed extraction with an empty list, and its nightly consolidation reports four phases done while running one.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A queue and an MCP surface over Graphiti on
+FalkorDB</p>
+          <h1>Janus-Graph</h1>
+          <p class="document-deck">An MCP memory service that queues
+agent episodes in SQLite and feeds them to Graphiti on an embedded
+FalkorDB; the schema-repair layer it puts between the model and Graphiti
+answers a malformed extraction with an empty list, and its nightly
+consolidation reports four phases done while running one.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Maple-Aikon/janus-graph">
+              <span>Source</span>
+              <strong>Maple-Aikon/janus-graph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Maple-Aikon/janus-graph/commit/987c34c0c488f8e16b350aea16b1e281d6248d3e" title="987c34c0c488f8e16b350aea16b1e281d6248d3e">
+              <span>Analyzed revision</span>
+              <code>987c34c0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Maple-Aikon--janus-graph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Maple-Aikon--janus-graph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><strong>Janus-Graph is a local memory service for agents that puts a
+durable queue and an MCP surface in front of <a
+href="../graphiti/">Graphiti</a> on an embedded FalkorDB.</strong> It is
+not the Apache JanusGraph database. An agent calls
+<code>add_episode</code>; the text lands in a SQLite WAL table in one
+insert; a sweep run from cron, or from the daemon when
+<code>daemon.cron_enabled</code> is set, hands each episode to
+<code>Graphiti.add_episode</code>, which extracts entities and dated
+fact edges with a model; <code>search_memory</code> runs Graphiti's
+BM25-plus-cosine edge search with MMR reranking, restricted to facts
+whose <code>invalid_at</code> is null. Apache-2.0, 25 commits between 28
+August and 7 September 2026, 24 of them by one author; 6,416 lines of
+Python and 2,705 lines of tests. <code>uv.lock</code> pins graphiti-core
+0.29.3, whose package is 36,684 lines — the memory model lives in the
+dependency, and this report reads it at that tag.</p>
+<p>What the repository itself adds is plumbing around an LLM-heavy
+ingest: a queue with a stuck-row reaper, a per-episode timeout and a
+dead-letter table; a wrapper around the LLM client that repairs
+responses failing Graphiti's Pydantic models; a daemon with a circuit
+breaker around FalkorDB; and a nightly <em>dream</em> run. The
+<code>bitemporal</code> mark is earned by Graphiti's edges, which this
+wrapper reaches on its write path and filters on in
+<code>search_memory</code>.</p>
+<p><strong>Three findings decide whether it works as memory.</strong>
+The repair wrapper hands each rule the input at the <em>first</em>
+validation error, which for a malformed item is that item rather than
+the response, and every rule's fallback is an empty list — so one bad
+edge empties the episode's whole extraction, and one bad index empties
+the contradiction list that would have invalidated an older fact. The
+episode is then marked done. <code>search_memory</code> reads a graph
+named by a hardcoded driver default while writes go to a graph named by
+the configured group id; the two agree at the code default and disagree
+under <code>config.example.yaml</code>, which the loader uses whenever
+no <code>config.yaml</code> exists. And dream mode's clustering,
+deduplication and orphan-pruning phases set status strings without
+touching the graph, which the committed test asserts.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The episode is evidence; the belief is a Graphiti fact edge — a
+sentence, a relation type between two entity nodes, a
+<code>valid_at</code> and <code>invalid_at</code> the model extracted
+from the text, and a <code>created_at</code> from the clock. There is no
+candidate stage: whatever the extraction returns and Graphiti resolves
+is believed, and every read path treats it as ground truth. The agent
+controls what is enqueued; extraction and resolution are background
+work.</p>
+<p>A fact stops being current in one way. When Graphiti's edge-dedupe
+prompt names an existing fact as contradicted, and both facts carry a
+<code>valid_at</code> with the existing one earlier, the older edge's
+<code>invalid_at</code> is set to the newer fact's <code>valid_at</code>
+and its <code>expired_at</code> to now
+(<code>edge_operations.py:546-571</code> in graphiti-core 0.29.3;
+<code>:822-838</code> handles a new fact that arrives already
+superseded); the edge stays in the graph and
+<code>search_memory</code>'s <code>invalid_at IS NULL</code> filter
+hides it. Nothing else ends a belief. There is no delete or forget tool,
+and the dream phases that claim to deduplicate and prune do nothing.</p>
+<p>Two paths keep a statement from ever reaching recall, and the agent
+is told about neither: the repair wrapper's empty-list fallback, below,
+which means the fact is never written, and the filter itself, which
+hides a stored fact whose <em>future</em> end date was extracted from
+the text — "the lease runs to June 2027" is invisible to
+<code>search_memory</code> from the moment it is written, because the
+predicate is <code>IS NULL</code> rather than a comparison with now.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an episode becomes facts only if Graphiti's extraction survives the repair wrapper, whose fallback for a malformed item is an empty list; a fact stops being returned when a contradiction closes its interval, and search_memory reads the right graph only when the group id equals the driver default</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an episode becomes facts only if Graphiti&#39;s extraction survives the repair wrapper, whose fallback for a malformed item is an empty list; a fact stops being returned when a contradiction closes its interval, and search_memory reads the right graph only when the group id equals the driver default
+flowchart TD
+  A[&quot;add_episode: content, name, source&quot;] --&gt; Q[&quot;SQLite episodes row, status queued&quot;]
+  Q --&gt; S[&quot;sweep claims a batch; created_at is not loaded&quot;]
+  S --&gt; W[&quot;Graphiti.add_episode, reference_time = the sweep&#39;s clock&quot;]
+  W --&gt; X[&quot;model extracts entities and fact edges&quot;]
+  X --&gt; V{&quot;response validates against the Pydantic model?&quot;}
+  V --&gt;|yes| E[&quot;fact edge: valid_at and invalid_at from the text, created_at now&quot;]
+  V --&gt;|no| R[&quot;rule repairs errors()[0].input, often one nested item&quot;]
+  R --&gt;|&quot;no list found in the fragment&quot;| Z[&quot;edges or contradicted_facts replaced by an empty list&quot;]
+  Z --&gt; D[&quot;episode marked done, fewer facts or none&quot;]
+  E --&gt; C{&quot;dedupe prompt names a contradicted fact?&quot;}
+  C --&gt;|yes| I[&quot;older edge gets invalid_at and expired_at, stays in the graph&quot;]
+  C --&gt;|no| K[&quot;edge current&quot;]
+  K --&gt; F[&quot;search_memory: BM25 plus cosine, MMR, invalid_at IS NULL&quot;]
+  I -.-&gt;|&quot;filtered out&quot;| F
+  F --&gt; G{&quot;configured group id equals graphiti_memory?&quot;}
+  G --&gt;|yes| OUT[&quot;facts with valid_at and invalid_at&quot;]
+  G --&gt;|&quot;no, e.g. picoclaw_memory from config.example.yaml&quot;| N[&quot;queries graph graphiti_memory: nothing&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four things have to be running besides the Python package: FalkorDB
+(a <code>redis-server</code> with the <code>falkordb.so</code> module on
+port 6379), an OpenAI-compatible chat endpoint (the default is a LiteLLM
+proxy on port 4000, called in <code>json_object</code> mode with the
+schema pasted into the prompt), an OpenAI-compatible embeddings endpoint
+(port 8081, 768 dimensions), and something that runs the sweep — a
+crontab line from <code>docs/operations.md</code> or the daemon with
+<code>daemon.cron_enabled: true</code>. The MCP server is a separate
+stdio process. Nothing works without the two model endpoints, but both
+can be local.</p>
+<p>The engine binaries are not in the tree. <code>bin/install.sh</code>
+copies them from <code>$LEGACY_BIN_DIR</code> if set and otherwise
+prints a warning; <code>bin/build.sh</code> checks for <code>git</code>
+and <code>make</code> and prints a sentence about CI
+(<code>build.sh:16</code>), which the CI job named "FalkorDB Cross-Arch
+Build" runs and passes. <code>FalkorDBServerManager.start</code>
+(<code>engine/server.py:50-78</code>) launches the engine without
+<code>--save</code> or <code>--maxmemory</code>, so
+<code>save_interval_sec</code> and <code>max_memory_mb</code> in
+<code>EngineConfig</code> are keys nothing reads.</p>
+<p>The daemon (<code>python -m janus_graph.daemon</code>) is an aiohttp
+server on 8765 with <code>/health</code>, <code>/shutdown</code>,
+<code>POST /episodes</code> and <code>/search/graph</code>, a
+three-state circuit breaker around the engine probe, and the optional
+cron loop. <code>POST /episodes</code> is refused with 409 by default:
+<code>DaemonLockSettings.mode</code> defaults to <code>mcp_only</code>
+(<code>daemon/phase3_settings.py:44</code>).</p>
+<p><strong>Backups cover the queue, not the memory.</strong>
+<code>janus-graph snapshot</code> and <code>rollback</code>
+(<code>migrate.py:140-253</code>) and the two shell scripts copy
+<code>episodes.db</code> and a <code>checkpoints</code> directory.
+Nothing in the tree snapshots or restores the FalkorDB graph, and
+rolling back the queue alone leaves <code>done</code> rows describing a
+graph that has moved on.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Enqueue.</strong> <code>add_episode</code>
+(<code>mcp/server.py:67-95</code>) takes content, a name and a source
+description, pins the group to <code>cfg.graphiti.group_id</code>, and
+calls <code>EpisodeQueue.enqueue</code>
+(<code>pipeline/queue.py:129-163</code>): one <code>INSERT</code> with
+status <code>queued</code>. The HTTP path,
+<code>EpisodeQueueAdapter.enqueue_guarded</code>
+(<code>daemon/episode_queue_adapter.py:151-206</code>), adds a sha256
+over content, group and source and refuses a duplicate only while the
+earlier row is <code>queued</code> or <code>processing</code>
+(<code>:262-276</code>). It also stamps <code>claimed_by</code>, which
+the lock-mode docstring says the other writer skips
+(<code>phase3_settings.py:35-37</code>); no claim query reads the
+column.</li>
+<li><strong>Sweep.</strong> <code>run_cron_sweep</code>
+(<code>pipeline/cron.py:29-136</code>) reaps rows stuck in
+<code>processing</code> past the timeout
+(<code>queue.py:310-370</code>), claims a batch (<code>:165-222</code>),
+and runs <code>EpisodeWorker.process_record</code> under a semaphore.
+<code>_execute_ingestion</code> (<code>pipeline/worker.py:48-81</code>)
+builds a fresh Graphiti instance per episode and calls
+<code>add_episode</code> with <code>reference_time</code> taken from
+<code>record.created_at</code> — which <code>claim_next_batch</code>
+neither selects nor sets (<code>queue.py:175-176</code>,
+<code>:205-217</code>), so the fallback <code>datetime.now()</code> at
+<code>worker.py:66</code> is always the value used.</li>
+<li><strong>Failure routing.</strong> <code>should_retry</code>
+(<code>pipeline/retry.py:28-49</code>) sends <code>TypeError</code>,
+<code>ValueError</code>, <code>KeyError</code> and any
+<code>ValidationError</code> straight to the dead-letter table; others
+become <code>failed</code>. Nothing requeues a <code>failed</code> row
+except <code>reap_failed_or_aborted</code>
+(<code>queue.py:372-398</code>), called by the dream run and by
+<code>janus-graph queue reap</code>.
+<code>compute_backoff_seconds</code> (<code>retry.py:22-25</code>), the
+README's "exponential backoff", has no caller outside
+<code>tests/test_queue.py</code>.</li>
+<li><strong>Graph partition.</strong> Graphiti on FalkorDB turns a group
+id into a graph name: <code>add_episode</code> clones the driver with
+<code>database=group_id</code> whenever the two differ
+(<code>graphiti_core/graphiti.py:1079-1082</code> at v0.29.3), and every
+query runs against the driver's database
+(<code>driver/falkordb_driver.py:238-239</code>). Janus-Graph constructs
+the driver with <code>database</code> from
+<code>cfg.database.graph_name</code>, a field <code>JanusSettings</code>
+does not have, so it is always <code>"graphiti_memory"</code>
+(<code>core/instance.py:68-77</code>).</li>
+<li><strong>Repair.</strong>
+<code>SchemaRepairingLLMClient.generate_response</code>
+(<code>heuristics/repairing_client.py:79-133</code>) validates the inner
+client's dict against the requested model; on failure it takes
+<code>err.errors()[0]["input"]</code> (<code>:114-116</code>), finds the
+first active rule for the schema name, returns the rule's output if it
+validates, and logs the fragment and the repair to
+<code>llm_schema_quirks.jsonl</code>. The three rules active by default
+(<code>config.py:80-82</code>) are <code>edge_duplicate</code>,
+<code>extracted_edges</code> and <code>node_resolutions</code>.</li>
+<li><strong>Recall.</strong> <code>search_memory</code>
+(<code>mcp/server.py:169-257</code>) deep-copies
+<code>EDGE_HYBRID_SEARCH_MMR</code>, applies <code>sim_min_score</code>
+and <code>mmr_lambda</code> from config, adds
+<code>SearchFilters(invalid_at IS NULL)</code> (<code>:219-221</code>),
+and calls Graphiti's module-level <code>search</code> with
+<code>group_ids=[cfg.graphiti.group_id]</code> against the lazily built
+instance's driver (<code>:226-233</code>). It returns fact, relation
+name, <code>valid_at</code> and <code>invalid_at</code>.</li>
+<li><strong>Structural search.</strong> <code>SearchEngine.search</code>
+(<code>daemon/search_engine.py:267-331</code>) probes the seeds by exact
+name, runs a variable-length BFS in the hardcoded graph
+<code>graphiti_memory</code> (<code>:348</code>, <code>:381</code>),
+embeds every returned fact and the query through its own client, drops
+rows under <code>min_cosine</code>, and orders by a hop-penalised
+score.</li>
+<li><strong>Dream.</strong> <code>run_dream_consolidation</code>
+(<code>pipeline/dream.py:72-146</code>) is described below.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The queue schema (<code>queue.py:18-70</code>) is
+<code>episodes</code> (id, status, <code>payload_json</code>, attempt
+counters, <code>last_error</code>, <code>checkpoint</code>, timestamps;
+the daemon adds <code>payload_hash</code> and <code>claimed_by</code>),
+<code>dead_letter</code> (payload, error, attempts,
+<code>failed_at</code>, <code>recovered_at</code>), and two tables for
+dream mode, <code>dream_runs</code> and
+<code>dream_entity_undo_log</code>, with columns for a source node
+snapshot and the redirected edge ids. Nothing inserts into either.
+Episode payloads are kept after <code>done</code>, so
+<code>episodes.db</code> holds every episode ever enqueued.</p>
+<p>The graph is Graphiti's: <code>Episodic</code> nodes with content and
+<code>valid_at = reference_time</code>
+(<code>graphiti.py:1100-1111</code>), <code>Entity</code> nodes with a
+model-written summary, <code>MENTIONS</code> edges from episodes to
+entities, and <code>RELATES_TO</code> fact edges built at
+<code>edge_operations.py:250-313</code> with
+<code>valid_at</code>/<code>invalid_at</code> parsed from the model's
+ISO strings, <code>created_at = utc_now()</code>, and the episodes that
+asserted them. Every node and edge carries <code>group_id</code>, which
+on FalkorDB is also its graph's name. There is no owner, agent, session
+or confidence field on any of them, and nothing Janus-Graph writes into
+the graph beyond what <code>add_episode</code> produces.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>search_memory</code> is the semantic path: BM25 over Graphiti's
+fulltext index and cosine over edge embeddings, fused and reranked by
+MMR with λ 0.5 and a 0.6 similarity floor by default, <code>limit</code>
+5, current facts only. It returns sentences with their validity ends and
+no entity context. <strong>It reads the graph the driver default names,
+not the one the configured group writes to.</strong> Under the code
+default (<code>group_id = "graphiti_memory"</code>,
+<code>config.py:55</code>) the two coincide. Under
+<code>config.example.yaml</code>, which sets
+<code>group_id: "picoclaw_memory"</code> (<code>:16</code>) and is what
+<code>_resolve_default_yaml_file</code> loads when no
+<code>config.yaml</code> exists (<code>config.py:195-203</code>), the
+sweep writes to graph <code>picoclaw_memory</code> and
+<code>search_memory</code> queries graph <code>graphiti_memory</code>
+for group <code>picoclaw_memory</code>, which holds nothing.
+<code>get_entity</code>, <code>list_entities</code> and
+<code>cypher_query</code> select the graph by the group id
+(<code>mcp/server.py:269</code>, <code>:307</code>, <code>:358</code>)
+and do see the data, so the store looks healthy through every tool
+except recall.</p>
+<p><code>/search/graph</code> is a different mechanism and does less
+than its docstring says. Its Cypher
+(<code>search_engine.py:129-143</code>) filters
+<code>rel.invalid_at IS NULL OR true</code>, which admits every
+relationship; every row is built with <code>invalid_at=None</code>
+(<code>:412</code>), so the Python filter at <code>:315</code> admits
+them again; the request's <code>edge_types</code> and
+<code>include_episodes</code> are validated and never used in the query;
+and the fact text is <code>[n IN ns | n.summary][0]</code>
+(<code>:139</code>) — the first node of the path, which is the seed — so
+every row from one seed carries the seed's own summary line with a
+different path attached. The source comment dated 7 September 2026
+explains the design: the author's live graph held only
+<code>MENTIONS</code> relationships, so facts were read from node
+summaries (<code>:119-122</code>).</p>
+<p>No retrieval path injects context automatically; every read is a tool
+call.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes do not block the agent.</strong>
+<code>add_episode</code> returns after one SQLite insert. The lag before
+a fact is retrievable is the sweep interval — five minutes in the
+documented crontab, ten in the daemon's default — plus Graphiti's
+extraction, which makes several model calls per episode. A failed
+episode waits for the next dream run or a manual
+<code>queue reap</code>; a dead-lettered one for the next dream run, a
+manual <code>retry_dlq_episode</code>, or <code>queue reap</code>.</p>
+<p><strong>The time an episode is dated by is when the sweep ran, not
+when it was said.</strong> Graphiti resolves relative expressions
+against <code>reference_time</code> and stamps the episode's
+<code>valid_at</code> with it; because <code>worker.py:66</code> always
+falls back to now, a day-relative phrase in an episode that sat in the
+queue over a weekend, or was replayed from the dead-letter table,
+resolves to the wrong day. No MCP or HTTP parameter lets a caller supply
+the time.</p>
+<p><strong>The repair wrapper deletes by fallback.</strong> For a
+missing field, Pydantic v2 reports as <code>input</code> the object at
+the failing location — one edge dict, not the
+<code>{"edges": [...]}</code> response — and for a wrong type, the bad
+value itself. <code>ExtractedEdgesRule.repair</code> given an edge dict
+finds no <code>edges</code>, <code>facts</code>,
+<code>fact_triples</code>, <code>edges_list</code> or
+<code>relations</code> key and returns <code>{"edges": []}</code>
+(<code>heuristics/rules/extracted_edges.py:34-54</code>); given a
+scalar, it returns the same at <code>:37-38</code>. The empty response
+validates, <code>generate_response</code> returns it, and Graphiti
+proceeds with no edges. <code>EdgeDuplicateRule</code> returns
+<code>{"duplicate_facts": [], "contradicted_facts": []}</code> for any
+non-dict input (<code>edge_duplicate.py:69-70</code>), so a single
+non-integer in <code>contradicted_facts</code> means the contradiction
+the model found is not applied and the older fact stays current. The
+quirks log records the fragment rather than the response, with
+<code>episode_id</code> <code>"unknown"</code> because the wrapper is
+never told which episode it serves. The rules do what they claim for the
+shapes their tests feed them — a whole response under a wrong key or a
+<code>properties</code> wrapper — and nothing in the tree feeds them
+what <code>errors()[0]["input"]</code> produces for a nested error. The
+7 September observation above, a live graph with no fact edges, is what
+this path would produce; I did not run it, and nothing in the tree says
+whether it was the cause.</p>
+<p>No background pass rewrites the store. Graphiti's community builder
+is never called, and dream mode writes nothing to the graph.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The stdio MCP server registers eleven tools:
+<code>add_episode</code>, <code>search_memory</code>,
+<code>get_entity</code>, <code>list_entities</code>,
+<code>cypher_query</code>, <code>queue_status</code>,
+<code>retry_dlq_episode</code>, <code>run_dream_maintenance</code>,
+<code>graphiti_health</code>, <code>cache_stats</code> and
+<code>report_stats</code>. The group is fixed by configuration for all
+of them; the docstrings give the reason as keeping PicoClaw's MCP tools
+in one memory tenant. <code>cypher_query</code> rejects any query
+containing a mutating keyword by word-boundary regex
+(<code>mcp/server.py:33-44</code>). <code>docs/mcp-protocol.md</code>
+lists a <code>group_id</code> parameter on <code>add_episode</code>,
+<code>search_memory</code> and <code>run_dream_maintenance</code> that
+the code removed. Adapting it to another agent is a configuration
+exercise; the agent must decide what to write and when to search.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Extraction failures are silent by construction.</strong> See
+section 7. The one place an operator would see them is
+<code>llm_schema_quirks.jsonl</code>, and it records the fragment that
+failed, not the facts that were discarded.</p>
+<p><strong>Dream mode reports work it does not do.</strong> Phase 1 sets
+<code>"DONE"</code> when forced or when the queue's episode count
+reaches 50 (<code>dream.py:104-114</code>), phases 2 and 3 set
+<code>"DONE"</code> unconditionally (<code>:116-120</code>), and
+<code>bounded_label_propagation</code> (<code>:29-69</code>) is called
+only from a test. The <code>group_id</code> argument the CLI passes is
+never read. Phase 4 calls <code>reap_failed_or_aborted(limit=100)</code>
+(<code>:124</code>), which requeues dead-lettered episodes without
+resetting <code>attempt_count</code> and without setting
+<code>dead_letter.recovered_at</code> — so an episode that failed on a
+schema error is retried through the model once a night, returns to the
+dead-letter table on its first failure, and if it ever succeeds, its
+dead-letter row stays open, <code>graphiti_health</code> counts it, and
+the status stays <code>degraded</code>. <code>docs/operations.md</code>
+describes the same run as Leiden clustering, entity deduplication and
+orphan pruning.</p>
+<p><strong>Scope is a partition, and a single one.</strong> Each group
+id is a FalkorDB graph, every MCP tool uses one group, and
+<code>/search/graph</code> hardcodes one graph. That isolates two
+deployments with different group ids; it gives no per-user, per-agent or
+per-session boundary inside one.</p>
+<p><strong>No correction a person can make.</strong> There is no update,
+delete or forget path for an episode, node or edge, and
+<code>cypher_query</code> is read-only by design.</p>
+<p><strong>Marks.</strong> <code>bitemporal</code> is awarded on
+Graphiti's edges, and passes the Helm diagnostic: a fact whose text
+dates it — "moved to Berlin in 2019" — is written with a
+<code>valid_at</code> years before its own <code>created_at</code>, a
+contradiction closes the older interval instead of overwriting it, and
+<code>search_memory</code> reads the validity axis on every call. The
+mechanism is the dependency's; what this tree contributes is that it
+forwards the reference time and applies the filter, and the reference
+time it forwards is the wrong clock. <code>scope_enforced</code> is
+withheld: on FalkorDB a group id is a graph, so the
+<code>group_id</code> predicate Graphiti adds to its search excludes
+rows only in the mismatch described in section 6, where it excludes all
+of them, and the other read paths select a graph with no predicate at
+all — a partition, described above. <code>tombstone</code> is withheld:
+invalidation is keyed on the edge, and a re-extracted fact is a new edge
+that dedupe may or may not match. <code>trust_state</code> is withheld:
+the only status fields are the queue's
+<code>queued</code>/<code>processing</code>/<code>done</code>/<code>failed</code>/<code>aborted</code>,
+which describe processing, not belief. <code>audit_log</code> is
+withheld: <code>llm_schema_quirks.jsonl</code> records repairs to model
+responses and <code>janus_report.jsonl</code> records sweep and dream
+summaries, neither records a mutation of the memory, and
+<code>dream_entity_undo_log</code>, the table that would have, is
+declared and unwritten. <code>human_review</code> is withheld:
+<code>queue_status</code> and <code>retry_dlq_episode</code> operate the
+pipeline, <code>get_entity</code> and <code>cypher_query</code> only
+display, and no surface lets a person confirm, correct or reject a fact.
+<code>negative_eval</code> is withheld for the reason in section 10.</p>
+<p><strong>The queue itself is sound.</strong> WAL mode, a busy timeout,
+an asyncio write lock per queue object, a reaper that aborts rows stuck
+past the timeout after three attempts, and an online SQLite backup for
+snapshots. The circuit breaker keeps a dead engine from being restarted
+in a loop.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>133 test functions in 18 files, plus
+<code>tests/smoke_phase2.sh</code>, which starts and kills the engine
+and the daemon. CI runs ruff and pytest on Python 3.12 and 3.13. I ran
+none of it; the lockfile and manifest are inside the seven-day
+cooldown.</p>
+<p>The suite is thorough about the queue, the HTTP handlers,
+configuration precedence, the circuit breaker and the report sinks, and
+every test that reaches Graphiti replaces it with a mock. Three things
+in it cannot fail on the behaviour they name.
+<code>test_dream_consolidation</code>
+(<code>tests/test_pipeline.py:126-146</code>) asserts that phases 2 and
+3 equal <code>"DONE"</code>, which <code>dream.py</code> hardcodes.
+<code>test_worker_process_success</code> (<code>:31-55</code>) asserts
+<code>reference_time=ANY</code>, so the always-now fallback is invisible
+to it. <code>test_mmr_mixed_changes_order</code>
+(<code>tests/test_search_graph.py:217-243</code>) says in its docstring
+that the mixed ordering differs from <em>both</em> extremes and asserts
+<code>mixed != pure_rel or mixed != pure_div</code>, which holds when it
+equals either one.</p>
+<p>The repair rules are tested only on whole-response payloads
+(<code>tests/test_heuristics.py</code>), and
+<code>test_edge_duplicate_rule_basics</code> pins the empty-list
+fallback as intended behaviour (<code>:24-27</code>).
+<code>SchemaRepairingLLMClient</code> is covered by one
+<code>isinstance</code> check
+(<code>tests/test_scaffolding.py:38</code>). No test writes an episode
+through a real or stubbed Graphiti and reads a fact back, and no test
+asserts that an invalidated fact is kept out of
+<code>search_memory</code>, which is why <code>negative_eval</code> is
+withheld.</p>
+<p>No benchmark, no retrieval evaluation, and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A durable queue between the agent and extraction.</strong>
+Enqueue in one insert, extract in a sweep, reap stuck rows, cap
+attempts, keep a dead-letter table with a replay verb. It turns a
+multi-call LLM ingest into something an agent can call on every
+turn.</li>
+<li><strong>Reading the validity axis on the default recall
+path.</strong> Passing <code>invalid_at IS NULL</code> into every
+<code>search_memory</code> call is what makes Graphiti's invalidation
+reach the agent: <code>Graphiti.search</code> defaults to an empty
+<code>SearchFilters()</code> (<code>graphiti.py:1580</code> at v0.29.3)
+and returns closed facts beside current ones. Compare with now rather
+than testing for null, or a fact with a future end date disappears
+too.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Repairing from the first error's
+<code>input</code>.</strong> Repair the whole response, validate item by
+item, drop only the items that fail, and count them where the operator
+will see it. A fallback to an empty list is a delete.</li>
+<li><strong>Naming the same graph from two settings.</strong> The write
+path and every read path should derive the graph from one value, and a
+test should write under a non-default group and read it back.</li>
+<li><strong>Status fields that say DONE before the code does.</strong> A
+phase that is not implemented should report
+<code>NOT_IMPLEMENTED</code>, and a test that asserts the string it
+hardcodes proves nothing.</li>
+<li><strong>Dating an episode by when it was processed.</strong> Store
+the time it was said at enqueue and pass that as the reference
+time.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>For someone already running Graphiti on FalkorDB for one agent who
+wants an MCP front door and a queue, the queue layer is worth reading
+and the rest is thin. As memory at this commit it needs three fixes
+before it can be trusted: the repair fallback, the graph name on the
+recall path, and the dream run. A reader who wants Graphiti's temporal
+graph should start from <a href="../graphiti/">Graphiti</a> directly and
+borrow the queue.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the author's graph lacked fact edges because of the repair
+fallback, the LiteLLM proxy's <code>json_object</code> responses, or
+something else; answering it needs the quirks log from a live run.</li>
+<li>What PicoClaw's hook path does — the <code>search_memory</code>
+docstring describes a separate "hook Falkor path" racing the MCP path
+for a budget, and it is not in this repository.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Queue and dead-letter: <code>janus_graph/pipeline/queue.py</code>,
+<code>retry.py</code>, <code>worker.py</code>, <code>cron.py</code>.
+Daemon ingest:
+<code>janus_graph/daemon/episode_queue_adapter.py</code>.</li>
+<li>Graphiti wiring: <code>janus_graph/core/instance.py</code>. Repair:
+<code>janus_graph/heuristics/repairing_client.py</code>,
+<code>registry.py</code>, <code>rules/*.py</code>,
+<code>quirks_logger.py</code>.</li>
+<li>Recall: <code>janus_graph/mcp/server.py</code>. Structural search:
+<code>janus_graph/daemon/search_engine.py</code>,
+<code>embedding_client.py</code>, <code>http_server.py</code>.</li>
+<li>Background: <code>janus_graph/pipeline/dream.py</code>,
+<code>janus_graph/daemon/cron_loop.py</code>,
+<code>lifespan.py</code>.</li>
+<li>Config and backups: <code>janus_graph/config.py</code>,
+<code>config.example.yaml</code>, <code>janus_graph/migrate.py</code>,
+<code>bin/*.sh</code>.</li>
+<li>Tests: <code>tests/</code>. CI:
+<code>.github/workflows/ci.yml</code>.</li>
+<li>Engine anchors are in graphiti-core at tag <code>v0.29.3</code>
+(<code class="commit-id" title="021d3a57d511f21b10adaf7fa923bd5c1fce5e9d">021d3a57…</code>), the version
+<code>uv.lock</code> pins: <code>graphiti_core/graphiti.py</code>,
+<code>driver/falkordb_driver.py</code>,
+<code>utils/maintenance/edge_operations.py</code>,
+<code>prompts/extract_edges.py</code>,
+<code>prompts/dedupe_edges.py</code>,
+<code>search/search_filters.py</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong> (run at
+the janus-graph tree root unless noted)</p>
+<pre class="sh"><code>rg -n &#39;compute_backoff_seconds&#39; .                                   # defined in retry.py; called only by tests/test_queue.py
+rg -n &#39;dream_runs|dream_entity_undo_log&#39; .                          # CREATE TABLE only: no INSERT, no reader
+rg -n &#39;bounded_label_propagation\(&#39; janus_graph                     # the definition only; called from tests/test_pipeline.py
+rg -n &#39;group_id&#39; janus_graph/pipeline/dream.py                      # the parameter only: never read
+rg -n &#39;claimed_by&#39; janus_graph | grep -v episode_queue_adapter      # a settings docstring and the HTTP response: no claim query reads it
+rg -n -i &#39;remove_episode|\bdelete\b|detach&#39; janus_graph             # only the Cypher blocklist: no delete path
+rg -n &#39;build_communities|update_communities&#39; .                      # 0: Graphiti&#39;s community builder is never called
+rg -n &#39;edge_types|include_episodes&#39; janus_graph/daemon/search_engine.py   # validated and returned, never used in the Cypher
+rg -n &#39;save_interval_sec|max_memory_mb&#39; janus_graph                 # declared in config.py, never read
+rg -n &#39;created_at&#39; janus_graph/pipeline/queue.py                    # claim_next_batch neither selects nor sets it; get_record does
+rg -n &#39;SchemaRepairingLLMClient|generate_response&#39; tests            # one isinstance check: the repair path is untested
+rg -n &#39;not in .*results|not in .*facts&#39; tests                       # 0: no exclusion asserted on a search result
+rg -n -i &#39;verified|candidate|rejected|approve|confidence&#39; janus_graph   # two dated source comments and dream&#39;s label-propagation locals: no trust or review state
+rg -n -i &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; -g &#39;!uv.lock&#39; .   # 0: no paper
+# in graphiti-core v0.29.3:
+rg -n &#39;clone\(database&#39; graphiti_core/graphiti.py                   # add_episode and add_episode_bulk switch graph by group id; search does not</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Maple-Aikon/janus-graph/commit/987c34c0c488f8e16b350aea16b1e281d6248d3e"><code class="commit-id" title="987c34c0c488f8e16b350aea16b1e281d6248d3e">987c34c0…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration, one <code>tests/conftest.py</code>,
+<code>pyproject.toml</code> and <code>uv.lock</code> inside the
+seven-day cooldown, and no unpinned surface. Read only, nothing built or
+run. graphiti-core was read at tag <code>v0.29.3</code>, the version
+<code>uv.lock</code> pins, for the graph schema, the group-to-graph
+mapping and the edge invalidation path.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -203,6 +203,8 @@ comparing feature lists will see `as_of` and `valid_to` and assume the pair.
 
 [Uteke](../../systems/uteke/) ships `valid_from`, `valid_until` and `recall --at`, and all three are record time. `valid_from` equals `created_at` on every path, and `valid_until` is set only by a deprecation, to the moment it happened. Point-in-time recall draws candidates from a vector index that drops a row when it is deprecated, and `list --at` filters `deprecated = 0` in SQL, so a memory retired after the requested time is missing from the answer about that time. The predicate that would keep it is correct and never receives such a row.
 
+[Janus-Graph](../../systems/janus-graph/) is Graphiti seen from a caller, and both of its temporal defects live in the wrapper rather than the engine. It dates every episode by the sweep that processed it — the worker's `reference_time` falls back to now because it reads a `created_at` the queue's claim never sets — so relative dates in a delayed or dead-letter-replayed episode resolve against the wrong day, and no caller can supply the time. And its recall filter is `invalid_at IS NULL`, which keeps closed facts out but also hides a fact whose extracted end date lies in the future; comparing against the query instant is the correct predicate. It still earns the mark, because the engine's edges carry a model-extracted validity that can precede their row, and the wrapper reads that axis on every search.
+
 ## A third clock
 
 Two clocks answer *what was true* and *what did we believe*. The temporal

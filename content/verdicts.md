@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 423 reports.**
+**This page covers all 424 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3728,3 +3728,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: ten commits by one author on 10 and 11 September 2026, 3,403 lines of Rust with 1,730 of integration tests and 61 Rust test functions, no CI. There is no injectable clock, so no test can age a row, and the only embedder is a 64-dimension token hash.
 - Study when: you want a small, local, explicitly driven store per project under a harness that owns its loop, and a budgeted pack to copy.
 - Do not copy when: you need memory that outlives an hour without the model tiering, pinning or compacting on purpose, recall by meaning, or text in Chinese.
+
+### [`janus-graph`](../systems/janus-graph/)
+- Best idea: **a durable queue in front of an LLM-heavy graph ingest.** One SQLite insert per `add_episode`, a sweep with a stuck-row reaper, a per-episode timeout and a dead-letter table with a replay verb — and `invalid_at IS NULL` passed on every `search_memory` call, so Graphiti's invalidation reaches the agent. One capability mark, `bitemporal`, earned by Graphiti's edges.
+- Biggest risk: **facts disappear behind a log line.** The schema-repair wrapper hands each rule the input at the first validation error — for one malformed edge, that edge — and every rule falls back to an empty list, so a single bad item empties the episode's extraction or the contradiction list that would have closed an older fact, and the episode is marked done. Separately, `search_memory` reads a graph named by a driver default while writes follow the configured group id; under `config.example.yaml`, which the loader uses whenever no `config.yaml` exists, recall returns nothing.
+- Most reusable component: `EpisodeQueue` in `janus_graph/pipeline/queue.py` — WAL mode, an atomic batch claim, and a reaper that requeues or dead-letters stuck rows by attempt count.
+- Maturity impression: 25 commits between 28 August and 7 September 2026, 6,416 lines of Python with 2,705 of tests and CI; every test that reaches Graphiti mocks it. Dream mode's clustering, deduplication and pruning phases set "DONE" without running and the committed test asserts the strings; the README's exponential backoff has no caller; the dream-run and entity-merge undo tables are declared and never written.
+- Study when: you run Graphiti for one agent and want a queue and dead-letter path in front of its ingest.
+- Do not copy when: you need to know an extraction failed, need per-user or per-session scope inside one deployment, or need the graph backed up — the snapshot covers the SQLite queue only.

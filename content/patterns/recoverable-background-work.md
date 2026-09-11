@@ -193,6 +193,8 @@ coverage rather than against a false zero. Any background pass that upserts a
 full row from a partial computation needs the same question asked of it — which
 columns does this pass have no input for, and what happens to them.
 
+[Janus-Graph](../../systems/janus-graph/) builds almost every piece of this pattern and shows two failures it cannot see. The input is durable before extraction — an `add_episode` is one SQLite insert and payloads are kept after `done` — and the sweep has a reaper for stuck rows, an attempt cap and a dead-letter table with a replay verb. But a schema-repair wrapper between the model and Graphiti answers a malformed item with an empty list, so the job *succeeds* with nothing extracted and is marked done, and nothing distinguishes an empty success from a real one. And the nightly run labelled DLQ auto-repair requeues every dead-lettered episode without resetting its attempt count or closing its dead-letter row, so a poison input costs one model pass a night indefinitely. A dead-letter path that re-feeds itself is as unread as one nobody opens.
+
 ## Tests to require
 
 - Crash before, during, and after each state mutation.

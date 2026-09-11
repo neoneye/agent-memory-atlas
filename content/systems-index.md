@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **423 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **424 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -223,6 +223,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## J
 
 <ul class="az">
+<li><a class="az-row" href="../systems/janus-graph/"><span class="az-id">Janus-Graph</span><span class="az-what">A queue and an MCP surface over Graphiti on FalkorDB</span><code class="az-repo">Maple-Aikon/janus-graph</code><span class="az-caps"><span class="az-cap">Bi-temporal</span></span></a></li>
 <li><a class="az-row" href="../systems/joplin/"><span class="az-id">Joplin</span><span class="az-what">Notes an assistant may edit, one tool at a time</span><code class="az-repo">laurent22/joplin</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/juggler/"><span class="az-id">Juggler</span><span class="az-what">A gitignored notebook with a delete button</span><code class="az-repo">juggler-ai/juggler</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/jumbo/"><span class="az-id">Jumbo Context</span><span class="az-what">Event-sourced project memory</span><code class="az-repo">jumbocontext/jumbo.cli</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>

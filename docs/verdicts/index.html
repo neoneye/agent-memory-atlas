@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 423 reports.</strong></p>
+<p><strong>This page covers all 424 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15055,6 +15055,43 @@ copy.</li>
 <li>Do not copy when: you need memory that outlives an hour without the
 model tiering, pinning or compacting on purpose, recall by meaning, or
 text in Chinese.</li>
+</ul>
+<h3 id="janus-graph"><a
+href="../systems/janus-graph/"><code>janus-graph</code></a></h3>
+<ul>
+<li>Best idea: <strong>a durable queue in front of an LLM-heavy graph
+ingest.</strong> One SQLite insert per <code>add_episode</code>, a sweep
+with a stuck-row reaper, a per-episode timeout and a dead-letter table
+with a replay verb — and <code>invalid_at IS NULL</code> passed on every
+<code>search_memory</code> call, so Graphiti's invalidation reaches the
+agent. One capability mark, <code>bitemporal</code>, earned by
+Graphiti's edges.</li>
+<li>Biggest risk: <strong>facts disappear behind a log line.</strong>
+The schema-repair wrapper hands each rule the input at the first
+validation error — for one malformed edge, that edge — and every rule
+falls back to an empty list, so a single bad item empties the episode's
+extraction or the contradiction list that would have closed an older
+fact, and the episode is marked done. Separately,
+<code>search_memory</code> reads a graph named by a driver default while
+writes follow the configured group id; under
+<code>config.example.yaml</code>, which the loader uses whenever no
+<code>config.yaml</code> exists, recall returns nothing.</li>
+<li>Most reusable component: <code>EpisodeQueue</code> in
+<code>janus_graph/pipeline/queue.py</code> — WAL mode, an atomic batch
+claim, and a reaper that requeues or dead-letters stuck rows by attempt
+count.</li>
+<li>Maturity impression: 25 commits between 28 August and 7 September
+2026, 6,416 lines of Python with 2,705 of tests and CI; every test that
+reaches Graphiti mocks it. Dream mode's clustering, deduplication and
+pruning phases set "DONE" without running and the committed test asserts
+the strings; the README's exponential backoff has no caller; the
+dream-run and entity-merge undo tables are declared and never
+written.</li>
+<li>Study when: you run Graphiti for one agent and want a queue and
+dead-letter path in front of its ingest.</li>
+<li>Do not copy when: you need to know an extraction failed, need
+per-user or per-session scope inside one deployment, or need the graph
+backed up — the snapshot covers the SQLite queue only.</li>
 </ul>
         </article>
       </div>
