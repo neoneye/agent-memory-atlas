@@ -113,14 +113,14 @@ in.</p>
               <strong>Morephine/feltstate</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed" title="45b1c9824326669f7e1855097a3bfe01192084ed">
+            <a class="meta-pill revision-pill" href="https://github.com/Morephine/feltstate/commit/0f9ef23b62b65416a0cdb18d389ffa6b5af066b7" title="0f9ef23b62b65416a0cdb18d389ffa6b5af066b7">
               <span>Analyzed revision</span>
-              <code>45b1c982…</code>
+              <code>0f9ef23b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-16</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Morephine--feltstate" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -308,6 +308,24 @@ skills win most, <em>"but a low one keeps a non-zero chance to be
 re-tried and redeem itself — so no skill monopolises and a newly-good
 one can rise."</em> That is an explore/exploit answer to the lock-in
 problem most usefulness-ranked stores have.</p>
+<p><strong>A third leg reads the key web rather than the text.</strong>
+<code>Canon.reach</code> composes three functions from
+<code>memory/keyweb.py</code>: <code>key_hits</code> collides the query
+words with the keys written onto each row at birth,
+<code>walk_edges</code> gathers kin across edges judged at digest time,
+and <code>chain</code> orders what it found by event time. The module is
+explicit that these three are the <em>whole</em> read path and that
+nothing sits behind them — <em>"There is no semantic index and no
+invalidation machine behind them: if the answer looks wrong, the keys,
+the edges, or the timestamps are wrong, and each of those is a thing you
+can look at."</em></p>
+<p>The consequence is the design's clearest sentence about currency:
+<em>"the newest first-hand row is the present, because it stands at the
+tail."</em> Nothing marks a row stale and nothing has to; position in
+event time is the answer. That is the same commitment as the validity
+window in section 5, applied to retrieval instead of to storage — and it
+is why a wrong answer here is always traceable to a wrong key, edge or
+timestamp rather than to a scoring function nobody can inspect.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are synchronous, explicit and blocking; there is no queue and
 no background rewrite. The store never injects anything into a prompt on
@@ -356,11 +374,31 @@ metadata that is <em>supposed</em> to evolve — recall counts, decay
 state, pruned lineage — stays out, <em>"so living never looks like
 tampering."</em> A tamper-evident log that alarms on ordinary use gets
 muted, and this one is built not to.</p>
+<p><strong>A crystallisation ladder was added above all of this, and its
+discipline is the part to take.</strong> <code>memory/ladder.py</code>
+casts facts whose birth intensity clears a floor into day crystals,
+clusters live crystals of a tier by their most-shared key, and fuses a
+cluster into the tier above when it reaches the batch size — day to week
+to month to year, <em>"the same furnace climbed rung by rung, only the
+dials changing."</em> Two rules keep it from accumulating the failure
+this atlas finds most often. <strong>Nothing derivable is
+stored</strong>: no <code>absorbed</code> flag exists, because a crystal
+is absorbed iff some higher crystal lists its <code>mid</code> in
+<code>src_ids</code>, and a fact is cast iff a day crystal cites it —
+<em>"What can be read from existing data is never written as new state,
+so the two can never disagree."</em> And <strong>nothing ticks</strong>:
+a crystal's heat is a pure function of its born heat and its age under
+the tier's half-life, so a crystal too cold for the next tier's
+admission bar simply never climbs. Every rung seals a fingerprint whose
+pointer hashes the fact's own text, so a year crystal is still drillable
+to the words underneath it. The summariser is a seat the caller fills —
+an LLM in production, a string join offline — and everything else is
+deterministic.</p>
 <p>Against that, there is no scope key. One store, one companion; a
 second user is not a configuration but a second deployment.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>528 tests across 40 files, against ~25,400 lines. There is <strong>no
+<p>540 tests across 43 files, against 27,082 lines. There is <strong>no
 paper</strong>, no benchmark and no retrieval-quality evaluation — which
 for a substring-matched store of one person's life is a smaller gap than
 it sounds, and the report says so rather than leaving a reader to infer
@@ -474,8 +512,18 @@ reason nothing surfaces?</li>
 <p><strong>Memory</strong></p>
 <ul>
 <li><code>feltstate/memory/canon.py</code> — the 5W1H store: decay,
-dedup, grey zone, <code>correct</code>, <code>retract</code>,
-<code>history</code>, <code>as_of</code></li>
+dedup, grey zone, <code>correct</code> <code>:866</code>,
+<code>retract</code> <code>:939</code>, <code>history</code>
+<code>:959</code>, <code>as_of</code> <code>:986</code>, and
+<code>reach</code> <code>:1139</code>; the retract-then-readd behaviour
+is documented at <code>:610</code></li>
+<li><code>feltstate/memory/ladder.py</code> — the day/week/month/year
+crystallisation ladder, with <code>cast_day_crystals</code>
+<code>:198</code>, <code>ladder_pass</code> <code>:266</code>,
+<code>absorbed_mids</code> <code>:130</code> and <code>heat_now</code>
+<code>:139</code></li>
+<li><code>feltstate/dashboard.py</code> — a read-only view over the
+stores</li>
 <li><code>feltstate/memory/skill.py</code> — the human-rated skill
 region and its promotion and retirement rules</li>
 <li><code>feltstate/memory/keyweb.py</code>, <code>context.py</code>,
@@ -508,7 +556,81 @@ consistency check</li>
 <code>test_canon.py</code> and <code>test_lifecycle.py</code> carry the
 correction, retraction and death contracts</li>
 </ul>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A withdrawal is never consulted on the next write</td>
+<td>read <code>_write_or_reinforce</code> at
+<code>feltstate/memory/canon.py:600-612</code></td>
+<td>Its own docstring: <em>"Retracted / superseded entries are ignored
+when matching, so retract-then-readd yields a fresh active
+fact"</em></td>
+</tr>
+<tr>
+<td>No scope key of any kind</td>
+<td><code>grep -rniE "tenant|user_id|owner|namespace|session_id" --include="*.py" feltstate</code></td>
+<td>Nothing on the store; <code>region</code> and <code>actor</code> are
+content filters</td>
+</tr>
+<tr>
+<td>Nothing writes derived ladder state</td>
+<td><code>grep -rn "absorbed" --include="*.py" feltstate</code></td>
+<td><code>absorbed_mids</code> computes it from <code>src_ids</code>; no
+field is written</td>
+</tr>
+<tr>
+<td>The read path has no index</td>
+<td><code>grep -rn "embedding|faiss|index" --include="*.py" feltstate</code></td>
+<td>Nothing; <code>search</code>, <code>recall</code> and
+<code>reach</code> are the three legs</td>
+</tr>
+<tr>
+<td>Tree and suite size</td>
+<td><code>find . -name "*.py" | xargs wc -l | tail -1</code>;
+<code>grep -rc "def test_" tests/*.py</code> summed</td>
+<td>27,082 lines; 540 tests across 43 files</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/Morephine/feltstate/commit/0f9ef23b62b65416a0cdb18d389ffa6b5af066b7"><code class="commit-id" title="0f9ef23b62b65416a0cdb18d389ffa6b5af066b7">0f9ef23b…</code></a>
+— re-read, 16 files and 2,061 insertions past the previous pin in a
+single commit. <strong>Marks unchanged at five, each re-verified, and
+the report's central criticism is confirmed by the code's own
+docstring.</strong> <code>_write_or_reinforce</code> at
+<code>canon.py:610</code> states the behaviour the eyebrow names:
+<em>"Retracted / superseded entries are ignored when matching, so
+retract-then-readd yields a fresh active fact."</em> The store records a
+withdrawal and does not consult it on the next write, and that is
+deliberate rather than an oversight. <code>retract</code> still sets
+<code>invalid_at</code> and <code>history</code> still renders the
+<code>valid_at</code>/<code>invalid_at</code> window with a three-value
+status, so <code>bitemporal</code> holds. <strong>Two additions extend
+the report.</strong> <code>Canon.reach</code> is a third read leg over
+the key web — <code>key_hits</code> to enter, <code>walk_edges</code> to
+gather kin, <code>chain</code> to order by event time — with the module
+stating that these three are the whole read path and that <em>"the
+newest first-hand row is the present, because it stands at the
+tail"</em>: no semantic index, no invalidation flag, and a wrong answer
+traceable to a wrong key, edge or timestamp. And
+<code>memory/ladder.py</code> adds a day/week/month/year crystallisation
+ladder whose two rules are worth more than the ladder itself — nothing
+derivable is stored (<code>absorbed</code> is computed from
+<code>src_ids</code>, never written, <em>"so the two can never
+disagree"</em>) and nothing ticks (heat is a pure function of born heat
+and age). Suite 528 tests across 40 files to 540 across 43, over 27,082
+lines. Screened before reading: no auto-run surface, one dependency
+manifest with no lockfile beside it; nothing was installed or run.</p>
 <p><strong>2026-08-16</strong> — <a
 href="https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed"><code class="commit-id" title="45b1c9824326669f7e1855097a3bfe01192084ed">45b1c982…</code></a>
 — First reading, at 60 commits. Screened first: 0 auto-run surfaces, 0

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Morephine/feltstate"
 source_url: https://github.com/Morephine/feltstate
 archive_name: "Morephine--feltstate"
-revision: 45b1c9824326669f7e1855097a3bfe01192084ed
-revision_url: https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed
-analyzed_at: 2026-08-16
+revision: 0f9ef23b62b65416a0cdb18d389ffa6b5af066b7
+revision_url: https://github.com/Morephine/feltstate/commit/0f9ef23b62b65416a0cdb18d389ffa6b5af066b7
+analyzed_at: 2026-09-11
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "canon fact store | feltstate/memory/canon.py | a grey-zone pending file promoted by confirm, plus `_retracted` and `_superseded_by` fields that `_is_active` filters on, all separate from the `confidence` float | tests/test_canon.py, test_ask_is_grey_zone_and_confirm_promotes and test_retract_hides_fact_but_keeps_record"
@@ -23,12 +23,12 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "A 5W1H record — who/what/why/when/where plus intensity, confidence, recalls and a reinforce count — optionally sealed with a birth fingerprint carrying its source pointers and the affect present at the moment it was written"
   storage: "Line-delimited JSON, no database: `canon.jsonl` for confirmed facts, `canon.pending.jsonl` for the grey zone, an archived sidecar, plus a hash-linked ledger and a snapshot set"
-  retrieval: "Substring match over the record text, filtered to active entries and to a `region`, ranked by a salience recomputed on every read from base intensity, age, reinforcement and recall count; skills are drawn probabilistically weighted by their human rating"
+  retrieval: "Three legs — substring `search`, scored `recall`, and `reach`, which collides query words with the keys written at birth, walks judged edges, and lets event time decide, with no semantic index and no invalidation flag behind it. All filtered to active entries and to a `region`, ranked by a salience recomputed on every read"
   write: "Explicit tools only — the agent calls `add`, `ask`, `correct`, `retract`; nothing is injected into a prompt by the store itself, and a distilled summary is gated against its sources by a zero-LLM consistency check before it commits"
   update_delete: "Four distinct exits: decay past a floor (invisible, still on disk), `correct` (old version superseded), `retract` (marked, kept for audit), and a real death — `gc` computes a plan, `reaper` writes a fsynced `legal_death` tombstone before removing the rows from the live stores and from every snapshot"
   scoping: "None. `region` partitions facts from skills and `actor` is an optional filter; there is no user, tenant or session key anywhere in the store"
   integration: "A Python library the agent calls; affect is appraised by a component the reply model cannot author, and state is returned as context rather than as behavioural instruction"
-  background: "An off-path dreaming pass that recombines affect-tagged material without logic and leaves only a mood residue, plus a sleep pass; the memory lifecycle itself runs on explicit tools with no hidden rewrite daemon"
+  background: "An off-path dreaming pass that recombines affect-tagged material without logic and leaves only a mood residue, plus a sleep pass and a caller-scheduled crystallisation ladder that fuses day crystals up through week, month and year; the lifecycle itself runs on explicit tools with no hidden rewrite daemon"
   trust: "A grey zone promoted by explicit confirmation, `_retracted` and `_superseded_by` as separate fields, and a `confidence` float kept distinct from all of them"
   strengths: "A tamper-evident ledger whose fail-safe direction is right — deleting a tombstone makes the next patrol alarm rather than go quiet; deletion that reaches snapshots under a crash-safe transaction; a validity window with a real as-of read; and negative tests that include the rare corrected-value case"
   risks: "A retracted or superseded entry is ignored when matching, so re-asserting the same value yields a fresh active fact — the store records that a value was withdrawn and never consults that record on the next write; and there is no scope key of any kind"
@@ -190,6 +190,22 @@ one keeps a non-zero chance to be re-tried and redeem itself — so no skill
 monopolises and a newly-good one can rise."* That is an explore/exploit answer to
 the lock-in problem most usefulness-ranked stores have.
 
+**A third leg reads the key web rather than the text.** `Canon.reach` composes
+three functions from `memory/keyweb.py`: `key_hits` collides the query words with
+the keys written onto each row at birth, `walk_edges` gathers kin across edges
+judged at digest time, and `chain` orders what it found by event time. The module
+is explicit that these three are the *whole* read path and that nothing sits
+behind them — *"There is no semantic index and no invalidation machine behind
+them: if the answer looks wrong, the keys, the edges, or the timestamps are
+wrong, and each of those is a thing you can look at."*
+
+The consequence is the design's clearest sentence about currency: *"the newest
+first-hand row is the present, because it stands at the tail."* Nothing marks a
+row stale and nothing has to; position in event time is the answer. That is the
+same commitment as the validity window in section 5, applied to retrieval instead
+of to storage — and it is why a wrong answer here is always traceable to a wrong
+key, edge or timestamp rather than to a scoring function nobody can inspect.
+
 ## 7. Write Mechanics
 
 Writes are synchronous, explicit and blocking; there is no queue and no
@@ -239,12 +255,29 @@ evolve — recall counts, decay state, pruned lineage — stays out, *"so living
 never looks like tampering."* A tamper-evident log that alarms on ordinary use
 gets muted, and this one is built not to.
 
+**A crystallisation ladder was added above all of this, and its discipline is the
+part to take.** `memory/ladder.py` casts facts whose birth intensity clears a
+floor into day crystals, clusters live crystals of a tier by their most-shared
+key, and fuses a cluster into the tier above when it reaches the batch size —
+day to week to month to year, *"the same furnace climbed rung by rung, only the
+dials changing."* Two rules keep it from accumulating the failure this atlas
+finds most often. **Nothing derivable is stored**: no `absorbed` flag exists,
+because a crystal is absorbed iff some higher crystal lists its `mid` in
+`src_ids`, and a fact is cast iff a day crystal cites it — *"What can be read
+from existing data is never written as new state, so the two can never
+disagree."* And **nothing ticks**: a crystal's heat is a pure function of its
+born heat and its age under the tier's half-life, so a crystal too cold for the
+next tier's admission bar simply never climbs. Every rung seals a fingerprint
+whose pointer hashes the fact's own text, so a year crystal is still drillable to
+the words underneath it. The summariser is a seat the caller fills — an LLM in
+production, a string join offline — and everything else is deterministic.
+
 Against that, there is no scope key. One store, one companion; a second user is
 not a configuration but a second deployment.
 
 ## 10. Tests, Evals, and Benchmarks
 
-528 tests across 40 files, against ~25,400 lines. There is **no paper**, no
+540 tests across 43 files, against 27,082 lines. There is **no paper**, no
 benchmark and no retrieval-quality evaluation — which for a substring-matched
 store of one person's life is a smaller gap than it sounds, and the report says
 so rather than leaving a reader to infer it.
@@ -346,7 +379,12 @@ to six.
 
 **Memory**
 - `feltstate/memory/canon.py` — the 5W1H store: decay, dedup, grey zone,
-  `correct`, `retract`, `history`, `as_of`
+  `correct` `:866`, `retract` `:939`, `history` `:959`, `as_of` `:986`, and
+  `reach` `:1139`; the retract-then-readd behaviour is documented at `:610`
+- `feltstate/memory/ladder.py` — the day/week/month/year crystallisation ladder,
+  with `cast_day_crystals` `:198`, `ladder_pass` `:266`, `absorbed_mids` `:130`
+  and `heat_now` `:139`
+- `feltstate/dashboard.py` — a read-only view over the stores
 - `feltstate/memory/skill.py` — the human-rated skill region and its promotion
   and retirement rules
 - `feltstate/memory/keyweb.py`, `context.py`, `extract.py`, `feeling.py`
@@ -367,6 +405,20 @@ to six.
 - `tests/` — 528 tests across 40 files; `test_canon.py` and `test_lifecycle.py`
   carry the correction, retraction and death contracts
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| A withdrawal is never consulted on the next write | read `_write_or_reinforce` at `feltstate/memory/canon.py:600-612` | Its own docstring: *"Retracted / superseded entries are ignored when matching, so retract-then-readd yields a fresh active fact"* |
+| No scope key of any kind | `grep -rniE "tenant\|user_id\|owner\|namespace\|session_id" --include="*.py" feltstate` | Nothing on the store; `region` and `actor` are content filters |
+| Nothing writes derived ladder state | `grep -rn "absorbed" --include="*.py" feltstate` | `absorbed_mids` computes it from `src_ids`; no field is written |
+| The read path has no index | `grep -rn "embedding\|faiss\|index" --include="*.py" feltstate` | Nothing; `search`, `recall` and `reach` are the three legs |
+| Tree and suite size | `find . -name "*.py" \| xargs wc -l \| tail -1`; `grep -rc "def test_" tests/*.py` summed | 27,082 lines; 540 tests across 43 files |
+
 ## History
+
+**2026-09-11** — [`0f9ef23b62b65416a0cdb18d389ffa6b5af066b7`](https://github.com/Morephine/feltstate/commit/0f9ef23b62b65416a0cdb18d389ffa6b5af066b7) — re-read, 16 files and 2,061 insertions past the previous pin in a single commit. **Marks unchanged at five, each re-verified, and the report's central criticism is confirmed by the code's own docstring.** `_write_or_reinforce` at `canon.py:610` states the behaviour the eyebrow names: *"Retracted / superseded entries are ignored when matching, so retract-then-readd yields a fresh active fact."* The store records a withdrawal and does not consult it on the next write, and that is deliberate rather than an oversight. `retract` still sets `invalid_at` and `history` still renders the `valid_at`/`invalid_at` window with a three-value status, so `bitemporal` holds. **Two additions extend the report.** `Canon.reach` is a third read leg over the key web — `key_hits` to enter, `walk_edges` to gather kin, `chain` to order by event time — with the module stating that these three are the whole read path and that *"the newest first-hand row is the present, because it stands at the tail"*: no semantic index, no invalidation flag, and a wrong answer traceable to a wrong key, edge or timestamp. And `memory/ladder.py` adds a day/week/month/year crystallisation ladder whose two rules are worth more than the ladder itself — nothing derivable is stored (`absorbed` is computed from `src_ids`, never written, *"so the two can never disagree"*) and nothing ticks (heat is a pure function of born heat and age). Suite 528 tests across 40 files to 540 across 43, over 27,082 lines. Screened before reading: no auto-run surface, one dependency manifest with no lockfile beside it; nothing was installed or run.
 
 **2026-08-16** — [`45b1c9824326669f7e1855097a3bfe01192084ed`](https://github.com/Morephine/feltstate/commit/45b1c9824326669f7e1855097a3bfe01192084ed) — First reading, at 60 commits. Screened first: 0 auto-run surfaces, 0 build-time execution paths, one `pyproject.toml` with no lockfile beside it; nothing was installed or run. Five marks — `trust_state`, `bitemporal`, `audit_log`, `human_review`, `negative_eval`. Two withheld and both stated in place: there is no scope key of any kind, and the rejected-value tombstone is absent by a documented decision rather than an omission, since matching ignores retracted and superseded entries so the same value re-asserted yields a fresh active fact. No paper.
