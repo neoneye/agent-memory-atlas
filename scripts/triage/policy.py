@@ -45,9 +45,19 @@ RARE_MARKS = {
                      r"|\bassertNotIn\b|\bshould[_ ]not[_ ](contain|retrieve|return)\b",
 }
 COMMON_MARKS = {
+    # The first rules asked for `scope_id` and friends and missed a plain `scope`
+    # column filtered in a WHERE clause, which is the ordinary way to write it.
     "scope_enforced": r"\b(tenant|workspace|namespace|scope)[_ ]?(id|key|filter)\b"
-                      r"|\bWHERE\s+\w*scope\b|\bowner[_ ]key\b",
-    "audit_log": r"\baudit[_ ]?(log|trail|entry)\b|\bappend[_ ]only\b|\bmutation[_ ]log\b",
+                      r"|\bowner[_ ]key\b|\bWHERE\b[^;\n]{0,80}\b(scope|namespace|tenant_id|"
+                      r"user_id|workspace_id|owner)\s*=",
+    "audit_log": r"\baudit[_ ]?(log|trail|entry)\b|\bappend[_ ]only\b|\bmutation[_ ]log\b"
+                 r"|\bmemory_history\b|\bhistory\s+table\b",
+    # Correction without a tombstone: soft deletion, supersession, expiry,
+    # versioning. The shape most small memory systems actually have, and the
+    # lead that tells the full analysis where to look for a tombstone's absence.
+    "correction": r"\bdeleted_at\b|\bsuperseded?_by\b|\bsupersedes\b|\bvalid_until\b"
+                  r"|\bexpires?_at\b|\binvalidated(_at)?\b|\brevoked(_at)?\b|\barchived_at\b"
+                  r"|\bversion\s+INTEGER\b|\bforget_memory\b|\bdelete_memory\b",
 }
 
 

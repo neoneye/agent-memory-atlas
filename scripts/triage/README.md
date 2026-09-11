@@ -320,7 +320,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-131 tests, under two seconds, hermetic — a fake GitHub, temporary state
+143 tests, under two seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered
@@ -332,7 +332,7 @@ fixture run.
 
 ---
 
-## The first live run
+## The first live runs
 
 On 11 September 2026, against the live feed, with a token:
 
@@ -340,18 +340,36 @@ On 11 September 2026, against the live feed, with a token:
 | --- | --- |
 | Feed | 275,543 bytes, 1,384 lines |
 | Records | 1,331 repositories, 53 `post`/`meta`, 0 malformed |
-| Budget spent | 40 metadata collections, 12 inspections, 377 API requests |
-| Outcomes | 1 eligible, 10 rejected, 1 deferred |
-| Selected | 1, from 19 remaining slots |
-| State directory | 2.3 MiB (database 2.3 MiB, cache 1.1 MiB) |
-| Scratch after the run | 74 bytes — the ownership marker, nothing else |
+| Metadata collected | 40 repositories |
+| Inspected | 37 repositories: 52 inspections, 40 of them under policy `2026-09-11.2` |
+| Current outcomes | 6 eligible, 27 rejected, 4 deferred |
+| Selected | 1 — the day froze on the first, smaller batch |
+| State directory | 2.3 MiB after the first batch, 74 bytes of scratch |
 
 1,331 repositories in an accumulated index is a **backlog**, not a daily arrival
 rate, and the report separates newly imported from backlog for that reason.
 
-Three of the ten rejections scored 56, 57 and 59 against a minimum of 60. That is
-a cluster sitting on the threshold, and it is the clearest thing the first batch
-says: the number is a guess until it is calibrated.
+The first batch of twelve ran under `2026-09-11.1` and exposed five defects,
+each now pinned by a test in [`tests/test_regressions.py`](tests/test_regressions.py):
+a Rust store written with `std::fs` was invisible, so a crate with a
+`core/persistence.rs` was rejected as out of scope; scope was rejected from a
+*sample* in which no store write appeared, which is an absence claim from
+partial coverage; correction vocabulary such as `deleted_at` and a plain `scope`
+column went unmatched, so the fifteen atlas-value points were unreachable and
+every candidate was ranked out of eighty-five; blob reads were spent on issue
+templates, config files and a translated README instead of source; and an empty
+repository was deferred as "the tree could not be listed". Under `.2`, two of the
+first batch's rejections — ContextMeld and memora — are eligible.
+
+The version names the evidence rules and the weights together. A rejection is a
+statement under one version, and a new version makes it due for reassessment,
+which is how the first batch was re-read without anyone clearing a decision by
+hand.
+
+More than half the rejections under `.2` are about score, not gates: fifteen of
+the twenty-seven cleared all four gates and scored between 46 and 59. The minimum of
+60 sits on that cluster, and it is the clearest thing these batches say: the
+number is a guess until it is calibrated.
 
 ---
 

@@ -87,7 +87,14 @@ PERSISTENCE = re.compile(
     r"sqlite3?|CREATE TABLE|psycopg|asyncpg|SQLAlchemy|prisma|mongo|redis|duckdb|lmdb|leveldb"
     r"|chromadb|qdrant|weaviate|pinecone|milvus|lancedb|faiss|pgvector|neo4j|surrealdb"
     r"|\.jsonl?['\"]|open\([^)]*['\"][wa]|writeFile|fs\.write|json\.dump|pickle\.dump"
-    r"|\bDB_PATH\b|\bstorage\b|\bstore\.(save|put|write|upsert)",
+    r"|\bDB_PATH\b|\bstorage\b|\bstore\.(save|put|write|upsert)"
+    # Rust. The first live batch rejected a crate whose store lives in a file
+    # called `core/persistence.rs` because none of the above is Rust.
+    r"|std::fs\b|\bfs::write|File::create|OpenOptions|rusqlite|\bsqlx\b|\bdiesel\b|\bsled\b"
+    r"|\bredb\b|bincode::|serde_json::to_(writer|vec|string_pretty)"
+    # Go, JVM, .NET, browser
+    r"|os\.(WriteFile|Create|OpenFile)|ioutil\.WriteFile|\bbbolt\b|\bbadger\b|\bgorm\b"
+    r"|Files\.write|FileWriter|\bjdbc\b|File\.WriteAll|localStorage\.setItem|indexedDB",
     re.IGNORECASE,
 )
 
@@ -189,6 +196,8 @@ def choose_blobs(inspection: Inspection, limit: int) -> list[str]:
                 if count <= 0:
                     return
 
+    # The top-level README only. A translation is the same promise in another
+    # language, and xiaoO's twelve reads included one.
     take([p for p in paths if p in DOC_FILES or p.lower() == "readme.md"], 1)
     take([p for p in paths if p.split("/")[-1] in MANIFESTS and "/" not in p], 2)
     take([p for p in paths if p.startswith(".github/workflows/") and p.endswith((".yml", ".yaml"))], 1)
@@ -200,20 +209,38 @@ def choose_blobs(inspection: Inspection, limit: int) -> list[str]:
     )
     take(tests, 4)
 
-    implementation = [
-        p for p in paths
-        if p.endswith(_CODE_SUFFIXES) and not TEST_PATH.search(p) and MEMORY_TERMS.search(p)
-    ]
-    take(sorted(implementation, key=lambda p: (p.count("/"), len(p))), 2)
-    take([p for p in paths if p.endswith(_CODE_SUFFIXES) and not TEST_PATH.search(p)], limit)
+    source = [p for p in paths if _implementation(p)]
+    memory_named = [p for p in source if MEMORY_TERMS.search(p)]
+    take(sorted(memory_named, key=lambda p: (p.count("/"), len(p))), 3)
+    take(sorted(source, key=lambda p: (p.count("/"), len(p))), limit)
     return chosen[:limit]
 
 
-_CODE_SUFFIXES = (
+_SOURCE_SUFFIXES = (
     ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".go", ".rs", ".java", ".kt", ".rb",
     ".cs", ".php", ".swift", ".scala", ".ex", ".exs", ".c", ".cc", ".cpp", ".h", ".hpp",
-    ".sql", ".yml", ".yaml", ".toml", ".json", ".md",
+    ".sql",
 )
+# Everything a test file or a manifest can be. Wider than source on purpose; it is
+# never used to pick implementation files, which is the mistake it used to make.
+_CODE_SUFFIXES = _SOURCE_SUFFIXES + (".yml", ".yaml", ".toml", ".json", ".md")
+
+# Paths that are never the implementation, whatever their suffix. The first live
+# batch spent three of ContextMeld's twelve reads on issue templates.
+NOT_IMPLEMENTATION = re.compile(
+    r"(^|/)\.github/|(^|/)(docs?|examples?|samples?|scripts|benchmarks?|migrations)/"
+    r"|(^|/)(LICEN[CS]E|NOTICE|CHANGELOG|CONTRIBUTING)|\.config\.(js|ts|mjs|cjs)$"
+    r"|(^|/)\.[^/]+rc(\.json|\.js)?$|\.d\.ts$|(^|/)setup\.(py|ts|js)$",
+    re.IGNORECASE,
+)
+
+
+def _implementation(path: str) -> bool:
+    return (
+        path.endswith(_SOURCE_SUFFIXES)
+        and not TEST_PATH.search(path)
+        and not NOT_IMPLEMENTATION.search(path)
+    )
 
 
 def read_blobs(client: Client, owner: str, name: str, commit: str, paths: list[str],
@@ -432,8 +459,24 @@ def classify_scope(inspection: Inspection) -> ScopeEvidence:
             "appears in code rather than only in the README"
         )
     elif not scope.persistence_paths:
-        scope.in_scope = False
-        scope.reasons.append("nothing in the inspected implementation writes to a store")
+        # An absence is only a finding when the whole implementation was read.
+        # Eight files of forty-five with no store write in them says nothing
+        # about the other thirty-seven, and the first live batch rejected a
+        # memory crate on exactly that reading.
+        listed = [p for p in inspection.tree_paths if _implementation(p)]
+        read = [b.path for b in inspection.blobs if b.text and _implementation(b.path)]
+        if listed and len(read) < len(listed):
+            scope.in_scope = None
+            scope.reasons.append(
+                f"no store write in the {len(read)} of {len(listed)} implementation files read; "
+                f"the rest were not read, so this is not an absence"
+            )
+        else:
+            scope.in_scope = False
+            scope.reasons.append(
+                "nothing in the implementation writes to a store, and every implementation "
+                "file listed was read"
+            )
     else:
         scope.in_scope = None
         scope.reasons.append(
@@ -458,11 +501,7 @@ def classify_substance(inspection: Inspection) -> SubstanceEvidence:
         substance.reasons.append("no tree listing")
         return substance
 
-    code = [
-        path for path in inspection.tree_paths
-        if path.endswith(_CODE_SUFFIXES) and not path.endswith((".md", ".json", ".yml", ".yaml"))
-        and not TEST_PATH.search(path)
-    ]
+    code = [path for path in inspection.tree_paths if _implementation(path)]
     substance.code_files = len(code)
     read_code = [
         blob for blob in inspection.blobs

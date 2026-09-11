@@ -106,18 +106,37 @@ def _reassessment_due(row: sqlite3.Row) -> bool:
     return parse_iso(when) <= utc_now()
 
 
-def assessable(connection: sqlite3.Connection) -> list[sqlite3.Row]:
-    """Candidates this program is still allowed to spend requests on."""
+def backoff_days(policy: Policy, attempts: int) -> int:
+    """Days until an incomplete assessment is tried again: doubling, capped.
+
+    Without it a repository whose evidence cannot be completed comes back every
+    few days for ever, spending inspection budget on the same gap.
+    """
+    base = policy.reassessment_days["incomplete_evidence"]
+    ceiling = policy.reassessment_days["incomplete_evidence_max"]
+    return min(base * 2 ** max(attempts - 1, 0), ceiling)
+
+
+def assessable(connection: sqlite3.Connection,
+               policy_version: str | None = None) -> list[sqlite3.Row]:
+    """Candidates this program is still allowed to spend requests on.
+
+    A rejection or deferral is a statement under one policy version. When the
+    version changes — new rules, new weights — it is due again regardless of its
+    date, because the reason it was set aside may have been the rules.
+    """
     rows = connection.execute(
-        "SELECT * FROM candidate WHERE analysis_status NOT IN "
-        "('selected','running','accepted') ORDER BY id"
+        "SELECT c.*, a.policy_version AS decided_under FROM candidate c "
+        "LEFT JOIN assessment a ON a.id = c.latest_assessment "
+        "WHERE c.analysis_status NOT IN ('selected','running','accepted') ORDER BY c.id"
     ).fetchall()
     out = []
     for row in rows:
-        if row["triage_status"] == "rejected" and not _reassessment_due(row):
-            continue
-        if row["triage_status"] == "deferred" and not _reassessment_due(row):
-            continue
+        if row["triage_status"] in ("rejected", "deferred"):
+            outdated = (policy_version is not None and row["decided_under"] is not None
+                        and row["decided_under"] != policy_version)
+            if not outdated and not _reassessment_due(row):
+                continue
         out.append(row)
     return out
 
@@ -161,13 +180,14 @@ def prescore(facts: dict[str, Any]) -> int:
 
 
 def collect_metadata(config: Config, connection: sqlite3.Connection, client: Client,
-                     day: str, run: AssessRun, limit: int | None = None) -> None:
+                     day: str, run: AssessRun, limit: int | None = None,
+                     policy_version: str | None = None) -> None:
     """One repository at a time, until the daily metadata budget is spent."""
     collector = Collector(client)
     allowance = limit if limit is not None else config.metadata_budget
     spent = budget_used(connection, day, "metadata_repos")
     pending = [
-        row for row in assessable(connection)
+        row for row in assessable(connection, policy_version)
         if connection.execute(
             "SELECT 1 FROM metadata WHERE candidate_id = ?", (row["id"],)
         ).fetchone() is None
@@ -235,14 +255,16 @@ def _defer(connection: sqlite3.Connection, candidate_id: int, *, days: int, reas
 # --- stage C ---------------------------------------------------------------
 
 def inspection_queue(connection: sqlite3.Connection, config: Config, run: AssessRun,
-                     allowance: int | None = None) -> list[sqlite3.Row]:
+                     allowance: int | None = None,
+                     policy_version: str | None = None) -> list[sqlite3.Row]:
     """Eighty per cent by metadata rank, twenty per cent by rotation.
 
     The rotation is a cursor over candidate id, so it is reproducible: the same
     database at the same cursor picks the same exploration slice, and the cursor
     advances past what it handed out.
     """
-    rows = [row for row in assessable(connection) if not duplicate_reason(connection, row)]
+    rows = [row for row in assessable(connection, policy_version)
+            if not duplicate_reason(connection, row)]
     have_metadata = {
         int(item["candidate_id"]): int(item["prescore"])
         for item in connection.execute("SELECT candidate_id, prescore FROM metadata")
@@ -313,6 +335,11 @@ def inspect_one(config: Config, connection: sqlite3.Connection, client: Client,
             inspection.blobs = blobs
             coverage.update(blob_coverage)
             blob_texts = {blob.path: blob.text for blob in blobs if blob.text}
+    elif facts.get("empty_repository"):
+        # Not a gap in the evidence: GitHub says there is nothing here yet. The
+        # first live batch recorded this as "the tree could not be listed".
+        coverage["tree"] = "complete"
+        inspection.notes.append("empty repository: no commits on the default branch")
     else:
         coverage["tree"] = "unavailable"
         inspection.notes.append("no default-branch commit was resolved; nothing was read")
@@ -380,6 +407,12 @@ def inspect_one(config: Config, connection: sqlite3.Connection, client: Client,
         duplicate=duplicate_reason(connection, row),
         corpus_loaded=atlas.count(connection) > 0,
     )
+    if facts.get("empty_repository") and not commit:
+        decision.outcome = "deferred"
+        decision.reasons = ["empty repository: nothing has been pushed to the default branch yet"]
+        decision.reassessment_condition = "reassess once the repository has commits"
+    if decision.outcome == "deferred":
+        decision.reassess_in_days = backoff_days(policy, int(row["inspections"] or 0) + 1)
     if scope.basis == "heuristic":
         decision.limitations.append(
             "scope and substance were judged by structural rules — path and vocabulary "
@@ -486,7 +519,7 @@ def run_stage_c(config: Config, connection: sqlite3.Connection, client: Client, 
             f"does not exist."
         )
     allowance = limit if limit is not None else config.inspection_budget
-    queue = inspection_queue(connection, config, run, allowance)
+    queue = inspection_queue(connection, config, run, allowance, policy.version)
     spent = budget_used(connection, day, "inspections")
 
     for row in queue:

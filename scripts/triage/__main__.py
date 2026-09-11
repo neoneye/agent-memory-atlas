@@ -180,7 +180,8 @@ def cmd_assess(args, config: Config) -> int:
         client = make_client(config, connection)
         if not args.inspect_only:
             assess_module.collect_metadata(config, connection, client, day, run,
-                                           limit=args.metadata_limit)
+                                           limit=args.metadata_limit,
+                                           policy_version=policy.version)
         if not args.metadata_only:
             assess_module.run_stage_c(config, connection, client, policy, day, run, manual,
                                       limit=args.limit)
@@ -345,7 +346,8 @@ def cmd_run(args, config: Config) -> int:
 
         if inventory_error is None:
             assess_module.collect_metadata(config, connection, client, day, run,
-                                           limit=args.metadata_limit)
+                                           limit=args.metadata_limit,
+                                           policy_version=policy.version)
             assess_module.run_stage_c(config, connection, client, policy, day, run, manual,
                                       limit=args.limit)
             shortlist = selection_module.finalize(connection, config)
