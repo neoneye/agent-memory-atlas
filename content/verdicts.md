@@ -325,11 +325,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mateclaw`](../systems/mateclaw/)
 - Best idea: a provider SPI that carries an owner key, with retry and metrics as decorators over every backend.
-- Biggest risk: the contract still has no deletion hook, and contradiction is detected without a resolution path.
-- Most reusable component: the SPI shape with scoped overloads and default methods, and `spi/decorator/`.
+- Biggest risk: the contract has no deletion hook, and the four contradiction-resolution verbs are validated on the way in and read by nothing that touches a fact — resolving clears the queue and leaves both facts recallable at their original trust.
+- Most reusable component: the exclusion tests — four conversations inserted through JDBC, then an assertion that search returns the completed one and not the still-running sibling or the caller's own.
 - Maturity impression: built in the enterprise-framework tradition — layered, dependency-injected, event-driven, and conventional in the ways that tradition is good at.
 - Study when: designing a memory contract third parties will implement, or wondering who owns provider resilience.
-- Do not copy when: you need the deletion half of the governance story, which is absent.
+- Do not copy when: you need the deletion half of the governance story, which is absent, or an adjudication that acts on what it adjudicates.
 
 ### [`llamaindex`](../systems/llamaindex/)
 - Best idea: one token budget split between chat history and blocks, with each block truncating itself to fit.
