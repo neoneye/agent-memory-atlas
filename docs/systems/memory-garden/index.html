@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A retrospection agent over a
+person's Obsidian notes that proposes changes in their stated views as
+candidates, lets only the person confirm or deny them, and refuses to
+re-propose a denied pair — keyed on atom ids that any edit to the note
+reissues.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memory
+Garden — Agent Memory Atlas">
+    <meta property="og:description" content="A retrospection agent over
+a person's Obsidian notes that proposes changes in their stated views as
+candidates, lets only the person confirm or deny them, and refuses to
+re-propose a denied pair — keyed on atom ids that any edit to the note
+reissues.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory
+Garden — Agent Memory Atlas">
+    <meta name="twitter:description" content="A retrospection agent over
+a person's Obsidian notes that proposes changes in their stated views as
+candidates, lets only the person confirm or deny them, and refuses to
+re-propose a denied pair — keyed on atom ids that any edit to the note
+reissues.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memory Garden — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memory Garden",
+      "description": "A retrospection agent over a person's Obsidian notes that proposes changes in their stated views as candidates, lets only the person confirm or deny them, and refuses to re-propose a denied pair \u2014 keyed on atom ids that any edit to the note reissues.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Change candidates only the user can
+confirm</p>
+          <h1>Memory Garden</h1>
+          <p class="document-deck">A retrospection agent over a person's
+Obsidian notes that proposes changes in their stated views as
+candidates, lets only the person confirm or deny them, and refuses to
+re-propose a denied pair — keyed on atom ids that any edit to the note
+reissues.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/drephantom/memory-garden">
+              <span>Source</span>
+              <strong>drephantom/memory-garden</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/drephantom/memory-garden/commit/f8171c471aaf7c321addc0557c010619fbad2bfb" title="f8171c471aaf7c321addc0557c010619fbad2bfb">
+              <span>Analyzed revision</span>
+              <code>f8171c47…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-11</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/drephantom--memory-garden" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>drephantom--memory-garden</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memory Garden is a personal <em>cognitive retrospection</em> agent
+written in Chinese: it reads a person's Obsidian vault, looks for places
+where what they wrote about a topic at one time differs from what they
+wrote later, and asks them whether that is a real change. MIT-licensed,
+five commits by one author between 31 August and 7 September 2026, 7,619
+lines of Python with 2,413 lines of tests and evaluation.</p>
+<p>The notes are the evidence, not the memory. The memory is what the
+system and the person build on top of them: stance snapshots extracted
+offline from each paragraph, <em>discovery candidates</em> that pair an
+earlier and a later snapshot as a possible change, and the person's
+<em>verdicts</em> on those candidates and on the agent's answers. The
+design's rule, stated in the schema's own comment, is that <strong>the
+only writer of confirmed cognition is the user</strong>. A candidate is
+a candidate until the person rules on it; the most recent note is
+labelled <code>latest_memory_candidate</code> rather than assumed to be
+current; and events inside a time interval are marked
+<code>within_interval</code> rather than offered as causes, with the
+harness refusing a final answer that skips the interval and
+counter-evidence steps.</p>
+<p>That rule earns two of the atlas's marks. <code>trust_state</code>: a
+discovery is <code>candidate</code>, then <code>reviewed</code> with a
+verdict, and the rejecting verdicts are filters — a pair the person
+denied is skipped on every later scan. <code>human_review</code>: the
+web workspace and the CLI are where that ruling happens, over candidates
+the scans write.</p>
+<p>The weak point is the key. A denied pair is remembered by the ids of
+its two source atoms, and an atom's id is a hash of its file's
+whole-content revision, the importer version and its position in the
+file. Edit an unrelated line in either note, or upgrade the importer,
+and every atom in that file gets a new id — and the pair the person
+denied is eligible to be proposed again. The rejection is consulted; it
+is keyed on the file revision rather than on the statement, which is why
+<code>tombstone</code> is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A paragraph of a note becomes an <em>atom</em> with a record time
+(the note's creation or frontmatter date, low confidence), an <em>event
+time</em> only when the note declares one explicitly, and an authorship
+— <code>user</code>, <code>quoted</code>, <code>ai_generated</code> or
+<code>derived</code>. An extractor turns each atom into a stance
+snapshot: a topic, a stance, a quote, how firmly it is held, and whether
+it is the writer's own view. A discovery scan pairs an early and a
+recent snapshot on the same topic, classifies the difference —
+<code>true_change</code>, <code>parallel_stance</code>,
+<code>wording_drift</code>, <code>deepening</code>,
+<code>contextual_stance</code> — and writes the pair as a candidate.
+Nothing becomes a belief about the person until the person says so.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a discovery is a candidate until the person rules on it; a denial is remembered and skipped on later scans, but by atom ids that any edit to either note reissues</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a discovery is a candidate until the person rules on it; a denial is remembered and skipped on later scans, but by atom ids that any edit to either note reissues
+stateDiagram-v2
+  [*] --&gt; candidate: scan pairs early and recent stance snapshots
+  candidate --&gt; reviewed_confirmed: person rules accurate or partly_accurate
+  candidate --&gt; reviewed_denied: person rules no_change or not_my_view
+  candidate --&gt; snoozed: person dismisses for 7 days
+  snoozed --&gt; candidate: after 7 days
+  reviewed_confirmed --&gt; [*]: served to the agent as the user&#39;s own verdict
+  reviewed_denied --&gt; skipped: later scans skip the same atom pair
+  skipped --&gt; candidate: either note edited or importer upgraded, atom ids reissued</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A local Python application. <code>importer.py</code> syncs the vault
+read-only into SQLite, hashing every file and recording each content
+revision in <code>source_revisions</code>; <code>retrieval.py</code>
+offers BM25 over an FTS5 trigram index, a character-hashing embedder, a
+real embedding provider and an RRF hybrid; <code>snapshots.py</code>
+extracts stances deterministically or with a model in batches;
+<code>cognitive.py</code> holds the discovery and verdict services;
+<code>agent.py</code> is a single-agent harness over an
+OpenAI-compatible model with a tool budget and a protocol guard;
+<code>tools.py</code> defines eight read-only domain tools that
+<code>mcp_server.py</code> also exposes over MCP; <code>web.py</code>
+serves the workspace. Nothing runs on a schedule, and the model is
+optional — an explicitly labelled offline demo runs from templates.</p>
+<p><code>agent_runs</code> records every run's trace, token counts and a
+<code>private_vault_sent</code> flag set whenever vault content went to
+a cloud model or embedding provider — a run-level privacy audit, and on
+the context side of the line rather than a record of memory
+mutations.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Discovery.</strong> <code>DiscoveryService.run_scan</code>
+(<code>src/memory_garden/cognitive.py:127-200</code>) takes candidates
+from the snapshot engine, or a heuristic fallback when no snapshots
+exist, and before inserting each one checks <code>discoveries</code> for
+the same <code>(early_atom_id, recent_atom_id)</code> with a snooze
+inside seven days or a <code>review_verdict</code> of
+<code>no_change</code> or <code>not_my_view</code>
+(<code>:142-150</code>). A match is skipped.</li>
+<li><strong>Review.</strong> <code>review</code> (<code>:243-270</code>)
+sets the discovery to <code>reviewed</code> with the verdict and
+revision, and inserts a topic-level verdict; <code>react</code> records
+<code>accurate</code>, <code>wrong</code> or <code>boring</code> in
+<code>candidate_reactions</code>, which feeds ranking and removes a
+<code>wrong</code> candidate from the pending list; <code>dismiss</code>
+snoozes.</li>
+<li><strong>Answers.</strong> <code>AgentHarness</code> requires the
+timeline, candidate pairing, interval search and both supporting and
+challenging evidence before it accepts a final answer
+(<code>agent.py:941-975</code>). If the latest verdict on the topic is
+<code>no_change</code> or <code>not_my_view</code>, the answer type is
+forced to <code>no_clear_change</code> and the person's revision is
+added as challenging evidence cited as the user's verdict
+(<code>:1254</code>, <code>:1293</code>, <code>:1348-1355</code>).</li>
+<li><strong>Atom identity.</strong> The importer marks a file's atoms
+not current and re-upserts them <code>ON CONFLICT(uid)</code>, where
+<code>uid = sha256(source_id : revision_hash : IMPORTER_VERSION : seq)</code>
+(<code>importer.py:443-470</code>, <code>:464</code>). An unchanged file
+keeps its atom ids; a changed file, anywhere, does not.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sources</code>, <code>source_revisions</code></td>
+<td>notes with stable uid across moves, <code>recorded_at</code>,
+<code>event_time</code>, authorship, and every content hash seen</td>
+</tr>
+<tr>
+<td><code>source_atoms</code>, <code>source_atoms_fts</code>,
+<code>atom_vectors</code></td>
+<td>paragraphs with line ranges and times, trigram FTS, vectors per
+provider, model and text version</td>
+</tr>
+<tr>
+<td><code>stance_snapshots</code></td>
+<td>one per atom: topic, stance, quote, tone strength, own-view flag,
+confidence, extractor</td>
+</tr>
+<tr>
+<td><code>discoveries</code></td>
+<td>candidate change pairs with change type, confidence, status, review
+verdict, shown count</td>
+</tr>
+<tr>
+<td><code>verdicts</code></td>
+<td>the person's rulings by topic, with revision, confirmed
+interpretation, missing event, accepted and rejected atom ids</td>
+</tr>
+<tr>
+<td><code>candidate_reactions</code></td>
+<td>lightweight feedback feeding ranking</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>rejected_atom_ids_json</code> on a verdict is written on every
+review, and <code>VerdictService.rejected_atom_ids</code>
+(<code>cognitive.py:102-107</code>) reads it into a set — and has no
+caller. The atoms a person rejected as evidence are recorded and never
+consulted.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval runs over atoms, with a route chosen by configuration: BM25
+on the trigram index, which handles Chinese without a word segmenter; a
+deterministic character-hash embedding for offline use; a configured
+embedding model; or a reciprocal-rank fusion of them, keeping each
+route's attribution score. Queries filter by authorship — so a quotation
+or an AI draft is not treated as the person's view — and by a date
+window. The window is over
+<code>COALESCE(event_time, recorded_at)</code>
+(<code>retrieval.py:177-180</code>): the two times are stored separately
+and every query reads them as one timeline, which is why
+<code>bitemporal</code> is withheld.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Nothing the agent does writes to the vault. Sync is a foreground
+command; snapshot extraction and discovery scans run when invoked and
+write their results immediately. A verdict is written when the person
+submits it and changes the next answer on that topic at once. No
+background pass rewrites anything.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The harness drives an OpenAI-compatible model through the eight
+read-only tools, under a step and token budget, with citation validation
+that rejects a reference the trace did not produce. The same tools are
+available over MCP for another agent to use, read-only. Model use is
+optional and declared: a template demo runs without a key, and each run
+records whether private vault content left the machine.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The denial decays with editing.</strong> The discovery-level
+rejection is keyed on the pair of atom ids, and atom ids change whenever
+their file's content hash changes. A vault is a living set of notes; the
+people this is for are the people who go back and edit. The topic-level
+denial survives edits — it is keyed on <code>topic_key</code> and forces
+<code>no_clear_change</code> on the next answer — but it shapes answers,
+not scans, so a scan after an edit can write the denied pair back into
+the candidate list. Keying the scan's check on the normalised text of
+the two quotes would keep it.</p>
+<p><strong>Rejected evidence is recorded and ignored.</strong> The atoms
+a person marks as rejected on a verdict are stored and never read, as
+above.</p>
+<p><strong>The authorship boundary is the design's best defence, and it
+holds at retrieval.</strong> Quotes and AI drafts are imported with
+their authorship and filtered out of the person's positions, and the
+agent evaluation's <code>quoted-view</code> and
+<code>ai-generated</code> cases require the agent to abstain.</p>
+<p><strong>No scope,</strong> by design: one person, one vault, one
+database.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Thirteen test files and two evaluation suites. I did not run them;
+there is no CI configuration committed, and the manifests are inside the
+seven-day cooldown.</p>
+<p>The unit tests are careful about the behaviours that define the
+product: review sinks into verdict memory and marks the discovery
+reviewed (<code>test_cognitive.py:20-31</code>); a prior denial forces
+<code>no_clear_change</code> on the next answer
+(<code>test_agent.py:54-68</code>); a reaction of <code>wrong</code>
+drops a candidate from the pending list and records the reaction
+(<code>test_snapshots.py:95-108</code>); event time is taken only from
+an explicit declaration and never from dates in the body
+(<code>test_importer.py:27-40</code>); interval events are constrained
+to their dates; a final answer is refused until the evidence plan is
+complete; a dismissal does not become a belief verdict.</p>
+<p><strong><code>negative_eval</code> is withheld, on three near-misses
+that are each one assertion from counting.</strong>
+<code>test_authorship_filter_excludes_quoted_and_ai</code> asserts
+<code>authorships &lt;= {"user"}</code>, which an empty result
+satisfies. <code>test_dismissal_does_not_become_a_belief_verdict</code>
+asserts <code>all(...)</code> over the second scan's candidates, which
+is true of none. And the discovery evaluation
+(<code>evaluation.py:396-474</code>) names an
+<code>excluded_pairs</code> entry — a wording drift that must not become
+a candidate — and computes <code>excluded_pair_leak</code>, but its test
+(<code>test_cli.py:18-30</code>) asserts only that snapshots were
+extracted and candidates returned. Asserting the leak is zero beside the
+expected-pair recall it already computes would make it the case the mark
+asks for.</p>
+<p>The agent evaluation (<code>evals/agent_cases.json</code>) is gated:
+twelve cases across true change, wording drift, quoted and AI-generated
+material, missing endpoints, adjacency without causality, a prior denial
+and event-versus-record time, and <code>test_cli.py</code> asserts a
+pass rate of 1.0. Its abstention cases would also pass against a
+retriever that returned nothing for their query, which is why they are
+not counted either.</p>
+<p>No paper and no external benchmark.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Only the person confirms a belief about the person.</strong>
+Every inference is a candidate with a status, and the confirmed state is
+written by a human action. It is the right default for memory about
+someone's own mind.</li>
+<li><strong>Authorship as a column, filtered at retrieval.</strong> A
+quotation is not an opinion and an AI draft is not a diary entry;
+recording which is which at import is cheap and prevents a whole class
+of misattribution.</li>
+<li><strong>A harness that refuses the causal shortcut.</strong>
+Requiring the interval, the supporting and the challenging evidence
+before a final answer, in code, is how the design keeps its "adjacent is
+not causal" promise.</li>
+<li><strong>Recording whether private data left the machine</strong>,
+per run.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Keying a rejection on an identifier derived from the whole
+file.</strong> Key it on the normalised text of the statements, so an
+unrelated edit does not reopen a question the person already
+answered.</li>
+<li><strong>Storing rejected evidence nobody reads.</strong> Either
+consult <code>rejected_atom_ids</code> when building the next answer, or
+stop collecting it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>A thoughtful design for one person who keeps a long-running notes
+vault and wants help noticing how their thinking has moved, without a
+model deciding what they believe. It is not a general agent memory — it
+remembers judgements about change, not facts to act on — and at five
+commits it is a well-argued prototype rather than something to depend
+on.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether snapshot extraction by a model in batches, rather than the
+deterministic extractor, changes discovery precision on a real vault;
+the committed evaluation runs on the synthetic one.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>src/memory_garden/db.py</code>. Import and atom
+identity: <code>src/memory_garden/importer.py</code>.</li>
+<li>Retrieval: <code>src/memory_garden/retrieval.py</code>. Snapshots
+and discovery engine: <code>src/memory_garden/snapshots.py</code>.</li>
+<li>Discovery, review and verdict services:
+<code>src/memory_garden/cognitive.py</code>.</li>
+<li>Harness and answer construction:
+<code>src/memory_garden/agent.py</code>. Tools and MCP:
+<code>src/memory_garden/tools.py</code>,
+<code>mcp_server.py</code>.</li>
+<li>Web workspace and CLI: <code>src/memory_garden/web.py</code>,
+<code>cli.py</code>.</li>
+<li>Evaluation: <code>src/memory_garden/evaluation.py</code>,
+<code>evals/</code>. Tests: <code>tests/</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>rg -n &quot;rejected_atom_ids\(&quot; src                                  # defined, never called
+rg -n &quot;event_time&quot; src/memory_garden/retrieval.py src/memory_garden/tools.py   # read, and filtered only through COALESCE with recorded_at
+rg -n &quot;excluded_pair_leak&quot; tests                                 # 0: the discovery exclusion is computed and never asserted
+rg -n &quot;atom_uid *=&quot; src/memory_garden/importer.py                # uid hashes source_id, file revision, importer version and position
+ls .github                                                       # absent: no CI</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/drephantom/memory-garden/commit/f8171c471aaf7c321addc0557c010619fbad2bfb"><code class="commit-id" title="f8171c471aaf7c321addc0557c010619fbad2bfb">f8171c47…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>: no
+auto-running configuration, one <code>conftest.py</code>, two manifests
+inside the seven-day cooldown and no unpinned surface. Nothing was
+installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

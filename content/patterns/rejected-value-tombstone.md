@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-five systems of four hundred and sixteen
+> **This is not an established best practice.** Thirty-five systems of four hundred and seventeen
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-five systems of 416 in the atlas have this.** That is still the most
+**Thirty-five systems of 417 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -220,8 +220,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of four hundred and sixteen
-would suggest a hard idea that a few teams reach independently. One of four hundred and sixteen, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of four hundred and seventeen
+would suggest a hard idea that a few teams reach independently. One of four hundred and seventeen, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -671,6 +671,16 @@ intact, which is the record this page asks for, keyed on memory ids rather than
 on the value. And its committed evaluation is the MemoryOps benchmark's shape —
 a superseded memory must not reach the top five, asserted over full result sets
 — which proves the read half and never re-asserts the value.
+
+**[Memory Garden](../../systems/memory-garden/) consults its rejection and keys it
+on the wrong thing.** A person who denies a proposed change in their own views
+leaves a reviewed discovery that every later scan checks before writing the same
+pair again — the consulted form this page argues for. The key is the pair of
+source-atom ids, and an atom's id hashes its note's whole-content revision, the
+importer version and its position. Editing any line of either note reissues every
+id in the file, and the denied pair is eligible again. A living notes vault is
+edited constantly, so the rejection decays exactly where it is needed. Keying the
+check on the normalised text of the two statements would make it the value.
 
 **One sighting outside the corpus, because of where it was found.**
 `os-factory/har` is a harness for running coding agents in isolated worktrees —

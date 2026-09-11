@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 416 reports.**
+**This page covers all 417 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3672,3 +3672,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, fourteen commits by one author on 11 September 2026, version 0.1 by its own description; 204 lines of long-term memory in a 4,679-line platform with 3,642 lines of tests and no CI. The one negative recall test asserts an empty result.
 - Study when: you want the smallest readable example of model-written memory with automatic recall — and of why scope has to come first.
 - Do not copy when: more than one person, or any web access, will share the store.
+
+### [`memory-garden`](../systems/memory-garden/)
+- Best idea: **only the person confirms a belief about the person.** A proposed change in their view is written as a candidate, and a person moves it to reviewed with a verdict; denied pairs are skipped on every later scan, and confirmed interpretations are what the agent is handed as the user's own position. Two marks, `trust_state` and `human_review`.
+- Biggest risk: **the denial is keyed on the file, not the statement.** An atom's id hashes its note's whole-content revision, the importer version and its position, so editing any line in either note — or upgrading the importer — reissues the ids, and a pair the person already denied is eligible to be proposed again. The rejected atoms a verdict records are read by a function nothing calls.
+- Most reusable component: the authorship column — `user`, `quoted`, `ai_generated`, `derived` — set at import and filtered at retrieval, so a quotation or an AI draft is never read back as the person's own view.
+- Maturity impression: MIT, five commits by one author between 31 August and 7 September 2026, 7,619 lines of Python with 2,413 of tests and evaluation, no CI. A gated twelve-case agent evaluation; three exclusion checks that are each one assertion from counting.
+- Study when: you are building memory about a person's own views, beliefs or history, and want the model to propose and the person to decide.
+- Do not copy when: you need a denial that survives the person editing their notes, or memory an agent acts on rather than reflects with.
