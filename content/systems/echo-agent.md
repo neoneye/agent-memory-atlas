@@ -7,10 +7,14 @@ page_kind: system
 source_name: "fuyuxiang/echo-agent"
 source_url: https://github.com/fuyuxiang/echo-agent
 archive_name: "fuyuxiang--echo-agent"
-revision: 29a19f4dd86ae2aeabab97df2b9bea3ae718460e
-revision_url: https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e
-analyzed_at: 2026-08-04
-capabilities: "scope_enforced, audit_log"
+revision: f612b74f5721a80237a709a3f625303722388a4b
+revision_url: https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b
+analyzed_at: 2026-09-11
+capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "the memory read path, under the session policy the shipped config selects | echo_agent/memory/store.py:646-664 (`_visible_in_session`), echo_agent/config/schema.py:2154-2161, agent/loop.py:280 | the config field is `Literal[\"legacy\", \"session\"]` with `default=\"session\"` and the loop passes it into the store, so the strict branch is what ships; under it a USER entry with no `source_session` is invisible rather than global — fail-closed, with `migrate run --adopt-empty` named in the code as the way to adopt historical rows | tests/test_gateway_admin_scope_csrf.py and the store suites"
+  audit_log: "the memory mutation trail | echo_agent/memory/store.py (`_append_audit`) | append-only JSONL with rotation, written on the mutation paths rather than reconstructed from state | the store suites"
+  negative_eval: "the rendered memory block and the forgetting-curve selection | echo_agent/memory/render.py:15, echo_agent/memory/eligibility.py:134-138 | `test_render_excludes_superseded_and_archival` renders three entries and asserts the output contains the active one and neither the superseded nor the archival one; the forgetting-curve suite asserts a user-stated entry is in neither `to_archive` nor `to_forget` while others are; working-memory eviction asserts the evicted content is absent and the newest present | tests/test_memory_render.py:20-27, tests/test_memory_advanced.py:210-245, :376-386"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -20,18 +24,18 @@ matrix:
   retrieval: "Vector plus lexical over local embeddings with a local reranker, filtered by a visibility function before ranking"
   write: "A memory tool with a constrained enum, a background LLM reviewer, and sleep-time consolidation that promotes from episodic"
   update_delete: "`superseded_by` set by an adjudicating contradiction pass; a forgetting curve archives then forgets; no rejected-value record"
-  scoping: "`memory_scope` applied through a visibility function on the read path, under a configurable `scope_policy` that defaults to `legacy`"
+  scoping: "`memory_scope` applied through a visibility function on the read path, under a `scope_policy` the shipped config defaults to `session`, which is fail-closed for an unowned user memory"
   integration: "Python package and CLI with a web UI, skills directory and an evolution subsystem"
   background: "Contradiction check and resolve, a decay pass, sleep-time consolidation, and a background reviewer"
   trust: "No candidate/verified/rejected state; a `source` provenance word ranks write authority instead, and the writing path assigns it"
   strengths: "A write guard that ranks provenance so a model-inferred claim cannot overwrite a user-stated one; contradiction that adjudicates and supersedes rather than flagging"
-  risks: "Supersession is record-keyed, so re-assertion is unguarded; the reviewer is an LLM, not a person; the default scope policy is `legacy`"
+  risks: "Supersession is record-keyed, so re-assertion is unguarded, and the reviewer that approves a memory is an LLM rather than a person"
 ---
 
 ## 1. Executive Summary
 
 Echo Agent is a **self-hostable long-running agent** with memory as a
-first-class subsystem: 76,594 lines of Python in the package, 360 test files,
+first-class subsystem: 94,427 lines of Python in the package, 409 test files,
 MIT, bilingual documentation with the Chinese README as the primary one. The
 memory layer alone has eighteen modules with names that read like this atlas's
 table of contents — `contradiction.py`, `forgetting.py`, `consolidator.py`,
@@ -185,11 +189,34 @@ post-filtering results, so a scoped read and an unscoped one do not silently
 differ in how many rows a limit returns.
 
 `memory_scope` and `episode_session_key` are both parameters on the retrieval
-path. The caveat belongs beside the mark: `MemoryStore` takes a `scope_policy`
-that **defaults to `"legacy"`** (`store.py:160`), so what the visibility
-function enforces depends on configuration, and the default is the backward
--compatible one. The mechanism is on the read path; whether it is strict is an
-operator's decision.
+path, and the policy that governs them is stricter than the constructor suggests.
+`MemoryStore.__init__` takes `scope_policy: str = "legacy"` — the
+backward-compatible library default — but nothing ships that way: the config field
+is `Literal["legacy", "session"]` with `default="session"`
+(`config/schema.py:2154-2161`), and `agent/loop.py:280` passes
+`config.memory.scope_policy` into the store. A reader tracing the signature finds
+`legacy`; a reader tracing the running agent finds `session`.
+
+The `session` branch is **fail-closed** where it matters. A `global`-tagged entry
+is visible to everyone, an `ENVIRONMENT` entry with no owner stays visible because
+machine facts have no subject, and a `USER` entry with no `source_session` is
+**invisible** — the comment beside it says why in as many words: unowned user
+memories must not leak globally across sessions, and historical rows have to be
+adopted deliberately with `echo-agent migrate run --adopt-empty`. Invisible but
+not lost, and the adoption is an operator action with a named command. That is a
+better answer than the two usual ones, which are to show the unowned row to
+everybody or to drop it.
+
+**A second suppression sits beside the scope filter and is keyed on provenance.**
+`is_transient_task_state` (`eligibility.py:103-132`) classifies an entry as
+turn-local task state and, for the `SNAPSHOT`, `RETRIEVAL` and `TOOL` audiences,
+returns it as not eligible; sleep consolidation refuses to distil one as well
+(`consolidator.py:202`). It fires on a transient tag, on a normalised key in a
+direct list, or on a key part plus a state-shaped value in the content — and only
+when the entry's `source` is one of the inferred ones. The comment above it draws
+the line the rest of this design draws: "An explicit user-stated memory is never
+hidden, even if its key happens to contain ``status``." A heuristic that could
+hide a user's own words is scoped so that it cannot.
 
 ## 7. Write Mechanics
 
@@ -250,12 +277,25 @@ priority 3.
 360 test files against 76,594 lines of package source, and the memory modules
 have dedicated suites. I did not run them.
 
-**No committed case asserts that particular material must not be retrieved.**
-Searching for negative-assertion vocabulary returned only generic
-`not in result`-style checks in unrelated suites — which, given how much of this
-design is about *refusing* writes and *excluding* superseded rows, is the gap
-worth naming: the guard and the pre-filter are both properties a negative
-assertion expresses naturally, and neither has one.
+**Committed cases do assert that particular material must not be retrieved**,
+and the clearest one guards the block that actually reaches the model.
+`render_memory_md` keeps an entry only `if not e.is_superseded and e.tier !=
+MemoryTier.ARCHIVAL` (`render.py:15`), and
+`test_render_excludes_superseded_and_archival` renders three entries — one
+active, one superseded, one archival — and asserts the output contains `active`
+and neither `old` nor `archived`. The result is populated, so the assertion is
+not the vacuous kind.
+
+Two more hold the forgetting curve to the same standard: a user-stated entry is
+asserted to be in neither `to_archive` nor `to_forget` while its neighbours are
+selected, and working-memory eviction at capacity two asserts the evicted content
+is absent from `contents` and the newest present. `negative_eval` is earned on
+the render path and the selection passes. `provenance_guard` is tested too, at
+the level below: `test_provenance_guard.py` asserts
+`provenance_guard("model_inferred", _e("user_stated")) is False` and that an
+unrecognised `legacy` actor is refused as well. That is a unit assertion on the
+predicate rather than an exclusion from a populated retrieval, which is why the
+mark rests on the render path and not on it.
 
 No benchmark harness and no committed retrieval numbers.
 
@@ -279,8 +319,11 @@ No benchmark harness and no committed retrieval numbers.
 
 - **Assuming the guard covers correction.** It governs authority, not truth. A
   wrong `user_stated` fact outranks everything and can be re-asserted freely.
-- **Shipping `scope_policy: "legacy"`** without deciding what your policy should
-  be. The filter runs either way; the default is the permissive one.
+- **Reading a constructor default as the shipped default.** `MemoryStore` takes
+  `scope_policy: str = "legacy"` and the config that the running agent passes
+  defaults to `"session"`. Two defaults for one setting is a documentation bug
+  waiting to become a security claim; make the permissive one impossible to
+  reach by accident, or make them the same word.
 
 ### Fit
 
@@ -336,5 +379,7 @@ supersession channel) are among them.
 - `tests/` — 360 files
 
 ## History
+
+**2026-09-11** — [`f612b74f5721a80237a709a3f625303722388a4b`](https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b) — re-read. Screened before reading: no auto-run surface, five build-time execution hooks, two floating dependency declarations. The tree was read, never installed, and nothing was run. 723 files and 77,619 insertions past the previous pin; the memory package and its tests account for 43 files and 2,912. **`negative_eval` awarded** and a stated risk withdrawn, both corrections rather than drift. `render_memory_md` keeps an entry only `if not e.is_superseded and e.tier != MemoryTier.ARCHIVAL`, and `test_render_excludes_superseded_and_archival` — present at the previous pin — renders three entries and asserts the output holds the active one and neither the superseded nor the archival one, with two more exclusion assertions on the forgetting curve and working-memory eviction. And the scope default: the report cited `MemoryStore.__init__`'s `scope_policy: str = "legacy"`, but `config/schema.py` declared `default="session"` at that pin too and `agent/loop.py` passes it, so the strict branch is what ships — and that branch is fail-closed, hiding a `USER` entry with no `source_session` rather than showing it globally, with `migrate run --adopt-empty` named in the code as the deliberate way to adopt historical rows. New since the pin: `is_transient_task_state` in `eligibility.py`, a conservative classifier that suppresses model-inferred task-status facts from the snapshot, retrieval and tool audiences and from sleep consolidation, and refuses to fire on a user-stated entry "even if its key happens to contain `status`". Counts corrected to 94,427 lines of Python and 409 test files.
 
 **2026-08-04** — [`29a19f4dd86ae2aeabab97df2b9bea3ae718460e`](https://github.com/fuyuxiang/echo-agent/commit/29a19f4dd86ae2aeabab97df2b9bea3ae718460e) — first reading.
