@@ -110,14 +110,14 @@ writes.</p>
               <strong>AgentSwarms-fyi/agentswarms</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">
+            <a class="meta-pill revision-pill" href="https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8" title="6705e292da0cb97df62d46a4d1ea00821ccfbfc8">
               <span>Analyzed revision</span>
-              <code>cfde9169…</code>
+              <code>6705e292…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AgentSwarms-fyi--agentswarms" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -649,7 +649,74 @@ block on the way out).</p>
 <code>src/utils/chatRetention.server.ts</code>.</p>
 <p><strong>Licence</strong> — <code>LICENSE</code> (Elastic License
 2.0).</p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>usage_count</code> has no writer</td>
+<td>read <code>src/utils/memory/recall.server.ts:111-131</code></td>
+<td>The update passes <code>usage_count: undefined</code>, which
+PostgREST drops from the body; the comment promises a read-then-write
+that is not there and <code>void ids;</code> discards the ids it
+gathered</td>
+</tr>
+<tr>
+<td><code>score</code> is a constant</td>
+<td><code>grep -rn "score" src/utils/memory/*.ts supabase/migrations/*.sql</code></td>
+<td><code>DEFAULT 1.0</code> at the schema, read in the ranking sum,
+written by nothing</td>
+</tr>
+<tr>
+<td><code>expires_at</code> has no writer and no sweeper</td>
+<td><code>grep -rn "expires_at" src/utils/memory supabase/migrations</code></td>
+<td>Declared on the table; nothing sets it and nothing reads it</td>
+</tr>
+<tr>
+<td><code>last_used_at</code> is a live loop</td>
+<td><code>grep -n "last_used_at" src/utils/memory/recall.server.ts</code></td>
+<td>Written on every surfaced row at <code>:120</code>, read back as a
+recency boost at <code>:98-104</code></td>
+</tr>
+<tr>
+<td>Scope reaches the query and the database</td>
+<td><code>grep -n "eq(" src/utils/memory/recall.server.ts</code>;
+<code>grep -c "ROW LEVEL SECURITY" supabase/migrations/20260421221517_*.sql</code></td>
+<td>Two <code>.eq</code> predicates; six RLS declarations</td>
+</tr>
+<tr>
+<td>The memory subsystem barely moved</td>
+<td><code>git diff --stat &lt;prev-pin&gt;..HEAD -- '*memor*'</code></td>
+<td>76 insertions across four files, most of it list reformatting</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8"><code class="commit-id" title="6705e292da0cb97df62d46a4d1ea00821ccfbfc8">6705e292…</code></a>
+— re-read, and the numbers are the finding: <strong>554 commits and
+291,954 insertions past the previous pin, of which the memory path took
+76 lines across four files</strong>, most of that a stopword list
+reformatted one entry per line. Every claim in this report holds at the
+new commit, including the three that name inert columns.
+<code>usage_count</code> is still written as <code>undefined</code> —
+dropped from the PostgREST body — under a comment promising a
+read-then-write that does not exist, with <code>void ids;</code>
+discarding the ids it had gathered for it; <code>score</code> is still
+the schema default read into the ranking sum and set by nothing;
+<code>expires_at</code> is still declared and untouched.
+<code>last_used_at</code> remains the one live member of that group,
+written on every surfaced row and read back as a recency boost. Both
+marks re-verified, with <code>capability_evidence</code> records added
+where the report had none. Screened before reading: thirteen findings,
+none an auto-run surface; nothing was installed or run.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4"><code class="commit-id" title="cfde9169ede6128f3cf149e0b3748859e1a2f4e4">cfde9169…</code></a>
 — first reading.</p>

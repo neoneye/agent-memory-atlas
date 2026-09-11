@@ -7222,7 +7222,7 @@ Privacy/deletion:
 - [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4)
 - [mthines/lorekit](https://github.com/mthines/lorekit) at [`f50830a2a9470c3736cbcde2d963768efde9bc49`](https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49)
 - [SyntheticAutonomicMind/CLIO](https://github.com/SyntheticAutonomicMind/CLIO) at [`00d4381155b8f95bfa928e510d671602e9551c8c`](https://github.com/SyntheticAutonomicMind/CLIO/commit/00d4381155b8f95bfa928e510d671602e9551c8c)
-- [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`cfde9169ede6128f3cf149e0b3748859e1a2f4e4`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4)
+- [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`6705e292da0cb97df62d46a4d1ea00821ccfbfc8`](https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8)
 - [proxysoul/Empryo](https://github.com/proxysoul/Empryo) at [`e6b5885db1232f35a52eb9faeae1023ab46d5685`](https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685) — renamed from `proxysoul/soulforge`
 - [truffle-ai/dexto](https://github.com/truffle-ai/dexto) at [`4108a9c730425f43602bce6c8720e2fe44b4b9d5`](https://github.com/truffle-ai/dexto/commit/4108a9c730425f43602bce6c8720e2fe44b4b9d5)
 - [Arvincreator/project-golem](https://github.com/Arvincreator/project-golem) at [`210658a11bee669df875cc6edc0511fac239d1ba`](https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba)

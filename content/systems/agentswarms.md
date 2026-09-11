@@ -7,10 +7,13 @@ page_kind: system
 source_name: "AgentSwarms-fyi/agentswarms"
 source_url: https://github.com/AgentSwarms-fyi/agentswarms
 archive_name: "AgentSwarms-fyi--agentswarms"
-revision: cfde9169ede6128f3cf149e0b3748859e1a2f4e4
-revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4
-analyzed_at: 2026-07-31
+revision: 6705e292da0cb97df62d46a4d1ea00821ccfbfc8
+revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8
+analyzed_at: 2026-09-11
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "long-term memory recall | src/utils/memory/recall.server.ts:84-85 | `.eq(\"user_id\", userId).eq(\"agent_id\", agentId)` on the query, with row-level security enforcing the same at the database | unknown"
+  human_review: "the memory settings surface | src/utils/memory/tools.server.ts:119 (`memory_forget`) and the per-item bin in the UI | a person inspects stored items and deletes any of them outright | unknown"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -539,6 +542,21 @@ the awaited post-turn block on the way out).
 
 **Licence** — `LICENSE` (Elastic License 2.0).
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| `usage_count` has no writer | read `src/utils/memory/recall.server.ts:111-131` | The update passes `usage_count: undefined`, which PostgREST drops from the body; the comment promises a read-then-write that is not there and `void ids;` discards the ids it gathered |
+| `score` is a constant | `grep -rn "score" src/utils/memory/*.ts supabase/migrations/*.sql` | `DEFAULT 1.0` at the schema, read in the ranking sum, written by nothing |
+| `expires_at` has no writer and no sweeper | `grep -rn "expires_at" src/utils/memory supabase/migrations` | Declared on the table; nothing sets it and nothing reads it |
+| `last_used_at` is a live loop | `grep -n "last_used_at" src/utils/memory/recall.server.ts` | Written on every surfaced row at `:120`, read back as a recency boost at `:98-104` |
+| Scope reaches the query and the database | `grep -n "eq(" src/utils/memory/recall.server.ts`; `grep -c "ROW LEVEL SECURITY" supabase/migrations/20260421221517_*.sql` | Two `.eq` predicates; six RLS declarations |
+| The memory subsystem barely moved | `git diff --stat <prev-pin>..HEAD -- '*memor*'` | 76 insertions across four files, most of it list reformatting |
+
 ## History
+
+**2026-09-11** — [`6705e292da0cb97df62d46a4d1ea00821ccfbfc8`](https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8) — re-read, and the numbers are the finding: **554 commits and 291,954 insertions past the previous pin, of which the memory path took 76 lines across four files**, most of that a stopword list reformatted one entry per line. Every claim in this report holds at the new commit, including the three that name inert columns. `usage_count` is still written as `undefined` — dropped from the PostgREST body — under a comment promising a read-then-write that does not exist, with `void ids;` discarding the ids it had gathered for it; `score` is still the schema default read into the ranking sum and set by nothing; `expires_at` is still declared and untouched. `last_used_at` remains the one live member of that group, written on every surfaced row and read back as a recency boost. Both marks re-verified, with `capability_evidence` records added where the report had none. Screened before reading: thirteen findings, none an auto-run surface; nothing was installed or run.
 
 **2026-07-31** — [`cfde9169ede6128f3cf149e0b3748859e1a2f4e4`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4) — first reading.
