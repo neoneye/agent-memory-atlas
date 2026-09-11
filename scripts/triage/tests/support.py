@@ -17,6 +17,7 @@ import db
 from config import Config, Limits
 from fetching import BUDGET, Client, FetchError, NOT_FOUND, Response, api_url, raw_url
 from db import budget_used, spend
+from util import iso, utc_now
 
 
 class Harness:
@@ -86,7 +87,9 @@ class FakeClient(Client):
         self.routes[(url, accept) if accept else url] = (payload, headers or {})
 
     def get(self, url, *, accept="application/vnd.github+json", max_bytes=None, cache=False,
-            reject_binary=False, repo_budget=None, hops=0) -> Response:
+            reject_binary=False, repo_budget=None, hops=0, refresh=False) -> Response:
+        """No cache: every call is a fresh answer. The cache path is exercised
+        against the real `Client` with a fake opener (test_fetching_cache)."""
         limit = max_bytes if max_bytes is not None else self.limits.blob_bytes
         self.calls.append(url)
 
@@ -114,7 +117,7 @@ class FakeClient(Client):
             raise FetchError("malformed", f"{url}: binary content")
         if repo_budget is not None:
             repo_budget.response_bytes += len(body)
-        return Response(200, headers, body, url)
+        return Response(200, headers, body, url, fetched_at=iso(utc_now()))
 
 
 def repo_routes(client: FakeClient, name: str, *, commit: str, files: dict[str, str],

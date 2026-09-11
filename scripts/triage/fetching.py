@@ -77,6 +77,9 @@ class Response:
     body: bytes
     url: str
     from_cache: bool = False
+    # When GitHub produced this body: now for a network response, the original
+    # fetch time for a cache hit. A measurement is as old as its oldest input.
+    fetched_at: str | None = None
 
     def json(self) -> Any:
         try:
@@ -224,7 +227,10 @@ class Client:
     def get(self, url: str, *, accept: str = "application/vnd.github+json",
             max_bytes: int | None = None, cache: bool = False,
             reject_binary: bool = False, repo_budget: RepoBudget | None = None,
-            hops: int = 0) -> Response:
+            hops: int = 0, refresh: bool = False) -> Response:
+        """`cache` reads and writes the metadata cache; `refresh` skips the read
+        but still writes, for a caller whose reason to ask is that what it has
+        is out of date."""
         limit = max_bytes if max_bytes is not None else self.limits.blob_bytes
         host = _check_host(url)
 
@@ -232,7 +238,7 @@ class Client:
         if blocked:
             raise FetchError(RATE_LIMIT, f"{host} rate-limited until {blocked}", retry_at=blocked)
 
-        if cache:
+        if cache and not refresh:
             hit = self._cache_get(url)
             if hit is not None:
                 return hit
@@ -272,7 +278,7 @@ class Client:
                 url=url,
                 reject_binary=reject_binary,
             )
-            response = Response(stream.status, headers, body, url)
+            response = Response(stream.status, headers, body, url, fetched_at=iso(utc_now()))
         except _Redirect as redirect:
             if hops >= 3:
                 raise FetchError(TRANSIENT, f"{url}: too many redirects") from None
@@ -282,6 +288,7 @@ class Client:
             return self.get(
                 target, accept=accept, max_bytes=max_bytes, cache=cache,
                 reject_binary=reject_binary, repo_budget=repo_budget, hops=hops + 1,
+                refresh=refresh,
             )
         except urllib.error.HTTPError as error:
             headers = {key.lower(): value for key, value in (error.headers or {}).items()}
@@ -338,7 +345,8 @@ class Client:
         if age_days > self.limits.cache_ttl_days:
             self.connection.execute("DELETE FROM http_cache WHERE url_hash = ?", (key,))
             return None
-        return Response(int(row["status"]), {"x-cache": "hit"}, row["body"], url, from_cache=True)
+        return Response(int(row["status"]), {"x-cache": "hit"}, row["body"], url, from_cache=True,
+                        fetched_at=row["fetched_at"])
 
     def _cache_put(self, response: Response) -> None:
         if len(response.body) > 1024 * 1024:

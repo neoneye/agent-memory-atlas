@@ -320,6 +320,9 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
             break
         owner, name = row["canonical_name"].split("/", 1)
         budget = RepoBudget()
+        # A refresh exists because what is held is out of date, so it does not
+        # read the response cache; a first collection may.
+        collector.fresh = reason == "stale"
         try:
             facts, coverage = collect(collector, owner, name, budget)
         except FetchError as error:
@@ -351,10 +354,13 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
                         f"different candidate; treated as a separate project"
                     )
                     continue
+            # Dated by the oldest response it was built from, so a cache hit can
+            # never make a measurement look newer than GitHub's answer was.
+            observed = min(collector.observed, key=parse_iso, default=None) or iso(utc_now())
             connection.execute(
                 "INSERT OR REPLACE INTO metadata(candidate_id, collected_at, facts, coverage, prescore) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (row["id"], iso(utc_now()), dumps(facts), dumps(coverage), prescore(facts)),
+                (row["id"], observed, dumps(facts), dumps(coverage), prescore(facts)),
             )
         run.metadata_collected += 1
         if reason == "stale":

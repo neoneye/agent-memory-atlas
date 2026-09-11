@@ -65,13 +65,24 @@ def _page_count(headers: dict[str, str], page_items: int, per_page: int) -> tupl
 
 
 class Collector:
+    """`fresh` is set by the caller for a refresh: every endpoint here is
+    mutable, and a refresh that read the same seven-day cache would record old
+    numbers under a new date. `observed` collects when GitHub produced each
+    response used, so the measurement can be dated by its oldest input."""
+
     def __init__(self, client: Client):
         self.client = client
-        self._owners: dict[str, tuple[dict | None, str]] = {}
+        self.fresh = False
+        self.observed: list[str] = []
+        # login -> (payload, coverage, when GitHub produced it, came from cache)
+        self._owners: dict[str, tuple[dict | None, str, str | None, bool]] = {}
 
     def _get(self, url: str, budget: RepoBudget, *, cache: bool = True):
-        return self.client.get(url, cache=cache, repo_budget=budget,
-                               max_bytes=self.client.limits.tree_bytes)
+        response = self.client.get(url, cache=cache, refresh=self.fresh, repo_budget=budget,
+                                   max_bytes=self.client.limits.tree_bytes)
+        if response.fetched_at:
+            self.observed.append(response.fetched_at)
+        return response
 
     # --- repository -------------------------------------------------------
     def repository(self, owner: str, name: str, budget: RepoBudget) -> tuple[dict, dict]:
@@ -235,15 +246,19 @@ class Collector:
 
     def owner(self, login: str, budget: RepoBudget) -> tuple[dict, dict]:
         """One lookup per owner per run, shared by every candidate they own."""
-        if login in self._owners:
-            payload, coverage = self._owners[login]
+        known = self._owners.get(login)
+        if known is not None and not (self.fresh and known[3]):
+            payload, coverage, observed, _ = known
+            if observed:
+                self.observed.append(observed)
         else:
             try:
-                payload = self._get(api_url("users", login), budget).json()
-                coverage = "complete"
+                response = self._get(api_url("users", login), budget)
+                payload, coverage = response.json(), "complete"
+                observed, cached = response.fetched_at, response.from_cache
             except FetchError as error:
-                payload, coverage = None, _coverage_for(error)
-            self._owners[login] = (payload, coverage)
+                payload, coverage, observed, cached = None, _coverage_for(error), None, False
+            self._owners[login] = (payload, coverage, observed, cached)
 
         if payload is None:
             return ({"owner_created_at": None, "owner_public_repos": None}, {"owner": coverage})
@@ -270,7 +285,9 @@ def _coverage_for(error: FetchError) -> str:
 
 
 def collect(collector: Collector, owner: str, name: str, budget: RepoBudget) -> tuple[dict, dict]:
-    """Everything above, in one pass, with per-repository failures isolated."""
+    """Everything above, in one pass, with per-repository failures isolated.
+    `collector.observed` afterwards holds when each response used was produced."""
+    collector.observed = []
     facts: dict[str, Any] = {}
     coverage: dict[str, str] = {}
     for chunk_facts, chunk_coverage in [collector.repository(owner, name, budget)]:

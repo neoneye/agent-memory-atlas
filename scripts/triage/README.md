@@ -201,8 +201,10 @@ means it is not offered for admission until released.
 **Measurements go stale.** A metadata row older than `metadata_max_age_days`
 (14) is due for a refresh under the same daily budget, and so is one whose
 feed hint reports a newer push — after a day, so a reimport cannot turn every
-hinted change into same-day work. Refreshing a measurement does not reopen an
-analysis rejection or anything running.
+hinted change into same-day work. A refresh reads GitHub, not the seven-day
+response cache, and every measurement is dated by the oldest response it was
+built from, so a cache hit never makes old numbers look new. Refreshing a
+measurement does not reopen an analysis rejection or anything running.
 
 The fetch reads the Contents API's JSON form for the file's size and git blob
 sha. Up to 1 MiB that response also carries the file as Base64, and those bytes
@@ -383,7 +385,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-180 tests, about four seconds, hermetic — a fake GitHub, temporary state
+182 tests, about four seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered
