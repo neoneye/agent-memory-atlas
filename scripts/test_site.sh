@@ -612,4 +612,14 @@ if [[ -n "$card_order" ]]; then
   exit 1
 fi
 
+# The candidate-triage CLI lives in this repository, so its suite runs with the
+# site's. It is hermetic — a fake GitHub and temporary state directories, no
+# network and nothing written outside a temp dir — and takes about two seconds.
+triage_out="$(python3 "$project_dir/scripts/triage" selftest 2>&1)" || {
+  echo "$triage_out" >&2
+  echo "The candidate-triage suite failed; see scripts/triage/README.md." >&2
+  exit 1
+}
+echo "$(printf '%s' "$triage_out" | grep -oE '^Ran [0-9]+ tests' | tail -1) passed in scripts/triage."
+
 echo "Validated $system_count reports, $pattern_count design patterns, card ordering, revision metadata, inspected-list pins, history sections, verdict anchors, analyzed-on dates, and project-relative navigation."

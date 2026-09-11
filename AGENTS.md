@@ -102,6 +102,14 @@ Read [`content/methodology/atlas-rubric.md`](content/methodology/atlas-rubric.md
 first: it defines each of the seven marks strictly, and a mark awarded on a
 loose reading is worse than no mark.
 
+**Where the next repository comes from.** `scripts/triage` reads Scout's
+candidate index, assesses it cheaply, and writes one bounded shortlist a day to
+[`scout/`](scout/) — see [`scripts/triage/README.md`](scripts/triage/README.md).
+It gates on committed tests and a readable implementation, ranks on inspection
+value rather than popularity, and never clones or runs anything it fetched. It
+is the intake stage before `add-memory-system`; it does not analyse anything
+itself, and its rubric is uncalibrated, which the README says in its own words.
+
 ### House rules that have all been learned the hard way
 
 - **Before writing "nothing does X", grep the whole tree for X** — not the
