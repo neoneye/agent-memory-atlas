@@ -13,6 +13,13 @@ One pair of files per day, written by [`scripts/triage`](../scripts/triage):
   with sorted keys, so a diff between two days shows what changed.
 - `YYYY-MM-DD.md` — the same content as a digest to read.
 
+A day run more than once under different triage code keeps each pair, suffixed
+`-iterationN`. 11 September 2026 has two: `iteration1` from the first triage
+build, `iteration2` from the v2 build that reads Scout's nested `latest`
+payloads and holds the title-only legacy batch. The day's selection was frozen
+by the first run, so the second regenerates the same shortlist; what differs is
+intake and measurement.
+
 Scout's own `data/candidates.jsonl` is JSON Lines because it is an accumulating
 index of thousands of records. A day's report is neither: it is read whole, it
 holds at most twenty selections, and one document with one shape is easier to
