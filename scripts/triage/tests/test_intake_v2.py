@@ -18,7 +18,7 @@ import atlas
 import db
 import ingest as ingest_module
 import selection as selection_module
-from fetching import api_url
+from fetching import RATE_LIMIT, FetchError, api_url
 from identity import find
 from policy import Policy
 from tests.support import FakeClient, Harness, repo_routes
@@ -419,8 +419,11 @@ class SchedulingTests(Base):
         for _ in range(10):
             run = assess_module.AssessRun()
             queue = assess_module.metadata_queue(self.conn, self.h.config, run, 5)
+            for row, _ in queue:  # processed, as collect_metadata does
+                assess_module.advance_rotation(self.conn, run, assess_module.METADATA_ROTATION, int(row["id"]))
             seen.update(row["canonical_name"] for row, _ in queue)
-        self.assertTrue(any(n.startswith("plain/") for n in seen), "no permanent starvation")
+        self.assertEqual(len([n for n in seen if n.startswith("plain/")]), 6,
+                         "the rotation walks every unhinted row, not one slice again and again")
 
         other = Harness(); self.addCleanup(other.close)
         atlas.sync(other.connection, other.atlas_repo, Path(other.config.policy_file).parent / "exclusions.txt")
@@ -485,6 +488,114 @@ class SchedulingTests(Base):
         absent = assess_module.hint_priority({"has_latest": True, "readme_bytes": 0})
         self.assertLess(absent, neutral)
         self.assertEqual(assess_module.hint_priority({"has_latest": True}), neutral)
+
+
+class DayStopTests(Base):
+    """A stop that belongs to the day — the request ceiling, a rate limit, a
+    spent allowance — is never recorded against the repository in hand."""
+
+    NAMES = [f"own{i}/repo{i}" for i in range(5)]
+
+    def _client(self, ceiling: int | None = None) -> FakeClient:
+        if ceiling is not None:
+            self.h.config.limits.requests_per_day = ceiling
+        client = FakeClient(self.h.config, self.conn, self.day)
+        for i, name in enumerate(self.NAMES):
+            repo_routes(client, name, commit=COMMIT, files={"README.md": "x", "mem/store.py": IMPLEMENTATION},
+                        repo_id=5000 + i)
+        return client
+
+    def _deferred(self) -> list[str]:
+        return [r["canonical_name"] for r in self.conn.execute(
+            "SELECT canonical_name FROM candidate WHERE triage_status = 'deferred'")]
+
+    def test_the_request_ceiling_mid_queue_defers_no_one(self):
+        self.ingest([modern(name) for name in self.NAMES])
+        probe = Harness(); self.addCleanup(probe.close)  # how many requests one collection costs
+        atlas.sync(probe.connection, probe.atlas_repo, Path(probe.config.policy_file).parent / "exclusions.txt")
+        probe.feed([modern(self.NAMES[0])]); ingest_module.run(probe.config, probe.connection, None)
+        pc = FakeClient(probe.config, probe.connection, self.day)
+        repo_routes(pc, self.NAMES[0], commit=COMMIT, files={"README.md": "x"}, repo_id=5000)
+        assess_module.collect_metadata(probe.config, probe.connection, pc, self.day, assess_module.AssessRun())
+        per_repo = len(pc.calls)
+
+        run = assess_module.AssessRun()
+        assess_module.collect_metadata(self.h.config, self.conn, self._client(2 * per_repo + 2),
+                                       self.day, run)
+        self.assertEqual(run.metadata_collected, 2)
+        self.assertEqual(run.metadata_failed, 0, "a request never made is not a failure")
+        self.assertEqual(self._deferred(), [])
+        self.assertIn("ceiling", run.budget_stopped or "")
+        self.assertEqual(db.budget_used(self.conn, self.day, "metadata_repos"), 2,
+                         "the cut-short collection spends no slot")
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM metadata").fetchone()[0], 2)
+
+    def test_a_rate_limit_mid_collection_defers_no_one(self):
+        self.ingest([modern(self.NAMES[0])])
+        client = self._client()
+        owner, name = self.NAMES[0].split("/")
+        client.route(api_url("repos", owner, name, "contributors", per_page=100, anon="0"),
+                     FetchError(RATE_LIMIT, "HTTP 403", status=403))
+        # The real client records the limit as it raises; the fake does not.
+        self.conn.execute("INSERT INTO rate_limit(host, retry_at, reason, recorded_at) VALUES (?, ?, ?, ?)",
+                          ("api.github.com", iso(plus(utc_now(), days=1)), "HTTP 403", iso(utc_now())))
+        run = assess_module.AssessRun()
+        assess_module.collect_metadata(self.h.config, self.conn, client, self.day, run)
+        self.assertEqual((run.metadata_collected, run.metadata_failed), (0, 0))
+        self.assertEqual(self._deferred(), [])
+        self.assertIn("rate-limited", run.budget_stopped or "")
+
+    def test_a_stop_mid_inspection_leaves_status_and_evidence_alone(self):
+        self.ingest([modern(self.NAMES[0])])
+        run = assess_module.AssessRun()
+        assess_module.collect_metadata(self.h.config, self.conn, self._client(), self.day, run)
+        cid = int(self.row(self.NAMES[0])["id"])
+        self.conn.execute("UPDATE candidate SET triage_status = 'eligible' WHERE id = ?", (cid,))
+        used = db.budget_used(self.conn, self.day, "github_requests")
+        client = self._client(used)  # the ceiling is already reached: the tree read is refused
+        before = self.conn.execute("SELECT COUNT(*) FROM assessment").fetchone()[0]
+        run = assess_module.AssessRun()
+        assess_module.run_stage_c(self.h.config, self.conn, client, self.policy, self.day, run, {})
+        row = self.row(self.NAMES[0])
+        self.assertEqual(row["triage_status"], "eligible", "a budget stop never overwrites a status")
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM assessment").fetchone()[0], before)
+        self.assertEqual(run.inspected, 0)
+        self.assertEqual(db.budget_used(self.conn, self.day, "inspections"), 0)
+        self.assertIn("ceiling", run.budget_stopped or "")
+
+    def test_a_spent_day_offers_nothing_and_moves_no_cursor(self):
+        import reports
+        # Small enough that a queue built to the full allowance has an
+        # exploration part, whose cursor a build-time write would move.
+        self.h.config.inspection_budget, self.h.config.exploration_share = 4, 0.5
+        self.ingest([modern(name) for name in self.NAMES])
+        assess_module.collect_metadata(self.h.config, self.conn, self._client(), self.day,
+                                       assess_module.AssessRun())
+        db.spend(self.conn, self.day, "inspections", self.h.config.inspection_budget)
+        self.conn.execute("DELETE FROM rotation")
+        run = assess_module.AssessRun()
+        assess_module.run_stage_c(self.h.config, self.conn, self._client(), self.policy, self.day, run, {})
+        self.assertEqual((run.inspected, run.exploration_slots), (0, 0))
+        self.assertIsNone(self.conn.execute("SELECT 1 FROM rotation").fetchone(),
+                          "no candidate is skipped in the rotation by a run that inspected nothing")
+        line = reports.digest({"day": self.day, "generated_at": iso(utc_now()), "generator": "test",
+                               "timezone": self.h.config.timezone, "shortlist": [],
+                               "assessment": {"inspected": 0, "exploration_slots": 0}})
+        self.assertIn("0 repositories were inspected\n", line)
+        self.assertNotIn("exploration share", line)
+
+    def test_exploration_counts_inspections_made(self):
+        self.h.config.exploration_share = 0.5
+        self.ingest([modern(name) for name in self.NAMES])
+        assess_module.collect_metadata(self.h.config, self.conn, self._client(), self.day,
+                                       assess_module.AssessRun())
+        run = assess_module.AssessRun()
+        assess_module.run_stage_c(self.h.config, self.conn, self._client(), self.policy, self.day, run, {},
+                                  limit=4)
+        self.assertEqual(run.inspected, 4)
+        self.assertEqual(run.exploration_slots, 2)
+        cursor = self.conn.execute("SELECT cursor FROM rotation WHERE name = 'exploration'").fetchone()[0]
+        self.assertIn(cursor, run.explored[assess_module.INSPECTION_ROTATION])
 
 
 class GateIndependenceTests(Base):

@@ -279,6 +279,14 @@ and decisions.
 | Run log | 16 MiB, rotated at half, one predecessor kept, redacted |
 | Whole state directory | 256 MiB soft stop |
 
+A daily ceiling stops the run; it is not recorded against the repository that
+happened to be in hand. When the request ceiling or a rate limit cuts a
+measurement or an inspection short, nothing is written for that repository, no
+slot is spent on it, its status is untouched, and it is due again next run. A
+rerun on a day whose allowance is spent offers nothing. The rotating exploration
+cursor moves past a candidate only once it has actually been measured or
+inspected, so a run that stops early skips no one.
+
 `Content-Length` is never trusted: the reader counts the bytes that actually
 arrive and, separately, the bytes that come out of the decompressor, so a
 chunked response, a misdeclared length and a compression bomb all land on the
@@ -355,9 +363,11 @@ logarithm.
 Test evidence is one of `unknown`, `absent`, `mention_only`, `files_only`,
 `substantive`, `memory_specific`. The distinction that matters is between the
 first two: a truncated tree, an unfamiliar layout, a failed request or an
-exhausted budget produces `unknown`, which **defers**. Only an adequately covered
-tree with nothing in it produces `absent`, which rejects. Collapsing those two is
-how a project gets rejected for the reviewer's timeout.
+exhausted per-repository budget produces `unknown`, which **defers**. Only an
+adequately covered tree with nothing in it produces `absent`, which rejects.
+Collapsing those two is how a project gets rejected for the reviewer's timeout.
+A stop that belongs to the day — the request ceiling, a rate limit — produces
+neither: the reading is discarded, and the run ends.
 
 The rubric is in [`policy.json`](policy.json) with a version, and every awarded
 point carries the anchor that awarded it, visible in `explain` and in the day's
@@ -385,7 +395,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-182 tests, about four seconds, hermetic — a fake GitHub, temporary state
+187 tests, about four seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered

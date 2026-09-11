@@ -302,10 +302,11 @@ def digest(report: dict[str, Any]) -> str:
         + f"; {assessment.get('backlog_without_metadata', 0)} still have none")
     # The exploration share is a counter from the run that did the inspecting. A
     # regenerated report does not have it, and reporting zero there would be a
-    # claim rather than a gap.
+    # claim rather than a gap. It counts inspections made, never places offered.
     add(f"- {assessment.get('inspected', 0)} repositories were inspected"
         + (f" ({assessment['exploration_slots']} of them from the rotating exploration share)"
-           if assessment.get("exploration_slots") is not None else ""))
+           if assessment.get("exploration_slots") is not None and assessment.get("inspected")
+           else ""))
     add(f"- {assessment.get('eligible', 0)} eligible, {assessment.get('rejected', 0)} rejected, "
         f"{assessment.get('deferred', 0)} deferred for incomplete evidence")
     add(f"- {assessment.get('backlog_assessable', 0)} assessable candidates remain in the backlog")

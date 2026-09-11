@@ -34,7 +34,7 @@ from evidence import (
     Inspection, PASSING, UNKNOWN, choose_blobs, classify_scope, classify_substance,
     classify_tests, read_blobs, read_tree,
 )
-from fetching import Client, FetchError, RepoBudget
+from fetching import BUDGET, Client, FetchError, RepoBudget
 from identity import bind_repo_id
 from metadata import Collector, collect
 from policy import Policy, decide
@@ -66,7 +66,12 @@ class AssessRun:
     metadata_refreshed: int = 0
     backlog_stale_metadata: int = 0
     held_skipped: int = 0
+    # Inspections actually made from the rotating exploration share — not the
+    # places the queue offered, which a spent budget may never reach.
     exploration_slots: int = 0
+    # Per rotation, the candidate ids a queue offered from its exploration
+    # share. The cursor moves past one only when it is actually processed.
+    explored: dict[str, set[int]] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
     classifier_state: str = "not configured"
 
@@ -297,12 +302,27 @@ def metadata_queue(connection: sqlite3.Connection, config: Config, run: "AssessR
     if remainder and explore:
         start = next((i for i, (row, _) in enumerate(remainder) if int(row["id"]) > cursor), 0)
         explored = (remainder[start:] + remainder[:start])[:explore]
-        connection.execute(
-            "INSERT INTO rotation(name, cursor) VALUES ('metadata_exploration', ?) "
-            "ON CONFLICT(name) DO UPDATE SET cursor = excluded.cursor",
-            (int(explored[-1][0]["id"]),),
-        )
+    run.explored[METADATA_ROTATION] = {int(row["id"]) for row, _ in explored}
     return ranked + explored
+
+
+METADATA_ROTATION = "metadata_exploration"
+INSPECTION_ROTATION = "exploration"
+
+
+def advance_rotation(connection: sqlite3.Connection, run: "AssessRun", name: str,
+                     candidate_id: int) -> bool:
+    """Move rotation `name` past `candidate_id` if the queue offered it from the
+    exploration share; True if it did. Called as work is done, never when a
+    queue is built, so a run that stops early leaves the rest where they were."""
+    if candidate_id not in run.explored.get(name, ()):
+        return False
+    connection.execute(
+        "INSERT INTO rotation(name, cursor) VALUES (?, ?) "
+        "ON CONFLICT(name) DO UPDATE SET cursor = excluded.cursor",
+        (name, candidate_id),
+    )
+    return True
 
 
 def collect_metadata(config: Config, connection: sqlite3.Connection, client: Client,
@@ -330,7 +350,16 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
                 run.budget_stopped = str(error)
                 break
             facts, coverage = {}, {"repository": "unavailable"}
+        # The collectors record a refused request as a gap. When the day has
+        # stopped — request ceiling or rate limit — a gap is the day's, not the
+        # repository's: nothing is recorded, deferred or charged, and the
+        # candidate stays due for the next run.
+        stop = client.stopped()
+        if stop and not _measured_completely(coverage):
+            run.budget_stopped = stop
+            break
         spent = spend(connection, day, "metadata_repos", 1)
+        advance_rotation(connection, run, METADATA_ROTATION, int(row["id"]))
 
         if not facts:
             run.metadata_failed += 1
@@ -377,6 +406,11 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
         run.budget_stopped = f"daily GitHub request ceiling of {client.limits.requests_per_day}"
     elif spent >= allowance and (run.backlog_no_metadata + run.backlog_stale_metadata) > 0:
         run.budget_stopped = run.budget_stopped or f"daily metadata budget of {allowance} repositories"
+
+
+def _measured_completely(coverage: dict[str, str]) -> bool:
+    """Every endpoint answered: whole, or a labelled sample of a longer list."""
+    return bool(coverage) and all(value in ("complete", "sampled") for value in coverage.values())
 
 
 def _defer(connection: sqlite3.Connection, candidate_id: int, *, days: int, reason: str) -> None:
@@ -432,12 +466,7 @@ def inspection_queue(connection: sqlite3.Connection, config: Config, run: Assess
         start = next((index for index, row in enumerate(remainder) if int(row["id"]) > cursor), 0)
         ordered = remainder[start:] + remainder[:start]
         explored = ordered[:explore_count]
-        connection.execute(
-            "INSERT INTO rotation(name, cursor) VALUES ('exploration', ?) "
-            "ON CONFLICT(name) DO UPDATE SET cursor = excluded.cursor",
-            (int(explored[-1]["id"]) if explored else cursor,),
-        )
-    run.exploration_slots = len(explored)
+    run.explored[INSPECTION_ROTATION] = {int(row["id"]) for row in explored}
     return picked + explored
 
 
@@ -465,12 +494,23 @@ def inspect_one(config: Config, connection: sqlite3.Connection, client: Client,
     if commit:
         inspection = read_tree(client, owner, name, commit, budget)
         coverage.update(inspection.coverage)
+        read = dict(inspection.coverage)
         if inspection.tree_paths and time.monotonic() < deadline:
             paths = choose_blobs(inspection, config.limits.blobs_per_repo)
             blobs, blob_coverage = read_blobs(client, owner, name, commit, paths, budget)
             inspection.blobs = blobs
             coverage.update(blob_coverage)
+            read.update(blob_coverage)
             blob_texts = {blob.path: blob.text for blob in blobs if blob.text}
+        # Evidence cut short because the day stopped is not evidence about the
+        # repository; an assessment written from it would defer the candidate
+        # for the day's reason. Nothing is persisted and the run stops. A blob
+        # refused by a rate limit is recorded as `sampled`, so when the day has
+        # stopped anything short of complete counts as cut short: the cost of
+        # being wrong is one repository read again tomorrow.
+        stop = client.stopped()
+        if stop and not all(value == "complete" for value in read.values()):
+            raise FetchError(BUDGET, f"{stop}, while reading {row['canonical_name']}")
     elif facts.get("empty_repository"):
         # Not a gap in the evidence: GitHub says there is nothing here yet. The
         # first live batch recorded this as "the tree could not be listed".
@@ -655,8 +695,10 @@ def run_stage_c(config: Config, connection: sqlite3.Connection, client: Client, 
             f"does not exist."
         )
     allowance = limit if limit is not None else config.inspection_budget
-    queue = inspection_queue(connection, config, run, allowance, policy.version)
     spent = budget_used(connection, day, "inspections")
+    # Sized to what is left of today's allowance, so a rerun on a spent day
+    # offers nothing rather than a queue it cannot start.
+    queue = inspection_queue(connection, config, run, max(allowance - spent, 0), policy.version)
 
     for row in queue:
         if spent >= allowance:
@@ -666,13 +708,17 @@ def run_stage_c(config: Config, connection: sqlite3.Connection, client: Client, 
             record = inspect_one(config, connection, client, policy, row, manual, run, day)
         except FetchError as error:
             if error.category in ("rate_limit", "budget_exceeded"):
+                # The day stopped, not the candidate: its status and its
+                # evidence stay as they were, and it is due again next run.
                 run.budget_stopped = str(error)
-                _defer(connection, int(row["id"]), days=1, reason=f"stopped: {error}")
                 break
             _defer(connection, int(row["id"]), days=1, reason=f"fetch failed: {error}")
             run.deferred += 1
+            advance_rotation(connection, run, INSPECTION_ROTATION, int(row["id"]))
             continue
         spent = spend(connection, day, "inspections", 1)
+        if advance_rotation(connection, run, INSPECTION_ROTATION, int(row["id"])):
+            run.exploration_slots += 1
         run.inspected += 1
         run.backlog_unassessed = max(run.backlog_unassessed - 1, 0)
         if record["outcome"] == "eligible":

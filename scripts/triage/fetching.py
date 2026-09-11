@@ -197,6 +197,22 @@ class Client:
         self.connection.execute("DELETE FROM rate_limit WHERE host = ?", (host,))
         return None
 
+    def stopped(self) -> str | None:
+        """Why no further API request can be made today, or None.
+
+        The collectors turn a refused request into a coverage label rather than
+        an exception, so a caller that finds a gap asks this to learn whether
+        the gap belongs to the repository or to the day. A day's stop is not a
+        fact about the repository it happened to be reading.
+        """
+        used = budget_used(self.connection, self.day, "github_requests")
+        if used >= self.limits.requests_per_day:
+            return f"daily GitHub request ceiling of {self.limits.requests_per_day}"
+        blocked = self._blocked_until("api.github.com")
+        if blocked:
+            return f"api.github.com rate-limited until {blocked}"
+        return None
+
     def _record_limit(self, host: str, retry_at: str, reason: str) -> None:
         self.connection.execute(
             "INSERT INTO rate_limit(host, retry_at, reason, recorded_at) VALUES (?, ?, ?, ?) "
