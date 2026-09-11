@@ -1683,7 +1683,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`omega-memory`](../systems/omega-memory/)
 
 - Best idea: a genuine point-in-time filter — one batched negative query removing every candidate whose `valid_from` is after or `valid_until` at or before the requested instant — paired with a supersede that writes the validity bound and the status in the same statement.
-- Biggest risk: `flagged_for_review` is set when the feedback score reaches −3 and nothing in the tree ever clears it, so a memory that later collects helpful ratings stays permanently invisible, because the retrieval filter tests the sticky flag rather than the score.
+- Biggest risk: `flagged_for_review` is set when the feedback score reaches −3 and nothing in the tree ever clears it, so a memory that later collects helpful ratings stays permanently invisible, because the retrieval filter tests the sticky flag rather than the score. The re-read adds why the feedback tool cannot rescue it: the context filter excludes on the flag while a rating moves the score, so an adjudication that lifts a memory back above the threshold changes a value the filter no longer consults.
 - Most reusable component: `forgetting_log` — an append-only deletion record with a reason vocabulary, indexed on reason and time, exposed to the agent as a queryable tool.
 - Maturity impression: 17,300 lines of Python, Apache-2.0, 70 test files, a dead-letter queue for failed maintenance — and two self-reported LongMemEval figures inside one commit, 95.4% in `CITATION.cff` and 76.8% in the benchmark report, with no result artifact for either.
 - Study when: you want the forgetting side of memory worked out — reasons, decay, dedup, delete propagation to a cloud copy.

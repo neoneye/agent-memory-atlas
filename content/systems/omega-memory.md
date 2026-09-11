@@ -7,10 +7,14 @@ page_kind: system
 source_name: "omega-memory/omega-memory"
 source_url: https://github.com/omega-memory/omega-memory
 archive_name: "omega-memory--omega-memory"
-revision: d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
-revision_url: https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a
-analyzed_at: 2026-08-09
+revision: 7d24f3f7b6af84597a86b86eb957ffb62e496412
+revision_url: https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412
+analyzed_at: 2026-09-11
 capabilities: "bitemporal, scope_enforced, audit_log"
+capability_evidence:
+  bitemporal: "the retrieval constraint pass | src/omega/sqlite_store/_query.py:396-410 | `_valid_at_ok` excludes a node whose `valid_from` is after or `valid_until` at-or-before a caller-supplied `valid_at`, separately from `created_at` | tests"
+  scope_enforced: "the retrieval filter | src/omega/sqlite_store/_query.py:356-357 and :1208-1211 | `metadata.get(\"project\")` compared against the request path, with null and empty admitted everywhere | tests"
+  audit_log: "deletion | src/omega/schema.py:108 (`forgetting_log`) and src/omega/bridge.py:4415 | an append-only row per forgotten memory carrying the reason | tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -228,6 +232,15 @@ queue and cannot clear it; the only exit is deleting the memory. Combined with
 the flag being sticky against a recovering score, the mechanism converts a
 transient negative streak into permanent invisibility.
 
+The exclusion is stricter than the score suggests, which is the part worth being
+exact about. `context_handlers.py:535-536` returns `(False,
+"flagged_for_review")` on the **flag**, not on the score, so a person who rates a
+flagged memory `helpful` and lifts it back above −3 has changed a number the
+context filter no longer consults. The review tool renders *"N need review"* over
+a query that admits either condition — `flagged_for_review = 1` **or**
+`feedback_score <= -3` — so the queue shows a memory whose score has recovered
+and offers no verb that would take it off the list.
+
 **Tombstone — no**, for the reason in section 7.
 
 **Negative eval — no.** 70 test files, none asserting that particular material
@@ -357,6 +370,20 @@ predicate at `:760`), `src/omega/reranker.py`, `src/omega/query_expansion.py`,
 `scripts/longmemeval_official.py`, `docs/benchmark-report.md`, `CITATION.cff`,
 `benchmarks/memorystress/`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| Nothing clears the review flag | `grep -rn "flagged_for_review" --include="*.py" src \| grep -iE "= *False\|pop\(\|del "` | Nothing; the only writes are `= True` at `_maintenance.py:900` and `:967` |
+| No unflag verb exists | `grep -rn "unflag\|clear_flag\|review_memory\|resolve_flag" --include="*.py" src` | Nothing |
+| The context filter tests the flag, not the score | read `src/omega/server/context_handlers.py:535-536` | `return False, "flagged_for_review"` |
+| Both ends of the validity interval are filtered | read `_valid_at_ok` at `src/omega/sqlite_store/_query.py:396-410` | `valid_from > ?` or `valid_until <= ?` against the caller's `valid_at` |
+| Deletion is logged with a reason | `grep -rn "forgetting_log" --include="*.py" src` | The table at `schema.py:108`, the reader at `bridge.py:4415` |
+
 ## History
+
+**2026-09-11** — [`7d24f3f7b6af84597a86b86eb957ffb62e496412`](https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412) — re-read, 71 files and 8,548 insertions past the previous pin in a single commit, much of it tests. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. **The sticky-flag finding holds and gets one degree sharper.** Nothing in `src/` sets `flagged_for_review` to false, deletes the key or otherwise resolves a flagged memory — the only writes are two `= True` assignments in `_maintenance.py`, and no `unflag`, `clear_flag` or `resolve_flag` verb exists. What the re-read adds is *why the feedback tool cannot help*: `context_handlers.py:535-536` excludes on the **flag**, while the score is what a person's `helpful` rating moves, so an adjudication that lifts a memory back above −3 changes a value the context filter no longer consults. The review tool's own query admits either condition, so its *"N need review"* list will show a memory whose score has fully recovered and offer no verb that removes it. Screened before reading: seven findings; nothing was installed or run.
 
 **2026-08-09** — [`d25e89f9fb8d9cbfca83e23cc368311e743f0e6a`](https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a) — first reading. Screened before reading: three auto-run surfaces (`.mcp.json`, `server.json`, `smithery.yaml`), build-time execution in `tests/conftest.py`, and a `pyproject.toml` changed inside the seven-day cooldown. The tree was read, never installed, and no test or benchmark was run.

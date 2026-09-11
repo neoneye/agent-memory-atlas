@@ -106,14 +106,14 @@ happened — and a review flag that is set and never cleared.</p>
               <strong>omega-memory/omega-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a" title="d25e89f9fb8d9cbfca83e23cc368311e743f0e6a">
+            <a class="meta-pill revision-pill" href="https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412" title="7d24f3f7b6af84597a86b86eb957ffb62e496412">
               <span>Analyzed revision</span>
-              <code>d25e89f9…</code>
+              <code>7d24f3f7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-11</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/omega-memory--omega-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -341,6 +341,17 @@ the queue and cannot clear it; the only exit is deleting the memory.
 Combined with the flag being sticky against a recovering score, the
 mechanism converts a transient negative streak into permanent
 invisibility.</p>
+<p>The exclusion is stricter than the score suggests, which is the part
+worth being exact about. <code>context_handlers.py:535-536</code>
+returns <code>(False, "flagged_for_review")</code> on the
+<strong>flag</strong>, not on the score, so a person who rates a flagged
+memory <code>helpful</code> and lifts it back above −3 has changed a
+number the context filter no longer consults. The review tool renders
+<em>"N need review"</em> over a query that admits either condition —
+<code>flagged_for_review = 1</code> <strong>or</strong>
+<code>feedback_score &lt;= -3</code> — so the queue shows a memory whose
+score has recovered and offers no verb that would take it off the
+list.</p>
 <p><strong>Tombstone — no</strong>, for the reason in section 7.</p>
 <p><strong>Negative eval — no.</strong> 70 test files, none asserting
 that particular material must not be retrieved.</p>
@@ -493,7 +504,69 @@ call-site map), <code>src/omega/reflect.py</code>,
 <code>scripts/longmemeval_official.py</code>,
 <code>docs/benchmark-report.md</code>, <code>CITATION.cff</code>,
 <code>benchmarks/memorystress/</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing clears the review flag</td>
+<td><code>grep -rn "flagged_for_review" --include="*.py" src | grep -iE "= *False|pop\(|del "</code></td>
+<td>Nothing; the only writes are <code>= True</code> at
+<code>_maintenance.py:900</code> and <code>:967</code></td>
+</tr>
+<tr>
+<td>No unflag verb exists</td>
+<td><code>grep -rn "unflag|clear_flag|review_memory|resolve_flag" --include="*.py" src</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>The context filter tests the flag, not the score</td>
+<td>read <code>src/omega/server/context_handlers.py:535-536</code></td>
+<td><code>return False, "flagged_for_review"</code></td>
+</tr>
+<tr>
+<td>Both ends of the validity interval are filtered</td>
+<td>read <code>_valid_at_ok</code> at
+<code>src/omega/sqlite_store/_query.py:396-410</code></td>
+<td><code>valid_from &gt; ?</code> or <code>valid_until &lt;= ?</code>
+against the caller's <code>valid_at</code></td>
+</tr>
+<tr>
+<td>Deletion is logged with a reason</td>
+<td><code>grep -rn "forgetting_log" --include="*.py" src</code></td>
+<td>The table at <code>schema.py:108</code>, the reader at
+<code>bridge.py:4415</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-11</strong> — <a
+href="https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412"><code class="commit-id" title="7d24f3f7b6af84597a86b86eb957ffb62e496412">7d24f3f7…</code></a>
+— re-read, 71 files and 8,548 insertions past the previous pin in a
+single commit, much of it tests. <strong>All three marks re-verified and
+unchanged</strong>, with <code>capability_evidence</code> records added
+where the report had none. <strong>The sticky-flag finding holds and
+gets one degree sharper.</strong> Nothing in <code>src/</code> sets
+<code>flagged_for_review</code> to false, deletes the key or otherwise
+resolves a flagged memory — the only writes are two <code>= True</code>
+assignments in <code>_maintenance.py</code>, and no <code>unflag</code>,
+<code>clear_flag</code> or <code>resolve_flag</code> verb exists. What
+the re-read adds is <em>why the feedback tool cannot help</em>:
+<code>context_handlers.py:535-536</code> excludes on the
+<strong>flag</strong>, while the score is what a person's
+<code>helpful</code> rating moves, so an adjudication that lifts a
+memory back above −3 changes a value the context filter no longer
+consults. The review tool's own query admits either condition, so its
+<em>"N need review"</em> list will show a memory whose score has fully
+recovered and offer no verb that removes it. Screened before reading:
+seven findings; nothing was installed or run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/omega-memory/omega-memory/commit/d25e89f9fb8d9cbfca83e23cc368311e743f0e6a"><code class="commit-id" title="d25e89f9fb8d9cbfca83e23cc368311e743f0e6a">d25e89f9…</code></a>
 — first reading. Screened before reading: three auto-run surfaces
