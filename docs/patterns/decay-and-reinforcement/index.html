@@ -453,6 +453,23 @@ multiplies effective age by 25% per release behind, floored at a quarter
 of the half-life — so a memory ages by how much has shipped since, not
 only by how long ago it was. Git is consulted only by the refresh; the
 read path does an indexed lookup and fails open to neutral.</p>
+<p><strong><a href="../../systems/membrane/">Membrane</a> is where the
+sweep and the marker collide.</strong> Its decay is exponential per type
+— one hour for episodic, thirty days for semantic — reversible by a
+reinforcement gain, with a pinned flag and a three-value deletion
+policy, and the shape is right. But the decay pass computes elapsed time
+from a timestamp only reinforcement advances, and applies the result to
+the <em>already decayed</em> stored salience, so after repeated sweeps
+the exponent grows with the square of the sweep count; at the shipped
+defaults an episodic record sits at 0.00098 after four hourly sweeps
+instead of 0.0625, and the half-life constant stops meaning what it
+says. No test applies the decay pass twice to the same record, which is
+why the suite reports green. The second collision is worse: retraction
+marks a record by setting salience to zero, and the prune pass deletes
+any unpinned auto-prune record at or below its floor — default zero — so
+the retraction marker is also the deletion trigger, and the audit rows
+cascade away with the record. If you drive pruning off a numeric floor,
+retraction has to set something else.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store retrieval strength separately from confidence and trust.</li>

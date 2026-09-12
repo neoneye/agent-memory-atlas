@@ -164,7 +164,7 @@ Adapting this elsewhere is cheap: the MCP server is standard, the Go library int
 
 **Prompt injection is defended in one place and not the other.** `internal/harness/memory_prompt.go` wraps recalled facts in an explicit *"## Memory (untrusted data)"* preamble, delimits them with `<memory>` tags, and sanitises each fact so it cannot close the block — breaking a forged tag rather than deleting it, case-insensitively, so a reader can see something was there. The comment is honest that *"Framing is not a fix on its own."* The problem is reach: `grep -rn "BuildMemoryBlock" --include='*.go' .` finds one production caller, `runner.go:214`. `renderMemoryBlock` in `hooks_run.go:480-505` — the path behind the README's headline integration — emits a `## Memory` heading and bullets with newlines flattened and no preamble, which is verbatim the shape `memory_prompt.go:16-21` describes as the defect it exists to fix. `context-sync` sanitises its markers but also ships no preamble.
 
-**Correction durability is the best-engineered property here.** The `UpdateFact` latch means no path may un-retire a fact, and the sibling guard above it refuses to write a key that is already gone so `forget` cannot be undone by a list-then-write race. Both were found by the project's own lifecycle simulation and both have the failure written into the comment.
+**Correction durability is the part this design gets right.** The `UpdateFact` latch means no path may un-retire a fact, and the sibling guard above it refuses to write a key that is already gone so `forget` cannot be undone by a list-then-write race. Both were found by the project's own lifecycle simulation and both have the failure written into the comment.
 
 **Withheld marks, and why.**
 

@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go memory substrate that stores
+six typed record classes in one Postgres schema with pgvector, expands
+retrieval into a bounded entity graph behind a scope-and-sensitivity
+gate, and revises knowledge through supersede, fork, merge, contest and
+retract — each writing an append-only audit entry — while an
+<code>active</code>/<code>contested</code>/<code>retracted</code> status
+is written on four paths and read on none, so retraction takes effect
+only as a salience of zero the caller must filter for.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Membrane — Agent Memory Atlas">
+    <meta property="og:description" content="A Go memory substrate that
+stores six typed record classes in one Postgres schema with pgvector,
+expands retrieval into a bounded entity graph behind a
+scope-and-sensitivity gate, and revises knowledge through supersede,
+fork, merge, contest and retract — each writing an append-only audit
+entry — while an
+<code>active</code>/<code>contested</code>/<code>retracted</code> status
+is written on four paths and read on none, so retraction takes effect
+only as a salience of zero the caller must filter for.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Membrane — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go memory substrate that
+stores six typed record classes in one Postgres schema with pgvector,
+expands retrieval into a bounded entity graph behind a
+scope-and-sensitivity gate, and revises knowledge through supersede,
+fork, merge, contest and retract — each writing an append-only audit
+entry — while an
+<code>active</code>/<code>contested</code>/<code>retracted</code> status
+is written on four paths and read on none, so retraction takes effect
+only as a salience of zero the caller must filter for.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Membrane — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Membrane",
+      "description": "A Go memory substrate that stores six typed record classes in one Postgres schema with pgvector, expands retrieval into a bounded entity graph behind a scope-and-sensitivity gate, and revises knowledge through supersede, fork, merge, contest and retract \u2014 each writing an append-only audit entry \u2014 while an `active`/`contested`/`retracted` status is written on four paths and read on none, so retraction takes effect only as a salience of zero the caller must filter for.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Typed Postgres memory with a revision
+layer</p>
+          <h1>Membrane</h1>
+          <p class="document-deck">A Go memory substrate that stores six
+typed record classes in one Postgres schema with pgvector, expands
+retrieval into a bounded entity graph behind a scope-and-sensitivity
+gate, and revises knowledge through supersede, fork, merge, contest and
+retract — each writing an append-only audit entry — while an
+<code>active</code>/<code>contested</code>/<code>retracted</code> status
+is written on four paths and read on none, so retraction takes effect
+only as a salience of zero the caller must filter for.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/BennettSchwartz/membrane">
+              <span>Source</span>
+              <strong>BennettSchwartz/membrane</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/BennettSchwartz/membrane/commit/b3f1f09189051f1280f49107c582cfa913277b9e" title="b3f1f09189051f1280f49107c582cfa913277b9e">
+              <span>Analyzed revision</span>
+              <code>b3f1f091…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BennettSchwartz--membrane" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>BennettSchwartz--membrane</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Membrane is a Go memory substrate for LLM agents: six typed record
+classes — episodic, working, semantic, competence, plan_graph, entity —
+in one Postgres schema with pgvector, reachable as an embeddable library
+or as a gRPC daemon with TypeScript, Python and OpenClaw clients. MIT
+licensed. 56,752 lines of Go outside the generated protobuf package, 678
+test functions, and a 680-line specification (<code>rfc.md</code>) that
+the code cites by section number in hundreds of doc comments.</p>
+<p><strong>The typing is real, not a label.</strong>
+<code>MemoryRecord</code> is one shape with a discriminated payload
+(<code>pkg/schema/memory.go:16-76</code>), and <code>Validate</code>
+refuses a record whose <code>Payload.PayloadKind()</code> disagrees with
+its <code>Type</code> (<code>:227-229</code>). Each class has its own
+lifecycle: episodic records are immutable by construction —
+<code>revision.ensureRevisable</code> rejects every revision operation
+on them (<code>pkg/revision/revision.go:46-54</code>) — and get a
+one-hour decay half-life, semantic records get thirty days and are the
+only class carrying a revision state
+(<code>pkg/ingestion/policy.go:34-43</code>).</p>
+<p><strong>The bounding work is the part of this design to read
+closely.</strong> Retrieval is capped twice — by row count and by an
+aggregate 16 MB projected-byte budget computed in SQL before hydration
+(<code>pkg/storage/postgres/postgres.go:723-733</code>) — and the
+service re-applies both caps in Go on the returned slice, because
+<em>"ListOptions projection fields are an optimization contract, not a
+trust boundary"</em> (<code>pkg/retrieval/retrieval.go:263-266</code>).
+Scope and sensitivity are filtered in the same way: a SQL predicate,
+then a second in-memory check. Derived records inherit the maximum
+sensitivity of every contributing source, and entity backreferences that
+a promotion made unsafe are pruned in the same transaction
+(<code>pkg/storage/derived_policy.go:73-141</code>).</p>
+<p><strong>Correction is where the design stops short of its own
+vocabulary.</strong> <code>RevisionStatus</code> is a proper three-state
+enum — <code>active</code>, <code>contested</code>,
+<code>retracted</code> — and four code paths write it. Nothing reads it.
+<code>Retract</code> and <code>Merge</code> also set
+<code>Salience = 0</code> (<code>pkg/revision/revision.go:77-85</code>),
+and that zero is the only thing retrieval can act on, through a
+<code>MinSalience</code> the caller supplies and whose default is
+<code>0</code> in both SDKs. The project's own lifecycle eval passes
+<code>MinSalience: 0.01</code> to make the retraction scenario come out
+right (<code>cmd/membrane-eval-lifecycle/main.go:326-331</code>).
+<code>Contest</code> does not touch salience at all, so a contested fact
+is returned exactly as an uncontested one.</p>
+<p><strong>Two lifecycle interactions cut the other way and delete more
+than intended.</strong> A record whose salience is zero and whose
+deletion policy is the default <code>auto_prune</code> is eligible for
+hard deletion by the decay sweep
+(<code>pkg/decay/decay.go:319-331</code>), so a retracted record — the
+one <code>Retract</code>'s doc comment says is kept <em>"without
+deleting it, preserving auditability"</em> — is removed at the next
+sweep, taking its <code>audit_log</code> rows with it through the FK
+cascade. And <code>ApplyDecay</code> measures elapsed time from
+<code>LastReinforcedAt</code>, which nothing but <code>Reinforce</code>
+advances, while multiplying the <em>already decayed</em> salience, so
+decay compounds quadratically in the number of sweeps.</p>
+<p><strong>Where to be sceptical:</strong> every claim about retrieval
+quality rests on an eval that needs a live embedding key, and no result
+file is committed to the tree. What is committed and unconditional is a
+large unit suite, a scope/sensitivity negative eval that runs in CI
+against Postgres, and a checker script with its own committed negative
+controls.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is whatever an agent hands to <code>CaptureMemory</code>.
+There is no admission gate. The request carries a
+<code>reason_to_remember</code> string, which is the only field in the
+API that names a selectivity decision, and it is stored into the
+episodic environment context (<code>pkg/ingestion/capture.go:539</code>)
+and put into the ingest LLM prompt
+(<code>pkg/ingestion/llm.go:46</code>) — no branch anywhere reads it.
+<code>Classifier.Classify</code> picks a type from the candidate kind
+and <code>PolicyEngine.Apply</code> stamps a confidence from the same
+kind (tool output 0.9, event 0.8, observation 0.7) and a half-life from
+the type. Everything offered is written.</p>
+<p>Selection happens afterwards, in two places.
+<strong>Promotion</strong> decides what becomes durable knowledge:
+<code>SemanticConsolidator</code> only reads episodic records whose
+<code>Outcome</code> is <code>success</code>
+(<code>pkg/consolidation/semantic.go:65-67</code>), and
+<code>CompetenceConsolidator</code> groups successful episodes by the
+exact ordered signature of their tool names and promotes a group only at
+<code>minPatternOccurrences = 2</code>
+(<code>pkg/consolidation/competence.go:19</code>,
+<code>:107-110</code>). <strong>Attrition</strong> decides what stops
+being retrievable: exponential salience decay per type, a 24-hour
+episodic compression that halves salience down to a 0.05 floor, and an
+auto-prune that deletes at the floor.</p>
+<p>Epistemic status is a second, parallel axis, and it is the one that
+does not close. <code>RevisionStatus</code> moves on four writes —
+<code>Contest</code> sets <code>contested</code>
+(<code>pkg/revision/contest.go:42</code>), <code>retractRecord</code>
+sets <code>retracted</code> (<code>pkg/revision/revision.go:83</code>),
+<code>Supersede</code> and <code>markSemanticActive</code> set
+<code>active</code> (<code>pkg/revision/supersede.go:73</code>,
+<code>revision.go:95</code>). A search for every read of that field at
+the tree root returns only those writes and one erasure in
+<code>normalizeNewRecordMetadata</code>
+(<code>pkg/revision/audit.go:43</code>). No filter, no ranking term, no
+projection into the protobuf response consults it. What a reader sees
+instead is salience: <code>Retract</code> and <code>Merge</code> set it
+to zero, <code>Supersede</code> retracts the old record the same way,
+and <code>Contest</code> leaves it alone.</p>
+<p>So a fact dies by falling below whatever <code>min_salience</code>
+its caller happens to pass. The Python SDK defaults that to
+<code>0.0</code> (<code>clients/python/membrane/client.py:819</code>)
+and the TypeScript SDK to <code>0</code>
+(<code>clients/typescript/src/client.ts:295</code>), both of which
+return a retracted record; the OpenClaw plugin defaults to
+<code>0.3</code> (<code>clients/openclaw/src/types.ts:47</code>), which
+does not. And the death is not stable in either direction:
+<code>reinforceSemanticFact</code> matches an incoming observation
+against existing semantic records by scope plus
+subject/predicate/object, without consulting revision status, and adds
+the reinforcement gain to a record it has not seen this source before
+(<code>pkg/consolidation/semantic_reinforcement.go:53-64</code>) — so a
+retracted fact that is observed again rises back above zero and becomes
+retrievable, still labelled <code>retracted</code>. If the decay sweep
+gets there first, the record is deleted outright and the identical fact
+is recreated as new.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — revision status is written on four paths and read on none, so the only thing retrieval can see is salience — and zero salience is simultaneously the retraction signal, a value a caller must opt into filtering, and the condition that makes an auto-prune record eligible for hard deletion with its audit history</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: revision status is written on four paths and read on none, so the only thing retrieval can see is salience — and zero salience is simultaneously the retraction signal, a value a caller must opt into filtering, and the condition that makes an auto-prune record eligible for hard deletion with its audit history
+flowchart TD
+  C[&quot;CaptureMemory: no admission gate, reason_to_remember stored not evaluated&quot;] --&gt; A[&quot;active record: salience 1.0, deletion_policy auto_prune&quot;]
+  A --&gt; K{&quot;consolidation sweep, every 6h&quot;}
+  K --&gt;|&quot;episodic Outcome == success&quot;| S[&quot;semantic fact created or reinforced&quot;]
+  K --&gt;|&quot;same tool signature twice&quot;| P[&quot;competence record created&quot;]
+  A --&gt; R[&quot;Retract or Merge: status = retracted, salience = 0, audit delete entry&quot;]
+  A --&gt; V[&quot;Supersede: old status = retracted, salience = 0, supersedes edge pair&quot;]
+  A --&gt; T[&quot;Contest: status = contested, salience untouched&quot;]
+  T --&gt;|&quot;nothing reads the status&quot;| Q[&quot;returned exactly like an active record&quot;]
+  R --&gt; M{&quot;caller&#39;s min_salience &gt; 0?&quot;}
+  V --&gt; M
+  M --&gt;|&quot;no, the SDK default&quot;| Q
+  M --&gt;|&quot;yes&quot;| X[&quot;excluded from this response only&quot;]
+  R --&gt; D{&quot;decay sweep: salience &lt;= floor and auto_prune and not pinned&quot;}
+  D --&gt;|&quot;yes&quot;| H[&quot;hard delete; audit_log rows cascade away&quot;]
+  S -.-&gt;|&quot;same subject/predicate/object observed again, status never checked&quot;| G[&quot;salience += gain, retrievable again, still labelled retracted&quot;]
+  R -.-&gt; G
+  H -.-&gt;|&quot;the identical fact is recreated as new&quot;| C</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One process and one database.</strong>
+<code>membrane.New</code> opens a <code>PostgresStore</code>, applies
+<code>pkg/storage/postgres/schema.sql</code> on startup with the
+configured embedding dimension substituted into the
+<code>vector(…)</code> column, and wires ingestion, retrieval, decay,
+revision, consolidation and metrics against it. <code>membraned</code>
+adds a gRPC server on <code>127.0.0.1:9090</code> by default. Postgres
+with pgvector is not optional in either shape — the README says so and
+<code>check-postgres-only.sh</code> enforces it, failing the build on
+any SQLite, file-backed-store or optional-vector-index reference
+anywhere in the tree including the docs.</p>
+<p><strong>Fifteen tables, all keyed on <code>memory_records(id)</code>
+with <code>ON DELETE CASCADE</code></strong>:
+<code>decay_profiles</code>, <code>payloads</code>,
+<code>interpretations</code>, <code>tags</code>,
+<code>provenance_sources</code>, <code>relations</code> (with a
+<code>UNIQUE(source_id, predicate, target_id)</code>), three entity
+indexes, <code>audit_log</code>, <code>competence_stats</code>,
+<code>trigger_embeddings</code> (per-record vectors despite the name,
+with an <code>ivfflat … vector_cosine_ops</code> index at
+<code>lists = 100</code>), <code>embedding_metadata</code>, and
+<code>episodic_extraction_log</code>. The store is ordinary SQL and
+inspectable by hand.</p>
+<p><strong>Two background tickers, started by
+<code>Membrane.Start</code> and both full-store scans.</strong> Decay
+defaults to one hour and consolidation to six
+(<code>pkg/membrane/config.go:121-122</code>); the schedulers' own
+fallback for a non-positive interval is one minute.
+<code>ApplyDecayAll</code> calls
+<code>store.List(ctx, ListOptions{})</code> with no limit and then
+issues one transaction per record
+(<code>pkg/decay/decay.go:281-301</code>); <code>Prune</code> lists
+everything again. <code>SemanticConsolidator</code> and
+<code>CompetenceConsolidator</code> each call <code>ListByType</code>
+over the whole corpus of episodic records and of their own type.
+Per-sweep cost therefore scales with the size of the store rather than
+with the day's activity, and the decay sweep issues O(records)
+transactions each time.</p>
+<p><strong>External dependencies are narrow</strong>: pgx,
+protobuf/gRPC, <code>google/uuid</code>, <code>yaml.v3</code>. Embedding
+and LLM providers are HTTP clients configured by endpoint and key, and
+everything except vector ranking and LLM extraction works without them —
+the selector falls back to <code>record.Confidence</code> as its
+applicability signal and retrieval falls back to salience ordering.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Postgres 16 with pgvector (the bundled compose file pins
+<code>pgvector/pgvector:pg16</code> and binds to <code>127.0.0.1</code>
+only), plus <code>make build</code> and the daemon binary. No API key is
+needed to store anything: structured capture, graph retrieval, revision
+and access control all run with no provider configured. An embedding
+provider adds automatic vector population and hybrid ranking; an LLM
+provider adds optional ingest interpretation and triple extraction
+during consolidation.</p>
+<p>The security defaults are unusually careful for a project this size.
+<code>rejectUnauthenticatedPublicListen</code> refuses to start without
+an API key on a non-loopback listener, and
+<code>rejectInsecurePublicCredentials</code> refuses API-key auth over
+plaintext off loopback unless TLS is configured or
+<code>allow_insecure_credentials</code> is set
+(<code>api/grpc/authz.go:206-230</code>). The compose file makes
+<code>MEMBRANE_POSTGRES_PASSWORD</code> a required variable with
+<code>:?</code>, so <code>docker compose</code> fails rather than
+defaulting a password.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Capture.</strong> <code>Membrane.CaptureMemory</code> →
+<code>ingestion.Service.CaptureMemoryWithAccess</code>
+(<code>pkg/ingestion/capture.go:150</code>). Sensitivity is resolved
+from policy before anything else so the primary record and every derived
+record agree; <code>prepareCaptureResolution</code> (<code>:194</code>)
+builds a deterministic fallback interpretation, optionally overlays an
+LLM <code>Interpret</code> call, fetches bounded candidate records, and
+optionally overlays a second <code>Resolve</code> call against those
+candidates. Both LLM steps swallow their errors
+(<code>if err == nil &amp;&amp; …</code>) and keep the deterministic
+interpretation. Then one transaction wraps <code>captureMemory</code>
+(<code>:236</code>), which creates the primary record, resolves each
+mention to a canonical entity or creates one, materializes relation and
+reference candidates as edges, and may create a semantic record with
+<code>maybeCreateSemanticRecordWithResolutionIndex</code>
+(<code>:1497</code>). Every stage is budgeted by an explicit constant —
+mention count, alias count, normalized bytes, match operations —
+declared in one <code>const</code> block at
+<code>pkg/ingestion/capture.go:18-75</code>.</p>
+<p><strong>Layered retrieval.</strong>
+<code>retrieval.Service.Retrieve</code>
+(<code>pkg/retrieval/retrieval.go:205</code>) builds one
+<code>ListOptions</code> carrying the trust context's scopes,
+<code>IncludeUnscoped</code> when scopes are restricted, a max
+sensitivity, <code>MinSalience</code>, a candidate limit and the byte
+budget, and requires the store to implement
+<code>BoundedListStore</code> — a store that cannot bound is refused
+rather than scanned (<code>:253-256</code>). Results are sanitized,
+re-filtered by trust, re-filtered by salience when
+<code>MinSalience &gt; 0</code>, re-bounded by bytes, then ranked:
+vector cosine when a ranker and query embedding exist, else
+selector-promoted, else salience.</p>
+<p><strong>Graph expansion.</strong> <code>Service.RetrieveGraph</code>
+(<code>pkg/retrieval/graph.go:47</code>) runs the layered retrieval for
+roots, adds entity roots resolved from the task descriptor through
+<code>FindGraphEntitiesByTermBounded</code>, reranks, and walks outgoing
+and incoming relations breadth-first under root/node/edge/hop limits.
+Trust is applied at each hop, and the code refuses to expand from a
+record it is only allowed to see redacted: <em>"would restore content
+removed by <code>Redact</code> and reveal private neighbors"</em>
+(<code>:133-134</code>).</p>
+<p><strong>Revision.</strong> <code>pkg/revision</code> is five files,
+each one transaction. <code>Supersede</code> retracts the old record,
+links <code>supersedes</code>/<code>superseded_by</code> both ways,
+appends a <code>revise</code> entry to the old and a <code>create</code>
+entry to the new. <code>Fork</code> leaves both active and links
+<code>derived_from</code>/<code>derived_semantic</code>.
+<code>Merge</code> retracts every source. <code>Retract</code> sets
+salience to zero and appends a <code>delete</code> entry.
+<code>Contest</code> sets the status, adds
+<code>contested_by</code>/<code>contests</code> edges when the reference
+names a stored record the caller may link to, and appends a
+<code>revise</code> entry. <code>ensureEvidence</code> refuses a
+semantic revision with neither payload evidence nor provenance sources
+(<code>pkg/revision/revision.go:58-73</code>).</p>
+<p><strong>Decay and prune.</strong>
+<code>decay.Service.ApplyDecay</code>
+(<code>pkg/decay/decay.go:26</code>) reads the record, computes
+<code>elapsed = now - LastReinforcedAt</code>, zeroes salience if
+<code>MaxAgeSeconds</code> has passed, applies <code>Exponential</code>
+to the <em>current</em> salience, writes it through
+<code>UpdateSalience</code> and appends a <code>decay</code> audit
+entry. <code>Prune</code> (<code>:305</code>) deletes every unpinned
+<code>auto_prune</code> record whose salience is at or below its floor
+and under 0.001; <code>deletePruned</code> (<code>:338</code>) appends a
+<code>delete</code> audit entry and then deletes the record in the same
+transaction, which cascades that entry away with the rest.</p>
+<p><strong>Consolidation.</strong> <code>Service.RunAll</code>
+(<code>pkg/consolidation/consolidation.go:115</code>) runs episodic
+compression, observation-to-semantic extraction, the optional LLM triple
+extractor, competence extraction and plan-graph extraction in sequence,
+aborting the whole run on the first error. The LLM extractor is the only
+stage with a work queue: <code>episodic_extraction_log</code> marks a
+record in flight with <code>triple_count = -1</code> and records the
+unique triple count on completion.</p>
+<p><strong>gRPC.</strong> <code>api/grpc/handlers.go</code> validates
+every field before touching the service — string lengths, a JSON payload
+byte/depth budget (<code>jsonPayloadBudget</code>), float slices for NaN
+and infinity, enum membership — then derives a trust context from the
+server policy rather than from the request, and re-authorizes every
+referenced record ID through a capped field-only metadata lookup
+(<code>authorizeReferencedMemories</code>, <code>:877</code>).</p>
+<p><strong>Tests.</strong> <code>pkg/*/…_test.go</code> run against
+<code>internal/teststore</code> with no database; <code>tests/</code>
+and <code>api/grpc</code> integration cases are gated on
+<code>MEMBRANE_TEST_POSTGRES_DSN</code> and run in CI with a Postgres
+service.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryRecord</code> (<code>pkg/schema/memory.go:16</code>) is
+the single shape: <code>ID</code>, <code>Type</code>,
+<code>Sensitivity</code>, <code>Confidence</code> in [0,1],
+<code>Salience</code> in [0,∞), optional <code>Scope</code> and
+<code>Tags</code>, <code>CreatedAt</code>/<code>UpdatedAt</code>, a
+<code>Lifecycle</code>, a <code>Provenance</code>, typed
+<code>Relations</code>, a discriminated <code>Payload</code>, an
+optional <code>Interpretation</code>, and an <code>AuditLog</code>. The
+Postgres schema enforces the enums as <code>CHECK</code> constraints, so
+an invalid type or sensitivity cannot be written even by a caller
+bypassing <code>Validate</code>.</p>
+<p><strong>Payloads.</strong> Semantic is subject/predicate/object with
+<code>Evidence []ProvenanceRef</code>, a <code>Validity</code>, a
+<code>RevisionState</code> and a <code>RevisionPolicy</code> string.
+Competence is skill name, triggers, an ordered recipe with per-step tool
+and validation, failure modes, fallbacks and
+<code>PerformanceStats</code>. Plan graph carries nodes,
+<code>data</code>/<code>control</code> edges and metrics. Entity carries
+a canonical name, typed aliases and namespaced identifiers, indexed into
+<code>entity_terms</code> and <code>entity_identifiers</code> with a
+scope column.</p>
+<p><strong>Scoping</strong> is a single free-form string per record. It
+is not a tenancy boundary in the sense of separate databases — one
+Postgres instance holds every scope — but it is a real predicate on the
+read path, clamped server-side against
+<code>read_scopes</code>/<code>write_scopes</code>. Two asymmetries
+matter. On reads, a record with an empty scope is visible to every trust
+context (<code>pkg/retrieval/trust.go:110</code>); on writes,
+<code>allowsWriteRecord</code> refuses an empty scope outright, with the
+comment saying so: <em>"every network mutation must name an explicitly
+permitted non-empty scope"</em>
+(<code>api/grpc/authz.go:118-131</code>). So the in-process library and
+the daemon's own consolidation can create unscoped records that every
+caller can then read.</p>
+<p><strong>Sensitivity</strong> is a five-level ordinal that gates reads
+with a one-level-above redacted view — metadata retained, payload,
+provenance, relations and audit log cleared
+(<code>pkg/retrieval/filter.go:51-88</code>). Derived records raise
+their sensitivity to the maximum of their sources, never lower it, and
+the raise is computed against a locked in-transaction reading of the
+source's classification rather than the snapshot the background pass
+carried (<code>pkg/storage/derived_policy.go:73-95</code>).</p>
+<p><strong>Temporal fields</strong> are record time only:
+<code>created_at</code> and <code>updated_at</code> on the row,
+<code>last_reinforced_at</code> on the decay profile, and a timestamp
+per provenance source and per audit entry. Valid time exists in the
+schema — <code>Validity{Mode, Conditions, Start, End}</code> with a
+<code>timeboxed</code> mode — and is writable over gRPC through
+<code>validityFromPB</code>
+(<code>api/grpc/handlers.go:1845-1861</code>), but every producer inside
+the tree writes <code>ValidityModeGlobal</code> with no window
+(<code>pkg/ingestion/ingestion.go:347</code>,
+<code>pkg/ingestion/capture.go:1528</code>,
+<code>pkg/consolidation/semantic.go:102</code>,
+<code>pkg/consolidation/semantic_extractor.go:322</code>), and a search
+for readers of <code>Validity.Start</code> or <code>Validity.End</code>
+at the tree root finds only the protobuf conversion that echoes them
+back out. Nothing filters or ranks on validity time.</p>
+<p><strong>Correction chains</strong> are graph edges plus payload
+pointers: <code>supersedes</code>/<code>superseded_by</code> as a
+<code>Relation</code> pair and as <code>RevisionState</code> string
+fields, <code>derived_from</code>/<code>derived_semantic</code> for
+forks and merges, <code>contests</code>/<code>contested_by</code> for
+contests. They are durable and queryable. What is missing is any record
+keyed on a <em>rejected value</em> — searches for
+<code>tombstone</code>, <code>denylist</code>, <code>blocklist</code>,
+<code>blacklist</code> and <code>never_reassert</code> across the tree
+return nothing — so nothing prevents a retracted
+subject/predicate/object from being written again.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Three arms.</strong> A SQL candidate list ordered
+<code>salience DESC, created_at DESC, id</code> under the scope,
+sensitivity, type, tag and salience predicates; a pgvector cosine
+ranking over <code>trigger_embeddings</code> when an embedding provider
+is configured, with <code>SearchByEmbeddingCandidates</code> available
+so a filtered candidate set does not have to share the global vector
+window; and a lexical entity-term lookup that matches a normalized query
+term by equality or either-direction substring, ranked
+exact-before-contains-before-contained
+(<code>pkg/storage/postgres/postgres.go:1817-1837</code>). Graph
+expansion then walks typed relations from the ranked roots.</p>
+<p><strong>Ranking</strong> is a three-way priority in
+<code>Retrieve</code> (<code>pkg/retrieval/retrieval.go:302-312</code>):
+vector similarity for all records when a ranker and query embedding
+exist, with selector-chosen competence and plan_graph records promoted
+to the front; otherwise selector ranking; otherwise pure salience. The
+<code>Selector</code> scores competence and plan_graph candidates on
+three equally weighted signals — applicability (cosine similarity if
+embeddings exist, else the record's <code>Confidence</code> field as a
+stand-in), observed success rate from <code>PerformanceStats</code>, and
+a 30-day-half-life recency of reinforcement — and reports a
+<code>Confidence</code> that is the normalized gap between the best and
+second-best candidate, with <code>NeedsMore</code> set below a
+configurable threshold (<code>pkg/retrieval/selector.go:68-132</code>).
+Reporting "these two are too close to choose between" as a first-class
+field is a good idea; it is up to the caller to do anything with it.</p>
+<p><strong>Token budgeting is byte budgeting, and it is unusually
+thorough.</strong> <code>MaxBoundedHydrationBytes</code> is 16 MB; the
+SQL computes each candidate's projected payload and interpretation size
+with <code>octet_length</code> in a materialized CTE and stops
+accumulating IDs once the budget is exhausted, before any record is
+hydrated. The service recomputes projected bytes in Go over the returned
+slice, and a single record that cannot fit even without relations and
+history produces a typed <code>ProjectedRecordTooLargeError</code>.
+Truncation is reported to the caller as a
+<code>response_byte_limit_applied</code> diagnostic rather than
+silently.</p>
+<p><strong>Retrieval is application-driven.</strong> There is no
+automatic injection in the core; the OpenClaw plugin adds one by calling
+<code>retrieveGraph</code> on <code>before_agent_start</code> and
+formatting roots and neighbours into a context string.</p>
+<p><strong>Failure modes.</strong> The one worth naming is the
+retracted-record leak: <code>MinSalience</code> is the only mechanism
+that removes retracted and superseded material, its default is zero in
+both SDKs, and a caller who forgets it gets the wrong fact back with no
+signal — the returned record's <code>revision.status</code> says
+<code>retracted</code>, but only if the caller thinks to look, and
+bounded retrieval returns the payload either way. Beyond that: unscoped
+records join every result set; a scope-restricted query still admits
+them by design (<code>IncludeUnscoped</code> is set precisely when
+scopes are restricted); and the entity-term lookup's substring matching
+in both directions will pull in an entity whose canonical name merely
+contains a query token.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are synchronous and transactional.</strong>
+<code>CaptureMemory</code> does its interpretation work first, then
+opens one transaction for the primary record, the entity records and
+every edge, so a partially resolved capture is never visible. Revision
+operations are one transaction each, with the explicit contract stated
+in every file header: <em>"partial revisions are never externally
+visible (RFC 15.7)"</em>.</p>
+<p><strong>The agent blocks on what it configures.</strong> With no
+provider, capture is a handful of Postgres round-trips. With
+<code>ingest_llm_enabled</code>, it is up to two LLM calls —
+<code>Interpret</code> and, when the interpreter also implements
+<code>CandidateResolver</code>, <code>Resolve</code> against fetched
+candidates — both on the caller's goroutine before the transaction
+opens. Both failures degrade to the deterministic fallback
+interpretation rather than failing the capture, which is the right
+choice.</p>
+<p><strong>Retrievability lag is zero for the record itself</strong> —
+it is committed and visible to the next query — and is bounded by the
+consolidation interval for anything derived from it: up to six hours by
+default before a successful episode becomes a semantic fact or a
+repeated tool signature becomes a competence record. Embeddings are
+written best-effort after the transaction (<code>s.embedRecord</code>
+ignores its error), so a new record can be retrievable by salience and
+scope for a moment before it is rankable by vector.</p>
+<p><strong>Two background passes re-read the whole store.</strong> Decay
+lists every record and issues one transaction per record every hour;
+consolidation lists every episodic record, every semantic record and
+every competence record every six hours. Neither is incremental except
+the LLM triple extractor, which has an explicit queue table. Token cost
+is bounded — only the extractor calls a model — but database cost scales
+with corpus size rather than with the day's activity.</p>
+<p><strong>Deduplication</strong> is exact-match, not semantic:
+<code>findExistingSemanticFact</code> looks up subject/predicate/object
+within a scope, and consolidation keys its index the same way. Repeat
+evidence for a known fact appends a provenance source and adds the
+reinforcement gain once per distinct source; a source already recorded
+is a no-op, which is what stops the six-hourly sweep from driving every
+fact to salience 1.0
+(<code>pkg/consolidation/semantic_reinforcement.go:50-52</code>).</p>
+<p><strong>Noisy or hostile input is not filtered.</strong> There is no
+content policy, no injection screen, no rate limit on what a captured
+tool result may assert; the defences are structural — a per-request JSON
+byte and depth budget at the gRPC boundary, scope and sensitivity clamps
+on writes, and the fact that an agent cannot raise its own trust
+context.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>Per turn, the OpenClaw plugin captures on
+<code>after_agent_reply</code> and <code>after_tool_call</code> and
+awaits each capture, so a memory write sits on the agent's critical
+path. Injected context is bounded by <code>context_limit</code> roots
+(default 5) plus graph neighbours within a one-hop budget, formatted as
+a text block — prepended, so it does sit where a provider's
+prompt-prefix cache would be invalidated on every turn whose memory
+changed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Four surfaces.</strong> The Go library exposes the full
+<code>Membrane</code> API including the complete-record
+<code>RetrieveByID</code>. The gRPC service exposes eleven RPCs —
+<code>CaptureMemory</code>, <code>RetrieveGraph</code>,
+<code>RetrieveByID</code>, <code>Supersede</code>, <code>Fork</code>,
+<code>Retract</code>, <code>Merge</code>, <code>Reinforce</code>,
+<code>Penalize</code>, <code>GetMetrics</code>, <code>Contest</code> —
+with TypeScript and Python SDKs that validate arguments client-side
+before transport. The OpenClaw plugin registers three hooks and one
+model-facing tool, <code>membrane_search</code>. The agent harness
+(<code>examples/agent-harness</code>) defines five OpenAI function
+tools: <code>membrane_retrieve_graph</code>,
+<code>membrane_capture_fact</code>,
+<code>membrane_capture_working_state</code>,
+<code>membrane_capture_episode</code>,
+<code>membrane_retrieve_by_id</code>.</p>
+<p><strong>The model gets to write and read, not to correct.</strong> No
+shipped integration exposes <code>Supersede</code>,
+<code>Retract</code>, <code>Contest</code>, <code>Merge</code> or
+<code>Fork</code> as a tool — a search for
+<code>membrane_supersede</code>, <code>membrane_retract</code> and
+<code>membrane_contest</code> across the clients and examples returns
+nothing. Revision is an operator or application action reached through
+the SDK. That is a defensible trust boundary and it should be stated as
+one, because it means the "agents can revise" framing describes the API
+rather than any shipped agent loop.</p>
+<p><strong>Trust is server-derived, which is the right call.</strong> A
+gRPC caller supplies a <code>TrustContext</code>, and
+<code>accessPolicy.readTrust</code> intersects it with the server's
+configured policy: the sensitivity is
+<code>min(requested, policy)</code> and any requested scope outside
+<code>read_scopes</code> is a <code>PermissionDenied</code> rather than
+a silent narrowing (<code>api/grpc/authz.go:93-108</code>,
+<code>:141-166</code>). An agent cannot widen its own access by
+asking.</p>
+<p><strong>Session lifecycle</strong> is the working-memory type:
+<code>thread_id</code>, <code>task_state</code> from a five-value enum,
+a context summary, next actions and open questions, with a one-day
+half-life. There is no compaction-boundary hook; an agent resumes by
+retrieving its working record.</p>
+<p><strong>Porting cost</strong> is low for anything that speaks gRPC —
+the <code>.proto</code> is the contract and the two SDKs are thin — and
+the OpenClaw plugin is a readable 380-line template for a new
+harness.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is required, not optional.</strong>
+<code>Provenance.Sources</code> is populated on every write path,
+<code>ProvenanceSource</code> carries kind, an opaque ref, an optional
+content hash, a creator and a timestamp, and <code>ensureEvidence</code>
+refuses a semantic revision that has neither payload evidence nor
+provenance sources. <code>normalizeNewRecordMetadata</code> makes the
+operation's identity, lineage, timestamps and lifecycle authoritative
+while preserving the caller's attributed evidence — a caller cannot
+forge who performed a revision or when, only what it claims as
+evidence.</p>
+<p><strong>The uncertainty representation is present and
+unused.</strong> Confidence is a float, used by the selector as an
+applicability proxy. Status is a discrete state, used by nothing. The
+distinction the capability rubric draws — a score answers "how sure", a
+state answers "may this be acted on" — is exactly the one this codebase
+declares and does not complete: <code>trust_state</code> is withheld for
+that reason, not for the absence of the idea.</p>
+<p><strong>The retraction-then-prune interaction is the sharpest
+reliability problem.</strong> <code>Retract</code>'s contract is that
+the record survives for auditability. But it sets salience to zero
+without touching <code>DeletionPolicy</code> or <code>Pinned</code>, the
+ingestion default policy is <code>auto_prune</code>
+(<code>pkg/ingestion/policy.go:41</code>), the default decay profile's
+<code>MinSalience</code> floor is zero, and <code>Prune</code> deletes
+any unpinned <code>auto_prune</code> record at or below its floor and
+under 0.001. Zero satisfies both. <code>deletePruned</code> then writes
+an <code>auto-pruned: salience reached floor</code> audit entry and
+deletes the record inside the same transaction, so the FK cascade
+removes the entry it just wrote along with the record's entire history.
+The same applies to every record <code>Supersede</code> and
+<code>Merge</code> retract: the superseded original is deleted, and the
+<code>supersedes</code> relation on the survivor cascades with it.</p>
+<p><strong>The decay sweep compounds.</strong> <code>ApplyDecay</code>
+computes <code>elapsed</code> from <code>LastReinforcedAt</code>, which
+only <code>Reinforce</code> and <code>ReinforceFromSource</code> ever
+advance, and applies <code>salience * 2^(-elapsed/halfLife)</code> to
+the <em>current</em> stored salience. After <em>n</em> sweeps at
+interval Δ the stored value is <code>S₀ · 2^(−Δ·n(n+1)/(2H))</code>
+rather than <code>S₀ · 2^(−nΔ/H)</code>. At the shipped defaults — a
+one-hour interval and a one-hour episodic half-life — an episodic
+record's salience after four sweeps is 0.00098 instead of the intended
+0.0625, and after six it is 4.8e-07 instead of 0.0156. Semantic records
+decay 1,000 times more slowly and reach the same place later, but the
+shape is the same. No test applies <code>ApplyDecay</code> twice to the
+same record, which is why the suite does not see it.</p>
+<p><strong>Concurrency is handled carefully where it was thought
+about.</strong> <code>GetDerivedDestination</code> reloads a record
+after locking its authorization metadata in the transaction, <em>"so a
+background snapshot never overwrites newer payload, evidence or
+labels"</em>, and <code>reinforceSemanticFact</code> re-derives the fact
+key inside the transaction and aborts with
+<code>semantic destination fact changed</code> if the destination moved.
+<code>ContestWithAccess</code> deliberately gives a denied contesting
+reference the same external behaviour as a missing one, <em>"preventing
+an authorization oracle while protecting the hidden record's
+graph"</em>.</p>
+<p><strong>Injected false memories</strong> are bounded by scope and
+sensitivity, not by content: a compromised tool result becomes an
+episodic record like any other, and if its outcome is
+<code>success</code> it becomes a semantic fact at the next
+consolidation with provenance pointing back at the tool. The provenance
+is the remedy — you can see where a fact came from — and there is no
+gate that would have stopped it.</p>
+<p><strong>Backup, sync and replication</strong> are Postgres's problem;
+the project ships nothing of its own and does not pretend to.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>678 test functions</strong>, split between unconditional unit
+tests against <code>internal/teststore</code> and a <code>tests/</code>
+directory plus <code>api/grpc</code> integration cases gated on
+<code>MEMBRANE_TEST_POSTGRES_DSN</code>
+(<code>tests/integration_test.go:21-24</code>). A skip is not a pass, so
+the gate matters — and CI supplies the DSN and a Postgres service,
+running the gated packages explicitly
+(<code>.github/workflows/ci.yml:186-191</code>). Coverage is unusually
+broad on the security-adjacent surfaces:
+<code>value_payload_security_test.go</code>,
+<code>bounded_id_auth_test.go</code>,
+<code>referenced_auth_test.go</code>,
+<code>graph_redaction_security_test.go</code>,
+<code>graph_diagnostics_security_test.go</code>.</p>
+<p><strong><code>TestEvalTrustGating</code> is a real negative
+eval.</strong> Three semantic records under two scopes and two
+sensitivities, one retrieval, and three assertions on the same populated
+result: the in-scope low record must be present, the high-sensitivity
+record must be absent, the other-scope record must be absent
+(<code>tests/eval_trust_test.go:63-71</code>). The positive control is
+what makes the two exclusions non-vacuous, and both fail if their
+predicate is removed.</p>
+<p><strong>Two of the project's own checks carry negative controls,
+which is the thing that makes a checker's green result mean
+something.</strong> <code>scripts/check-postgres-only_test.sh</code>
+copies the checker into a <code>mktemp</code> directory, writes nine
+distinct violating fixtures — a <code>storage/sqlite</code> import, two
+SQLite drivers, a <code>.sqlite</code> file reference, an
+<code>optional vector index</code> doc line, a stale RFC fragment — and
+fails if the checker exits zero on any of them, then re-runs each with
+<code>PATH=/usr/bin:/bin</code> to exercise the
+<code>find</code>/<code>grep</code> fallback when <code>rg</code> is
+absent. <code>check-go-proto-sync.sh</code> has a matching self-test.
+And <code>tests/compose_security_test.go:29-31</code> explicitly shadows
+<code>MEMBRANE_POSTGRES_PASSWORD</code> rather than merely unsetting it,
+with a comment naming the failure it is avoiding: <em>"Merely removing
+the process variable lets Compose load a local .env value and turns this
+negative test into a machine-dependent false pass."</em> That is the
+right instinct, written down.</p>
+<p><strong>The retrieval eval is real code with no committed
+result.</strong> <code>tests/data/recall_dataset.jsonl</code> holds 59
+records across five types and 25 queries, each with an
+<code>expected</code> ID list, a <code>k</code>, a trust context and
+memory types; <code>cmd/membrane-eval</code> runs them and reports
+recall@k, precision@k, MRR and NDCG against a pure-vector baseline.
+Every query is a positive expectation — the dataset's key union is
+<code>expected, k, key, memory_types, text, trust, type</code>, with no
+forbidden or must-not-return field — so the dataset measures ranking
+quality, not exclusion.</p>
+<p><strong>The lifecycle eval's retraction scenario passes a threshold
+the SDKs do not.</strong> <code>cmd/membrane-eval-lifecycle</code> runs
+four Membrane-versus-RAG scenarios and prints win/tie/loss counts.
+Scenario 1 retracts a wrong fact and retrieves with
+<code>MinSalience: 0.01</code>, with the comment <em>"Membrane: respects
+retraction (salience=0, filtered with MinSalience)"</em>
+(<code>main.go:326-331</code>). That is an accurate description of the
+mechanism and also the reason the result does not generalize to a caller
+using the SDK default of zero. The eval needs both Postgres and a live
+embedding key, and <code>.github/workflows/eval.yml</code> skips the
+whole job when the secret is absent.</p>
+<p><strong>No eval result reaches the repository.</strong> The workflow
+tees its output to <code>eval-retrieval.txt</code> and
+<code>eval-lifecycle.txt</code>, uploads them as artifacts, and then
+runs an <code>awk</code> script that would splice a results table into
+the README — anchored on a line matching
+<code>^### Latest Results</code>
+(<code>.github/workflows/eval.yml:198</code>). A search for that string
+across the tree at this commit finds it only inside the workflow itself.
+With no anchor, <code>awk</code> reproduces the README unchanged and the
+commit step's <code>git diff --cached --quiet</code> finds nothing to
+push, so the published numbers land nowhere. Neither result file is
+committed, and no benchmark was rerun for this report.</p>
+<p><strong>No paper.</strong> Searches for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>citation</code>, <code>doi.org</code> and a <code>CITATION*</code>
+file across the tree return nothing. The design document is
+<code>rfc.md</code>, 680 lines, self-authored, and it is genuinely
+load-bearing: the Go source cites it by section in hundreds of comments,
+which makes the spec checkable against the code. It is not external
+validation, and the code does diverge from it — the RFC's memory model
+is implemented closely, but "all memory access must be auditable" is
+satisfied by a table that the prune path deletes.</p>
+<p><strong>What is missing before trusting this.</strong> A test that
+applies decay twice. A test that retrieves after <code>Retract</code>
+with the default <code>min_salience</code>. A test that runs a
+consolidation sweep after a retraction and asserts the fact stays
+retracted. A test that asserts audit history survives whatever lifecycle
+a record actually goes through.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make the projection budget a storage contract, and re-enforce
+it above the store.</strong> Membrane's <code>ListOptions</code> carries
+<code>Limit</code>, <code>MaxHydratedBytes</code>,
+<code>OmitRelations</code> and <code>OmitHistory</code>; the Postgres
+implementation computes projected sizes with <code>octet_length</code>
+in SQL and stops before hydrating, and the service treats all of it as
+advisory — <em>"an optimization contract, not a trust boundary"</em> —
+and re-caps the returned slice in Go. A retrieval layer that cannot be
+made to allocate unboundedly by a custom store or a large payload is
+worth the duplication.</p>
+<p><strong>Monotone sensitivity for derived records, computed under
+lock.</strong> When a background pass derives a fact from several
+sources, raise the derived record's classification to the maximum of the
+sources', re-read each source's authoritative label inside the
+transaction rather than trusting the snapshot the pass carried, and
+prune backreferences the promotion made unsafe.
+<code>pkg/storage/derived_policy.go</code> is 158 lines and worth
+reading whole.</p>
+<p><strong>Give your own checker scripts negative controls.</strong> A
+checker that has silently stopped working looks exactly like a clean
+tree. <code>check-postgres-only_test.sh</code> feeds its checker nine
+violations it must reject, in a scratch directory, including through the
+no-<code>ripgrep</code> fallback path. Ten minutes of work, and it
+converts "the check passed" from a hope into evidence.</p>
+<p><strong>Report selection ambiguity as a field.</strong> The selector
+returns the normalized gap between the best and second-best candidate as
+<code>Confidence</code> and sets <code>NeedsMore</code> when it is
+small. "I have two equally good procedures for this" is information the
+agent can act on and a bare ranked list throws away.</p>
+<p><strong>Cite the spec from the code.</strong>
+<code>// RFC 15A.3: Required field with minimum value of 1</code> beside
+the field it describes makes a written design checkable by grep in both
+directions.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not encode a memory's epistemic status in a field and then
+enforce it with a number.</strong> If a record can be
+<code>retracted</code>, some read path must filter on
+<code>retracted</code> — not on a salience of zero that happens to be
+set at the same time, and certainly not on a threshold the caller must
+remember to pass, whose SDK default admits the retracted record. The
+state and the enforcement have to be the same mechanism, or the state is
+documentation.</p>
+<p><strong>Do not overload one value with a status meaning and a
+lifecycle meaning.</strong> Salience zero here means both "this was
+retracted" and "this is garbage, delete it". Those want opposite
+treatment, and the second wins: the retraction marker is what makes the
+record eligible for hard deletion, and the audit history goes with it.
+If you use a numeric floor to drive pruning, make retraction set
+something else, or set <code>Pinned</code> when you retract.</p>
+<p><strong>Do not write an audit row inside the transaction that deletes
+its own foreign key.</strong> <code>deletePruned</code> appends
+<code>auto-pruned: salience reached floor</code> and then deletes the
+record; <code>ON DELETE CASCADE</code> removes the entry before anyone
+could read it. An audit of deletions belongs in a table that does not
+reference the deleted row.</p>
+<p><strong>Do not compute decay from the last <em>reinforcement</em>
+while applying it to the last <em>computed</em> value.</strong> Either
+recompute from an immutable baseline, or advance the timestamp you
+measure from. Membrane does neither, and the quadratic compounding is
+invisible to a suite that only ever decays each record once.</p>
+<p><strong>Do not let an unscoped record be a wildcard on
+reads.</strong> An empty scope readable from every context is a
+reasonable default only if nothing can create one by accident; here the
+write boundary forbids it and the in-process library and the
+consolidators do not.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that already runs Postgres, writes Go, and wants a
+typed memory model with a written specification rather than a bag of
+embedded strings — and that is prepared to own the lifecycle semantics
+itself. The engineering on bounding, authorization and transaction
+discipline is serious work — every retrieval path has a row cap and a
+byte cap, every mutation path re-reads its authorization under lock —
+and the six-type model is a genuine design position rather than a schema
+with an enum column.</p>
+<p>It does not suit anyone who needs correction to be reliable out of
+the box. The fixes are small — a status predicate on the read path, a
+<code>Pinned</code> or a deletion-policy change in <code>Retract</code>,
+one line in <code>ApplyDecay</code> — but until they land, a deployment
+that retracts facts is one decay sweep away from losing the record and
+its history, and a client that forgets <code>min_salience</code> gets
+the retracted fact back. It also does not suit an operator who wants a
+single binary with an embedded store: Postgres with pgvector is
+mandatory in every shape, deliberately and enforced by a build check.
+And it does not yet suit an agent that is meant to correct its own
+memory, because no shipped integration puts revision in the model's
+hands.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the compounding decay intentional — an unstated "decay
+accelerates for records never reinforced" design — or an oversight?
+Nothing in <code>rfc.md</code> or the comments suggests the former, and
+<code>DecayProfile</code>'s doc says profiles <em>"MUST be monotonic and
+reversible via reinforcement"</em>, which the compounding form still
+technically satisfies while making the <code>half_life_seconds</code>
+parameter mean something other than its name.</li>
+<li>What is the intended lifetime of a retracted record? Reading
+<code>Retract</code>'s comment and <code>Prune</code>'s condition
+together gives "forever" and "until the next sweep"; only the author can
+say which was meant.</li>
+<li>Was <code>Contest</code> meant to affect retrieval at all? It writes
+a status nothing reads and leaves salience untouched, so at this commit
+contesting a record changes only its graph edges and its audit
+trail.</li>
+<li>Does any deployment set <code>previous_state_json</code>? Both
+insert sites pass <code>nil</code>; the column may be reserved for a
+planned before-image, or may be vestigial.</li>
+<li>Has the eval workflow's README table ever been written? The
+<code>### Latest Results</code> anchor is absent from the tree, which
+would make every run since the anchor disappeared a no-op — but the git
+history, not the checkout, would settle when and why.</li>
+<li>How does consolidation behave over a corpus large enough that
+<code>ListByType</code> over all episodic records stops fitting
+comfortably in memory? The retrieval path is byte-bounded with great
+care; the background path is not bounded at all.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and storage.</strong>
+<code>pkg/schema/memory.go</code> (the record),
+<code>pkg/schema/enums.go</code> (every closed vocabulary),
+<code>pkg/schema/payloads.go</code> (the six payload types,
+<code>Validity</code>, <code>RevisionState</code>),
+<code>pkg/schema/lifecycle.go</code>,
+<code>pkg/schema/provenance.go</code>, <code>pkg/schema/audit.go</code>,
+<code>pkg/schema/relation.go</code>, <code>pkg/storage/store.go</code>
+(the <code>Store</code> and bounded-lookup interfaces),
+<code>pkg/storage/postgres/schema.sql</code>,
+<code>pkg/storage/postgres/postgres.go</code>,
+<code>pkg/storage/derived_policy.go</code>,
+<code>pkg/storage/projection.go</code>.</p>
+<p><strong>Write path.</strong> <code>pkg/ingestion/capture.go</code>,
+<code>pkg/ingestion/ingestion.go</code>,
+<code>pkg/ingestion/classifier.go</code>,
+<code>pkg/ingestion/policy.go</code>, <code>pkg/ingestion/llm.go</code>,
+<code>pkg/ingestion/source_kind.go</code>.</p>
+<p><strong>Retrieval.</strong> <code>pkg/retrieval/retrieval.go</code>,
+<code>pkg/retrieval/graph.go</code>,
+<code>pkg/retrieval/trust.go</code>,
+<code>pkg/retrieval/filter.go</code>,
+<code>pkg/retrieval/selector.go</code>,
+<code>pkg/embedding/service.go</code>.</p>
+<p><strong>Revision and lifecycle.</strong>
+<code>pkg/revision/{revision,supersede,fork,merge,retract,contest,audit}.go</code>,
+<code>pkg/decay/{decay,curves,scheduler}.go</code>,
+<code>pkg/consolidation/{consolidation,episodic,semantic,semantic_extractor,semantic_reinforcement,competence,plangraph,entity_links,scheduler}.go</code>.</p>
+<p><strong>API and clients.</strong>
+<code>api/proto/membrane/v1/membrane.proto</code>,
+<code>api/grpc/{server,handlers,authz}.go</code>,
+<code>pkg/membrane/{membrane,config}.go</code>,
+<code>cmd/membraned/main.go</code>,
+<code>clients/typescript/src/client.ts</code>,
+<code>clients/python/membrane/client.py</code>,
+<code>clients/openclaw/src/index.ts</code>,
+<code>clients/openclaw/openclaw.plugin.json</code>,
+<code>examples/agent-harness/src/tools.ts</code>.</p>
+<p><strong>Tests, evals and checks.</strong>
+<code>tests/eval_trust_test.go</code>,
+<code>tests/recall_test.go</code>,
+<code>tests/integration_test.go</code>,
+<code>tests/compose_security_test.go</code>,
+<code>tests/data/recall_dataset.jsonl</code>,
+<code>pkg/revision/revision_test.go</code>,
+<code>pkg/decay/decay_test.go</code>,
+<code>cmd/membrane-eval/main.go</code>,
+<code>cmd/membrane-eval-lifecycle/main.go</code>,
+<code>scripts/check-postgres-only.sh</code>,
+<code>scripts/check-postgres-only_test.sh</code>,
+<code>.github/workflows/ci.yml</code>,
+<code>.github/workflows/eval.yml</code>, <code>Makefile</code>,
+<code>rfc.md</code>.</p>
+<p><strong>Recorded searches.</strong> Every absence claim above rests
+on one of these, run from the tree root at the pinned commit:</p>
+<ul>
+<li><code>grep -rn 'RevisionStatus\(Active\|Contested\|Retracted\)' --include='*.go' .</code>
+and <code>grep -rn '\.Revision\.Status' --include='*.go' .</code> — four
+writes, one erasure, no read that filters or ranks.</li>
+<li><code>grep -rn 'Validity\b\|\.Validity' --include='*.go' . | grep -v _test</code>
+— four producers, all <code>ValidityModeGlobal</code>; the only reads
+are the protobuf conversions in <code>api/grpc/handlers.go</code>.</li>
+<li><code>grep -rn -i 'tombstone\|denylist\|blocklist\|blacklist\|never_reassert' --include='*.go' --include='*.sql' --include='*.proto' --include='*.ts' --include='*.py' --include='*.md' .</code>
+— no match for any of the first four; <code>rejected</code> matches only
+SDK argument-validation prose and
+<code>TestEpisodicRevisionRejected</code>.</li>
+<li><code>grep -rni 'human.review\|approve\|approval\|reviewer' --include='*.go' . | grep -v _test</code>
+— two matches, both about transaction policy approval;
+<code>pkg/consolidation/consolidation.go:4</code> states consolidation
+<em>"requires no user approval"</em>.</li>
+<li><code>grep -rn 'previous_state_json\|PreviousState' --include='*.go' --include='*.sql' .</code>
+— the column, and two inserts that pass <code>nil</code>.</li>
+<li><code>grep -rn 'ReasonToRemember\|reason_to_remember' --include='*.go' . | grep -v _test</code>
+— stored and prompted, never branched on.</li>
+<li><code>grep -rn 'Latest Results' . --include='*.md' --include='*.mdx' --include='*.yml'</code>
+— one match, inside <code>.github/workflows/eval.yml</code> itself.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|citation|doi\.org' --include='*.md' --include='*.mdx' --include='*.cff' --include='*.yaml' --include='*.yml' .</code>
+and <code>find . -iname 'CITATION*'</code> — both empty.</li>
+<li><code>grep -rn 'membrane_supersede\|membrane_retract\|membrane_contest' clients examples</code>
+— empty; no shipped integration exposes revision as a model-facing
+tool.</li>
+<li><code>python3 -c "…"</code> over
+<code>tests/data/recall_dataset.jsonl</code> — 25 query objects, key
+union <code>expected, k, key, memory_types, text, trust, type</code>, no
+must-not-retrieve field.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/BennettSchwartz/membrane/commit/b3f1f09189051f1280f49107c582cfa913277b9e"><code class="commit-id" title="b3f1f09189051f1280f49107c582cfa913277b9e">b3f1f091…</code></a>
+— first reading. The pinned commit is dated 4 September 2026. Screened
+before reading: 0 auto-run surfaces, 13 dependency surfaces inside the
+seven-day cooldown (<code>go.mod</code>, <code>go.sum</code>, four
+<code>package.json</code>, three lockfiles,
+<code>clients/python/pyproject.toml</code>, the <code>.deepsec</code>
+workspace), 9 unpinned surfaces, 2 build-time exec surfaces
+(<code>Makefile</code>, a <code>prepublishOnly</code> script); nothing
+was installed, built or executed, and the decay trajectory in section 9
+was recomputed from the committed constants in a scratch script rather
+than by running the project. <code>scope_enforced</code>,
+<code>audit_log</code> and <code>negative_eval</code> awarded;
+<code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>human_review</code> withheld for the
+reasons given in section 9 and section 5.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

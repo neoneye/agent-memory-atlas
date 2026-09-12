@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **430 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **431 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -283,6 +283,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/memanto/"><span class="az-id">Memanto</span><span class="az-what">Resolved conflict</span><code class="az-repo">moorcheh-ai/memanto</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/memary/"><span class="az-id">Memary</span><span class="az-what">Knowledge-graph agent memory</span><code class="az-repo">kingjulio8238/Memary</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/membase/"><span class="az-id">Membase</span><span class="az-what">Signature-owned conversation memory</span><code class="az-repo">unibaseio/membase</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/membrane/"><span class="az-id">Membrane</span><span class="az-what">Typed Postgres memory with a revision layer</span><code class="az-repo">BennettSchwartz/membrane</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/membukkit/"><span class="az-id">MemBukkit</span><span class="az-what">As of May, and a receipt for it</span><code class="az-repo">memseekai/membukkit</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memcontinuum/"><span class="az-id">MemContinuum</span><span class="az-what">A decision chain no edit can rewrite</span><code class="az-repo">krakozavr/MemContinuum</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memcp/"><span class="az-id">MemCP</span><span class="az-what">The baseline column is a constant with a comment</span><code class="az-repo">maydali28/memcp</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>

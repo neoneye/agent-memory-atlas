@@ -457,6 +457,8 @@ check for: the schema is not the evidence, the call sites are.
 
 **[GrayMatter](../../systems/graymatter/) writes the trail and never reads it.** Every reflect action — add, update, forget, link, pin, unpin — appends one entry carrying timestamp, action, agent, old and new text and source to an audit bucket inside the store's own database, keyed by a fixed-width RFC3339 timestamp so the byte order is time order and pruning walks oldest-first. The producer is reachable and the format is shared between the direct and daemon paths. No reader exists: the package exports only a write and a failure counter, and a tree-wide search for the bucket name finds the writer, its test and a changelog line. The package added error returns specifically so an audit write could not fail invisibly, and its one caller discards the result while nothing reads the failure counter. The CLI correction commands write no entry at all, so a person's correction leaves less trace than an agent's.
 
+**[Membrane](../../systems/membrane/) is the cascade version of this failure.** Its audit table is genuinely insert-only with a closed action vocabulary — create, revise, fork, merge, delete, reinforce, decay — and, unusually, every value in it has a producer on a reachable path. The defeat is one clause in the schema: `record_id … ON DELETE CASCADE`. The prune pass writes its own audit entry and deletes the record in the same transaction, so the entry documenting the deletion is removed by the deletion it documents, along with the record's entire history. An audit meant to outlive what it describes cannot be keyed to it by a foreign key that cascades.
+
 ## Tests to require
 
 - Mutation and audit event commit or roll back together.

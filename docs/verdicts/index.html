@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 430 reports.</strong></p>
+<p><strong>This page covers all 431 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15349,6 +15349,58 @@ a test.</li>
 <li>Do not copy when: you need multi-tenancy, per-agent authorization,
 or a memory layer that can represent doubt — the confidence field exists
 and nothing reads it.</li>
+</ul>
+<h3 id="membrane"><a
+href="../systems/membrane/"><code>membrane</code></a></h3>
+<ul>
+<li>Best idea: <strong>a retrieval budget that is a storage contract and
+is still re-enforced above the store.</strong> The list options carry a
+row limit, a 16 MB hydration budget and projection flags; the Postgres
+implementation sizes each candidate with <code>octet_length</code> in a
+materialized CTE and stops before hydrating anything, and the service
+re-caps the returned slice in Go because <em>"ListOptions projection
+fields are an optimization contract, not a trust boundary"</em> — a
+store that cannot bound is refused rather than scanned. Beside it,
+derived records that raise their sensitivity to the maximum of their
+sources against an in-transaction re-read of each source's label,
+pruning the entity backreferences the promotion made unsafe. Three
+marks.</li>
+<li>Biggest risk: <strong>the retraction marker is also the deletion
+trigger, and the only thing that reads it is a threshold callers default
+to zero.</strong> Retraction sets a status no read path consults and a
+salience of zero, which is the sole signal retrieval can act on, through
+a minimum that is zero in both SDKs; the lifecycle eval passes a
+positive floor to make its own retraction scenario pass. That same zero
+satisfies the prune condition against a default auto-prune policy and a
+zero floor, so the next hourly sweep deletes the record and the audit
+table's cascade erases its history, including the entry written in the
+deleting transaction. A retracted fact observed again before that is
+reinforced back above zero by consolidation, still labelled
+retracted.</li>
+<li>Most reusable component: the derived-sensitivity policy — 158 lines
+of monotone sensitivity for background-derived records, computed under
+lock with backreference pruning — together with the checker test that
+feeds its own checker nine violating fixtures in a temporary tree and
+re-runs each without ripgrep.</li>
+<li>Maturity impression: 56,752 lines of Go outside the generated
+protobuf package, 678 test functions, a 680-line specification the
+source cites by section in hundreds of comments, CI running the race
+detector plus a Postgres service for the DSN-gated integration packages,
+and startup refusals for an unauthenticated non-loopback listener and
+for API keys over plaintext. Against that: decay never advances the
+reinforcement timestamp while applying decay to the already-decayed
+value, so an episodic record reaches 0.00098 after four hourly sweeps
+instead of 0.0625, with no test that decays a record twice; the
+previous-state column is inserted as null at both call sites; and the
+eval workflow's README table is anchored on a heading that appears
+nowhere in the tree, so no eval number ever lands.</li>
+<li>Study when: you run Postgres, write Go, and want a typed six-class
+memory model with an atomic revision layer and a retrieval path that
+cannot be made to allocate unboundedly.</li>
+<li>Do not copy when: a retraction must stay retracted, an audit must
+outlive the record it describes, or the model itself is meant to correct
+its own memory — no shipped integration exposes supersede, retract or
+contest as a tool.</li>
 </ul>
         </article>
       </div>
