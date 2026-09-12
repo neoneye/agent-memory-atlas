@@ -1498,9 +1498,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`brain-md`](../systems/brain-md/)
 - Best idea: `update-truth` rewrites a page's compiled truth and appends its timeline entry in one command, so *"a compiled_truth rewrite can never silently skip its timeline entry"* — belief and the reason it changed are one operation rather than a convention.
-- Biggest risk: the correct-by-construction guarantee holds only while nobody hand-edits a file, there is deliberately no validator, and the pre-commit hook that would catch it is optional and locates its own CLI by searching four paths.
+- Biggest risk: the correct-by-construction guarantee holds only while nobody hand-edits a file, there is deliberately no validator, and the hooks that would catch it are optional and locate their own CLI by searching a list of well-known paths.
 - Most reusable component: the page format — a current-knowledge section over an append-only timeline typed `decision | evidence | reversal | note` — which drops into any markdown memory without the code.
-- Maturity impression: 22 files and 19 commits under Apache-2.0, a 522-line zero-dependency library under 452 lines of tests, six fixed root pages whose history is deliberately git rather than a timeline, and a linter that exempts the append-only layer on stated grounds.
+- Maturity impression: Apache-2.0, published to npm as `@mindmux/brain-md`, a 522-line zero-dependency library and a 797-line CLI under 1,463 lines of tests — 50 cases that pass from a bare checkout with nothing installed, including a committed shell-injection case and assertions that page bodies cannot reach the session snapshot.
 - Study when: you keep project knowledge in the repository and want the reason a belief changed to be structurally inseparable from the change.
 - Do not copy when: memory must be searched rather than navigated, several agents write concurrently, or a reversed claim must be unable to return — a reversal is recorded and nothing stops the same truth being compiled back tomorrow.
 

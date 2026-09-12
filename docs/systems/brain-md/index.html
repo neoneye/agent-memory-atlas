@@ -111,14 +111,14 @@ a belief cannot change without saying why.</p>
               <strong>mindmuxai/brain.md</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543" title="5cecfdd4154687751f80e2d40f3a70a4fdca4543">
+            <a class="meta-pill revision-pill" href="https://github.com/mindmuxai/brain.md/commit/8064f3334cfa465129d42668ba271ef71a53dc71" title="8064f3334cfa465129d42668ba271ef71a53dc71">
               <span>Analyzed revision</span>
-              <code>5cecfdd4…</code>
+              <code>8064f333…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-07</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mindmuxai--brain.md" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -142,13 +142,17 @@ a belief cannot change without saying why.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>brain.md is a small Apache-2.0 project — 22 files, 19 commits, a
-522-line zero-dependency Node library and a CLI over it — that stores a
-project's durable knowledge as plain markdown in the repository and
-reads and writes it through one command. It ships as four agent skills
+<p>brain.md is a small Apache-2.0 project — a 522-line zero-dependency
+Node library and a 797-line CLI over it — that stores a project's
+durable knowledge as plain markdown in the repository and reads and
+writes it through one command. It ships as four agent skills
 (<code>brain-bootstrap</code>, <code>brain-ingest</code>,
-<code>brain-page</code>, <code>brain-setup</code>) and is deliberately
-agent-agnostic.</p>
+<code>brain-page</code>, <code>brain-setup</code>), publishes as
+<code>@mindmux/brain-md</code> on npm, and is deliberately
+agent-agnostic. The library and the page format are byte-identical to
+<code class="commit-id" title="5cecfdd4154687751f80e2d40f3a70a4fdca4543">5cecfdd4…</code>; everything around
+them — packaging, an installer, agent wiring, session hooks and roughly
+a thousand lines of test — is what the project has built since.</p>
 <p><strong>The page format is the contribution.</strong> Every page
 carries two sections: <code>compiled_truth</code>, which is what is
 currently believed, and <code>timeline</code>, an append-only list of
@@ -228,12 +232,25 @@ the commit when the index lives inside the repo. A
 <code>.mindmux/preferences.json</code> allows a sidecar brain outside
 the repository, and the hook skips folding in that case — a small
 correctness detail that many hook scripts would get wrong.</p>
-<p><strong>The hook payload in the tree is an asset, not an active
-hook.</strong> <code>skills/brain-setup/hooks/pre-commit</code> is a
-file the setup skill installs into a target repository's
-<code>.git/hooks/</code>. In this checkout it is inert: nothing runs on
-clone, and the tree carries no manifest, no install step and no
-dependency.</p>
+<p><strong>The hook payloads in the tree are assets, not active
+hooks.</strong> <code>skills/brain-setup/hooks/pre-commit</code> and
+<code>skills/brain-setup/hooks/session-start</code> are files the CLI
+installs into a target repository. In this checkout they are inert:
+nothing runs on clone. The tree does carry a manifest —
+<code>package.json</code> declares <code>@mindmux/brain-md</code>, a
+<code>brain</code> bin and <code>node --test</code>, and declares
+<strong>no dependencies of any kind</strong>, so the committed suite
+runs against a bare checkout with nothing installed.</p>
+<h3 id="what-distribution-added">What distribution added</h3>
+<p><code>bin/brain.mjs</code> and <code>bin/lib/installer.mjs</code> put
+the skills on disk for five runtimes and keep a manifest of what they
+wrote, refusing to remove anything they did not install.
+<code>brain init</code> scaffolds a brain, and every step of it is
+conditional: <code>BRAIN.md</code> is copied only if missing, the
+skeleton only if the resolved location holds no page, and the wired
+block is replaced in place between its own markers. Running
+<code>init</code> twice changes nothing the second time, which is the
+property an agent-invoked scaffolder most needs and least often has.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
@@ -246,17 +263,30 @@ Paths</h2>
 <code>findWikiLinks</code>, <code>setFrontmatterField</code>,
 <code>normalizePageSectionMarkers</code>.</li>
 <li><strong>CLI</strong> — <code>skills/brain-page/bin/brain.mjs</code>
-(530 lines).</li>
+(797 lines): the eight mutation subcommands, four read subcommands
+(<code>brain-dir</code>, <code>list-pages</code>,
+<code>read-page</code>, <code>read-root</code>), <code>init</code>,
+<code>wire</code>, and <code>install-hooks</code> /
+<code>uninstall-hooks</code>.</li>
 <li><strong>Contract for agents</strong> —
 <code>skills/brain-page/SKILL.md</code>, which states the invariants an
-agent must not work around.</li>
-<li><strong>Hook</strong> —
-<code>skills/brain-setup/hooks/pre-commit</code>.</li>
+agent must not work around, and
+<code>skills/brain-setup/assets/BRAIN.md</code>, the copy placed in the
+target project's root.</li>
+<li><strong>Hooks</strong> —
+<code>skills/brain-setup/hooks/pre-commit</code> and
+<code>skills/brain-setup/hooks/session-start</code>.</li>
+<li><strong>Installer</strong> — <code>bin/brain.mjs</code> and
+<code>bin/lib/installer.mjs</code> (377 lines), with a
+<code>.brain-md-installed</code> manifest per project.</li>
 <li><strong>Seed brain</strong> —
 <code>skills/brain-setup/assets/brain/</code>, the six root pages plus
 <code>index.md</code> and <code>pages/</code>.</li>
-<li><strong>Tests</strong> —
-<code>skills/brain-page/test/brain.test.mjs</code>, 452 lines.</li>
+<li><strong>Tests</strong> — four files, 1,463 lines:
+<code>brain.test.mjs</code> (452, the library),
+<code>cli-hooks.test.mjs</code> (523),
+<code>cli-init-wire.test.mjs</code> (297),
+<code>installer.test.mjs</code> (191).</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Frontmatter is CLI-generated and carries at least an id, a status and
@@ -294,10 +324,72 @@ become enforcing.</p>
 <p>Four skills, each a markdown contract rather than code: bootstrap for
 standing a brain up from an existing repository, ingest for pulling
 material in, page for the read/write vocabulary, setup for installation.
-Claude Code, Codex, Cursor and Pi are named as targets, and the CLI's
-skill-location search reflects that — <code>~/.claude/skills/</code>,
-<code>~/.codex/skills/</code>,
+Claude Code, Codex, Cursor, opencode and Pi are named as targets, and
+the CLI's skill-location search reflects that —
+<code>~/.claude/skills/</code>, <code>~/.codex/skills/</code>,
 <code>~/.config/opencode/skills/</code>.</p>
+<p>Three mechanisms carry the contract to the agent, and they are worth
+separating because only one of them is code.</p>
+<p><strong><code>brain wire</code> writes the contract into the agent's
+own config file.</strong> It splices a block between
+<code>&lt;!-- BEGIN brain.md --&gt;</code> and
+<code>&lt;!-- END brain.md --&gt;</code> in <code>CLAUDE.md</code> and
+<code>AGENTS.md</code>, creating the file if absent and replacing the
+block in place if the markers are already there — so re-wiring upgrades
+rather than duplicates, and text outside the markers is untouched. The
+agent set is deduped by <em>target file</em> rather than by name, so
+asking for <code>codex</code>, <code>cursor</code> and
+<code>opencode</code> writes <code>AGENTS.md</code> once. Claude's block
+gets one extra line, <code>@import ./BRAIN.md</code>, because the syntax
+is Claude-specific and the others would render it as prose.</p>
+<p><strong>The block is prompt text, and its instructions are the
+enforcement.</strong> It tells the agent to load context before a task,
+to capture a decision the moment it settles rather than batching it, not
+to write during pure implementation, to use <code>update-truth</code> or
+a <code>reversal</code> entry when overturning a conclusion, and to
+store only what will still matter in six months. There is no code behind
+any of it. This is the same shape the atlas records under <a
+href="../../patterns/skills-as-procedural-memory/">skills as procedural
+memory</a> — a policy whose only runtime is the model reading it.</p>
+<h3 id="the-mcp-preference-is-one-sentence">The MCP preference is one
+sentence</h3>
+<p>The wired block ends with <em>"Never hand-edit brain files. If a
+brain MCP server is connected and authenticated, prefer it; otherwise
+use the <code>brain</code> CLI."</em> That sentence is the whole of the
+feature. No MCP server, client, manifest or transport exists in this
+repository:</p>
+<pre class="sh"><code>grep -rn -i &quot;mcp&quot; . --exclude-dir=.git</code></pre>
+<p>Four hits at the pinned commit — the sentence, a README line naming
+<em>"MindMux over MCP"</em> as a runtime layered on the same files, and
+two tests. The tests are the honest part:
+<code>cli-init-wire.test.mjs:58</code> asserts the sentence appears in
+the wired block, and <code>:106</code> asserts that re-wiring a project
+whose block predates the sentence replaces it without duplicating. A
+string assertion is the correct test for a string feature, and reading
+the two together tells you exactly what was shipped: a routing
+instruction to a server that lives somewhere else.</p>
+<h3 id="the-session-hook-injects-the-index-without-being-asked">The
+session hook injects the index without being asked</h3>
+<p><code>brain install-hooks</code> writes
+<code>skills/brain-setup/hooks/session-start</code> into
+<code>.claude/hooks/</code> or <code>.codex/hooks/</code> and registers
+it as a <code>SessionStart</code> hook in the project-local settings
+file. At the start of a session the hook resolves the CLI from nine
+candidate paths, calls <code>brain-dir</code>, exits silently unless the
+output line reads <code>populated: true</code>, then calls
+<code>list-pages</code> and prints the index into the agent's
+context.</p>
+<p>Two properties of the script are load-bearing. It <strong>shells out
+for everything</strong> — it never opens a file under
+<code>brain/</code>, so the redirect in
+<code>.mindmux/preferences.json</code> is honoured for free and the hook
+cannot disagree with the CLI about where the brain is. And it
+<strong>fails open</strong>: <code>trap 'exit 0' EXIT</code> with stderr
+sent to <code>/dev/null</code>, so a missing CLI, a failing subcommand
+or an unpopulated brain costs a session nothing.</p>
+<p>The index is page metadata only — id, title, category, status, one
+line each — so no page body reaches the prompt. That is asserted rather
+than assumed; see section 10.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>The timeline earns <code>audit_log</code>.</strong> It is a
@@ -309,7 +401,33 @@ credit it there.</p>
 <p><strong>Scope is a directory.</strong> One brain per repository,
 resolved rather than configured per call, with a redirect for a sidecar.
 That is the file-boundary form of scope, and its limit is the usual one:
-a single-user store with no tenancy and no authorisation.</p>
+a single-user store with no tenancy and no authorisation.
+<code>brainRoot</code> in <code>.mindmux/preferences.json</code> is the
+stored key, and every read command derives its path from the resolution
+rather than taking one — <code>read-page</code> and
+<code>read-root</code> accept an id and a slug, not a path, and
+<code>read-root</code> rejects any slug outside the six.</p>
+<p><strong>The hook installer is the most defensive code in the project,
+and it is not over-written.</strong> <code>hookTarget</code> refuses to
+proceed if the settings file, the hook directory or the script is a
+symlink, so a project-local install cannot be made to write a global
+settings file. <code>checkOwnedScript</code> reads the destination and
+refuses to overwrite <em>or remove</em> anything whose first two lines
+are not the project's own shebang and marker comment. Uninstall filters
+out only the entries matching its own command, collapses the structures
+it empties, and leaves every other <code>SessionStart</code> hook in
+place. Each of those is asserted, including the refusal path for all
+four symlinkable locations.</p>
+<p><strong>The shell quoting is tested against an adversarial
+path.</strong> The Codex hook is registered as
+<code>sh '&lt;dest&gt;' codex</code> with single quotes doubled, and the
+suite runs the whole install-and-invoke cycle inside a directory whose
+name carries a single quote, a <code>$HOME</code> reference, a
+<code>$(...)</code> substitution, a backtick substitution and a
+non-ASCII character — both substitutions attempting to create a file
+named <code>INJECTED</code> — then asserts that no such file appears. A
+committed injection case over a path the shell would otherwise expand is
+rare in this corpus.</p>
 <p><strong>The guarantee is bounded and the boundary is
 published.</strong> Correct-by- construction writes, no validator, and
 one sentence saying exactly when the property stops holding. Compare the
@@ -323,17 +441,75 @@ page whose truth changed after a given date without parsing the files.
 and not the end.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>452 lines of Node test against a 522-line library — a ratio most
-projects this size do not reach. The assertions that earn
-<code>negative_eval</code> are the boundary ones:
-<code>assert.doesNotMatch(truth, /## Timeline/)</code> and
+<p>1,463 lines of Node test across four files, against a 522-line
+library and a 797-line CLI. <strong>50 tests, all passing</strong>, run
+for this reading at the pinned commit on Node v22.17.0 with
+<code>node --test</code> and nothing installed — the package declares no
+dependencies, so the suite is runnable from a bare checkout, which is
+itself worth more than the line count.</p>
+<p>The library cases that first earned <code>negative_eval</code> are
+unchanged: <code>assert.doesNotMatch(truth, /## Timeline/)</code> and
 <code>doesNotMatch(truth, /real timeline/)</code> pin that timeline
 content cannot leak into an extracted compiled truth, and further cases
 assert the raw section markers do not survive into a rendered body.</p>
-<p>That is a committed case asserting particular material must not come
-back from a read path — the read path being the one that feeds an agent
-what it currently believes. It is not a deletion-durability assertion,
-and this report does not claim it is.</p>
+<p>The hook suite extends the same shape to the path that feeds an agent
+at session start, and it does so <strong>with a positive control on
+every negative case</strong> — the test this atlas usually has to note
+the absence of:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Must not appear</th>
+<th>Paired positive control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A page body written through <code>update-truth</code>
+(<code>SECRET_BODY_MUST_NOT_LEAK_INTO_THE_HOOK</code>)</td>
+<td>the same page's id is asserted present in the same output</td>
+</tr>
+<tr>
+<td>A page read off disk rather than through the CLI
+(<code>SECRET_FROM_FILE_NOT_CLI</code>)</td>
+<td>the mock CLI's own row is asserted present</td>
+</tr>
+<tr>
+<td><code>list-pages</code> being called at all when
+<code>brain-dir</code> reports the brain unpopulated</td>
+<td><code>brain-dir</code> is asserted present in the invocation
+log</td>
+</tr>
+<tr>
+<td>A redirected brain's body text from a nested working directory
+(<code>PRIVATE_PAGE_BODY</code>)</td>
+<td>the page's id and its UTF-8 title are asserted present</td>
+</tr>
+<tr>
+<td><code>brain/</code> appearing in the project or the nested directory
+when <code>brainRoot</code> redirects</td>
+<td>a newly created page is asserted to reach the next snapshot</td>
+</tr>
+<tr>
+<td>A <code>U+FFFD</code> replacement character, or a truncation notice
+below the budget</td>
+<td>the emitted rows are asserted to equal a prefix of the input
+rows</td>
+</tr>
+</tbody>
+</table></div>
+<p>The hook's <em>source</em> is also asserted structurally: it must
+mention <code>brain-dir</code> and <code>list-pages</code> and must not
+contain <code>brain/pages</code>, <code>index.md</code>,
+<code>cat</code>, or <code>readFile|writeFile|open(</code>. That is a
+test that the hook has no second way to reach the store — a property the
+usual behavioural test would miss, because a hook that read the files
+directly would produce the same output on the happy path.</p>
+<p><code>negative_eval</code> is earned on the read path, in the sense
+<a href="../../capabilities/">this atlas counts</a>: committed cases
+asserting that particular material does not come back from the surface
+that feeds an agent. None of them is a deletion-durability assertion,
+and this report does not claim otherwise.</p>
 <p>No benchmarks, and none claimed.</p>
 <h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
 <h3 id="steal">Steal</h3>
@@ -352,6 +528,28 @@ designs never make.</p>
 <p><strong>Publish the boundary of your guarantee in the same breath as
 the guarantee.</strong> <em>"The guarantee holds only as long as you
 never hand-edit a brain file."</em></p>
+<p><strong>Make your session hook shell out to your own CLI, and test
+that it has no second path.</strong> The hook never opens a brain file,
+so it inherits the CLI's directory resolution rather than duplicating
+it, and a test greps the script for <code>readFile</code>,
+<code>cat</code> and the store's own paths to keep it that way. A
+component that reads the store two ways will eventually read it two
+different ways.</p>
+<p><strong>Refuse to touch a script you did not write.</strong>
+<code>checkOwnedScript</code> reads the destination and bails unless it
+starts with the project's own shebang and marker comment — on install
+<em>and</em> on uninstall. An uninstaller that deletes by path is a
+footgun pointed at whatever else was there.</p>
+<p><strong>Make your scaffolder idempotent by construction, not by a
+flag.</strong> <code>init</code> copies only what is missing, scaffolds
+only into an unpopulated location, and replaces a marked block rather
+than appending one. An agent that runs a setup command twice is the
+normal case, not the error case.</p>
+<p><strong>Fail a context hook open.</strong>
+<code>trap 'exit 0' EXIT</code>, stderr to <code>/dev/null</code>, and a
+silent exit unless the store reports itself populated. A memory layer
+that can break a session start will be uninstalled the first time it
+does.</p>
 <h3 id="avoid">Avoid</h3>
 <p><strong>Do not rely on a funnel with an open side.</strong> The CLI
 cannot enforce anything against a text editor, and the project's answer
@@ -360,6 +558,19 @@ searching four paths.</p>
 <p><strong>Do not let provenance be readable only by a human.</strong>
 Four entry kinds is a usable vocabulary; without a query over them, the
 reversal history is prose.</p>
+<p><strong>Do not budget one consumer of a shared payload and not the
+other.</strong> The hook's Codex branch passes the index through an awk
+filter with an 8,192-byte ceiling, a whole-row truncation rule and an
+explicit <em>"Index truncated"</em> notice; the branch every other
+runtime takes prints the index whole. Both feed the same list into the
+same kind of context window, and only one of them can say what it will
+cost.</p>
+<p><strong>Do not ship a preference for a component that is not
+there.</strong> <em>"If a brain MCP server is connected and
+authenticated, prefer it"</em> is a routing rule with no router — an
+agent that reads it and finds no such server falls through to the CLI,
+which is the safe outcome, but the line describes the product rather
+than the repository.</p>
 <h3 id="fit">Fit</h3>
 <p>This suits a team that wants project knowledge to live in the
 repository, travel with it, and be legible to any agent — and that is
@@ -381,6 +592,17 @@ current beliefs look the same in frontmatter.</li>
 <li><strong>An optional hook as the only enforcement</strong>, which
 finds its CLI by searching well-known paths and silently skips when it
 cannot.</li>
+<li><strong>An unbounded context injection on every runtime but
+one.</strong> The SessionStart hook's Codex branch is capped at 8,192
+bytes with a truncation notice; the branch Claude Code and every other
+target takes prints the whole <code>list-pages</code> output. The
+payload is one line per page rather than page bodies, so it grows with
+the brain's page count — but nothing in that branch bounds it, and the
+asymmetry is invisible from the settings file that installs it.</li>
+<li><strong>A write contract that lives in prose the agent may or may
+not follow.</strong> The wired block is the enforcement for "capture a
+decision the moment it settles" and "never hand-edit brain files", and
+the code cannot tell whether either happened.</li>
 </ul>
 <h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
 <p>The page format is the borrowable thing, and it is borrowable without
@@ -397,6 +619,11 @@ nothing reads them programmatically beyond counting.</li>
 <li>What happens when two agents update the same page's truth
 concurrently? The write is atomic per command and the store is a
 file.</li>
+<li>Why is the byte budget on the Codex branch alone? The awk filter is
+runtime-independent and the other branch has no ceiling.</li>
+<li>What does the brain MCP server expose that the CLI does not, and
+does the page format survive the crossing? The wired block prefers it
+and nothing in this repository describes it.</li>
 </ul>
 <h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
 <div class="table-wrap"><table>
@@ -429,12 +656,66 @@ them</td>
 <td>Six root pages, index, <code>pages/</code></td>
 </tr>
 <tr>
+<td><code>skills/brain-setup/hooks/session-start</code></td>
+<td>Resolve the CLI, exit unless populated, inject
+<code>list-pages</code>; 8 KiB budget on the Codex branch only</td>
+</tr>
+<tr>
+<td><code>skills/brain-setup/assets/BRAIN.md</code></td>
+<td>The read/write contract copied into the target project's root</td>
+</tr>
+<tr>
+<td><code>bin/brain.mjs</code>, <code>bin/lib/installer.mjs</code></td>
+<td>npm entry point and the skill installer, with a per-project
+manifest</td>
+</tr>
+<tr>
 <td><code>skills/brain-page/test/brain.test.mjs</code></td>
 <td>452 lines, including the timeline-must-not-leak assertions</td>
+</tr>
+<tr>
+<td><code>skills/brain-page/test/cli-hooks.test.mjs</code></td>
+<td>523 lines: body-leak, no-second-read-path, shell injection, UTF-8
+budget, symlink refusal</td>
+</tr>
+<tr>
+<td><code>skills/brain-page/test/cli-init-wire.test.mjs</code></td>
+<td>297 lines: idempotent <code>init</code>, in-place block replacement,
+the MCP sentence</td>
+</tr>
+<tr>
+<td><code>skills/brain-page/test/installer.test.mjs</code></td>
+<td>191 lines: manifest, backups, refusal to remove what it did not
+install</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/mindmuxai/brain.md/commit/8064f3334cfa465129d42668ba271ef71a53dc71"><code class="commit-id" title="8064f3334cfa465129d42668ba271ef71a53dc71">8064f333…</code></a>
+— 31 commits past the previous pin.
+<code>skills/brain-page/lib/brain.mjs</code> and its 452-line test file
+are byte-identical, so the page format, the compiled-truth invariant and
+the library evidence behind every mark are unchanged. What moved is
+everything around them: an npm package and a skill installer, a
+<code>brain init</code> that is idempotent by construction, opt-in
+SessionStart hooks for Claude Code and Codex, and three new test files
+taking the suite to 1,463 lines and 50 cases, all passing here on Node
+v22.17.0 with no dependencies installed. <code>negative_eval</code> is
+re-verified and substantially broader — the hook suite asserts page
+bodies cannot reach the injected snapshot, that the hook has no second
+path to the store, and that a shell-hostile project path cannot execute,
+each with a positive control. <code>scope_enforced</code> and
+<code>audit_log</code> re-verified at the new pin and unchanged. Two
+findings are new: the SessionStart hook budgets its payload to 8,192
+bytes on the Codex branch only, and the <em>"prefer an authenticated
+brain MCP"</em> line added to the wired agent block is prompt text with
+no server, client or transport in the repository. The first reading did
+not cover <code>brain wire</code>, which existed at the previous pin;
+the wired block and its contents are described in section 8 here. The
+screen at this pin reports a <code>FRESH</code> finding on
+<code>package.json</code> — a manifest changed within the seven-day
+cooldown — so nothing was installed; the suite needs nothing to run.</p>
 <p><strong>2026-08-07</strong> — <a
 href="https://github.com/mindmuxai/brain.md/commit/5cecfdd4154687751f80e2d40f3a70a4fdca4543"><code class="commit-id" title="5cecfdd4154687751f80e2d40f3a70a4fdca4543">5cecfdd4…</code></a>
 — first reading. The screen returned <strong>NOTHING SCANNED</strong> —
