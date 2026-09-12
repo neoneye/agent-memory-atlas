@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-12-a-paper-derived-ontology-of-the-same-field.md](2026-09-12-a-paper-derived-ontology-of-the-same-field.md) —
+  `Haiyoung/AgentMemoryAtlas`, an unrelated project sharing this one's name, maps
+  the same field from 148 papers instead of from code. Seven probes against its
+  1,411 concepts find no vocabulary at all for tombstones, mutation audit, human
+  review or negative retrieval assertions, and one concept for scope — mechanisms
+  39, 148, 131, 185 and 227 of 439 reports here carry. The likeliest reason is
+  selection: papers report novelty, repositories report what shipping required.
+  Its carrier axis also names a memory form the stack census cannot record, which
+  `second-me` analyses in prose and files as `sqlite, chroma`. No report: it is a
+  literature map, not a memory system.
+
 - [2026-09-10-archive-what-is-outstanding.md](2026-09-10-archive-what-is-outstanding.md) —
   396 of 397 cited repositories are forked into the archive org and every report
   carries an `archive_name`. What is missing: the pinned commits are reachable
