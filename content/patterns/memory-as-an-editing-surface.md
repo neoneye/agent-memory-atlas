@@ -184,6 +184,8 @@ structural excuse for lacking the second — writing the edit as a sibling and
 moving the head would cost one insert. Editability, negative memory, and
 **recoverable correction** are three properties, not one.
 
+In [marm-memory](../../systems/marm-memory/) the bundled console is not the secondary surface — it is the *more* capable one, and the gap is the finding. A person there creates, replaces and deletes memory rows, and adjudicates the concept graph through merge, dismiss and remove, each under the leased build lock and each aborting on a lost lease rather than half-applying. The connected agent can do none of it: its delete tool accepts only two document kinds and cannot address a memory row, and the flag that lets a caller set a memory's project and platform instead of inheriting the server process's has exactly one caller in the tree, the console's create path. The editing surface is authoritative in the sense this page means, and it is the only place the store's scope key can be written on purpose.
+
 ## Tests to write first
 
 - Edit a unit, then run the automatic pass, and assert the edit survives.

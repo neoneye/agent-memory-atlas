@@ -404,6 +404,23 @@ before the delete rebuilds it, offered as a rollback feature; nothing in
 that repository redacts or compacts the log. Cheap deterministic capture
 makes an audit trail affordable, and an audit trail is the thing a
 deletion request has to survive.</p>
+<p><a href="../../systems/marm-memory/">marm-memory</a> runs the pattern
+across the whole write path and then names the one decision it will not
+make deterministically. Classification is a keyword scan over lowercased
+content; deduplication is a hash of normalised text with the content
+compared before a merge; entity extraction is noun chunks and named
+entities typed by keyword triggers in the surrounding sentence, with
+predicates read off a dependency-parse lowest common ancestor. No model
+call appears anywhere on the write path, and a write succeeds with a
+null embedding when the encoder is unavailable. The interesting part is
+what it does about summarisation, which it accepts needs a mind: a
+background pass clusters a session by cosine and union-find, stages the
+cluster, and then the HTTP middleware prepends a request to the
+<em>connected agent's next tool result</em> asking it to write the
+summary, which the agent then applies or discards. That keeps the model
+out of capture entirely and borrows one already in the room for the one
+job capture cannot do — at the cost of putting standing instructions in
+a tool result, which is the half of the arrangement not to copy.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Assign a stable event ID before acknowledging capture.</li>

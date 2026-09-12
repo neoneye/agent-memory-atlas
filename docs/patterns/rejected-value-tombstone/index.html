@@ -123,22 +123,23 @@ belief.</p>
         </aside>
         <article class="prose" id="article">
 <blockquote>
-<p><strong>This is not an established best practice.</strong> Thirty-six
-systems of four hundred and thirty-one carry it, and almost no two
-arrived the same way: one invented it under adversarial pressure, one
-adopted it from the first, one arrived at a weaker form independently,
-one was driven to it by a regulation, several built it only after their
-report named its absence — one of them adding it in the same release
-that closed a scope hole the same report found — <strong>one has it as a
-side effect of a lookup that forgot to exclude the rejected
-row</strong>, one made that same collision deliberate, one began as that
-side effect and was rebuilt as an explicit refusal, one built it as
-ordinary plumbing in its write gate, and one hardened it against key
-rotation. Sorted by mechanism rather than by mark, twenty-one refuse the
-write — <a href="#sorted-by-what-actually-stops-the-value">the table
-below</a> says which, and what the rest do instead. There is no
-consensus behind this page and no library that provides the mechanism.
-There is now a <strong>vocabulary</strong>: <a
+<p><strong>This is not an established best practice.</strong>
+Thirty-seven systems of four hundred and thirty-two carry it, and almost
+no two arrived the same way: one invented it under adversarial pressure,
+one adopted it from the first, one arrived at a weaker form
+independently, one was driven to it by a regulation, several built it
+only after their report named its absence — one of them adding it in the
+same release that closed a scope hole the same report found —
+<strong>one has it as a side effect of a lookup that forgot to exclude
+the rejected row</strong>, one made that same collision deliberate, one
+began as that side effect and was rebuilt as an explicit refusal, one
+built it as ordinary plumbing in its write gate, and one hardened it
+against key rotation. Sorted by mechanism rather than by mark,
+twenty-one refuse the write — <a
+href="#sorted-by-what-actually-stops-the-value">the table below</a> says
+which, and what the rest do instead. There is no consensus behind this
+page and no library that provides the mechanism. There is now a
+<strong>vocabulary</strong>: <a
 href="https://arxiv.org/abs/2605.26252">arXiv:2605.26252</a> states it
 as a correctness condition — <em>no superseded value becomes
 current</em> — and proves that append-only storage cannot satisfy it,
@@ -271,7 +272,7 @@ one.</p>
 A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
-<p><strong>Thirty-six systems of 431 in the atlas have this.</strong>
+<p><strong>Thirty-seven systems of 432 in the atlas have this.</strong>
 That is still the most striking negative result in the atlas, and it is
 the reason this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -393,8 +394,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-four hundred and thirty-one would suggest a hard idea that a few teams
-reach independently. One of four hundred and thirty-one, plus one
+four hundred and thirty-two would suggest a hard idea that a few teams
+reach independently. One of four hundred and thirty-two, plus one
 adoption by a reader who went looking, suggests an idea that is
 <em>not</em> being reached at all — and that the way it spread was
 somebody reading another project's source.</p>
@@ -1296,6 +1297,24 @@ and no history check, so a forget followed by the same sentence stores a
 second live fact at full weight. The pattern's distinction is visible in
 one repository — a record-keyed retirement engineered carefully, and the
 re-assertion it cannot see.</p>
+<p><a href="../../systems/marm-memory/">marm-memory</a> arrives at the
+pattern from a place most of the corpus does not: not a claim extractor
+that might re-assert a corrected fact, but a derived graph its own
+product tells you to throw away and rebuild. Removing a concept writes
+its name into a suppressions table <em>before</em> it deletes the entity
+row, so the record is keyed on the name in its scope; name resolution
+follows the alias chain and then returns nothing for a suppressed name,
+and the build engine skipping that result is the only place the reading
+is used. What makes it a clear worked example is the table list in the
+reset: a full rebuild drops entities, relationships, code links, build
+runs and schema metadata, and leaves aliases, suppressions and
+dismissals standing. The committed test does the thing the pattern is
+for — remove, reset the whole graph, assert the name still resolves to
+nothing. The limit is worth stating beside it: the mechanism covers the
+<em>derived</em> layer only. A memory row is hard-deleted with nothing
+left behind, so the same text logged again is stored as new, and the
+entity gets suppressed on its way back out while the sentence that
+produced it does not.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

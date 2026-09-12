@@ -344,6 +344,22 @@ contract package's bounded in-process cache of recent episodes papers
 over the ordinary one-minute lag and dies with the process, and it holds
 episodes only, so a newly written fact is unrecallable until the cron
 catches up.</p>
+<p><a href="../../systems/marm-memory/">marm-memory</a>'s concept
+indexer is the outbox done the way this page asks. The enqueue runs
+inside the memory row's own <code>BEGIN IMMEDIATE</code>, so a memory
+cannot exist without an indexing task and a process killed
+mid-extraction loses nothing — the task is a row with a lease token, a
+lease expiry, an attempt counter and a last-error column, parked after
+three failures rather than dropped. Two details are worth lifting. The
+aggregate counters are deliberately not the settle signal: the build
+takes an outcomes dict as an out-parameter because <em>"a build in which
+every extraction failed returns success with zeros, and a caller
+settling queue tasks on that would delete work it promised to
+retry."</em> And because the HTTP and STDIO servers are separate
+processes each running their own worker, the mutual exclusion is a
+leased row in the database rather than an in-process lock — released
+when the engine call returns rather than when the awaiting task is
+cancelled, since cancelling the await leaves the thread writing.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>

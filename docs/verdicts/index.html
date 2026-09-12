@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 431 reports.</strong></p>
+<p><strong>This page covers all 432 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15401,6 +15401,51 @@ cannot be made to allocate unboundedly.</li>
 outlive the record it describes, or the model itself is meant to correct
 its own memory — no shipped integration exposes supersede, retract or
 contest as a tool.</li>
+</ul>
+<h3 id="marm-memory"><a
+href="../systems/marm-memory/"><code>marm-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>keep the human verdicts in the tables the rebuild
+does not drop.</strong> Removing a concept records its <em>name</em> in
+a suppressions table before deleting the row, name resolution returns
+nothing for it on the extraction path, and the reset drops entities,
+relationships, code links, build runs and schema metadata while
+deliberately keeping aliases, suppressions and dismissals — so a full
+rebuild cannot resurrect a removed concept, and a committed test asserts
+that across a reset. Four marks: <code>tombstone</code>,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>every memory is HTML-escaped on write and
+nothing ever unescapes it.</strong> The sanitizer calls
+<code>html.escape</code> before the row is stored, and a tree-root
+search for <code>unescape</code> across all Python returns nothing, so a
+snippet containing <code>&lt;</code>, <code>&gt;</code> or
+<code>&amp;</code> is stored, embedded, indexed into FTS5 and returned
+to the model in escaped form. The feature that sells this system to a
+developer is an exact lexical lane that never gets semantically
+reranked, and it cannot match the stored form of any such snippet.</li>
+<li>Most reusable component: the name-resolution function with the three
+review tables and the reset that spares them — about forty lines that
+turn a disposable derived graph into one a person can correct
+permanently.</li>
+<li>Maturity impression: 95 dated releases from June 2025 to 2 September
+2026, 28,385 lines of non-test Python, 32,959 of tests holding 1,316
+functions, run on every pull request alongside mypy with a baseline and
+ruff. Concurrency is handled with unusual care —
+<code>BEGIN IMMEDIATE</code> throughout, a compare-and-swap on merge,
+content-hash snapshots gating a compaction apply, and cross-process
+serialization by leased database row rather than an in-process lock. The
+concept extractor is the weak half: every noun chunk becomes an entity,
+every pair of the first twenty-five becomes an edge, and a substring
+test makes one verb shadow another, so the shadowed relation never
+produces an edge and nothing pins it.</li>
+<li>Study when: you want a local MCP memory server you can install in
+one command, and a worked example of separating a rebuildable derived
+graph from the durable judgements about it.</li>
+<li>Do not copy when: you need a shared multi-agent store with
+per-caller scope on writes, a record of what changed in memory and why,
+a way to mark a memory doubtful, or literal recall of code containing
+angle brackets or ampersands.</li>
 </ul>
         </article>
       </div>
