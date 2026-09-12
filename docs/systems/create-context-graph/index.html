@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Neo4j Labs CLI that scaffolds a
+complete agent application — FastAPI backend, Next.js graph UI, a domain
+ontology and one of eight agent frameworks — around a three-tier context
+graph of conversation messages, extracted entities and decision traces,
+with thirteen connectors that import real Slack, Linear, Google
+Workspace and Claude Code history into it at scaffold time.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Create Context
+Graph — Agent Memory Atlas">
+    <meta property="og:description" content="A Neo4j Labs CLI that
+scaffolds a complete agent application — FastAPI backend, Next.js graph
+UI, a domain ontology and one of eight agent frameworks — around a
+three-tier context graph of conversation messages, extracted entities
+and decision traces, with thirteen connectors that import real Slack,
+Linear, Google Workspace and Claude Code history into it at scaffold
+time.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Create Context
+Graph — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Neo4j Labs CLI that
+scaffolds a complete agent application — FastAPI backend, Next.js graph
+UI, a domain ontology and one of eight agent frameworks — around a
+three-tier context graph of conversation messages, extracted entities
+and decision traces, with thirteen connectors that import real Slack,
+Linear, Google Workspace and Claude Code history into it at scaffold
+time.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Create Context Graph — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Create Context Graph",
+      "description": "A Neo4j Labs CLI that scaffolds a complete agent application \u2014 FastAPI backend, Next.js graph UI, a domain ontology and one of eight agent frameworks \u2014 around a three-tier context graph of conversation messages, extracted entities and decision traces, with thirteen connectors that import real Slack, Linear, Google Workspace and Claude Code history into it at scaffold time.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory that ships as a template</p>
+          <h1>Create Context Graph</h1>
+          <p class="document-deck">A Neo4j Labs CLI that scaffolds a
+complete agent application — FastAPI backend, Next.js graph UI, a domain
+ontology and one of eight agent frameworks — around a three-tier context
+graph of conversation messages, extracted entities and decision traces,
+with thirteen connectors that import real Slack, Linear, Google
+Workspace and Claude Code history into it at scaffold time.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/neo4j-labs/create-context-graph">
+              <span>Source</span>
+              <strong>neo4j-labs/create-context-graph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d" title="707b168d9509cbf1b919b82940285d1df4c6810d">
+              <span>Analyzed revision</span>
+              <code>707b168d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neo4j-labs--create-context-graph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>neo4j-labs--create-context-graph</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Create Context Graph is a Neo4j Labs CLI —
+<code>uvx create-context-graph</code> or
+<code>npx create-context-graph</code> — that asks six questions and
+writes out a complete agent application: a FastAPI backend, a Next.js
+and Chakra UI frontend with an NVL graph view, a domain ontology, Cypher
+schema, synthetic fixtures, and an agent implemented against one of
+eight frameworks. Apache-2.0, Python, 242 commits on <code>main</code>
+since the repository was created on 22 March 2026, version 0.14.0 at the
+pinned commit of 4 September 2026. About 17,000 lines of Python under
+<code>src/create_context_graph/</code> and another 13,400 lines of
+Jinja2 templates beside it, with 1,127 test functions.</p>
+<p><strong>The scope call, stated up front.</strong> A scaffolder is not
+a memory system. This one is in scope on two counts, and both are about
+code in this repository rather than about what it generates in the
+abstract. First, <code>src/create_context_graph/ingest.py</code> is a
+1,077-line write path that the CLI runs itself: thirteen connectors pull
+real GitHub, Slack, Gmail, Jira, Notion, Linear, Google Workspace,
+Salesforce, Claude Code, Claude AI and ChatGPT history and this file
+writes it into a graph that outlives the run. Second, the memory
+mechanisms of the generated app live in templates committed here —
+<code>templates/backend/shared/memory.py.j2</code>,
+<code>memory_adapter.py.j2</code>,
+<code>context_graph_client.py.j2</code> and
+<code>connectors/import_data.py.j2</code> — and those templates are the
+artifact judged below.</p>
+<p><strong>The memory engine itself is a dependency</strong>, <a
+href="../neo4j-agent-memory/">neo4j-agent-memory</a> pinned as
+<code>&gt;=0.4.0,&lt;0.6.0</code> in the generated
+<code>pyproject.toml</code>. Short-term, long-term and reasoning tiers,
+extraction and embeddings all belong to it. What this repository
+contributes is the <em>compatibility layer</em> for the hosted Neo4j
+Agent Memory Service, which became the default backend in v0.12.0, and
+that layer is where the interesting engineering and the interesting
+damage both are.</p>
+<p><strong>The hosted REST surface accepts only
+<code>{name, type, description}</code> on an entity and has no
+<code>add_relationship</code>.</strong> The response is a hybrid write
+shape: every non-name property is rendered into <code>description</code>
+as a markdown block, and every outbound edge is appended to the same
+field as a fenced <code>ccg-edges</code> YAML block, deterministically
+sorted, documented in <code>docs/docs/explanation/ccg-edges.md</code>,
+and mirrored identically in three separate implementations that a
+contract test holds in lockstep. It is a careful, honest workaround. It
+is also, at this commit, write-only:
+<code>grep -rn 'ccg-edges' src/create_context_graph/templates/frontend/</code>
+returns nothing, the only readers of the marker
+(<code>memory_adapter.py.j2:240-241</code>, <code>:263-264</code>) split
+on it and keep the text <em>before</em> it, and no migration script
+exists. The README's "the frontend graph view parses them out and
+renders edges" and the generated project README's "the frontend parses
+these blocks to render edges" are not supported by the tree.</p>
+<p><strong>Correction and forgetting are absent, and the code says so
+plainly.</strong> <code>_reset_nams</code>
+(<code>src/create_context_graph/ingest.py:924-959</code>) counts what is
+stored and then prints that it cannot remove it, with a comment
+recording that an earlier version "silently reported '0 entities
+removed' by swallowing AttributeErrors; being honest beats pretending."
+On bolt the only eraser is <code>MATCH (n) DETACH DELETE n</code>.
+Nothing in the tree supersedes, expires, tombstones or deletes an
+individual memory.</p>
+<p><strong>Strongest parts:</strong> the generated
+<code>import_data.py</code>, whose per-connector watermarks advance only
+after a clean batch and whose failures append to a drainable JSONL
+deadletter; <code>tests/test_nams_ingest_parity.py</code>, which drives
+the CLI path and the rendered template against one fixture and diffs the
+captured call sequences; and the Claude Code connector's redaction,
+which is called on message content, tool output, error messages and
+document bodies rather than at one chokepoint. <strong>Weakest:</strong>
+the agent's own read path has no scope predicate in any of the
+twenty-seven bundled domains, and the test that was written to catch
+that asserts <code>len(domain_scoped_tools) &gt;= 0</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is whatever a connector or a chat turn hands to
+<code>neo4j-agent-memory</code>, and the system's own epistemics are
+thin by design: it decides <em>what shape</em> a thing is written in,
+not whether it is true. Three kinds survive a session.</p>
+<p><strong>A message</strong> is appended verbatim on every turn, user
+and assistant, by <code>store_message</code>
+(<code>templates/backend/shared/memory.py.j2:387-428</code>). The
+library extracts entities from it; on the hosted backend preference
+detection is forced off (<code>config.py:143-148</code>), so that half
+of the extraction never runs at the default.</p>
+<p><strong>An entity</strong> is a name plus a POLE+O type plus one
+description string. On bolt it also carries typed attributes and a
+<code>domain</code>. On the hosted backend <code>add_entity</code> is
+called with three keyword arguments and nothing else
+(<code>ingest.py:351-355</code>), so the type system is the
+description's <code>_pole_type: X_</code> suffix and a markdown
+attribute list. Identity is the name: re-ingest MERGEs onto it, which is
+the only deduplication anywhere.</p>
+<p><strong>A decision trace</strong> is a task, an ordered list of
+thought/action/observation steps, and an outcome, written through the
+reasoning API with <code>success=True</code> hardcoded for every fixture
+trace (<code>ingest.py:455-459</code>).</p>
+<p>Nothing moves between states. A memory is created and then is
+permanent: no <code>valid_from</code>/<code>valid_until</code>, no
+status column, no archival, no TTL — searches for all of them are in the
+appendix. The closest thing to a rejection record is the Claude Code
+connector's correction detector
+(<code>connectors/_claude_code/decision_extractor.py:162-269</code>),
+which reads a user message matching one of eight correction patterns,
+writes the preceding assistant turn as an <code>Alternative</code> with
+<code>wasChosen: False</code> and
+<code>reason: "User corrected this approach"</code>, and links it
+<code>REJECTED</code> from a <code>Decision</code> node. That is a
+durable record of something a person rejected — but its key is
+<code>alt-{session_id}-{index}-original</code>, derived from where it
+sat in a transcript rather than from the value, so a later import of the
+same bad suggestion produces a fresh node and walks straight past it.
+<code>tombstone</code> is withheld on exactly that.</p>
+<p>Agency sits with the ingest pipeline and the library, not with the
+agent. The generated agent has no tool that writes memory; it queries a
+graph someone else populated, and its own turns are captured for it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one ontology drives two backends that diverge at the write, and on the hosted default every relationship lands inside a text field that no reader in the tree parses back out</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one ontology drives two backends that diverge at the write, and on the hosted default every relationship lands inside a text field that no reader in the tree parses back out
+flowchart TD
+  SRC[&quot;connector fetch or LLM-generated fixtures: entities, relationships, documents, traces&quot;] --&gt; ING[&quot;ingest.py run_nams_ingest / _ingest_with_memory_client&quot;]
+  ING --&gt; BK{&quot;memory_backend&quot;}
+
+  BK --&gt;|&quot;bolt, --self-hosted&quot;| B1[&quot;MERGE on {name, domain} with typed attributes&quot;]
+  B1 --&gt; B2[&quot;relationships as native edges via Cypher MERGE&quot;]
+  B2 --&gt; B3[&quot;Document nodes plus MENTIONS edges&quot;]
+  B3 --&gt; BR[&quot;read: agent tools and run_cypher, unfiltered; REST helpers filter n.domain&quot;]
+
+  BK --&gt;|&quot;nams, default&quot;| N1[&quot;add_entity name, type, description only&quot;]
+  N1 --&gt; N2[&quot;properties flattened into description as markdown&quot;]
+  N2 --&gt; N3[&quot;outbound edges appended as a fenced ccg-edges YAML block&quot;]
+  N3 --&gt; N4[&quot;documents dual-tracked: entity plus short_term.add_message&quot;]
+  N4 --&gt; NR[&quot;read: memory_adapter strips the block and keeps the text before it&quot;]
+  NR --&gt; DEAD[&quot;no parser anywhere: the encoded edges are never read back&quot;]
+
+  BR --&gt; DEL{&quot;forget one memory?&quot;}
+  NR --&gt; DEL
+  DEL --&gt;|&quot;bolt&quot;| W[&quot;only MATCH n DETACH DELETE n, the whole store&quot;]
+  DEL --&gt;|&quot;nams&quot;| X[&quot;no delete endpoint; reset prints a refusal&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>Two artifacts, one repository.</strong> The CLI is a Click
+application (<code>cli.py</code>, 748 lines) with a Questionary wizard
+(<code>wizard.py</code>, 600 lines). It loads a domain YAML through
+<code>ontology.py</code> into a <code>DomainOntology</code> Pydantic
+model, optionally generates fixtures with an LLM
+(<code>generator.py</code>), renders a project tree through Jinja2
+(<code>renderer.py</code>, 584 lines), and can then ingest into the
+chosen backend. Twenty-seven bundled domain YAMLs plus a
+<code>_base.yaml</code> they inherit from, and a matching pre-generated
+fixture JSON for each.</p>
+<p><strong>The generated app</strong> is a FastAPI backend
+(<code>main.py</code>, <code>routes.py</code>, <code>agent.py</code>,
+<code>context_graph_client.py</code>, <code>memory.py</code>,
+<code>memory_adapter.py</code>, <code>gds_client.py</code>,
+<code>vector_client.py</code>), a Next.js frontend,
+<code>cypher/schema.cypher</code>, <code>data/ontology.yaml</code> and
+<code>data/fixtures.json</code>, a Makefile and a docker-compose for
+local Neo4j.</p>
+<p><strong>Deployment, which differs sharply by backend.</strong> The
+default path needs a NAMS API key from <code>memory.neo4jlabs.com</code>
+plus an LLM key for the agent; nothing is stored without the API key,
+and <code>connect_memory</code> raises if
+<code>MEMORY_BACKEND=nams</code> and <code>MEMORY_API_KEY</code> is
+unset (<code>memory.py.j2:150-154</code>). Nothing runs locally: no
+Neo4j, no embedder — <code>_resolve_embedding_model</code> returns
+<code>None</code> on NAMS specifically to avoid pulling
+sentence-transformers and torch (<code>:120-132</code>). The
+<code>--self-hosted</code> path needs a Neo4j 5+ instance (Docker, Aura
+or <code>neo4j-local</code>), pulls the library's
+<code>[sentence-transformers,extraction,fuzzy]</code> extras, and
+defaults embeddings to local <code>all-MiniLM-L6-v2</code>. Either way
+the generated <code>.env</code> holds every key in plaintext; it is
+gitignored, but <code>.context-graph/</code> and
+<code>data/fixtures.json</code> are not
+(<code>templates/base/gitignore.j2</code>), so an imported Slack or
+Gmail corpus and a deadletter of failed writes land in a tracked path by
+default.</p>
+<p><strong>No background processing exists in the generated
+app.</strong> <code>main.py.j2</code>'s lifespan connects Neo4j and
+memory, calls <code>create_vector_index()</code> once, and that is the
+whole of it — no worker, no queue, no scheduled consolidation. Seeding
+and importing are <code>make</code> targets a person runs.</p>
+<p><strong>Degradation is deliberate and well-covered.</strong> Startup
+catches its own failures and sets a degraded flag rather than exiting;
+<code>_classify_memory_error</code> (<code>memory.py.j2:63-106</code>)
+buckets an exception into <code>auth</code>, <code>rate_limit</code>,
+<code>network</code>, <code>config</code> or <code>unknown</code> by
+status code, then exception type, then message substring, and
+<code>/health</code> reports the bucket. <code>store_message</code>
+writes into the same state on a live failure, and treats the library's
+swallowed <code>{"error": ...}</code> return as a failure rather than a
+success (<code>:410-418</code>) — a fix whose absence, per
+<code>CLAUDE.md</code>, meant conversation memory "was silently failing
+on every message".</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Scaffold-time write, hosted.</strong>
+<code>ingest_data</code> (<code>ingest.py:1011-1077</code>) →
+<code>_ingest_with_nams</code> (<code>:470-548</code>) →
+<code>run_nams_ingest</code> (<code>:274-467</code>). Stage 0 binds the
+workspace ontology (<code>ensure_nams_ontology</code>,
+<code>:219-271</code>), returning one of <code>already-active</code>,
+<code>activated</code>, <code>created</code> or
+<code>unavailable</code>. Stage 1 writes entities:
+<code>_serialize_entity_to_description</code> (<code>:84-115</code>)
+renders every property outside
+<code>{name, description, domain, id, uuid}</code> as
+<code>**Key**: value</code> and appends <code>_pole_type: X_</code>;
+<code>_description_with_edges</code> (<code>:180-189</code>) appends the
+<code>ccg-edges</code> block; <code>add_entity</code> takes the result.
+An entity whose connector declares <code>BODY_FIELDS</code> also goes
+through <code>short_term.add_message</code> as extraction fuel. Stage 2
+writes documents twice. Stage 3 writes traces.</li>
+<li><strong>Scaffold-time write, bolt.</strong>
+<code>_ingest_with_memory_client</code> (<code>:556-730</code>) applies
+the generated Cypher schema, calls <code>add_entity</code> <em>with</em>
+<code>attributes={**item, "domain": domain_id}</code>
+(<code>:609-615</code>), MERGEs each relationship as a native edge
+behind <code>_require_safe_cypher_identifier</code>
+(<code>:126-130</code>), MERGEs <code>:Document</code> nodes and links
+<code>MENTIONS</code> by substring containment of an entity name in the
+document body (<code>:675-684</code>), and writes
+<code>:DecisionTrace</code>/<code>:TraceStep</code>.
+<code>_ingest_with_driver</code> (<code>:733-901</code>) is the same
+without the library.</li>
+<li><strong>Runtime write.</strong> Every framework's
+<code>handle_message</code> calls <code>resolve_session_id</code>,
+<code>store_message(session_id, "user", message)</code>,
+<code>get_context</code>, the agent, then
+<code>store_message(..., "assistant", ...)</code> —
+<code>templates/backend/agents/pydanticai/agent.py.j2:106-146</code> and
+the same shape in the other seven.</li>
+<li><strong>Hosted session mapping.</strong>
+<code>_resolve_nams_conversation</code>
+(<code>memory.py.j2:365-384</code>) creates a conversation on first use
+and caches the server-assigned id in a module-level dict, because the
+service rejects client-chosen ids. The comment is explicit that this is
+process-local and that a restart therefore resets context rather than
+failing every write.</li>
+<li><strong>Retrieval.</strong> <code>execute_cypher</code>
+(<code>context_graph_client.py.j2:253-287</code>) dispatches to
+<code>client.query.cypher</code> on NAMS and to a driver session on
+bolt. <code>search_entities</code> (<code>:290-305</code>),
+<code>get_entity_graph</code> (<code>:308-322</code>),
+<code>get_schema</code> (<code>:325-352</code>) and
+<code>expand_node</code> (<code>:421-434</code>) are the domain-filtered
+helpers behind the REST routes; <code>memory_adapter.py.j2</code> holds
+the NAMS equivalents, each cypher-first with a REST search
+fallback.</li>
+<li><strong>Incremental import in the generated project.</strong>
+<code>templates/backend/connectors/import_data.py.j2</code> —
+<code>_load_watermarks</code>/<code>_save_watermarks</code>
+(<code>:89-101</code>), <code>_append_deadletter</code>
+(<code>:104-107</code>), <code>main</code> (<code>:693-774</code>) which
+advances watermarks only <code>if not any_failure</code>, and
+<code>_retry_deadletter</code> (<code>:777-</code>) which renames the
+file to <code>.jsonl.retrying</code> before replaying it so a failed
+retry does not lose records.</li>
+<li><strong>Correction and preference extraction from local
+sessions.</strong>
+<code>connectors/_claude_code/decision_extractor.py</code> (492 lines,
+four detectors: corrections, deliberations, error resolutions,
+dependency changes) and <code>preference_extractor.py</code> (213 lines,
+fifteen explicit patterns plus package-frequency inference with
+<code>_MIN_PACKAGE_SESSIONS = 2</code> and
+<code>_MIN_CONFIDENCE = 0.4</code>).</li>
+<li><strong>Redaction.</strong>
+<code>connectors/_claude_code/redactor.py:23-61</code> — thirteen
+patterns for Anthropic, OpenAI, GitHub, Slack and AWS credentials,
+bearer headers, generic key and password assignments, credentialed
+connection strings and <code>.env</code>-style variables — called at
+<code>claude_code_connector.py:252</code>, <code>:306</code>,
+<code>:382</code> and <code>:411</code>.</li>
+<li><strong>Tests covering the above.</strong>
+<code>tests/test_nams_ingest_parity.py</code> (625 lines),
+<code>tests/test_memory_adapter.py</code> (492),
+<code>tests/test_ingest_nams.py</code> (556),
+<code>tests/test_generated_client_runtime.py</code> (695),
+<code>tests/test_integration.py</code> (414, <code>--integration</code>
+only).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no schema of the system's own. What exists is a
+<em>generated</em> schema per domain plus the library's, and the two
+backends produce structurally different graphs from the same ontology —
+<code>ingest.py</code>'s module docstring says so in as many words.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Bolt (<code>--self-hosted</code>)</th>
+<th>NAMS (default)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entity identity</td>
+<td><code>MERGE (n:Label {name, domain})</code></td>
+<td><code>add_entity(name=…)</code>, server-side merge by name</td>
+</tr>
+<tr>
+<td>Properties</td>
+<td>native node properties, plus <code>domain</code></td>
+<td>one markdown block inside <code>description</code></td>
+</tr>
+<tr>
+<td>Relationships</td>
+<td>native typed edges via <code>MERGE</code></td>
+<td>a fenced <code>ccg-edges</code> block inside the source entity's
+<code>description</code></td>
+</tr>
+<tr>
+<td>Documents</td>
+<td><code>:Document {title, content, template_id, template_name, domain}</code>
+plus <code>MENTIONS</code></td>
+<td>an OBJECT entity <em>and</em> a <code>short_term</code> message</td>
+</tr>
+<tr>
+<td>Traces</td>
+<td><code>:DecisionTrace</code> and <code>:TraceStep</code> with
+<code>HAS_STEP</code></td>
+<td>the reasoning REST API</td>
+</tr>
+<tr>
+<td>Constraints and indexes</td>
+<td><code>generate_cypher_schema</code>
+(<code>ontology.py:411-478</code>) emits uniqueness constraints,
+per-label name indexes, a full-text index over Document and Section, and
+a <strong>commented-out</strong> vector index</td>
+<td>server-owned; the CLI prints that it is skipping schema DDL</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Temporal fields are absent.</strong> The only timestamps are
+content — <code>timestamp</code> on a Claude Code decision,
+<code>loadedAt</code>/<code>createdAt</code>/<code>modifiedAt</code> on
+a local-file Document — and none is a validity bound distinguished from
+a record time. <code>bitemporal</code> is withheld.</p>
+<p><strong>Scoping</strong> is the <code>domain</code> string, and it is
+worth being precise about where it lives. It is MERGEd into the node key
+on bolt (<code>generate_data.py.j2:73</code>), so two domains sharing
+one Neo4j instance cannot collide on a name. It is read back by four
+helpers in <code>context_graph_client.py.j2</code> under the predicate
+<code>(n.domain IS NULL OR n.domain = $domain)</code> — permissive, so
+anything written without the property, including everything the library
+writes, is visible from every domain. None of the 193 agent tools across
+the bundled domains references it:
+<code>grep -rn -F '$domain' src/create_context_graph/domains/</code>
+returns zero. And on the hosted backend the property is never written,
+so the boundary there is the workspace behind the API key — a physical
+partition, which is a real boundary and a different mark.</p>
+<p><strong>Provenance</strong> is by convention rather than field. A
+<code>metadata</code> dict with <code>kind: "document"</code> or
+<code>kind: "entity-body"</code> and the entity name rides along on
+<code>short_term.add_message</code> (<code>ingest.py:379-385</code>),
+and <code>_pole_type: X_</code> is described in the code as "this
+scaffold's own write contract" for surviving the service's coercion of
+unknown entity types to <code>custom</code>
+(<code>memory_adapter.py.j2:282-286</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The agent reads the graph with Cypher and nothing
+else.</strong> Each domain YAML declares seven or more tools whose
+bodies are literal Cypher strings interpolated into the framework
+template (<code>agents/pydanticai/agent.py.j2:63-76</code>), plus a
+free-form <code>run_cypher</code> and a <code>get_graph_schema</code>.
+The system prompt insists the model call a tool before answering
+anything about the data. There is no ranking, no fusion, no token
+budget: a tool returns <code>json.dumps(result)</code> of whatever rows
+came back, and each domain tool's own <code>LIMIT</code> is the only
+bound.</p>
+<p><strong>Lexical matching is substring containment.</strong>
+<code>search_entities</code> is
+<code>toLower(n.name) CONTAINS toLower($query) OR toLower(coalesce(n.description, '')) CONTAINS toLower($query)</code>
+with <code>LIMIT $limit</code>. On the hosted backend the equivalent
+delegates to <code>client.long_term.search_entities(query=…)</code>,
+whose ranking belongs to the service.</p>
+<p><strong>The vector arm is an empty index.</strong>
+<code>main.py.j2:71-75</code> calls <code>create_vector_index()</code>
+at startup, creating <code>entity_embeddings</code> on
+<code>(:Entity).embedding</code> at 1536 dimensions. Nothing in the tree
+ever writes an <code>embedding</code> property to a node, and neither
+<code>vector_search</code> nor <code>hybrid_search</code> in
+<code>vector_client.py.j2</code> has a single caller anywhere — both
+searches are in the appendix. The ontology's own vector index is emitted
+as commented-out Cypher with a note that dimensions must match the
+embedder. So the file is scaffolding for work an adopter has to finish,
+and the generated app's retrieval is graph traversal plus substring
+matching.</p>
+<p><strong>The most consequential finding in this section is what the
+context call throws away.</strong> Every framework does:</p>
+<pre class="python"><code>context = await get_context(session_id, query=message)
+history = context.get(&quot;messages&quot;, [])</code></pre>
+<p><code>get_context</code> returns
+<code>{"messages", "entities", "preferences", "traces"}</code>
+(<code>memory.py.j2:431-449</code>). All eight templates bind only
+<code>messages</code>; <code>entities</code>, <code>preferences</code>
+and <code>traces</code> are fetched over the network and dropped —
+<code>grep -rn 'context\.get(' src/create_context_graph/templates/backend/agents/</code>
+returns sixteen lines and every one of them is
+<code>context.get("messages", [])</code>. The extraction results that
+come back from the <em>write</em> (<code>assistant_result</code>) are
+forwarded to the browser as <code>entities_extracted</code> and
+<code>preferences_detected</code> SSE badges and are not put in front of
+the model either. So the long-term tier the README calls the point of
+the design reaches the agent only if the model happens to write a Cypher
+query that finds it.</p>
+<p><strong>Failure modes that follow.</strong> On the hosted backend,
+the document browser enumerates by
+<code>n.description CONTAINS '_pole_type: OBJECT_'</code> — but that
+marker is written onto <em>every</em> entity whose ontology POLE type is
+OBJECT, which is 102 entity types out of the 170 across the bundled
+domains. A Diagnosis and a Medication are returned as documents.
+<code>_document_record_from_fields</code> only rejects a record whose
+description is empty after the marker and edge block are stripped, and
+an entity's attribute list is not empty.
+<code>schema_visualization_nams</code> always returns
+<code>"relationships": []</code>. And <code>list_traces_nams</code>
+fetches every trace and then <code>get_trace_with_steps</code> per
+trace, an N+1 over the whole reasoning store on a single page load.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Chat writes are synchronous and doubled.</strong>
+<code>store_message</code> is awaited before the agent runs and again
+after it produces text, and the library performs entity extraction
+inside that call — an LLM round trip on the user's turn before the agent
+has started thinking. A memory is retrievable as soon as the call
+returns; there is no deferral and therefore no lag to state. Extraction
+defaults to <code>anthropic/claude-haiku-4-5</code> when an Anthropic
+key is present, <code>openai/gpt-4o-mini</code> when only an OpenAI key
+is (<code>memory.py.j2:109-117</code>); with neither, extraction is
+disabled and messages are still stored.</p>
+<p><strong>Ingest writes are one record at a time, with per-record
+failure isolation.</strong> <code>run_nams_ingest</code> wraps every
+<code>add_entity</code>, <code>add_message</code>,
+<code>start_trace</code> and <code>complete_trace</code> in its own
+try/except, appends a failure record with a kind and a name, and returns
+counts alongside <code>failure_records</code>. The CLI prints the count;
+the generated <code>import_data.py</code> writes each record to
+<code>.context-graph/deadletter.jsonl</code> instead, which is the
+better half of the same design.</p>
+<p><strong>Deduplication is MERGE-on-name and nothing more.</strong> On
+bolt,
+<code>MERGE (n:Label {name, domain}) ON CREATE SET … ON MATCH SET …</code>
+overwrites in place, so a re-import replaces properties with no record
+that they changed. On NAMS the service merges by name. Two different
+people called "J. Smith" are one entity in both. There is no conflict
+detection, no contradiction pass and no consolidation anywhere in the
+tree.</p>
+<p><strong>Deletion.</strong> <code>reset_memory_store</code>
+(<code>ingest.py:962-975</code>) branches: bolt runs
+<code>MATCH (n) DETACH DELETE n</code>, NAMS runs
+<code>_reset_nams</code>, which counts and refuses. The generated
+Makefile mirrors both — <code>make reset</code> on the hosted backend
+prints "NAMS exposes no delete API (neo4j-agent-memory 0.5.x) — reset is
+not available from the CLI." A test asserts the refusal path calls no
+delete (<code>tests/test_ingest_nams.py:437</code>,
+<code>delete_entity.await_count == 0</code>). Nothing narrower than the
+whole store exists on either backend.</p>
+<p><strong>Noisy and hostile input.</strong> Bolt ingest validates every
+interpolated label and relationship type against
+<code>^[A-Za-z_][A-Za-z0-9_]*$</code> before it reaches an f-string, and
+passes names as parameters — this is the one place the repository treats
+connector data as untrusted. Redaction is applied to Claude Code content
+on import. Beyond that, imported Slack messages, Jira descriptions and
+Gmail bodies become entity descriptions that the agent reads back as
+tool results; nothing filters instruction-shaped text.</p>
+<p><strong>No background pass rewrites the store</strong>, so there is
+no corpus-scaled token bill. The cost is proportional to the day's
+messages, plus whatever the LLM fixture generator spends once at
+scaffold time.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Eight frameworks, one shape.</strong> PydanticAI, Claude
+Agent SDK, OpenAI Agents, LangGraph, CrewAI, Strands, Google ADK and a
+hand-rolled Anthropic tool loop. Each template differs only in how tools
+are registered and how streaming is collected; the memory calls, the
+session handling and the HTTP layer are identical. That uniformity is
+the scaffolder's real product and it is executed cleanly — the domain ×
+framework matrix job renders all 176 combinations in CI.</p>
+<p><strong>The agent has no memory tools.</strong> It cannot save,
+search, forget or correct a memory. Its memory affordance is Cypher over
+the graph and a message history the harness injects for it. Capture is
+automatic and invisible to the model.</p>
+<p><strong>Sessions.</strong> <code>--session-strategy</code> picks
+<code>per_conversation</code> (default), <code>per_day</code> or
+<code>persistent</code>, passed to the library's
+<code>SessionStrategy</code> at construction
+(<code>memory.py.j2:261-282</code>). The browser keeps the id in
+<code>sessionStorage</code> under
+<code>ccg-session-id-${DOMAIN.id}</code>
+(<code>ChatInterface.tsx.j2:51</code>, <code>:130</code>,
+<code>:192</code>), so it dies with the tab, while chat text is kept
+separately in <code>localStorage</code>. On the hosted backend the
+server-id mapping is a module-level dict, so a backend restart silently
+starts a new conversation for a returning session id. There is no
+compaction-boundary handling; nothing bounds how much history
+<code>get_context(max_items=10)</code> returns beyond that default.</p>
+<p><strong>MCP.</strong> <code>--with-mcp</code> writes a Claude Desktop
+config that launches
+<code>python -m neo4j_agent_memory.mcp.server</code> against the same
+backend (<code>templates/base/mcp/claude_desktop_config.json.j2</code>).
+The profile is coerced to <code>core</code> on NAMS because the extended
+tools need preference and fact endpoints the REST API does not expose
+(<code>config.py:136-141</code>). The server is the library's; this
+repository contributes the config and the coercion.</p>
+<p><strong>Adapting it elsewhere</strong> is easy in one direction and
+not the other: the memory surface is four functions in one module, so
+swapping frameworks is trivial, but the whole design assumes a
+Neo4j-shaped store behind <code>neo4j-agent-memory</code> and nothing
+abstracts that.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The hosted write path is lossy in a way the code documents
+and the docs overstate.</strong> Structured entity properties become
+prose inside <code>description</code>; relationships become YAML inside
+the same field. The encoding is deterministic and grep-able, the docs
+page explains the intended migration, and the plan is written down in
+<code>docs/docs/explanation/ccg-edges.md:70-72</code> as three steps
+starting with a script named
+<code>scripts/migrate_ccg_edges_to_native.py</code>. That script does
+not exist. Nor does a parser: the block is written by three
+implementations and read by none. Until one lands, a NAMS-backed graph's
+edges exist only as text, and the claims in <code>README.md:152</code>,
+<code>templates/base/README.md.j2:73</code> and
+<code>docs/docs/how-to/use-nams.md:87</code> that the frontend renders
+them are wrong at this commit.</p>
+<p><strong><code>POST /cypher</code> on bolt accepts writes.</strong>
+The route's docstring says "On NAMS, only read queries are accepted
+(server enforces)" and the bolt branch passes the query to
+<code>session.run</code> with no access mode and no keyword filter
+(<code>routes.py.j2:274-292</code>,
+<code>context_graph_client.py.j2:273-287</code>). Searches for
+<code>execute_read</code>, <code>default_access_mode</code> and a
+write-keyword denylist are in the appendix and return nothing. The
+endpoint is CORS-exposed to a local frontend, so on a self-hosted
+scaffold a <code>DETACH DELETE</code> reaches the store through the same
+door the graph view uses.</p>
+<p><strong>Trust is a float, and it is not consulted.</strong> Extracted
+decisions carry <code>confidence: 0.75</code>; preferences start at a
+floor of 0.4 and climb 0.15 per repeat to a 0.95 cap. Neither is read on
+any path — <code>confidence</code> appears in a returned column in one
+domain's tool Cypher and nowhere in a <code>WHERE</code>. The
+<code>Alternative</code> node's <code>wasChosen: False</code> is the
+nearest thing to an epistemic state and it describes a past decision,
+not the status of a memory. <code>trust_state</code> is withheld; the
+closest field in the whole tree is the data-journalism demo ontology's
+<code>Claim.verdict</code> enum of true/mostly_true/…/unverified, which
+is a schema for the demo's <em>subject matter</em>, with nothing
+filtering on it.</p>
+<p><strong>Privacy.</strong> Claude Code redaction is genuinely
+well-wired — four call sites covering message content, tool output,
+error text and document bodies, and the generated connector template
+drops the toggle entirely and redacts unconditionally
+(<code>templates/backend/connectors/claude_code_connector.py.j2:87-97</code>).
+The other twelve connectors have no equivalent: a Slack channel or a
+Gmail thread is imported as-is. And the output lands in tracked paths —
+the generated <code>.gitignore</code> ignores <code>.env</code> and
+<code>data/documents/*.json</code> but not
+<code>data/fixtures.json</code> or <code>.context-graph/</code>, so an
+imported corpus and a deadletter carrying the records that failed to
+write are committed by default.</p>
+<p><strong>Withheld marks, stated once.</strong></p>
+<ul>
+<li><code>tombstone</code> — the <code>REJECTED</code> edge and its
+<code>Alternative</code> with <code>wasChosen: False</code> and a reason
+is the near-miss, and a good one; it is keyed on a session-and-index
+hash rather than on the value, so re-extraction of the same rejected
+approach creates a new node and nothing consults the old one.</li>
+<li><code>trust_state</code> — confidence floats only, and nothing
+filters on them.</li>
+<li><code>bitemporal</code> — no
+<code>valid_from</code>/<code>valid_until</code>/<code>as_of</code>
+field exists anywhere; searches in the appendix.</li>
+<li><code>audit_log</code> — there is no mutation record in the system's
+own store. The <code>deadletter.jsonl</code> is append-only and durable
+but records writes that <em>failed</em>, which is the opposite object;
+decision traces record reasoning, not changes to memory.</li>
+<li><code>human_review</code> — the frontend displays entities,
+documents and traces and cannot alter any of them; the only POSTs it
+issues are <code>/chat</code>, <code>/search</code> and
+<code>/expand</code>, and the backend has no PUT, PATCH or DELETE route
+at all.</li>
+</ul>
+<p><strong>Race conditions and recovery.</strong> Every ingest is
+sequential and idempotent by MERGE, so a re-run is safe; the watermark
+design makes a partial import re-fetchable. The counterpart is that a
+crash mid-ingest leaves a half-populated graph with no marker saying so,
+and on the hosted backend no way to clean it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,127 test functions across 29 files, 41 parametrized. CI runs a
+<code>test</code> job (<code>pytest tests/ -v</code> on Python 3.11 and
+3.12) and a <code>lint</code> job on every push and pull request, a
+<code>full-suite</code> job adding <code>--slow --functional</code>, and
+a <code>smoke-test</code> job that is <code>main</code>-push-only
+<em>and</em> gated behind a <code>SMOKE_TESTS_ENABLED</code> repository
+variable. I ran none of it.</p>
+<p><strong>The contract test is the best thing in the suite.</strong>
+<code>tests/test_nams_ingest_parity.py</code> exists because
+<code>run_nams_ingest</code> and the rendered
+<code>import_data.py</code> are duplicated on purpose; it loads the
+rendered template into a namespace, drives both against one canonical
+fixture chosen to hit every branch (an entity with no body, one with a
+body, one with outbound edges, a document, a trace), captures every
+client call from each, and diffs the sequences — including splitting
+both descriptions on the <code>ccg-edges</code> fence and comparing the
+blocks (<code>:354-376</code>). It is the right instrument for the risk
+it was built for.</p>
+<p><strong>The domain-scoping test cannot fail.</strong>
+<code>tests/test_security.py:165-186</code>, parametrized over all
+twenty-seven domains, collects every agent tool whose Cypher contains
+<code>$domain</code> or <code>domain:</code> and then asserts
+<code>assert len(domain_scoped_tools) &gt;= 0</code>. A list's length is
+never negative. The docstring and the failure message both describe a
+check the assertion does not perform — and the check would fail if it
+were written, because
+<code>grep -rn -F '$domain' src/create_context_graph/domains/</code>
+returns zero and no <code>cypher:</code> line in any bundled domain
+contains <code>domain:</code> either. The whole class of "at minimum,
+the domain should have some tools with domain scoping" is unverified at
+this commit for every domain, and the repair is one character.</p>
+<p><strong>What backs the marks.</strong> <code>negative_eval</code>
+rests on <code>tests/test_memory_adapter.py:176-196</code>, which is the
+shape the mark asks for: a populated result, a named exclusion, and a
+positive control
+(<code>assert "chest pain" in result[0]["preview"]</code>) that stops it
+passing against a function returning nothing. It runs unconditionally in
+the CI test job. The scope-boundary case in
+<code>tests/test_integration.py:309-334</code> is also real — it seeds
+financial-services and healthcare fixtures under two test domains and
+asserts that a query scoped to one returns zero nodes carrying any of
+the seven labels unique to the other — but it is doubly gated, and its
+<code>neo4j_driver</code> fixture calls <code>pytest.skip</code> when
+Neo4j is unreachable, so a green run is not evidence it executed.</p>
+<p><strong>Other sound coverage:</strong>
+<code>test_generated_client_runtime.py</code> executes the rendered
+client and memory modules against doubles rather than asserting on
+template text, which is the distinction most template-testing suites
+miss; <code>test_security.py</code>'s parameterization checks catch
+f-string interpolation of user input; <code>test_doc_snippets.py</code>
+pins the <code>ccg-edges</code> documentation page's example against
+<code>_build_ccg_edges_block</code>'s actual output. A great deal of the
+rest is string containment over rendered templates, which verifies that
+a line was emitted and not that it works.</p>
+<p><strong>No benchmark, no eval harness, no paper.</strong>
+<code>scripts/e2e_smoke_test.py</code> scaffolds, installs, starts a
+backend and sends chat prompts, asserting the pipeline runs; it measures
+nothing about retrieval quality and needs live API keys. Searching the
+tree for <code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>@misc</code>, <code>doi.org</code> and a <code>CITATION</code>
+file finds nothing — there is no paper associated with this project, and
+no committed result of any kind about whether the generated agent
+answers better with the graph than without it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>A watermark that advances only after the batch
+lands.</strong> Keep the per-source cursor tentative through the run and
+commit it only when nothing failed, so a partial import leaves the
+window re-fetchable instead of silently skipped. Pair it with a JSONL
+deadletter of individual failures and a <code>--retry</code> that
+renames the file aside before replaying it, so a failed retry cannot
+lose records.</li>
+<li><strong>A parity contract test over deliberately duplicated
+code.</strong> When two copies of a write path must exist, do not settle
+for reviewing both — drive both against one fixture, capture the call
+sequences, and diff them. The fixture is the design document: pick one
+case per load-bearing branch and say so in a comment.</li>
+<li><strong>Refuse rather than report zero.</strong>
+<code>_reset_nams</code> counts what it cannot delete and says the API
+does not exist, with the earlier swallow-the-AttributeError version
+named in the comment. A destructive operation that no-ops silently is
+worse than one that errors.</li>
+<li><strong>Redact at every content path, not at one
+chokepoint.</strong> Message bodies, tool output, error strings and
+document text all carry credentials, and a single call site covers
+whichever one you thought of first.</li>
+<li><strong>A write-time marker that survives a server's type
+coercion.</strong> When a backend normalizes your types away, stamping
+your own convention into a field it preserves gives the read path
+something to filter on. Write the contract down where the reader can
+find it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Encoding structure into a text field before the reader
+exists.</strong> The lossy write is defensible when the target API
+genuinely cannot hold the shape. Shipping it while the docs claim a
+parser renders it is not, and it is the failure mode this pattern always
+takes: the encoder is easy and gets written, the decoder is deferred,
+and the round trip is never closed. Write the reader first, or state in
+the README that the data is quarantined until one exists.</li>
+<li><strong>Fetching context you then discard.</strong>
+<code>get_context</code> returns four collections and the caller binds
+one. Either use the entities and preferences or stop paying for them —
+and if the design's headline is a knowledge graph the agent reasons
+over, notice when the code hands that graph to nobody.</li>
+<li><strong>An assertion that cannot fail, under a docstring that
+describes one that could.</strong> <code>len(x) &gt;= 0</code> over a
+list is the purest form, but the tell is general: if the failure message
+names a condition the assertion does not evaluate, the test is
+documentation.</li>
+<li><strong>A permissive scope predicate.</strong>
+<code>n.domain IS NULL OR n.domain = $domain</code> admits every row
+your own writer did not stamp, which is precisely the rows another
+writer produced.</li>
+<li><strong>Creating an index for a property nothing writes.</strong> An
+empty vector index and two uncalled search functions read, from outside,
+exactly like a working vector arm.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a demo generator and it is an unusually good one —
+twenty-seven ontologies, eight frameworks, a 176-combination render
+matrix in CI, and a frontend that makes a graph legible in about five
+minutes. Take it if you want to show someone what an agent over a
+knowledge graph looks like, or if you want a running skeleton to gut. Do
+not take the generated app as a memory architecture to build a product
+on: it has no way to correct or delete a single memory on either
+backend, its default backend cannot store a relationship in a form
+anything reads back, and its agent never sees the long-term tier unless
+it writes the Cypher itself. The people best served here are the ones
+who will replace <code>memory.py</code> and
+<code>context_graph_client.py</code> within a week and keep the ontology
+pipeline, the connectors and the import machinery — which is the
+genuinely reusable third of the repository.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Whether the hosted service's own entity resolution creates edges
+that make the missing <code>ccg-edges</code> parser matter less in
+practice — <code>expand_node_nams</code> queries for
+<code>SAME_AS</code> edges the service creates, and only a live
+workspace shows how much of a graph that is.</li>
+<li>What <code>client.long_term.search_entities</code> actually ranks on
+server-side, which decides whether the generated app has a semantic
+retrieval arm at all.</li>
+<li>Whether the <code>_pole_type: OBJECT_</code> document marker
+returning OBJECT-typed domain entities is known and accepted, or whether
+the document browser is understood to be showing documents only.</li>
+<li>How the library's <code>get_context</code> weighs a query against
+stored messages, since that is the one ranked retrieval the generated
+agent actually consumes.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>CLI and configuration: <code>src/create_context_graph/cli.py</code>,
+<code>wizard.py</code>, <code>config.py</code>.</li>
+<li>Ontology and codegen:
+<code>src/create_context_graph/ontology.py</code>,
+<code>custom_domain.py</code>, <code>renderer.py</code>,
+<code>generator.py</code>, <code>name_pools.py</code>,
+<code>domains/*.yaml</code>, <code>fixtures/*.json</code>.</li>
+<li>Write path: <code>src/create_context_graph/ingest.py</code>;
+<code>templates/backend/connectors/import_data.py.j2</code>;
+<code>templates/backend/shared/generate_data.py.j2</code>.</li>
+<li>Connectors: <code>src/create_context_graph/connectors/</code> —
+<code>claude_code_connector.py</code>,
+<code>local_file_connector.py</code>, <code>linear_connector.py</code>,
+<code>google_workspace_connector.py</code>,
+<code>_claude_code/{parser,decision_extractor,preference_extractor,redactor}.py</code>,
+<code>_chat_import/</code>, <code>_local_file/</code>.</li>
+<li>Generated memory layer:
+<code>templates/backend/shared/memory.py.j2</code>,
+<code>memory_adapter.py.j2</code>,
+<code>context_graph_client.py.j2</code>,
+<code>vector_client.py.j2</code>, <code>gds_client.py.j2</code>,
+<code>config.py.j2</code>, <code>main.py.j2</code>,
+<code>routes.py.j2</code>.</li>
+<li>Generated agents:
+<code>templates/backend/agents/{pydanticai,claude_agent_sdk,strands,google_adk,openai_agents,langgraph,crewai,anthropic_tools}/agent.py.j2</code>.</li>
+<li>Generated frontend and MCP:
+<code>templates/frontend/components/</code>,
+<code>templates/base/mcp/claude_desktop_config.json.j2</code>,
+<code>templates/base/Makefile.j2</code>,
+<code>templates/base/gitignore.j2</code>,
+<code>templates/base/dot_env.j2</code>.</li>
+<li>Tests: <code>tests/test_nams_ingest_parity.py</code>,
+<code>test_bolt_ingest_parity.py</code>,
+<code>test_memory_adapter.py</code>, <code>test_ingest_nams.py</code>,
+<code>test_generated_client_runtime.py</code>,
+<code>test_security.py</code>, <code>test_integration.py</code>,
+<code>test_connectors.py</code>, <code>test_doc_snippets.py</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &#39;ccg-edges&#39; src/create_context_graph/templates/frontend/                      # 0: no parser in the generated UI
+grep -rn -F &#39;CCG_EDGES_OPEN&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; src/                     # writers in 3 files; the only readers split and keep [0]
+find . -name &#39;*migrate*&#39; -not -path &#39;./.git/*&#39;                                          # 0: the docs&#39; migrate_ccg_edges_to_native.py does not exist
+grep -rn -F &#39;$domain&#39; src/create_context_graph/domains/                                 # 0 across all 27 bundled domain YAMLs
+grep -rn &#39;cypher:&#39; src/create_context_graph/domains/ | grep -F &#39;domain:&#39;                # 0: the test&#39;s second alternative matches nothing either
+grep -rniE &#39;valid_from|valid_until|as_of|observed_at|effective_&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; --include=&#39;*.yaml&#39; . | grep -v &#39;^./docs/&#39;   # only effective_mcp_profile / a demo property named effective_date
+grep -rniE &#39;tombstone|forget|do_not_store|denylist|supersede&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; . | grep -v &#39;^./docs/&#39;                          # 0 for all five identifiers
+grep -rn &#39;delete_entity\|remove_entity\|long_term.delete&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; . | grep -v &#39;^./docs/&#39;                              # only the comment saying it does not exist, and the test asserting it is not called
+grep -rniE &#39;execute_read|read_only|default_access_mode|ACCESS_MODE_READ&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; . | grep -v &#39;^./docs/&#39;               # 0: only Google OAuth *.readonly scopes
+grep -rn &#39;vector_search(\|hybrid_search(&#39; --include=&#39;*.py&#39; --include=&#39;*.j2&#39; --include=&#39;*.tsx&#39; .                                                 # 0 callers outside the definitions
+grep -rn &quot;SET n.embedding\|\&quot;embedding\&quot;:&quot; --include=&#39;*.j2&#39; --include=&#39;*.py&#39; src/                                                               # 0 writers of a node embedding property
+grep -rn &#39;context\.get(&#39; src/create_context_graph/templates/backend/agents/                                                                     # 16 lines, all context.get(&quot;messages&quot;, [])
+grep -n &#39;@router.put\|@router.delete\|@router.patch&#39; src/create_context_graph/templates/backend/shared/routes.py.j2                             # 0: no mutating route, hence no review surface
+grep -rniE &#39;arxiv|bibtex|@article|@misc|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; --include=&#39;*.toml&#39; . ; find . -iname &#39;CITATION*&#39;            # 0: no paper
+python3 - &lt;&lt;&#39;PY&#39;   # 102 OBJECT pole types out of 170 entity types, from the committed domain YAMLs
+import re, glob, collections
+c = collections.Counter()
+for p in glob.glob(&#39;src/create_context_graph/domains/*.yaml&#39;):
+    t = open(p).read()
+    if &#39;entity_types:&#39; not in t: continue
+    s = t.split(&#39;entity_types:&#39;, 1)[1].split(&#39;\nrelationship_types:&#39;, 1)[0]
+    for _, pt in re.findall(r&#39;-\s*label:\s*(\S+)\s*\n\s*pole_type:\s*(\S+)&#39;, s): c[pt] += 1
+print(sum(c.values()), c)
+PY</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/neo4j-labs/create-context-graph/commit/707b168d9509cbf1b919b82940285d1df4c6810d"><code class="commit-id" title="707b168d9509cbf1b919b82940285d1df4c6810d">707b168d…</code></a>
+— first reading. Screened with <code>scripts/screen_repo.py</code>
+before any file was opened: no auto-running configuration, two
+build-time execution surfaces (<code>Makefile</code>,
+<code>tests/conftest.py</code>, which runs at pytest collection), one
+unpinned manifest (<code>docs/package.json</code>, fourteen floating
+ranges with a lockfile beside it), <code>uv.lock</code> and
+<code>docs/package-lock.json</code> both outside the seven-day cooldown,
+and <code>CLAUDE.md</code> read as data. Nothing was installed, built or
+run; the POLE-type distribution was recomputed from the committed domain
+YAMLs in Python.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

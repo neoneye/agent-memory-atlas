@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-seven systems of four hundred and thirty-three
+> **This is not an established best practice.** Thirty-seven systems of four hundred and thirty-four
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-seven systems of 433 in the atlas have this.** That is still the most
+**Thirty-seven systems of 434 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -220,8 +220,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of four hundred and thirty-three
-would suggest a hard idea that a few teams reach independently. One of four hundred and thirty-three, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of four hundred and thirty-four
+would suggest a hard idea that a few teams reach independently. One of four hundred and thirty-four, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -951,6 +951,8 @@ for being wrong does not record it, and recording it does not erase it.
 [marm-memory](../../systems/marm-memory/) arrives at the pattern from a place most of the corpus does not: not a claim extractor that might re-assert a corrected fact, but a derived graph its own product tells you to throw away and rebuild. Removing a concept writes its name into a suppressions table *before* it deletes the entity row, so the record is keyed on the name in its scope; name resolution follows the alias chain and then returns nothing for a suppressed name, and the build engine skipping that result is the only place the reading is used. What makes it a clear worked example is the table list in the reset: a full rebuild drops entities, relationships, code links, build runs and schema metadata, and leaves aliases, suppressions and dismissals standing. The committed test does the thing the pattern is for — remove, reset the whole graph, assert the name still resolves to nothing. The limit is worth stating beside it: the mechanism covers the *derived* layer only. A memory row is hard-deleted with nothing left behind, so the same text logged again is stored as new, and the entity gets suppressed on its way back out while the sentence that produced it does not.
 
 [Lobu](../../systems/lobu/) calls its mechanism a tombstone and it is the record-keyed kind. A delete appends an empty event whose supersedes pointer names the target, a partial unique index permits one superseder per target, a trigger blocks a top-level delete on the events table, and the current-records view removes the target from every recall arm — a clean, durable retraction of a *row*. Nothing is keyed on the text, so the same content saved again becomes a new live head. The nearest thing to the value-keyed form is one layer up: a field-controls column marks a field human-owned and the merge returns an automation's write to an owned field as blocked rather than applying it, which is a durable refusal that survives re-proposal indefinitely — but it refuses the *field*, not the value, so it prevents silent application and not re-assertion.
+
+[create-context-graph](../../systems/create-context-graph/)'s session connector gets most of the way and stops at the key. A corrections pass reads a user turn matching one of eight patterns, writes the preceding assistant turn as an alternative carrying a not-chosen flag and a reason, and links it as rejected from a decision — a durable, reasoned record of a value a person rejected, which is more than most of the corpus has. Its name is derived from the session id and the message's index in the transcript, so importing a second session in which the model proposes the same thing creates a second node and consults neither. The distinction this page draws — keyed on the record versus keyed on the value — is the whole difference here, and it is one hash function wide.
 
 ## Tests to require
 

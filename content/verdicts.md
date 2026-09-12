@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 433 reports.**
+**This page covers all 434 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3808,3 +3808,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 2,291 TypeScript files over nineteen packages, 279 migrations since 19 May 2026, 1,150 test files and about 10,800 cases, integration suites sharded three ways against a real Postgres with pgvector, and a CI guard that parses the test report and fails a run in which zero tests ran. Two operational incidents from June 2026 are written into the embedding-backfill scheduler as the reason for its bounds.
 - Study when: many agents and many people need one organisation's context under different permissions, and a leak is the failure you cannot undo.
 - Do not copy when: you want a retrieval engine — the hybrid weights are two untuned constants with no quality harness — or when "forget that" has to survive the next write.
+
+### [`create-context-graph`](../systems/create-context-graph/)
+- Best idea: **a watermark that advances only after the batch lands, beside a drainable failure log.** The generated importer keeps each connector's cursor tentative through the run and commits it only when nothing failed, appends every individual failure to a JSONL deadletter, and renames that file aside before a retry replays it. Beside it, a parity test that drives two deliberately duplicated write paths against one fixture and diffs the captured call sequences. Two marks, `scope_enforced` and `negative_eval`, on a domain key filtered in four REST helpers and a document-preview exclusion test with a positive control.
+- Biggest risk: **on the default backend the graph has no edges anything reads.** Every relationship is appended to the source entity's description as a fenced block; no parser exists in the front end or anywhere else, the only readers split on the fence and keep the text before it, and the migration script the docs name is absent — while the README and the generated project's own README say the front end renders them. Nothing on either backend can delete a single memory.
+- Most reusable component: the watermark and deadletter pair in the generated importer, together with the parity contract test that pins its call sequence to the CLI's.
+- Maturity impression: 242 commits since 22 March 2026, about 17,000 lines of Python and 13,400 of templates, 1,127 test functions, lint and a domain-by-framework matrix in CI. The soft spots are in the read path: the security test asserts a list has at least zero members, no bundled domain's tool query names the domain parameter, all eight agent templates discard the entities, preferences and traces the context call returns, a vector index is created over a property nothing writes and its two search functions have no callers, and the document browser returns any object-typed entity as a document.
+- Study when: you want a demo of an agent over a knowledge graph standing in five minutes, or an ingest pipeline with resumable watermarks and per-record failure isolation to copy.
+- Do not copy when: you need to correct or delete one memory, need relationships that read back, or need the long-term tier to reach the model without it writing the queries itself.

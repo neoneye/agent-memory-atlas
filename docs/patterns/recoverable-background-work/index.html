@@ -360,6 +360,24 @@ processes each running their own worker, the mutual exclusion is a
 leased row in the database rather than an in-process lock — released
 when the engine call returns rather than when the awaiting task is
 cancelled, since cancelling the await leaves the thread writing.</p>
+<p><a
+href="../../systems/create-context-graph/">create-context-graph</a>
+ships this pattern <em>into generated projects</em> rather than running
+it itself, and its version is the resumable cursor plus the piece most
+omit. The generated importer keeps each connector's cursor in a local
+dict through the whole run and writes it to disk only when nothing
+failed — a fetch error, an ingest failure, anything — so a partial
+import leaves the window re-fetchable instead of silently skipped. Under
+it sits the retry queue: every failed entity, message or trace call
+appends a typed record to a JSONL deadletter, and a retry flag
+reconstructs a minimal payload from those lines and drives it through
+the same write path. The detail worth copying is the ordering — the
+retry renames the file aside <em>before</em> replaying, so a retry that
+fails again writes a fresh deadletter without having destroyed the old
+records. What the design does not protect is the graph itself: a crash
+mid-ingest leaves a half-populated store with no marker saying so, and
+on the default hosted backend there is no delete endpoint with which to
+clean it.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Crash before, during, and after each state mutation.</li>
