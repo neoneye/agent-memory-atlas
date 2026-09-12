@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go task manager for Claude Code
+and Codex whose durable memory is five markdown files the binary never
+parses: an unusually well-specified policy — five buckets with trigger
+phrases, an exact entry format, six non-negotiable guardrails and a
+three-bar test at close-out — carried entirely by prompt text, with a
+stats command that mines session transcripts to count how often the
+model actually read what it wrote.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="flow — Agent Memory Atlas">
+    <meta property="og:description" content="A Go task manager for
+Claude Code and Codex whose durable memory is five markdown files the
+binary never parses: an unusually well-specified policy — five buckets
+with trigger phrases, an exact entry format, six non-negotiable
+guardrails and a three-bar test at close-out — carried entirely by
+prompt text, with a stats command that mines session transcripts to
+count how often the model actually read what it wrote.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="flow — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go task manager for
+Claude Code and Codex whose durable memory is five markdown files the
+binary never parses: an unusually well-specified policy — five buckets
+with trigger phrases, an exact entry format, six non-negotiable
+guardrails and a three-bar test at close-out — carried entirely by
+prompt text, with a stats command that mines session transcripts to
+count how often the model actually read what it wrote.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>flow — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "flow",
+      "description": "A Go task manager for Claude Code and Codex whose durable memory is five markdown files the binary never parses: an unusually well-specified policy \u2014 five buckets with trigger phrases, an exact entry format, six non-negotiable guardrails and a three-bar test at close-out \u2014 carried entirely by prompt text, with a stats command that mines session transcripts to count how often the model actually read what it wrote.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A task manager whose memory layer is five
+markdown files and a prompt</p>
+          <h1>flow</h1>
+          <p class="document-deck">A Go task manager for Claude Code and
+Codex whose durable memory is five markdown files the binary never
+parses: an unusually well-specified policy — five buckets with trigger
+phrases, an exact entry format, six non-negotiable guardrails and a
+three-bar test at close-out — carried entirely by prompt text, with a
+stats command that mines session transcripts to count how often the
+model actually read what it wrote.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Facets-cloud/flow">
+              <span>Source</span>
+              <strong>Facets-cloud/flow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Facets-cloud/flow/commit/b32b4e6a20c2e9376b57f4d31028b3ff4a4eb23e" title="b32b4e6a20c2e9376b57f4d31028b3ff4a4eb23e">
+              <span>Analyzed revision</span>
+              <code>b32b4e6a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Facets-cloud--flow" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Facets-cloud--flow</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>flow is a task manager for Claude Code and Codex with a memory layer
+attached: 32,400 lines of Go, half of them tests, MIT, alpha at
+<code>0.1.0-alpha.28</code>. It captures work as structured briefs,
+keeps a session id per task so a tab can be closed and resumed days
+later, spawns sessions into a terminal of the user's choice, and — the
+part this atlas is about — maintains five markdown files of durable
+facts about the user, their org, their products, their processes and
+their business.</p>
+<p><strong>The memory design is a policy, and the policy is genuinely
+good.</strong> <code>internal/app/skill/SKILL.md</code> §4.10 gives five
+buckets with the phrases that should trigger each one ("I prefer / I
+always" → <code>user.md</code>; "our team / my manager is" →
+<code>org.md</code>), an exact entry format, and six numbered
+guardrails: only durable facts, deduplicate by reading first, never
+invent, never edit an existing entry because the file is an append-only
+log, one bucket per fact, and remind the user to gitignore
+<code>kb/</code> if they ever init a repo in <code>~/.flow</code>. The
+close-out sweep adds three bars that all have to be met — durable in
+three months, surprising or non-obvious, and future-relevant enough that
+a later session would decide differently — with the expected answer
+stated plainly: <em>"Most task transcripts contribute nothing to the KB…
+The expected answer for most files on most tasks is 'no'. Don't
+reach."</em></p>
+<p><strong>None of it is code.</strong> The binary seeds the five files,
+prints their paths, counts lines beginning with <code>- </code> for a
+statistics display, and composes prompts. Every write, every
+deduplication check, every application of the three bars happens inside
+a model that was asked nicely. <code>buildCloseoutSweepPrompt</code>'s
+own comment says so: <em>"All dedupe/append discipline and update-file
+shape lives in the flow skill, not in this prompt… Substance gating is
+delegated to the LLM."</em> That is a legitimate design for this product
+— it is a task manager first — and it is why this report awards no
+capability marks. <code>capabilities: ""</code> here means the seven
+mechanisms were looked for and none of them exists, not that nobody
+looked.</p>
+<p><strong>The one thing worth stealing is the instrument.</strong>
+<code>internal/stats/scan.go</code> parses the harness's own session
+JSONL transcripts, classifies every tool call, and counts a
+<code>Read</code> whose path contains <code>/.flow/kb/</code> as a
+knowledge-base lookup, reporting the total alongside resume, reference
+and cross-task lookups and a count of knowledge-base facts. When your
+read path is a sentence in a prompt, this is the only way to find out
+whether it happened, and it is the kind of instrument the atlas's
+memory-policy pattern names as the missing half of writing rules
+down.</p>
+<p><strong>And the tree disagrees with itself about that read
+path.</strong> The SessionStart hook tells the model <em>"DO NOT read
+these eagerly on every turn — lazy-load only when the current task
+requires that context"</em>, and §4.10 agrees: <em>"KB files are NOT
+loaded at session start (the hook and §9 skip them)."</em> But the
+comment above the code that prints them says execution sessions <em>"are
+instructed… to Read each file listed here as part of their context
+load"</em> (<code>internal/app/show.go:385-387</code>), and the
+close-out sweep tells the model that knowledge-base entries <em>"are
+forever — they sit at the top of every future task brief"</em>
+(<code>internal/app/done.go:140</code>), which is the stated reason its
+bar is so strict. The code prints five paths; which of those three
+claims is true depends on what the model does next.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a line in a file, and the file is a
+bucket</strong>. There is no record, no id, no status and no schema —
+the unit is <code>- 2026-09-12 — &lt;paraphrase&gt;</code> appended to
+whichever of five files the fact belongs in. The design's whole leverage
+is in deciding <em>what becomes a line</em>, and it spends all of it on
+prose.</p>
+<p><strong>Writing is eager and unasked; reading is lazy and
+discretionary.</strong> §4.10 states both halves: the scoop rule is
+<em>"append without asking… never pause to ask 'should I record
+this?'"</em>, followed by a quiet announcement to the user of what was
+noted; the read rule is <em>"Reading is lazy; writing stays eager… Read
+at most the one file you need, on demand."</em> The asymmetry is
+deliberate and it is the interesting part of the design: capture has to
+be cheap or it will not happen mid-conversation, and injection has to be
+cheap or it taxes every turn.</p>
+<p><strong>Correction is a convention with no enforcement.</strong>
+Guardrail four makes the file an append-only log and says a changed fact
+is a new dated entry — which means a superseded fact stays on the page
+above its replacement, and nothing marks which is current. A
+reader-model opening <code>org.md</code> six months in sees both lines
+and has to work it out from the dates.</p>
+<p><strong>The task layer is the part with real invariants.</strong>
+<code>tasks</code> has CHECK constraints on status, kind and priority
+and a constraint pairing status with a session id; updates use
+optimistic locking against a session id that may be NULL, with a comment
+warning that <code>IS ?</code> rather than <code>= ?</code> is required
+for that; archiving sets a timestamp and never removes a file. The
+contrast with the knowledge base is the report in one line: where the
+state is the binary's, it is constrained; where the state is the
+model's, it is described.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — everything inside the binary is a path, a prompt or a count — the five knowledge-base files are seeded by init, listed by show, counted by stats and never parsed, so both the write and the read of a durable fact happen inside a model that was asked to follow a policy, and the only feedback loop is the transcript scanner that counts whether the read happened</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: everything inside the binary is a path, a prompt or a count — the five knowledge-base files are seeded by init, listed by show, counted by stats and never parsed, so both the write and the read of a durable fact happen inside a model that was asked to follow a policy, and the only feedback loop is the transcript scanner that counts whether the read happened
+flowchart TD
+  A[&quot;flow init&quot;] --&gt; B[&quot;seed kb/user.md, org.md, products.md, processes.md, business.md&quot;]
+  C[&quot;the user says something durable mid-session&quot;] --&gt; D[&quot;the skill&#39;s scoop rule — append without asking&quot;]
+  D --&gt; E{&quot;the model reads the file first to check for a duplicate&quot;}
+  E --&gt;|&quot;policy says yes&quot;| F[&quot;append one dated bullet&quot;]
+  E --&gt;|&quot;nothing enforces it&quot;| F
+  F --&gt; G[&quot;kb/*.md — five markdown files&quot;]
+
+  H[&quot;flow done slug&quot;] --&gt; I[&quot;binary spawns a headless claude -p close-out sweep&quot;]
+  I --&gt; J[&quot;prompt: load the skill, read the whole transcript&quot;]
+  J --&gt; K{&quot;three bars — durable, non-obvious, future-relevant&quot;}
+  K --&gt;|&quot;passes&quot;| L[&quot;synthesize one dated bullet and append&quot;]
+  K --&gt;|&quot;fails, the expected answer&quot;| M[&quot;write nothing&quot;]
+  L --&gt; G
+
+  N[&quot;a later session starts&quot;] --&gt; O[&quot;SessionStart hook — read the brief and updates eagerly&quot;]
+  O --&gt; P[&quot;flow show task — prints the brief path, update paths and five kb paths&quot;]
+  P --&gt; Q{&quot;does the model open a kb file&quot;}
+  Q --&gt;|&quot;the hook says only when the turn needs it&quot;| R[&quot;Read kb/org.md&quot;]
+  Q --&gt;|&quot;otherwise&quot;| S[&quot;the fact never reaches the context window&quot;]
+  R --&gt; T[&quot;the fact is in context&quot;]
+
+  U[&quot;flow stats&quot;] --&gt; V[&quot;parse the harness session jsonl transcripts&quot;]
+  V --&gt; W[&quot;count Read calls whose path contains /.flow/kb/&quot;]
+  W --&gt; X[&quot;report kb lookups beside resume, reference and cross-task&quot;]
+  R -.-&gt;|&quot;this is what the counter sees&quot;| W</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary, one SQLite file, one directory tree, no services.
+<code>~/.flow/</code> holds <code>flow.db</code>, <code>kb/</code>,
+<code>tasks/&lt;slug&gt;/</code> and
+<code>projects/&lt;slug&gt;/</code>; <code>FLOW_ROOT</code> relocates
+it. The harness abstraction has two implementations — Claude Code and
+Codex — and the terminal layer has five, so
+<code>flow do &lt;slug&gt;</code> opens the task's session in an iTerm,
+Ghostty, Kitty, Warp or Zellij tab with the right working directory.</p>
+<p>The binary installs its own operating manual.
+<code>internal/app/skill/</code> — a <code>SKILL.md</code> plus fourteen
+reference files, embedded with <code>go:embed</code> — is written into
+the harness's skill directory, and a SessionStart hook emits a bootstrap
+contract naming the exact sequence: invoke the skill, run
+<code>flow show task</code>, Read the brief and every update, Read the
+project's brief and updates, Read <code>CLAUDE.md</code>, and only then
+proceed.</p>
+<p>Three background-ish mechanisms exist and none of them touches memory
+except by prompting for it: <strong>owners</strong>, recurring agents
+with a wake schedule and a tick process; the <strong>message
+bus</strong>, a two-kind table with a backoff escalation schedule for
+messages waiting on a human; and the <strong>close-out sweep</strong>, a
+headless <code>claude -p</code> process the binary spawns after
+<code>flow done</code> flips a task.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Seed</strong> — <code>internal/app/init.go:153-192</code>:
+<code>kbSeeds</code> returns five files, each a heading, two lines of
+description and an HTML comment stating the entry format.
+<code>init.go:198-207</code>: <code>kbFiles</code> stats those five
+paths and returns the ones that exist.</p>
+<p><strong>List</strong> — <code>internal/app/show.go:385-396</code>:
+print the paths under a <code>kb:</code> heading. That is the entirety
+of the knowledge base's read path inside the binary.</p>
+<p><strong>Instruct</strong> — <code>internal/app/hook.go:85-110</code>:
+the per-session bootstrap, including the lazy-load rule and the
+instruction to append on the fly "no permission needed".
+<code>hook.go:190-212</code>: the unbound-session variant, which points
+at <code>kb/</code> for unfamiliar terminology.</p>
+<p><strong>Sweep</strong> — <code>internal/app/done.go:121-200</code>:
+compose the close-out prompt — the mindset paragraph, the five files,
+the three bars, the synthesis instruction and the duplicate check — and
+hand it to <code>claude -p</code> as a single positional argument, with
+a comment noting that this avoids shell interpolation entirely.</p>
+<p><strong>Measure</strong> —
+<code>internal/stats/scan.go:150-180</code>: classify each transcript
+tool call; a <code>Read</code> under <code>/.flow/kb/</code> is a
+<code>kb</code> lookup, one under <code>/.flow/tasks/</code> or
+<code>/.flow/projects/</code> is <code>cross_task</code>,
+<code>flow show task</code> is a <code>resume</code>.
+<code>internal/stats/report.go:298-320</code>: count lines beginning
+with <code>- </code> across <code>kb/*.md</code> as facts.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The SQLite schema is careful: <code>projects</code>,
+<code>playbooks</code>, <code>tasks</code>, <code>workdirs</code>,
+<code>task_tags</code>, <code>owners</code> and four bus tables, with
+CHECK constraints on every enumerated column, foreign keys with cascade
+where cascade is right, <code>archived_at</code> rather than deletion,
+and an index set matched to the list queries. The <code>tasks</code>
+table carries the harness binding — <code>session_id</code>,
+<code>session_started</code>, <code>session_last_resumed</code>,
+<code>harness</code> — and a table-level CHECK that a non-backlog task
+must have a session.</p>
+<p>The knowledge base has no schema. Five filenames are constants in Go;
+everything inside them is whatever a model wrote. The only structure the
+binary assumes is that a fact is a line starting with <code>- </code>,
+and it assumes that in exactly one place, for a statistic.</p>
+<p>Time appears twice and means different things:
+<code>created_at</code>/<code>updated_at</code>/<code>archived_at</code>
+on the rows, and a date the model types at the front of a bullet.
+Nothing reconciles them, and nothing validates the second.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranking, no index, no search over the knowledge base.
+<code>flow show task</code> prints paths; a model opens a file or does
+not. For the task layer there is real retrieval — <code>flow list</code>
+with status, project, tag and archived filters, <code>flow show</code>
+for a task, project or playbook, <code>flow transcript</code> to print a
+past session's conversation — and the stats scanner treats those calls
+as retrievals too, which is the right accounting: a
+<code>flow show</code> <em>is</em> how stored context reaches a session
+here.</p>
+<p>The lazy-read rule has a real cost worth naming. A fact recorded in
+<code>org.md</code> in March is invisible to a September session unless
+that session's model decides its question needs org context and opens
+the file. The design accepts this consciously — the alternative is five
+files at the top of every context window forever — and the sweep's
+strict bar is the compensating control. That compensation is aimed at
+the wrong target if the files are not injected, which is what makes the
+disagreement in section 1 more than a documentation nit.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Nothing blocks a session. The mid-session scoop is a Read and a Write
+the model performs while talking; the close-out sweep is a separate
+headless process the binary spawns after <code>flow done</code> has
+already flipped the status, so the user's session is not waiting on
+it.</p>
+<p>The sweep's prompt is the most carefully written thing in the
+repository, and its shape is worth recording: a mindset paragraph that
+gives the knowledge base and the project log <em>deliberately
+different</em> bars, a numbered procedure, three explicit tests with
+examples of what fails each, an instruction to synthesize rather than
+transcribe with the reason ("in real-time scoop you capture what the
+user just said, mostly verbatim, because it's a single fresh fact; here
+you've read the whole conversation"), a duplicate check "in any form —
+paraphrase, near-duplicate, superset", and a closing instruction that
+empty output is a successful sweep.</p>
+<p>What the binary verifies afterwards: nothing. It does not diff the
+files, does not check the entry format, does not count what was added,
+and does not record that a sweep ran.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>flow is the harness's tenant rather than a server it calls: it
+installs a skill, installs a hook, spawns sessions, and reads the
+harness's own transcript files back off disk. That last part is what
+makes the stats instrument possible and it is a dependency worth naming
+— the analytics work because Claude Code writes JSONL transcripts in a
+known place, and the Codex harness would need its own reader.</p>
+<p><code>flow do &lt;slug&gt;</code> binds a session to a task and opens
+it in a terminal tab; <code>flow done &lt;slug&gt;</code> flips status
+and triggers the sweep; <code>flow auto</code> runs a task headlessly
+with a prompt that tells the model to run <code>flow done</code> itself
+at the end, "Do this yourself; no human will."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The privacy guidance is in the right place and is only
+guidance.</strong> Guardrail six tells the model to remind the user to
+gitignore <code>kb/</code> if they init a git repo in
+<code>~/.flow</code>. The files hold durable facts about the user's
+employer, colleagues, customers and contracts, written unasked;
+<code>flow init</code> does not write a <code>.gitignore</code>, and
+nothing checks for one.</p>
+<p><strong>Nothing constrains what reaches the files.</strong> The scoop
+rule is "append without asking", the three bars are prose, and the only
+announcement is a quiet line to the user after the fact. A model that
+misreads a throwaway remark as durable writes it permanently, and the
+append-only guardrail means the correction is another line rather than a
+fix.</p>
+<p><strong>The task layer is defended properly.</strong> Optimistic
+locking with a documented NULL-safe comparison, CHECK constraints,
+cascade deletes only on the tag table, archiving that never removes
+files, and a close-out prompt passed as a positional argument
+specifically so no shell interpolation can occur.</p>
+<p><strong><code>CLAUDE.md</code> in the repository root</strong> is an
+instruction file for agents working on flow itself; it was read here as
+data.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> The screen found no
+auto-run surface, one build-time execution path (the
+<code>Makefile</code> default target), <code>go.sum</code> inside the
+seven-day cooldown, and one agent-directed file; the posture stayed
+read-only, so everything here is read from the committed code.</p>
+<p>577 test functions across 16,300 lines — a near one-to-one ratio with
+the implementation, which is high for this atlas. They are thorough
+about the task manager: <code>do_test.go</code> at 1,375 lines covers
+session binding and spawning, <code>list_test.go</code> the filters,
+<code>owner_tick_test.go</code> the recurring-agent scheduler,
+<code>bus_test.go</code> the message bus and its escalation,
+<code>db_test.go</code> the migrations.</p>
+<p><strong>The knowledge base is tested as text.</strong>
+<code>hook_test.go</code> asserts that the hook output contains the
+string <code>/kb/ holds durable facts</code>; <code>done_test.go</code>
+asserts the sweep prompt mentions <code>flow skill</code>,
+<code>flow transcript has-session</code> and <code>kb/</code>. Those are
+the right tests for what the binary controls — it emits prompts, so the
+prompts are what can be pinned — and they are also the exact boundary of
+what can be tested here: no committed case asserts that a fact was
+written, deduplicated, found later, or kept out of a place it should not
+be. That is why no <code>negative_eval</code> mark is awarded, and the
+absence is structural rather than an oversight.</p>
+<p><strong>No benchmark, no paper, and no claim to either.</strong>
+<code>grep -rn -i "arxiv\|doi" README.md docs/</code> returns nothing;
+the README's evidence is a four-act GIF demo of the mechanic, which it
+says is "silly on purpose — Star Trek bridge starships — so the mechanic
+is what you watch, not the code".</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Count whether the memory was read.</strong>
+<code>flow stats</code> mines the harness transcripts for
+<code>Read</code> calls under the memory directory and reports them
+beside the other retrieval kinds. For a system whose retrieval is an
+instruction rather than a call, this converts a hope into a number, and
+it costs one JSONL parser.</p>
+<p><strong>Give capture and injection opposite defaults.</strong> Eager,
+unasked writing and lazy, on-demand reading is a coherent position that
+most prompt-based memories get backwards, and §4.10 states both halves
+with their reasons.</p>
+<p><strong>Give two artifacts deliberately different bars, in the same
+breath.</strong> The sweep tells the model that knowledge-base entries
+are forever and the bar is very strict with a default of writing
+nothing, while the project log is local, a sibling task may want the
+narrative, and the default is to write something if the session moved
+the project forward. One paragraph, two thresholds, no ambiguity about
+which applies where.</p>
+<p><strong>State the expected answer.</strong> <em>"The expected answer
+for most files on most tasks is 'no'. Don't reach."</em> A policy that
+does not say what the common case looks like invites a model to produce
+output because output was requested.</p>
+<p><strong>Pass a composed prompt as a positional argument and say why
+in the comment.</strong> No shell interpolation, so a transcript
+containing anything at all is safe.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let two shipped artifacts describe the read path
+differently.</strong> The hook and the skill say lazy; a code comment
+and the sweep prompt say always-loaded. The sweep's strictness is
+justified by the claim the hook contradicts, so the disagreement has a
+behavioural consequence, not just a documentary one.</p>
+<p><strong>Do not make "never edit an entry" a rule when nothing can
+enforce it.</strong> An append-only log with no supersession marker and
+no reader that understands dates leaves a six-month-old contradiction
+sitting above its correction.</p>
+<p><strong>Do not put the privacy control in a sentence addressed to the
+model.</strong> If a directory will hold employer, colleague and
+customer facts, write the <code>.gitignore</code> in
+<code>init</code>.</p>
+<h3 id="fit">Fit</h3>
+<p>Take flow if you want <strong>task management for Claude Code
+sessions</strong> and you regard the knowledge base as a convenience on
+top. The session-per-task binding, the resume story, the
+brief-and-updates structure and the terminal integration are the
+product, they are well built, and the tests back them.</p>
+<p>Do not take it as <strong>a memory system</strong>. There is no store
+to query, no unit to correct, no scope to enforce and nothing to audit —
+by design, since the binary's position is that the model owns the
+memory. A team that wants flow's workflow and a real memory underneath
+should expect to write the second part themselves, and the seam is
+clean: the knowledge base is five paths in one function.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>Policy as mechanism.</strong> Every guarantee in §4.10 —
+durability, deduplication, no invention, no editing, one bucket per fact
+— is a sentence. The atlas has a name for the general case; here it is
+unusually visible because the sentences are unusually good.</p>
+<p><strong>A memory nobody is required to read.</strong> Lazy loading
+plus no index means a fact's usefulness depends on a later model
+guessing that it needs org context. The stats counter exists precisely
+because this is uncertain, which is the honest version, but the number
+it reports is the number of times the design worked.</p>
+<p><strong>Unbounded append with no compaction.</strong> Five files, one
+bullet per fact, forever, with no cap, no rotation and no summarisation.
+The only size instrument is an average-bytes-per-file statistic.</p>
+<p><strong>Durable personal data written unasked, with the privacy
+control in the prompt.</strong></p>
+<p><strong>Three artifacts, two stories, one code path.</strong></p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the transcript scanner.</strong> It is a small,
+self-contained classifier over JSONL that turns "is the memory being
+used?" into a count, and it transfers to any harness that writes
+transcripts.</p>
+<p><strong>Borrow the sweep prompt's structure</strong> — mindset,
+numbered steps, explicit bars with failure examples, a duplicate
+instruction, and an explicit statement that empty output is success —
+for any close-out or distillation pass, whatever store it writes
+into.</p>
+<p><strong>Do not borrow the store.</strong> Five append-only markdown
+files is the store the policy had to be this good to survive; a system
+that can deduplicate, supersede and scope in code needs a weaker policy
+and gets stronger guarantees.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Which read policy is intended? The hook and §4.10 say lazy,
+<code>show.go</code>'s comment and the sweep prompt say loaded. The
+answer changes what the strict bar is for.</li>
+<li>Does the close-out sweep ever run under the Codex harness? It spawns
+<code>claude -p</code> specifically, while the harness abstraction has
+two implementations.</li>
+<li>What happens to the knowledge base at scale? Nothing compacts, caps
+or rotates, and the lazy-read rule means a large <code>org.md</code> is
+read whole or not at all.</li>
+<li>The stats command reports knowledge-base lookups; nothing in the
+tree acts on that number. Whether a low count is meant to prompt a
+policy change, and by whom, is not addressed.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Memory</strong></p>
+<ul>
+<li><code>internal/app/init.go:153-207</code> — <code>kbSeeds</code>,
+<code>kbFiles</code></li>
+<li><code>internal/app/show.go:385-396</code> — the <code>kb:</code>
+section, and the comment that disagrees with the hook</li>
+<li><code>internal/app/hook.go:85-110</code>, <code>:190-212</code> —
+the bootstrap contract and the lazy-load rule</li>
+<li><code>internal/app/done.go:110-200</code> —
+<code>buildCloseoutSweepPrompt</code>, the three bars and the dedupe
+instruction</li>
+<li><code>internal/app/skill/SKILL.md</code> §4.10 — buckets, entry
+format, six guardrails, the read policy</li>
+</ul>
+<p><strong>Task state</strong></p>
+<ul>
+<li><code>internal/flowdb/db.go</code> — the schema, the migrations and
+the optimistic-locking note</li>
+<li><code>internal/flowdb/bus.go</code> — the message bus and its
+escalation schedule</li>
+<li><code>internal/app/do.go</code>, <code>owner.go</code>,
+<code>owner_tick.go</code>, <code>auto.go</code></li>
+</ul>
+<p><strong>Instrumentation</strong></p>
+<ul>
+<li><code>internal/stats/scan.go</code> — transcript parsing and lookup
+classification</li>
+<li><code>internal/stats/report.go</code> — <code>countKBFacts</code>,
+<code>computeAvgKBFileBytes</code></li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>internal/app/hook_test.go</code>, <code>done_test.go</code>,
+<code>init_test.go</code>, <code>stats_test.go</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -rn -i &quot;knowledge base\|kb/&quot; --include=&quot;*.go&quot; --exclude=&quot;*_test.go&quot; internal/
+grep -rn &quot;CREATE TABLE&quot; internal/flowdb/*.go        # tasks and the bus; no memory table
+grep -rn &quot;kb&quot; --include=&quot;*_test.go&quot; internal/       # prompt-text assertions only
+grep -rn -i &quot;arxiv\|doi&quot; README.md docs/            # no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/Facets-cloud/flow/commit/b32b4e6a20c2e9376b57f4d31028b3ff4a4eb23e"><code class="commit-id" title="b32b4e6a20c2e9376b57f4d31028b3ff4a4eb23e">b32b4e6a…</code></a>
+— first reading, at the default branch's head, a commit dated 7
+September 2026. Screened before reading: no auto-run surface, one
+build-time execution path (the <code>Makefile</code>, whose default
+target was checked), <code>go.sum</code> inside the seven-day cooldown
+at five days, no unpinned dependency surface, and one agent-directed
+file, <code>CLAUDE.md</code>, read as data and not as instructions.
+Nothing was installed, built or run, and no test in this repository was
+executed. Licence is MIT per <code>LICENSE</code>; the project describes
+itself as alpha and the changelog's newest entry is
+<code>0.1.0-alpha.28</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

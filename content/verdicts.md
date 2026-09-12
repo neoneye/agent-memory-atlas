@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 438 reports.**
+**This page covers all 439 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3848,3 +3848,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: about 60,400 lines of Go, 8,640 of them the memory path against 7,270 lines of tests running on a real SQLite file, 700 test functions, Apache-2.0, npm-distributed, with setup assets for six agent hosts. No benchmark is claimed and none is committed, for a system implementing a paper that reports LoCoMo and LongMemEval — a restraint worth naming. The README credits MAGMA to "Zou et al."; its authors are Jiang, Li, Li and Li.
 - Study when: you want local single-binary memory for a coding agent, or a compact reference implementation of a four-graph memory with intent-adaptive traversal.
 - Do not copy when: memory must be scoped between users, or "we have this on record and do not believe it" has to be expressible.
+
+### [`facets-flow`](../systems/facets-flow/)
+- Best idea: **counting whether the memory was actually read.** `flow stats` parses the harness's own session JSONL transcripts, classifies every tool call, and reports each `Read` under `/.flow/kb/` as a knowledge-base lookup beside resume, reference and cross-task lookups. For a system whose read path is a sentence in a prompt, that turns a hope into a number — the compliance instrument the memory-policy pattern page asks for and mostly does not get. The policy it instruments is itself unusually good: five buckets with trigger phrases, an exact entry format, six numbered guardrails, and a close-out sweep with three explicit bars and the expected answer stated — "The expected answer for most files on most tasks is 'no'. Don't reach."
+- Biggest risk: **none of that policy is code.** The memory is five markdown files the binary seeds, lists by path, counts lines in for a statistic and never parses; every write, every deduplication check and every application of the three bars happens inside a model that was asked. No capability mark — the seven were looked for and the store carries none. Three shipped artifacts also disagree about the read path: the session hook and the skill say the files are lazy-loaded only when a turn needs them, a comment above the code that prints them says every listed file is read as part of the context load, and the sweep prompt tells the model they "sit at the top of every future task brief", which is the premise its strict bar rests on. And the privacy control for a directory holding employer, colleague and customer facts is a sentence telling the model to remind the user to gitignore it.
+- Most reusable component: the transcript scanner in `internal/stats/scan.go`, and the shape of the close-out prompt — mindset, numbered steps, bars with failure examples, a duplicate instruction, and an explicit statement that empty output is a successful sweep.
+- Maturity impression: 32,400 lines of Go with 16,300 of tests and 577 test functions, MIT, alpha at `0.1.0-alpha.28`, two harnesses and five terminal integrations. The task layer is properly built — CHECK constraints throughout, optimistic locking with a documented NULL-safe comparison, archiving that never deletes a file. The knowledge base beside it has no schema at all, which is the design rather than an omission.
+- Study when: you want task management for Claude Code sessions, or a worked example of writing a memory policy for a model to follow and then measuring whether it did.
+- Do not copy when: you need a store you can query, correct, scope or audit.
