@@ -624,6 +624,20 @@ retired account does not turn its history into bare UUIDs. The unusual
 part is the consumer: an optional governance agent reads past human
 verdicts out of the ledger as <em>precedent</em> before adjudicating a
 duplicate pair and cites the events it relied on.</p>
+<p><strong><a href="../../systems/graymatter/">GrayMatter</a> writes the
+trail and never reads it.</strong> Every reflect action — add, update,
+forget, link, pin, unpin — appends one entry carrying timestamp, action,
+agent, old and new text and source to an audit bucket inside the store's
+own database, keyed by a fixed-width RFC3339 timestamp so the byte order
+is time order and pruning walks oldest-first. The producer is reachable
+and the format is shared between the direct and daemon paths. No reader
+exists: the package exports only a write and a failure counter, and a
+tree-wide search for the bucket name finds the writer, its test and a
+changelog line. The package added error returns specifically so an audit
+write could not fail invisibly, and its one caller discards the result
+while nothing reads the failure counter. The CLI correction commands
+write no entry at all, so a person's correction leaves less trace than
+an agent's.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Mutation and audit event commit or roll back together.</li>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 429 reports.</strong></p>
+<p><strong>This page covers all 430 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15312,6 +15312,43 @@ unattended because its writes are all traceable to a quote.</li>
 semantic layer's behaviour pinned by CI before depending on it, or
 cannot have unredacted session transcripts sitting in a local
 database.</li>
+</ul>
+<h3 id="graymatter"><a
+href="../systems/graymatter/"><code>graymatter</code></a></h3>
+<ul>
+<li>Best idea: <strong>the published number cannot drift from the
+code.</strong> A benchmark test parses the token tables out of the
+README and the benchmark doc and compares every cell to a live run,
+giving the headline reduction column no tolerance at all; a sibling test
+fails any line in the docs carrying a quality-metric name beside a
+percentage, because a relevance figure that nothing computed once
+shipped for several releases. A second gate fails if GrayMatter ever
+stops costing more per query than a sliding window. Beside that, a
+supersession latch that makes retirement monotonic against in-flight
+snapshots.</li>
+<li>Biggest risk: <strong>a retired value can be written straight
+back.</strong> The marker is keyed on a record, the write path performs
+no exact-text or similarity check, and no path consults retirement
+history before a write, so a forget followed by the same sentence
+produces a new live fact at full weight. Alongside it, the audit trail
+has one producer and no reader in the tree, and the CLI correction path
+writes no entry at all.</li>
+<li>Most reusable component: the token-count benchmark test together
+with its "What this benchmark does not measure" section — a headline
+claim and the test that keeps it honest, in one readable pair.</li>
+<li>Maturity impression: 66,856 lines of Go across 296 files, four
+direct dependencies, MIT, fourteen decision records, a threat model that
+tabulates its own undefended surfaces, and CI running vet, the suite and
+the benchmark packages with <code>-race</code> on three platforms behind
+merged coverage gates. The write-cost gate is opt-in behind an
+environment variable, and every published benchmark runs keyword-only,
+so the vector arm weighted equally in the fusion is unmeasured.</li>
+<li>Study when: you want a memory layer that is one binary with no
+services, or you want to see a project hold its own marketing number to
+a test.</li>
+<li>Do not copy when: you need multi-tenancy, per-agent authorization,
+or a memory layer that can represent doubt — the confidence field exists
+and nothing reads it.</li>
 </ul>
         </article>
       </div>

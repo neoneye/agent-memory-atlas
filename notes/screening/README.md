@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 312 of 429 screened at the report's current pin.**
+**Progress: 313 of 430 screened at the report's current pin.**
 
 12 further record(s) describe a revision the report has since moved
 off, and 105 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 127 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 153 |
+| Repositories with an auto-run surface (`RUNS`) | 128 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 154 |
 | Repositories with build-time execution (`EXEC`) | 232 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -72,6 +72,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`gitmem`](../../content/systems/gitmem.md) | `hooks/`, `server.json` |
 | [`gobii`](../../content/systems/gobii.md) | `server.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
+| [`graymatter`](../../content/systems/graymatter.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
 | [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |

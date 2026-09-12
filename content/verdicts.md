@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 429 reports.**
+**This page covers all 430 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3776,3 +3776,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 1,052 released versions between 19 February and 10 September 2026, about 230,000 lines of non-test TypeScript, 152 migrations, 464 test files and 151,887 lines of tests, a db-owner protocol with lanes and deadlines and a CI workflow guarding event-loop responsiveness. But the workspace test command appears in none of the 22 workflows, which run roughly twenty named files; twelve cases in one worker suite return early with a warning and report green; a review-queue endpoint selects three event names nothing in the tree writes; and the archived-visibility predicate is hand-copied into eight files with no test.
 - Study when: you run three or four harnesses against one body of context and want a background consolidation pass you can let run unattended because its writes are all traceable to a quote.
 - Do not copy when: you need a retraction to stay retracted, need the semantic layer's behaviour pinned by CI before depending on it, or cannot have unredacted session transcripts sitting in a local database.
+
+### [`graymatter`](../systems/graymatter/)
+- Best idea: **the published number cannot drift from the code.** A benchmark test parses the token tables out of the README and the benchmark doc and compares every cell to a live run, giving the headline reduction column no tolerance at all; a sibling test fails any line in the docs carrying a quality-metric name beside a percentage, because a relevance figure that nothing computed once shipped for several releases. A second gate fails if GrayMatter ever stops costing more per query than a sliding window. Beside that, a supersession latch that makes retirement monotonic against in-flight snapshots.
+- Biggest risk: **a retired value can be written straight back.** The marker is keyed on a record, the write path performs no exact-text or similarity check, and no path consults retirement history before a write, so a forget followed by the same sentence produces a new live fact at full weight. Alongside it, the audit trail has one producer and no reader in the tree, and the CLI correction path writes no entry at all.
+- Most reusable component: the token-count benchmark test together with its "What this benchmark does not measure" section — a headline claim and the test that keeps it honest, in one readable pair.
+- Maturity impression: 66,856 lines of Go across 296 files, four direct dependencies, MIT, fourteen decision records, a threat model that tabulates its own undefended surfaces, and CI running vet, the suite and the benchmark packages with `-race` on three platforms behind merged coverage gates. The write-cost gate is opt-in behind an environment variable, and every published benchmark runs keyword-only, so the vector arm weighted equally in the fusion is unmeasured.
+- Study when: you want a memory layer that is one binary with no services, or you want to see a project hold its own marketing number to a test.
+- Do not copy when: you need multi-tenancy, per-agent authorization, or a memory layer that can represent doubt — the confidence field exists and nothing reads it.

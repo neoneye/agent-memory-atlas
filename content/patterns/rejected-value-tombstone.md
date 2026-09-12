@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-six systems of four hundred and twenty-nine
+> **This is not an established best practice.** Thirty-six systems of four hundred and thirty
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-six systems of 429 in the atlas have this.** That is still the most
+**Thirty-six systems of 430 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -220,8 +220,8 @@ rejected-value tombstones", and whose recommendations listed "keep rejected
 tombstones". So the field has produced this mechanism **once**, in Verel, and
 copied it once — into the system belonging to the person who ran the survey.
 
-That makes the negative result stronger rather than weaker. Two of four hundred and twenty-nine
-would suggest a hard idea that a few teams reach independently. One of four hundred and twenty-nine, plus one adoption by a reader who went looking, suggests an idea
+That makes the negative result stronger rather than weaker. Two of four hundred and thirty
+would suggest a hard idea that a few teams reach independently. One of four hundred and thirty, plus one adoption by a reader who went looking, suggests an idea
 that is *not* being reached at all — and that the way it spread was somebody
 reading another project's source.
 
@@ -945,6 +945,8 @@ for being wrong does not record it, and recording it does not erase it.
 [Utopia](../../systems/utopia/) writes the *triple* rather than the row: rejecting a queued fact inserts `(kb_id, subject_id, predicate_id, object_id)` into `rejected_facts`, and `pending::propose` runs that lookup — after checking whether the claim is already asserted or already queued — before creating any new proposal. Because entity resolution maps the same name to the same row, a re-extraction of the same sentence hits the key rather than re-asking. It is also the clearest illustration on this page that a tombstone's value is bounded by where it is consulted: only documents belonging to the implicit memory source reach `propose` at all, so an uploaded PDF restating a rejected triple writes it straight to the ledger, and the table has no `object_value` column, so a rejected salary blocks nothing. Both limits are argued in the source — keying attribute facts on `(subject, predicate)` would turn *this salary is wrong* into *never mention salary again*.
 
 [Signet AI](../../systems/signetai/) ships a table named for tombstones and a route named `/tombstone`, and neither is this pattern. The table is keyed on agent and session with removed paths — a record of what the rolling memory-file window dropped, so a privacy removal survives a re-index — and the route forces a soft delete. Nothing is keyed on the rejected value: the uniqueness index and the dedup lookup both filter out deleted rows, and the retention worker hard-deletes the row after thirty days, taking the content hash with it. The consequence is sharper here than in most systems that lack the pattern, because the same store runs a background pass that re-derives beliefs from evidence: a value the user forgot is accepted as a new memory the next time it is said, and the next dreaming pass may cite it and re-assert the claim it was removed from.
+
+**[GrayMatter](../../systems/graymatter/) builds the durable half and skips the value-keyed half.** Its supersession marker excludes a fact from recall immediately and unconditionally, before any signal is scored, and the update path latches it — when the stored fact is retired and an incoming snapshot is not, the write is dropped, so a consolidation cycle holding a pre-retirement snapshot cannot resurrect a corrected value. That is more retirement durability than most systems here manage. What is absent is anything keyed on the value: the write path performs no exact-text lookup, no similarity query and no history check, so a forget followed by the same sentence stores a second live fact at full weight. The pattern's distinction is visible in one repository — a record-keyed retirement engineered carefully, and the re-assertion it cannot see.
 
 ## Tests to require
 
