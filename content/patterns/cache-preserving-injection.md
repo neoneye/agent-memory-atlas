@@ -199,6 +199,16 @@ on how to write one.
   — the counter-examples, each invalidating on every turn.
 - **[OpenCode](../../systems/opencode/)** — the contract-level version: a host
   whose only injection seam is the cache-sensitive one.
+- **[Lobu](../../systems/lobu/)** — the deliberate case and its own
+  counterexample, in one product. Org guidance is injected into every managed
+  agent's system prompt under a hard 3,000-character cap, ordered by event id
+  with no timestamps or counts and a deterministic truncation marker,
+  explicitly so that it *"counts as stable data"* inside the cached prefix.
+  The per-turn memory plugin does the opposite, prepending a freshly recalled
+  memory block ahead of the user message on every turn; the turn machinery
+  keys transient context per message rather than per turn for exactly this
+  reason, naming *"a prompt-cache prefix that changes on each call"* as the
+  failure.
 
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and

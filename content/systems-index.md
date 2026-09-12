@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **432 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **433 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -259,6 +259,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/livingfeed/"><span class="az-id">LivingFeed</span><span class="az-what">Forgetting as a feature, in Korean</span><code class="az-repo">showjihyun/livingfeed</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/llamaindex/"><span class="az-id">LlamaIndex</span><span class="az-what">Composable memory blocks</span><code class="az-repo">run-llama/llama_index</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/llm-wiki-memory/"><span class="az-id">llm-wiki-memory</span><span class="az-what">Filesystem and git memory</span><code class="az-repo">ctxr-dev/llm-wiki-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/lobu/"><span class="az-id">Lobu</span><span class="az-what">Org-wide event log behind a compiled read predicate</span><code class="az-repo">lobu-ai/lobu</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/logseq/"><span class="az-id">Logseq</span><span class="az-what">A human knowledge base agents can write to</span><code class="az-repo">logseq/logseq</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/loongflow/"><span class="az-id">LoongFlow</span><span class="az-what">Stochastic recall</span><code class="az-repo">baidu-baige/LoongFlow</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/lorekit/"><span class="az-id">LoreKit</span><span class="az-what">Multi-tenant lesson store</span><code class="az-repo">mthines/lorekit</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>

@@ -227,6 +227,8 @@ the store when you turned the guard on. They are not substitutes, and a system
 with a governed write gateway of its own has the better version of the first
 half — because it knows which writes are writes.
 
+[Lobu](../../systems/lobu/) separates the gate from the writer completely. Its entity-mutation surfaces are described in their own comments as policy-blind: each builds one mutation request, calls the gate, and acts on the decision without importing any policy module. The one shipped interceptor consults a write-policy table whose action and effect rows resolve to auto, approval, deny or disabled, and an approval turns the write into a deferred mutation whose queue closure the core runs strictly post-commit — the repository's stated invariant that approvals never ride the caller's transaction. Two details make the gate hold rather than merely exist: the approval context check rejects any context carrying an agent, client or MCP session id and requires a user id, so an automation cannot approve the run it queued, and the queued proposal carries the snapshot it was built on, so a field a human edited in the meantime is skipped as stale instead of being clobbered by the approval.
+
 ## Tests to require
 
 - Exercise every adapter against the same invariant suite.

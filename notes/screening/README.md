@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 315 of 432 screened at the report's current pin.**
+**Progress: 316 of 433 screened at the report's current pin.**
 
 12 further record(s) describe a revision the report has since moved
 off, and 105 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 128 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 155 |
-| Repositories with build-time execution (`EXEC`) | 234 |
+| Repositories with an auto-run surface (`RUNS`) | 129 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 156 |
+| Repositories with build-time execution (`EXEC`) | 235 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -87,6 +87,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
+| [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `server.json` |
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |

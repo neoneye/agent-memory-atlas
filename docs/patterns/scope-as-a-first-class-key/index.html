@@ -969,6 +969,27 @@ post-filtered neighbour list. The boundary is still caller-chosen — the
 API token authorizes a project, not a participant, and an adopter who
 calls the record API directly gets no predicate — and its committed
 isolation tests assert the project boundary, not the five-field one.</p>
+<p><a href="../../systems/lobu/">Lobu</a> is the version of this pattern
+where the key is not one column but a compiled expression, and where the
+compiler is the artefact. An authorization scope of organisation,
+principal and agent is built once from the tool context, and three
+functions turn it into SQL that every content-recall seam splices in:
+one binds the tenant, one admits a connection-sourced row only when the
+connection is org-visible or the principal created it, and one requires
+a membership edge from the principal's member entity to a resource
+entity named in the row. The third is what the pattern does not usually
+reach: the scope key is not Lobu's own invention but GitHub's
+collaborator list and Slack's channel membership, synced into entities
+and joined at read time, so a leak requires the upstream to be wrong.
+The enforcement state is deliberately three-valued rather than two —
+never graphed, enforced, or graphed-but-stale — because a negated set
+membership silently makes the stale case permissive; the stale case
+matches neither branch and its rows are dropped, with the reason in the
+module comment: <em>"a stalled sync hides data, it does not leak
+it."</em> The limit worth naming beside it is that the per-entity-type
+read policy is a post-fetch filter in application code, so an agent's
+page can come back short with the total computed before the filter
+ran.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

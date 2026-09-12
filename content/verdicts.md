@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 432 reports.**
+**This page covers all 433 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3800,3 +3800,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 95 dated releases from June 2025 to 2 September 2026, 28,385 lines of non-test Python, 32,959 of tests holding 1,316 functions, run on every pull request alongside mypy with a baseline and ruff. Concurrency is handled with unusual care — `BEGIN IMMEDIATE` throughout, a compare-and-swap on merge, content-hash snapshots gating a compaction apply, and cross-process serialization by leased database row rather than an in-process lock. The concept extractor is the weak half: every noun chunk becomes an entity, every pair of the first twenty-five becomes an edge, and a substring test makes one verb shadow another, so the shadowed relation never produces an edge and nothing pins it.
 - Study when: you want a local MCP memory server you can install in one command, and a worked example of separating a rebuildable derived graph from the durable judgements about it.
 - Do not copy when: you need a shared multi-agent store with per-caller scope on writes, a record of what changed in memory and why, a way to mark a memory doubtful, or literal recall of code containing angle brackets or ampersands.
+
+### [`lobu`](../systems/lobu/)
+- Best idea: **compile the read predicate once and splice it into every seam.** One authorization scope produces three ANDed SQL fragments — tenant, then org-visible or created-by-principal, then a membership join that mirrors GitHub's or Slack's own ACL onto the event rows — with a three-state enforcement split where a graphed-but-stale connection fails closed instead of falling back. Five marks: `scope_enforced`, `negative_eval`, `audit_log`, `human_review`, `bitemporal`.
+- Biggest risk: **a correction is masking, and the store cannot refuse a value.** A delete and a superseding save both stamp the target superseded and the current-records view hides the row, but nothing is keyed on the retired text, so re-saving it creates a new live head. Beside that, the per-turn plugin appends verbatim user and assistant pairs capped at 2,000 characters into the shared organisation store, with no extraction, summarisation or deduplication.
+- Most reusable component: the resource-visibility compiler — 137 lines that turn a synced upstream access list into a fail-closed SQL predicate, with the three-state reasoning written into the module comment.
+- Maturity impression: 2,291 TypeScript files over nineteen packages, 279 migrations since 19 May 2026, 1,150 test files and about 10,800 cases, integration suites sharded three ways against a real Postgres with pgvector, and a CI guard that parses the test report and fails a run in which zero tests ran. Two operational incidents from June 2026 are written into the embedding-backfill scheduler as the reason for its bounds.
+- Study when: many agents and many people need one organisation's context under different permissions, and a leak is the failure you cannot undo.
+- Do not copy when: you want a retrieval engine — the hybrid weights are two untuned constants with no quality harness — or when "forget that" has to survive the next write.

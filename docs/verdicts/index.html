@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 432 reports.</strong></p>
+<p><strong>This page covers all 433 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15446,6 +15446,42 @@ graph from the durable judgements about it.</li>
 per-caller scope on writes, a record of what changed in memory and why,
 a way to mark a memory doubtful, or literal recall of code containing
 angle brackets or ampersands.</li>
+</ul>
+<h3 id="lobu"><a href="../systems/lobu/"><code>lobu</code></a></h3>
+<ul>
+<li>Best idea: <strong>compile the read predicate once and splice it
+into every seam.</strong> One authorization scope produces three ANDed
+SQL fragments — tenant, then org-visible or created-by-principal, then a
+membership join that mirrors GitHub's or Slack's own ACL onto the event
+rows — with a three-state enforcement split where a graphed-but-stale
+connection fails closed instead of falling back. Five marks:
+<code>scope_enforced</code>, <code>negative_eval</code>,
+<code>audit_log</code>, <code>human_review</code>,
+<code>bitemporal</code>.</li>
+<li>Biggest risk: <strong>a correction is masking, and the store cannot
+refuse a value.</strong> A delete and a superseding save both stamp the
+target superseded and the current-records view hides the row, but
+nothing is keyed on the retired text, so re-saving it creates a new live
+head. Beside that, the per-turn plugin appends verbatim user and
+assistant pairs capped at 2,000 characters into the shared organisation
+store, with no extraction, summarisation or deduplication.</li>
+<li>Most reusable component: the resource-visibility compiler — 137
+lines that turn a synced upstream access list into a fail-closed SQL
+predicate, with the three-state reasoning written into the module
+comment.</li>
+<li>Maturity impression: 2,291 TypeScript files over nineteen packages,
+279 migrations since 19 May 2026, 1,150 test files and about 10,800
+cases, integration suites sharded three ways against a real Postgres
+with pgvector, and a CI guard that parses the test report and fails a
+run in which zero tests ran. Two operational incidents from June 2026
+are written into the embedding-backfill scheduler as the reason for its
+bounds.</li>
+<li>Study when: many agents and many people need one organisation's
+context under different permissions, and a leak is the failure you
+cannot undo.</li>
+<li>Do not copy when: you want a retrieval engine — the hybrid weights
+are two untuned constants with no quality harness — or when "forget
+that" has to survive the next write.</li>
 </ul>
         </article>
       </div>

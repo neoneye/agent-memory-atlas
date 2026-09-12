@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An event-sourced organisational
+memory for agents — one append-only Postgres event log with pgvector and
+tsvector recall and a typed entity graph over it — whose every read
+compiles its scope predicate from a single AuthzScope value: tenant,
+then connection owner, then the source system's own ACL mirrored as SQL
+and failing closed when the sync goes stale, with corrections appended
+as superseding rows that a masking view hides and nothing ever
+deletes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lobu — Agent Memory Atlas">
+    <meta property="og:description" content="An event-sourced
+organisational memory for agents — one append-only Postgres event log
+with pgvector and tsvector recall and a typed entity graph over it —
+whose every read compiles its scope predicate from a single AuthzScope
+value: tenant, then connection owner, then the source system's own ACL
+mirrored as SQL and failing closed when the sync goes stale, with
+corrections appended as superseding rows that a masking view hides and
+nothing ever deletes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lobu — Agent Memory Atlas">
+    <meta name="twitter:description" content="An event-sourced
+organisational memory for agents — one append-only Postgres event log
+with pgvector and tsvector recall and a typed entity graph over it —
+whose every read compiles its scope predicate from a single AuthzScope
+value: tenant, then connection owner, then the source system's own ACL
+mirrored as SQL and failing closed when the sync goes stale, with
+corrections appended as superseding rows that a masking view hides and
+nothing ever deletes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lobu — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lobu",
+      "description": "An event-sourced organisational memory for agents \u2014 one append-only Postgres event log with pgvector and tsvector recall and a typed entity graph over it \u2014 whose every read compiles its scope predicate from a single AuthzScope value: tenant, then connection owner, then the source system's own ACL mirrored as SQL and failing closed when the sync goes stale, with corrections appended as superseding rows that a masking view hides and nothing ever deletes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Org-wide event log behind a compiled read
+predicate</p>
+          <h1>Lobu</h1>
+          <p class="document-deck">An event-sourced organisational
+memory for agents — one append-only Postgres event log with pgvector and
+tsvector recall and a typed entity graph over it — whose every read
+compiles its scope predicate from a single AuthzScope value: tenant,
+then connection owner, then the source system's own ACL mirrored as SQL
+and failing closed when the sync goes stale, with corrections appended
+as superseding rows that a masking view hides and nothing ever
+deletes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lobu-ai/lobu">
+              <span>Source</span>
+              <strong>lobu-ai/lobu</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lobu-ai/lobu/commit/d3131ab5095e317f4222788273e39d761ae0474d" title="d3131ab5095e317f4222788273e39d761ae0474d">
+              <span>Analyzed revision</span>
+              <code>d3131ab5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lobu-ai--lobu" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lobu-ai--lobu</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lobu is a shared organisational memory for agents, built as an
+event-sourced Postgres application: connector polls, webhooks, device
+signals, agent writes and tool invocations all land as immutable rows in
+one <code>events</code> table, get linked to a typed entity graph, and
+are served back through a remote MCP server that ChatGPT, Claude Code,
+Codex and Lobu's own persistent agents all query. Apache-2.0. 2,291
+TypeScript files and roughly 355,000 non-test lines across nineteen
+workspace packages, 279 migrations dating from 19 May 2026, 1,150 test
+files holding about 10,800 cases, and a release changelog running back
+to 18 March 2026.</p>
+<p><strong>The scope predicate is the reason to read this
+repository.</strong> Every read seam that can surface connector-sourced
+data compiles its visibility clause in one place, from one value.
+<code>AuthzScope</code> carries
+<code>{ organizationId, principal, agentId }</code>
+(<code>packages/server/src/authz/scope.ts:10-24</code>);
+<code>compileConnectionFkVisibility</code> turns it into "org-visible,
+or this principal's own private connection"; and
+<code>compileResourceVisibility</code> turns it into a
+<code>member_of</code> join that mirrors the <em>source system's</em>
+access control — a GitHub repo's collaborator list, a Slack channel's
+membership — into SQL on the recall path. The three-state split is the
+part worth stealing: a connection never graphed passes through to the
+older per-connection fence, a freshly graphed one requires resource
+membership, and one that is graphed but whose sync has gone stale
+matches neither branch and is dropped. The module comment says why in
+one line: <em>"a stalled sync hides data, it does not leak it."</em></p>
+<p><strong>Correction is masking on an append-only log, and the design
+stops there.</strong> <code>delete_knowledge</code> inserts an empty
+<code>tombstone</code>-typed event whose
+<code>supersedes_event_id</code> points at the target;
+<code>save_memory</code> with <code>supersedes_event_id</code> does the
+same with a replacement body. A partial unique index allows one
+superseder per target, a trigger blocks a top-level
+<code>DELETE FROM events</code> outright, and the
+<code>current_event_records</code> view — the only table every search
+branch reads — is <code>WHERE superseded_by IS NULL</code>. History
+stays readable through <code>read_knowledge</code>'s
+<code>include_superseded</code> branch. But the tombstone is keyed on
+the <em>record</em>: nothing in the tree records the retired value, so
+the same text saved again is a new live head. <code>tombstone</code> is
+withheld on exactly that.</p>
+<p><strong>Human review is real and it is on the entity graph rather
+than on the log.</strong> An agent's or automation's entity write runs
+through a pluggable mutation gate whose one shipped interceptor defers a
+denied or escalated change into a durable approval run;
+<code>entities.field_controls</code> pins a field to a human, and
+<code>computeFieldMerge</code> returns an automation's write to an owned
+field as <code>blocked</code> rather than applying it.
+<code>requireHumanApprovalContext</code> refuses any context carrying an
+agent, OAuth client or MCP session identity, so an agent cannot approve
+the proposal it queued, and a proposal whose underlying value drifted
+after the card was built is skipped rather than applied.</p>
+<p><strong>Two findings cut against the product story.</strong> For
+Lobu's own managed agents, <code>search_memory</code>'s content arm is
+fenced to <code>events.metadata-&gt;&gt;'agent_id' = ctx.agentId</code>
+— so a specialist recalls only what it wrote, and the org's connector
+history reaches it through entities, its bound channels, and explicit
+<code>read_knowledge</code> or <code>query_sql</code> calls instead. And
+the turn plugin that gives those agents automatic memory captures the
+last user/assistant exchange verbatim, truncated at 2,000 characters, as
+a <code>semantic_type: 'observation'</code> event with no extraction,
+summarisation or deduplication — transcript slices accumulating in the
+same store that the organisation's decisions live in.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is an <strong>observation with provenance</strong>, not a
+fact. The unit is an <code>events</code> row: a title and a payload, a
+<code>semantic_type</code> chosen from the organisation's own registry,
+an <code>occurred_at</code> the writer states and a
+<code>created_at</code> the insert stamps, plus columns naming the
+connector, connection, feed, run, OAuth client, creating user and acting
+agent that produced it
+(<code>db/migrations/00000000000000_baseline.sql:847-887</code>). The
+table's own comment states the contract: <em>"Append-only event log —
+the primary data substrate… Never DELETE; supersede with a tombstone row
+that points at the original."</em></p>
+<p><strong>A row has exactly two epistemic states, and neither is about
+truth.</strong> It is a live head while
+<code>superseded_by IS NULL</code>, and it is masked once something
+supersedes it. Nothing else moves it. There is no
+<code>candidate</code>/<code>verified</code>/<code>rejected</code>
+column anywhere in the schema, no confidence threshold on the read path,
+and no way to hold a memory on record while disbelieving it. What the
+system tracks instead is <em>who said so</em> — and it tracks that very
+thoroughly, down to a server-owned <code>_lobu_</code> metadata
+namespace that is stripped from caller input so a member cannot forge an
+audit discriminator
+(<code>packages/server/src/tools/save_content.ts:480-485</code>).</p>
+<p><strong>Belief is therefore a function of the reader, not of the
+row.</strong> The same live head is returned to one member and dropped
+for another, decided per query by predicates compiled from the caller's
+<code>AuthzScope</code>. That is the design's real epistemic claim: a
+shared store where "what is known" is not a property of the store.</p>
+<p><strong>The entity graph is where something becomes a maintained
+value rather than an observation.</strong> Entities carry a jsonb body
+keyed by their type's schema, a <code>field_controls</code> map marking
+fields a human owns, and identity claims in
+<code>entity_identities</code> that connector events resolve against at
+read time. This is the only layer with a correction workflow: an
+automation proposing a change to an owned field is blocked into an
+approval card, and a human approving, rejecting or letting it go stale
+decides what the entity says.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nothing is edited or deleted — a correction is a new row that stamps the old one's superseded_by and the masking view removes it from every recall arm, while what a given caller sees of the live set is decided again on each query by a predicate compiled from one AuthzScope; the human-owned field pin is the only thing that stops an agent re-asserting a refused value, and it is keyed on the field rather than on the value</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: nothing is edited or deleted — a correction is a new row that stamps the old one&#39;s superseded_by and the masking view removes it from every recall arm, while what a given caller sees of the live set is decided again on each query by a predicate compiled from one AuthzScope; the human-owned field pin is the only thing that stops an agent re-asserting a refused value, and it is keyed on the field rather than on the value
+flowchart TD
+  I[&quot;observation: connector poll, webhook, device signal, or an agent&#39;s save_memory&quot;] --&gt; A[&quot;append to events: immutable row, occurred_at from the writer, created_at now&quot;]
+  A --&gt; H[&quot;live head: superseded_by IS NULL&quot;]
+  H --&gt; V{&quot;tenant: organization_id, or a public workspace&quot;}
+  V --&gt;|&quot;in scope&quot;| V2{&quot;connection visibility&quot;}
+  V --&gt;|&quot;other tenant&quot;| D[&quot;dropped&quot;]
+  V2 --&gt;|&quot;visibility = org, or created_by = principal&quot;| V3{&quot;source ACL state for the connection&quot;}
+  V2 --&gt;|&quot;another member&#39;s private connection&quot;| D
+  V3 --&gt;|&quot;never graphed: legacy fence already decided&quot;| R[&quot;returned by search_memory&quot;]
+  V3 --&gt;|&quot;enforced, and principal is member_of the resource entity&quot;| R
+  V3 --&gt;|&quot;graphed but stale, or no principal&quot;| D
+  R --&gt; C[&quot;correction: save_memory with supersedes_event_id, or client.knowledge.delete&quot;]
+  C --&gt; T[&quot;new row appended; the target&#39;s superseded_by is stamped, one superseder per target&quot;]
+  T --&gt; M[&quot;masked: current_event_records hides it from every recall arm&quot;]
+  M --&gt;|&quot;read_knowledge include_superseded reads the raw table&quot;| M2[&quot;history readable, entity-scoped chronological only&quot;]
+  M --&gt;|&quot;nothing is keyed on the retired VALUE&quot;| I
+  H --&gt; F{&quot;automation proposes a field a human owns?&quot;}
+  F --&gt;|&quot;yes&quot;| Q[&quot;blocked; a durable approval run is queued post-commit&quot;]
+  Q --&gt;|&quot;a signed-in human approves, and the live value has not drifted&quot;| A
+  Q --&gt;|&quot;rejected&quot;| K[&quot;field keeps its human value; nothing records the proposed value as refused&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><strong>One database, three processes.</strong> Postgres with
+pgvector holds everything — events, embeddings, entities, identities,
+relationships, ACL state, runs, approvals, OAuth and sessions. The app
+image (<code>ghcr.io/lobu-ai/lobu-app</code>) serves the gateway, the
+MCP endpoint, REST and the scheduler. A worker image drains runs —
+automation turns, agent turns, embedding backfill. An embeddings service
+holds <code>Xenova/bge-base-en-v1.5</code> at 768 dimensions on the CPU
+through transformers.js, and its single-threadedness is a load-bearing
+constraint the scheduler is written around
+(<code>packages/server/src/scheduled/trigger-embed-backfill.ts:43-57</code>).</p>
+<p><strong>Deployment is asymmetric between the two published paths, and
+it matters for recall.</strong> The Helm chart deploys app, worker,
+embeddings service and their PVCs and wires
+<code>EMBEDDINGS_SERVICE_URL</code> into both deployments
+(<code>charts/lobu/templates/deployment.yaml:100-103</code>,
+<code>worker-deployment.yaml:95-98</code>).
+<code>docker-compose.example.yml</code> starts Postgres and the app only
+and sets no embeddings URL; <code>searchContentBySingleQuery</code>
+catches the missing service and logs <em>"Embedding generation failed,
+falling back to text-only search"</em>
+(<code>packages/server/src/utils/content-search/search-path.ts:65-75</code>).
+A default self-hosted compose deployment therefore runs the lexical arm
+alone until an embeddings service is added — a quiet, correct
+degradation that nothing surfaces to the agent beyond a
+<code>similarity</code> of <code>NULL</code>.</p>
+<p><strong>Minimum to boot</strong> is <code>DATABASE_URL</code>, a
+32-byte <code>ENCRYPTION_KEY</code>, a 32-byte
+<code>BETTER_AUTH_SECRET</code> and the externally-visible
+<code>PUBLIC_GATEWAY_URL</code>. No model provider key is required at
+boot; keys can be added through the admin UI at runtime. The store is
+ordinary Postgres and fully inspectable by hand — <code>query_sql</code>
+exposes a member-safe read-only slice of it as a tool.</p>
+<p><strong>A submodule at <code>packages/owletto</code> is declared in
+<code>.gitmodules</code></strong> and points at a second repository; it
+was left uninitialised, so nothing in it is described here.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>save_memory</code> →
+<code>saveContent</code>
+(<code>packages/server/src/tools/save_content.ts</code>) validates
+<code>semantic_type</code> against the organisation's registered event
+kinds, strips reserved <code>_lobu_</code> metadata keys, stamps
+<code>agent_id</code> from the bound context last so a caller cannot
+write into another agent's scope (<code>:486-505</code>), validates any
+<code>supersedes_event_id</code> target and refuses a second superseder
+(<code>:402-435</code>, with the concurrent-race path recovering from
+the unique violation at <code>:644-649</code>), inserts through
+<code>insertEvent</code>, and returns <code>indexing_status</code> from
+the shared <code>needsEmbeddingSql</code> predicate
+(<code>:722-736</code>).</li>
+<li><strong>Delete and correct.</strong>
+<code>client.knowledge.delete</code>
+(<code>packages/server/src/sandbox/namespaces/knowledge.ts:79-84</code>,
+reachable through the <code>run_sdk</code> MCP tool) →
+<code>deleteContentImpl</code> inserts one empty <code>tombstone</code>
+event per target carrying <code>supersedes_event_id</code>,
+<code>deleted_event_id</code> and an optional reason
+(<code>packages/server/src/tools/delete_content.ts:97-112</code>).
+Removing a <code>guidance</code> row is additionally owner/admin-gated
+through <code>assertCanRemoveGuidance</code>.</li>
+<li><strong>Append-only enforcement.</strong>
+<code>db/migrations/20260610040000_events_append_only_guard.sql</code>
+installs a <code>BEFORE DELETE</code> trigger that raises unless
+<code>pg_trigger_depth() &gt; 1</code> (an organisation cascade) or the
+transaction has set <code>lobu.allow_event_delete</code>.
+<code>SET LOCAL</code> scopes the bypass to one transaction so a pooled
+connection cannot leak it.</li>
+<li><strong>Retrieval.</strong> <code>search_memory</code> →
+<code>searchImpl</code> → <code>searchWorkspaceImpl</code> →
+<code>gatherLocalRecall</code> fans out three concurrent reads — events
+through <code>searchContentByText</code>, channel transcripts, and
+source-feed coverage
+(<code>packages/server/src/tools/search.ts:1208-1266</code>).
+<code>searchContentBySingleQuery</code> builds the one SQL
+statement.</li>
+<li><strong>Scope compilation.</strong>
+<code>buildConnectionVisibilityClause</code>
+(<code>packages/server/src/utils/content-search/visibility.ts:148-176</code>)
+composes <code>compileConnectionFkVisibility</code> and
+<code>compileResourceVisibility</code>, binding their parameters in
+order so every caller's <code>$N</code> indexing survives.
+<code>buildOrgScopeWhere</code> (<code>:99-127</code>) binds the tenant,
+with a GIN-indexed <code>linked_org_ids</code> fast path behind a
+backfill gate.</li>
+<li><strong>Masking.</strong> Every candidate and result branch joins
+<code>current_event_records</code>, which is
+<code>SELECT … FROM public.events e WHERE e.superseded_by IS NULL</code>
+(<code>db/migrations/20260820150000_current_event_records_stored_content_length.sql:49-50</code>);
+<code>search-path.ts:373-429</code> shows all four branches using
+it.</li>
+<li><strong>Approval.</strong> <code>runMutationGate</code>
+(<code>packages/server/src/authz/entity-mutation-gate.ts:233-268</code>)
+is called from <code>manage_entity</code> create and delete,
+<code>entity-management.updateEntity</code>, and automation keyed-entity
+promotion. A <code>defer</code> decision returns a
+<code>DeferredMutation</code> whose <code>queue()</code> closure the
+core runs strictly post-commit, so an approval never rides the caller's
+transaction.</li>
+<li><strong>Resolution.</strong> <code>manage_operations</code>
+<code>approve</code>/<code>reject</code> →
+<code>requireHumanApprovalContext</code> →
+<code>requireApprovalAuthority</code> →
+<code>applyEntityChangeProposal</code> →
+<code>mergeEntityFields(source: 'human')</code>
+(<code>packages/server/src/tools/admin/manage_operations/handlers/approvals.ts:978-1060</code>).
+The MCP App path reaches the same handler through
+<code>resolveApproval</code> after revalidating an encrypted host-bound
+capability
+(<code>packages/server/src/tools/mcp_app.ts:951-1007</code>).</li>
+<li><strong>Audit.</strong> <code>executeTool</code> wraps every
+dispatch and calls <code>recordToolInvocationAudit</code> on both the
+success and the exception path
+(<code>packages/server/src/tools/execute.ts:409-433</code>), appending
+an <code>events</code> row with
+<code>semantic_type = 'audit'</code>.</li>
+<li><strong>Background.</strong>
+<code>packages/server/src/scheduled/jobs.ts</code> registers cron jobs
+against durable rows; <code>trigger-embed-backfill</code> runs
+<code>*/5</code> (<code>:203-210</code>).</li>
+<li><strong>Agent turn.</strong> <code>runAgentTurn</code> builds
+<code>createTurnMemoryHooks</code> when the turn declares memory
+(<code>packages/connector-worker/src/agent-turn/guest-entry.ts:374-391</code>),
+which drives <code>@lobu/plugin-memory</code>'s
+<code>beforeAgentStart</code> recall and <code>agentEnd</code> capture
+through the real <code>PluginHost</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>events</code></td>
+<td><code>id</code> (bigserial), <code>organization_id</code>,
+<code>entity_ids</code> bigint[], <code>origin_id</code>,
+<code>title</code>, <code>payload_type</code> in
+<code>text</code>/<code>markdown</code>/<code>json_template</code>/<code>media</code>/<code>empty</code>,
+<code>payload_text</code>, <code>payload_data</code>,
+<code>attachments</code>, <code>metadata</code>, <code>score</code>,
+<code>author_name</code>, <code>source_url</code>,
+<code>occurred_at</code>, <code>created_at</code>,
+<code>origin_type</code>, <code>connector_key</code>,
+<code>connection_id</code>, <code>feed_key</code>, <code>feed_id</code>,
+<code>run_id</code>, <code>semantic_type</code>, <code>client_id</code>,
+<code>created_by</code>, the <code>interaction_*</code> approval
+columns, <code>supersedes_event_id</code>, a stored
+<code>content_length</code>, and a generated <code>search_tsv</code>
+weighting title <code>A</code> and body <code>B</code></td>
+</tr>
+<tr>
+<td><code>event_embeddings</code></td>
+<td><code>(event_id, embedding_model, chunk_index)</code> → a
+768-dimension <code>vector</code>, so one event carries N chunk
+vectors</td>
+</tr>
+<tr>
+<td><code>entities</code></td>
+<td><code>organization_id</code>, <code>entity_type_id</code>,
+<code>slug</code>, <code>name</code>, jsonb <code>metadata</code> keyed
+by the type's schema, <code>field_controls</code>, <code>content</code>,
+a 768-dimension <code>embedding</code>, a generated
+<code>content_tsv</code>, <code>parent_id</code>,
+<code>deleted_at</code></td>
+</tr>
+<tr>
+<td><code>entity_identities</code></td>
+<td>normalised identifier claims — <code>namespace</code>
+(<code>phone</code>, <code>email</code>, <code>slack_user_id</code>,
+<code>github_login</code>, <code>auth_user_id</code>, …),
+<code>identifier</code>, <code>scope_key</code>,
+<code>source_connector</code>, <code>deleted_at</code>, under a
+live-unique partial index</td>
+</tr>
+<tr>
+<td><code>entity_relationships</code></td>
+<td>typed edges with <code>confidence</code>, <code>source</code>, a
+<code>_lobu_claims</code> ownership map in metadata, and
+<code>deleted_at</code>; types carry a <code>purpose</code>, and
+<code>purpose = 'authorization'</code> types are writable only by the
+ACL syncs</td>
+</tr>
+<tr>
+<td><code>authz_source_acl_state</code></td>
+<td>per-connection <code>acl_support</code>,
+<code>freshness_state</code> in
+<code>fresh</code>/<code>stale</code>/<code>unknown</code>/<code>failed</code>,
+<code>last_synced_at</code> — the triple the read gates consult</td>
+</tr>
+<tr>
+<td><code>write_approval_policies</code> +
+<code>write_policy_action_effects</code></td>
+<td>scope+principal headers with one <code>(action, effect)</code> child
+row each, <code>effect</code> in
+<code>auto</code>/<code>approval</code>/<code>deny</code>/<code>disabled</code></td>
+</tr>
+<tr>
+<td><code>runs</code></td>
+<td>the durable approval and execution record —
+<code>approval_status</code>, <code>action_input</code> (the frozen
+proposal), <code>action_output</code>, <code>parent_run_id</code></td>
+</tr>
+<tr>
+<td><code>agents</code></td>
+<td>a persistent specialist's <code>soul_md</code>,
+<code>user_md</code>, <code>identity_md</code>, skills, tools, plugins,
+guardrails and egress config</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Scoping is layered and the layers are different kinds of
+object.</strong> <code>organization_id</code> is a column on essentially
+every table and a predicate on essentially every query. Connection
+visibility is a row property (<code>visibility</code> plus
+<code>created_by</code>) resolved as a subquery. Resource membership is
+a <em>graph</em> property, joined through
+<code>entity_relationships</code> at read time. Per-agent memory is
+<code>events.metadata-&gt;&gt;'agent_id'</code>, a jsonb key with
+partial indexes. And per-agent private instructions are three text
+columns on the <code>agents</code> row — the one place the boundary is
+physical rather than predicated, and appropriately so, since an agent's
+own soul document is not something anyone queries across agents.</p>
+<p><strong>Two timelines, both populated, one queryable.</strong>
+<code>occurred_at</code> is the writer's statement of when the thing
+happened and <code>created_at</code> is the insert stamp; neither is
+ever overwritten, because the row is never updated. Retirement has its
+own timestamp — the superseding row's <code>created_at</code> — so the
+interval during which a wrong value was live is recoverable exactly.
+What is missing is a predicate on the record axis: nothing in the tree
+binds <code>created_at</code> in a <code>WHERE</code>, so a record-time
+as-of read has to be assembled from the chain by hand.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>One statement, two arms, weighted linearly.</strong> With an
+embedding available,
+<code>combined_score = COALESCE(text_rank * (1 - w) + best_sim * w, text_rank)</code>
+where <code>w</code> defaults to 0.6 and is clamped to
+<code>[0,1]</code>
+(<code>packages/server/src/utils/content-search/search-path.ts:269-287</code>).
+<code>text_rank</code> is <code>ts_rank_cd</code> over the generated
+tsvector plus a flat 1.0 bonus when the raw query appears as an ILIKE
+substring. <code>best_sim</code> is the maximum cosine over the event's
+chunk vectors, computed by a correlated subquery scoped to the
+configured embedding model, so a row embedded under a previous model
+contributes <code>NULL</code> and falls back to the text score instead
+of being compared across incompatible spaces. Candidates come from a
+vector branch (<code>ORDER BY emb.embedding &lt;=&gt; $vec</code>), a
+GIN-served <code>@@</code> branch, or both.</p>
+<p><strong>The scoring has a sensible tiebreaker and one honest
+scar.</strong> <code>(f.id % 997) ASC</code> spreads near-ties
+pseudo-uniformly before falling back to
+<code>COALESCE(occurred_at, created_at) DESC</code> — the comment names
+near-duplicate conversation sessions as the case where an
+occurrence-time fallback collapses results onto the newest cluster. The
+<code>min_similarity</code> knob's history is written into the code: it
+was hardcoded to 0.4 at the recall seam, so <em>"sweeping 0 → 1.0 never
+changed the result set, and the documented default was silently
+overridden"</em>; the fix passes <code>undefined</code> through so the
+one clamped copy in <code>search-path.ts</code> applies
+(<code>packages/server/src/tools/search.ts:875-886</code>).</p>
+<p><strong>The transcript arm is much cruder than the events
+arm.</strong> <code>fetchConversationSnippets</code> tokenises the
+query, drops a stopword list and terms of three characters or fewer,
+keeps at most eight, and ANDs an <code>ILIKE '%term%'</code> per term
+over <code>channel_messages</code>, ordered by
+<code>occurred_at DESC</code> — no FTS index, no vector, no ranking
+(<code>packages/server/src/tools/search.ts:1020-1055</code>). It runs
+only when the caller is an agent, and only over
+<code>(connection_id, channel_id)</code> pairs that agent is bound
+to.</p>
+<p><strong>Entity-type read policy is a post-filter, not a
+predicate.</strong> <code>filterEntitiesByReadPolicy</code> runs
+<code>evaluateEntityMutation(action: 'read')</code> per distinct
+entity-type slug over the already-fetched rows
+(<code>packages/server/src/tools/search.ts:1395-1430</code>). It applies
+only when the caller is an agent or an automation, and because it
+removes rows after the query, an agent's result page can come back
+shorter than the limit with no indication that a type was filtered.</p>
+<p><strong>Failure modes worth naming.</strong> The entity-scoped and
+query-scoped arms are deliberately conjunctive, so
+<code>{ entity_id, query }</code> never returns transcripts.
+<code>min_similarity</code> defaults to 0.3, which on
+<code>bge-base</code> is a low floor and over-recalls on short queries.
+And the per-agent content fence is silent in both directions: a Lobu
+specialist searching its own memory gets nothing from the org's
+connector stream, and a human's PAT search over the same workspace
+returns the agent's rows plus everything else — the code comment records
+that the asymmetry once ran the other way, with a model unable to recall
+a memory it had just written.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes are synchronous, cheap and non-extractive.</strong>
+<code>save_memory</code> validates, inserts, fires the NER-lite
+auto-linker and returns; there is no LLM on the path. The auto-linker
+scans up to 5,000 characters of content against a 60-second-TTL cache of
+the organisation's entity names, requiring a name of at least three
+characters, and creates at most 20 <code>mentions</code> edges
+(<code>packages/server/src/utils/auto-linker.ts:28-32</code>). Connector
+ingest uses the richer mechanism: declarative <code>attributions</code>
+rules extract and normalise identifiers, look them up in
+<code>entity_identities</code>, create on miss when
+<code>autoCreate</code> is set, and log a merge candidate when one
+event's identifiers resolve to two entities — and it never mutates
+<code>events.entity_ids</code>, recovering the link by join at read time
+instead.</p>
+<p><strong>Semantic retrievability lags; lexical does not.</strong>
+<code>search_tsv</code> is a generated column, so a saved memory matches
+the text arm on the next query. The embedding is left null and filled by
+the <code>*/5</code> <code>trigger-embed-backfill</code> job, which
+discovers backlogged organisations by scanning the newest 5,000
+unembedded rows under an 8-second statement timeout and dispatches, by
+default, <strong>one</strong> organisation per tick. Both bounds are
+incident-derived and the comments say so: an unbounded discovery scan
+reached 14.5 seconds and restarted the Postgres primary on 22 June 2026,
+and concurrent backfill runs serialising at the single-threaded
+embeddings service produced a congestion collapse on 24 June 2026 in
+which <em>"embed_backfill 0-completed for hours"</em>. The practical
+consequence for an adopter is that on a busy multi-tenant instance the
+lag from write to vector-searchable is at least one five-minute tick and
+is not bounded above.</p>
+<p><strong>Update is append; there is no in-place edit of a
+memory.</strong> The only mutation <code>insertEvent</code> performs on
+an existing row is <code>applyVolatileState</code>, which patches
+<code>score</code> and a narrow volatile metadata set for a connector
+re-sync, with a dirty check so an omitted counter does not register as a
+change. Everything else supersedes.</p>
+<p><strong>Deduplication is by producer key, not by content.</strong>
+<code>idempotency_key</code> returns the original event unchanged;
+connector re-ingest dedupes on <code>origin_id</code>. Nothing compares
+embeddings or text before writing, so the plugin's per-turn capture and
+a model that saves the same fact twice both land twice.</p>
+<p><strong>Malicious input is filtered in exactly one place, and it is
+the right place.</strong> <code>guidance</code> is the only content
+injected into an agent's system prompt, and
+<code>loadOrgGuidanceBlock</code> requires
+<code>connection_id IS NULL AND connector_key IS NULL</code> — both,
+because a webhook writes <code>connector_key='webhook:&lt;id&gt;'</code>
+with a null <code>connection_id</code> and its
+<code>semantic_type</code> is caller-configurable, so either check alone
+would let a webhook token holder write into every agent's prompt
+(<code>packages/server/src/utils/org-guidance.ts:110-124</code>).
+Authorship and removal are both owner/admin-gated, the latter covering
+supersede and tombstone because both mask.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<p>The agent blocks on one insert and a bounded auto-link, and nothing
+else. Injection is bounded and cache-friendly: org guidance is capped at
+3,000 characters with a deterministic truncation marker and ordered by
+<code>id ASC</code> with no timestamps or counts, explicitly so it stays
+inside the cached system-prompt prefix
+(<code>packages/server/src/utils/org-guidance.ts:25-28</code>,
+<code>:88-93</code>). The per-turn recall block is the opposite —
+<code>@lobu/plugin-memory</code> prepends up to six content snippets of
+500 characters each plus three entities as a
+<code>&lt;lobu-memory&gt;</code> block in front of the user message on
+every turn (<code>packages/plugin-memory/src/index.ts:100-127</code>),
+which changes the prefix each turn. The turn machinery is aware of the
+hazard and manages it at a different layer, keying transient context per
+message so a steered follow-up does not re-attach the opener's block and
+<em>"a prompt-cache prefix that changes on each call"</em>. No
+background pass re-reads or rewrites the whole store; the only
+corpus-scale job is the embedding backfill, and it is bounded per
+tick.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><strong>Fourteen tools on the MCP surface</strong>, of which the
+memory hot path is three: <code>search_memory</code>,
+<code>save_memory</code> and <code>search_sdk</code>, plus
+<code>query_sdk</code>/<code>query_sql</code> for reads and
+<code>run_sdk</code> for writes through a capability-scoped TypeScript
+sandbox (<code>packages/server/src/tools/registry.ts:292-380</code>).
+<code>read_knowledge</code> and <code>delete_knowledge</code> are not
+advertised on <code>tools/list</code>; they are reached as
+<code>client.knowledge.read</code> and
+<code>client.knowledge.delete</code> inside a script. The registry's own
+comment explains the asymmetry — data tools deliberately mount no UI
+card so an agent can chain reads, and <code>save_memory</code> is the
+exception because <em>"its single durable write is itself the final
+result a person inspects."</em></p>
+<p><strong>The agent is expected to save and search explicitly.</strong>
+The workspace instruction block tells it so in as many words — <em>"You
+have persistent memory. Use it proactively — don't wait to be
+asked"</em> — and lists the organisation's entity types, relationship
+types (annotating an ACL-managed type
+<code>read-only: access control</code> rather than hiding it) and the
+<code>guidance</code> block
+(<code>packages/server/src/utils/workspace-instructions.ts:167-186</code>).
+A direct MCP client receives capability documentation only;
+tenant-authored guidance is restricted to managed-agent prompts so that
+<em>"tenant content [cannot] steer an unrelated host."</em></p>
+<p><strong>Lobu's own agents get automatic memory, and it is
+thin.</strong> <code>beforeAgentStart</code> calls
+<code>search_memory</code> with the raw prompt (skipping heartbeats) and
+prepends the result; <code>agentEnd</code> fires a
+<code>save_memory</code> of <code>User: …\nAssistant: …</code> truncated
+to 2,000 characters as <code>semantic_type: 'observation'</code>,
+started and not awaited. The comment around that promise is the most
+careful piece of engineering in the plugin: the retired worker process
+outlived the turn, the isolate does not, so the promise is retained and
+<code>settle()</code> awaits it at teardown — <em>"a runtime that is
+about to tear itself down awaits it… while one that is not simply never
+calls it."</em></p>
+<p><strong>Compaction is handled, and handled well.</strong>
+<code>resolveMemoryFlushConfig</code> is on by default with a
+4,000-token soft threshold below the compaction point, a system prompt
+of <em>"Session nearing compaction. Store durable memories now."</em>
+and an instruction to reply <code>NO_REPLY</code> if there is nothing to
+store (<code>packages/core/src/memory-flush.ts:13-20</code>).
+<code>memoryFlushDue</code> counts <code>compaction</code> entries on
+the branch and compares against a <code>lobu.memory_flush_state</code>
+custom entry, so exactly one flush fires per compaction cycle
+(<code>:89-108</code>). The flush runs as a side prompt with the turn's
+transient context suppressed.</p>
+<p><strong>Adapting this to another agent is the easy
+direction.</strong> The whole memory surface is a remote MCP server
+behind OAuth, and <code>lobu connect</code> writes the client config for
+Claude Code, Codex and OpenCode. Adapting <em>away</em> from it is the
+hard direction: the tools assume Lobu's entity types, semantic-type
+registry and SDK.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is the system's strength and its substitute for
+epistemic state.</strong> Every row names its connector, connection,
+feed, run, OAuth client, creating user and acting agent, the
+<code>_lobu_</code> metadata namespace is server-owned, and the audit
+event carries a SHA-256 of sanitised arguments plus a preview redacted
+by four credential patterns applied <em>before</em> truncation —
+<em>"slicing first can split a quoted credential and the unbalanced
+quote defeats the pattern"</em>
+(<code>packages/server/src/tools/audit.ts:75-79</code>). What none of it
+supports is uncertainty: there is no field on a memory that says
+"recorded, not believed". <code>entity_relationships.confidence</code>
+and <code>event_classifications.confidences</code> exist, are projected
+into results, and a search over
+<code>packages/server/src/utils/content-search/</code> and
+<code>search.ts</code> finds no <code>WHERE</code> binding either.
+<code>trust_state</code> is withheld on that.</p>
+<p><strong>The nearest thing to a trust state is about permissions, not
+truth.</strong> <code>authz_source_acl_state.freshness_state</code> is a
+genuine four-valued discrete state that is read on the retrieval path
+and does withhold rows. But what it withholds them from is
+<em>visibility</em>, not <em>belief</em>: it answers "is our copy of
+GitHub's access list current enough to rely on", which cannot turn out
+to be false about the memory. It belongs on the scope side of the line,
+and that is where it is credited.</p>
+<p><strong>The scope story's honest limits.</strong> The mark covers the
+read path. Background consolidation is a non-issue because there is
+none, but three other gaps are real.
+<code>filterEntitiesByReadPolicy</code> is application-side, so entity
+counts and pagination are computed pre-filter. Embedding keys are scoped
+by model, not by tenant, which is correct here because the vectors live
+in the same tenant-predicated tables. And deletion is masking, so a
+scoped copy question does not arise — but neither does erasure: an
+organisation cascade is the only path that physically removes an
+event.</p>
+<p><strong>Prompt injection is defended at the one place it matters and
+left open elsewhere.</strong> The <code>guidance</code> fence is careful
+and correct. But <code>save_memory</code> accepts arbitrary text from
+any write-scoped caller, <code>search_memory</code> returns it, and the
+plugin prepends it to the next turn's prompt inside a
+<code>&lt;lobu-memory&gt;</code> block whose only instruction is
+<em>"Use these long-term memories only when directly relevant."</em> A
+memory written by one agent is an instruction candidate for the
+next.</p>
+<p><strong>One approval invariant is satisfied structurally rather than
+verified.</strong> <code>requireHumanApprovalContext</code> refuses any
+context carrying <code>agentId</code>, <code>clientId</code> or
+<code>mcpSessionId</code>. The MCP App resolver reaches the same handler
+by <em>clearing</em> all three after revalidating an encrypted,
+host-bound, run-scoped capability
+(<code>packages/server/src/tools/mcp_app.ts:985-1002</code>). The
+comment is explicit that the capability <em>"proves a signed-in OAuth
+user deliberately used this app surface"</em>, and the downstream
+membership and run-owner checks still run — but the "no agent may
+approve" guard is, on that one path, satisfied by assignment rather than
+by evidence, and its strength is exactly the strength of
+<code>mcpAppCapabilityMatchesHost</code>.</p>
+<p><strong>Concurrency is handled where it was hit.</strong> A unique
+partial index guarantees one superseder per target and the loser of a
+race gets a clean error rather than a duplicate chain. Embedding writers
+take <code>FOR NO KEY UPDATE</code> on the event before touching
+<code>event_embeddings</code>, with the lock order documented as events
+→ event_embeddings everywhere to avoid a cycle. Approval application
+shares the terminal transaction, with committed tests for the rollback
+of each shape.</p>
+<p><strong>Two mechanisms are declared and not wired, and the repository
+says so itself.</strong> <code>$eval_case.expectation</code> is captured
+with the note that it <em>"has NO consumer yet — PR 4's judge is what
+reads it"</em>, captured now because <em>"recovering it later from a run
+id is guesswork"</em> — a defensible reason to ship a field early,
+stated. And the event-sourced <code>entity_field_state</code> projection
+was built and then dropped in
+<code>db/migrations/20260623050000_drop_entity_field_projection.sql</code>
+with the diagnosis written into the migration: <em>"it shipped substrate
+first… but NO read path ever consumed it."</em> Deleting a mechanism
+because nothing read it, and leaving the diagnosis in the migration, is
+a better outcome than the unwired projection this atlas usually finds
+still standing.</p>
+<p><strong>Withheld marks, and why.</strong> <code>tombstone</code> —
+the supersession record is keyed on <code>supersedes_event_id</code>, a
+record id, which the rubric names explicitly as not this; re-saving
+retired text produces a new live head. The near-miss is
+<code>entities.field_controls</code>: once a human owns a field, an
+automation's write to it is blocked and re-surfaces as a card forever,
+which is a durable refusal — but keyed on the <em>field</em>, so the
+same rejected value can be proposed again indefinitely and only the
+silent application is prevented. <code>trust_state</code> — no discrete
+epistemic status exists on a memory, and a search for the usual
+vocabulary across <code>packages/server/src</code> and
+<code>db/migrations</code> returns nothing.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>The suite is large and the CI gate is unusually well
+defended.</strong> 1,150 test files and roughly 10,800 cases, 942 files
+of them in <code>packages/server</code>. Integration tests run against a
+real Postgres with pgvector in a service container, sharded three ways
+under Vitest with <code>pool: 'forks', singleFork: true</code>. The gate
+that matters is <code>scripts/assert-vitest-report-clean.mjs</code>:
+Vitest's exit code is not trusted, the JSON report is parsed, and the
+run fails unless it parses, reports zero failed tests and suites,
+<strong>and ran at least one test</strong> — <em>"zero tests ran —
+refusing to treat that as green."</em> The comment names the incident
+that produced it, a run that went green while printing "Test Files 5
+failed" because an <code>async-exit-hook</code> registered by importing
+<code>embedded-postgres</code> overwrote the exit code. It is 59 lines,
+over half of them the docstring naming the incident it exists for, and
+it is worth copying verbatim.</p>
+<p><strong>The visibility tests are the ones that carry the marks, and
+they are non-vacuous by construction.</strong>
+<code>github-repo-visibility.test.ts</code> seeds two events on two repo
+entities, builds the access graph, and asserts a collaborator on repo A
+sees A and not B in one result — then asserts a requester with no
+<code>$member</code> entity sees neither, then asserts that
+<em>without</em> a graph both are visible. That last case is the
+control: a predicate that hid everything would fail it. The file also
+re-runs the assertion through the production
+<code>syncGithubConnectionAcl</code> rather than only the test builder.
+<code>slack-channel-visibility.test.ts</code> covers the same shape for
+chat, and <code>search-connection-visibility.test.ts</code> pairs
+<code>toContain</code> with <code>not.toContain</code> on five caller
+shapes over one fixture, plus an assertion that hidden private
+connections do not leak through the entity's
+<code>connection_count</code> — the counting channel, which is where a
+visibility filter most often fails to reach.</p>
+<p><strong>Approval behaviour is tested at the transaction
+boundary</strong>, which is the right place:
+<code>entity-approval-atomic-apply.test.ts</code> asserts that a card
+with one stale escalated field commits none of the rest, that a
+<code>$name</code> rollback takes the metadata half with it, and — as an
+explicitly labelled <code>CONTROL</code> — that a hold card with no
+escalation still applies its live fields.</p>
+<p><strong>No memory benchmark exists here, and that is a scoped
+claim.</strong> A case-insensitive search of the whole tree for
+<code>locomo|longmemeval|hotpotqa|msc benchmark|memgpt|mem0</code>
+matches exactly one file,
+<code>packages/server/src/utils/content-search/search-path.ts</code>,
+and there only in a comment explaining the <code>id % 997</code>
+tiebreaker. There is no retrieval-quality harness, no recall@k
+measurement, and no ranking regression test: the
+<code>vector_weight</code> of 0.6 and the <code>min_similarity</code> of
+0.3 are unmeasured constants. The committed eval machinery aims
+elsewhere — <code>examples/personal-finance/evals</code> is a promptfoo
+config for a connector,
+<code>examples/lobu-crm/evals/discovery-surface</code> drives
+tool-discovery scenarios, and the in-product <code>$eval_case</code>
+mechanism replays real automation runs.</p>
+<p><strong>No paper.</strong> A case-insensitive search of the tree for
+<code>arxiv</code>, <code>bibtex</code>, <code>@inproceedings</code> and
+<code>@article</code> returns nothing, and there is no
+<code>CITATION.cff</code>.</p>
+<p><strong>What I would want before trusting this.</strong> A
+retrieval-quality regression on the hybrid weights, since two unmeasured
+constants decide every recall. A test that a superseded memory's text,
+re-saved, is distinguishable from a fresh one — the gap that withholds
+<code>tombstone</code>. And an assertion that an agent-bound
+<code>search_memory</code> returns connector-sourced events, because the
+per-agent fence means it does not, and nothing in the suite records that
+as intended behaviour rather than a regression waiting to be
+introduced.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Compile the scope predicate in one function and call it from
+every read seam.</strong> <code>connection-visibility.ts</code> is 67
+lines and it is the whole rule; the seams differ only in parameter-index
+bookkeeping, which the composing helper absorbs. The alternative — a
+visibility clause written separately into a search path, a list path and
+a read path — is how the same system earlier shipped a drill that
+<em>"returns 200 with the org's ENTIRE activity stream, which looks
+plausible."</em></li>
+<li><strong>Split ACL enforcement three ways, not two.</strong>
+Never-graphed, enforced, and graphed-but-stale must be separate states,
+because <code>NOT IN (enforced)</code> silently makes the stale case
+permissive. Write the stale case as failing closed and say so in the
+comment, as this code does.</li>
+<li><strong>Mirror the source system's own ACL rather than inventing
+one.</strong> A memory sourced from a Slack channel or a GitHub repo
+already has an authoritative access list; joining it at read time means
+a leak requires the upstream to be wrong.</li>
+<li><strong>Gate CI on the test <em>report</em>, not the exit
+code.</strong> A few dozen lines that parse the JSON and refuse a run
+with zero tests catch the failure mode where a dependency's exit hook
+turns a red run green.</li>
+<li><strong>Fire one memory flush per compaction cycle.</strong> Asking
+the model to write durable memories as the window approaches its limit,
+keyed on a marker that counts compactions so it fires once, is a cheap
+way to stop a long session losing what it learned.</li>
+<li><strong>Make an approval card refuse a stale value.</strong>
+Carrying the snapshot the proposal was built on and skipping any field
+whose live value has drifted since is what stops a queued approval from
+clobbering a human's later edit.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Don't let "append-only" stand in for "correctable".</strong>
+Masking the old row answers "stop showing me this" and not "this value
+is wrong"; without a record keyed on the value, the next extraction pass
+re-asserts it and the store is confidently wrong again.</li>
+<li><strong>Don't capture raw turn pairs into a shared store.</strong>
+Verbatim exchanges with no extraction, no summarisation and no dedup
+mean the organisation's decisions compete for rank with slices of chat,
+and the volume grows with conversation rather than with knowledge.</li>
+<li><strong>Don't filter after the query when the count is part of the
+answer.</strong> A post-fetch policy filter returns a short page with no
+signal that anything was removed, and any total computed in SQL is a
+pre-filter total.</li>
+<li><strong>Don't ship a documented threshold the callee
+overrides.</strong> A hardcoded floor at the seam made a published
+<code>min_similarity</code> knob inert across its entire range — the
+shape this atlas keeps finding, here caught and fixed with the reasoning
+left in the file.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This is a company system, not a library, and it costs what a company
+system costs: Postgres with pgvector, a worker, an embeddings service,
+OAuth, and a Helm chart that means it. The design's centre of gravity is
+<em>permission</em>, not <em>recall</em> — the deepest thinking in the
+tree is about who may see a row, and the retrieval side is a competent
+hybrid with two untuned constants and no quality harness. That is the
+right trade for what it is aimed at: many agents and many people over
+one organisation's connected systems, where a leak is unrecoverable and
+a mediocre ranking is an inconvenience. Take it if your problem is that
+five agents and forty people need the same context under different
+permissions. Walk away if your problem is one person's memory on a
+laptop, or if you wanted a retrieval engine — there is a much smaller
+thing that ranks better, and you would be paying for governance you do
+not need. Read the authz directory regardless; the predicate compiler
+and the three-state ACL split transfer to a system a hundredth of this
+size.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>What is the actual write-to-vector-searchable lag on a
+populated instance?</strong> The code bounds the discovery scan and the
+per-tick dispatch but not the queue, and the two 2026 incidents recorded
+in the comments suggest it has been hours. Measuring it needs a running
+deployment.</li>
+<li><strong>Is the per-agent content fence intended to exclude connector
+events from a specialist's recall, or is it a scope that grew a side
+effect?</strong> The comment at <code>save_content.ts:496-500</code>
+reads as deliberate — <em>"what keeps workspace nouns and connector
+ingest out of any agent's private scope"</em> — but the product
+description promises shared history to every agent, and no committed
+test pins either reading.</li>
+<li><strong>How often is an approval card actually resolved rather than
+expired?</strong> <code>expire-pending-approvals</code> is a scheduled
+job; whether the queue is drained by people or by timeout is a question
+about a deployment, not about code.</li>
+<li><strong>What does <code>packages/owletto</code> contain?</strong>
+The submodule was left uninitialised for this reading.</li>
+<li><strong>Does the MCP App capability hold up under host
+compromise?</strong> The approval path's human-only invariant reduces,
+on that route, to <code>mcpAppCapabilityMatchesHost</code>; assessing it
+needs the encryption and binding implementation read against a threat
+model, not just the call site.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Storage and schema</strong></p>
+<ul>
+<li><code>db/migrations/00000000000000_baseline.sql</code> —
+<code>events</code> (<code>:847-887</code>) and its table comment
+(<code>:893</code>), <code>entities</code> (<code>:1016-1034</code>),
+<code>entity_identities</code> (<code>:1075-1097</code>),
+<code>entity_relationships</code> (<code>:1204-1218</code>),
+<code>event_embeddings</code> (<code>:940-944</code>),
+<code>grants</code> (<code>:1506-1514</code>), <code>agents</code>
+(<code>:471-501</code>), <code>idx_events_superseded_by</code>
+(<code>:3996</code>)</li>
+<li><code>db/migrations/20260610040000_events_append_only_guard.sql</code>
+— the DELETE-blocking trigger</li>
+<li><code>db/migrations/20260820150000_current_event_records_stored_content_length.sql:49-50</code>
+— the masking view</li>
+<li><code>db/migrations/20260628000000_authz_source_acl_state.sql</code>
+— ACL enforcement state</li>
+<li><code>db/migrations/20260710120000_write_policy_action_effects.sql</code>
+— approval policy actions and effects</li>
+<li><code>db/migrations/20260623050000_drop_entity_field_projection.sql</code>
+— a projection removed for having no reader</li>
+<li><code>db/migrations/20260816000010_automation_vocabulary.sql:343-370</code>
+— the watchers → automations rename</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>packages/server/src/tools/save_content.ts</code></li>
+<li><code>packages/server/src/utils/insert-event.ts</code></li>
+<li><code>packages/server/src/tools/delete_content.ts</code></li>
+<li><code>packages/server/src/utils/auto-linker.ts</code></li>
+<li><code>packages/server/src/utils/entity-link-upsert.ts</code></li>
+<li><code>packages/server/src/utils/entity-field-merge.ts</code></li>
+<li><code>packages/server/src/utils/entity-management.ts</code></li>
+</ul>
+<p><strong>Retrieval path</strong></p>
+<ul>
+<li><code>packages/server/src/tools/search.ts</code></li>
+<li><code>packages/server/src/utils/content-search/search-path.ts</code></li>
+<li><code>packages/server/src/utils/content-search/list-path.ts</code></li>
+<li><code>packages/server/src/utils/content-search/params.ts</code></li>
+<li><code>packages/server/src/utils/content-search/fts.ts</code></li>
+<li><code>packages/server/src/utils/content-search/entity-link.ts</code></li>
+<li><code>packages/server/src/utils/content-search/sql-fragments.ts</code></li>
+<li><code>packages/server/src/tools/get_content/handler.ts</code></li>
+<li><code>packages/server/src/tools/get_content/query.ts</code></li>
+</ul>
+<p><strong>Scope and authorization</strong></p>
+<ul>
+<li><code>packages/server/src/authz/scope.ts</code></li>
+<li><code>packages/server/src/authz/connection-visibility.ts</code></li>
+<li><code>packages/server/src/authz/resource-visibility.ts</code></li>
+<li><code>packages/server/src/authz/acl-state.ts</code></li>
+<li><code>packages/server/src/authz/channel-visibility.ts</code></li>
+<li><code>packages/server/src/authz/entity-mutation-gate.ts</code></li>
+<li><code>packages/server/src/authz/approval-interceptor.ts</code></li>
+<li><code>packages/server/src/authz/entity-policy.ts</code></li>
+<li><code>packages/server/src/utils/content-search/visibility.ts</code></li>
+<li><code>packages/server/src/tools/access-control.ts</code></li>
+</ul>
+<p><strong>Context assembly</strong></p>
+<ul>
+<li><code>packages/server/src/utils/org-guidance.ts</code></li>
+<li><code>packages/server/src/utils/workspace-instructions.ts</code></li>
+<li><code>packages/plugin-memory/src/index.ts</code></li>
+<li><code>packages/connector-worker/src/agent-turn/memory.ts</code></li>
+<li><code>packages/connector-worker/src/agent-turn/guest-entry.ts</code></li>
+<li><code>packages/core/src/memory-flush.ts</code></li>
+</ul>
+<p><strong>Background workers</strong></p>
+<ul>
+<li><code>packages/server/src/scheduled/jobs.ts</code></li>
+<li><code>packages/server/src/scheduled/trigger-embed-backfill.ts</code></li>
+<li><code>packages/server/src/scheduled/expire-pending-approvals.ts</code></li>
+<li><code>packages/server/src/scheduled/classification-reconciliation.ts</code></li>
+<li><code>packages/server/src/authz/acl-sync.ts</code></li>
+<li><code>packages/server/src/authz/github-acl-sync.ts</code></li>
+<li><code>packages/server/src/authz/slack-acl-sync.ts</code></li>
+</ul>
+<p><strong>MCP, API and SDK</strong></p>
+<ul>
+<li><code>packages/server/src/tools/registry.ts</code></li>
+<li><code>packages/server/src/tools/execute.ts</code></li>
+<li><code>packages/server/src/tools/audit.ts</code></li>
+<li><code>packages/server/src/tools/mcp_app.ts</code></li>
+<li><code>packages/server/src/tools/admin/manage_operations/handlers/approvals.ts</code></li>
+<li><code>packages/server/src/tools/admin/entity-field-approval.ts</code></li>
+<li><code>packages/server/src/sandbox/client-sdk.ts</code></li>
+<li><code>packages/server/src/sandbox/namespaces/knowledge.ts</code></li>
+<li><code>server.json</code></li>
+</ul>
+<p><strong>Tests and evals</strong></p>
+<ul>
+<li><code>packages/server/src/__tests__/integration/authz/github-repo-visibility.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/authz/slack-channel-visibility.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/authz/search-connection-visibility.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/authz/entity-approval-atomic-apply.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/mcp/tool-invocation-audit.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/events/delete-content-tombstone.test.ts</code></li>
+<li><code>packages/server/src/__tests__/integration/cross-org/isolation.test.ts</code></li>
+<li><code>scripts/assert-vitest-report-clean.mjs</code></li>
+<li><code>.github/workflows/ci.yml</code></li>
+</ul>
+<p><strong>Recorded searches</strong> (run at the tree root; each
+grounds an absence claim above)</p>
+<pre class="sh"><code>grep -rliE &quot;locomo|longmemeval|hotpotqa|msc benchmark|memgpt|mem0&quot; .            # 1 file, a comment in search-path.ts
+grep -rniE &quot;arxiv|CITATION\.cff|@inproceedings|@article&quot; .                      # no matches
+ls CITATION*                                                                    # no such file
+grep -rniE &quot;&#39;(candidate|verified|unverified|disputed|refuted)&#39;&quot; \
+  --include=&#39;*.ts&#39; packages/server/src db/migrations                            # no matches
+grep -rn &quot;confidence&quot; --include=&#39;*.ts&#39; \
+  packages/server/src/utils/content-search/ packages/server/src/tools/search.ts # projected only, never in a WHERE
+grep -rn &quot;f.created_at &gt;=&quot; --include=&#39;*.ts&#39; packages/server/src                 # no read path binds record time
+grep -rn &quot;watcher_window_field_feedback&quot; --include=&#39;*.ts&#39; packages/             # no TS producer; table dropped by migration
+grep -rn &quot;EMBEDDINGS_SERVICE_URL&quot; docker-compose.example.yml                    # unset in the compose example
+grep -rn &quot;deleteContent&quot; --include=&#39;*.ts&#39; packages/                             # reachable via sandbox/namespaces/knowledge.ts</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/lobu-ai/lobu/commit/d3131ab5095e317f4222788273e39d761ae0474d"><code class="commit-id" title="d3131ab5095e317f4222788273e39d761ae0474d">d3131ab5…</code></a>
+— first reading, at a commit dated 12 September 2026. Screened before
+reading: five auto-run surfaces (<code>.claude/settings.json</code>
+PreToolUse hooks, three <code>.claude/hooks/*.sh</code> scripts,
+<code>.claude-plugin/marketplace.json</code>, <code>server.json</code>,
+<code>.gitmodules</code>), 34 dependency manifests inside the seven-day
+cooldown, 34 unpinned manifest surfaces, two build-time execution hooks,
+and two agent-directed files (<code>AGENTS.md</code>,
+<code>CLAUDE.md</code>) read as data. Every auto-run surface was read:
+all three hooks are project-local guards — one blocks edits under
+<code>dist/</code>, one rewrites npm invocations to bun, and one refuses
+a truncated
+<code>pg_indexes</code>/<code>pg_constraint</code>/<code>pg_policies</code>
+query whose conclusion would be an absence, with the false-positive
+incident that motivated it written into the file. None reaches the
+network or reads outside the repository. The tree was read, never built,
+nothing was installed and nothing was run; the
+<code>packages/owletto</code> submodule was left uninitialised. Licence
+is Apache-2.0 per <code>LICENSE</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
