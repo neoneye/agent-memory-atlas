@@ -21624,28 +21624,34 @@ quarantined lesson re-distilled from a fresh interaction can return</td>
 <tr>
 <td><code>soul-of-waifu</code></td>
 <td>Four kinds of Markdown file — a psychological state index, a user
-profile, per-subject topic files, and a dated append-only diary</td>
+profile, per-subject topic files, and a dated diary that shares the
+topics directory</td>
 <td>Plain files under
-<code>.soul/&lt;character&gt;/chats/&lt;chat&gt;/memory/</code>, with a
-rolling five-deep backup directory</td>
-<td>The index and profile are injected whole; topic files are ranked by
-MiniLM cosine similarity above a file-count threshold</td>
+<code>.soul/&lt;character&gt;/chats/&lt;chat&gt;/memory/</code>, with
+five rolling backups each of the index and the profile</td>
+<td>Two independent implementations — <code>TopicRAG</code> ranks topics
+for the Router, and a separate loop in the prompt builder ranks them for
+the character above a 0.42 cosine floor</td>
 <td>A Router sub-agent returns JSON that the code renders into a fixed
-Markdown skeleton; an Archivist writes topic files; a Diary appends</td>
-<td>The index and profile are overwritten wholesale, backed up first;
-topic files are overwritten; nothing is ever deleted</td>
+Markdown skeleton; an Archivist writes topic files; a Diary agent
+rewrites the day's file with one entry appended</td>
+<td>The index and profile are overwritten wholesale, backed up first; a
+<code>create</code> action within 0.82 cosine of an existing file is
+redirected onto it; nothing is ever deleted</td>
 <td>Per character and per chat, as a filesystem path; no principal or
 tenant key</td>
-<td>The companion app's own prompt builder; no API and no tool
-interface</td>
-<td>The pipeline runs every four messages, with the diary generated as a
-concurrent task</td>
+<td>The companion app's own prompt builder and a tool registry that
+carries no memory tool</td>
+<td>The pipeline runs every <code>soul_memory_batch</code> messages,
+with the diary generated as a concurrent task</td>
 <td>None. The <code>trust_level</code> field is the character's feeling
 about the user, not confidence in a memory</td>
-<td>Short-output writes are rejected rather than stored; contradiction
-resolutions are logged; every index rewrite is backed up first</td>
-<td>The backup, restore and inspection API has no caller anywhere in the
-application</td>
+<td>Short-output writes are rejected rather than stored; a truncated
+JSON generation is repaired, and an unrepairable one retries the batch
+instead of defaulting it</td>
+<td>The de-duplication redirect is applied after the guard that protects
+the diary, so a <code>create</code> action can land the Archivist inside
+a diary file</td>
 </tr>
 <tr>
 <td><code>sovereign</code></td>
@@ -29351,7 +29357,7 @@ href="https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff8
 <li><a
 href="https://github.com/jofizcd/Soul-of-Waifu">jofizcd/Soul-of-Waifu</a>
 at <a
-href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5"><code class="commit-id" title="3d032badc07335012ae6917e29ea16b8203252f5">3d032bad…</code></a></li>
+href="https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d"><code class="commit-id" title="747048b3b3ad7d321a667630018f7ffc04eb5f6d">747048b3…</code></a></li>
 <li><a
 href="https://github.com/SugarcaneDefender/z-waif">SugarcaneDefender/z-waif</a>
 at <a

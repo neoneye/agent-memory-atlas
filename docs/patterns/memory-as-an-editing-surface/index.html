@@ -216,15 +216,19 @@ accepted</strong>. That last one is the same operation its 2023
 generation performed silently on a threshold, which is the clearest
 before-and-after of this pattern in the corpus.</p>
 <p><strong><a href="../../systems/soul-of-waifu/">Soul of
-Waifu</a></strong> is the cautionary version. The API is right —
-<code>restore_backup</code> even takes a backup of the current state
-before overwriting, so a restore is itself undoable — and
-<strong>nothing in the application calls it.</strong>
+Waifu</a></strong> is the cautionary version, and it shows both ways the
+gap can close. At <code class="commit-id" title="3d032badc07335012ae6917e29ea16b8203252f5">3d032bad…</code>
+the API was right — <code>restore_backup</code> took a backup of the
+current state before overwriting, so a restore was itself undoable — and
+nothing in the application called it, alongside
 <code>list_backups</code>, <code>list_topic_files</code> and
-<code>get_memory_stats</code> have no callers either. Five good backups
-sit on disk with no way to reach them, which shows this pattern is a
-product property rather than an architectural one: unreachable
-correctness is not correctness.</p>
+<code>get_memory_stats</code>. At
+<code class="commit-id" title="747048b3b3ad7d321a667630018f7ffc04eb5f6d">747048b3…</code> all four functions
+are deleted and the backups they would have read are written as before,
+five each of the index and the user profile. The store gained a copy and
+lost its only reader. This pattern is a product property rather than an
+architectural one: unreachable correctness is not correctness, and
+deleting the unreachable half leaves the cost in place.</p>
 <p><strong><a href="../../systems/skales/">Skales</a></strong> shows
 partial adoption, which is worse than none. Two of its three stores
 delete correctly from the memory page; the third answers a delete

@@ -1112,10 +1112,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`soul-of-waifu`](../systems/soul-of-waifu/)
 - Best idea: a length floor on any LLM-generated overwrite, so a short or empty rewrite is rejected rather than stored — the clearest small example here of how to make a full-rewrite memory safe.
-- Biggest risk: the backup, restore and inspection API has no caller anywhere in the application, and only one of the two files written by the same call is backed up.
-- Most reusable component: having the model fill a schema and letting your code render the document, plus giving append-only and rewritable memory different files.
+- Biggest risk: two filename guards run against a proposed topic name, and a de-duplication step four lines below them reassigns that name from a directory listing without re-checking it, so a `create` action can land the Archivist inside a diary file the guard above exists to protect.
+- Most reusable component: having the model fill a schema and letting your code render the document, plus a repair ladder that rebuilds a truncated JSON response and retries the batch rather than writing a default over real memory.
 - Maturity impression: no test suite exists — no `tests/` directory, no `test_*.py`, nothing.
-- Study when: you want to see the guards that make a rewrite-the-whole-document memory survivable.
+- Study when: you want to see the guards that make a rewrite-the-whole-document memory survivable, or a small readable case of a safety check placed one step too early.
 - Do not copy when: users will ask "what did I tell you about X". There is no retrieval over history, no provenance and no deletion, and the index forgets by omission.
 
 ### [`tigrimosr`](../systems/tigrimosr/)

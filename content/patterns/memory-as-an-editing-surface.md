@@ -110,13 +110,17 @@ bulk re-summarise **with the result previewed before it is accepted**. That last
 one is the same operation its 2023 generation performed silently on a threshold,
 which is the clearest before-and-after of this pattern in the corpus.
 
-**[Soul of Waifu](../../systems/soul-of-waifu/)** is the cautionary version. The
-API is right — `restore_backup` even takes a backup of the current state before
-overwriting, so a restore is itself undoable — and **nothing in the application
-calls it.** `list_backups`, `list_topic_files` and `get_memory_stats` have no
-callers either. Five good backups sit on disk with no way to reach them, which
-shows this pattern is a product property rather than an architectural one:
-unreachable correctness is not correctness.
+**[Soul of Waifu](../../systems/soul-of-waifu/)** is the cautionary version, and
+it shows both ways the gap can close. At
+`3d032badc07335012ae6917e29ea16b8203252f5` the API was right —
+`restore_backup` took a backup of the current state before overwriting, so a
+restore was itself undoable — and nothing in the application called it, alongside
+`list_backups`, `list_topic_files` and `get_memory_stats`. At
+`747048b3b3ad7d321a667630018f7ffc04eb5f6d` all four functions are deleted and the
+backups they would have read are written as before, five each of the index and
+the user profile. The store gained a copy and lost its only reader. This pattern
+is a product property rather than an architectural one: unreachable correctness
+is not correctness, and deleting the unreachable half leaves the cost in place.
 
 **[Skales](../../systems/skales/)** shows partial adoption, which is worse than
 none. Two of its three stores delete correctly from the memory page; the third

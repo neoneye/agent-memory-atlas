@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="Markdown memory rewritten by three
-sub-agents, guarded against degenerate writes, backed up before every
-rewrite — and a restore API with no caller.">
+sub-agents, guarded against degenerate writes — and a de-duplication
+step that redirects a write onto the one file the guard above it
+protects.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Soul of
 Waifu — Agent Memory Atlas">
     <meta property="og:description" content="Markdown memory rewritten
-by three sub-agents, guarded against degenerate writes, backed up before
-every rewrite — and a restore API with no caller.">
+by three sub-agents, guarded against degenerate writes — and a
+de-duplication step that redirects a write onto the one file the guard
+above it protects.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Soul of
 Waifu — Agent Memory Atlas">
     <meta name="twitter:description" content="Markdown memory rewritten
-by three sub-agents, guarded against degenerate writes, backed up before
-every rewrite — and a restore API with no caller.">
+by three sub-agents, guarded against degenerate writes — and a
+de-duplication step that redirects a write onto the one file the guard
+above it protects.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Soul of Waifu — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -43,7 +46,7 @@ every rewrite — and a restore API with no caller.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Soul of Waifu",
-      "description": "Markdown memory rewritten by three sub-agents, guarded against degenerate writes, backed up before every rewrite \u2014 and a restore API with no caller.",
+      "description": "Markdown memory rewritten by three sub-agents, guarded against degenerate writes \u2014 and a de-duplication step that redirects a write onto the one file the guard above it protects.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -97,25 +100,26 @@ every rewrite — and a restore API with no caller.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">Rollback that nothing calls</p>
+          <p class="eyebrow">The guard the redirect walks past</p>
           <h1>Soul of Waifu</h1>
           <p class="document-deck">Markdown memory rewritten by three
-sub-agents, guarded against degenerate writes, backed up before every
-rewrite — and a restore API with no caller.</p>
+sub-agents, guarded against degenerate writes — and a de-duplication
+step that redirects a write onto the one file the guard above it
+protects.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/jofizcd/Soul-of-Waifu">
               <span>Source</span>
               <strong>jofizcd/Soul-of-Waifu</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5" title="3d032badc07335012ae6917e29ea16b8203252f5">
+            <a class="meta-pill revision-pill" href="https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d" title="747048b3b3ad7d321a667630018f7ffc04eb5f6d">
               <span>Analyzed revision</span>
-              <code>3d032bad…</code>
+              <code>747048b3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jofizcd--Soul-of-Waifu" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -141,50 +145,72 @@ rewrite — and a restore API with no caller.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Soul of Waifu is a desktop AI companion, GPL-3.0, and its
 <code>SoulMemoryAgent</code> (<code>app/utils/soul_memory.py</code>,
-1,031 lines) is a more careful piece of engineering than its context
+1,135 lines) is a more careful piece of engineering than its context
 suggests. It is a <strong>full-rewrite Markdown memory</strong> — the
 riskiest shape in this atlas, since an LLM regenerates the whole store
-on a schedule — and almost every mechanism in it exists to make that
+on a schedule — and most of the mechanism in it exists to make that
 shape survivable:</p>
 <ul>
 <li><strong>Degenerate output is rejected, not stored.</strong> An index
 rewrite shorter than <code>MIN_INDEX_CHARS = 100</code> is refused with
-<em>"Keeping old memory"</em> (<code>:373-380</code>); topics and the
-user profile have a 50-character floor. A model that returns a shrug
-does not erase what it was asked to update.</li>
+<em>"Keeping old memory"</em> (<code>:462-466</code>); topics and the
+user profile have a 50-character floor (<code>:485</code>,
+<code>:515</code>).</li>
 <li><strong>The LLM fills slots; the code writes the file.</strong> The
 Router returns JSON, and <code>_parse_router_response</code>
-(<code>:488</code>) renders it into a fixed Markdown skeleton with a
-default for every field. A partial or malformed response degrades to
-defaults rather than corrupting the document.</li>
-<li><strong>Every index write is backed up first</strong>, five deep,
-rolling (<code>:357-371</code>), and writes go through a temp file and
-an atomic <code>replace</code> (<code>:385-388</code>).</li>
+(<code>:634</code>) renders it into a fixed Markdown skeleton with a
+default for every field.</li>
+<li><strong>A truncated generation is repaired before it is given up
+on.</strong> <code>_extract_json_object</code> (<code>:579</code>) tries
+the raw text, the brace-delimited slice, a bracket-balanced repair of a
+tail the model never finished, and a trailing-comma fix. If none parses,
+the pipeline logs <em>"Pipeline aborted WITHOUT advancing the batch
+tracker"</em> (<code>:1001</code>) and the same messages are tried again
+on the next turn — nothing is written from a failed parse.</li>
+<li><strong>Both rewritten files are backed up</strong>, five deep each,
+rolling and prefix-scoped (<code>_backup_file</code>, <code>:444</code>;
+called for <code>MEMORY</code> at <code>:473</code> and for
+<code>USER</code> at <code>:519</code>), through a temp file and an
+atomic <code>replace</code>.</li>
+<li><strong>The Router may decline.</strong>
+<code>no_significant_change</code> (<code>:650</code>) lets the model
+report that a batch of small talk carried nothing worth recording; every
+write is skipped, the batch is marked processed, and
+<code>NO_SIGNIFICANT_CHANGE</code> goes to the audit log
+(<code>:1011</code>). A memory that can be told <em>nothing
+happened</em> fabricates less than one that must produce an update every
+cycle.</li>
 <li><strong>Contradictions are logged.</strong> The Router prompt
 instructs it to <em>"Resolve any direct contradictions between user
 action and previous beliefs, and document this in the
-<code>healing_log</code>"</em> (<code>:128</code>), and that log is
+<code>healing_log</code>"</em> (<code>:196</code>), and that log is
 appended to a timestamped <code>agent_logs.txt</code> alongside every
-index, profile and topic mutation (<code>:846</code>, <code>:853</code>,
-<code>:925</code>). That earns <code>audit_log</code>.</li>
-<li><strong>Hallucinated filenames are filtered.</strong>
-<code>_BAD_TOPIC_NAMES</code> (<code>:290</code>) blocks
-<code>example.md</code>, <code>topic_name.md</code>,
-<code>untitled.md</code> and four more — the placeholder names the
-prompt's own examples teach the model to emit. Diary files are
-separately protected from the Archivist (<code>:900</code>).</li>
+index, profile, topic and diary mutation (<code>:1019</code>,
+<code>:1026</code>, <code>:1107</code>, <code>:887</code>). That earns
+<code>audit_log</code>.</li>
 </ul>
-<p>And then the finding that gives this report its title.
-<code>restore_backup</code> (<code>:1005</code>) is correct — it backs
-up the current state <em>before</em> restoring, so a restore is itself
-undoable — and <code>list_backups</code>, <code>list_topic_files</code>
-and <code>get_memory_stats</code> are all implemented. <strong>None of
-them has a caller anywhere in the application.</strong> The only
-<code>restore_backup</code> calls in the repository belong to
-<code>backend_updater.py</code>, an unrelated class. The rollback
-primitive that the security survey <a href="../../compare/">read for
-this atlas</a> reports as "largely absent" from the literature is
-implemented here, correctly, and unreachable.</p>
+<p>And then the finding that gives this report its title. The Archivist
+loop refuses two classes of filename in sequence — the placeholder names
+a model emits when it copies the prompt's examples (<code>:1066</code>),
+and anything beginning <code>diary_</code>, with the comment
+<em>"Protecting diary file from Archivist"</em> (<code>:1070</code>).
+Four lines later, a <code>create</code> action is passed to
+<code>find_similar_topic</code> (<code>:1078</code>), and if an existing
+file scores at or above <code>DEDUP_THRESHOLD = 0.82</code> the target
+filename is <strong>replaced with that file's name</strong>
+(<code>:1084</code>) and used unguarded (<code>:1086</code>).</p>
+<p>Diary files live in the same directory the de-duplicator searches
+(<code>_load_all_topics</code> globs <code>*.md</code> over
+<code>topics/</code>, <code>:77</code>), so the name that comes back can
+be <code>Diary_2026-09-13.md</code>. The Archivist then reads that file,
+rewrites it, and <code>_safe_write_topic</code> replaces it — the one
+store in this system with a distinct lifecycle, overwritten through the
+redirect that sits four lines below the guard protecting it from exactly
+that.</p>
+<p>The similarity is not a remote one. The diary for the current day is
+a first-person reflection on the same delta the Router has just
+summarised, so a <code>create</code> action derived from that delta is
+competing against a passage written about it.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is one of four Markdown documents, and they have genuinely
 different lifecycles — which is the design's best idea:</p>
@@ -205,7 +231,7 @@ different lifecycles — which is the design's best idea:</p>
 <tr>
 <td><code>USER.md</code></td>
 <td>Router</td>
-<td>overwritten wholesale, no backup</td>
+<td>overwritten wholesale, backed up first</td>
 </tr>
 <tr>
 <td><code>topics/*.md</code></td>
@@ -213,150 +239,236 @@ different lifecycles — which is the design's best idea:</p>
 <td>overwritten per subject, no backup</td>
 </tr>
 <tr>
-<td><code>diary_*.md</code></td>
-<td>Diary</td>
-<td><strong>append-only</strong>, never rewritten</td>
+<td><code>topics/Diary_*.md</code></td>
+<td>Diary agent</td>
+<td>read, one entry concatenated, written back whole</td>
 </tr>
 </tbody>
 </table></div>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — a rendered memory shorter than the floor is rejected and the old memory kept, so a degraded model response cannot empty the file</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a rendered memory shorter than the floor is rejected and the old memory kept, so a degraded model response cannot empty the file
+<p>The diary's own lifecycle is append-<em>semantics</em> over a
+whole-file rewrite: <code>_update_daily_diary</code> (<code>:829</code>)
+reads the existing day's file, concatenates a <code>**[HH:MM]**</code>
+block, and hands the result to <code>_safe_write_topic</code>
+(<code>:482</code>) — the same function, and the same absence of a
+backup, as any topic file.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the two filename guards run before the de-duplication step, and the file the second guard names can be handed back by the step below it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the two filename guards run before the de-duplication step, and the file the second guard names can be handed back by the step below it
 flowchart TB
-    B[&quot;every BATCH_SIZE (4) messages&quot;] --&gt; D[&quot;delta = last MAX_DELTA_MSGS (14) messages,&lt;br/&gt;overlapping the previous batch by MSG_OVERLAP (2)&quot;]
+    B[&quot;every soul_memory_batch messages&quot;] --&gt; D[&quot;delta = last MAX_DELTA_MSGS (14) messages,&lt;br/&gt;overlapping the previous batch by MSG_OVERLAP (2)&quot;]
     D --&gt; R[&quot;Router sees: MEMORY.md + USER.md +&lt;br/&gt;RAG-selected topics + delta + world lore&quot;]
-    R --&gt; J[&quot;JSON: character_memory, user_memory,&lt;br/&gt;topic_plan, healing_log&quot;]
+    R --&gt; P{&quot;parses?&quot;}
+    P --&gt;|&quot;no, after 4 repair attempts&quot;| RT[&quot;abort, tracker not advanced,&lt;br/&gt;batch retried next turn&quot;]
+    P --&gt;|&quot;no_significant_change&quot;| NOP[&quot;all writes skipped,&lt;br/&gt;NO_SIGNIFICANT_CHANGE logged&quot;]
+    P --&gt;|&quot;yes&quot;| J[&quot;JSON: character_memory, user_memory,&lt;br/&gt;topic_plan, healing_log&quot;]
     J --&gt; REN[&quot;rendered into a fixed skeleton,&lt;br/&gt;defaults for missing fields&quot;]
     REN --&gt;|too short| REJ[&quot;write REJECTED, old memory kept&quot;]
-    REN --&gt;|else| BK[&quot;backup, then atomic replace&quot;]
-    R --&gt; TP[&quot;topic_plan actions —&lt;br/&gt;Archivist writes each topic file&quot;]
-    TP --&gt;|&quot;filename in _BAD_TOPIC_NAMES,&lt;br/&gt;or starts diary_&quot;| SKIP[skipped]
-    R --&gt; DIA[&quot;Diary agent (concurrent task) —&lt;br/&gt;appends to today&#39;s diary&quot;]</code></pre></details></figure>
+    REN --&gt;|else| BK[&quot;backup MEMORY and USER, then atomic replace&quot;]
+    J --&gt; TP[&quot;topic_plan actions&quot;]
+    TP --&gt; G1{&quot;name in _BAD_TOPIC_NAMES?&quot;}
+    G1 --&gt;|yes| SKIP[skipped]
+    G1 --&gt;|no| G2{&quot;name starts diary_?&quot;}
+    G2 --&gt;|yes| SKIP
+    G2 --&gt;|no| DD{&quot;action is create,&lt;br/&gt;and a file scores &gt;= 0.82?&quot;}
+    DD --&gt;|yes| RED[&quot;target replaced by that filename —&lt;br/&gt;including a Diary_*.md&quot;]
+    DD --&gt;|no| ARC
+    RED --&gt; ARC[&quot;Archivist rewrites the target file&quot;]
+    R --&gt; DIA[&quot;Diary agent (concurrent task) —&lt;br/&gt;rewrites today&#39;s file with one entry added&quot;]</code></pre></details></figure>
 <p>The state machine is short because there is only one transition:
 <strong>a memory is rewritten, or it is not.</strong> There is no
 supersession, no expiry, no decay of a record, and <strong>no deletion
 of anything</strong> — not of topics, not of diary entries, not of
-backups beyond the rolling five. A fact enters the index and stays until
-a later rewrite happens not to carry it forward, silently.</p>
+backups beyond the rolling five per prefix. A fact enters the index and
+stays until a later rewrite happens not to carry it forward,
+silently.</p>
 <p>The index does model decay, but of the character's <em>mood</em>, not
-of belief: <code>Emotional Decay Counter: N/3</code> is a field the
-Router maintains inside the document. The whole index is explicitly a
+of belief: <code>emotional_decay_counter</code> is a field the Router
+maintains inside the document, with the prompt instructing it to soften
+the emotion at 3 and reset it whenever the emotion is referenced again
+(<code>:195</code>). The whole index is explicitly a
 <strong>psychological state cache</strong> — core identity, primary
 emotion and intensity, psychological tension, active agenda, unresolved
 cognitive dissonance. This is memory as characterisation, not as
 knowledge, and it should be read that way.</p>
 <p>Four modes (<code>soul_memory_mode</code>) trade cost against depth:
 Full runs all three sub-agents; Index+Diary drops topics; Index only
-drops the diary too; Diary only runs nothing but the diary.</p>
+drops the diary too; Diary only runs nothing but the diary. Only Full
+reads <code>topic_plan</code> (<code>:1030</code>), and only Full's
+prompt contains one — the lite template has no topic section at all.</p>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Python with a Qt desktop GUI. No server, no database, no queue — the
 store is a directory tree, which makes it one of the most operationally
 trivial systems in this atlas.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the router reads the index, the user file, RAG-selected topics and the delta, and three sub-agents write to different files with the backups rolling underneath</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the router reads the index, the user file, RAG-selected topics and the delta, and three sub-agents write to different files with the backups rolling underneath
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one shared embedder serves two separately written retrieval paths, and the model it loads is named by a path that is not in the repository</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one shared embedder serves two separately written retrieval paths, and the model it loads is named by a path that is not in the repository
 flowchart TB
-    C[Chat, every 4 messages] --&gt; D[delta: last 14, overlap 2]
-    T[(topics/*.md)] --&gt; RAG[TopicRAG&lt;br/&gt;MiniLM cosine, above threshold]
+    C[Chat, every soul_memory_batch messages] --&gt; D[delta: last 14, overlap 2]
+    T[(&quot;topics/*.md, diaries included&quot;)] --&gt; RAG[&quot;TopicRAG.get_relevant_topics&lt;br/&gt;top 3, no floor, 8000 chars each&quot;]
     RAG --&gt; R
     IDX[(MEMORY.md)] --&gt; R[Router sub-agent]
     USR[(USER.md)] --&gt; R
     D --&gt; R
     R --&gt;|JSON| REN[render to fixed skeleton&lt;br/&gt;+ length floor]
-    REN --&gt; BK[(backups/ rolling 5)]
+    REN --&gt; BK[(&quot;backups/ — MEMORY_* and USER_*,&lt;br/&gt;five each&quot;)]
     REN --&gt; IDX
     REN --&gt; USR
-    R --&gt;|topic_plan| ARC[Archivist sub-agent] --&gt; T
-    D --&gt; DIA[Diary sub-agent] --&gt; DY[(diary_*.md, append-only)]
-    REN --&gt; LOG[(agent_logs.txt, append-only)]
+    R --&gt;|topic_plan| DD[&quot;find_similar_topic&lt;br/&gt;redirect at &gt;= 0.82&quot;]
+    DD --&gt; ARC[Archivist sub-agent] --&gt; T
+    D --&gt; DIA[Diary sub-agent] --&gt; T
+    REN --&gt; LOG[(&quot;agent_logs.txt, append-only&quot;)]
     ARC --&gt; LOG
-    IDX --&gt; PE[prompt_engine.py&lt;br/&gt;injected whole]
-    USR --&gt; PE</code></pre></details></figure>
+    DIA --&gt; LOG
+    EMB[&quot;embedding_provider.get_embedder&lt;br/&gt;process-wide singleton, CPU&quot;] --&gt; RAG
+    EMB --&gt; DD
+    EMB --&gt; PR
+    IDX --&gt; PE[prompt_engine.py]
+    USR --&gt; PE
+    T --&gt; PR[&quot;second ranking loop in prompt_engine&lt;br/&gt;cosine &gt; 0.42, full file text&quot;]
+    PR --&gt; PE</code></pre></details></figure>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <ul>
 <li><strong>What has to be running:</strong> the app. Storage is
 <code>.soul/&lt;character&gt;/chats/&lt;chat&gt;/memory/</code>.</li>
-<li><strong>Local and offline: yes</strong>, including embeddings —
-<code>all-MiniLM-L6-v2</code> on CUDA if available, CPU otherwise
-(<code>:37-47</code>).</li>
+<li><strong>Local and offline: yes</strong>, including embeddings — but
+see below on which model.</li>
 <li><strong>Degrades rather than fails when a dependency is
-missing.</strong> If <code>sentence-transformers</code> is not
-installed, <code>_check_embedder_available</code> logs the
-<code>pip install</code> line once and topic selection falls back to
-taking the first N files (<code>:79-82</code>). Below
-<code>RAG_THRESHOLD</code> files it skips embeddings entirely and passes
-everything. Three fallback layers on the retrieval path, all
-logged.</li>
+missing.</strong> <code>embedding_provider</code>
+(<code>app/utils/embedding_provider.py</code>) checks for
+<code>sentence_transformers</code> once, logs the
+<code>pip install</code> line, and returns <code>None</code> thereafter;
+a load failure sets <code>_failed</code> and is never retried unless
+<code>reset_failure_state()</code> is called. Callers handle
+<code>None</code>: <code>TopicRAG</code> falls back to the first N topic
+files, and the prompt builder skips topic injection entirely.</li>
 <li><strong>Hand-repairable: entirely.</strong> The store is Markdown a
 person can open, and the log next to it says what the model did to
 it.</li>
 </ul>
+<h3 id="the-embedding-model-is-named-but-not-shipped">The embedding
+model is named but not shipped</h3>
+<p><code>MODEL_NAME = "e5-small-en-ru"</code>
+(<code>embedding_provider.py:9</code>). The loader prefers a local
+directory <code>app/utils/e5-small-en-ru</code> and falls back to
+passing the bare string to <code>SentenceTransformer</code>
+(<code>:44-46</code>). That directory is not in the repository; the
+string appears in exactly one place in the tree, which is its own
+definition; nothing in the tree, <code>installer.bat</code> included,
+fetches it; and it is not an owner-qualified Hugging Face identifier, so
+the fallback has nothing to resolve against.
+<code>installer.bat:14</code> tells a user who is missing files to
+<em>"download the archive from there"</em>, meaning the Releases page,
+whose single asset is a 1.8 GB archive — large enough to carry a model
+directory the repository does not.</p>
+<p>The consequence for a reader who clones this repository and runs it
+is concrete rather than theoretical: <code>get_embedder</code> returns
+<code>None</code>, so topic ranking falls back to the first three files
+by modification time, the de-duplication redirect never fires, and the
+character's prompt receives <strong>no topic files at all</strong> — the
+injection loop is gated on the embedder at
+<code>prompt_engine.py:644</code>, and that gate covers explicitly named
+topics too.</p>
+<p>Searches behind the paragraph above:</p>
+<pre class="sh"><code>grep -rn -i &quot;e5-small\|e5_small&quot; . --exclude-dir=.git
+ls -d app/utils/e5-small-en-ru
+grep -n -i &quot;model\|download\|huggingface\|snapshot&quot; installer.bat
+curl -sS -o /dev/null -w &#39;%{http_code}\n&#39; https://huggingface.co/api/models/e5-small-en-ru</code></pre>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p>Everything below is <code>app/utils/soul_memory.py</code> unless
 noted.</p>
 <p><strong>Paths and scoping.</strong> <code>get_memory_paths</code>
-(<code>:310</code>) sanitises the character name and chat id into a
-filesystem path, creates the directories, and touches
-<code>MEMORY.md</code> and <code>USER.md</code> if absent. Falls back to
-<code>current_chat</code> from config, then to
-<code>"default"</code>.</p>
-<p><strong>Retrieval.</strong> <code>class TopicRAG</code>
-(<code>:50</code>): <code>_load_all_topics</code> (<code>:58</code>),
-<code>get_relevant_topics</code> (<code>:69</code>) — return everything
-if at or below <code>RAG_THRESHOLD</code> files; otherwise embed the
-first <code>EMBED_CHARS</code> of each file, cosine against the query
-with an explicit <code>1e-9</code> norm guard, take the top
-<code>max_topics</code> (default 3), truncate each to
-<code>PASS_CHARS</code>. Logs which files it selected out of how
-many.</p>
+(<code>:397</code>) sanitises the character name and chat id into a
+filesystem path, creates <code>memory/</code>, <code>topics/</code> and
+<code>backups/</code>, and touches <code>MEMORY.md</code> and
+<code>USER.md</code> if absent. Falls back to <code>current_chat</code>
+from config, then to <code>"default"</code>.</p>
+<p><strong>Retrieval, write side.</strong> <code>class TopicRAG</code>
+(<code>:19</code>): <code>_load_all_topics</code> (<code>:77</code>)
+globs <code>topics/*.md</code> sorted by modification time;
+<code>get_relevant_topics</code> (<code>:97</code>) returns everything
+at or below <code>RAG_THRESHOLD = 4</code> files, otherwise embeds the
+first <code>EMBED_CHARS = 600</code> of each, takes the top three by
+cosine with an explicit <code>1e-9</code> norm guard, and truncates each
+to <code>PASS_CHARS = 8000</code>.</p>
+<p><strong>The vector cache.</strong> <code>_encode_topics_cached</code>
+(<code>:42</code>) keys a process-wide <code>_VECTOR_CACHE</code>
+(<code>:31</code>) on the resolved topics directory, then on filename,
+and stores <code>(md5 of the snippet, vector)</code>. A file whose first
+600 characters change is re-embedded; entries for files no longer
+present are dropped on each pass. It is guarded by a
+<code>threading.Lock</code> and is correct.</p>
+<p><strong>De-duplication.</strong> <code>find_similar_topic</code>
+(<code>:139</code>) embeds
+<code>"&lt;filename&gt; &lt;summary&gt;"</code> from the proposed action
+and returns the highest-scoring existing filename at or above
+<code>DEDUP_THRESHOLD = 0.82</code> (<code>:137</code>), or
+<code>None</code>. Its one caller is the Archivist loop
+(<code>:1078</code>).</p>
+<p><strong>E5 prefixes.</strong> <code>USE_E5_PREFIXES = True</code>
+(<code>:27</code>) prepends <code>query: </code> to the query and
+<code>passage: </code> to each stored snippet, in both
+<code>get_relevant_topics</code> and <code>find_similar_topic</code>,
+which is the asymmetry that family of models is trained for.</p>
 <p><strong>The write pipeline.</strong> <code>_call_router_agent</code>
-(<code>:441</code>) assembles the index, profile, RAG-selected topics,
+(<code>:531</code>) assembles the index, profile, RAG-selected topics,
 delta messages and triggered world lore into one prompt, choosing
-<code>_ROUTER_SYSTEM</code> or <code>_ROUTER_SYSTEM_LITE</code> by mode.
-<code>_parse_router_response</code> (<code>:488</code>) strips code
-fences, parses JSON, and builds the Markdown; on a parse failure it
-falls back to a regex for
-<code>[UPDATE_INDEX_START]...[UPDATE_INDEX_END]</code>
-(<code>:588</code>) — a second output format kept for when the model
-ignores the first.</p>
+<code>_ROUTER_SYSTEM</code> (<code>:177</code>) for mode 0 and
+<code>_ROUTER_SYSTEM_LITE</code> (<code>:249</code>) otherwise.
+<code>_extract_json_object</code> (<code>:579</code>) is the repair
+ladder; <code>_parse_router_response</code> (<code>:634</code>) renders
+the skeleton.</p>
 <p><strong>Guarded writes.</strong> <code>_safe_write_index</code>
-(<code>:373</code>), <code>_safe_write_topic</code> (<code>:395</code>),
-<code>_safe_write_user_profile</code> (<code>:425</code>) — each checks
-a length floor, writes to <code>.tmp</code>, and <code>replace</code>s.
-<code>_backup_index</code> (<code>:357</code>) copies with
-<code>copy2</code> to a timestamped name and prunes to
-<code>MAX_BACKUP_COUNT = 5</code>.</p>
-<p><strong>Topic actions.</strong> <code>:885-930</code> — sanitise the
-filename to alphanumerics, force <code>.md</code>, skip if in
-<code>_BAD_TOPIC_NAMES</code>, skip if it starts with
-<code>diary_</code>, read any existing content, call the Archivist,
-extract between <code>[TOPIC_CONTENT_START]</code> and
-<code>[TOPIC_CONTENT_END]</code>, write, log.</p>
+(<code>:460</code>), <code>_safe_write_topic</code> (<code>:482</code>),
+<code>_safe_write_user_profile</code> (<code>:512</code>) — each checks
+a length floor, writes to <code>.tmp</code>, and <code>replace</code>s,
+unlinking the temp on error. <code>_backup_file</code>
+(<code>:444</code>) copies with <code>copy2</code> to a
+<code>&lt;prefix&gt;_&lt;timestamp&gt;.md</code> name and prunes that
+prefix to <code>MAX_BACKUP_COUNT = 5</code>.</p>
+<p><strong>Input bounds.</strong> <code>_cap_message_lengths</code>
+(<code>:387</code>) truncates any single delta message to
+<code>MAX_MSG_CHARS = 2000</code> with a visible
+<code>…[truncated]</code> marker before it reaches a prompt.</p>
+<p><strong>Batch trigger.</strong> <code>_run_update_pipeline</code>
+(<code>:896</code>) reads <code>soul_memory_batch</code> from settings,
+defaulting to 4 (<code>:911-913</code>), and returns early while the
+count is below it unless <code>force</code> is set (<code>:942</code>).
+The tracker file is written in a <code>finally</code>
+(<code>:1126</code>) — but the parse-failure path returns before that
+block is entered, which is what makes the retry work.</p>
+<p><strong>Topic actions.</strong> <code>:1054-1122</code> — sanitise
+the filename to alphanumerics and <code>._-</code>, lowercase, force
+<code>.md</code>, skip if in <code>_BAD_TOPIC_NAMES</code>
+(<code>:1066</code>), skip if it starts with <code>diary_</code>
+(<code>:1070</code>), redirect a <code>create</code> onto a similar file
+(<code>:1076-1084</code>), read any existing content, call the
+Archivist, write, log.</p>
 <p><strong>Diary.</strong> <code>_update_daily_diary</code>
-(<code>:676</code>) — a first-person reflection appended under a
-<code>**[HH:MM]**</code> heading to <code>diary_&lt;date&gt;.md</code>,
-requiring more than 20 characters, launched as a concurrent
-<code>asyncio</code> task (<code>:864</code>) and awaited at the end
-(<code>:878</code>).</p>
+(<code>:829</code>) — a first-person reflection requiring more than 20
+characters, appended under a <code>**[HH:MM]**</code> heading to
+<code>Diary_&lt;date&gt;.md</code> in the topics directory
+(<code>:876</code>), launched as a concurrent <code>asyncio</code> task
+(<code>:1038</code>) and awaited at the end of the loop
+(<code>:1122</code>).</p>
 <p><strong>Audit log.</strong> <code>_append_log</code>
-(<code>:938</code>) opens in <code>"a"</code> mode and writes
+(<code>:1130</code>) opens in <code>"a"</code> mode and writes
 <code>[timestamp] MESSAGE</code>. Callers:
-<code>INDEX_UPDATE | status=… | healing: …</code> (<code>:846</code>),
-<code>USER_PROFILE_UPDATE | status=…</code> (<code>:853</code>),
+<code>DIARY_UPDATED | file=…</code> (<code>:887</code>),
+<code>NO_SIGNIFICANT_CHANGE</code> (<code>:1011</code>),
+<code>INDEX_UPDATE | status=… | healing: …</code> (<code>:1019</code>),
+<code>USER_PROFILE_UPDATE | status=…</code> (<code>:1026</code>), and
 <code>TOPIC_CREATED|TOPIC_UPDATED | file=… | write=…</code>
-(<code>:925</code>). No rotation and no truncation anywhere.</p>
+(<code>:1107</code>). No rotation and no truncation anywhere.</p>
 <p><strong>Injection.</strong>
-<code>app/utils/ai_clients/prompt_engine.py:425-443</code> — the index
-is injected as <code>[CHARACTER PSYCHOLOGY &amp; COGNITIVE CACHE]</code>
-and the profile as
-<code>[USER PROFILE &amp; RELATIONSHIP HISTORIC METADATA]</code>. Note
-it constructs <code>SoulMemoryAgent(None)</code> (<code>:428</code>) — a
+<code>app/utils/ai_clients/prompt_engine.py:617-708</code> — the index
+is injected as
+<code>[CHARACTER PSYCHOLOGY &amp; COGNITIVE CACHE]</code>, the profile
+as <code>[USER PROFILE &amp; RELATIONSHIP HISTORIC METADATA]</code>, and
+selected topic files as <code>[RELEVANT DEEP MEMORY TOPICS]</code>. Note
+it constructs <code>SoulMemoryAgent(None)</code> (<code>:621</code>) — a
 read-only instance with no LLM function, which is a neat way to reuse
-the path logic without the ability to write.</p>
+the path logic without the ability to write. The write entry point
+builds the same class with a generator attached (<code>:906</code>).</p>
 <p><strong>Concurrency.</strong> <code>_get_lock</code>
-(<code>:300</code>) keeps an <code>asyncio.Lock</code> per
+(<code>:376</code>) keeps an <code>asyncio.Lock</code> per
 <code>character::chat</code>. The dict is never pruned.</p>
-<p><strong>Unreachable API.</strong> <code>restore_backup</code>
-(<code>:1005</code>), <code>list_backups</code> (<code>:1025</code>),
-<code>list_topic_files</code> (<code>:985</code>),
-<code>get_memory_stats</code> (<code>:957</code>) — no callers.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>There is no schema in the storage sense; the schema lives in
 <code>_parse_router_response</code>, which is the more interesting place
@@ -371,18 +483,41 @@ field.</p>
 LLM rewrite:</strong> the model cannot invent a section, cannot drop a
 section, and cannot emit prose where a list belongs. The document's
 shape is a property of the code, not of the generation.</p>
-<p><code>trust_level</code> appears under relationship metadata, and it
+<p><code>trust_level</code> appears under relationship metadata,
+constrained by the prompt to one of <em>Distrustful / Wary / Neutral /
+Developing Trust / Deeply Bound / Unstable</em> (<code>:225</code>). It
 is <strong>not</strong> the atlas's <code>trust_state</code> — it
 records how much the character trusts the user, roleplay state, not
 confidence in a stored claim. <strong><code>trust_state</code> is
 withheld.</strong></p>
+<h3 id="a-pin-marker-with-no-producer">A pin marker with no
+producer</h3>
+<p><code>prompt_engine.py:631</code> parses the index for
+<code>[TOPIC FILE: &lt;name&gt;.md]</code> markers and treats each named
+file as explicitly pinned: it is injected in full, ahead of the ranking
+loop and exempt from the 0.42 similarity floor. It is the one mechanism
+in this system by which the memory can <em>direct its own
+retrieval</em>.</p>
+<p>Nothing writes the marker. The Router's output schema is enumerated
+field by field in <code>_ROUTER_SYSTEM</code> (<code>:177-248</code>)
+and contains no such token; the renderer in
+<code>_parse_router_response</code> emits fixed headings and the field
+values it was given; no prompt in the file mentions the syntax. The
+marker can only appear if the model volunteers a bracket convention it
+was never shown, inside a free-text field, in a form matching the
+regex.</p>
+<pre class="sh"><code>grep -rn &quot;TOPIC FILE&quot; --include=&quot;*.py&quot; .</code></pre>
+<p>Three hits at the pinned commit: the regex itself, and two lines of
+the Router prompt describing <em>"RELEVANT TOPIC FILES"</em> as an input
+section. This is a read path waiting on a write path that was not
+built.</p>
 <p>No provenance: nothing records which messages produced which line of
 the index, which is the field <a href="../risuai/">RisuAI</a> added in
 its second generation and the one that would make deletion meaningful
 here.</p>
 <p>No temporal fields except the diary's date and the backups'
-timestamps. No versioning of individual claims — the backups version the
-whole document, which is coarse but real.</p>
+timestamps. No versioning of individual claims — the backups version two
+whole documents, which is coarse but real.</p>
 <p><strong>Scoping</strong> is the filesystem path:
 <code>.soul/&lt;character&gt;/chats/&lt;chat&gt;/memory/</code>. Reads
 derive their path from the same <code>get_memory_paths</code>, so a
@@ -393,42 +528,102 @@ withheld</strong> on the same basis as <a
 href="../sillytavern/">SillyTavern</a> and <a
 href="../risuai/">RisuAI</a>.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p>Two paths with different characters.</p>
-<p><strong>The index and profile are not retrieved at all — they are
-injected whole</strong>, truncated at 5,000 and 3,000 characters
-respectively (<code>:348</code>, <code>:416</code>) with a
+<p><strong>The index and profile are not retrieved — they are injected
+whole</strong>, truncated at 5,000 and 3,000 characters respectively
+(<code>:436</code>, <code>:504</code>) with a
 <code>[MEMORY TRUNCATED]</code> marker. There is no selection, so there
 is no relevance question and no under-recall: whatever is in the file is
 in the prompt. The cost is a fixed token bill every turn and a hard
 ceiling on how much a character can know, enforced by truncating the
 <em>end</em> of the file — so the last sections written are the first
 lost.</p>
-<p><strong>Topic files are retrieved</strong>, by <code>TopicRAG</code>,
-and the tiering is sensible in shape but generous in its constants:
-<code>RAG_THRESHOLD = 4</code>, <code>EMBED_CHARS = 600</code>,
-<code>PASS_CHARS = 8000</code>. At four topic files or fewer the
-embedder is skipped and everything is passed; above that, only the first
-600 characters of each file are embedded, and the top three selected
-files are passed at up to 8,000 characters each.</p>
-<p>Two consequences follow from those numbers. Ranking on a
-600-character prefix makes a long topic file compete on its opening
-paragraph — tolerable here, since the Archivist writes topic files to a
-consistent shape, but it means a fact buried at the end of a file is
-invisible to selection. And selecting three files at 8,000 characters
-apiece admits up to 24,000 characters of topic material into a prompt
-that also carries the index and profile, so the ceiling on this system's
-per-turn context is set by a constant that reads like an upper bound
-rather than a budget.</p>
+<p>Topic files are ranked by <strong>two separately written
+implementations</strong> that share only the embedder. One selects
+context for the Router that rewrites memory; the other selects context
+for the character that answers the user.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>TopicRAG</code> (<code>soul_memory.py:97</code>)</th>
+<th>prompt builder (<code>prompt_engine.py:644</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Consumer</td>
+<td>the Router sub-agent</td>
+<td>the character's own prompt</td>
+</tr>
+<tr>
+<td>Score floor</td>
+<td>none — always the top 3</td>
+<td>cosine &gt; 0.42</td>
+</tr>
+<tr>
+<td>Small-corpus shortcut</td>
+<td>≤ 4 files: pass everything</td>
+<td>none</td>
+</tr>
+<tr>
+<td>What is embedded</td>
+<td>first 600 chars of the body</td>
+<td><code>"Topic: &lt;stem&gt;. Content: &lt;first 200 chars&gt;"</code>,
+or for a diary
+<code>"Diary: &lt;stem&gt;. Recent thoughts: &lt;last 600 chars&gt;"</code></td>
+</tr>
+<tr>
+<td>What is passed</td>
+<td>truncated to 8,000 chars</td>
+<td>the <strong>entire file</strong>, untruncated</td>
+</tr>
+<tr>
+<td>Cache key</td>
+<td>directory + filename, invalidated by an md5 of the snippet</td>
+<td><code>topic_&lt;character&gt;_&lt;filename&gt;</code>, <strong>never
+invalidated</strong></td>
+</tr>
+<tr>
+<td>No embedder</td>
+<td>first 3 files by mtime</td>
+<td>nothing injected, pins included</td>
+</tr>
+<tr>
+<td>Query</td>
+<td>the last two non-empty turns of the delta</td>
+<td>the last four chat messages plus the pending one</td>
+</tr>
+</tbody>
+</table></div>
+<p>The cache row is the one to read twice.
+<code>prompt_engine.py:673</code> stores a vector under
+<code>topic_&lt;character_name&gt;_&lt;filename&gt;</code> and reuses it
+whenever that key is present, with no content hash and no modification
+time. Topic files are overwritten by the Archivist on most batches, and
+the day's diary is rewritten on every batch that runs the diary agent —
+so the read-path ranking scores a stale vector against every query for
+the life of the process. The write path in the same feature hashes its
+snippet and re-embeds on change (<code>:42-53</code>). Two caches, one
+project, one correct.</p>
+<p>The key also omits the chat id while the files are per chat, so two
+chats of the same character with a topic file of the same name share one
+cached vector.</p>
+<p>Ranking on a 200-character prefix on the read path — a 600-character
+prefix on the write path — makes a long topic file compete on its
+opening lines, so a fact buried at the end of a file is invisible to
+selection while being fully injected once the file is chosen. And
+selecting up to three files at their full length, with no character cap
+on the read path, means the per-turn context is bounded by what the
+Archivist happened to write rather than by any constant in the code.</p>
 <p>Failure modes: the index is a summary of a summary of a summary,
 since each rewrite reads only the previous version plus fourteen
-messages, so anything not carried forward is gone with no record; topic
-files are selected against the <em>current query</em> rather than the
-delta being summarized; and the 5,000-character truncation is silent to
-the model, which sees a marker but not what was cut.</p>
+messages, so anything not carried forward is gone with no record; and
+the 5,000-character truncation is silent to the model, which sees a
+marker but not what was cut.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are <strong>batched and inline</strong>: every
-<code>BATCH_SIZE = 4</code> messages the pipeline runs, taking the last
-<code>MAX_DELTA_MSGS = 14</code> messages with
+<code>soul_memory_batch</code> messages (default 4) the pipeline runs,
+taking the last <code>MAX_DELTA_MSGS = 14</code> messages with
 <code>MSG_OVERLAP = 2</code> carried over from the previous batch. The
 overlap is a small, deliberate choice — a fact stated across a batch
 boundary appears in both windows, so it is not lost to the seam.</p>
@@ -437,40 +632,117 @@ Archivist call <em>per topic action</em> (sequential, in a loop), and a
 Diary call launched concurrently. There is no queue and no rate limiter
 — a Router that plans five topic actions issues five sequential model
 calls inside the batch.</p>
+<h3 id="three-ways-a-write-does-not-happen">Three ways a write does not
+happen</h3>
+<p>Each is a different judgement, and all three are logged or
+visible:</p>
+<ol type="1">
+<li><strong>The model declines.</strong>
+<code>no_significant_change</code> skips every write for the batch and
+advances the tracker, so the messages are not reconsidered.</li>
+<li><strong>The output is unusable.</strong> A parse failure after four
+repair attempts aborts the pipeline <em>before</em> the
+<code>try/finally</code> that advances the tracker, so the same messages
+are retried on the next turn. The cost of this is worth knowing: the
+trigger is <code>diff &gt;= soul_memory_batch</code>, and
+<code>diff</code> only grows while the tracker is frozen, so a
+persistently unparseable Router means a Router call on every subsequent
+message rather than every fourth.</li>
+<li><strong>The rendered document is too short.</strong> The length
+floor refuses the write and the previous file stands, logged as
+<code>status=SKIPPED (safety check)</code>.</li>
+</ol>
+<p>The first is a model judgement, the second a parser judgement, the
+third a code judgement, and the audit log distinguishes all three.</p>
+<h3 id="where-the-de-duplication-sits">Where the de-duplication
+sits</h3>
+<p><code>find_similar_topic</code> is a genuine improvement on the shape
+it replaces: a Router that invents <code>cafe_meeting.md</code> when
+<code>the_cafe.md</code> already covers the subject would otherwise
+fragment the store, and nothing here merges files after the fact.
+Redirecting the write is the cheap correct answer.</p>
+<p>It is applied in the wrong place. The two filename guards above it
+operate on <code>safe_fname</code>; the redirect
+<strong>reassigns</strong> <code>safe_fname</code> from a directory
+listing and nothing re-checks it. <code>_BAD_TOPIC_NAMES</code> cannot
+be hit by a real filename, so the first guard is unaffected; the diary
+guard is not so lucky, because diaries are real files in the directory
+being searched. Moving the two guards below the redirect, or filtering
+<code>diary_</code> out of <code>_load_all_topics</code>, closes it.</p>
+<p>The same sequence has a smaller consequence worth naming: the
+redirect turns a <code>create</code> into an overwrite of a file the
+Archivist is given as <code>existing_content</code>, so nothing is lost
+when the target is an ordinary topic. It is a merge, not a supersession
+— no record is kept of the name that was proposed and dropped, and
+<code>tombstone</code> is withheld.</p>
+<h3 id="the-blocklist-does-not-cover-the-prompts-own-examples">The
+blocklist does not cover the prompt's own examples</h3>
+<p><code>_BAD_TOPIC_NAMES</code> (<code>:366</code>) holds
+<code>example.md</code>, <code>topic_name.md</code>,
+<code>name_of_important_subject.md</code>, <code>untitled.md</code>,
+<code>new_topic.md</code>, <code>topic.md</code> and
+<code>subject.md</code>. The Router prompt's worked examples are
+<code>{"action": "create", "filename": "example_topic.md", ...}</code>
+and
+<code>{"action": "update", "filename": "existing_topic.md", ...}</code>
+(<code>:242-243</code>). Neither is in the set, and the sanitiser
+preserves both intact — <code>example_topic.md</code> survives the
+alphanumeric filter unchanged. A model that copies the instructions
+instead of following them writes the file, and has been able to at both
+commits this report has covered: the same two example names and the same
+seven blocked names appear in
+<code class="commit-id" title="3d032badc07335012ae6917e29ea16b8203252f5">3d032bad…</code>.</p>
 <p><strong>There is no delete path of any kind.</strong> No topic file
 is ever removed, no diary entry retracted, no line of the index
-tombstoned. The Router's <code>healing_log</code> is the nearest thing
-to correction, and it is a <em>description</em> of a contradiction it
-resolved, written to a log rather than a record keyed on the rejected
-value. <code>tombstone</code> is withheld. But a logged contradiction
-resolution is more than most systems here produce, and it is
-durable.</p>
+tombstoned. The only <code>unlink</code> calls in the module are on temp
+files and on backups beyond the fifth. The Router's
+<code>healing_log</code> is the nearest thing to correction, and it is a
+<em>description</em> of a contradiction it resolved, written to a log
+rather than a record keyed on the rejected value.</p>
 <p>Malicious input is unfiltered — chat text reaches the Router, whose
-output becomes a system-injected document. The length floors and the
-fixed skeleton bound the <em>damage</em> (a hostile message cannot empty
-the memory or invent a section) without addressing the
-<em>content</em>.</p>
+output becomes a system-injected document. The length floors, the fixed
+skeleton and the 2,000-character per-message cap bound the
+<em>damage</em> (a hostile message cannot empty the memory or invent a
+section) without addressing the <em>content</em>.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <ul>
 <li><strong>The write path is batched but not deferred</strong> — the
-pipeline runs inline every four messages, so every fourth turn pays for
-a Router call plus one call per topic action.</li>
-<li><strong>The lag to retrievability is up to four messages</strong>,
-deterministically.</li>
+pipeline runs inline every <code>soul_memory_batch</code> messages, so
+every fourth turn by default pays for a Router call plus one call per
+topic action.</li>
+<li><strong>The lag to retrievability is up to
+<code>soul_memory_batch</code> messages</strong>, except after a parse
+failure, which defers the batch and then re-runs the pipeline on every
+message until one parses.</li>
 <li><strong>No background pass re-reads the whole store.</strong> Cost
 scales with activity, not with corpus size — the index rewrite reads
 only the previous index, not its history, which is exactly why it loses
 things.</li>
-<li><strong>On the read path the injection is unbounded by
-tokens</strong> and bounded only by the 5,000 + 3,000 character
-truncations, injected as a system block whose contents change every four
-messages.</li>
+<li><strong>On the read path the injection is bounded</strong> by the
+5,000 + 3,000 character truncations for the index and profile, and
+<strong>unbounded</strong> for topic files, which are injected
+whole.</li>
 </ul>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>None. There is no API, no MCP server and no tool interface;
-<code>prompt_engine.py</code> reads two files and concatenates them into
-the system prompt. The model has no agency over its own memory beyond
-being the thing that rewrites it when called.</p>
+<p>There is no memory API and no MCP server exposing this store. The
+application does carry a tool interface —
+<code>app/utils/ai_clients/tools.py</code> defines a
+<code>ToolRegistry</code> and
+<code>app/utils/soul_companion/plugins/agentic_tools.py</code> adds GUI
+control, a browser agent, code execution, a file organiser, a
+system-vitals monitor and a task planner — and none of its tools reads
+or writes memory. There is also an MCP <em>client</em>
+(<code>app/utils/ai_clients/mcp_client.py</code>), which consumes other
+people's servers rather than publishing this one. The model has no
+agency over its own memory beyond being the thing that rewrites it when
+called.</p>
+<p>The agentic tools do carry a <code>needs_approval</code> /
+<code>get_confirmation_summary</code> pair, so the same application
+knows how to put a person in front of an action. That gate covers
+clicking and shell commands; no memory write passes through it, and
+<strong><code>human_review</code> is withheld.</strong> A project with a
+confirmation mechanism already written and a memory path that does not
+use it is the cheapest possible version of this gap.</p>
 <p>The transferable piece is not an interface but the
 <code>SoulMemoryAgent(None)</code> construction — instantiating the
 memory manager without an LLM function to get a read-only view. A memory
@@ -481,63 +753,83 @@ Trust</h2>
 <p><strong>The write guards are the story, and they are the right guards
 for this shape.</strong> A system where an LLM regenerates the entire
 memory each cycle has one catastrophic failure — the model returns
-something empty, truncated or malformed, and the memory is gone. Three
+something empty, truncated or malformed, and the memory is gone. Four
 mechanisms address exactly that: a length floor that refuses the write,
-a fixed skeleton that defaults missing fields, and a backup taken before
-the replace. Most systems in this atlas that rewrite whole documents
-have none of the three.</p>
+a fixed skeleton that defaults missing fields, a repair ladder that
+recovers a truncated JSON object, and a backup taken before the replace.
+Most systems in this atlas that rewrite whole documents have none of the
+four.</p>
 <p><strong>Atomicity is handled</strong>: temp file plus
 <code>replace</code>, with the temp unlinked on error. A crash mid-write
 leaves the previous version intact.</p>
 <p><strong><code>audit_log</code> is earned.</strong>
 <code>agent_logs.txt</code> lives in the memory directory, is opened
 append-only, is never rotated or truncated, and records every index,
-profile and topic mutation with a timestamp, a write status, and — for
-the index — the Router's account of which contradictions it resolved.
-That last part is unusual: most audit logs in this atlas record
-<em>that</em> a memory changed, not <em>how a conflict was
-settled</em>.</p>
-<p><strong>Rollback exists and is unreachable.</strong>
-<code>restore_backup</code> is written correctly, including backing up
-the current state before overwriting it. Nothing calls it. A user whose
-memory has been degraded by a bad rewrite has five good backups on disk
-and no way to use them from the product. This is the gap most worth
-closing, and it is a UI task, not a memory task.</p>
+profile, topic and diary mutation with a timestamp, a write status, a
+declined batch, and — for the index — the Router's account of which
+contradictions it resolved. That last part is unusual: most audit logs
+in this atlas record <em>that</em> a memory changed, not <em>how a
+conflict was settled</em>.</p>
+<p><strong>Five backups of each rewritten document, and nothing that
+reads them.</strong> The index and the profile are each copied before
+every overwrite and pruned to five. No code in the repository opens a
+file from <code>backups/</code>:</p>
+<pre class="sh"><code>grep -rn &quot;backups&quot; --include=&quot;*.py&quot; .</code></pre>
+<p>At the pinned commit the hits are the docstring, the path
+construction, and the pruning loop — all writers. A user whose memory
+has been degraded by a bad rewrite has ten good files on disk and no
+path to them that does not involve a file manager. Backups without a
+restore are a diagnostic aid, not a recovery mechanism, and the
+asymmetry between the two documents that had it is gone in the direction
+of covering both.</p>
+<p><strong>The diary is the least protected store and the one most
+treated as protected.</strong> It is explicitly guarded from the
+Archivist by name, it is the only file with a distinct lifecycle, and it
+has no backup, no length floor beyond 50 characters, and a whole-file
+rewrite on every entry. Its guard is bypassable through the redirect
+described in section 7.</p>
 <p><strong>No trust model, no provenance, no uncertainty.</strong> The
 index is prose asserted by a model, injected as fact.</p>
 <p><strong>Prompt injection is unaddressed</strong> in content, bounded
 in structure — see section 7.</p>
-<p><strong><code>USER.md</code> is not backed up</strong> although
-<code>MEMORY.md</code> is, and both are rewritten by the same call with
-the same failure modes. That asymmetry looks like an oversight rather
-than a decision.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><strong>No test suite exists in the repository</strong> — no
-<code>tests/</code> directory, no <code>test_*.py</code>, nothing.</p>
+<code>tests/</code> directory, no <code>test_*.py</code>, no
+<code>conftest.py</code>, no <code>pytest.ini</code>:</p>
+<pre class="sh"><code>find . -path ./.git -prune -o \( -iname &quot;test_*.py&quot; -o -iname &quot;*_test.py&quot; \
+  -o -iname &quot;conftest.py&quot; -o -iname &quot;pytest.ini&quot; \) -print
+find . -path ./.git -prune -o -type d -iname &quot;tests&quot; -print</code></pre>
+<p>Both return nothing at the pinned commit.</p>
 <p>That is the same finding as <a href="../risuai/">RisuAI</a> but with
 a sharper edge, because the invariants here are unusually easy to state
 and unusually cheap to assert:</p>
 <ul>
 <li>A router response of <code>""</code> leaves <code>MEMORY.md</code>
-unchanged.</li>
+unchanged <strong>and leaves the batch tracker unadvanced</strong>.</li>
 <li>A router response of 99 characters leaves <code>MEMORY.md</code>
 unchanged; 101 replaces it.</li>
-<li>A malformed JSON response produces a document with every heading
-present.</li>
-<li>A <code>topic_plan</code> naming <code>example.md</code> writes no
-file.</li>
-<li>A <code>topic_plan</code> naming <code>diary_2026-07-29.md</code>
+<li>A response truncated mid-object is repaired and written.</li>
+<li>A malformed JSON response produces no write at all.</li>
+<li><code>{"no_significant_change": true}</code> writes nothing and logs
+one line.</li>
+<li>A <code>topic_plan</code> naming <code>example_topic.md</code>
 writes no file.</li>
-<li>After six index writes, exactly five backups exist.</li>
-<li><code>restore_backup</code> restores the named file and leaves a
-backup of what it replaced.</li>
+<li>A <code>topic_plan</code> naming <code>Diary_2026-09-13.md</code>
+writes no file — <strong>including by way of the de-duplication
+redirect.</strong></li>
+<li>After six index writes, exactly five <code>MEMORY_*</code> backups
+exist, and the <code>USER_*</code> series is pruned independently.</li>
 </ul>
 <p>Every one of those is a behaviour the code deliberately implements,
 several of them guarding against a total loss of memory, and none is
-asserted anywhere. <code>negative_eval</code> is withheld; the
-<code>_BAD_TOPIC_NAMES</code> filter is precisely a must-not-be-written
-rule and it has no test.</p>
+asserted anywhere. The seventh is the one the code gets wrong, and it is
+the one a test would have caught at the moment the redirect was added,
+because writing that test means listing the paths a filename can arrive
+by.</p>
+<p><code>negative_eval</code> is withheld; <code>_BAD_TOPIC_NAMES</code>
+and the diary guard are precisely must-not-be-written rules and neither
+has a test.</p>
 <p>No benchmarks, and none in <a href="../../benchmarks/">this atlas's
 survey</a> would apply.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
@@ -546,45 +838,73 @@ survey</a> would apply.</p>
 <li><strong>Put a length floor on any LLM-generated overwrite.</strong>
 <em>"Index write rejected — content too short. Keeping old memory"</em>
 is four lines of code and it is the difference between a bad turn and a
-lost character. If your model rewrites a document, refuse the write
-rather than trusting the generation.</li>
+lost character.</li>
 <li><strong>Have the model fill a schema and let your code render the
 document.</strong> JSON in, fixed skeleton out, a default per field. The
 model cannot then drop a section, invent one, or emit prose where a list
 belongs.</li>
+<li><strong>Try to repair a truncated generation before giving up on
+it.</strong> Balancing the open brackets of a cut-off JSON object and
+retrying the parse is twenty lines, and it turns the most common LLM
+output failure into a non-event.</li>
+<li><strong>Let the writer say "nothing happened".</strong> A memory
+pipeline that must produce an update every cycle will produce one, and
+it will be invented. Give the model a no-op token, log that it used it,
+and advance the batch anyway.</li>
+<li><strong>On an unusable response, do not advance the cursor.</strong>
+Retrying the batch is better than writing a default over real memory —
+but bound the retry, because a frozen cursor turns a periodic job into a
+per-message one.</li>
 <li><strong>Blocklist your own prompt's example filenames.</strong>
-<code>_BAD_TOPIC_NAMES</code> is a list of the placeholder names a model
-emits when it copies the instructions instead of following them —
-<code>example.md</code>, <code>untitled.md</code>,
-<code>topic_name.md</code>. Everyone who asks a model to name files hits
-this; almost nobody writes it down.</li>
-<li><strong>Give append-only and rewritable memory different
-files.</strong> The diary is never rewritten and is explicitly protected
-from the agent that rewrites topics. One store per lifecycle is clearer
-than one store with a mode flag.</li>
+Everyone who asks a model to name files hits this, and almost nobody
+writes it down. Then check the list against the prompt: the seven names
+blocked here are plausible placeholders and none of them is either of
+the two the prompt actually demonstrates. A constant that encodes a fact
+about a string elsewhere in the same file wants a test, or to be derived
+from that string rather than retyped.</li>
 <li><strong>Overlap your batches.</strong> <code>MSG_OVERLAP = 2</code>
 costs two messages of context and removes the seam where a fact stated
 across a boundary is summarized by neither pass.</li>
 <li><strong>Log how a contradiction was resolved, not just that memory
 changed.</strong> The <code>healing_log</code> line in the audit trail
 is the most reviewable artifact in this system.</li>
-<li><strong>Back up before restoring.</strong>
-<code>restore_backup</code> takes a backup first, so a restore is
-undoable. Rollback that is itself irreversible is a trap.</li>
+<li><strong>Redirect a duplicate write instead of creating a
+near-duplicate file</strong> — and put the redirect <em>above</em> your
+filename guards, not below them.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Building a rollback API with no caller.</strong> Backups,
-restore, listing and stats are all implemented here and none is
-reachable from the product, which makes them cost without benefit. Ship
-the button or delete the code.</li>
+<li><strong>Validating a name and then replacing it.</strong> Two guards
+run against a proposed filename; a de-duplication step four lines later
+assigns a different filename from a directory listing and nothing
+re-validates. Any check that runs before a value can still change is
+decoration. If a variable is guarded, make the guard the last thing that
+touches it.</li>
+<li><strong>Two retrieval implementations over one store.</strong> The
+write path and the read path here rank the same files with different
+prefixes, different thresholds, different truncation and different
+caching. One of the two caches invalidates correctly. A single ranking
+function with parameters would have made that impossible.</li>
+<li><strong>Caching an embedding under a key that cannot express
+staleness.</strong> A vector keyed on a filename, over files an agent
+overwrites continuously, is a ranking that drifts silently away from its
+own corpus. Hash the content into the key, as the same feature does
+forty lines away.</li>
+<li><strong>Naming a model your repository does not contain.</strong> A
+single string constant decides whether every semantic feature works,
+resolves against a directory that is not in the tree, and fails to a
+silent fallback. If a model is required, fetch it in the installer and
+fail loudly when it is absent.</li>
+<li><strong>Writing a read path for a marker nothing emits.</strong> The
+<code>[TOPIC FILE: …]</code> pin is real code with a real effect and no
+producer; it reads as a feature and behaves as dead weight.</li>
+<li><strong>Keeping backups you cannot restore from.</strong> Ten files
+per chat are copied, pruned and never read. Either ship the restore or
+stop paying for the copies.</li>
 <li><strong>Rewriting a document from its previous version plus a small
 window.</strong> Each cycle reads the last index and fourteen messages,
 so anything the model does not carry forward is gone with no record that
 it existed. This is chained lossy summarization wearing a schema.</li>
-<li><strong>Backing up one of two files written by the same
-call.</strong> <code>MEMORY.md</code> is protected and
-<code>USER.md</code> is not, for no reason visible in the code.</li>
 <li><strong>Truncating the tail of an injected document
 silently.</strong> Cutting at 5,000 characters removes the most recently
 written sections first, and the model sees only a marker.</li>
@@ -604,18 +924,28 @@ and adding retrieval to it means adding the store it does not have.</p>
 <p>The reason to read it even if neither applies: it is the clearest
 small example in this atlas of <strong>how to make a full-rewrite memory
 safe</strong>, and those guards transfer to any system where a model
-regenerates a document.</p>
+regenerates a document. The second reason is the one in section 7 — a
+well-judged feature added four lines below the guard it defeats is an
+ordinary way for a safety property to be lost, and here it is small
+enough to read in one screen.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>Why is the backup and restore API unreachable — was it
-removed from the GUI, or never wired up?</strong> The commit history
-would say, and it determines whether this is a regression or unfinished
-work.</li>
-<li><strong>Were <code>PASS_CHARS = 8000</code> and
-<code>RAG_THRESHOLD = 4</code> chosen together?</strong> Three files at
-8,000 characters is a large injection, and at four files or fewer
-nothing is filtered at all; whether anyone measured the resulting prompt
-size is not visible.</li>
+<li><strong>Was the diary meant to be reachable by
+de-duplication?</strong> The guard and the redirect are in the same
+function, twelve lines apart, and the redirect was added second. Whether
+the interaction was considered is not visible in the code.</li>
+<li><strong>Where does <code>e5-small-en-ru</code> come from?</strong>
+The constant names a directory the repository does not contain and an
+identifier that does not resolve, and the release archive is the only
+plausible carrier. Whether a user who installs from source ever gets
+embeddings is the difference between two quite different systems.</li>
+<li><strong>Was <code>[TOPIC FILE: …]</code> a planned Router
+output?</strong> The regex is specific enough to have been written
+against a format someone had in mind.</li>
+<li><strong>Were <code>PASS_CHARS = 8000</code> and the read path's
+uncapped injection chosen together?</strong> One path truncates at 8,000
+characters and the other injects whole files, for the same three-file
+budget.</li>
 <li><strong>Does the <code>_locks</code> dict leak?</strong> One
 <code>asyncio.Lock</code> per <code>character::chat</code> is created on
 demand and never removed; harmless on a desktop, worth knowing.</li>
@@ -623,56 +953,117 @@ demand and never removed; harmless on a desktop, worth knowing.</li>
 normal use?</strong> The truncation is silent to the model and cuts the
 newest sections; whether users reach it depends on how verbose the
 Router is over months.</li>
-<li><strong>Is <code>MSG_OVERLAP = 2</code> enough at
-<code>BATCH_SIZE = 4</code>?</strong> Half the batch is overlap already,
-which is a high ratio; whether it was tuned or guessed is not
-visible.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Memory system</strong> —
 <code>app/utils/soul_memory.py</code></p>
 <ul>
-<li>Embedder availability and loading (21–47)</li>
-<li><code>TopicRAG</code> (50), <code>_load_all_topics</code> (58),
-<code>get_relevant_topics</code> (69)</li>
-<li>Router prompts, contradiction instruction (128), lite mode
-(183)</li>
-<li>Archivist prompt (233), Diary prompt (252)</li>
-<li><code>SoulMemoryAgent</code> (266), constants and
-<code>_BAD_TOPIC_NAMES</code> (284–293)</li>
-<li><code>_get_lock</code> (300), <code>_sanitize</code> (306),
-<code>get_memory_paths</code> (310)</li>
-<li><code>_read_index</code> with truncation (342),
-<code>_backup_index</code> (357)</li>
-<li><code>_safe_write_index</code> with the length floor (373),
-<code>_safe_write_topic</code> (395)</li>
-<li><code>_read_user_profile</code> (410),
-<code>_safe_write_user_profile</code> (425)</li>
-<li><code>_call_router_agent</code> (441),
-<code>_parse_router_response</code> (488), regex fallback (588)</li>
-<li><code>_call_archivist_agent</code> (594)</li>
-<li><code>_update_daily_diary</code> (676)</li>
-<li>Batch pipeline, delta and overlap (793–795), audit-log calls (846,
-853, 925)</li>
-<li>Topic action handling, name filtering, diary protection
-(885–930)</li>
-<li><code>_append_log</code> (938), <code>get_full_memory_context</code>
-(945)</li>
-<li>Unreachable API: <code>get_memory_stats</code> (957),
-<code>list_topic_files</code> (985), <code>restore_backup</code> (1005),
-<code>list_backups</code> (1025)</li>
+<li><code>TopicRAG</code> (19), constants and E5 prefixes (23–29),
+<code>_VECTOR_CACHE</code> (31)</li>
+<li><code>_encode_topics_cached</code> (42),
+<code>_load_all_topics</code> (77), <code>get_relevant_topics</code>
+(97)</li>
+<li><code>DEDUP_THRESHOLD</code> (137), <code>find_similar_topic</code>
+(139)</li>
+<li>Router prompt (177), contradiction instruction (196), emotional
+decay (195), no-op detection (197–200), <code>trust_level</code> values
+(225), worked topic examples (242–243)</li>
+<li>Lite router prompt (249), Archivist prompt (301), Diary prompt
+(325)</li>
+<li><code>SoulMemoryAgent</code> (341), constants (359–364),
+<code>_BAD_TOPIC_NAMES</code> (366)</li>
+<li><code>_get_lock</code> (376), <code>_cap_message_lengths</code>
+(387), <code>get_memory_paths</code> (397)</li>
+<li><code>_read_index</code> with truncation (429, 436),
+<code>_backup_file</code> (444)</li>
+<li><code>_safe_write_index</code> with the length floor (460),
+<code>_safe_write_topic</code> (482)</li>
+<li><code>_read_user_profile</code> (497, 504),
+<code>_safe_write_user_profile</code> with the USER backup (512,
+519)</li>
+<li><code>_call_router_agent</code> and prompt selection (531, 542)</li>
+<li><code>_extract_json_object</code> repair ladder (579),
+<code>_parse_router_response</code> (634),
+<code>no_significant_change</code> branch (650)</li>
+<li><code>_call_archivist_agent</code> (747),
+<code>update_memory_after_response</code> (797)</li>
+<li><code>_update_daily_diary</code> (829), diary filename (876), diary
+audit line (887), diary task launch and await (1038, 1122)</li>
+<li><code>_run_update_pipeline</code> (896), batch trigger (942), guard
+initialisers (983–984)</li>
+<li>Parse-failure abort (1000–1004), no-op branch (1006–1011), index and
+profile writes (1013–1026), batch tracker in <code>finally</code>
+(1126)</li>
+<li>Topic action handling: name sanitising (1060–1064),
+<code>_BAD_TOPIC_NAMES</code> guard (1066), diary guard (1070),
+de-duplication redirect (1076–1084), unguarded use of the redirected
+name (1086)</li>
+<li><code>_append_log</code> (1130)</li>
 </ul>
-<p><strong>Injection</strong></p>
+<p><strong>Injection and write entry point</strong></p>
 <ul>
 <li><code>app/utils/ai_clients/prompt_engine.py</code> —
-<code>is_soul_memory_enabled</code> (60), read-only agent construction
-and injection (425–443)</li>
+<code>embedding_cache</code> (194), read-only agent construction (621),
+<code>[TOPIC FILE: …]</code> parsing (631), embedder gate on topic
+injection (641–644), read-path cache key (673), similarity floor (688),
+write entry point (900–907)</li>
+</ul>
+<p><strong>Embedding provider</strong></p>
+<ul>
+<li><code>app/utils/embedding_provider.py</code> —
+<code>MODEL_NAME</code> (9), availability check (16),
+<code>get_embedder</code> and the local-directory preference (32,
+44–46)</li>
+</ul>
+<p><strong>Tools</strong> (no memory tool)</p>
+<ul>
+<li><code>app/utils/ai_clients/tools.py</code> —
+<code>ToolRegistry.default_tools</code> (192)</li>
+<li><code>app/utils/soul_companion/plugins/agentic_tools.py</code> —
+<code>needs_approval</code> (248, 500, 737)</li>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>
 <li>None.</li>
 </ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>find . -path ./.git -prune -o \( -iname &quot;test_*.py&quot; -o -iname &quot;*_test.py&quot; \
+  -o -iname &quot;conftest.py&quot; -o -iname &quot;pytest.ini&quot; \) -print
+find . -path ./.git -prune -o -type d -iname &quot;tests&quot; -print
+grep -rn &quot;TOPIC FILE&quot; --include=&quot;*.py&quot; .
+grep -rn &quot;backups&quot; --include=&quot;*.py&quot; .
+grep -rn -i &quot;e5-small\|e5_small&quot; . --exclude-dir=.git
+grep -n &quot;unlink\|rmtree\|os.remove&quot; app/utils/soul_memory.py
+grep -n &quot;user_id\|tenant\|principal\|owner_id&quot; app/utils/soul_memory.py
+grep -n &quot;rotat\|truncat\|RotatingFile&quot; app/utils/soul_memory.py
+grep -rn -i &quot;arxiv\|bibtex\|@article\|@misc\|citation\|doi\.&quot; README.md</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d"><code class="commit-id" title="747048b3b3ad7d321a667630018f7ffc04eb5f6d">747048b3…</code></a>
+— re-read 80 commits past the previous pin. The backup, restore and
+inspection API this report was previously titled for
+(<code>restore_backup</code>, <code>list_backups</code>,
+<code>list_topic_files</code>, <code>get_memory_stats</code>) was
+deleted in <code class="commit-id" title="4eb36d1123e380552a9720ef0c43c9ac373c27ae">4eb36d11…</code>; the
+backups it would have read are still written, and both rewritten
+documents are now covered rather than one, so the published criticism
+that <code>USER.md</code> went unbacked is corrected here. Four
+mechanisms were added: a JSON repair ladder with a batch retry on
+failure, a model-declared no-op, a de-duplication redirect for
+<code>create</code> actions, and a second topic-ranking implementation
+on the read path. The redirect is applied after the guard protecting
+diary files and reassigns the guarded variable, which is the finding
+this reading is titled for. The embedder moved to a shared provider
+naming a model the repository does not contain. The published claim that
+<code>_BAD_TOPIC_NAMES</code> blocks "the placeholder names the prompt's
+own examples teach the model to emit" was wrong when it was made: the
+prompt's examples are <code>example_topic.md</code> and
+<code>existing_topic.md</code> at both commits, and neither is in the
+set. Marks unchanged at <code>audit_log</code>;
+<code>human_review</code> re-checked against the new approval gate in
+the agentic tools and withheld, since no memory write passes through
+it.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/jofizcd/Soul-of-Waifu/commit/3d032badc07335012ae6917e29ea16b8203252f5"><code class="commit-id" title="3d032badc07335012ae6917e29ea16b8203252f5">3d032bad…</code></a>
 — first reading.</p>
