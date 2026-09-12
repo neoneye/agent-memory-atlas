@@ -7,13 +7,13 @@ page_kind: system
 source_name: "gi-dellav/zerostack"
 source_url: https://github.com/gi-dellav/zerostack
 archive_name: "gi-dellav--zerostack"
-revision: 90986c5c55631e0a372694e77fa69880ba39b31b
-revision_url: https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b
-analyzed_at: 2026-07-30
+revision: efd142b3ac46c9db79b1c318cad25bfd309acc5f
+revision_url: https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f
+analyzed_at: 2026-09-12
 capabilities: ""
 stack_storage: "files"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "lexical"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A Markdown file — the global `MEMORY.md`, a per-project `SCRATCHPAD.md`, project notes, and a daily log per date"
   storage: "Plain files on disk under a store root, with project-scoped subdirectories and `YYYY-MM-DD.md` daily logs"
@@ -246,11 +246,21 @@ one overwritable `.bak`.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `src/extras/memory/mod.rs` | 1,266 | Store, four tools, atomic write, backup, caps |
-| `src/tests/memory_tests.rs` | 1,203 | 65 test functions |
-| `src/ui/slash/memory.rs` | — | The `/memory` command |
-| `src/agent/tools.rs` | — | `check_perm`, shared with every tool |
+| `src/extras/memory/mod.rs` | 1,271 | Store, four tools, ranked lexical search, atomic write, backup, caps |
+| `src/tests/memory_tests.rs` | 1,204 | 65 test functions |
+| `src/ui/slash/memory.rs` | 248 | The `/memory` command in the TUI |
+| `src/engine/mod.rs` | — | `slash_memory`, the same command in the headless engine |
+| `src/agent/tools/mod.rs` | — | `check_perm`, shared with every tool |
 
 ## History
+
+**2026-09-12** — [`efd142b3ac46c9db79b1c318cad25bfd309acc5f`](https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f) — re-read 124 commits past the previous pin. The memory subsystem is unchanged in substance: `src/extras/memory/mod.rs` moved by thirteen lines, all of it visibility and doc comments, where four path helpers went from `pub(crate)` to `pub` under a comment naming the reason — the headless `Engine` implements `/memory` without a TUI. The store, the four tools, the atomic write, the single-depth `.bak` and the caps are as described.
+
+What is new is a second front end rather than a second memory. `Engine::slash_memory` reaches the same `Mem` API that `src/ui/slash/memory.rs` does, and in both the slash surface takes user input — `engine/mod.rs:175` documents the entry point as *"Run one user input string"* — so the permission gate that guards the agent's four tools is not bypassed by it, because it never applied to an operator's own command in either front end. `src/agent/tools.rs` became `src/agent/tools/mod.rs` and `check_perm` moved with it.
+
+Two census corrections, both errors in the seeded row rather than changes upstream: `stack_retrieval` was empty while the matrix row it was derived from described `memory_search`, and `Mem::search` — a ranked lexical scan over the store's files, ordered by distinct matching terms — is present at the previous pin as well as this one, so the field is filled as `lexical` and `stack_source` promoted from `seeded` to `reviewed`.
+
+Screened before reading: one auto-run surface, a `.gitmodules` declaring a `tap` submodule from the same owner, left uninitialised; `Cargo.toml` and `Cargo.lock` changed five days earlier, inside the seven-day cooldown; no build-time execution path and no unpinned surface; `AGENTS.md` read as data. Nothing was installed, built or run. Re-ran the report's absence claims at this commit: no audit or event log in the memory module, nothing spawned in the background, and the `.bak` still one version deep.
+
 
 **2026-07-30** — [`90986c5c55631e0a372694e77fa69880ba39b31b`](https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b) — first reading.

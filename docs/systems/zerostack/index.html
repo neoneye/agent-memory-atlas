@@ -114,14 +114,14 @@ permission gate on reads as on writes.</p>
               <strong>gi-dellav/zerostack</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b" title="90986c5c55631e0a372694e77fa69880ba39b31b">
+            <a class="meta-pill revision-pill" href="https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f" title="efd142b3ac46c9db79b1c318cad25bfd309acc5f">
               <span>Analyzed revision</span>
-              <code>90986c5c…</code>
+              <code>efd142b3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-12</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gi-dellav--zerostack" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -374,27 +374,71 @@ injection cap and no compaction path.</li>
 <tbody>
 <tr>
 <td><code>src/extras/memory/mod.rs</code></td>
-<td>1,266</td>
-<td>Store, four tools, atomic write, backup, caps</td>
+<td>1,271</td>
+<td>Store, four tools, ranked lexical search, atomic write, backup,
+caps</td>
 </tr>
 <tr>
 <td><code>src/tests/memory_tests.rs</code></td>
-<td>1,203</td>
+<td>1,204</td>
 <td>65 test functions</td>
 </tr>
 <tr>
 <td><code>src/ui/slash/memory.rs</code></td>
-<td>—</td>
-<td>The <code>/memory</code> command</td>
+<td>248</td>
+<td>The <code>/memory</code> command in the TUI</td>
 </tr>
 <tr>
-<td><code>src/agent/tools.rs</code></td>
+<td><code>src/engine/mod.rs</code></td>
+<td>—</td>
+<td><code>slash_memory</code>, the same command in the headless
+engine</td>
+</tr>
+<tr>
+<td><code>src/agent/tools/mod.rs</code></td>
 <td>—</td>
 <td><code>check_perm</code>, shared with every tool</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f"><code class="commit-id" title="efd142b3ac46c9db79b1c318cad25bfd309acc5f">efd142b3…</code></a>
+— re-read 124 commits past the previous pin. The memory subsystem is
+unchanged in substance: <code>src/extras/memory/mod.rs</code> moved by
+thirteen lines, all of it visibility and doc comments, where four path
+helpers went from <code>pub(crate)</code> to <code>pub</code> under a
+comment naming the reason — the headless <code>Engine</code> implements
+<code>/memory</code> without a TUI. The store, the four tools, the
+atomic write, the single-depth <code>.bak</code> and the caps are as
+described.</p>
+<p>What is new is a second front end rather than a second memory.
+<code>Engine::slash_memory</code> reaches the same <code>Mem</code> API
+that <code>src/ui/slash/memory.rs</code> does, and in both the slash
+surface takes user input — <code>engine/mod.rs:175</code> documents the
+entry point as <em>"Run one user input string"</em> — so the permission
+gate that guards the agent's four tools is not bypassed by it, because
+it never applied to an operator's own command in either front end.
+<code>src/agent/tools.rs</code> became
+<code>src/agent/tools/mod.rs</code> and <code>check_perm</code> moved
+with it.</p>
+<p>Two census corrections, both errors in the seeded row rather than
+changes upstream: <code>stack_retrieval</code> was empty while the
+matrix row it was derived from described <code>memory_search</code>, and
+<code>Mem::search</code> — a ranked lexical scan over the store's files,
+ordered by distinct matching terms — is present at the previous pin as
+well as this one, so the field is filled as <code>lexical</code> and
+<code>stack_source</code> promoted from <code>seeded</code> to
+<code>reviewed</code>.</p>
+<p>Screened before reading: one auto-run surface, a
+<code>.gitmodules</code> declaring a <code>tap</code> submodule from the
+same owner, left uninitialised; <code>Cargo.toml</code> and
+<code>Cargo.lock</code> changed five days earlier, inside the seven-day
+cooldown; no build-time execution path and no unpinned surface;
+<code>AGENTS.md</code> read as data. Nothing was installed, built or
+run. Re-ran the report's absence claims at this commit: no audit or
+event log in the memory module, nothing spawned in the background, and
+the <code>.bak</code> still one version deep.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/gi-dellav/zerostack/commit/90986c5c55631e0a372694e77fa69880ba39b31b"><code class="commit-id" title="90986c5c55631e0a372694e77fa69880ba39b31b">90986c5c…</code></a>
 — first reading.</p>
