@@ -166,21 +166,44 @@ initial issue batch Scout retracted as a discovery misfire
 true`, an issue number, nothing else. A third shape, a bare name with a status,
 is ordinary older input and is treated as such.
 
+Since Scout's [PR 1257](https://github.com/Daily-Nerd/scout/pull/1257), merged
+11 September 2026, a row also carries Scout's own states and its own rubric.
+`discovery` says what Scout did — `seen`, `filed`, `retracted`, `title_only` —
+and `assessment` what its scoring said — `none`, `tier-a`, `tier-b`, `tier-c`,
+`atlas-known`. `score`, `tier`, `components`, `absent_components` and
+`scored_at` are that rubric's output, recomputed on every Scout run. Inside
+`latest`, `fetched_at` is when Scout last read the repository from GitHub, and
+`tree_tests`, `tree_source_files` and `tree_fetched_at` are what one git-tree
+listing showed it. Scout's own README states that a retracted or title-only
+discovery never means the atlas analysed or rejected the project, and this
+program agrees: a legacy row without a payload is held, whether it says
+`title_only: true` or `discovery: retracted`.
+
 Everything in `latest` is stored as a **hint**, validated and capped, and shown
 by `explain` under *upstream hints*. A hint is another program's observation of
 unknown age. It decides which repository has its metadata fetched first. It is
 never copied into the measured facts, never read by a gate, and never part of
 the atlas score. A missing hint is neutral; only a measured zero — a README
-size of 0 — counts against. Scout's own A/B/C tiers and scores are not in the
-feed; if a later feed exports them they are kept as `upstream_*` hints, read by
-nothing that decides.
+size of 0 — counts against. Scout's tree signals order the queue the same way:
+a seen tests directory reads earlier, an unfetched tree is neutral. Scout's
+states and rubric are kept under `upstream_*` names — `upstream_discovery`,
+`upstream_assessment`, `upstream_tier`, `upstream_score`,
+`upstream_components` — read by nothing that decides and by nothing that
+orders: Scout's tier weighs the same signals this program collects for itself,
+and reading it would count them twice. The day's report counts the snapshot's
+`discovery` and `assessment` states under *Scout's own view*, so its
+vocabulary and this program's can be compared without being confused.
+
+An observation is recorded when what Scout said changed: a new tier or a new
+discovery state is one, a rescored decimal with a new `scored_at` is not.
 
 **The legacy batch is held.** A title-only record with no payload is imported
 and kept, and held out of the daily metadata and inspection budgets. The hold
 is about the source, not the project: it is not a rejection, it is separate
 from `analysis_status`, and a new policy version does not lift it. Two things
 do: a later snapshot that carries a payload for that identity, which clears the
-hold even if the `title_only` flag was left stale; or the maintainer.
+hold even if the `title_only` flag was left stale or the discovery still says
+`retracted`; or the maintainer.
 
 ```bash
 python3 scripts/triage legacy list                    # what is held, and why
@@ -395,7 +418,7 @@ outweighs a sparse public profile. Private history is *unavailable*, not absent.
 python3 scripts/triage selftest
 ```
 
-187 tests, about four seconds, hermetic — a fake GitHub, temporary state
+195 tests, about four seconds, hermetic — a fake GitHub, temporary state
 directories, no network. They run as part of `npm test` for this repository.
 
 They cover the acceptance list in the specification: rewritten and reordered

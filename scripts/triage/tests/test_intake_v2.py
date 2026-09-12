@@ -53,6 +53,34 @@ def minimal(name: str) -> dict:
     return {"kind": "repo", "repo": name.lower(), "status": "filed", "issue_number": 123}
 
 
+def scored(name: str, *, score=8.5, tier="a", discovery="seen", assessment=None,
+           tree_tests=True, tree_source_files=12, **extra) -> dict:
+    """A row as Scout writes it since its PR 1257 (merged 11 September 2026):
+    a persisted score with its breakdown, a discovery/assessment split, tree
+    signals and a fetch stamp inside `latest`."""
+    rec = modern(name, fetched_at="2026-09-11T23:38:50Z", tree_tests=tree_tests,
+                 tree_source_files=tree_source_files, tree_fetched_at="2026-09-11T23:38:50Z")
+    rec.update({
+        "discovery": discovery,
+        "assessment": assessment or f"tier-{tier}",
+        "score": score, "tier": tier, "scored_at": "2026-09-12T04:54:44Z",
+        "components": {
+            "density": {"input": 0.167, "value": 0.5},
+            "list_penalty": {"input": False, "value": 0.0},
+            "name": {"input": None, "value": 0.0},
+            "readme": {"input": 1616, "value": 0.1616},
+            "recency": {"input": 0.3, "value": 1.9943},
+            "source": {"input": None, "value": None},
+            "stars": {"input": 2, "value": 0.016},
+            "tests": {"input": None, "value": None},
+            "topics": {"input": ["agent", "memory"], "value": 2.0},
+        },
+        "absent_components": ["tests", "source"],
+    })
+    rec.update(extra)
+    return rec
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self.h = Harness()
@@ -116,6 +144,91 @@ class HintTests(Base):
         hints = loads(self.row("tiered/one")["hints"])
         self.assertEqual((hints["upstream_tier"], hints["upstream_score"]), ("A", 97))
         self.assertNotIn("upstream_tier", loads(self.row("plain/two")["hints"]))
+
+
+class ScoredFeedTests(Base):
+    """Scout PR 1257: the score, tier and breakdown are on the row, discovery
+    is split from assessment, and `latest` carries tree signals and a fetch
+    stamp. All of it is a labelled upstream hint; none of it measures."""
+
+    def test_scored_rows_keep_score_tier_and_breakdown_as_upstream_hints(self):
+        self.ingest([scored("tiered/one")])
+        hints = loads(self.row("tiered/one")["hints"])
+        self.assertEqual(hints["upstream_score"], 8.5)
+        self.assertEqual(hints["upstream_tier"], "a")
+        self.assertEqual(hints["upstream_discovery"], "seen")
+        self.assertEqual(hints["upstream_assessment"], "tier-a")
+        self.assertEqual(hints["upstream_scored_at"], "2026-09-12T04:54:44Z")
+        self.assertEqual(hints["upstream_absent_components"], ["tests", "source"])
+        self.assertEqual(hints["upstream_components"]["tests"], {"input": None, "value": None})
+        self.assertEqual(hints["upstream_components"]["topics"]["input"], ["agent", "memory"])
+        self.assertEqual(hints["tree_tests"], True)
+        self.assertEqual(hints["tree_source_files"], 12)
+        self.assertIsNone(self.conn.execute("SELECT 1 FROM metadata").fetchone(),
+                          "Scout's score and tree signals are never measurements")
+
+    def test_a_rescore_is_not_a_new_observation_but_a_tier_change_is(self):
+        self.ingest([scored("re/scored")])
+        again = self.ingest([scored("re/scored", score=9.1, scored_at="2026-09-13T04:00:00Z")])
+        self.assertEqual(again.observations_added, 0,
+                         "Scout rescores every run; a moved decimal is not news about the project")
+        moved = self.ingest([scored("re/scored", tier="b")])
+        self.assertEqual(moved.observations_added, 1)
+        observations = loads(self.row("re/scored")["provenance"])["observations"]
+        self.assertEqual([o.get("upstream_tier") for o in observations], ["a", "b"])
+
+    def test_tree_signals_order_metadata_fetches_and_are_not_measurements(self):
+        self.ingest([
+            scored("no/tests", tree_tests=False),
+            modern("un/known"),
+            scored("has/tests", tree_tests=True),
+        ])
+        self.h.config.exploration_share = 0.0
+        queue = assess_module.metadata_queue(self.conn, self.h.config, assess_module.AssessRun(), 3)
+        self.assertEqual([row["canonical_name"] for row, _ in queue],
+                         ["has/tests", "un/known", "no/tests"],
+                         "a seen tests directory reads first, an unfetched tree is neutral")
+        self.assertIsNone(self.conn.execute("SELECT 1 FROM metadata").fetchone())
+
+    def test_a_retracted_discovery_without_payload_is_held_without_the_flag(self):
+        retracted = {"kind": "repo", "repo": "was/filed", "status": "filed", "issue_number": 5,
+                     "discovery": "retracted", "assessment": "none",
+                     "first_seen_at": "2026-09-11T04:21:44+00:00", "sources": []}
+        rebuilt = {"kind": "repo", "repo": "from/title", "status": "pending",
+                   "discovery": "title_only", "assessment": "none",
+                   "first_seen_at": "2026-09-11T04:21:44+00:00", "sources": []}
+        result = self.ingest([retracted, rebuilt, minimal("plain/one")])
+        self.assertEqual(self.row("was/filed")["source_hold"], "legacy_title_only")
+        self.assertEqual(self.row("from/title")["source_hold"], "legacy_title_only")
+        self.assertIsNone(self.row("plain/one")["source_hold"])
+        self.assertEqual(result.shapes, {"modern": 0, "legacy": 2, "minimal": 1})
+
+    def test_a_retracted_discovery_with_a_payload_is_ordinary_modern_input(self):
+        result = self.ingest([scored("found/again", discovery="retracted")])
+        row = self.row("found/again")
+        self.assertIsNone(row["source_hold"])
+        self.assertEqual(result.shapes["modern"], 1)
+        self.assertEqual(loads(row["hints"])["upstream_discovery"], "retracted")
+
+    def test_payload_fetched_at_is_the_hint_observation_time(self):
+        self.ingest([scored("stamped/one"), modern("unstamped/one")])
+        stamped = self.row("stamped/one")
+        self.assertEqual(stamped["hints_observed_at"], "2026-09-11T23:38:50Z")
+        self.assertEqual(loads(stamped["hints"])["payload_fetched_at"], "2026-09-11T23:38:50Z")
+        self.assertEqual(self.row("unstamped/one")["hints_observed_at"], "2026-09-11T04:22:43+00:00")
+
+    def test_malformed_scoring_fields_are_dropped_not_fatal(self):
+        rec = scored("odd/one", score="high", tier=7, discovery=5, assessment=["tier-a"],
+                     components="none", absent_components="tests", tree_tests="yes",
+                     tree_source_files=-1)
+        result = self.ingest([rec])
+        self.assertEqual(result.status, "complete")
+        hints = loads(self.row("odd/one")["hints"])
+        for key in ("upstream_score", "upstream_tier", "upstream_discovery", "upstream_assessment",
+                    "upstream_components", "upstream_absent_components"):
+            self.assertNotIn(key, hints, key)
+        self.assertIsNone(hints["tree_tests"])
+        self.assertIsNone(hints["tree_source_files"])
 
 
 class LegacyHoldTests(Base):
@@ -718,13 +831,30 @@ class ReportTests(Base):
         shortlist = selection_module.finalize(self.conn, self.h.config)
         report = reports.build(self.h.config, self.conn, shortlist, {}, {"status": "complete"})
         intake = report["intake"]
-        self.assertEqual(intake["source_records"], {"with_hints": 1, "legacy_title_only": 1,
-                                                    "without_hints_not_legacy": 1})
+        records = intake["source_records"]
+        self.assertEqual((records["with_hints"], records["legacy_title_only"],
+                          records["without_hints_not_legacy"]), (1, 1, 1))
         self.assertEqual(intake["holds"].get("legacy_title_only"), 1)
         self.assertEqual(intake["accumulated_identities"], 3)
         digest = reports.digest(report)
         self.assertIn("## Intake", digest)
         self.assertIn("never an atlas score", digest)
+        self.assertNotIn("passed triage", digest.lower())
+
+    def test_the_day_report_carries_scouts_own_view_of_the_snapshot(self):
+        import reports
+        retracted = {"kind": "repo", "repo": "was/filed", "status": "filed", "issue_number": 5,
+                     "discovery": "retracted", "assessment": "none", "sources": []}
+        self.ingest([scored("tiered/one"), retracted, modern("plain/two")])
+        shortlist = selection_module.finalize(self.conn, self.h.config)
+        report = reports.build(self.h.config, self.conn, shortlist, {}, {"status": "complete"})
+        records = report["intake"]["source_records"]
+        self.assertEqual(records["upstream_discovery"], {"seen": 1, "retracted": 1})
+        self.assertEqual(records["upstream_assessment"], {"tier-a": 1, "none": 1})
+        self.assertEqual(records["with_tree_signals"], 1)
+        digest = reports.digest(report)
+        self.assertIn("Scout's own view", digest)
+        self.assertIn("not a triage result", digest)
         self.assertNotIn("passed triage", digest.lower())
 
 

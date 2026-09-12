@@ -94,6 +94,12 @@ def intake_summary(connection: sqlite3.Connection, config: Config) -> dict[str, 
             "with_hints": shapes.get("modern"),
             "legacy_title_only": shapes.get("legacy"),
             "without_hints_not_legacy": shapes.get("minimal"),
+            # Scout's own states for the snapshot's rows — what it did and what
+            # its rubric said — counted so the two vocabularies can be compared,
+            # and read by nothing that decides.
+            "upstream_discovery": shapes.get("upstream_discovery") or {},
+            "upstream_assessment": shapes.get("upstream_assessment") or {},
+            "with_tree_signals": shapes.get("with_tree_signals"),
         },
         "holds": holds,
         "hold_dispositions": dispositions,
@@ -228,6 +234,12 @@ def write(config: Config, report: dict[str, Any], day: str) -> tuple[Path, Path]
     return json_path, digest_path
 
 
+def _counted(counts: dict[str, int] | None) -> str:
+    if not counts:
+        return "none recorded"
+    return ", ".join(f"{name} {n}" for name, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
+
+
 def digest(report: dict[str, Any]) -> str:
     meta = report
     entries = report.get("shortlist") or []
@@ -281,6 +293,11 @@ def digest(report: dict[str, Any]) -> str:
         add(f"- Source records: {records.get('with_hints')} carry Scout hints, "
             f"{records.get('legacy_title_only')} are the title-only legacy batch, "
             f"{records.get('without_hints_not_legacy')} have neither")
+        if records.get("upstream_discovery") or records.get("upstream_assessment"):
+            add(f"- Scout's own view: discovery {_counted(records.get('upstream_discovery'))}; "
+                f"assessment {_counted(records.get('upstream_assessment'))}; "
+                f"{records.get('with_tree_signals') or 0} rows carry its git-tree signals. "
+                f"Its assessment is its filing decision, not a triage result.")
         add(f"- Held from automatic intake: {holds.get('legacy_title_only', 0)} legacy identities; "
             f"{holds.get('released', 0)} released by the maintainer")
         add(f"- Gaps: {intake.get('identities_without_hints')} identities have no Scout hints; of the "

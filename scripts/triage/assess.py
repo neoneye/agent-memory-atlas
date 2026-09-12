@@ -225,6 +225,13 @@ def hint_priority(hints: dict[str, Any]) -> int:
     readme = hints.get("readme_bytes")
     if readme is not None:
         score += 5 if readme > 0 else -5
+    # Scout's one git-tree listing saw a tests directory or test-named file, or
+    # saw none. It is the third gate's subject, so it is worth reading first —
+    # as an observation. Scout's own score and tier, which weigh the same
+    # signal, are deliberately not read here.
+    tests = hints.get("tree_tests")
+    if tests is not None:
+        score += 10 if tests else -5
     return score
 
 

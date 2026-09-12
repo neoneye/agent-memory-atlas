@@ -75,6 +75,12 @@ class ImportResult:
     # modern: a usable `latest` payload; legacy: `title_only` with none;
     # minimal: neither, the oldest shape, which stays ordinary input.
     shapes: dict[str, int] = field(default_factory=lambda: {"modern": 0, "legacy": 0, "minimal": 0})
+    # What Scout itself says about the snapshot's rows, counted, never acted on:
+    # its `discovery` and `assessment` states, and how many rows carry its
+    # cheap git-tree signals.
+    upstream_discovery: dict[str, int] = field(default_factory=dict)
+    upstream_assessment: dict[str, int] = field(default_factory=dict)
+    with_tree_signals: int = 0
     observations_added: int = 0
     holds_applied: int = 0
     holds_cleared: int = 0
@@ -264,6 +270,11 @@ def parse(snapshot: Snapshot, *, quarantine_cap: int, excerpt_chars: int) -> Imp
         hints = source_hints(record, excerpt_chars)
         shape = record_shape(record, hints)
         result.shapes[shape] += 1
+        for key, counter in (("upstream_discovery", result.upstream_discovery),
+                             ("upstream_assessment", result.upstream_assessment)):
+            if key in hints:
+                counter[hints[key]] = counter.get(hints[key], 0) + 1
+        result.with_tree_signals += int(hints["tree_tests"] is not None)
         result.records.append((key, raw_name, _provenance(record, hints), hints, shape))
 
     if result.lines_total and result.repo_records == 0:
@@ -286,9 +297,23 @@ def parse(snapshot: Snapshot, *, quarantine_cap: int, excerpt_chars: int) -> Imp
 # may put a description or stars at the top level; that is accepted as a
 # labelled fallback and never preferred over `latest`.
 #
+# Since Scout's PR 1257 (merged 11 September 2026) a row also says what Scout
+# did and what its own scoring said. `discovery` is one of `seen`, `filed`,
+# `retracted`, `title_only`; `assessment` is `none`, `tier-a`, `tier-b`,
+# `tier-c` or `atlas-known`; `score`, `tier`, `components`, `absent_components`
+# and `scored_at` are its arithmetic rubric, rescored on every Scout run from
+# the cached payload. Inside `latest`, `fetched_at` is when Scout last read the
+# repository from GitHub, and `tree_tests`, `tree_source_files` and
+# `tree_fetched_at` are what one git-tree listing showed it. Scout's README
+# says a retracted or title-only discovery never means the atlas looked at or
+# rejected the project, and nothing here reads it that way.
+#
 # All of it is a hint: another program's observation of unknown age. None of it
 # becomes a measured fact, feeds a gate, or enters the atlas's score. It may
-# change which repository gets fetched first, and nothing else.
+# change which repository gets fetched first, and nothing else. Scout's own
+# score and tier are kept under `upstream_*` names and are not read even for
+# that ordering: the atlas's reading order comes from what Scout observed, not
+# from what Scout concluded.
 
 HINT_LIST_CAP = 20
 HINT_ITEM_CHARS = 80
@@ -318,13 +343,72 @@ def _str_list(value, cap_items: int, cap_chars: int) -> list[str] | None:
     return out[:cap_items]
 
 
+def _bool_or_none(value) -> bool | None:
+    return value if isinstance(value, bool) else None
+
+
 def usable_latest(record: dict) -> dict | None:
     latest = record.get("latest")
     if not isinstance(latest, dict):
         return None
     recognised = {"description", "stars", "pushed_at", "topics", "readme_bytes",
-                  "html_url", "matched_terms", "license", "source"}
+                  "html_url", "matched_terms", "license", "source", "fetched_at", "tree_tests"}
     return latest if recognised & set(latest) else None
+
+
+UPSTREAM_STATE_FIELDS = {
+    # top-level field: (cap in characters). All strings; a wrong type is dropped.
+    "discovery": 20, "assessment": 20, "tier": 20, "score_version": 40, "scoring_version": 40,
+    "scored_at": 40, "refresh_attempted_at": 40, "refresh_error": 80,
+}
+COMPONENT_CAP = 20
+
+
+def _component(value) -> dict | None:
+    """One `{input, value}` entry of Scout's breakdown, bounded. `value` is a
+    number or null; `input` is whatever the component read — a number, a flag,
+    a string or a list of strings — kept only in those shapes."""
+    if not isinstance(value, dict):
+        return None
+    number = value.get("value")
+    if isinstance(number, bool) or not isinstance(number, (int, float)) and number is not None:
+        return None
+    raw = value.get("input")
+    if raw is None or isinstance(raw, (bool, int, float)):
+        put = raw
+    elif isinstance(raw, str):
+        put = truncate(raw, HINT_ITEM_CHARS)
+    elif isinstance(raw, list):
+        put = _str_list(raw, HINT_LIST_CAP, HINT_ITEM_CHARS)
+    else:
+        put = None
+    return {"input": put, "value": number}
+
+
+def upstream_state_hints(record: dict, latest: dict | None) -> dict:
+    """Scout's own states and rubric, as `upstream_*` hints. Absent when Scout
+    did not write them; a field of the wrong type is dropped, not coerced."""
+    hints: dict = {}
+    for key, cap in UPSTREAM_STATE_FIELDS.items():
+        value = _str_or_none(record.get(key, (latest or {}).get(key)), cap)
+        if value is not None:
+            hints[f"upstream_{key}"] = value
+    score = record.get("score", (latest or {}).get("score"))
+    if isinstance(score, (int, float)) and not isinstance(score, bool):
+        hints["upstream_score"] = score
+    components = record.get("components")
+    if isinstance(components, dict):
+        kept = {}
+        for name in sorted(components)[:COMPONENT_CAP]:
+            entry = _component(components[name])
+            if isinstance(name, str) and entry is not None:
+                kept[truncate(name, 40)] = entry
+        if kept:
+            hints["upstream_components"] = kept
+    absent = _str_list(record.get("absent_components"), COMPONENT_CAP, 40)
+    if absent is not None:
+        hints["upstream_absent_components"] = absent
+    return hints
 
 
 def source_hints(record: dict, excerpt_chars: int) -> dict:
@@ -345,6 +429,15 @@ def source_hints(record: dict, excerpt_chars: int) -> dict:
         # A size Scout cached when it looked; not a fetched artifact, and not
         # proof that a README exists now.
         "readme_bytes": _int_or_none(origin.get("readme_bytes")),
+        # When Scout itself last read the repository from GitHub. A Reddit find
+        # has none until Scout's refresh pass reaches it.
+        "payload_fetched_at": _str_or_none(latest.get("fetched_at"), 40) if latest else None,
+        # One git-tree listing as Scout saw it: a tests directory or test-named
+        # file, and a capped count of source files two levels deep. Cheap
+        # observations, not the atlas's inspection, and read only for order.
+        "tree_tests": _bool_or_none(latest.get("tree_tests")) if latest else None,
+        "tree_source_files": _int_or_none(latest.get("tree_source_files")) if latest else None,
+        "tree_fetched_at": _str_or_none(latest.get("tree_fetched_at"), 40) if latest else None,
         "license": _str_or_none(origin.get("license"), 40),
         "matched_terms": _str_list(origin.get("matched_terms"), HINT_LIST_CAP, HINT_ITEM_CHARS),
         "sources": _str_list(record.get("sources"), 10, 40),
@@ -354,21 +447,20 @@ def source_hints(record: dict, excerpt_chars: int) -> dict:
         "upstream_first_seen_at": _str_or_none(record.get("first_seen_at"), 40),
         "upstream_last_seen_at": _str_or_none(record.get("last_seen_at"), 40),
     }
-    # Scout computes an A/B/C tier and a score at runtime and, at the pin this
-    # was written against, does not export them. If a later feed does, they are
-    # kept as versioned upstream hints — named apart from the atlas's score and
-    # read by no gate.
-    for key in ("tier", "score", "score_version", "scoring_version"):
-        value = record.get(key, (latest or {}).get(key))
-        if isinstance(value, (str, int, float)) and not isinstance(value, bool):
-            hints[f"upstream_{key}"] = value if not isinstance(value, str) else truncate(value, 40)
+    hints.update(upstream_state_hints(record, latest))
     return hints
+
+
+# Discovery states that mean the row was rebuilt from an issue title or
+# withdrawn by Scout, so without a payload it is the same source quality as
+# the flagged legacy batch.
+LEGACY_DISCOVERY = ("retracted", "title_only")
 
 
 def record_shape(record: dict, hints: dict) -> str:
     if hints["has_latest"]:
         return "modern"
-    if hints["title_only"] is True:
+    if hints["title_only"] is True or hints.get("upstream_discovery") in LEGACY_DISCOVERY:
         return "legacy"
     return "minimal"
 
@@ -376,11 +468,15 @@ def record_shape(record: dict, hints: dict) -> str:
 # Fields that make two observations different. Excluded on purpose: the local
 # ingestion time, the line number, and Scout's own last-seen time, which moves
 # every time Scout rewrites its index without anything about the repository
-# changing.
+# changing. Also excluded: Scout's score and `scored_at`, which it recomputes on
+# every run from the cached payload — a moved decimal is not news about the
+# project. Its tier and its discovery and assessment states are few-valued
+# and change only when Scout decided something, so they are in.
 FINGERPRINT_FIELDS = (
     "title_only", "has_latest", "description", "stars", "pushed_at", "topics",
     "readme_bytes", "license", "matched_terms", "sources", "source_urls", "status",
     "issue_number", "upstream_first_seen_at",
+    "upstream_discovery", "upstream_assessment", "upstream_tier", "tree_tests", "tree_source_files",
 )
 
 
@@ -403,17 +499,22 @@ def _provenance(record: dict, hints: dict) -> dict:
         "upstream_first_seen_at": hints["upstream_first_seen_at"],
         "hint_stars": hints["stars"],
         "hint_pushed_at": hints["pushed_at"],
+        "upstream_discovery": hints.get("upstream_discovery"),
+        "upstream_assessment": hints.get("upstream_assessment"),
+        "upstream_tier": hints.get("upstream_tier"),
     }
 
 
 # --- the legacy hold --------------------------------------------------------
 #
 # The retracted initial batch (Scout issue 1256) arrives as `title_only: true`
-# with no payload. Those identities are imported and kept, and held out of the
-# ordinary daily metadata and inspection budgets. The hold is about the source,
-# not the project: it is not a rejection, it is separate from `analysis_status`,
-# and a policy-version change does not lift it — only a usable payload in a
-# later snapshot, or the maintainer, does.
+# with no payload — and, since Scout's PR 1257, as `discovery: retracted`; a
+# row Scout rebuilt from a title without an issue is `discovery: title_only`.
+# Either marks the shape as legacy. Those identities are imported and kept, and
+# held out of the ordinary daily metadata and inspection budgets. The hold is
+# about the source, not the project: it is not a rejection, it is separate from
+# `analysis_status`, and a policy-version change does not lift it — only a
+# usable payload in a later snapshot, or the maintainer, does.
 
 HOLD = "legacy_title_only"
 RELEASED = "released"
@@ -535,7 +636,11 @@ def run(config: Config, connection: sqlite3.Connection, client: Client | None) -
         for key, raw_name, provenance, hints, shape in parsed.records:
             candidate_id, is_new, added = upsert(
                 connection, raw_name, provenance, hints=hints,
-                hints_observed_at=hints.get("upstream_last_seen_at") or hints.get("upstream_first_seen_at"),
+                # Scout's own GitHub fetch stamp dates the payload best; its
+                # sighting times are the fallback for rows without one.
+                hints_observed_at=(hints.get("payload_fetched_at")
+                                   or hints.get("upstream_last_seen_at")
+                                   or hints.get("upstream_first_seen_at")),
             )
             parsed.observations_added += int(added)
             if is_new:
@@ -563,7 +668,10 @@ def run(config: Config, connection: sqlite3.Connection, client: Client | None) -
                 parsed.repo_records, parsed.other_records,
                 parsed.malformed + parsed.invalid_names, parsed.imported_new, parsed.duplicates,
                 dumps(parsed.quarantine) if parsed.quarantine else None,
-                snapshot.upstream_commit, snapshot.verification, dumps(parsed.shapes),
+                snapshot.upstream_commit, snapshot.verification,
+                dumps({**parsed.shapes, "upstream_discovery": parsed.upstream_discovery,
+                       "upstream_assessment": parsed.upstream_assessment,
+                       "with_tree_signals": parsed.with_tree_signals}),
             ),
         )
     parsed.upstream_commit = snapshot.upstream_commit
