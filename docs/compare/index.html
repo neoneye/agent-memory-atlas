@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 37
+<li><strong>Correction is the phase that goes unbuilt.</strong> 38
 systems of 434 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-thirty-seven tombstones, one hundred and eighty-one negative-eval suites
+thirty-eight tombstones, one hundred and eighty-one negative-eval suites
 — are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Thirty-seven of four hundred and
+everything can overwrite or supersede. Thirty-eight of four hundred and
 thirty-four systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -3949,26 +3949,31 @@ it edits the governed file and consulted by nothing, which is one lookup
 short of a rejected-value tombstone.</p>
 <p><strong><a href="../systems/sage-memory/">SAGE</a> is the family's
 admission-by-vote store, and its status field withholds a memory rather
-than ranking it down.</strong> Apache-2.0, 1,559 commits since 2 March
-2026 by nine authors, 213,143 lines of Go beside 4,752 test functions,
+than ranking it down.</strong> Apache-2.0, 1,569 commits since 2 March
+2026 by nine authors, 213,191 lines of Go beside 4,754 test functions,
 on a vendored CometBFT chain. A submitted memory is written as
 <code>proposed</code> and every recall path hard-codes a committed
 status filter, so a memory nothing has voted on is not ranked low — it
 is absent. Confidence decays on an exponential curve with a
 corroboration bonus, evaluated at read time, and the floor is applied
 across the whole candidate set <em>before</em> the top-K trim, which is
-the ordering most implementations get wrong. Five marks. Two things need
-saying plainly. The README's opening line calls this BFT consensus
-validation; on the default personal install the genesis has one
-validator and the vote is three string heuristics — a duplicate check, a
-length check with eight hardcoded phrases, and a confidence check —
-which the project itself states 130 lines below the headline, adding
-that block inclusion is not memory acceptance. And the papers' priority
-commit is not an ancestor of this history: comparing trees, it holds 41
-files and 6,609 lines of experiment pipeline and run records that the
-published history does not, removed for a licensing reason the
-repository states, which leaves two of the four papers' statistics
-unreproducible from the tree.</p>
+the ordering most implementations get wrong. Six marks. The sixth is the
+voter's dedup lookup, which matches any other row that has left
+<code>proposed</code>, deprecated rows included, so a memory the quorum
+rejected or an operator forgot keeps its exact bytes out until a
+reinstate; from v10.1 until 12 September 2026 the predicate was
+committed-only, because the form before it matched the candidate's own
+row and deprecated every memory on arrival, and the repair excludes that
+one row instead of every unaccepted one. Two things need saying plainly.
+On the default personal install the genesis has one validator and the
+vote is three string heuristics — a duplicate check, a length check with
+eight hardcoded phrases, and a confidence check — which the README's
+opening line states beside its consensus claim, adding further down that
+block inclusion is not memory acceptance. And two of the four papers
+rest on an experiment pipeline excluded from the tree for a licensing
+reason the papers index states; the commit that held it, 41 files and
+6,609 lines, is fetchable by sha and is not an ancestor of the published
+history.</p>
 <p><strong><a href="../systems/plur/">PLUR</a> is the family's
 plain-text engram store, and it carries six of seven marks.</strong>
 Apache-2.0, 927 commits since 19 March 2026 by thirteen authors, 66,632
@@ -19891,10 +19896,11 @@ which is flushed at Commit through what the code calls the only path
 that writes memories to the offchain store</td>
 <td>No edit. A challenge transaction moves a memory to
 <code>challenged</code> or <code>deprecated</code> and a reinstate
-reverses it; deprecation leaves the row in place with a timestamp. A
-cleanup pass can evict memories whose decayed confidence falls below a
-threshold, and it is disabled by default and requires an operator and an
-explicit dry-run flag</td>
+reverses it; deprecation leaves the row in place with a timestamp, and
+the voter's dedup refuses the deprecated memory's exact bytes under any
+new id until a reinstate. A cleanup pass can evict memories whose
+decayed confidence falls below a threshold, and it is disabled by
+default and requires an operator and an explicit dry-run flag</td>
 <td>A required domain tag validated on write against a registered domain
 list, filtered in the query, and authorized per record against the
 caller's credential on the way out; agents may hold an owned home
@@ -19906,24 +19912,27 @@ explicit policy</td>
 <td>A voter loop polling every two seconds for proposed memories to vote
 on, the CometBFT block loop, federation sync, and an opt-in cleanup
 pass</td>
-<td>Four statuses gating readability, a caller-asserted confidence
+<td>Four produced statuses gating readability, a content-hash dedup that
+keeps a deprecated memory's bytes out, a caller-asserted confidence
 decaying on an exponential curve with a corroboration bonus, a
 per-domain decay rate, and a validator score table</td>
 <td>A status ladder that genuinely withholds — a memory is unreadable
 until something votes it in; a decay floor applied across the whole
 candidate set before the top-K trim rather than after; a node that
 re-embeds rather than trusting a caller's vector; consensus-first write
-ordering with a single documented path into the serving store; 4,752
-test functions</td>
+ordering with a single documented path into the serving store; a dedup
+that excludes the candidate's own row rather than every unaccepted row;
+4,754 test functions</td>
 <td>On the default install the vote is one validator key running three
-string heuristics, and the README's headline calls that BFT consensus
-while the qualification sits 130 lines below; the dedup lookup is
-committed-only, so a rejected memory does not block the identical bytes
-returning; the MCP client silently drops a write at 60% word overlap
-before the chain sees it; the papers' priority commit is not an ancestor
-of this history and the experiment material it contained was removed;
-<code>access_logs</code>, the lifecycle state machine and the record
-validator all have no production caller</td>
+string heuristics, which the README's opening line states beside its
+consensus claim; the dedup is keyed on exact bytes, is a node-local
+opinion that fails open on a store error, admits two identical proposals
+in flight at once, and does not run on the co-commit path; the MCP
+client silently drops a write at 60% word overlap before the chain sees
+it; two of the four papers rest on an experiment pipeline excluded from
+the tree, which the papers index states; <code>access_logs</code>, the
+lifecycle state machine, the <code>validated</code> status and the
+record validator all have no production caller</td>
 </tr>
 <tr>
 <td><code>sage-novelty-gate</code></td>
@@ -22774,7 +22783,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>37 of 434:</em> <a
+<p><em>38 of 434:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -22804,6 +22813,7 @@ href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/rck/"><code>rck</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
+href="../systems/sage-memory/"><code>sage-memory</code></a>, <a
 href="../systems/slowave/"><code>slowave</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -30406,9 +30416,10 @@ href="https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f
 manifest can register), two dependency manifests inside the seven-day
 cooldown, nothing installed or run</li>
 <li><a href="https://github.com/l33tdawg/sage">l33tdawg/sage</a> at <a
-href="https://github.com/l33tdawg/sage/commit/5c6b32e51586a9e8b9153e827dffa4491916e8c1"><code class="commit-id" title="5c6b32e51586a9e8b9153e827dffa4491916e8c1">5c6b32e5…</code></a>
+href="https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f"><code class="commit-id" title="36b2252f11b540a6a3f275f2dced56466b45280f">36b2252f…</code></a>
 — read only; two auto-run surfaces, five build-time execution points,
-five unpinned surfaces, nothing installed or run</li>
+five unpinned surfaces, six manifests inside the cooldown, nothing
+installed or run</li>
 <li><a href="https://github.com/plur-ai/plur">plur-ai/plur</a> at <a
 href="https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b"><code class="commit-id" title="d005139ee82eb124466472190302a9bc1770693b">d005139e…</code></a>
 — read only; three auto-run surfaces (two plugin manifests and a hooks
@@ -30732,6 +30743,20 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h3 id="known-limitations">Known Limitations</h3>
 <ul>
+<li><strong>A claim about two committed benchmark files was true of one
+of them.</strong> The <a href="../systems/sage-memory/">SAGE</a> report
+said the documented make targets reproduce neither LongMemEval result
+file <em>"because they pass no expansion parameter while both records
+carry one"</em>. The reranked v7.1 record carries
+<code>expand_n: 3</code>; the 0.9053 record has no expansion field at
+all, written by a harness version that predates the key. So the two runs
+differ in expansion as well as reranking, and the recall drop between
+them was never a reranker ablation — which the project's own
+<code>bench/longmemeval/README.md</code> states from 12 September 2026.
+Published 2026-09-08, corrected 2026-09-12. It was a positive claim
+generalised from one file to two, and the appendix's search list, which
+grounds the report's absence claims, had nothing that would have re-run
+it.</li>
 <li><strong>Terminal-Bench's marker and archive were given more
 evidential weight than they support.</strong> Corrected 2026-09-09: the
 <a href="../benchmarks/">benchmarks page</a> described ninety-one
@@ -35880,6 +35905,23 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-12</strong> — <strong>A criticism written as a
+mechanism description converts into a mark when the mechanism changes;
+one written as a verdict has to be re-derived.</strong> SAGE's first
+reading withheld <code>tombstone</code> in a paragraph that named the
+lookup, quoted its predicate, explained the bug that narrowed it and
+said what the narrowing cost — <em>"a memory the node rejected does not
+stop the identical bytes being submitted again."</em> Four days later
+the upstream widened the predicate to every other non-proposed row, and
+that paragraph was the evidence line with two words changed. The same
+re-read found the opposite failure: <em>"both records carry"</em> an
+expansion parameter was a positive claim generalised from one committed
+file to two, one of them did not, and the appendix convention — record
+the command behind every <em>no X</em> — had nothing that would re-run a
+sentence of the shape <em>both files have X</em>. Absence claims get a
+search because they are the residue of one; a positive claim about the
+contents of more than one artifact needs the same treatment, since it is
+an absence claim about the difference between them.</p>
 <p><strong>2026-09-10</strong> — <strong>A first reading can credit a
 mark the code documents itself as not having, and only a re-read of the
 mark's own evidence finds it.</strong> Two withdrawals in one round,

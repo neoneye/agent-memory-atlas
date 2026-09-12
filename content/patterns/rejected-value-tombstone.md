@@ -7,7 +7,7 @@ page_kind: pattern
 stance: advocacy
 ---
 
-> **This is not an established best practice.** Thirty-seven systems of four hundred and thirty-four
+> **This is not an established best practice.** Thirty-eight systems of four hundred and thirty-four
 > carry it, and almost no two arrived the same way: one invented it under
 > adversarial pressure, one adopted it from the first, one arrived at a weaker
 > form independently, one was driven to it by a regulation, several built it only
@@ -130,7 +130,7 @@ enough.
 
 ## Seen in the atlas
 
-**Thirty-seven systems of 434 in the atlas have this.** That is still the most
+**Thirty-eight systems of 434 in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 
 [Verel](../../systems/verel/) uses rejected memory records as a correctness
@@ -510,7 +510,7 @@ write completes?* — and re-derived report by report in
 
 | Kind | Systems | What happens on re-assertion |
 | --- | --- | --- |
-| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/) | The write is refused. No row, or no activation |
+| **Consulted** — the form this page argues for | [memsem](../../systems/memsem/), [Perseus Vault](../../systems/perseus-vault/), [Universal Memory Engine](../../systems/universal-memory-engine/), [RainBox](../../systems/rainbox/), [Verel](../../systems/verel/), [Noosphere](../../systems/noosphere/), [breadcrumbs](../../systems/breadcrumbs/), [Memory Compiler](../../systems/memory-compiler/), [Agent Memory Doctrine](../../systems/agent-memory-doctrine/), [Hippo Memory](../../systems/hippo-memory/), [Memmy](../../systems/memmy-agent/), [plur1bus](../../systems/plur1bus/), [Sonder Runtime](../../systems/sonder-runtime/), [Open Second Brain](../../systems/open-second-brain/), [Nova AI](../../systems/nova-ai/), [remem-mcp](../../systems/remem-mcp/), [aimee](../../systems/aimee/), [fireweed-mcp](../../systems/fireweed-mcp/), [NexusMem](../../systems/nexusmem/), [RCK](../../systems/rck/), [Veracium](../../systems/veracium/), [OpenMake LLM](../../systems/openmake-llm/), [Argos](../../systems/argos/), [no_human](../../systems/no-human/), [SAGE](../../systems/sage-memory/) | The write is refused. No row, or no activation |
 | **Collided** — the key stays occupied | [Mnemosyne](../../systems/mnemosyne/), [Wenlan](../../systems/wenlan/), [memoir-cli](../../systems/memoir-cli/) | The write lands *on* the rejected row, which stays rejected. Accidental in Mnemosyne, held in place by a missing filter and pinned by no test; deliberate in Wenlan, where the unique key is the value and the no-op is a named outcome the caller handles |
 | **Suppressed** — the read path hides it | [Provem](../../systems/provem/), [OmniMem](../../systems/omnimem/) | A copy enters the store and is stopped on the way out — in OmniMem by a suppression set matched as a substring of content, written by hand or by an effort-4 abandonment |
 | **Hybrid** | [Daimon](../../systems/daimon/) | All three at once: collided by content-addressed id, suppressed on every read, consulted by one emitter |
@@ -972,6 +972,17 @@ for being wrong does not record it, and recording it does not erase it.
   in a temporary directory, and asserts that a re-asserted rejected definition
   changes no status and creates no second sense. A tombstone is the one mechanism
   whose silent failure looks exactly like success.
+- **Run the lookup while the candidate is already in the table.** A tombstone
+  consulted after the row is inserted and before it is admitted can match the
+  candidate itself. SAGE's v10.1 did: the dedup predicate was `status !=
+  'deprecated'`, the voter ran with the candidate sitting there as `proposed`,
+  and on a single-validator chain every memory was rejected as a duplicate of
+  itself and deprecated on arrival. The first repair narrowed the lookup to
+  committed rows and deleted the tombstone with the bug; the second, on
+  12 September 2026, excludes the candidate's own id and ignores other
+  in-flight candidates, so two identical proposals cannot veto each other.
+  Assert all three: own row never matches, another proposed row never blocks,
+  a deprecated row always does.
 - Correct A to B, then try to reintroduce A through a different source.
 - Verify scope isolation between users, projects, and agents.
 - Verify trusted override and tombstone reactivation are audited.
