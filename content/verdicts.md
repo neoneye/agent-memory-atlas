@@ -1193,6 +1193,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need it commercially. The licence forbids it outright, and the memory is wired into a desktop app with no seam to lift it through.
 
 ### [`openyak`](../systems/openyak/)
+- Status: **the subsystem is gone upstream.** The v2 rewrite replaced the Python backend with a Rust core driving Claude Code and Codex over ACP — 277,040 deletions — and deleted all nine memory files. What replaced it persists a transcript and per-agent session routing, not a memory. The report stays pinned where the code is real; everything below describes that commit.
 - Best idea: the update queue is debounced by **workspace path rather than session id**, with a docstring saying why — two sessions in one directory collapse into a single refresh instead of racing to overwrite each other's document.
 - Biggest risk: every write is a full overwrite of the only copy, and the guards are a ceiling with no floor. An empty rewrite is refused; a three-line rewrite replacing two hundred lines is written silently, and the 200-line cap truncates the tail with no marker.
 - Most reusable component: the three write guards and the instruct-then-verify pattern — a prompt that bans Markdown in eight clauses and a parser that strips code fences anyway.

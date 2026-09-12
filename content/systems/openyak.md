@@ -9,11 +9,14 @@ source_url: https://github.com/openyak/openyak
 archive_name: "openyak--openyak"
 revision: bd88bff824c29fc48024eb19b7435cb2c065e432
 revision_url: https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432
-analyzed_at: 2026-07-31
+analyzed_at: 2026-09-12
 capabilities: "scope_enforced, human_review"
-stack_storage: ""
+capability_evidence:
+  scope_enforced: "the workspace memory document — every read, including prompt injection | backend/app/memory/workspace_memory_storage.py:20-40,:44-51,:58-65,:76-89, backend/app/memory/injection.py:19-30 | `WorkspaceMemory.workspace_path` is unique per row and every query filters on it: `select(...).where(WorkspaceMemory.workspace_path == key)` in the getter, the row fetch and the update path alike, with `key` produced by `_normalize_path`, which converts backslashes, resolves `.` and `..` and strips trailing slashes so the same physical directory maps to the same key however the caller spelled it. The injection path that builds the `<workspace-memory>` section of the system prompt goes through the same getter, so the boundary holds where it matters — what reaches the model. Verified at this pin, in a subsystem the upstream has since deleted | none — no committed case asserts one workspace's document stays out of another's prompt"
+  human_review: "the workspace memory document — the REST surface over it | backend/app/api/workspace_memory.py:34,:45,:63,:77,:89,:162 | six endpoints over the document a person can reach: `GET /list` and `GET` to inspect, `PUT` to rewrite it whole, `DELETE` to remove it, `POST /refresh` to force a regeneration and `POST /export`. Because the memory is one 200-line Markdown document rather than a set of records, the editing surface is the whole memory, so a person reviewing what the model wrote edits the document and the next rewrite starts from what they left. That is review by authorship rather than by approval — nothing is held pending a decision, and the rewrite is not gated on one. Verified at this pin, in a subsystem the upstream has since deleted | none"
+stack_storage: "sqlite"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "One row per workspace directory holding a free-form plain-text document capped at 200 lines"
   storage: "A single SQLAlchemy table with a unique index on the normalised workspace path"
@@ -29,6 +32,22 @@ matrix:
 ---
 
 ## 1. Executive Summary
+
+> **The subsystem this report describes no longer exists upstream.** On
+> [`71c384cbdf23996bf4ba854007bc360524a6790a`](https://github.com/openyak/openyak/commit/71c384cbdf23996bf4ba854007bc360524a6790a), "OpenYak v2:
+> Project → Task → Chat workbench driving Claude Code and Codex over ACP", the
+> project replaced its Python backend with a Rust core and an Electron app —
+> 1,463 files changed, 8,624 insertions and 277,040 deletions — and every file
+> named in this report's appendix was deleted, 859 lines across nine files. What
+> the Rust core persists instead is a transcript: `core/src/store.rs` is a
+> "SQLite transcript store: Projects, Tasks, Messages, and the per-(task, agent)
+> runtime state that makes agent switching work", and every other occurrence of
+> the word *memory* in it is `Connection::open_in_memory()`. There is no
+> workspace document, no rewrite queue and no injection path at the current head.
+> This report stays pinned to
+> [`bd88bff824c29fc48024eb19b7435cb2c065e432`](https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432),
+> where the code it describes is real and still reachable, and every claim below
+> is about that commit.
 
 OpenYak is a desktop agent platform — roughly 90,000 lines of Python on the
 backend — whose memory is 859 lines and one idea: **each workspace directory gets
@@ -393,5 +412,12 @@ honest signal of the intended scale.
 **Licence** — `LICENSE` (Apache-2.0).
 
 ## History
+
+**2026-09-12** — re-read against the upstream head, `ab052e4cd4a94d2432a20b5fc433e80ce8bdc698`, 50 commits past this report's pin, and **not re-pinned**. The memory subsystem was removed wholesale in the v2 rewrite (`71c384cbdf23996bf4ba854007bc360524a6790a`): 1,463 files changed, 277,040 deletions, the Python backend replaced by a Rust core and an Electron app, and all nine files this report's appendix names deleted. The replacement persists a transcript and per-agent session routing, not a memory. Re-pinning would point every section of this report at a tree that does not contain the code it describes, so `revision` stays where it is and section 1 now opens with the removal.
+
+Both marks were re-verified at the pin rather than carried forward, and both hold: `workspace_path` is filtered on every read including the prompt-injection path, under a normaliser that maps a directory to one key however it was spelled; and six REST endpoints let a person inspect, rewrite, delete, refresh and export the document. Evidence records were written for both, which this report predated. `stack_source` is promoted from `seeded` to `reviewed` and `stack_storage` filled as `sqlite` — the backend ran `sqlite+aiosqlite` — with `stack_retrieval` left empty because the document is injected whole and nothing retrieves.
+
+Screened at the head before reading it: no auto-run surface, no build-time execution path, no dependency surface inside the cooldown, one unpinned manifest in the Electron app. The screening ledger record is left alone; it is keyed to the pinned revision, which has not moved.
+
 
 **2026-07-31** — [`bd88bff824c29fc48024eb19b7435cb2c065e432`](https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432) — first reading.

@@ -117,7 +117,7 @@ different memory system entirely.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-12</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openyak--openyak" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -141,6 +141,26 @@ different memory system entirely.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
+<blockquote>
+<p><strong>The subsystem this report describes no longer exists
+upstream.</strong> On <a
+href="https://github.com/openyak/openyak/commit/71c384cbdf23996bf4ba854007bc360524a6790a"><code class="commit-id" title="71c384cbdf23996bf4ba854007bc360524a6790a">71c384cb…</code></a>,
+"OpenYak v2: Project → Task → Chat workbench driving Claude Code and
+Codex over ACP", the project replaced its Python backend with a Rust
+core and an Electron app — 1,463 files changed, 8,624 insertions and
+277,040 deletions — and every file named in this report's appendix was
+deleted, 859 lines across nine files. What the Rust core persists
+instead is a transcript: <code>core/src/store.rs</code> is a "SQLite
+transcript store: Projects, Tasks, Messages, and the per-(task, agent)
+runtime state that makes agent switching work", and every other
+occurrence of the word <em>memory</em> in it is
+<code>Connection::open_in_memory()</code>. There is no workspace
+document, no rewrite queue and no injection path at the current head.
+This report stays pinned to <a
+href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432"><code class="commit-id" title="bd88bff824c29fc48024eb19b7435cb2c065e432">bd88bff8…</code></a>,
+where the code it describes is real and still reachable, and every claim
+below is about that commit.</p>
+</blockquote>
 <p>OpenYak is a desktop agent platform — roughly 90,000 lines of Python
 on the backend — whose memory is 859 lines and one idea: <strong>each
 workspace directory gets one plain-text document, and an LLM rewrites it
@@ -492,6 +512,34 @@ debounce is, which is configuration this report did not resolve.</li>
 <code>backend/tests/test_session/test_prompt_assembler.py</code>.</p>
 <p><strong>Licence</strong> — <code>LICENSE</code> (Apache-2.0).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — re-read against the upstream head,
+<code class="commit-id" title="ab052e4cd4a94d2432a20b5fc433e80ce8bdc698">ab052e4c…</code>, 50 commits past
+this report's pin, and <strong>not re-pinned</strong>. The memory
+subsystem was removed wholesale in the v2 rewrite
+(<code class="commit-id" title="71c384cbdf23996bf4ba854007bc360524a6790a">71c384cb…</code>): 1,463 files
+changed, 277,040 deletions, the Python backend replaced by a Rust core
+and an Electron app, and all nine files this report's appendix names
+deleted. The replacement persists a transcript and per-agent session
+routing, not a memory. Re-pinning would point every section of this
+report at a tree that does not contain the code it describes, so
+<code>revision</code> stays where it is and section 1 now opens with the
+removal.</p>
+<p>Both marks were re-verified at the pin rather than carried forward,
+and both hold: <code>workspace_path</code> is filtered on every read
+including the prompt-injection path, under a normaliser that maps a
+directory to one key however it was spelled; and six REST endpoints let
+a person inspect, rewrite, delete, refresh and export the document.
+Evidence records were written for both, which this report predated.
+<code>stack_source</code> is promoted from <code>seeded</code> to
+<code>reviewed</code> and <code>stack_storage</code> filled as
+<code>sqlite</code> — the backend ran <code>sqlite+aiosqlite</code> —
+with <code>stack_retrieval</code> left empty because the document is
+injected whole and nothing retrieves.</p>
+<p>Screened at the head before reading it: no auto-run surface, no
+build-time execution path, no dependency surface inside the cooldown,
+one unpinned manifest in the Electron app. The screening ledger record
+is left alone; it is keyed to the pinned revision, which has not
+moved.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432"><code class="commit-id" title="bd88bff824c29fc48024eb19b7435cb2c065e432">bd88bff8…</code></a>
 — first reading.</p>
