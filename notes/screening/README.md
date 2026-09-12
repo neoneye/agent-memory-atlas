@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 131 |
+| Repositories with an auto-run surface (`RUNS`) | 130 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 164 |
 | Repositories with build-time execution (`EXEC`) | 242 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -110,7 +110,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
-| [`neko`](../../content/systems/neko.md) | `.gitmodules` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`neurakeep`](../../content/systems/neurakeep.md) | `server.json` |
 | [`neuron`](../../content/systems/neuron.md) | `.claude/settings.json` |

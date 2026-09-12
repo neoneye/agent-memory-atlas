@@ -7,13 +7,17 @@ page_kind: system
 source_name: "Project-N-E-K-O/N.E.K.O"
 source_url: https://github.com/Project-N-E-K-O/N.E.K.O
 archive_name: "Project-N-E-K-O--N.E.K.O"
-revision: 6a3d4beb7425261d01eb08034139d87bec03b8b5
-revision_url: https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb08034139d87bec03b8b5
-analyzed_at: 2026-07-29
+revision: b51d4532c59c03b6221bb74560b12e797af9307c
+revision_url: https://github.com/Project-N-E-K-O/N.E.K.O/commit/b51d4532c59c03b6221bb74560b12e797af9307c
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "recall — `MemorySubject` filtering applied before any ranking, on both the internal path and the model-facing tool | memory/scopes.py:30 (LEGACY_PRIVATE_SCOPE), :98-99, :263-285, :311-321, memory/hybrid_recall.py:1165-1169, plugin/plugins/qq_auto_reply/memory_tool_service.py:25-67 | the stored key is the entry's `subject_kind` / `subject_id` / `scope` triple, and `filter_entries_for_subjects` is called before BM25, cosine and RRF — the source comment at hybrid_recall.py:1165 names it a security boundary and states the reason, that a pre-ranking filter cannot be undone by a post-ranking one. It fails closed: an entry with no scope reads as `legacy_private` rather than as a wildcard, `scopes.py:19` says so in the module note, and a new subject is refused that scope outright. On the tool path `resolve_group_recall_subjects` is the single builder shared by the tool handler and the bootstrap context so both authorize identically, member subjects are gated on a non-empty sender and on a switch re-read at recall time, and a second group-shaped slot is deliberately left empty rather than filled with another group's memory | tests/unit/test_group_memory_recall_tool.py:204 (`test_model_supplied_subjects_cannot_influence_scope` — the model supplies a subjects list naming the legacy-private corpus plus include_legacy_private, and the outgoing call carries only the two host-derived subjects, with a positive control that the real answer still returns), :231 (a blank group id fails closed and the bridge is never awaited), tests/unit/test_group_memory_scopes.py:99, :121, :455, :554 (267 cases in that file)"
+  audit_log: "the memory views — a per-character append-only event journal under every mutation | memory/event_log.py:194 (class EventLog), :246 (`_append_unlocked`), :274 (public `append`), :617 (`record_and_save`) | every view mutation runs the ordered sequence load view, append event, mutate view, save view, advance sentinel, and the module comment states why the append precedes the mutation: the loaded view is often a shared cached object, so mutating first and failing to append would leave the journal disagreeing with memory that had already changed. The sentinel records the last event reconciled, so a crash between the append and the save is detectable and replayable rather than silent; `SentinelAdvanceError` and `SentinelConflictError` are raised rather than swallowed. Records are JSON lines and no path in the module rewrites or truncates one | tests/unit/test_memory_liveness_dead_letter.py, tests/unit/test_memory_maint_state_lock.py — not run here: the screen reports EXEC on four conftest.py files and FRESH on three dependency manifests, so nothing was installed and the suite was not executed at this pin"
+  negative_eval: "recall — the hard filter between fusion and the LLM rerank, and the provenance channel that feeds arbitration | tests/unit/test_memory_recall.py:120, :136, tests/unit/test_group_memory_scopes.py:3165, :3260, :3323, tests/unit/test_group_memory_recall_tool.py:204, :231 | `test_hard_filter_drops_negative_score` and `test_hard_filter_drops_suppressed` assert that an entry the user disputed into a negative evidence score, and one flagged suppressed, are absent from what reaches the reranker — a must-not-retrieve case about a corrected value rather than an access boundary. The scope suite adds the boundary form: a group bootstrap must not read legacy-private memory, an empty subject list must not fall back to the private corpus, and a model-supplied subject list must not reach the query. The forgery trio asserts that an extractor element carrying `speaker_trust: 999` and a spoofed label does not overwrite the request segment's real values, and that neither a message body nor a speaker label can forge a segment boundary — the inputs to the arbitration in section 1. Each carries a positive control: the real answer still returns, the genuine provenance is asserted present | the cases are the evidence, read at the pin; the suite was not executed here because the screen reports EXEC on four conftest.py files and FRESH on three dependency manifests"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A fact or observation carrying independent reinforcement and disputation counters with separate decay clocks, plus a scope and a source"
   storage: "Per-character JSON views — facts, reflections, persona, directives — behind an append-only event log, with embeddings and archive shards"
@@ -21,11 +25,11 @@ matrix:
   write: "Extraction into an outbox, deduplicated, with reflection and refinement passes running as background workers"
   update_delete: "Disputation drives an entry's score negative and out of recall; archival needs sustained negative days; no rejected-value record survives archival"
   scoping: "`MemorySubject` with group and participant scopes, missing fields failing closed to `legacy_private`, filtered before any ranking"
-  integration: "A companion runtime — voice, vision, avatar — with memory as an internal subsystem rather than an exposed API"
+  integration: "A companion runtime — voice, vision, avatar — with memory as an internal subsystem, plus a `recall_memory` tool exposed to the model inside the QQ plugin whose scope list is host-derived and ignores any subject the model supplies"
   background: "Embedding worker, reflection, refinement, dedup, archive sharding, and an outbox so mid-flight tasks can be re-run"
-  trust: "Reinforcement and disputation tracked separately with independent decay, deriving pending, confirmed, promoted or archive-candidate at read time"
-  strengths: "A dispute signal structurally separate from reinforcement; a tested hard filter on disputed entries; a durable do-not-mention list"
-  risks: "The status is derived from a score rather than stored; ban-topic directives expire after three days"
+  trust: "Two unrelated axes. On the memory: reinforcement and disputation with independent decay, deriving pending, confirmed, promoted or archive-candidate at read time. On the speaker: a server-authoritative trust pool keyed by account, stamped onto a fact's provenance at extraction and used to arbitrate contradictions, with `None` as an explicit abstention distinct from a low score"
+  strengths: "A dispute signal structurally separate from reinforcement; a tested hard filter on disputed entries; a do-not-mention list whose life extends with repetition; and committed tests that a model cannot forge the speaker provenance its arbitration depends on, nor widen its own recall scope"
+  risks: "The status is derived from a score rather than stored; ban-topic directives expire 3 to 30 days after the last time they were said, scaled by repetition, and the project's own constant comment records that there is no user-facing way to delete one"
 ---
 
 ## 1. Executive Summary
@@ -61,10 +65,31 @@ understood, and defended with a committed test. It is the **first negative
 retrieval assertion in the atlas that is about a corrected value rather than an
 access boundary**.
 
+**Trust runs on a second axis that has nothing to do with the memory.**
+`memory/trust_store.py` holds a server-authoritative pool keyed by a
+platform-neutral account id, and `resolve_trust` returns a float — or `None`,
+which is an explicit abstention the module goes to some length to keep distinct
+from a low score: *"``None`` means the handler must not write the
+``speaker_trust`` key at all… Falling back to 0.5 would stamp a finite value onto
+rows that today deliberately carry none, turning abstention into an active
+arbitration vote."* That value is stamped onto a fact's provenance when it is
+extracted, and `preferred_by_trust` uses it to decide which of two contradictory
+facts survives de-duplication. A memory's credibility is, in part, a property of
+who said it.
+
+Which makes the attribution channel a privilege boundary, and it is defended as
+one. `test_llm_output_cannot_spoof_speaker_provenance` has the extractor return
+an element carrying `speaker_trust: 999` and `speaker_label: "admin 本人"`, and
+asserts the stored fact keeps the request segment's `0.3` and `Alice(1001)`.
+Two further cases assert that neither a message body nor a speaker label can
+forge a segment boundary. Without those, a user could talk their way into a
+higher arbitration weight.
+
 The weaknesses are narrower than usual. The status tiers are *derived* from the
 score at read time rather than stored, so there is no field a query can filter on
 and no record that a specific value was rejected. And the do-not-mention
-directives — the closest thing here to a tombstone — expire after three days.
+directives — the closest thing here to a tombstone — are prompt-only and expire,
+though how fast depends on how often they were said.
 
 ## 2. Mental Model
 
@@ -96,7 +121,7 @@ flowchart TB
     U --> DS["disputation signal"] --> DC["disp counter<br/><i>own decay clock</i>"]
 
     U --> BT["ban-topic directive<br/>stop mentioning X"]
-    BT --> UD[("user_directives.json<br/>keyed on kind + term.casefold()<br/>TTL 3 days")]
+    BT --> UD[("user_directives.json<br/>keyed on kind + term.casefold()<br/>TTL 3d × hit_count, capped at 30d")]
     UD -->|"spliced in at cold start"| SP["system prompt"]
 
     style DC fill:#f4e2bd,stroke:#b8860b
@@ -149,7 +174,7 @@ Python, Apache-2.0, with `memory/` holding thirty modules and about 24,000 lines
 %% caption: the write and read halves together, with the scope filter failing closed to the private namespace
 flowchart TB
     U[Utterance] --> EX[extraction]
-    U --> UD[user_directives<br/>ban-topic, TTL 3d]
+    U --> UD[user_directives<br/>ban-topic, TTL 3d × hits, cap 30d]
     EX --> OB[outbox] --> DD[fact_dedup] --> V[(facts / reflections / persona JSON)]
     V --> EL[(event_log — append-only)]
     Q[Query] --> SF[scope filter<br/>fail-closed to legacy_private]
@@ -193,8 +218,15 @@ deliberately mean `legacy_private`; they never mean wildcard/global access."*
 
 **Ban-topic directives.** `memory/user_directives.py` — extraction across locales
 in parallel, dedup key `(kind, term.casefold())`, storage in
-`memory/{name}/user_directives.json`, TTL from `USER_DIRECTIVE_TTL_SECONDS`, and
-`render_prompt_block` splicing the block into the system prompt tail at startup.
+`memory/{name}/user_directives.json`, and `render_prompt_block` splicing the block
+into the system prompt tail at startup. The TTL is a function of how often the
+directive has been said: `_effective_ttl(hit_count)` (`:134-149`) returns
+`min(USER_DIRECTIVE_TTL_SECONDS * hit_count, USER_DIRECTIVE_TTL_MAX_SECONDS)`,
+which is three days for one mention, six for two, and a thirty-day cap from ten
+onwards. Only a fresh hit renews `expire_at`; silence does not. Reads filter on
+`expire_at`, `purge_expired` collects, and `_rotate` caps the file at
+`USER_DIRECTIVE_MAX_STORED = 60` while `get_active` truncates the injected block
+to `USER_DIRECTIVE_MAX_ACTIVE = 20`.
 
 **Anti-repetition.** `memory/anti_repeat.py` — a per-character rolling BM25
 corpus over recent *AI* output, because *"the LLM tends to circle back to the
@@ -287,13 +319,44 @@ the fact pipeline, not the ban list).
 
 ## 8. Agent Integration
 
-Memory is an internal subsystem, not an exposed API: no MCP surface, no memory
-tool the model calls. Recall is assembled and injected; directives are spliced
-into the system prompt at cold start.
+Memory is mostly an internal subsystem rather than an exposed API. There is no
+MCP surface; recall is assembled and injected, and directives are spliced into
+the system prompt at cold start. That is right for a product where the user never
+thinks about memory, and it means the mechanisms here are not reusable as a
+library — they are reusable as *designs*.
 
-That is right for a product where the user never thinks about memory, and it means
-the mechanisms here are not reusable as a library — they are reusable as
-*designs*.
+### The one place the model may ask
+
+`plugin/plugins/qq_auto_reply/memory_tool_service.py` defines a `recall_memory`
+tool (`RECALL_TOOL_NAME`, `:20`) with a five-second HTTP budget, handed to the
+model during a group turn. What makes it worth reading is not the tool but how
+its scope is decided.
+
+`resolve_group_recall_subjects` (`:25`) is the single place the group read path's
+subject list is built, and its docstring says why it is single: it is *"shared by
+the recall_memory tool handler AND the scoped bootstrap context: both paths must
+authorize exactly the same scopes, or what a group turn may read would depend on
+which one ran."* The list is the group subject, then the current speaker, then up
+to `GROUP_RECALL_MAX_MEMBER_SUBJECTS - 1` recent speakers — and the member slots
+are gated twice, on a non-empty sender id and on a `group_member_memory_enabled`
+switch re-read at the moment of recall so that turning member memory off stops
+participant-scope reads immediately rather than at the next restart.
+
+The ordering is load-bearing rather than cosmetic: the subject order *is* the
+render budget's allocation order under `SCOPED_RENDER_TOTAL_MAX_TOKENS`, so the
+group always outranks any individual, and the comment names that as the caller's
+only priority knob.
+
+**And there is a slot deliberately left empty.** A second group-shaped position
+exists in the shape and is not filled, because the only thing that could fill it
+is another group's memory — and the comment declines to open that here: the
+existing cross-group path reads live session memory and *"从不碰记忆库"*, never
+touches the memory store, so whether to allow cross-group disclosure is a
+separate decision rather than one made in passing while wiring a tool. A refusal
+to widen a scope, recorded at the place where widening would have been one line,
+is worth more than most of the scope documentation in this corpus.
+
+The model's own arguments do not reach any of this: see section 10.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -326,8 +389,19 @@ correction, not scope, and it is the first of its kind in this corpus.
 the mark.** It is durable, keyed on the term rather than on a row, and survives
 the restart that would otherwise wipe the context — more than most manage. But it
 works by *asking the model* not to raise the topic, so a sufficiently distracted
-model still can, and it **expires after three days**. A user who says "please stop
-bringing up my ex" is protected until Thursday.
+model still can, and it expires: three days from one mention, extending linearly
+with repetition to a thirty-day ceiling, measured from the last time the user
+said it rather than from a cumulative lifetime.
+
+The scaling is the right shape for the signal — `config/session_settings.py:46`
+argues it directly, that saying something once may be a mood and saying it
+repeatedly is a stable preference, and that the two should not share an expiry —
+and the same comment records the gap the atlas would otherwise have to infer:
+the ban list is a pure prompt constraint and *"用户今天还没有界面能删（管理面另行补）"*
+— the user has no interface today for deleting one, with an admin surface
+deferred. A suppression a user cannot inspect or revoke, that lapses on its own
+after a month of silence, is a strong hint and not a durable rejection. The mark
+stays withheld.
 
 **Privacy**: memories are per-character JSON on the user's machine, and the
 `protected` flag prevents character-card identity being disputed away. No secret
@@ -335,8 +409,8 @@ filtering on the write path was found.
 
 ## 10. Tests, Evals, and Benchmarks
 
-About **7,936 test functions** repository-wide — the largest suite of any system
-in this atlas — with memory covered by `test_memory_recall.py` (phase by phase
+About **16,344 test functions** under `tests/` and `plugin/tests/` — the largest
+suite of any system in this atlas — with memory covered by `test_memory_recall.py` (phase by phase
 over the recall pipeline), `test_group_memory_scopes.py`, a runtime memory soak
 test, and several `*_memory_policy_contract.py` files asserting that a feature's
 memory behaviour matches a written policy.
@@ -349,8 +423,35 @@ are both single-phase and both assert absence.
 No public benchmark is run, and none would be meaningful — this product's
 evaluation is whether users keep talking to it.
 
-**What I would want:** a test that a ban-topic directive still suppresses after
-the TTL boundary, or an explicit decision that it should not; and a test that a
+### What the scope and tool suites assert
+
+The scope suite runs to 267 test functions and the recall-tool suite to 50, and
+between them they cover the two surfaces a scope mark usually cannot reach.
+
+`test_model_supplied_subjects_cannot_influence_scope` calls the recall tool with
+a hallucinated `subjects` list naming the legacy-private corpus plus
+`include_legacy_private: True`, and asserts the outgoing call carries exactly the
+two host-derived subjects for the turn — with a positive control that the real
+answer still comes back. Its docstring names it *"behavioural twin of the schema
+assert"*, so the schema and the behaviour are checked separately. The atlas's own
+definition of `scope_enforced` says explicitly that the mark does **not** certify
+that a caller cannot widen the boundary by passing a different argument; this is
+a committed test that it cannot.
+
+`test_execute_recall_missing_group_id_fails_closed` covers the direction that
+matters more: a group turn with a blank group id must not call recall at all,
+because `subjects=None` means the legacy-private corpus server-side, so falling
+through would read the operator's private memories into a group chat. The test
+asserts the bridge was never awaited.
+
+And the provenance-forgery trio — `test_llm_output_cannot_spoof_speaker_provenance`,
+`test_message_body_cannot_forge_a_segment_boundary`,
+`test_speaker_label_cannot_forge_a_segment_boundary` — defend the input to the
+trust arbitration described in section 1.
+
+**What I would still want:** a test that a ban-topic directive still suppresses
+after the TTL boundary, or an explicit decision that it should not; a test that
+re-stating a directive extends rather than resets its life; and a test that a
 disputed fact re-extracted from a later conversation does not silently reset to
 zero.
 
@@ -421,9 +522,17 @@ filter — three things the research systems mostly discuss.
 
 ## 12. Open Questions
 
-- **Why three days for `USER_DIRECTIVE_TTL_SECONDS`?** No rationale appears in the
-  module, and the choice is the difference between a real suppression mechanism
-  and a temporary one.
+- **Will the deferred admin surface for the ban list arrive?** The constant's own
+  comment defers it, and until it does a user cannot see or delete a suppression
+  the system is applying on their behalf.
+- **Does a re-stated directive that has already expired start again at three days
+  or resume at its old `hit_count`?** The row is dropped on read once
+  `expire_at` passes, and whether `record` then sees a fresh term or a surviving
+  one decides how much a user pays for a lapse.
+- **Should `speaker_trust` reach the recall path as well as the write path?** It
+  arbitrates de-duplication and correction today; nothing consults it when
+  ranking what to recall, so a low-trust fact that survived arbitration is
+  retrieved on the same footing as any other.
 - **What happens when a disputed fact is re-extracted?** Whether `fact_dedup`
   matches it back to the archived entry and restores its disputation, or creates a
   fresh entry at zero, was not traced — and it decides whether correction
@@ -451,10 +560,27 @@ filter — three things the research systems mostly discuss.
 - `memory/anti_repeat.py` — BM25 over recent AI output
 - `memory/refine.py`, `memory/reflection/`
 
+**Speaker trust**
+
+- `memory/trust_store.py` — the pool, its four stated rules and its kill list of
+  identity heuristics (17–60), `TrustSnapshot.trust_inputs` (744),
+  `resolve_trust` and its three abstention conditions (778)
+- `memory/speaker_trust.py` — `preferred_by_trust` (156), `trust_band`
+- Consumers: `memory/fact_dedup.py` (1319, 1357),
+  `memory/persona/corrections.py` (757, 792), `memory/scoped_refine.py` (220–228)
+- `config/session_settings.py` — `USER_DIRECTIVE_TTL_SECONDS` (35),
+  `USER_DIRECTIVE_TTL_MAX_SECONDS` (46), `USER_DIRECTIVE_MAX_STORED` (66)
+
 **Recall**
 
-- `memory/hybrid_recall.py` — scope boundary comment (566), RRF fusion
-- `memory/recall.py`, `memory/recent.py`, `memory/timeindex.py`
+- `memory/hybrid_recall.py` — scope boundary comment (1165), RRF fusion
+- `memory/recall.py`, `memory/recent.py`, `memory/timeindex.py`,
+  `memory/recall_render.py`
+- `plugin/plugins/qq_auto_reply/memory_tool_service.py` — `RECALL_TOOL_NAME` (20),
+  `resolve_group_recall_subjects` and the empty second group slot (25),
+  `resolve_participant_recall_subjects` (68)
+- `config/memory_settings.py` — `SCOPED_RENDER_TOTAL_MAX_TOKENS` (136),
+  `GROUP_RECALL_MAX_MEMBER_SUBJECTS` (234)
 
 **Durability and scope**
 
@@ -468,11 +594,21 @@ filter — three things the research systems mostly discuss.
 
 **Tests**
 
-- `tests/unit/test_memory_recall.py` — `test_hard_filter_drops_negative_score`,
-  `test_hard_filter_drops_suppressed`
-- `tests/unit/test_group_memory_scopes.py`,
+- `tests/unit/test_memory_recall.py` — `test_hard_filter_drops_negative_score`
+  (120), `test_hard_filter_drops_suppressed` (136)
+- `tests/unit/test_group_memory_scopes.py` — 267 cases, including
+  `test_llm_output_cannot_spoof_speaker_provenance` (3165),
+  `test_message_body_cannot_forge_a_segment_boundary` (3260),
+  `test_speaker_label_cannot_forge_a_segment_boundary` (3323),
+  `test_qq_group_bootstrap_never_reads_legacy_private_memory` (455)
+- `tests/unit/test_group_memory_recall_tool.py` — 50 cases, including
+  `test_model_supplied_subjects_cannot_influence_scope` (204) and
+  `test_execute_recall_missing_group_id_fails_closed` (231)
+- `tests/unit/test_speaker_trust.py`, `tests/unit/test_trust_store.py`,
   `tests/unit/test_runtime_memory_soak.py`
 
 ## History
+
+**2026-09-13** — [`b51d4532c59c03b6221bb74560b12e797af9307c`](https://github.com/Project-N-E-K-O/N.E.K.O/commit/b51d4532c59c03b6221bb74560b12e797af9307c) — 403 commits past the previous pin, with roughly 19,000 lines added under `memory/` and ten new modules there. A published criticism is corrected: the ban-topic TTL is not a flat three days but `min(3 days × hit_count, 30 days)` measured from the last mention, and `config/session_settings.py:46` argues the scaling and records that no user-facing delete exists yet — which narrows the criticism rather than removing it, and answers the open question that asked for the rationale. The largest new material is `memory/trust_store.py` and `memory/speaker_trust.py`: a server-authoritative trust pool keyed by account, stamped into a fact's provenance and used by `preferred_by_trust` to arbitrate contradictions during de-duplication and correction, with `None` held as an explicit abstention. It is a float banded at read time and it describes the speaker rather than the memory, so `trust_state` is re-checked and withheld. The scope test file grew to 267 cases and a recall-tool file of 50 was added; both are folded into the `scope_enforced` record, which now rests on a committed test that a model cannot widen its own scope by passing subject arguments. `audit_log` and `negative_eval` re-verified at the new pin and unchanged. The screen reports `FRESH` on `pyproject.toml`, `requirements.txt` and `uv.lock` and `EXEC` on four `conftest.py` files, so nothing was installed and no test was run here; every claim about a test is a claim about its committed source.
 
 **2026-07-29** — [`6a3d4beb7425261d01eb08034139d87bec03b8b5`](https://github.com/Project-N-E-K-O/N.E.K.O/commit/6a3d4beb7425261d01eb08034139d87bec03b8b5) — first reading.
