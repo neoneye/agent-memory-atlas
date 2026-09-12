@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **437 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **438 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -338,6 +338,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/mindcache/"><span class="az-id">MindCache</span><span class="az-what">A superseded decision leaves the read path</span><code class="az-repo">faisalhussain-devs/MindCache</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/minecontext/"><span class="az-id">MineContext</span><span class="az-what">Prospective memory, inferred</span><code class="az-repo">volcengine/MineContext</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/mirix/"><span class="az-id">MIRIX</span><span class="az-what">Multi-agent typed memory</span><code class="az-repo">Mirix-AI/MIRIX</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/mnemon/"><span class="az-id">Mnemon</span><span class="az-what">A deterministic memory binary the host LLM supervises</span><code class="az-repo">mnemon-dev/mnemon</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mnemopi/"><span class="az-id">Mnemopi</span><span class="az-what">A decay curve per memory type</span><code class="az-repo">can1357/oh-my-pi</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mnemory/"><span class="az-id">mnemory</span><span class="az-what">fsck for a memory store</span><code class="az-repo">fpytloun/mnemory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/mnemos/"><span class="az-id">mnemos</span><span class="az-what">Strip the query from the document before you test retrieval</span><code class="az-repo">arhuman/mnemos</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

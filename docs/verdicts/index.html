@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 437 reports.</strong></p>
+<p><strong>This page covers all 438 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15657,6 +15657,51 @@ worked example of publishing a benchmark number honestly.</li>
 <li>Do not copy when: a fact will ever need correcting, a user will ever
 ask to be forgotten, or two users' memories have to be separated by
 anything stronger than two files.</li>
+</ul>
+<h3 id="mnemon"><a
+href="../systems/mnemon/"><code>mnemon</code></a></h3>
+<ul>
+<li>Best idea: <strong>the model is outside the binary, and the
+deviations from the paper are in a table.</strong> A single Go binary
+over one SQLite file implements MAGMA's four graphs and intent-adaptive
+beam search while calling no model of its own — importance, links and
+forget decisions arrive as CLI arguments the host agent chose — and
+<code>docs/design/08-decisions.md</code> lists six rows where the
+implementation departs from the paper, with the paper's choice beside
+each. Three marks: <code>audit_log</code> on an oplog written inside the
+same transaction as the write, <code>human_review</code> on a
+<code>gc</code> queue that returns candidates with the two commands that
+resolve them, <code>negative_eval</code> on soft-delete exclusions
+asserted with positive controls.</li>
+<li>Biggest risk: <strong>the decay the design is built around does not
+reach the automatic deleter.</strong> <code>effective_importance</code>
+is a materialised column; <code>AutoPrune</code> fires inside every
+<code>remember</code> over capacity and orders by that column without
+recomputing it, and the only corpus-wide refresh is
+<code>GetRetentionCandidates</code>, reached through the agent-invoked
+<code>mnemon gc</code>. On a store where nothing runs <code>gc</code>,
+rows are pruned by the score each had on the day it was written. Beside
+that, the audit log is a 5,000-entry ring that logs retrievals into the
+same table as mutations, and a schema migration soft-deletes every
+<code>narrative</code>-category insight below the store API, so nothing
+records the largest deletion an upgrade performs.</li>
+<li>Most reusable component: the lifecycle arithmetic and its immunity
+rule — base weight, log-scaled access count, half-life decay, a bounded
+edge bonus, and <code>importance &gt;= 4 || access_count &gt;= 3</code>
+short-circuiting all of it — plus the two-signal guard that refuses to
+replace a memory on embedding similarity alone.</li>
+<li>Maturity impression: about 60,400 lines of Go, 8,640 of them the
+memory path against 7,270 lines of tests running on a real SQLite file,
+700 test functions, Apache-2.0, npm-distributed, with setup assets for
+six agent hosts. No benchmark is claimed and none is committed, for a
+system implementing a paper that reports LoCoMo and LongMemEval — a
+restraint worth naming. The README credits MAGMA to "Zou et al."; its
+authors are Jiang, Li, Li and Li.</li>
+<li>Study when: you want local single-binary memory for a coding agent,
+or a compact reference implementation of a four-graph memory with
+intent-adaptive traversal.</li>
+<li>Do not copy when: memory must be scoped between users, or "we have
+this on record and do not believe it" has to be expressible.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 437 reports.**
+**This page covers all 438 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3840,3 +3840,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: about 8,300 lines in the package and 22,400 with the harness and tests, 24 test files holding 297 test functions with the model monkeypatched and no skip paths, seven docs pages, a data-licensing file that separates Apache-2.0 code from CC BY-NC benchmark derivatives, alpha per its own classifier, and one release. The reasoning written into the storage and refusal paths is a level above the average here; the memory lifecycle beside it is unbuilt rather than unfinished.
 - Study when: you want a memory a person can open in an editor, or a worked example of publishing a benchmark number honestly.
 - Do not copy when: a fact will ever need correcting, a user will ever ask to be forgotten, or two users' memories have to be separated by anything stronger than two files.
+
+### [`mnemon`](../systems/mnemon/)
+- Best idea: **the model is outside the binary, and the deviations from the paper are in a table.** A single Go binary over one SQLite file implements MAGMA's four graphs and intent-adaptive beam search while calling no model of its own — importance, links and forget decisions arrive as CLI arguments the host agent chose — and `docs/design/08-decisions.md` lists six rows where the implementation departs from the paper, with the paper's choice beside each. Three marks: `audit_log` on an oplog written inside the same transaction as the write, `human_review` on a `gc` queue that returns candidates with the two commands that resolve them, `negative_eval` on soft-delete exclusions asserted with positive controls.
+- Biggest risk: **the decay the design is built around does not reach the automatic deleter.** `effective_importance` is a materialised column; `AutoPrune` fires inside every `remember` over capacity and orders by that column without recomputing it, and the only corpus-wide refresh is `GetRetentionCandidates`, reached through the agent-invoked `mnemon gc`. On a store where nothing runs `gc`, rows are pruned by the score each had on the day it was written. Beside that, the audit log is a 5,000-entry ring that logs retrievals into the same table as mutations, and a schema migration soft-deletes every `narrative`-category insight below the store API, so nothing records the largest deletion an upgrade performs.
+- Most reusable component: the lifecycle arithmetic and its immunity rule — base weight, log-scaled access count, half-life decay, a bounded edge bonus, and `importance >= 4 || access_count >= 3` short-circuiting all of it — plus the two-signal guard that refuses to replace a memory on embedding similarity alone.
+- Maturity impression: about 60,400 lines of Go, 8,640 of them the memory path against 7,270 lines of tests running on a real SQLite file, 700 test functions, Apache-2.0, npm-distributed, with setup assets for six agent hosts. No benchmark is claimed and none is committed, for a system implementing a paper that reports LoCoMo and LongMemEval — a restraint worth naming. The README credits MAGMA to "Zou et al."; its authors are Jiang, Li, Li and Li.
+- Study when: you want local single-binary memory for a coding agent, or a compact reference implementation of a four-graph memory with intent-adaptive traversal.
+- Do not copy when: memory must be scoped between users, or "we have this on record and do not believe it" has to be expressible.

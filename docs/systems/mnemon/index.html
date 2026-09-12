@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single Go binary implementing
+MAGMA's four-graph memory over one SQLite file, where the host agent —
+not an embedded model — decides what to remember, how to link it and
+when to forget: importance and links are arguments the LLM passes, decay
+and pruning are computed in SQL, every mutation lands in a bounded
+oplog, and the command that recomputes decay is one the shipped skill
+file tells the agent to run.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemon — Agent Memory Atlas">
+    <meta property="og:description" content="A single Go binary
+implementing MAGMA's four-graph memory over one SQLite file, where the
+host agent — not an embedded model — decides what to remember, how to
+link it and when to forget: importance and links are arguments the LLM
+passes, decay and pruning are computed in SQL, every mutation lands in a
+bounded oplog, and the command that recomputes decay is one the shipped
+skill file tells the agent to run.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemon — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single Go binary
+implementing MAGMA's four-graph memory over one SQLite file, where the
+host agent — not an embedded model — decides what to remember, how to
+link it and when to forget: importance and links are arguments the LLM
+passes, decay and pruning are computed in SQL, every mutation lands in a
+bounded oplog, and the command that recomputes decay is one the shipped
+skill file tells the agent to run.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemon — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemon",
+      "description": "A single Go binary implementing MAGMA's four-graph memory over one SQLite file, where the host agent \u2014 not an embedded model \u2014 decides what to remember, how to link it and when to forget: importance and links are arguments the LLM passes, decay and pruning are computed in SQL, every mutation lands in a bounded oplog, and the command that recomputes decay is one the shipped skill file tells the agent to run.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A deterministic memory binary the host LLM
+supervises</p>
+          <h1>Mnemon</h1>
+          <p class="document-deck">A single Go binary implementing
+MAGMA's four-graph memory over one SQLite file, where the host agent —
+not an embedded model — decides what to remember, how to link it and
+when to forget: importance and links are arguments the LLM passes, decay
+and pruning are computed in SQL, every mutation lands in a bounded
+oplog, and the command that recomputes decay is one the shipped skill
+file tells the agent to run.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mnemon-dev/mnemon">
+              <span>Source</span>
+              <strong>mnemon-dev/mnemon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mnemon-dev/mnemon/commit/6c371ec7dce7af05aa55f31fb1b7c1aea81205db" title="6c371ec7dce7af05aa55f31fb1b7c1aea81205db">
+              <span>Analyzed revision</span>
+              <code>6c371ec7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mnemon-dev--mnemon" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mnemon-dev--mnemon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemon is a single Go binary — about 60,400 lines across memory and
+an unrelated "Agency" preview, 8,600 of them the memory path — that
+gives an LLM agent persistent memory in one SQLite file per store.
+Apache-2.0, Go 1.24, distributed over npm, no API keys, no server, no
+vector database unless the user runs a local Ollama model. It implements
+MAGMA (<a href="https://arxiv.org/abs/2601.03236">arXiv:2601.03236</a>,
+6 January 2026, ACL 2026 Main): four orthogonal graphs — temporal,
+semantic, causal, entity — with intent-adaptive traversal over them.</p>
+<p><strong>The architectural claim is about where the model
+sits.</strong> The README's table names four patterns and puts Mnemon in
+the fourth: LLM-embedded (Mem0, Letta), file injection, MCP server, and
+<em>LLM-supervised</em> — "the binary handles deterministic computation
+(storage, graph indexing, search, decay); the LLM makes judgment calls
+(what to remember, how to link, when to forget)". That is not marketing
+framing: <code>remember</code> takes the importance as an argument,
+<code>link</code> takes the edge type and weight, <code>gc</code>
+returns candidates and the two commands that resolve them. Nothing in
+the binary calls a model except the optional local embedder.</p>
+<p><strong>The audit trail is better than the usual.</strong>
+<code>oplog</code> sits in the same file as the insights;
+<code>remember</code> and <code>link</code> write their entries inside
+the same transaction as the write, because <code>db.execer()</code>
+returns the active transaction; and <code>AutoPrune</code> uses the
+error-propagating <code>RecordOp</code> whose comment states the rule —
+destructive transitions need "state change and audit evidence [to]
+commit or roll back together" — recording the capacity, the minimum age
+and the insight whose arrival triggered the prune. Two things bound it:
+the table is trimmed to 5,000 rows on every insert, and retrievals are
+logged into it beside mutations.</p>
+<p><strong>The finding worth carrying away is a stale consumer.</strong>
+Effective importance is a real decay formula —
+<code>base(importance) × max(1, log(1+accesses)) × 0.5^(days/half-life) × (1 + 0.1·min(edges,5))</code>
+— and it is stored in a column. <code>AutoPrune</code>, which fires
+automatically inside <code>remember</code> whenever the store is over
+capacity, orders candidates by that stored column and never refreshes
+it. The only path that recomputes it for every live insight is
+<code>GetRetentionCandidates</code>, reached through
+<code>mnemon gc</code> — a command the shipped skill files tell the
+<em>agent</em> to run. So on a store where nothing invokes
+<code>gc</code>, automatic deletion ranks rows by the score each had on
+the day it was written, which is the one moment the decay factor is 1.0
+for all of them. The decay is not decorative; the automatic path just
+does not see it.</p>
+<p><strong>Two smaller things a reader should know.</strong> The README
+credits MAGMA to "Zou et al."; the paper's authors are Jiang, Li, Li and
+Li. And the project publishes no benchmark numbers of its own — for a
+system implementing a paper whose abstract reports LoCoMo and
+LongMemEval results, that absence is a choice worth noticing rather than
+a gap to complain about.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>an insight with a judged importance</strong>, and
+the judgement is the host LLM's. Nothing in the binary decides what is
+worth keeping; <code>mnemon remember "..." --importance 4</code> is a
+sentence the agent composed after deciding, and the integer it passed is
+what the lifecycle then acts on: <code>baseWeight</code> maps 1-5 onto
+0.15-1.0, <code>IsImmune</code> exempts anything at 4 or above from
+automatic pruning, and the prune query filters
+<code>importance &lt; 4 AND access_count &lt; 3</code> before it orders
+by anything.</p>
+<p><strong>Belief is not modelled at all.</strong> There is no status
+column, no confidence, no provenance beyond a <code>source</code> string
+defaulting to <code>user</code>. A memory is live or soft-deleted, and
+everything in between is the score. That is coherent with the design: an
+epistemic state would be a judgement, and judgements belong to the
+supervisor.</p>
+<p><strong>Forgetting has three doors and they are not equally
+visible.</strong> A person or agent calls
+<code>forget &lt;id&gt;</code>. A replacement arrives through
+<code>remember</code>, whose diff soft-deletes the old row when token
+similarity clears 0.6 on an UPDATE verdict — with a comment refusing to
+let embedding similarity alone do it, because a high cosine "is not
+enough evidence to destroy an existing memory". And auto-prune deletes
+rows nobody named, inline, when the store is over capacity, protected by
+a minimum age measured against <code>stored_at</code> so that a freshly
+imported historical row is not dropped the moment it lands.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — decay is computed in two places and they disagree about when — gc recomputes every live row's score and hands the weak ones to a decision, while the auto-prune that fires inside remember reads whatever the column last held, which for a row nobody has recalled or gc'd is its value on the day it was written</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: decay is computed in two places and they disagree about when — gc recomputes every live row&#39;s score and hands the weak ones to a decision, while the auto-prune that fires inside remember reads whatever the column last held, which for a row nobody has recalled or gc&#39;d is its value on the day it was written
+flowchart TD
+  A[&quot;the host LLM decides something is worth keeping&quot;] --&gt; B[&quot;mnemon remember content --importance N&quot;]
+  B --&gt; C[&quot;diff against existing insights — token overlap, cosine when embedded&quot;]
+  C --&gt; D{&quot;verdict&quot;}
+  D --&gt;|&quot;DUPLICATE&quot;| E[&quot;skipped — oplog diff-skip&quot;]
+  D --&gt;|&quot;UPDATE and token similarity at or above 0.6&quot;| F[&quot;soft-delete the replaced row — oplog diff-replace&quot;]
+  D --&gt;|&quot;ADD or CONFLICT&quot;| G[&quot;insert&quot;]
+  F --&gt; G
+  G --&gt; H[&quot;four graph engines build temporal, semantic, causal and entity edges&quot;]
+  H --&gt; I[&quot;RefreshEffectiveImportance for this insight only&quot;]
+  I --&gt; J{&quot;store over MaxInsights&quot;}
+  J --&gt;|&quot;yes&quot;| K[&quot;AutoPrune — orders by the stored effective_importance column&quot;]
+  J --&gt;|&quot;no&quot;| L[&quot;commit&quot;]
+  K --&gt; L
+  L --&gt; M[&quot;oplog row, inside the same transaction&quot;]
+
+  N[&quot;mnemon gc --threshold&quot;] --&gt; O[&quot;recompute effective importance for every live insight&quot;]
+  O --&gt; P[&quot;return non-immune candidates below the threshold, with content and scores&quot;]
+  P --&gt; Q{&quot;a decision&quot;}
+  Q --&gt;|&quot;mnemon gc --keep id&quot;| R[&quot;access count plus three, score refreshed, immunity reported&quot;]
+  Q --&gt;|&quot;mnemon forget id&quot;| S[&quot;soft delete&quot;]
+  O -.-&gt;|&quot;the only corpus-wide refresh, and only when invoked&quot;| K</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One binary, one file, no services.
+<code>~/.mnemon/data/&lt;name&gt;/mnemon.db</code> holds a store;
+<code>~/.mnemon/active</code> names the one the CLI opens;
+<code>mnemon setup --target &lt;host&gt;</code> writes a skill file,
+hooks and a behavioural guide into the agent host. SQLite runs in WAL
+mode and the design document names the tradeoff it accepted: graph
+traversal, decay and atomic transactions all lean on SQLite-specific
+behaviour, so the storage layer is not swappable and abstracting it is
+named as the next milestone.</p>
+<p>Embeddings are optional and local — Ollama with
+<code>nomic-embed-text</code> — and their absence degrades the system
+rather than breaking it: semantic edges fall back to token overlap, and
+recall's anchor set comes from keyword search alone.</p>
+<p>The repository also contains an "Agency" preview at
+<code>mnemon agency ...</code> — durable responsibility and effect
+admission for a Pi agent, roughly half the Go in the tree — which the
+README is careful to separate from memory. This report is about the
+memory path.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Remember</strong> — <code>cmd/memory/remember.go</code>:
+classify the content against existing insights with
+<code>search.Diff</code> (keyword candidates, token similarity, cosine
+when embeddings exist), then one <code>InTransaction</code> closure that
+soft-deletes a replaced row, inserts, stores the embedding, runs
+<code>graph.Engine.OnInsightCreated</code> to build all four edge types,
+refreshes this insight's effective importance, auto-prunes if over
+capacity, and appends the oplog row.</p>
+<p><strong>Recall</strong> —
+<code>internal/memory/search/recall.go</code>: classify the query intent
+(why, when, entity, general), pick that intent's beam width, depth and
+visited budget from <code>intentTraversalParams</code>, gather anchors,
+and run a bounded beam search over the edge graph scoring structure at
+1.0 and semantics at 0.4 — the MAGMA constants, cited in the source.</p>
+<p><strong>Forget</strong> — <code>cmd/memory/forget.go</code>:
+<code>SoftDeleteInsight</code>, then an oplog entry.</p>
+<p><strong>GC</strong> — <code>cmd/memory/gc.go</code>: recompute every
+live insight's score in one pass, batch-update the column, return the
+non-immune ones below the threshold with the two commands that resolve
+them.</p>
+<p><strong>Auto-prune</strong> —
+<code>internal/memory/store/node.go:520-600</code>: count live rows,
+take the excess up to a batch size, select non-immune rows older than
+the minimum age ordered by the stored score ascending, soft-delete each,
+drop its edges, and <code>RecordOp</code> the prune with its reason.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>insights</code> carries content, category, importance, tags,
+entities, source, access count, timestamps and <code>deleted_at</code>;
+<code>edges</code> carries a source, target, type constrained by CHECK
+to the four graph types, a weight, metadata and a creation time, with
+<code>ON DELETE CASCADE</code> to both endpoints; <code>oplog</code>
+carries an operation, an optional insight id, a free-text detail and a
+timestamp.</p>
+<p>Two timestamps deserve a note because the schema comment explains
+them. <code>created_at</code> is the insight's own time — which an
+import can set to a historical value — and <code>stored_at</code> is
+when the row entered <em>this</em> store, set by a trigger when a writer
+omits it. The retention grace in <code>AutoPrune</code> is measured
+against <code>COALESCE(stored_at, created_at)</code> precisely so that
+an imported year-old insight is not instantly eligible. That is a
+bi-temporal distinction used for one purpose; no read path queries
+record time as an axis, and nothing asks what the store held as of a
+past date, which is why the mark is withheld.</p>
+<p><code>effective_importance</code> is a materialised column, not a
+computed one, and section 1 explains where that bites.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is a graph traversal, not a ranking over a flat list. The
+intent classifier routes a query to one of four parameter sets — a "why"
+question gets depth 5 and a 500-node budget, an entity question depth 4
+and 400 — and the beam expands from anchors found by keyword match and,
+where embeddings exist, cosine similarity. Structural and semantic
+contributions are weighted 1.0 and 0.4, the values the MAGMA paper
+gives, and the constants carry the citation in a comment.</p>
+<p>Every read path filters <code>deleted_at IS NULL</code>,
+consistently: <code>GetInsightByID</code>, the list query, the entity
+loader, the edge joins and the neighbourhood walk. That consistency is
+what the negative tests pin.</p>
+<p>Access is recorded: a retrieval bumps <code>access_count</code> and
+<code>last_accessed_at</code>, which feeds the decay formula and the
+immunity rule — three accesses make a row permanent against auto-prune
+regardless of its importance.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One transaction, synchronous, immediately recallable, and the
+ordering inside it is deliberate: the replacement is soft-deleted and
+dropped from the embedding cache <em>before</em> the insert, so the new
+insight cannot build a semantic edge to the row it just replaced; the
+effective importance is computed after the edges exist, because the edge
+count is a term in the formula; and the auto-prune runs last with the
+new insight explicitly excluded from its candidate set. When the
+transaction fails, the embedding cache — mutated inside the closure — is
+discarded rather than reused, with a comment saying why.</p>
+<p>Deduplication happens before the transaction. <code>Diff</code>
+returns ADD, DUPLICATE, CONFLICT or UPDATE; DUPLICATE skips the write
+entirely and reports the id it matched. The 0.6 token-similarity floor
+on an UPDATE is the guard against destroying a memory on embedding
+evidence alone.</p>
+<p>No background worker exists in the memory path. Whatever the design
+wants to happen over time — decay, pruning of the weak, consolidation —
+happens because something invoked a command.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>mnemon setup --target openclaw --yes</code> installs four
+things into the host: a skill file describing the commands, a bootstrap
+hook that injects a behavioural guide, an extension carrying remind,
+nudge and compact hooks, and the prompt files under
+<code>~/.mnemon/prompt/</code>. Equivalent asset sets exist for Cursor,
+NanoClaw, Zcode, Qoderwork and others, each with its own
+<code>SKILL.md</code> under
+<code>internal/memory/setup/assets/</code>.</p>
+<p>The protocol argument in the README is worth restating because it is
+the design: <code>remember</code>, <code>link</code> and
+<code>recall</code> are named for the LLM's vocabulary rather than
+SQL's, and every command returns structured JSON with the signals that
+produced the result — the diff verdict and the id it matched, the edge
+counts, the effective importance, the pruned ids. An agent can read why
+it got what it got.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Transactional discipline is good.</strong> Writes are atomic,
+the audit row commits with the write, a read-only store is detected and
+every mutating path refuses early rather than failing halfway, and
+<code>readonly_path_test.go</code> exists for exactly that.</p>
+<p><strong>The install path floats.</strong> The root
+<code>package.json</code> depends on <code>dsh-mnemon</code> at
+<code>latest</code>, and the skill files the setup command installs
+declare <code>@mnemon-dev/mnemon@latest</code> as the install target —
+so a host that follows the documented setup resolves whatever version is
+current at that moment. The screen flagged the first; the second is the
+same property inside an artifact the tool writes onto other
+machines.</p>
+<p><strong>A migration soft-deletes a whole category.</strong>
+<code>db.go:396-402</code> counts insights with
+<code>category = 'narrative'</code> and, when any exist, sets
+<code>deleted_at</code> on all of them — a one-time cleanup of a retired
+category that runs silently on open, with no oplog entry, since it
+happens below the store API. A user upgrading loses that category from
+every read path with nothing in the log to say so.</p>
+<p><strong>Provenance stops at a string.</strong> <code>source</code>
+defaults to <code>user</code> and nothing validates it; there is no
+record of which agent, session or host wrote an insight beyond what the
+caller put in the content.</p>
+<p><strong>The repository carries <code>AGENTS.md</code> and
+<code>CLAUDE.md</code></strong>, read here as data. Both are
+instructions to a coding agent working on the project, not to a reader
+of the memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> The screen found no
+auto-run surface, one build-time execution path (the
+<code>Makefile</code>'s default target), five dependency surfaces inside
+the seven-day cooldown, and one floating npm range; I kept the read-only
+posture, so every claim above is read from the committed code.</p>
+<p>700 test functions across the tree, with the memory path carrying
+about 7,270 lines of tests against 8,640 lines of implementation — a
+ratio at the high end of this atlas. <code>store_test.go</code> alone is
+1,554 lines, <code>graph/integration_test.go</code> 923,
+<code>search/integration_test.go</code> 532. They run against a real
+SQLite file in a temp directory, so there is no mock layer between the
+assertion and the schema.</p>
+<p>The negative assertions are the strong kind in two places and the
+weak kind in one, and the contrast is instructive.
+<code>TestLoadKnownEntities_SkipsDeleted</code> asserts the live entity
+is present <em>and</em> the deleted one is absent, over the same two-row
+fixture. <code>TestGetNeighborhood_SkipsDeletedNodes</code> iterates the
+returned neighbours looking for the deleted id and asserts nothing about
+what came back, so a traversal returning an empty slice passes it — the
+vacuous shape, one <code>if len(neighbors) == 0 { t.Fatal }</code> away
+from being airtight.</p>
+<p><strong>No benchmark is committed and none is claimed.</strong> There
+is no LoCoMo or LongMemEval harness in the tree and no accuracy figure
+in the README, which for a system implementing a paper that reports both
+is a restraint worth naming rather than a gap. The papers it builds on
+are cited properly in a References section — MAGMA for the four-graph
+methodology, RLM (<a
+href="https://arxiv.org/abs/2512.24601">arXiv:2512.24601</a>) for the
+orchestrator paradigm — with one error: MAGMA is credited to "Zou et
+al." and its authors are Dongming Jiang, Yi Li, Guanpeng Li and Bingzhe
+Li.</p>
+<p><strong>And the deviations from that paper are tabulated.</strong>
+<code>docs/design/08-decisions.md</code> lists six rows — entity
+extraction, causal reasoning, node types, storage, embeddings,
+deployment — with MAGMA's choice beside Mnemon's, and states what was
+kept: the four-graph separation, intent-adaptive retrieval and
+multi-signal fusion. A reader comparing implementation to paper is
+handed the diff instead of having to derive it.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Publish your deviations from the paper you
+implement.</strong> Six rows and a paragraph. It converts "inspired by"
+— which tells a reader nothing — into a claim they can check, and it
+protects the project from being measured against a method it
+deliberately did not implement.</p>
+<p><strong>Commit the audit row inside the transaction that made the
+change.</strong> <code>RecordOp</code>'s comment is the rule in one
+sentence: a destructive transition and its audit evidence must commit or
+roll back together. The best-effort variant stays available for the
+rest, and the split is explicit.</p>
+<p><strong>Refuse to destroy a memory on embedding evidence
+alone.</strong> A cosine above 0.85 marks an UPDATE candidate; the row
+is only replaced when token overlap also clears 0.6, "because a high
+cosine is not enough evidence to destroy an existing memory". Two
+independent signals for a destructive act, one for a suggestion.</p>
+<p><strong>Make retention immunity a rule, not a score.</strong>
+<code>importance &gt;= 4 || access_count &gt;= 3</code> is checked
+before any ranking, so the thing that matters most is not competing on a
+number that decays.</p>
+<p><strong>Measure a retention grace against when the row arrived, not
+when the fact happened.</strong> One
+<code>COALESCE(stored_at, created_at)</code> keeps an import of
+historical material from being pruned the moment it lands.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let an automatic path read a materialised score that
+only a manual command refreshes.</strong> Auto-prune orders by
+<code>effective_importance</code>; nothing in the write path recomputes
+it for anything but the row being written. Either compute the score in
+the prune query — every input is a column — or refresh before
+selecting.</p>
+<p><strong>Do not write a negative test that passes on an empty
+result.</strong> <code>TestGetNeighborhood_SkipsDeletedNodes</code> is
+the shape, and it sits two tests away from one that does it right.</p>
+<p><strong>Do not soft-delete a category during a schema migration
+without recording it.</strong> The narrative cleanup runs below the
+audit layer, so the log a user inspects afterwards does not contain the
+largest deletion the upgrade performed.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you want <strong>local, inspectable memory for a coding
+agent</strong> and you are comfortable with the supervisor model: one
+binary, one file, structured JSON out, and the host LLM making every
+judgement the binary would otherwise need a model for. The install story
+is genuinely one command per host, and the four-graph structure gives
+recall something to traverse that a flat vector store does not have.</p>
+<p>Do not take it where <strong>the memory must be scoped or
+defensible</strong>. Stores are separate files with no key on a row, so
+multi-user separation is the application's job; there is no epistemic
+state, so "we recorded this and do not believe it" is inexpressible; and
+the oplog that would answer "why is this gone" holds the last 5,000
+events of any kind.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>Decay that the automatic deleter cannot see.</strong> Stated
+in section 1 and worth repeating as the risk: a deployment where the
+agent never runs <code>gc</code> prunes by creation-time scores.</p>
+<p><strong>An audit log that is a ring, and that mixes reads with
+writes.</strong> 5,000 entries total, trimmed on insert, with
+<code>recall</code>, <code>search</code> and <code>show</code> competing
+for the same rows as <code>remember</code>, <code>forget</code> and
+<code>prune</code>. A busy week of retrievals can evict the record of
+the deletion a user is asking about.</p>
+<p><strong>No value-keyed refusal.</strong> A replacement records
+<code>replaced by &lt;id&gt;</code> and the superseded row is
+soft-deleted, but nothing is keyed on the content, so the same sentence
+remembered again is a new live insight and the diff will not find the
+deleted original — every read path, including the diff's candidate
+search, filters <code>deleted_at IS NULL</code>.</p>
+<p><strong>Floating install pins in an artifact installed onto other
+machines.</strong> <code>@mnemon-dev/mnemon@latest</code> in every
+shipped skill file.</p>
+<p><strong>A silent bulk deletion on upgrade</strong>, for the retired
+<code>narrative</code> category.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the four-graph schema and the intent-adaptive
+traversal</strong> if you have a paper-shaped design to implement and
+want a compact reference: two tables, a CHECK constraint, four small
+edge builders and a parameter table keyed by intent.</p>
+<p><strong>Borrow the lifecycle arithmetic</strong> — base weight,
+log-scaled access, half-life decay, a small edge bonus, and an immunity
+rule that short-circuits all of it — but compute it where it is
+consumed.</p>
+<p><strong>Borrow the supervisor split</strong> if you are paying for an
+embedded extraction model you are not sure earns its cost. Mnemon's
+position is that importance and linking are judgements the host model
+already has the context to make, and the binary's job is to be fast,
+deterministic and honest about what it did.</p>
+<p><strong>Build scoping yourself</strong> before putting this in front
+of more than one user.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is <code>gc</code> expected to run on a schedule? Nothing in the
+tree schedules it, the shipped skill files list it among commands the
+agent may run, and the auto-prune path depends on its side effect.</li>
+<li><code>MaxOplogEntries</code> is a constant. Whether 5,000 is a
+retention policy or a default nobody revisited is not stated, and the
+receipt command that exports the log inherits the bound.</li>
+<li>The diff runs against live insights only. Whether re-remembering
+something a user explicitly forgot should be refused, or is deliberately
+allowed as a correction path, is not addressed anywhere in the
+docs.</li>
+<li>The Agency preview shares the binary and the <code>.mnemon</code>
+directory with memory but not its store. What a reader should conclude
+about the memory path from Agency's very different admission machinery
+is left open by the README's insistence that they are separate.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Store</strong></p>
+<ul>
+<li><code>internal/memory/store/db.go</code> — schema, migrations,
+<code>InTransaction</code>, <code>execer</code>, store layout and the
+<code>active</code> file</li>
+<li><code>internal/memory/store/node.go</code> — insert, soft delete,
+<code>ComputeEffectiveImportance</code>, <code>IsImmune</code>,
+<code>GetRetentionCandidates</code>, <code>AutoPrune</code>,
+<code>BoostRetention</code></li>
+<li><code>internal/memory/store/edge.go</code>,
+<code>oplog.go</code></li>
+</ul>
+<p><strong>Graph and search</strong></p>
+<ul>
+<li><code>internal/memory/graph/</code> — <code>temporal.go</code>,
+<code>semantic.go</code>, <code>causal.go</code>,
+<code>entity.go</code>, <code>engine.go</code>, <code>bfs.go</code></li>
+<li><code>internal/memory/search/</code> — <code>intent.go</code>,
+<code>recall.go</code> (beam search and the MAGMA constants),
+<code>keyword.go</code>, <code>diff.go</code></li>
+</ul>
+<p><strong>Commands</strong></p>
+<ul>
+<li><code>cmd/memory/remember.go</code>, <code>forget.go</code>,
+<code>link.go</code>, <code>recall.go</code>, <code>gc.go</code>,
+<code>import.go</code>, <code>log.go</code>, <code>receipt.go</code>,
+<code>status.go</code>, <code>setup.go</code></li>
+<li><code>internal/memory/setup/assets/*/SKILL.md</code> — what each
+host is told the commands are</li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>internal/memory/store/store_test.go</code>,
+<code>readonly_path_test.go</code></li>
+<li><code>internal/memory/graph/integration_test.go</code></li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>docs/design/08-decisions.md</code> — the deviations table</li>
+<li><code>docs/design/06-lifecycle.md</code> — decay, immunity,
+pruning</li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -rn &quot;LogOp(\|RecordOp(&quot; --include=&quot;*.go&quot; --exclude=&quot;*_test.go&quot; .   # every oplog producer
+grep -rn &quot;RefreshEffectiveImportance\|effective_importance&quot; --include=&quot;*.go&quot; --exclude=&quot;*_test.go&quot; .
+grep -rn &quot;stored_at&quot; --include=&quot;*.go&quot; --exclude=&quot;*_test.go&quot; internal/ cmd/   # retention grace only
+grep -rn &quot;deleted_at IS NULL&quot; -r internal/memory/store/                      # the read-path filter
+grep -rn -i &quot;magma&quot; --include=&quot;*.go&quot; --include=&quot;*.md&quot; .                      # the citation and its constants</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/mnemon-dev/mnemon/commit/6c371ec7dce7af05aa55f31fb1b7c1aea81205db"><code class="commit-id" title="6c371ec7dce7af05aa55f31fb1b7c1aea81205db">6c371ec7…</code></a>
+— first reading, at the default branch's head on the day it was read.
+Screened before reading: no auto-run surface; one build-time execution
+path (the <code>Makefile</code>, whose default target was checked); five
+dependency surfaces inside the seven-day cooldown; one unpinned surface,
+a <code>package.json</code> depending on <code>dsh-mnemon</code> at
+<code>latest</code> above a present lockfile; and two agent-directed
+files, <code>AGENTS.md</code> and <code>CLAUDE.md</code>, read as data
+and not as instructions. Nothing was installed, built or run, and no
+test in this repository was executed. One check was made outside the
+checkout: the MAGMA paper's abstract, to compare the implementation's
+citation with the paper's own authors and claims. Licence is Apache-2.0
+per <code>LICENSE</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
