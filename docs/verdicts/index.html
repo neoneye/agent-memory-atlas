@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 440 reports.</strong></p>
+<p><strong>This page covers all 441 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15797,6 +15797,57 @@ machine, or a worked example of testing whether a fallback chain lies to
 its caller.</li>
 <li>Do not copy when: a deletion has to be explainable after the fact,
 or a memory needs a status that withholds it from being believed.</li>
+</ul>
+<h3 id="basemode"><a
+href="../systems/basemode/"><code>basemode</code></a></h3>
+<ul>
+<li>Best idea: <strong>source comments that audit the system's own
+wiring, with dates and counts.</strong> <code>src/supersede.rs</code>
+opens by recording that <code>ops:supersedes</code> and
+<code>ops:supersededBy</code> had been declared in the ontology for
+months "and <strong>nothing has ever written either one</strong> —
+measured on Chris's store, 2026-09-07: 0 quads of each across both
+tiers", names the sync-ledger field that was standing in "which no graph
+reader can see", and exists to end that drift — which it does, with a
+CLI producer and four readers. The same header separates the edge from
+the label and justifies it with a census: <code>ops:status</code> has
+six declared values and 44 real ones, including <code>Pass</code> 242,
+<code>PASS</code> 43 and <code>PASS (no change)</code> 1, so no decision
+path reads it. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the workspace key is written and not
+served.</strong> Writes route into a per-workspace named graph; the four
+Claude Code hook queries that put context in front of the model read
+<code>GRAPH ?g</code> across every named graph in the tier, so the
+boundary that holds is the tier's file. Bug #112 in the source is the
+same difference biting the removal path — a wildcard guard passed a rule
+in a foreign named graph, "460 quads of them on the reporting install",
+while the scoped DELETE matched nothing and a hardcoded
+<code>Ok(1)</code> reported success. And correction is keyed on the
+record, so re-learning a corrected fact makes a new live note the
+supersession chain never reaches.</li>
+<li>Most reusable component: the supersession module — forward-walking
+<code>resolve_head</code>, write-time cycle refusal, a
+<code>FILTER NOT EXISTS</code> helper the readers splice inside the
+GRAPH group, and an audit that reports disagreement rather than
+reconciling it — with the changes-log contract beside it: append after
+the rename lands, best-effort by design, tier derived from the path,
+<code>O_APPEND</code> because on Windows the rename is the step that
+gets lost.</li>
+<li>Maturity impression: about 54,200 lines of Rust against 16,100 in 74
+test files holding 454 cases, oxigraph over one N-Quads file per tier, a
+tree-sitter pass over 29 grammars, a Svelte dashboard, version 0.15.2.
+Licensed FSL-1.1-ALv2 — source-available with an Apache-2.0 future
+licence, which is why the API reports <code>NOASSERTION</code>. One
+stale header: <code>scope.rs</code> still calls itself a dormant
+primitive with zero non-test callers, and <code>crud/project.rs</code>
+calls it.</li>
+<li>Study when: you want a structured workspace graph pushed into an
+agent's turn at hook moments rather than fetched on request, or a worked
+RDF supersession chain with its failure modes written down.</li>
+<li>Do not copy when: you need a tenant boundary inside one tier, a
+correction that survives the same fact being learned again, or an
+epistemic status a reader can act on.</li>
 </ul>
         </article>
       </div>

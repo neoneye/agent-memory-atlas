@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 440 reports.**
+**This page covers all 441 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3864,3 +3864,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: about 72,800 lines of TypeScript against 64,200 lines of tests across 195 files, vitest over a real libSQL file with no mock storage layer and no skip path, Apache-2.0, distributed six ways at once (npm, MCP registry, Claude Code plugin, Smithery, Docker, Python and Vercel adapters), with a 3,269-line changelog. The scope predicate is the strong form — `user_id` bound from the environment, never from a tool argument — and the tombstone is not: `interface.ts` calls `deleted_at` a tombstone and it is keyed on the record.
 - Study when: you want session continuity for a coding agent on one machine, or a worked example of testing whether a fallback chain lies to its caller.
 - Do not copy when: a deletion has to be explainable after the fact, or a memory needs a status that withholds it from being believed.
+
+### [`basemode`](../systems/basemode/)
+- Best idea: **source comments that audit the system's own wiring, with dates and counts.** `src/supersede.rs` opens by recording that `ops:supersedes` and `ops:supersededBy` had been declared in the ontology for months "and **nothing has ever written either one** — measured on Chris's store, 2026-09-07: 0 quads of each across both tiers", names the sync-ledger field that was standing in "which no graph reader can see", and exists to end that drift — which it does, with a CLI producer and four readers. The same header separates the edge from the label and justifies it with a census: `ops:status` has six declared values and 44 real ones, including `Pass` 242, `PASS` 43 and `PASS (no change)` 1, so no decision path reads it. Two marks, `audit_log` and `negative_eval`.
+- Biggest risk: **the workspace key is written and not served.** Writes route into a per-workspace named graph; the four Claude Code hook queries that put context in front of the model read `GRAPH ?g` across every named graph in the tier, so the boundary that holds is the tier's file. Bug #112 in the source is the same difference biting the removal path — a wildcard guard passed a rule in a foreign named graph, "460 quads of them on the reporting install", while the scoped DELETE matched nothing and a hardcoded `Ok(1)` reported success. And correction is keyed on the record, so re-learning a corrected fact makes a new live note the supersession chain never reaches.
+- Most reusable component: the supersession module — forward-walking `resolve_head`, write-time cycle refusal, a `FILTER NOT EXISTS` helper the readers splice inside the GRAPH group, and an audit that reports disagreement rather than reconciling it — with the changes-log contract beside it: append after the rename lands, best-effort by design, tier derived from the path, `O_APPEND` because on Windows the rename is the step that gets lost.
+- Maturity impression: about 54,200 lines of Rust against 16,100 in 74 test files holding 454 cases, oxigraph over one N-Quads file per tier, a tree-sitter pass over 29 grammars, a Svelte dashboard, version 0.15.2. Licensed FSL-1.1-ALv2 — source-available with an Apache-2.0 future licence, which is why the API reports `NOASSERTION`. One stale header: `scope.rs` still calls itself a dormant primitive with zero non-test callers, and `crud/project.rs` calls it.
+- Study when: you want a structured workspace graph pushed into an agent's turn at hook moments rather than fetched on request, or a worked RDF supersession chain with its failure modes written down.
+- Do not copy when: you need a tenant boundary inside one tier, a correction that survives the same fact being learned again, or an epistemic status a reader can act on.

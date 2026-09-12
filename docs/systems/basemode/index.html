@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust binary that maps a
+workspace into an oxigraph RDF graph and injects slices of it at four
+Claude Code hook points, where every landed write appends a line to a
+changes log and a correction is a supersession edge the readers filter
+on — and where the module implementing that supersession opens by
+recording, with a date and a quad count, that the predicate had been
+declared for months and never once written.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="basemode — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust binary that maps a
+workspace into an oxigraph RDF graph and injects slices of it at four
+Claude Code hook points, where every landed write appends a line to a
+changes log and a correction is a supersession edge the readers filter
+on — and where the module implementing that supersession opens by
+recording, with a date and a quad count, that the predicate had been
+declared for months and never once written.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="basemode — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust binary that maps a
+workspace into an oxigraph RDF graph and injects slices of it at four
+Claude Code hook points, where every landed write appends a line to a
+changes log and a correction is a supersession edge the readers filter
+on — and where the module implementing that supersession opens by
+recording, with a date and a quad count, that the predicate had been
+declared for months and never once written.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>basemode — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "basemode",
+      "description": "A Rust binary that maps a workspace into an oxigraph RDF graph and injects slices of it at four Claude Code hook points, where every landed write appends a line to a changes log and a correction is a supersession edge the readers filter on \u2014 and where the module implementing that supersession opens by recording, with a date and a quad count, that the predicate had been declared for months and never once written.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An RDF workspace graph whose comments audit
+its own wiring</p>
+          <h1>basemode</h1>
+          <p class="document-deck">A Rust binary that maps a workspace
+into an oxigraph RDF graph and injects slices of it at four Claude Code
+hook points, where every landed write appends a line to a changes log
+and a correction is a supersession edge the readers filter on — and
+where the module implementing that supersession opens by recording, with
+a date and a quad count, that the predicate had been declared for months
+and never once written.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ChristopherKahler/base">
+              <span>Source</span>
+              <strong>ChristopherKahler/base</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ChristopherKahler/base/commit/0ace1bae246f1ff9ea0b5ea9b8d1801fbc83c627" title="0ace1bae246f1ff9ea0b5ea9b8d1801fbc83c627">
+              <span>Analyzed revision</span>
+              <code>0ace1bae…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ChristopherKahler--base" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ChristopherKahler--base</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>basemode is a Rust binary, <code>base</code>, that maps a workspace
+into an RDF knowledge graph and wires it into every hook Claude Code
+exposes, so that a briefing lands in the turn before the agent starts
+guessing. About 54,200 lines of Rust against 16,100 lines in 74 test
+files holding 454 cases, oxigraph over one N-Quads file per tier,
+version 0.15.2, a 352-line changelog, and a Svelte dashboard beside
+it.</p>
+<p><strong>The licence is a caveat to state before the
+mechanisms.</strong> <code>LICENSE.md</code> is the <strong>Functional
+Source License 1.1 with an Apache-2.0 future licence</strong>
+(FSL-1.1-ALv2) — source-available, not open source today, converting to
+Apache-2.0 on a delay. That is why GitHub reports
+<code>NOASSERTION</code>. The atlas analyses it the same way it analyses
+any other implementation; a reader deciding what they may <em>do</em>
+with it needs the licence text.</p>
+<p><strong>What makes this repository unusual is that its comments audit
+its own wiring, with measurements.</strong>
+<code>src/supersede.rs</code> opens by recording that
+<code>ops:supersedes</code> and <code>ops:supersededBy</code> had been
+declared in the ontology since before 0.13.19 <em>"and <strong>nothing
+has ever written either one</strong> — measured on Chris's store,
+2026-09-07: 0 quads of each across both tiers."</em> The only
+supersession that existed was a JSON field in a sync ledger <em>"which
+no graph reader can see"</em>, so a correction sat beside the thing it
+corrected, both came back from <code>recall</code>, and <em>"nothing
+says which one is live. That is the drift this module exists to
+end."</em> That is the atlas's own declared-and-unwired finding, made by
+the author about his own code, dated and counted.</p>
+<p><strong>And the module that ends it is wired.</strong>
+<code>base graph supersede &lt;old&gt; &lt;new&gt;</code> reaches
+<code>crud::supersede</code> at <code>cli.rs:4052</code>;
+<code>would_cycle</code> refuses a loop at write time;
+<code>resolve_head</code> walks the chain forward; and the serving
+surfaces splice
+<code>FILTER NOT EXISTS { ?x ops:supersededBy ?y }</code> into their
+SPARQL. The test file that pins it states the vacuity guard in its own
+header — <em>"a filter that excludes everything passes a 'the old one is
+gone' assertion just as well as a correct one"</em> — and asserts both
+halves per surface.</p>
+<p><strong>The one mark a reader might expect and will not find is
+scope.</strong> Writes are routed into a per-workspace named graph, and
+the four hook queries that actually put context in front of the model
+read <code>GRAPH ?g</code> — a wildcard over every named graph in the
+tier's file. The boundary that holds is therefore the file, selected by
+<code>find_workspace_base(cwd)</code>, which is a physical partition
+rather than a predicate. The project has already been bitten by the
+difference and wrote it down: bug #112 describes a removal whose guard
+read the wildcard while its DELETE was scoped to one graph, so a rule
+sitting in a foreign named graph — <em>"460 quads of them on the
+reporting install"</em> — passed the guard, matched nothing, and a
+hardcoded <code>Ok(1)</code> reported success.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a typed RDF subject with edges</strong>, and the
+ontology is the vocabulary: <code>Decision</code>, <code>Task</code>,
+<code>Goal</code>, <code>Handoff</code>, <code>Person</code>,
+<code>Project</code>, <code>Entity</code>, <code>Reminder</code>, plus
+AST-derived entities for the code itself — functions, callers, imports,
+dependents — so "where is this used" is a graph question rather than a
+grep.</p>
+<p><strong>Truth is an edge, and the status is a label.</strong>
+<code>supersede.rs</code> states the rule in a heading: <em>"The edge is
+the truth; the status is a label."</em> Every decision path keys on
+<code>ops:supersededBy</code>; the writer also stamps
+<code>ops:status "superseded"</code> so the dashboard and
+<code>learn --list</code> stop showing the record as active, but <em>"no
+reader may require both"</em> — because <code>ops:status</code> is
+unvalidated free text. The author measured his own store: 44 distinct
+values against the six the ontology declares, including case variants
+counted separately (<code>Pass</code> 242, <code>PASS</code> 43,
+<code>PASS (no change)</code> 1) and whole sentences, one of them a
+truncated markdown paragraph. One record already carries the status with
+no edge. <code>base doctor</code> reports the disagreement in both
+directions rather than any reader trying to reconcile it.</p>
+<p>That is why the trust-state mark is withheld and why the withholding
+is interesting: the field exists, its vocabulary is declared, and the
+system deliberately refuses to let a decision depend on it.</p>
+<p><strong>Correction never rewrites.</strong> A → B → C is three
+records and two edges, nothing is re-pointed, and
+<code>resolve_head</code> walks forward to the live end. A cycle is
+refused at write time, and if one reaches the store by another route the
+walk terminates on its visited set <em>"rather than hanging a
+session-start hook"</em> — the failure mode named, because this code
+runs on every session boot.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a correction is an edge the serving queries filter on, and the filter's placement is the whole mechanism — spliced inside the GRAPH group it hides the superseded note, and F16 once shipped it after the last arm where it constrained nothing and recall went on printing what it was meant to hide</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a correction is an edge the serving queries filter on, and the filter&#39;s placement is the whole mechanism — spliced inside the GRAPH group it hides the superseded note, and F16 once shipped it after the last arm where it constrained nothing and recall went on printing what it was meant to hide
+flowchart TD
+  A[&quot;base learn — a note, decision, rule or handoff&quot;] --&gt; B[&quot;lock, load inside the lock, mutate&quot;]
+  B --&gt; C[&quot;serialise to a temp file&quot;]
+  C --&gt; D[&quot;atomic rename into graph.nq&quot;]
+  D --&gt; E[&quot;the write has landed&quot;]
+  E --&gt; F[&quot;append one JSON line to changes.jsonl&quot;]
+  E --&gt; G[&quot;ring the doorbell for a running app&quot;]
+  F --&gt; H[&quot;external reader tails it by byte offset&quot;]
+
+  I[&quot;base graph supersede old new&quot;] --&gt; J{&quot;would_cycle&quot;}
+  J --&gt;|&quot;yes&quot;| K[&quot;refused at write time&quot;]
+  J --&gt;|&quot;no&quot;| L[&quot;new ops:supersedes old, and the inverse, in one statement&quot;]
+  L --&gt; M[&quot;ops:status superseded stamped on the old record&quot;]
+  M --&gt; N[&quot;written for the dashboard — no decision path reads it&quot;]
+
+  O[&quot;a Claude Code hook fires&quot;] --&gt; P[&quot;SPARQL composed for this moment&quot;]
+  P --&gt; Q[&quot;FILTER NOT EXISTS ?x ops:supersededBy ?y — spliced inside the GRAPH group&quot;]
+  Q --&gt; R[&quot;only the live version is served&quot;]
+  P --&gt; S[&quot;GRAPH ?g — every named graph in this tier&#39;s file&quot;]
+  S --&gt; T[&quot;the per-workspace key is written, not filtered on here&quot;]
+  U[&quot;find_workspace_base(cwd)&quot;] --&gt; V[&quot;one tier file — the boundary that actually holds&quot;]
+  V --&gt; S</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One binary, installed by <code>curl | sh</code> or a PowerShell
+one-liner, with no Rust toolchain required. Storage is oxigraph over a
+single N-Quads file per tier: <code>&lt;ws&gt;/.base/graph.nq</code> for
+a workspace and <code>~/.base-gbl/.base/graph.nq</code> for global,
+selected by walking up from the CWD. Beside each graph sits its
+<code>changes.jsonl</code>.</p>
+<p>The integration is the product. <code>base</code> registers into all
+four Claude Code hooks, and the README's table is the design: session
+start returns everything standing that governs where the agent is about
+to work; the prompt hook returns what bears on what was just asked; the
+pre-tool hook returns the shape of the file about to be touched; the
+post-tool hook returns the call chain for the exact lines just read.
+Subagents and explore agents inherit the same hooks and the same
+graph.</p>
+<p>Around that: a Svelte dashboard, a doorbell socket so a running
+Electron app learns about writes without polling, a plugin and extension
+surface, a tree-sitter AST pass over 29 grammars for the code graph, and
+<code>base doctor</code> as the health and audit surface.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write</strong> — <code>store::write_back_inner</code>
+(<code>src/store.rs</code>): the three write entry points funnel here;
+serialise, <code>rename_with_retry</code>, then
+<code>changelog::append</code> and <code>doorbell::ring</code>, both
+after the rename and both best-effort by contract.</p>
+<p><strong>Supersede</strong> — <code>cli.rs:4052</code> →
+<code>crud::supersede::supersede</code> →
+<code>supersede::would_cycle</code> then
+<code>supersede::link_update</code>, which writes both directions in one
+statement and stamps the status on the old record.</p>
+<p><strong>Serve</strong> — each hook composes SPARQL for its moment;
+<code>crud/note.rs:137</code> and <code>crud/rule.rs:140</code> splice
+<code>supersede::sparql_exclude_superseded</code> <em>inside</em> the
+GRAPH group; <code>graph_query.rs:127</code> and
+<code>graph_tools.rs:171</code> resolve an IRI to its head before
+answering.</p>
+<p><strong>Audit</strong> — <code>supersede::audit</code> runs inside
+<code>base doctor</code> on the store it has already loaded, counting
+superseded records, status/edge disagreements in both directions, and
+corrections naming nothing.</p>
+<p><strong>Compact</strong> — session start calls
+<code>graph::auto_compact_tiers</code>, backup-first, atomic and
+cooldown-gated, skipping an unhealthy graph, so a file that has
+ballooned is repaired at boot rather than growing unbounded.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>src/ontology/ops.ttl</code> declares the vocabulary — about
+twenty classes and their properties, with <code>ops:createdAt</code> and
+<code>ops:updatedAt</code> ranged on <code>xsd:dateTime</code>. Time is
+single-axis: <code>createdAt</code> is stamped at write and
+<code>updatedAt</code> overwrites, with no separate record of when a
+fact was true as against when the store learned it, which is why the
+bi-temporal mark is withheld.</p>
+<p>Two things sit outside the graph and matter.
+<code>changes.jsonl</code> is the mutation record described above. The
+sync ledger (<code>apply_ops.rs</code>, <code>changelog.rs</code>)
+carries <code>supersedes_fact_id</code> for cross-machine replication —
+the JSON field <code>supersede.rs</code> names as the pre-existing
+supersession that <em>"no graph reader can see"</em>, and the reason the
+graph predicate had to be wired.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranking here and no embedding anywhere. Retrieval is
+SPARQL composed per hook moment, and the design's claim is that a query
+bound to the moment beats a scored list: opening an auth file returns
+the auth rules, the decision that governs them, <em>"and nothing else.
+Targeted, never a dump."</em></p>
+<p>The supersession filter is the part worth studying, because its
+correctness is positional. <code>sparql_exclude_superseded</code>
+produces a <code>FILTER NOT EXISTS</code> that must be spliced
+<strong>inside</strong> the GRAPH group beside the pattern it
+constrains; the comment in <code>crud/rule.rs</code> names the release
+that got it wrong — F16 shipped it after the last arm, <em>"where it
+constrained nothing and <code>recall</code> went on printing what it was
+meant to hide"</em>, dated 2026-09-06. A filter that is present,
+syntactically valid, and in the wrong clause is invisible to every test
+that only checks the query runs, which is exactly why the test file
+asserts both halves per surface.</p>
+<p>Scope, as section 1 says, is the file. Within a tier the serving
+queries range over every named graph.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and locked: <code>lock_and_load</code> takes
+one lock and loads inside it, after a bug where a second
+<code>fetch</code> parsed the whole graph a second time before the
+mutation did. Serialisation goes to a temp file and an atomic rename;
+only then does anything observable happen — the changes line, the
+doorbell.</p>
+<p>The <code>O_APPEND</code> argument in <code>changelog.rs</code> is
+worth repeating because it is the rare case where the usual atomic-write
+advice is wrong: for a whole-file rewrite temp+rename is correct, but
+for an append-only log <em>"the rename is the unreliable step"</em> on
+Windows, where a scanner holding a transient handle makes it throw and
+the write is silently lost. An append has no rename to lose, and a
+single <code>O_APPEND</code> write is atomic against concurrent
+appenders on both targets — which matters because hooks fire on every
+tool call and several <code>base</code> processes really are writing at
+once.</p>
+<p>Nothing rewrites the store on a timer. The only bulk operation is the
+boot-time compaction.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four hooks, one graph, every agent. The distinctive choice is that
+basemode does not wait to be asked: there is no <code>recall</code> tool
+the model has to remember to call at the right moment, because the
+injection is bound to moments the harness already announces. The cost is
+the one this design always pays — what lands is whatever the query for
+that moment returns, and the agent cannot ask for more of it.</p>
+<p>The CLI is the human surface: <code>base learn</code>,
+<code>base recall</code>, <code>base graph query</code>,
+<code>base graph supersede</code>, <code>base doctor</code>, and a
+starter command set. <code>base doctor</code> is also where the
+supersession audit surfaces, deliberately rather than at write time.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The comment discipline is the strength and it is unusual
+enough to enumerate.</strong> A dated quad count establishing that a
+declared predicate had never been written. A census of a free-text
+field's real values explaining why no reader may depend on it. A
+numbered bug (#112) where a wildcard guard and a scoped DELETE asked
+different questions and a hardcoded <code>Ok(1)</code> reported success
+over 460 foreign quads. A filter-placement note naming the release that
+shipped it in the wrong clause. A ruling, dated, on why a warning
+belongs in <code>doctor</code> rather than at every write. Each is a
+fact about the system that a reader would otherwise have to
+rediscover.</p>
+<p><strong>The write path is defended.</strong> Lock-then-load,
+temp+rename for the graph, <code>O_APPEND</code> for the log with the
+platform reasoning written out, a doorbell that cannot fail the command,
+corruption surfaced loudly at boot <em>"before any other output, so a
+broken graph announces itself immediately instead of degrading
+silently"</em>, and compaction that backs up first and skips an
+unhealthy graph.</p>
+<p><strong>The gaps are two.</strong> The workspace key is written and
+not served, so the boundary is the tier file. And correction is keyed on
+the record: re-learning a corrected fact creates a new note the chain
+does not reach, because <code>supersededBy</code> points from one IRI to
+another and nothing is keyed on the text. The second is why the
+tombstone mark is withheld despite this being one of the more complete
+supersession implementations in the corpus.</p>
+<p><strong>One log caveat.</strong> Guarantee two — logging never fails
+the user's command — means a failed append warns once to stderr and is
+dropped, so the audit is best-effort by design, and no committed test
+asserts that a landed write produced a line.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> Five dependency surfaces
+changed the day of the pin, inside the seven-day cooldown, and
+<code>scripts/ast/requirements.txt</code> carries 29 unpinned
+requirements. The screen found no auto-run surface and no build-time
+execution path. Everything here is read from the committed code.</p>
+<p>74 integration test files holding 454 cases, plus unit tests
+in-module, against tempdirs with no service dependency.
+<code>tests/supersede_readers_test.rs</code> is the one to read: one
+fixture, one test per serving surface, both halves asserted, and the
+reason written at the top.</p>
+<p>The other tests worth naming are the ones pinning the incidents:
+<code>rule_index_test.rs</code> (tier-local indices, where <em>"the
+number a user reads in their injected context routinely names a
+different rule here"</em>), <code>ontology_test.rs</code>,
+<code>crud_decision_test.rs</code>. The scope module carries its own
+unit tests and was written filesystem-free <em>"so it is trivially
+unit-testable with literal paths"</em> — though its header still says it
+has <em>"zero non-test callers by design (a dormant primitive)"</em>,
+which is stale at this pin: <code>crud/project.rs</code> now calls
+<code>current_workspace</code>, <code>home</code> and
+<code>in_scope</code>.</p>
+<p><strong>No benchmark, no paper, and no claim to either.</strong>
+<code>grep -rn -i "benchmark\|locomo\|longmemeval\|arxiv" README.md</code>
+returns nothing. For a memory system this is the honest position, and
+the README's argument is a usage one — an un-briefed agent greps, a
+briefed one was handed the answer — rather than a number.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Write your unwired mechanisms down, with a measurement and a
+date.</strong> <em>"Declared since before 0.13.19 and nothing has ever
+written either one — measured 2026-09-07: 0 quads of each across both
+tiers"</em> is worth more than any issue tracker entry, because it is in
+the file a maintainer opens when they go to use the thing.</p>
+<p><strong>Separate the edge from the label, and say which one
+decides.</strong> A status string that the dashboard reads and no
+decision path consults is a legitimate design — once it is stated. The
+44-values census is what justifies the rule.</p>
+<p><strong>Log after the rename, never before.</strong> <em>"The write
+has landed. Only now is there something true to log."</em> One line, and
+it is the difference between an audit log and a log of intentions.</p>
+<p><strong>Know when temp+rename is the wrong atomicity.</strong> For an
+append-only log on Windows the rename is the failure point;
+<code>O_APPEND</code> has none. The comment names the memory it came
+from.</p>
+<p><strong>Put the periodic warning in the doctor, not in the write
+path.</strong> A per-write nag <em>"is ignored within a week, and trains
+him to ignore the next warning that matters"</em>.</p>
+<p><strong>Assert both halves of an exclusion, and say why in the test
+file.</strong> This project wrote the atlas's vacuity rule into its own
+header without being asked.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not route writes by a key the serving queries do not
+filter on.</strong> The named graph carries the workspace and the hook
+queries read <code>GRAPH ?g</code>; the difference already produced bug
+#112 on the removal path.</p>
+<p><strong>Do not let a guard and its mutation ask different
+questions.</strong> The same bug in one sentence.</p>
+<p><strong>Do not key a correction on the record when the thing being
+corrected is text.</strong> Re-learning the same wrong fact produces a
+fresh live note.</p>
+<h3 id="fit">Fit</h3>
+<p>Take basemode if you want <strong>a structured workspace graph pushed
+into an agent's turn without the model having to ask</strong>, and you
+are comfortable with a source-available licence. The hook coverage is
+complete, the code graph makes "where is this used" answerable rather
+than greppable, and the engineering around the file is careful in the
+specific ways that matter for a single durable artifact.</p>
+<p>Do not take it if you need <strong>a tenant boundary inside one
+tier</strong>, or a correction that survives the same fact being learned
+again, or an epistemic status a reader can act on. And read the licence
+before building on it.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>A write-time routing key that no serving query filters
+on.</strong></p>
+<p><strong>Correction keyed on the record.</strong> The supersession
+chain is complete and re-learning walks past it.</p>
+<p><strong>A status field with a declared vocabulary, free-text writes,
+and 44 real values.</strong> The system is right not to trust it; the
+field is still there, and the dashboard shows it.</p>
+<p><strong>A best-effort audit with no test.</strong> Three stated
+guarantees, none of them pinned by a committed case.</p>
+<p><strong>A stale module header.</strong> <code>scope.rs</code> still
+describes itself as dormant with zero non-test callers;
+<code>crud/project.rs</code> calls it.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the supersession module wholesale</strong> if you have
+an RDF or triple-shaped store: the forward walk, the write-time cycle
+refusal, the filter helper, and the audit that reports disagreement
+rather than reconciling it are about 250 lines and the reasoning is in
+the file.</p>
+<p><strong>Borrow the changes-log contract</strong> — after the rename,
+best-effort, tier derived from the path, <code>O_APPEND</code> — for any
+single-file store with external readers.</p>
+<p><strong>Borrow the comment style.</strong> It is the cheapest quality
+mechanism in this report and it does not depend on Rust, RDF, or
+anything else here.</p>
+<p><strong>Build the scope predicate yourself</strong> before running
+more than one workspace in a tier.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the named graph meant to become a serving predicate? The write
+routing, the <code>workspace_graph_iri</code> helper and the
+<code>reslot</code> migration all exist; the hook queries read the
+wildcard.</li>
+<li><code>scope.rs</code>'s header says dormant and
+<code>crud/project.rs</code> calls it. Which phase is actually shipped
+is not derivable from the file.</li>
+<li>The sync ledger's <code>supersedes_fact_id</code> and the graph's
+<code>ops:supersededBy</code> now both express supersession. Whether the
+ledger field is being retired, or the two are expected to agree, is not
+stated.</li>
+<li><code>ops:status</code> has a declared vocabulary nothing validates.
+Whether the intent is to validate it or to delete it is the fork the
+audit's existence implies but does not name.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Memory and correction</strong></p>
+<ul>
+<li><code>src/supersede.rs</code> — the module docs quoted throughout,
+<code>sparql_exclude_superseded</code> (<code>:66</code>),
+<code>resolve_head</code> (<code>:92</code>), <code>would_cycle</code>
+(<code>:126</code>), <code>link_update</code> (<code>:167</code>),
+<code>audit</code> (<code>:218</code>)</li>
+<li><code>src/crud/supersede.rs</code>, <code>src/crud/note.rs</code>,
+<code>src/crud/rule.rs</code>, <code>src/crud/decision.rs</code>,
+<code>src/crud/handoff.rs</code></li>
+<li><code>src/ontology/ops.ttl</code> — the class and property
+declarations, including <code>ops:status</code> at
+<code>:117</code></li>
+</ul>
+<p><strong>Store and log</strong></p>
+<ul>
+<li><code>src/store.rs</code> — <code>write_back_inner</code>, the
+post-rename append (<code>:1015-1030</code>)</li>
+<li><code>src/changelog.rs</code> — the three guarantees and the
+<code>O_APPEND</code> argument</li>
+<li><code>src/doorbell.rs</code>, <code>src/graph.rs</code>,
+<code>src/migrate.rs</code></li>
+</ul>
+<p><strong>Serving</strong></p>
+<ul>
+<li><code>src/hook/session_start.rs</code>,
+<code>user_prompt_submit.rs</code>, <code>pre_tool_use.rs</code>,
+<code>post_tool_use.rs</code></li>
+<li><code>src/graph_query.rs</code>, <code>src/graph_tools.rs</code>,
+<code>src/scope.rs</code>, <code>src/domain/tier.rs</code></li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>tests/supersede_readers_test.rs</code>,
+<code>tests/rule_index_test.rs</code>,
+<code>tests/ontology_test.rs</code>,
+<code>tests/crud_decision_test.rs</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -rn &quot;supersede::&quot; --include=&quot;*.rs&quot; src/ tests/    # the producer at cli.rs:4052 and the readers
+grep -rn &quot;write_back_inner(&quot; --include=&quot;*.rs&quot; src/     # three entry points, one funnel
+grep -c &quot;GRAPH ?g&quot; ; grep -c &quot;GRAPH &lt;{&quot;                # 200 wildcard reads against 114 bound
+grep -rn &quot;createdAt\|updatedAt&quot; src/ontology/ops.ttl   # one time axis, updatedAt overwrites
+grep -rn -i &quot;benchmark\|locomo\|longmemeval\|arxiv&quot; README.md   # no claim</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/ChristopherKahler/base/commit/0ace1bae246f1ff9ea0b5ea9b8d1801fbc83c627"><code class="commit-id" title="0ace1bae246f1ff9ea0b5ea9b8d1801fbc83c627">0ace1bae…</code></a>
+— first reading, at the default branch's head, release 0.15.2 dated the
+same day. The queue entry named an older pin, <code>0e7433070323</code>,
+which the branch had moved past by the time it was worked; this report
+describes what was read. Screened before reading: no auto-run surface
+and no build-time execution path; five dependency surfaces inside the
+seven-day cooldown; two unpinned surfaces — a dashboard manifest with
+four floating ranges above a present lockfile, and
+<code>scripts/ast/requirements.txt</code> with 29 requirements unpinned;
+<code>Cargo.lock</code> present. Nothing was installed, built or run,
+and no test in this repository was executed. The licence is the
+<strong>Functional Source License 1.1 with an Apache-2.0 future
+licence</strong> per <code>LICENSE.md</code>, with
+<code>LICENSE-APACHE-2.0</code> and <code>LICENSING.md</code> beside it
+— source-available rather than open source at this pin, which is why the
+GitHub API reports <code>NOASSERTION</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
