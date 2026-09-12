@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Session memory for coding agents
+over one libSQL file, with a three-tier search that degrades from native
+vectors to a JS quantised scan to keyword matching — and a family of
+nine contract tests whose subject is not whether retrieval works but
+whether the sentence the agent is shown about it is accurate, written
+after a health check hardcoded a zero and reported HEALTHY through an
+outage in which every semantic query returned nothing.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Prism — Agent Memory Atlas">
+    <meta property="og:description" content="Session memory for coding
+agents over one libSQL file, with a three-tier search that degrades from
+native vectors to a JS quantised scan to keyword matching — and a family
+of nine contract tests whose subject is not whether retrieval works but
+whether the sentence the agent is shown about it is accurate, written
+after a health check hardcoded a zero and reported HEALTHY through an
+outage in which every semantic query returned nothing.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Prism — Agent Memory Atlas">
+    <meta name="twitter:description" content="Session memory for coding
+agents over one libSQL file, with a three-tier search that degrades from
+native vectors to a JS quantised scan to keyword matching — and a family
+of nine contract tests whose subject is not whether retrieval works but
+whether the sentence the agent is shown about it is accurate, written
+after a health check hardcoded a zero and reported HEALTHY through an
+outage in which every semantic query returned nothing.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Prism — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Prism",
+      "description": "Session memory for coding agents over one libSQL file, with a three-tier search that degrades from native vectors to a JS quantised scan to keyword matching \u2014 and a family of nine contract tests whose subject is not whether retrieval works but whether the sentence the agent is shown about it is accurate, written after a health check hardcoded a zero and reported HEALTHY through an outage in which every semantic query returned nothing.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory that tests whether it is telling
+the agent the truth</p>
+          <h1>Prism</h1>
+          <p class="document-deck">Session memory for coding agents over
+one libSQL file, with a three-tier search that degrades from native
+vectors to a JS quantised scan to keyword matching — and a family of
+nine contract tests whose subject is not whether retrieval works but
+whether the sentence the agent is shown about it is accurate, written
+after a health check hardcoded a zero and reported HEALTHY through an
+outage in which every semantic query returned nothing.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/dcostenco/prism-coder">
+              <span>Source</span>
+              <strong>dcostenco/prism-coder</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/dcostenco/prism-coder/commit/839b1afe7b26386af5a4ad6d228661f282faa5b9" title="839b1afe7b26386af5a4ad6d228661f282faa5b9">
+              <span>Analyzed revision</span>
+              <code>839b1afe…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/dcostenco--prism-coder" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>dcostenco--prism-coder</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Prism is session memory for coding agents: an MCP server with 41
+tools over one libSQL file, published as <code>prism-mcp-server</code>
+at version 20.18.0, Apache-2.0, about 72,800 lines of TypeScript against
+64,200 lines of tests in 195 test files. It restores what the last
+session decided, what it changed and what is still open, with a
+local-first posture — on-device embeddings, nothing leaving the machine
+by default — and a Supabase path behind the same storage interface for
+hosted use.</p>
+<p><strong>The reason to read it is a test family, not a
+mechanism.</strong> Nine files named <code>*Honesty</code> or
+<code>*Contract</code> assert something this atlas usually has to check
+by hand: that the sentence the system shows the model about its own
+retrieval is true. <code>searchResultHonesty.test.ts</code> pins that a
+result set containing lexical ranks is labelled "hybrid retrieval"
+rather than "semantically similar", and that a lexical-only rescue
+renders as <code>exact-term match (lex#3)</code> rather than
+<code>N/A similar</code>. Its docstring names the class in five words —
+<em>"correct data, misleading presentation"</em>.</p>
+<p><strong>One of those tests documents a real outage, and it is the
+sharpest finding here.</strong> <code>getHealthStats</code> hardcoded
+<code>missingEmbeddings: 0</code> on both its success <em>and</em> its
+failure paths, so <code>session_health_check</code> reported "HEALTHY —
+all clean" through an incident in which, in the test's own words,
+<em>"100% of 8,560 rows lacked a vector and semantic search returned
+nothing for every query."</em> The repair is the interesting part: the
+metric now returns a real count when the portal reports one and an
+explicit <code>-1</code> for unknown when it cannot be reached —
+<em>"never a fabricated zero"</em>. A health metric that could not fail
+is the exact shape this atlas looks for in evaluation code; finding it
+in a <em>production</em> self-report, with the incident written into the
+regression test, is rarer.</p>
+<p><strong>The scope boundary is the strong kind.</strong>
+<code>searchMemory</code> opens its WHERE with four conditions before
+any caller option is considered, and <code>l.user_id = ?</code> is among
+them unconditionally. The bound value is <code>PRISM_USER_ID</code>, a
+module constant read once from the environment — not a tool argument —
+so a model calling <code>session_search_memory</code> cannot name a
+tenant it should not see. 53 <code>user_id</code> predicates and 29
+<code>archived_at IS NULL</code> filters apply the same pair across the
+storage layer.</p>
+<p><strong>What is missing is the other half of correction.</strong>
+Live handoff state is versioned properly: every save appends a full
+snapshot, and <code>memory_history</code>/<code>memory_checkout</code>
+give the agent a git-like revert that moves the version forward rather
+than rewinding it. The ledger entries — the memories — have none of
+that. A soft delete sets a column and records nothing, no table holds
+ledger mutations, and the one table named <code>memory_access_log</code>
+records <em>retrievals</em>, which is the half that cannot say what
+changed.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a session's residue with a vector
+attached</strong>. The unit is not a fact or an utterance but a whole
+working session compressed into one row: a summary, the decisions taken,
+the files touched, the todos left open, keywords, and an embedding of
+the summary. That choice drives everything downstream — recall returns
+sessions, consolidation rolls sessions into rollups, and the thing an
+agent gets back at boot is "here is where you were", not "here is a fact
+you established".</p>
+<p><strong>Belief is not modelled; availability is.</strong> There is no
+status field. What a row has instead is <code>importance</code> (a
+number that decays), <code>archived_at</code> and
+<code>deleted_at</code> (two ways to stop being returned), and
+<code>is_rollup</code> (a marker that this row stands for several).
+Nothing says a memory is on record and not to be trusted.</p>
+<p><strong>The distinctive epistemic move is one level up, about the
+system rather than the memory.</strong> Retrieval can happen three
+different ways, and which way it happened changes how much the result is
+worth. Prism's answer is to carry the tier into the rendering and then
+test the rendering: the model is told <code>sem#6 + lex#1</code> for a
+fused hit, <code>exact-term match (lex#3)</code> for a lexical rescue,
+and an explicit unknown when the health of the vector index cannot be
+determined. The system's claims about itself are treated as something
+that can be wrong, and pinned.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the honesty tests sit on the seam between what retrieval did and what the agent is told about it — the tier that answered, the arms that fused, and whether the vector index is healthy are all facts the renderer could misstate without any query failing, which is how a hardcoded zero reported HEALTHY through an outage where every semantic query returned nothing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the honesty tests sit on the seam between what retrieval did and what the agent is told about it — the tier that answered, the arms that fused, and whether the vector index is healthy are all facts the renderer could misstate without any query failing, which is how a hardcoded zero reported HEALTHY through an outage where every semantic query returned nothing
+flowchart TD
+  A[&quot;agent calls session_save_ledger&quot;] --&gt; B[&quot;PHI scan and redact before storage&quot;]
+  B --&gt; C[&quot;embed the summary — on-device by default&quot;]
+  C --&gt; D[&quot;session_ledger row — summary, decisions, files, todos, importance&quot;]
+  D --&gt; E[&quot;decayImportance, fire-and-forget&quot;]
+
+  F[&quot;agent calls session_search_memory&quot;] --&gt; G[&quot;WHERE user_id = PRISM_USER_ID, archived_at IS NULL, deleted_at IS NULL&quot;]
+  G --&gt; H{&quot;tier 1 — native vector_distance_cos&quot;}
+  H --&gt;|&quot;works&quot;| I[&quot;similarity per row&quot;]
+  H --&gt;|&quot;throws — old libSQL, no F32_BLOB&quot;| J{&quot;tier 2 — TurboQuant scan in JS&quot;}
+  J --&gt;|&quot;works&quot;| I
+  J --&gt;|&quot;fails&quot;| K[&quot;tier 3 — FTS5 keyword&quot;]
+  K --&gt; I
+  I --&gt; L[&quot;optional spreading activation over memory_links&quot;]
+  L --&gt; M[&quot;render the result for the model&quot;]
+
+  M --&gt; N{&quot;what is the agent told&quot;}
+  N --&gt;|&quot;pinned by searchResultHonesty&quot;| O[&quot;hybrid labelled hybrid, lexical rescue labelled lex, never N/A&quot;]
+  N --&gt;|&quot;pinned by embeddingCoverageHonesty&quot;| P[&quot;missing-vector count is real, or explicitly -1, never a fabricated 0&quot;]
+
+  Q[&quot;handoff save&quot;] --&gt; R[&quot;snapshot appended to session_handoffs_history, version + 1&quot;]
+  R --&gt; S[&quot;memory_history lists versions; memory_checkout restores one forward&quot;]
+  D -.-&gt;|&quot;a ledger delete sets a column and records nothing&quot;| T[&quot;no mutation record for the memories themselves&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One process, one file, no services required. The default is a local
+libSQL database under the user's home with on-device embeddings;
+<code>SupabaseStorage</code> implements the same
+<code>interface.ts</code> for a hosted multi-tenant deployment, and the
+interface is where the contract lives — 1,029 lines of it, heavily
+commented.</p>
+<p>The server speaks MCP over stdio and is distributed several ways at
+once: npm as <code>prism-mcp-server</code>, an MCP registry entry in
+<code>server.json</code>, a Claude Code plugin through
+<code>.claude-plugin/marketplace.json</code>, a Smithery manifest, a
+Docker image, and Python and Vercel AI SDK adapters. A local dashboard
+with optional authentication serves health, analytics, projects,
+settings, and bulk maintenance actions.</p>
+<p>Fifteen tables carry more than the memory path: an agent registry
+with heartbeats for multi-agent "hivemind" use,
+<code>memory_links</code> for spreading activation,
+<code>semantic_knowledge</code> and an HDC dictionary,
+<code>dark_factory_pipelines</code>, and
+<code>verification_harnesses</code>/<code>verification_runs</code>. This
+report is about the ledger, the handoffs and their retrieval.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Save</strong> — <code>session_save_ledger</code> → PHI scan
+and redaction (<code>src/utils/phiGuard.ts</code>) → embedding of the
+summary → insert into <code>session_ledger</code> → fire-and-forget
+<code>decayImportance(project, PRISM_USER_ID, 30)</code>.</p>
+<p><strong>Recall</strong> — <code>searchMemory</code>
+(<code>src/storage/sqlite.ts:1742</code>): compose the scoped WHERE, try
+native vector search, fall back to a TurboQuant scan in JS, fall back
+again to FTS5, filter by the similarity threshold, optionally expand
+through spreading activation, and return rows carrying
+<code>similarity</code>, <code>session_date</code>,
+<code>importance</code> and <code>last_accessed_at</code>.</p>
+<p><strong>Boot</strong> — <code>session_bootstrap</code> /
+<code>session_load_context</code> assemble the handoff plus recent
+ledger entries for the project and role into the block a new session
+starts from.</p>
+<p><strong>Correct</strong> — <code>session_save_handoff</code> takes an
+expected version, reads the current one, and refuses the write when they
+disagree; on success it appends the prior state to
+<code>session_handoffs_history</code>. <code>memory_history</code> lists
+those versions; <code>memory_checkout</code> restores one as a new
+version.</p>
+<p><strong>Consolidate</strong> — <code>session_compact_ledger</code>
+folds old entries into an <code>is_rollup</code> row with a
+<code>rollup_count</code>; <code>session_backfill_embeddings</code>
+repairs rows the write path left without a vector, which is the
+operation the health check exists to make visible.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>session_ledger</code> is the memory. Its two-copy embedding
+design is worth noting: <code>embedding F32_BLOB(768)</code> for native
+vector search beside <code>embedding_compressed</code> with an
+<code>embedding_format</code> tag, so the tier-2 fallback has something
+to scan when the native path is unavailable. <code>importance</code> and
+<code>last_accessed_at</code> feed decay;
+<code>is_rollup</code>/<code>rollup_count</code> mark consolidated
+rows.</p>
+<p>Two timestamps exist and one axis is queried.
+<code>session_date</code> is when the work happened and
+<code>created_at</code> is when the row was written, which is a real
+distinction — but every read coalesces them
+(<code>session_date: r.session_date || r.created_at</code> at
+<code>:1492</code> and <code>:1543</code>, and the same expression in
+the search projection), so there is no way to ask what the store held as
+of a past date. That is why the bi-temporal mark is withheld: both
+fields are stored, one axis is reachable.</p>
+<p><code>session_handoffs</code> is the live state, unique per
+<code>(project, user_id)</code>, carrying <code>version</code> for
+optimistic concurrency. <code>session_handoffs_history</code> holds one
+full <code>snapshot</code> per version. <code>memory_access_log</code>
+holds <code>(entry_id, accessed_at, context_hash)</code> — a retrieval
+record, not a mutation record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The three tiers are the design, and the source documents them in a
+reviewer note rather than leaving them to be discovered: native
+<code>vector_distance_cos()</code> over the DiskANN-indexed column; a
+JavaScript asymmetric scan over compressed vectors when the native path
+throws, with the reason given — <code>@libsql/client</code> has no
+user-defined functions, and the TurboQuant math needs
+<code>Float64Array</code> operations that cannot be expressed in SQL;
+and FTS5 keyword search when both fail.</p>
+<p>A fallback chain like this is where a memory system usually starts
+lying to its caller: the query still returns rows, so nothing errors,
+and the model has no way to know it just got keyword matches labelled as
+semantic ones. The honesty tests exist precisely on that seam, and they
+are the reason the tier machinery is trustworthy rather than merely
+clever.</p>
+<p>Scoping is applied before any of it. <code>user_id</code> is
+unconditional and comes from the environment; <code>project</code> and
+<code>role</code> narrow when supplied. Spreading activation expands a
+result set over <code>memory_links</code> and takes the same
+<code>userId</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous MCP calls on the agent's turn. The PHI guard
+runs before storage and is tested in both directions — SSN and
+date-of-birth patterns are redacted, and
+<code>does not flag non-SSN numbers</code> is the control that stops the
+matcher becoming indiscriminate. Redaction at the write path means the
+raw value never lands, which is the right place for it and also means
+the guard's false negatives are permanent.</p>
+<p>Decay is not a background pass; <code>decayImportance</code> is
+kicked off after a save and not awaited. Consolidation is an explicit
+tool call. Nothing rewrites the whole store on a timer.</p>
+<p>The handoff write is the careful one: an expected version in, a
+current version read, a refusal on disagreement, a snapshot appended on
+success. That is a correction path a second agent cannot silently
+clobber — and it is the only part of the store with one.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>41 tool definitions, of which the memory-shaped ones are
+<code>session_save_ledger</code>, <code>session_save_handoff</code>,
+<code>session_load_context</code>, <code>session_bootstrap</code>,
+<code>session_search_memory</code>, <code>knowledge_search</code>,
+<code>knowledge_forget</code>, <code>session_compact_ledger</code>,
+<code>memory_history</code> and <code>memory_checkout</code>. The
+descriptions are written for a model rather than a developer —
+<code>memory_checkout</code> says <em>"Time travel! … like a Git revert
+— the version number moves forward (no data is lost). Call
+memory_history first"</em> — and the ordering advice is doing real work,
+since a checkout without a prior history call is a guess at a version
+number.</p>
+<p>A drift timer on the session context tracks how long since the last
+<code>session_detect_drift</code> or save, and nudges. The nudge is a
+reminder to the agent, not an action.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The self-report discipline is the strength</strong>, and it
+is unusual enough to be worth listing as a family:
+<code>searchResultHonesty</code>, <code>embeddingCoverageHonesty</code>,
+<code>inferFailureContract</code>,
+<code>inferenceMetricsContract</code>,
+<code>layer1DeterministicContract</code>, <code>routeContract</code>,
+<code>behavioralVerifierContract</code>,
+<code>codingQualityPolicyContract</code>,
+<code>server-startup-contract</code>. Their common subject is the
+accuracy of what the system tells its caller about itself.</p>
+<p><strong>Export is confined.</strong>
+<code>sessionExportMemoryConfinement.test.ts</code> asserts that an
+<code>output_dir</code> outside every allowed root is rejected,
+including when the directory already exists — a path-traversal guard on
+the one tool that writes memory out of the store and onto arbitrary
+disk.</p>
+<p><strong>The mutation gap is the weakness.</strong> A ledger
+soft-delete writes a column and nothing else;
+<code>knowledge_forget</code> prunes; neither leaves a record. So "why
+is this memory gone, and who removed it" is unanswerable for the
+memories, while the same question about live handoff state has a
+complete answer. The one table named for logging holds retrievals, and
+by the rubric's own reasoning a record of what was read cannot be false
+in the way a record of what changed can.</p>
+<p><strong>The install surface is broad.</strong> Five auto-run surfaces
+at the pin — a Claude Code plugin manifest, a harness settings file, an
+empty <code>.gitmodules</code>, an MCP server manifest and a Smithery
+manifest — plus an npm <code>postinstall</code>, a Python
+<code>setup.py</code>, and 33 floating ranges above a present lockfile.
+One of those is stale rather than dangerous:
+<code>.claude/settings.json</code> configures a <code>PostToolUse</code>
+hook running <code>bash scripts/hooks/post-commit-repomix.sh</code>, and
+<code>scripts/hooks/</code> does not exist in the tree, so the hook is
+inert.</p>
+<p><strong>Version 20.18.0 in seven months, from one non-bot contributor
+and two bots.</strong> The changelog runs to 3,269 lines. Release
+velocity at that rate over a store holding a developer's decisions and
+file history is a maintenance risk worth weighing against the test
+count, which is genuinely high.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> Four dependency surfaces
+changed the day before the pin, inside the seven-day cooldown this atlas
+applies before installing anything, and the tree carries a
+<code>postinstall</code> and a Python <code>setup.py</code>. Everything
+below is read from the committed code.</p>
+<p>195 test files, 64,200 lines — close to one-to-one with the
+implementation — running under vitest against a real libSQL file in a
+temp directory, with no mock storage layer between the assertion and the
+schema and no skip path that would let a run pass having asserted
+nothing.</p>
+<p>The negative assertions worth separating by strength:</p>
+<ul>
+<li><strong>The predicate case.</strong>
+<code>tests/load/hivemind.test.ts:405-418</code> drives ten workflows
+into one store and asserts each project returns exactly one entry with
+exactly its own summary. A leaking project filter fails it.</li>
+<li><strong>The eligibility case.</strong>
+<code>tests/deep-storage.test.ts</code> seeds seven rows and excludes
+four for four distinct stated reasons — no compressed blob, too recent,
+soft-deleted, different project — asserting three eligible.</li>
+<li><strong>The fixture case, which is weaker than it looks.</strong>
+<code>tests/storage/isolation.test.ts</code> queries a neighbour's
+project and asserts zero rows, but the neighbour lives in a
+<em>different database file</em>, so the assertion pins the test harness
+rather than the read path.</li>
+</ul>
+<p><strong>No benchmark, no paper, and no claim to either.</strong>
+<code>evidence/</code> holds a single text file,
+<code>delegation-rate-mixed-session.txt</code>; there is no LoCoMo or
+LongMemEval harness in the tree and no accuracy figure in the README.
+For a memory system in 2026 that restraint is worth naming rather than
+filing as a gap.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Test the sentence, not just the mechanism.</strong> A
+fallback chain that still returns rows will mislabel its own results
+without anything failing. Asserting that a hybrid result set is called
+hybrid, and that a lexical rescue never renders as
+<code>N/A similar</code>, costs five small cases and closes a gap no
+retrieval test can see.</p>
+<p><strong>Return an explicit unknown instead of a plausible
+zero.</strong> <code>missingEmbeddings: -1</code> for "could not
+determine" is worth more than any monitoring dashboard built on a number
+that is hardcoded on the failure path. The incident that produced this
+rule is in the test's docstring, which is where such things belong.</p>
+<p><strong>Bind the tenant from the environment, not from the tool
+schema.</strong> A scope key a model can pass is a scope key a model can
+get wrong. <code>PRISM_USER_ID</code> is read once at startup and
+threaded through every handler as a constant.</p>
+<p><strong>Keep two embedding encodings so the fallback has something to
+scan.</strong> A compressed copy beside the native vector is what makes
+tier 2 possible at all, and the reason the native path cannot be assumed
+is written down: the client has no UDFs.</p>
+<p><strong>Version the live state and let the agent revert
+forward.</strong> Snapshot per version, expected-version writes, history
+before checkout, and a restore that increments rather than rewinds —
+described to the model in its own tool text.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not log retrievals and call it an audit.</strong>
+<code>memory_access_log</code> is useful for decay and analytics and
+answers none of the questions a mutation record answers. Naming it
+<code>..._log</code> while the mutations go unrecorded makes the gap
+harder to see.</p>
+<p><strong>Do not give live state a correction story and leave the
+memories without one.</strong> The handoff can be inspected, diffed and
+restored; a deleted ledger entry leaves no trace of who removed it or
+why.</p>
+<p><strong>Do not coalesce two timestamps at every read.</strong>
+<code>session_date || created_at</code> throws away the distinction the
+schema paid for.</p>
+<h3 id="fit">Fit</h3>
+<p>Take Prism if you want <strong>session continuity for a coding agent
+on one machine</strong>: the boot-time restore is the product, the
+local-first default is real, the tool surface is broad, and the honesty
+discipline means what it tells your agent about its own recall can be
+believed.</p>
+<p>Do not take it where <strong>memory must be defensible after the
+fact</strong>. There is no epistemic state, no mutation record for the
+memories, and no way to answer why an entry is gone. And weigh the
+operational shape honestly: a 41-tool MCP server at version 20.18.0 from
+a solo maintainer, installed through a <code>postinstall</code> over 33
+floating ranges, is a large surface to point at a developer's project
+history.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>A <code>..._log</code> table that records the half that
+cannot be wrong.</strong></p>
+<p><strong>Soft deletes that write nothing.</strong> Two columns stop a
+row being returned and no record says a removal happened.</p>
+<p><strong>A tombstone in name only.</strong> <code>interface.ts</code>
+calls <code>deleted_at</code> a tombstone; it is keyed on the record, so
+the same content saved again is a new live entry — the case the rubric's
+definition exists to exclude.</p>
+<p><strong>The PHI guard is regex-shaped and terminal.</strong>
+Redaction happens before storage, so a pattern it misses is stored in
+the clear permanently, and a pattern it over-matches destroys content
+with no record of what was removed.</p>
+<p><strong>A configured harness hook pointing at a missing
+script.</strong> Inert today, and a sign the settings file is not
+maintained with the tree.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the honesty tests.</strong> They carry across to any
+stack and depend on nothing else in this design: for any retrieval with
+more than one arm or more than one tier, pin what the caller is
+told.</p>
+<p><strong>Borrow the health-metric rule</strong> — a real number, or an
+explicit unknown, never a default that reads as healthy.</p>
+<p><strong>Borrow the handoff versioning</strong> if you have a mutable
+live-state row that two agents might write.</p>
+<p><strong>Build the mutation record yourself</strong> before relying on
+this in a setting where a deletion has to be explainable. One
+append-only table with an operation, an entry id, an actor and a reason
+would close it, and the schema already has the shape in
+<code>session_handoffs_history</code>.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Why does the ledger have no mutation record when the handoff has a
+full snapshot chain? The machinery exists one table over.</li>
+<li>Is the drift timer meant to become an action? It tracks time since
+the last check and nudges; nothing in the tree acts on it.</li>
+<li><code>session_date</code> is written but never queried
+independently. Whether it is intended as a validity axis or as display
+metadata is not stated.</li>
+<li>What happens to the honesty family as the tool surface grows? Nine
+contract tests against 41 tools is good coverage of the seams that
+existed when each incident happened, and nothing in the tree requires a
+new tool to declare what it tells the caller.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Storage</strong></p>
+<ul>
+<li><code>src/storage/interface.ts</code> — the contract, including the
+tombstone and GDPR comments</li>
+<li><code>src/storage/sqlite.ts</code> — fifteen tables
+(<code>:136</code> ledger, <code>:157</code> handoffs, <code>:221</code>
+handoff history, <code>:678</code> access log),
+<code>searchMemory</code> (<code>:1742</code>), the three-tier reviewer
+note (<code>:1810</code>), handoff history insert
+(<code>:1971</code>)</li>
+<li><code>src/storage/supabase.ts</code> — the hosted implementation of
+the same interface</li>
+</ul>
+<p><strong>Tools and session</strong></p>
+<ul>
+<li><code>src/tools/sessionMemoryDefinitions.ts</code> — 41 tool
+definitions, <code>memory_history</code> and
+<code>memory_checkout</code> at <code>:733</code></li>
+<li><code>src/tools/ledgerHandlers.ts</code> — save, load, handoff,
+health, decay</li>
+<li><code>src/tools/graphHandlers.ts</code> —
+<code>isHybridSearchResults</code>, <code>searchResultsHeader</code>,
+<code>formatHitScore</code></li>
+<li><code>src/memory/spreadingActivation.ts</code>,
+<code>src/session/sessionContext.ts</code>,
+<code>src/utils/phiGuard.ts</code>,
+<code>src/utils/healthCheck.ts</code></li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>tests/searchResultHonesty.test.ts</code>,
+<code>tests/embeddingCoverageHonesty.test.ts</code></li>
+<li><code>tests/load/hivemind.test.ts</code>,
+<code>tests/deep-storage.test.ts</code>,
+<code>tests/storage/isolation.test.ts</code></li>
+<li><code>tests/phiGuard.test.ts</code>,
+<code>tests/tools/sessionExportMemoryConfinement.test.ts</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -c &quot;user_id = ?&quot; src/storage/sqlite.ts              # 53 scope predicates
+grep -c &quot;archived_at IS NULL&quot; src/storage/sqlite.ts      # 29 read-path filters
+grep -rn &quot;PRISM_USER_ID&quot; src/config.ts src/tools/ledgerHandlers.ts   # env constant, never a tool arg
+grep -n &quot;CREATE TABLE&quot; src/storage/sqlite.ts             # fifteen tables; one log, of retrievals
+grep -n &quot;session_date&quot; src/storage/sqlite.ts             # coalesced with created_at on every read
+test -e scripts/hooks/post-commit-repomix.sh             # the configured hook&#39;s payload is absent</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/dcostenco/prism-coder/commit/839b1afe7b26386af5a4ad6d228661f282faa5b9"><code class="commit-id" title="839b1afe7b26386af5a4ad6d228661f282faa5b9">839b1afe…</code></a>
+— first reading, at the default branch's head, a commit dated 10
+September 2026. Screened before reading: five auto-run surfaces, all
+read first — a Claude Code plugin marketplace manifest, a
+<code>.claude/settings.json</code> whose <code>PostToolUse</code> hook
+invokes a script absent from the tree, an <strong>empty</strong>
+<code>.gitmodules</code>, and MCP and Smithery manifests declaring the
+published npm package as the start command; three build-time execution
+paths (an npm <code>postinstall</code>, a <code>prepublishOnly</code>
+chain, a Python <code>adapters/python/setup.py</code>); four dependency
+surfaces changed the day before the pin, inside the seven-day cooldown;
+three unpinned surfaces including 33 floating ranges above a present
+lockfile; one uninstalled git-hook payload under
+<code>scripts/knowledge-ingest/</code>; and <code>GEMINI.md</code> read
+as data. Nothing was installed, built or run, and no test in this
+repository was executed. Licence is Apache-2.0 per <code>LICENSE</code>
+and <code>package.json</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

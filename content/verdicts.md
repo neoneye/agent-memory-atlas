@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 439 reports.**
+**This page covers all 440 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3856,3 +3856,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 32,400 lines of Go with 16,300 of tests and 577 test functions, MIT, alpha at `0.1.0-alpha.28`, two harnesses and five terminal integrations. The task layer is properly built — CHECK constraints throughout, optimistic locking with a documented NULL-safe comparison, archiving that never deletes a file. The knowledge base beside it has no schema at all, which is the design rather than an omission.
 - Study when: you want task management for Claude Code sessions, or a worked example of writing a memory policy for a model to follow and then measuring whether it did.
 - Do not copy when: you need a store you can query, correct, scope or audit.
+
+### [`prism-coder`](../systems/prism-coder/)
+- Best idea: **tests whose subject is the accuracy of the system's own self-report.** Nine `*Honesty`/`*Contract` files pin the seam between what retrieval did and what the agent is told: a hit set carrying lexical ranks must be labelled "hybrid retrieval" not "semantically similar", and a lexical-only rescue must render as `exact-term match (lex#3)` rather than `N/A similar`. One of them documents the incident that produced the rule — `getHealthStats` hardcoded `missingEmbeddings: 0` on both its success and failure paths and reported HEALTHY through an outage in which "100% of 8,560 rows lacked a vector and semantic search returned nothing for every query"; the repair returns an explicit `-1` for unknown, "never a fabricated zero". Two marks, `scope_enforced` and `negative_eval`.
+- Biggest risk: **the memories have no mutation record.** A ledger soft-delete sets a column and writes nothing, `knowledge_forget` prunes without a trace, and the one table named `memory_access_log` records retrievals — the half that cannot be wrong the way a record of what changed can. Live handoff state, one table over, has a full snapshot per version and a git-like `memory_checkout`, so the correction story exists and stops short of the entries themselves. Add a release cadence of 20.18.0 in seven months from one non-bot contributor, installed through an npm `postinstall` over 33 floating ranges.
+- Most reusable component: the honesty tests, which are independent of everything else here — for any retrieval with more than one arm or tier, pin what the caller is told — and the health-metric rule beside them: a real count, or an explicit unknown, never a default that reads as healthy.
+- Maturity impression: about 72,800 lines of TypeScript against 64,200 lines of tests across 195 files, vitest over a real libSQL file with no mock storage layer and no skip path, Apache-2.0, distributed six ways at once (npm, MCP registry, Claude Code plugin, Smithery, Docker, Python and Vercel adapters), with a 3,269-line changelog. The scope predicate is the strong form — `user_id` bound from the environment, never from a tool argument — and the tombstone is not: `interface.ts` calls `deleted_at` a tombstone and it is keyed on the record.
+- Study when: you want session continuity for a coding agent on one machine, or a worked example of testing whether a fallback chain lies to its caller.
+- Do not copy when: a deletion has to be explainable after the fact, or a memory needs a status that withholds it from being believed.

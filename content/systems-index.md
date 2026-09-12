@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **439 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **440 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -436,6 +436,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/potpie/"><span class="az-id">Potpie</span><span class="az-what">Invalidation with a reason, and no key on the value</span><code class="az-repo">potpie-ai/potpie</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/powermem/"><span class="az-id">PowerMem</span><span class="az-what">Decay on the read path</span><code class="az-repo">oceanbase/powermem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/prime-agent/"><span class="az-id">Prime Agent</span><span class="az-what">A harness that edits itself, with an undo</span><code class="az-repo">PrimeIntellect-ai/prime-agent</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/prism-coder/"><span class="az-id">Prism</span><span class="az-what">A memory that tests whether it is telling the agent the truth</span><code class="az-repo">dcostenco/prism-coder</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/pro-workflow/"><span class="az-id">Pro Workflow</span><span class="az-what">Learnings the model writes and the person never sees loaded</span><code class="az-repo">rohitg00/pro-workflow</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/pro-long/"><span class="az-id">PRO-LONG</span><span class="az-what">The log is the memory</span><code class="az-repo">alexisfox7/PRO-LONG</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/athena/"><span class="az-id">Project Athena</span><span class="az-what">Claims labelled by how well they are known</span><code class="az-repo">winstonkoh87/Athena-Public</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>

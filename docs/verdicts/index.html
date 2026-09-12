@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 439 reports.</strong></p>
+<p><strong>This page covers all 440 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15749,6 +15749,54 @@ worked example of writing a memory policy for a model to follow and then
 measuring whether it did.</li>
 <li>Do not copy when: you need a store you can query, correct, scope or
 audit.</li>
+</ul>
+<h3 id="prism-coder"><a
+href="../systems/prism-coder/"><code>prism-coder</code></a></h3>
+<ul>
+<li>Best idea: <strong>tests whose subject is the accuracy of the
+system's own self-report.</strong> Nine
+<code>*Honesty</code>/<code>*Contract</code> files pin the seam between
+what retrieval did and what the agent is told: a hit set carrying
+lexical ranks must be labelled "hybrid retrieval" not "semantically
+similar", and a lexical-only rescue must render as
+<code>exact-term match (lex#3)</code> rather than
+<code>N/A similar</code>. One of them documents the incident that
+produced the rule — <code>getHealthStats</code> hardcoded
+<code>missingEmbeddings: 0</code> on both its success and failure paths
+and reported HEALTHY through an outage in which "100% of 8,560 rows
+lacked a vector and semantic search returned nothing for every query";
+the repair returns an explicit <code>-1</code> for unknown, "never a
+fabricated zero". Two marks, <code>scope_enforced</code> and
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the memories have no mutation record.</strong>
+A ledger soft-delete sets a column and writes nothing,
+<code>knowledge_forget</code> prunes without a trace, and the one table
+named <code>memory_access_log</code> records retrievals — the half that
+cannot be wrong the way a record of what changed can. Live handoff
+state, one table over, has a full snapshot per version and a git-like
+<code>memory_checkout</code>, so the correction story exists and stops
+short of the entries themselves. Add a release cadence of 20.18.0 in
+seven months from one non-bot contributor, installed through an npm
+<code>postinstall</code> over 33 floating ranges.</li>
+<li>Most reusable component: the honesty tests, which are independent of
+everything else here — for any retrieval with more than one arm or tier,
+pin what the caller is told — and the health-metric rule beside them: a
+real count, or an explicit unknown, never a default that reads as
+healthy.</li>
+<li>Maturity impression: about 72,800 lines of TypeScript against 64,200
+lines of tests across 195 files, vitest over a real libSQL file with no
+mock storage layer and no skip path, Apache-2.0, distributed six ways at
+once (npm, MCP registry, Claude Code plugin, Smithery, Docker, Python
+and Vercel adapters), with a 3,269-line changelog. The scope predicate
+is the strong form — <code>user_id</code> bound from the environment,
+never from a tool argument — and the tombstone is not:
+<code>interface.ts</code> calls <code>deleted_at</code> a tombstone and
+it is keyed on the record.</li>
+<li>Study when: you want session continuity for a coding agent on one
+machine, or a worked example of testing whether a fallback chain lies to
+its caller.</li>
+<li>Do not copy when: a deletion has to be explainable after the fact,
+or a memory needs a status that withholds it from being believed.</li>
 </ul>
         </article>
       </div>

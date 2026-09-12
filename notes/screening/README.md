@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 322 of 439 screened at the report's current pin.**
+**Progress: 323 of 440 screened at the report's current pin.**
 
 12 further record(s) describe a revision the report has since moved
 off, and 105 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 129 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 160 |
-| Repositories with build-time execution (`EXEC`) | 241 |
+| Repositories with an auto-run surface (`RUNS`) | 130 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 161 |
+| Repositories with build-time execution (`EXEC`) | 242 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -128,6 +128,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
+| [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
