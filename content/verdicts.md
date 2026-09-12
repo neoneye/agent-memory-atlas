@@ -489,11 +489,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`memora`](../systems/memora/)
 - Best idea: automated supersession that defaults to a dry run, so a correction sweep is previewed before it hides anything.
-- Biggest risk: supersession without a tombstone, in a system that ingests documents and images and can therefore re-ingest what it hid.
-- Most reusable component: the six-way relation vocabulary with neutral A/B presentation, and `dry_run: bool = True` as the default posture.
-- Maturity impression: substantial for its age, with the sophistication concentrated in what happens to memories after they are written.
-- Study when: you are about to run an automatic dedupe or supersession pass over a store you cannot afford to damage.
-- Do not copy when: you need trust state, scope isolation, or a correction that survives re-ingestion.
+- Biggest risk: the shipped Claude Code plugin's `PostToolUse` hook stamps a memory type by keyword — a test output matching `failed`, `error` or `failure` is written as an `issue` with `status: open` and `severity: major` — which is the classification the server's own write path had removed for a reason its commit message states, that word frequency cannot distinguish a note about a bug from a bug report. The property holds inside the server and not in the product as installed.
+- Most reusable component: the six-way relation vocabulary with neutral A/B presentation, `dry_run: bool = True` as the default posture, and a retirement keyed on a normalised content hash that both automatic ingest paths consult and refuse.
+- Maturity impression: substantial and moving fast — 95 commits and about 17,600 added lines in a month to v0.4.0, with one database per named instance, a durable absorb in-flight table, and session routing hardened over eight commits after a POST bypass. The sophistication is still concentrated in what happens to memories after they are written.
+- Study when: you are about to run an automatic dedupe or supersession pass over a store you cannot afford to damage, or you want a worked rejected-value tombstone that binds the automatic paths and deliberately exempts the operator.
+- Do not copy when: you need trust state, or a scope boundary that is a predicate rather than a separate database file.
 
 ### [`loongflow`](../systems/loongflow/)
 - Best idea: recall by Boltzmann sampling at a temperature driven by the store's measured diversity — the only stochastic retrieval in the atlas.

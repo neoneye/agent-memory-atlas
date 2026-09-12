@@ -1309,19 +1309,31 @@ href="../systems/memora/"><code>memora</code></a></h3>
 <ul>
 <li>Best idea: automated supersession that defaults to a dry run, so a
 correction sweep is previewed before it hides anything.</li>
-<li>Biggest risk: supersession without a tombstone, in a system that
-ingests documents and images and can therefore re-ingest what it
-hid.</li>
+<li>Biggest risk: the shipped Claude Code plugin's
+<code>PostToolUse</code> hook stamps a memory type by keyword — a test
+output matching <code>failed</code>, <code>error</code> or
+<code>failure</code> is written as an <code>issue</code> with
+<code>status: open</code> and <code>severity: major</code> — which is
+the classification the server's own write path had removed for a reason
+its commit message states, that word frequency cannot distinguish a note
+about a bug from a bug report. The property holds inside the server and
+not in the product as installed.</li>
 <li>Most reusable component: the six-way relation vocabulary with
-neutral A/B presentation, and <code>dry_run: bool = True</code> as the
-default posture.</li>
-<li>Maturity impression: substantial for its age, with the
-sophistication concentrated in what happens to memories after they are
+neutral A/B presentation, <code>dry_run: bool = True</code> as the
+default posture, and a retirement keyed on a normalised content hash
+that both automatic ingest paths consult and refuse.</li>
+<li>Maturity impression: substantial and moving fast — 95 commits and
+about 17,600 added lines in a month to v0.4.0, with one database per
+named instance, a durable absorb in-flight table, and session routing
+hardened over eight commits after a POST bypass. The sophistication is
+still concentrated in what happens to memories after they are
 written.</li>
 <li>Study when: you are about to run an automatic dedupe or supersession
-pass over a store you cannot afford to damage.</li>
-<li>Do not copy when: you need trust state, scope isolation, or a
-correction that survives re-ingestion.</li>
+pass over a store you cannot afford to damage, or you want a worked
+rejected-value tombstone that binds the automatic paths and deliberately
+exempts the operator.</li>
+<li>Do not copy when: you need trust state, or a scope boundary that is
+a predicate rather than a separate database file.</li>
 </ul>
 <h3 id="loongflow"><a
 href="../systems/loongflow/"><code>loongflow</code></a></h3>

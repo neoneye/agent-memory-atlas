@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 39
+<li><strong>Correction is the phase that goes unbuilt.</strong> 40
 systems of 441 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -324,17 +324,17 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-thirty-nine tombstones, one hundred and eighty-seven negative-eval
-suites — are counts <em>over inspectable code</em>, and a closed system
-could hold any of these mechanisms without this method ever knowing. And
-a mechanism's absence here is weaker evidence about the field than its
+forty tombstones, one hundred and eighty-seven negative-eval suites —
+are counts <em>over inspectable code</em>, and a closed system could
+hold any of these mechanisms without this method ever knowing. And a
+mechanism's absence here is weaker evidence about the field than its
 presence: finding a tombstone proves someone built one, while not
 finding one proves only that nobody built one <em>in public</em>.</p>
 <p><strong>The divergences that actually separate these
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Thirty-nine of four hundred and
+everything can overwrite or supersede. Forty of four hundred and
 forty-one systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -15348,16 +15348,31 @@ correction; no scoping; no licence</td>
 <td><code>memora</code></td>
 <td>Memory row with content, tags, metadata, importance, and access
 count</td>
-<td>SQLite with FTS5, embeddings, crossrefs, events, actions; D1 cloud
-backend</td>
+<td>SQLite with FTS5, embeddings, crossrefs, events, actions, tombstones
+and an absorb in-flight table; D1 cloud backend; one database per named
+instance, selected by the configured backend</td>
 <td>FTS5 plus embeddings, ranked with age-and-access importance decay,
 with a lineage mode that defaults to excluding superseded rows</td>
-<td>MCP tools; documents and images ingested alongside text; nothing is
-classified by keyword</td>
+<td>MCP tools, documents and images, and an <code>absorb</code> path
+that classifies extracted facts against existing rows; the server's own
+type inference is advisory and returns suggestions without writing. The
+shipped Claude Code plugin adds a second, automatic write path: a
+<code>PostToolUse</code> hook that captures git commits, test results,
+documentation edits and research fetches above a significance threshold,
+and stamps a type by keyword — a test run whose output matches
+<code>failed</code>, <code>error</code> or <code>failure</code> is
+written as an <code>issue</code> with <code>status: open</code> and
+<code>severity: major</code></td>
 <td>Pairwise relation classification into supersession edges; superseded
 rows excluded from public list and search by default, and a superseded
-id resolves to its current leaf</td>
-<td>Not traced; tags form a dotted hierarchy</td>
+id resolves to its current leaf. Retirement additionally writes a
+tombstone keyed on a normalised hash of the content, which the absorb
+and import paths consult and refuse, so the same text cannot re-enter by
+either automatic route</td>
+<td>Separate databases per named instance — a physical boundary rather
+than a predicate, with a committed test that retires a row in one and
+asserts the other is untouched. No scope key on a row and no scope
+clause on a query; tags form a dotted hierarchy</td>
 <td>MCP server, CLI, and two graph viewers — a Python server and a
 Cloudflare Worker force-graph</td>
 <td>Supersession sweeps, embedding backfill, cloud sync</td>
@@ -15365,8 +15380,14 @@ Cloudflare Worker force-graph</td>
 <code>contradicts</code> as a relation between memories; per-vector
 writer and dimension provenance</td>
 <td>Correction that can be rehearsed — <code>dry_run</code> defaults to
-True — and a read path whose omitted argument is the safe one</td>
-<td>No tombstone; supersession hides rather than blocks re-entry</td>
+True — a read path whose omitted argument is the safe one, and a
+retirement that is keyed on the content rather than the row, so
+re-ingesting the same text is refused with the reason it was retired
+for</td>
+<td>The shipped plugin's hook re-introduces keyword classification on an
+automatic write path, the layer the server's own write path had it
+removed from; and no epistemic state exists — a memory is present or
+superseded, with nothing marking it candidate, verified or rejected</td>
 </tr>
 <tr>
 <td><code>memorax-code</code></td>
@@ -23509,7 +23530,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>39 of 441:</em> <a
+<p><em>40 of 441:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -23521,6 +23542,7 @@ href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/marm-memory/"><code>marm-memory</code></a>, <a
 href="../systems/memmy-agent/"><code>memmy-agent</code></a>, <a
 href="../systems/memoir-cli/"><code>memoir-cli</code></a>, <a
+href="../systems/memora/"><code>memora</code></a>, <a
 href="../systems/memory-compiler/"><code>memory-compiler</code></a>, <a
 href="../systems/memory-project/"><code>memory-project</code></a>, <a
 href="../systems/memsem/"><code>memsem</code></a>, <a
@@ -29122,9 +29144,12 @@ and promoted from seeded to reviewed</li>
 <li><a
 href="https://github.com/agentic-box/memora">agentic-box/memora</a> at
 <a
-href="https://github.com/agentic-box/memora/commit/e3621fda42d07e95b854f1a7e3392442116212fb"><code class="commit-id" title="e3621fda42d07e95b854f1a7e3392442116212fb">e3621fda…</code></a>
-— read only; three dependency surfaces were inside the cooldown, so
-nothing was installed</li>
+href="https://github.com/agentic-box/memora/commit/c497d0752ea29983b8d12bad94ea026e2bef4251"><code class="commit-id" title="c497d0752ea29983b8d12bad94ea026e2bef4251">c497d075…</code></a>
+— read only; one auto-run surface that was not present at the previous
+pin (<code>.claude-plugin/marketplace.json</code>, read first), one
+build-time exec at pytest collection, two unpinned manifests and no
+dependency surface inside the cooldown; nothing was installed or
+executed</li>
 <li><a
 href="https://github.com/baidu-baige/LoongFlow">baidu-baige/LoongFlow</a>
 at <a

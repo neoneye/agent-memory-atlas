@@ -7,25 +7,30 @@ page_kind: system
 source_name: agentic-box/memora
 source_url: https://github.com/agentic-box/memora
 archive_name: "agentic-box--memora"
-revision: e3621fda42d07e95b854f1a7e3392442116212fb
-revision_url: https://github.com/agentic-box/memora/commit/e3621fda42d07e95b854f1a7e3392442116212fb
-analyzed_at: 2026-08-11
-capabilities: "audit_log, human_review, negative_eval"
+revision: c497d0752ea29983b8d12bad94ea026e2bef4251
+revision_url: https://github.com/agentic-box/memora/commit/c497d0752ea29983b8d12bad94ea026e2bef4251
+analyzed_at: 2026-09-12
+capabilities: "tombstone, audit_log, human_review, negative_eval"
+capability_evidence:
+  tombstone: "the memory store — the retirement gate on both ingest paths | memora/schema.py:333-369, memora/storage.py:3359, :3435-3470, :3473, :3500-3520, :3613, :4949-4958, :7083-7085 | `tombstones(content_hash, memory_id, reason, created_at)` and `tombstone_components(memory_id, content_hash, ...)` are written on the retirement path and carry no foreign key, so the schema comment's claim holds literally — *\"Tombstones survive the deleted row\"*. The key is the value: `content_tombstone_hash(content)` normalises case and whitespace before hashing, and both re-assertion paths consult it by hash — `absorb_memory` skips a fact whose digest is tombstoned, appending a decision of `action: tombstoned` carrying the original reason, and the import path skips the entry outright. A component-level marker is written first in a single statement so a later per-hash insert failure cannot leave ancestors current. `memory_create` is deliberately still allowed after a tombstone, so the gate binds the automatic paths and not the operator | tests/test_storage.py:523 (hash normalisation), :580-599 (`test_absorb_skips_tombstoned_hash`, which absorbs a case- and whitespace-variant of the retired text, asserts the decision and its reason in both dry-run and live mode and that nothing was created, and carries its own mutation note — *\"mutation: skip absorb hash consult and this goes red\"*), :602-626 (a different fact after a retirement still creates, with a classifier that throws if a tombstoned match reaches it), :670 (import), :683 (`memory_create` still allowed)"
+  audit_log: "the memory store — the actions log beside the rows | memora/schema.py:304-315, memora/storage.py:692, :425 | `memories_actions(id, memory_id, action, summary, timestamp)` takes an append-only row per mutation and declares no foreign key on `memory_id`, so the record of a deletion outlives the row it describes. `memories_events` sits beside it for tag events and does carry `ON DELETE CASCADE`, so that half is lost with its memory — the two tables answer different questions and only the first survives the event most worth auditing | tests/test_storage.py, tests/test_server.py:222 (`test_memory_delete_writes_tombstone_reason`)"
+  human_review: "the supersession sweep — rehearsal before any edge is written | memora/server.py:2678, :2724, memora/storage.py:2124, :5537 | the sweep that classifies memory pairs into relations takes `dry_run: bool = True` at every entry point, so the default call returns its findings and changes nothing; a person reads the proposed supersessions and re-runs with `dry_run=False` to apply them. The advisory half of the write path works the same way — `_infer_type` and `_suggest_tags` return suggestions in the response and never write, which is what the removal of keyword auto-detection from the server preserved | tests/test_server.py, tests/test_storage.py"
+  negative_eval: "the retrieval surfaces — default list and default semantic search | tests/test_server.py, tests/test_storage.py:580-626, tests/test_db_isolation.py:100-150 | committed cases assert that a memory the system itself superseded does not come back under default search or default list, in both directions, while `follow=\"all\"` still returns it and `memory_get_document` deliberately keeps historical versions reachable by version number under its own test. The tombstone cases extend the same shape to re-assertion. The isolation suite carries a correction worth recording as method: its first version *\"asserted BOTH sets were empty, which is true whether or not isolation works -- it survived the broken-routing mutation untouched\"*, and it now retires something in one database and asserts the two sets differ | the cases are the evidence; pytest over temporary databases, no service dependency"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "Memory row with content, tags, metadata, importance, and access count"
-  storage: "SQLite with FTS5, embeddings, crossrefs, events, actions; D1 cloud backend"
+  storage: "SQLite with FTS5, embeddings, crossrefs, events, actions, tombstones and an absorb in-flight table; D1 cloud backend; one database per named instance, selected by the configured backend"
   retrieval: "FTS5 plus embeddings, ranked with age-and-access importance decay, with a lineage mode that defaults to excluding superseded rows"
-  write: "MCP tools; documents and images ingested alongside text; nothing is classified by keyword"
-  update_delete: "Pairwise relation classification into supersession edges; superseded rows excluded from public list and search by default, and a superseded id resolves to its current leaf"
-  scoping: "Not traced; tags form a dotted hierarchy"
+  write: "MCP tools, documents and images, and an `absorb` path that classifies extracted facts against existing rows; the server's own type inference is advisory and returns suggestions without writing. The shipped Claude Code plugin adds a second, automatic write path: a `PostToolUse` hook that captures git commits, test results, documentation edits and research fetches above a significance threshold, and stamps a type by keyword — a test run whose output matches `failed`, `error` or `failure` is written as an `issue` with `status: open` and `severity: major`"
+  update_delete: "Pairwise relation classification into supersession edges; superseded rows excluded from public list and search by default, and a superseded id resolves to its current leaf. Retirement additionally writes a tombstone keyed on a normalised hash of the content, which the absorb and import paths consult and refuse, so the same text cannot re-enter by either automatic route"
+  scoping: "Separate databases per named instance — a physical boundary rather than a predicate, with a committed test that retires a row in one and asserts the other is untouched. No scope key on a row and no scope clause on a query; tags form a dotted hierarchy"
   integration: "MCP server, CLI, and two graph viewers — a Python server and a Cloudflare Worker force-graph"
   background: "Supersession sweeps, embedding backfill, cloud sync"
   trust: "`memories_events` and `memories_actions` logs; `contradicts` as a relation between memories; per-vector writer and dimension provenance"
-  strengths: "Correction that can be rehearsed — `dry_run` defaults to True — and a read path whose omitted argument is the safe one"
-  risks: "No tombstone; supersession hides rather than blocks re-entry"
+  strengths: "Correction that can be rehearsed — `dry_run` defaults to True — a read path whose omitted argument is the safe one, and a retirement that is keyed on the content rather than the row, so re-ingesting the same text is refused with the reason it was retired for"
+  risks: "The shipped plugin's hook re-introduces keyword classification on an automatic write path, the layer the server's own write path had it removed from; and no epistemic state exists — a memory is present or superseded, with nothing marking it candidate, verified or rejected"
 ---
 
 ## 1. Executive Summary
@@ -58,7 +63,7 @@ Each is defined in the prompt — `a_supersedes_b` means "A is a strictly newer 
 
 The third idea is about what an omitted argument means. Retrieval takes a `follow` mode — `active`, `latest`, `full_history`, `all` — and the public MCP tools resolve an omitted one to a safe default rather than to no filtering (`storage.py:2216`): `memory_list` and `memory_search` default to `active` and exclude superseded rows, `memory_get` defaults to `latest` and resolves a superseded id to the current leaf, and `all` is the explicit forensic escape hatch. The comment says the thing worth quoting: *"None is no longer a public 'give me everything' signal on MCP tools."* Almost every system in this atlas that has a correctness-relevant retrieval argument makes the caller remember it; this one makes forgetting it correct and makes the unsafe reading the one you have to type.
 
-The gap is the familiar one: supersession *hides* a memory from ordinary retrieval, and nothing records the rejected value, so re-ingesting the same content creates it again.
+Supersession *hides* a memory from ordinary retrieval, and retirement does more than hide: a `tombstones` row keyed on a normalised hash of the content survives the deleted memory — the schema comment says so literally, *"Tombstones survive the deleted row (no FK)"* — and both automatic ingest paths consult it. `absorb_memory` skips a fact whose digest is tombstoned and reports `action: tombstoned` with the reason the memory was retired for; the import path skips the entry. So the same text cannot re-enter by either route it could previously arrive through. What the gate deliberately does not bind is the operator: `memory_create` is still allowed after a tombstone, and a committed case pins that.
 
 ## 2. Mental Model
 
@@ -167,7 +172,7 @@ The vocabulary also distinguishes `duplicate` from `related` from `neither`, whi
 
 The distinction that makes this worth copying is that the safe behaviour is not the *only* behaviour. Forensic access is preserved and made explicit, so an operator investigating what the store used to believe types `follow="all"` and gets it. What is removed is the case where an agent that never heard of lineage gets superseded content back because it did not pass a parameter it had no reason to know about.
 
-The one gap the commit that introduced it names in its own message is on the other side: matching lineage during `memory_absorb` is a write-path concern and was left as separate work. So the read path resolves lineage correctly, and the write path can still add a new row asserting what an existing chain already superseded.
+The one gap the commit that introduced it names in its own message is on the other side: matching lineage during `memory_absorb` is a write-path concern and was left as separate work. So the read path resolves lineage correctly, and the write path can still add a new row asserting what an existing chain already superseded. The tombstone gate does not close this: it is keyed on a normalised hash of the content, so the identical text is refused and a paraphrase of it is not — `_search_snapshot_full` takes no `follow` argument, and absorb's candidate set is not lineage-filtered.
 
 ### Provenance on the vector, not just the memory
 
@@ -196,7 +201,7 @@ The base row is deliberately thin — content, tags, metadata, timestamps — wi
 What is absent:
 
 - **No trust or verification state.** A memory is present or superseded; nothing marks it candidate, verified, or rejected. The nearest thing is derived rather than stored: the force-graph API computes an `authority_unknown` flag per node from the crossref graph — a self-cycle, a lineage conflict, or a failed lineage query — and the viewer renders those nodes as *"authority not certified (self-cycle or integrity); do not treat as current"* rather than as current. It fails closed, so a lineage query that errors marks **every** node unknown. It is a real third state, and it exists only in a viewer and only for the duration of a request; nothing on the retrieval path consults it and no column holds it.
-- **No rejected-value tombstone.** Supersession hides a row from active retrieval; re-ingesting the same content produces a new row that nothing blocks. In a system with document and image ingestion, re-ingestion is a realistic path.
+- **The retirement gate binds the automatic paths only.** A tombstone refuses the same content through `absorb` and through import, and `memory_create` is exempt by design, so an operator can re-enter retired text directly. That is a defensible line — the gate exists to stop an extraction loop re-asserting what a person retracted — and it is the boundary a reader should know about rather than assume.
 - **No explicit scope** surfaced in the schema; the dotted-tag hierarchy organizes but does not isolate.
 - **Provenance lives in metadata**, not in typed columns, so source and confidence are unindexed.
 
@@ -223,6 +228,14 @@ A keyword matcher used to stamp `type: issue` or `type: todo` on incoming memori
 The reason recorded in the commit is worth more than the change. Tightening the matcher removed its spurious hits but could not fix what the commit calls the underlying limitation — *word frequency cannot distinguish a note ABOUT a bug from a bug REPORT* — and the evidence for that was the fix's own write-up, which scored five legitimate whole-word hits and was filed as an open issue. A classifier that misfiles its own postmortem is a clean demonstration of the class of error, and the response was to delete the feature rather than tune it further.
 
 The advisory half survives: `_infer_type` and `_suggest_tags` in `server.py` return suggestions in the response and never write. Separating a suggestion the caller may act on from a stamp the store applies silently is the distinction the removal preserves.
+
+### And the matcher that came back, one layer out
+
+The distinction holds inside the server and not across the product. `claude-plugin/` ships a Claude Code plugin whose `PostToolUse` hook captures significant actions automatically — git commits, test results, documentation edits and research fetches — above a significance threshold of 0.6, excluding its own `mcp__memora__` tools so a capture cannot loop. The capture decision is reasoned about in the handler's docstring, and the reasoning is the same one that deleted the server-side matcher: raw code edits are not captured because *"without knowing WHY a change was made, the capture is low-value noise"*.
+
+The type it writes is decided by keyword. `get_memory_type_config` reads a test run's output and sets `has_failures = any(kw in output.lower() for kw in ["failed", "error", "failure"])`; when that is true the memory is written as `memory_type: "issue"` with `status: open`, `severity: major` and `category: testing` stamped into its metadata, and when it is false as a `regular` memory. Research capture is keyword-gated the same way, against a list of comparison words and URL patterns.
+
+So the property the server's write path protects — a suggestion the caller may act on, never a stamp the store applies silently — does not hold for a user who installs the plugin, which is the documented way in. The limitation the commit named is unchanged by the move: word frequency still cannot distinguish a note about a failure from a failure, and the hook writes the stamp without a caller in the loop.
 
 ## 8. Agent Integration
 
@@ -330,6 +343,14 @@ The judgement that matters for a builder is about weight. Everything distinctive
 - Tests cited: `tests/test_server.py`, `tests/test_storage.py`, `tests/test_embeddings.py`, `tests/test_memory_type_detection.py`.
 
 ## History
+
+**2026-09-12** — [`c497d0752ea29983b8d12bad94ea026e2bef4251`](https://github.com/agentic-box/memora/commit/c497d0752ea29983b8d12bad94ea026e2bef4251) — re-read at v0.4.0, 95 commits and about 17,600 added lines past the previous pin. Screened before reading: one auto-run surface that was not there at the previous pin — `.claude-plugin/marketplace.json`, read first; one build-time exec (`tests/conftest.py` at collection); two unpinned manifests; no dependency surface inside the seven-day cooldown, and the `memora-graph` lockfile unchanged for 32 days. Nothing was installed and nothing was executed.
+
+**`tombstone` is earned at this commit, and it closes a gap this report published as open.** `tombstones` and `tombstone_components` are keyed on `content_tombstone_hash(content)`, carry no foreign key so they survive the row, and are consulted by both automatic ingest paths: `absorb_memory` skips a tombstoned digest with the retirement reason attached, and import skips the entry. `memory_create` remains exempt. The report's matrix risk row and its section 5 bullet both asserted the opposite — *"re-ingesting the same content produces a new row that nothing blocks"* — and both are corrected in place.
+
+**A keyword classifier returned on a different layer.** The report credits `30da3b5` with removing keyword auto-detection from the server's write path, and that removal stands. The shipped Claude Code plugin now carries a `PostToolUse` hook that captures git commits, test results, documentation edits and research fetches automatically, and stamps `memory_type: "issue"` when a test output matches `failed`, `error` or `failure`. The matrix write row said *"nothing is classified by keyword"*; that is true of the server and false of the product as installed, and the row now says which is which.
+
+Also at this commit: one database per named instance with a committed isolation suite, whose own docstring records that its first version asserted both sets were empty and *"survived the broken-routing mutation untouched"*; a durable absorb in-flight table so process death can be reconciled; and session routing hardened over eight commits (#999) after a POST bypass. The repository's `marketplace.json` still names the `agentic-mcp-tools` org and version 0.2.20, both of which the repository itself has moved past — the canonical remote is `agentic-box/memora` and the release is 0.4.0.
 
 **2026-08-11** — [`e3621fda42d07e95b854f1a7e3392442116212fb`](https://github.com/agentic-box/memora/commit/e3621fda42d07e95b854f1a7e3392442116212fb) — re-read at version 0.3.2, 81 commits and roughly 8,000 added lines past the previous pin. Screened before reading: 0 auto-run surfaces, 1 build-time exec (`tests/conftest.py`), 2 unpinned manifests, 3 dependency surfaces changed inside the seven-day cooldown; nothing was installed and nothing was executed.
 
