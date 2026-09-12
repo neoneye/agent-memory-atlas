@@ -123,11 +123,18 @@ second schema. A `believed_by` field on each fact makes two agents'
 contradictory beliefs about one entity representable instead of a
 last-writer-wins collision — the axis this page does not otherwise cover.
 
-[Atomic Agent](../../systems/atomic-agent/) applies the same split to profile
-facts — `valid_from` for when a row started being authoritative, `created_at` as
-the audit timestamp, with `supersedes`/`superseded_by` chaining — and documents
-the retrofit explicitly (`valid_from = legacy.updated_at`), so the point at which
-bi-temporality was added stays recoverable rather than silently assumed.
+[Atomic Agent](../../systems/atomic-agent/) is the near miss, and it is a useful
+one because the columns are all present. `profile_facts` carries `valid_from`,
+`created_at` and `updated_at` beside a `supersedes`/`superseded_by` chain under a
+partial unique index, and the legacy retrofit is documented
+(`valid_from = legacy.updated_at`). All three are written with the same `now` on
+every insert, and the code says so — `updatedAt` is *"identical to `validFrom`
+because every write creates a fresh row"*, and `created_at` is *"copied from
+`valid_from` on a fresh row"*, kept so a later phase has somewhere to hang vote
+scores. No read in `src/` takes a time argument. That is version history on one
+clock: it answers *what did this key hold before*, and not *what did this store
+believe on a given date*, which is what makes the pair of columns a plan rather
+than a second axis.
 
 [MagiCore](../../systems/magicore/) puts the instant form in a .NET library: `reference_time`
 in a memory's metadata beside `CreatedAt` and `UpdatedAt`, a range filter applied before

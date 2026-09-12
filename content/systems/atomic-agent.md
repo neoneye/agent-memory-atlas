@@ -7,25 +7,25 @@ page_kind: system
 source_name: AtomicBot-ai/atomic-agent
 source_url: https://github.com/AtomicBot-ai/atomic-agent
 archive_name: "AtomicBot-ai--atomic-agent"
-revision: d69332c589733e38ae7393dd81fcbc5a375d02fb
-revision_url: https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb
-analyzed_at: 2026-07-27
-capabilities: "bitemporal"
+revision: ae12759ad5185cd53ee81eb82c6d0f24763310a9
+revision_url: https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9
+analyzed_at: 2026-09-13
+capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Memory, lesson, profile fact, and procedure, linked by typed edges"
-  storage: "SQLite with versioned migrations; bi-temporal profile facts"
+  storage: "SQLite with versioned migrations; profile facts kept as a supersession chain on one time axis"
   retrieval: "Heuristic-gated query rewriting, links, and vote-aware ranking"
   write: "Consolidator clusters; lessons and procedures from one LLM call per cluster"
-  update_delete: "`supersedes`/`superseded_by` chains; deprecation retains the row"
-  scoping: "Not traced"
+  update_delete: "`supersedes`/`superseded_by` chains under a partial unique index; deprecation retains the row; a one-way Obsidian export reads the corpus without mutating it"
+  scoping: "A `working_dir` column filtered on the read path when the caller asks — `scope` defaults to `all`, and on the `memory.notes.recall` tool the model chooses it"
   integration: "Agent runtime with a separate reflection slot"
   background: "Consolidator, reflection, neighbour evolution, vote runner"
   trust: "Append-only `vote_events` with derived `vote_score`; surfaced-id allowlist"
-  strengths: "Numbered invariants cited from code, and features default-off until evaluated"
-  risks: "Large opt-in surface; evaluation campaign results not committed"
+  strengths: "Numbered invariants cited from code, features default-off until evaluated, and a supersession chain enforced by a partial unique index rather than by convention"
+  risks: "Large opt-in surface; evaluation campaign results not committed; three timestamp columns that always carry the same value, so the history is versions rather than validity"
 ---
 
 ## 1. Executive Summary
@@ -50,6 +50,8 @@ Three mechanisms stand out.
 
 The reservation is scale of surface: v2.5 adds a query rewriter, reflection segmentation, and typed NOTE extraction, all optional, on top of an already large fabric — and no scored campaign results were found committed, so the evaluation machinery's verdict is unknown.
 
+**And two of the three timestamp columns on a profile fact are the same number.** `valid_from`, `created_at` and `updated_at` are written with one `now` on every insert, which the code documents rather than hides; the supersession chain is genuine valid-time history, and there is no second axis and no read that takes a time. See section 2.
+
 ## 2. Mental Model
 
 Four domain objects, connected by typed links:
@@ -57,7 +59,7 @@ Four domain objects, connected by typed links:
 ```sql
 memories        -- extracted memory rows, with vote_score
 lessons         -- distilled guidance; status 'active' | 'deprecated'
-profile_facts   -- bi-temporal user facts
+profile_facts   -- user facts as a supersession chain
 procedures      -- read-only how-to templates, advisory only
 
 memory_links (from_id, to_id, kind)   -- PRIMARY KEY (from_id, to_id, kind)
@@ -65,7 +67,7 @@ memory_links (from_id, to_id, kind)   -- PRIMARY KEY (from_id, to_id, kind)
 vote_events (id, kind, target_id, direction, session_id, turn_index, created_at)
 ```
 
-Profile facts are bi-temporal with an explicit supersession chain:
+Profile facts are versioned through an explicit supersession chain:
 
 ```sql
 profile_facts(
@@ -77,7 +79,36 @@ profile_facts(
 )
 ```
 
-The comments document the legacy migration explicitly — `valid_from = legacy.updated_at`, `created_at = legacy.updated_at` — so the point at which bi-temporality was retrofitted is recoverable rather than silently assumed.
+The comments document the legacy migration explicitly — `valid_from = legacy.updated_at`, `created_at = legacy.updated_at` — so the point at which versioning was retrofitted is recoverable rather than silently assumed.
+
+**Three timestamps, one clock.** `valid_from`, `created_at` and `updated_at` are written with the same `now` on every insert, and the code says so rather than leaving it to be discovered: `profile-store.ts:32-38` documents `updatedAt` as *"identical to `validFrom` because every write creates a fresh row — the column is kept so phase 7a can stamp `applyVote` timestamps without another migration"*, and `memory-schema.ts:196-201` says the same of `created_at`, that it is *"copied from `valid_from` on a fresh row"* and exists to give a later phase somewhere to hang vote scores. The columns are a migration-free landing site, not a second axis.
+
+**`bitemporal` is withheld.** The chain records every version of a key and the order they took effect, which is valid-time history and is more than most stores here keep. What it cannot express is a fact whose validity began before the system learned it, and no read anywhere takes a time argument — `get`, `getById`, `list` and `history` are the whole surface, and the last returns a chain rather than a state at a moment:
+
+```sh
+grep -rn "asOf\|as_of\|AsOf\|pointInTime\|point_in_time\|validAt\|valid_at" --include="*.ts" src/
+```
+
+Nothing at the pinned commit, and nothing at `d69332c589733e38ae7393dd81fcbc5a375d02fb` either — the same doc comment stands in `profile-store.ts` there, so this is a correction to what this atlas published rather than a change upstream made. *"Where did I live last March"* and *"what did this store believe last March"* are still the same question here.
+
+### The scope key is real and the switch is in the wrong hand
+
+`memories`, `lessons` and `procedures` all carry a `working_dir` column, indexed, and the schema comments call it a *"per-project scoping mirror"*. It reaches the read path: `MemoryStore.recall` and `MemoryStore.list` both push `working_dir = ?` into the WHERE clause, and both fail closed inside that branch — a `scope: "project"` call with no directory returns `[]` rather than everything.
+
+But `const scope = opts.scope ?? "all"`, so the filter is off unless a caller turns it on, and the docstring says so: *"the caller is responsible for passing the current working directory when they want that filter."* Two callers matter, and they resolve it differently.
+
+The automatic injection path, `memory-context-provider.ts:273` and `:366`, spreads `{ scope: "project", workingDir: args.workingDir }` in whenever a working directory is known and nothing when it is not — scoped by default, unscoped when the host cannot say where it is.
+
+The tool path does not. `src/tools/memory/notes-recall.ts:48` reads `const scope = rawArgs.scope === "project" ? "project" : "all"` — **the model decides whether the project boundary applies**, and anything other than the literal `"project"` means no boundary. The one thing the model cannot do is aim it: `workingDir` comes from `ctx.workingDir`, the host's value, so the boundary can be switched off but not redirected.
+
+**`scope_enforced` is withheld.** The mark certifies that a stored key reaches the query; here it reaches the query on request, and the request most likely to matter is made by the model, whose default is the whole corpus. The distinction is not academic — [Project N.E.K.O.](../neko/) holds a committed test named `test_model_supplied_subjects_cannot_influence_scope` for exactly this surface, and derives the subject list from the host precisely so the model has no vote.
+
+Searches behind that paragraph:
+
+```sh
+grep -rn "working_dir" --include="*.ts" src/memory/ | grep -v "\.test\.ts"
+grep -rn 'scope: "project"' --include="*.ts" src/ | grep -v "\.test\.ts"
+```
 
 Lifecycle:
 
@@ -196,7 +227,7 @@ Strengths:
 
 - **Numbered invariants cited from code** into a design document.
 - **Append-only vote events** with derived, indexed scores.
-- **Bi-temporal profile facts** with a documented legacy migration.
+- **A supersession chain enforced by a partial unique index**, so two active rows for one key are rejected at insert rather than by convention — the storage-layer guard for a numbered invariant in the design document.
 - **Surfaced-id allowlist** closing the rank-as-identity failure.
 - **Procedures never auto-executed**, stated as an invariant.
 - **One LLM call per cluster**, stated as an invariant.
@@ -213,6 +244,8 @@ Gaps:
 - **No committed campaign results**, so the acceptance criteria's verdict is unknown.
 
 ## 10. Tests, Evals, and Benchmarks
+
+`reflection-decorator-fire-safety.test.ts` is the newest and the most interesting shape: a regression pin on the *contract* of the reflection decorators — which of the wrapped runners may fire, when, and what happens to the others when one throws — rather than on any single behaviour. Decorator stacks are where a wrapper silently stops calling the thing it wraps, and this atlas has recorded that failure elsewhere; a test file named for the stack rather than for a function is the cheap defence.
 
 Test files sit beside nearly every module (`memory-store-v2`, `memory-store-archive`, `memory-store-evolve`, `profile-store-bitemporal`, `vote-parser`, `vote-runner`, `vote-store`, `neighbor-evolver`, `notes-renderer`, `profile-renderer`, `memory-schema`, `memory-context-provider`), plus `eval-memory/` with its own `vitest.config.ts`, campaign profiles, and environment config.
 
@@ -251,6 +284,12 @@ Do not copy:
 - The full fabric unless you need it; the practices transfer better than the surface.
 - Deprecation as the only correction mechanism.
 
+### The export path
+
+`src/memory/obsidian-export.ts` renders the corpus into an Obsidian vault as plain markdown, one-way, and its design comment is worth reading for how carefully it stays out of the way. The database is opened `{ readonly: true }` and migrations are deliberately not applied, so an export cannot bump a schema; rows are read with `SELECT *` so a vault built against an older schema degrades to `undefined` columns rather than throwing; filenames are id-based and content is a pure function of the row, so re-exporting rewrites only the files whose bytes changed and leaves mtimes stable for sync tools; and pruning is restricted to the machine-owned `note-<n>.md` / `lesson-<n>.md` / `procedure-<n>.md` patterns inside the three export folders, so anything a person put there survives.
+
+It also takes no scope argument and exports the whole corpus, which is the right default for a personal vault and the wrong one anywhere a `working_dir` boundary was meant to mean something.
+
 ## 12. Open Questions
 
 - What did the E9–E12 experiments conclude? The machinery exists; the answers are not committed.
@@ -270,5 +309,7 @@ Do not copy:
 - Design and evaluation: `MEMORY_FABRIC_V2.md` (§14 acceptance criteria), `MEMORY_FABRIC_V2.5.md` (implementation ledger), `eval-memory/PLAN.md`, `eval-memory/config/`.
 
 ## History
+
+**2026-09-13** — [`ae12759ad5185cd53ee81eb82c6d0f24763310a9`](https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9) — 801 commits past the previous pin, of which `src/memory/` took about 2,000 added lines. **`bitemporal` is withdrawn, and it was wrong when awarded rather than overtaken.** `valid_from`, `created_at` and `updated_at` are written with the same `now` on every insert; `profile-store.ts:32-38` and `memory-schema.ts:196-201` both say so in comments that stand unchanged at `d69332c589733e38ae7393dd81fcbc5a375d02fb`, and a grep for `asOf`, `as_of`, `pointInTime`, `validAt` and their variants returns nothing across `src/` at either commit. The supersession chain is real valid-time history and the report says so; a second axis is not there. The `scoping: "Not traced"` gap is closed in the other direction: `working_dir` is a real read-path filter that fails closed, but `scope` defaults to `all` and `src/tools/memory/notes-recall.ts:48` takes it from the model's own arguments, so `scope_enforced` is withheld with the reason recorded. Two features arrived: a one-way read-only Obsidian export, and a regression pin on the reflection decorators' fire-safety contract. The screen reports `FRESH` on `package.json` and `package-lock.json` within the cooldown, so nothing was installed and no test was run.
 
 **2026-07-27** — [`d69332c589733e38ae7393dd81fcbc5a375d02fb`](https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb) — first reading.

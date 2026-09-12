@@ -8350,20 +8350,27 @@ are hand-set constants with no evaluation behind them</td>
 <td><code>atomic-agent</code></td>
 <td>Memory, lesson, profile fact, and procedure, linked by typed
 edges</td>
-<td>SQLite with versioned migrations; bi-temporal profile facts</td>
+<td>SQLite with versioned migrations; profile facts kept as a
+supersession chain on one time axis</td>
 <td>Heuristic-gated query rewriting, links, and vote-aware ranking</td>
 <td>Consolidator clusters; lessons and procedures from one LLM call per
 cluster</td>
-<td><code>supersedes</code>/<code>superseded_by</code> chains;
-deprecation retains the row</td>
-<td>Not traced</td>
+<td><code>supersedes</code>/<code>superseded_by</code> chains under a
+partial unique index; deprecation retains the row; a one-way Obsidian
+export reads the corpus without mutating it</td>
+<td>A <code>working_dir</code> column filtered on the read path when the
+caller asks — <code>scope</code> defaults to <code>all</code>, and on
+the <code>memory.notes.recall</code> tool the model chooses it</td>
 <td>Agent runtime with a separate reflection slot</td>
 <td>Consolidator, reflection, neighbour evolution, vote runner</td>
 <td>Append-only <code>vote_events</code> with derived
 <code>vote_score</code>; surfaced-id allowlist</td>
-<td>Numbered invariants cited from code, and features default-off until
-evaluated</td>
-<td>Large opt-in surface; evaluation campaign results not committed</td>
+<td>Numbered invariants cited from code, features default-off until
+evaluated, and a supersession chain enforced by a partial unique index
+rather than by convention</td>
+<td>Large opt-in surface; evaluation campaign results not committed;
+three timestamp columns that always carry the same value, so the history
+is versions rather than validity</td>
 </tr>
 <tr>
 <td><code>aukora-kernel</code></td>
@@ -23702,7 +23709,7 @@ href="../systems/vir/"><code>vir</code></a>, <a
 href="../systems/weave/"><code>weave</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>69 of 441:</em> <a
+<p><em>68 of 441:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
@@ -23710,7 +23717,6 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a>,
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
-href="../systems/atomic-agent/"><code>atomic-agent</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/caura/"><code>caura</code></a>, <a
 href="../systems/claude-total-memory/"><code>claude-total-memory</code></a>,
@@ -29148,7 +29154,7 @@ href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08
 <li><a
 href="https://github.com/AtomicBot-ai/atomic-agent">AtomicBot-ai/atomic-agent</a>
 at <a
-href="https://github.com/AtomicBot-ai/atomic-agent/commit/d69332c589733e38ae7393dd81fcbc5a375d02fb"><code class="commit-id" title="d69332c589733e38ae7393dd81fcbc5a375d02fb">d69332c5…</code></a></li>
+href="https://github.com/AtomicBot-ai/atomic-agent/commit/ae12759ad5185cd53ee81eb82c6d0f24763310a9"><code class="commit-id" title="ae12759ad5185cd53ee81eb82c6d0f24763310a9">ae12759a…</code></a></li>
 <li><a href="https://github.com/mateaix/mateclaw">mateaix/mateclaw</a>
 at <a
 href="https://github.com/mateaix/mateclaw/commit/7e36ac7749b9e6d5e001811a71aa5fbe0abc2ede"><code class="commit-id" title="7e36ac7749b9e6d5e001811a71aa5fbe0abc2ede">7e36ac77…</code></a></li>
@@ -36782,6 +36788,29 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-13</strong> — <strong>Two time columns are not two
+axes until something writes them different values.</strong> <a
+href="../systems/atomic-agent/">Atomic Agent</a>'s
+<code>bitemporal</code> mark was withdrawn on a re-read. Its
+<code>profile_facts</code> table carries <code>valid_from</code>,
+<code>created_at</code> and <code>updated_at</code> beside a
+supersession chain, which reads as bi-temporality at a glance and was
+published as such. All three are assigned the same <code>now</code> on
+every insert, and the source comments say so plainly at both pins —
+<code>updated_at</code> is <em>"identical to <code>validFrom</code>
+because every write creates a fresh row"</em> and
+<code>created_at</code> is <em>"copied from
+<code>valid_from</code>"</em> — with the columns kept so a later phase
+would not need a migration. The test that would have caught it at the
+first reading is the one the producer test already prescribes for every
+other mark: find the writer, and check what value it puts there. For a
+temporal axis the question sharpens to whether <em>any</em> path can
+record a fact whose validity began before the system learned it, and
+whether <em>any</em> read takes a time argument; here neither exists,
+and a grep for <code>asOf</code>, <code>as_of</code>,
+<code>pointInTime</code> and <code>validAt</code> across the tree
+returns nothing at either commit. A supersession chain is real
+valid-time history and worth describing — it is simply not the mark.</p>
 <p><strong>2026-09-12</strong> — <strong>A criticism written as a
 mechanism description converts into a mark when the mechanism changes;
 one written as a verdict has to be re-derived.</strong> SAGE's first

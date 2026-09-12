@@ -230,14 +230,23 @@ beside a second schema. A <code>believed_by</code> field on each fact
 makes two agents' contradictory beliefs about one entity representable
 instead of a last-writer-wins collision — the axis this page does not
 otherwise cover.</p>
-<p><a href="../../systems/atomic-agent/">Atomic Agent</a> applies the
-same split to profile facts — <code>valid_from</code> for when a row
-started being authoritative, <code>created_at</code> as the audit
-timestamp, with <code>supersedes</code>/<code>superseded_by</code>
-chaining — and documents the retrofit explicitly
-(<code>valid_from = legacy.updated_at</code>), so the point at which
-bi-temporality was added stays recoverable rather than silently
-assumed.</p>
+<p><a href="../../systems/atomic-agent/">Atomic Agent</a> is the near
+miss, and it is a useful one because the columns are all present.
+<code>profile_facts</code> carries <code>valid_from</code>,
+<code>created_at</code> and <code>updated_at</code> beside a
+<code>supersedes</code>/<code>superseded_by</code> chain under a partial
+unique index, and the legacy retrofit is documented
+(<code>valid_from = legacy.updated_at</code>). All three are written
+with the same <code>now</code> on every insert, and the code says so —
+<code>updatedAt</code> is <em>"identical to <code>validFrom</code>
+because every write creates a fresh row"</em>, and
+<code>created_at</code> is <em>"copied from <code>valid_from</code> on a
+fresh row"</em>, kept so a later phase has somewhere to hang vote
+scores. No read in <code>src/</code> takes a time argument. That is
+version history on one clock: it answers <em>what did this key hold
+before</em>, and not <em>what did this store believe on a given
+date</em>, which is what makes the pair of columns a plan rather than a
+second axis.</p>
 <p><a href="../../systems/magicore/">MagiCore</a> puts the instant form
 in a .NET library: <code>reference_time</code> in a memory's metadata
 beside <code>CreatedAt</code> and <code>UpdatedAt</code>, a range filter
