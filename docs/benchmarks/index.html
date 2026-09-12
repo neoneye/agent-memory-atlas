@@ -3712,11 +3712,14 @@ bootstrap interval 0.939 to 0.977</td>
 </tr>
 <tr>
 <td>Poisoning</td>
-<td><code>results-poisoning.json</code> <code>points</code></td>
+<td><code>results-poisoning.json</code> <code>points</code>, twelve
+seeds per point</td>
 <td>one injected lie against one truth is returned half the time at z
 4.45; two lies, 0.83 at z 5.04; three, always at z 6.11; the
 repeated-truth series is 0.0, 0.0, 0.33, 0.58 as reinforcement
-accumulates</td>
+accumulates. A 24-seed rerun sits beside it in
+<code>results-poisoning-s24.json</code>: one lie 0.458 with silence
+0.083 at z 4.40, two 0.875 at z 5.33, three 1.0 at z 6.57</td>
 </tr>
 <tr>
 <td>Ablation, pooled</td>
@@ -3767,7 +3770,8 @@ moves coverage from 0.496 to 0.538 and hallucination from 0.011 to
 </tr>
 <tr>
 <td>Closed rooms</td>
-<td><code>results-chambre-close.json</code> <code>pieces</code></td>
+<td><code>results-chambre-close.json</code> <code>pieces</code>, one
+deterministic run at d = 2048 with no seed loop</td>
 <td>six rigged environments, eighteen known facts and six never-stated
 pairs each; the healthy control, the clock rewound sixty days and the
 two-object store answer without inventing; the clock advanced ten years
@@ -3849,17 +3853,18 @@ under three candidates, having no spread to doubt against, so a store
 that had just started or just been emptied by an erasure request
 answered every never-stated pair at infinite confidence — six inventions
 of six. <code>holomem</code> gained an absolute floor,
-<code>MIN_ABSOLUTE = 0.40</code>, on 8 September, chosen inside a
-measured gap between the worst true score and the best never-stated one,
-and the price is committed with the fix: two correct answers went
-silent, 4 correct and 2 mute where there were 6, and
-<code>tests/test_chambres.py:81-112</code> asserts that exact pair so
-the floor cannot move unnoticed. Saturation is the room that does not
-hold: at ten times capacity the layer still invents on two of six
-never-stated pairs at z 4.83, and nothing in the output says so. The
-clock rewound is harmless because <code>effective_weight</code> clamps
-age at zero; the clock advanced and the corrupted trace both end in
-silence, which is the failure the bench calls correct.</p>
+<code>MIN_ABSOLUTE = 0.40</code>, on 8 September, chosen inside a gap
+measured by a thirty-seed sweep in the store's own repository — five
+dimensions, one and two objects in the pool — between the worst true
+score and the best never-stated one, and the price is committed with the
+fix: two correct answers went silent, 4 correct and 2 mute where there
+were 6, and <code>tests/test_chambres.py:81-112</code> asserts that
+exact pair so the floor cannot move unnoticed. Saturation is the room
+that does not hold: at ten times capacity the layer still invents on two
+of six never-stated pairs at z 4.83, and nothing in the output says so.
+The clock rewound is harmless because <code>effective_weight</code>
+clamps age at zero; the clock advanced and the corrupted trace both end
+in silence, which is the failure the bench calls correct.</p>
 <p><strong>Decay is a mute, not a delete.</strong> The confinement bench
 ages one store with nothing relearned and finds the cliff between day
 109 and day 112: 18 of 18 answered through the 111-day threshold, then
@@ -3898,15 +3903,19 @@ them. The full-context arm at 78% with twice the tokens is the number a
 reader should hold against the retrieval arm, and it says retrieval here
 loses accuracy to save tokens rather than gaining it.</p>
 <p><strong>Tests.</strong> 102 test functions under <code>tests/</code>,
-thirteen of them for the rooms and the provenance rule, and every one
-that exercises an arm, a room or the rule imports <code>holomem</code>,
-so a clone without it tests the scorer, corpus and statistics and not
-the subject. At <code>f5b361bb</code> that was 52 run and 21 skipped;
-the count at this pin was not re-run, and neither were the README's
-mutation figures (13 mutants killed by 40 tests). The eight room tests
-exist, in the write-up's words, <em>"to go red when the behaviour
-changes, not to prove it is good"</em>; one of them froze the two-object
-defect and demanded its own deletion on the day the gate closed, and its
+which pytest collects as 111 cases because four of them are parametrised
+into thirteen. Thirteen functions are for the rooms and the provenance
+rule, and every one that exercises an arm, a room or the rule imports
+<code>holomem</code>, so a clone without it tests the scorer, corpus and
+statistics and not the subject. With the store present the one remaining
+skip is <code>tests/test_providers.py:110</code>, which skips when a
+provider account file is not configured and says so. At
+<code>f5b361bb</code> a clone without the store ran 52 and skipped 21;
+nothing was run at this pin, and neither were the README's mutation
+figures (13 mutants killed by 40 tests). The eight room tests exist, in
+the write-up's words, <em>"to go red when the behaviour changes, not to
+prove it is good"</em>; one of them froze the two-object defect and
+demanded its own deletion on the day the gate closed, and its
 replacement pins the fix with its price.</p>
 <p><strong>Against the thirteen-step sequence above,</strong> membench
 covers steps 5 to 8 — the ones AOEP leaves open — for <em>scheduled</em>

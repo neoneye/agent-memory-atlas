@@ -2950,14 +2950,14 @@ what this page reads. The `holomem` repository was created on 2 September
 | Run | Artifact | Result |
 | --- | --- | --- |
 | Main, eight seeds | `README.md:46-62` (no JSON is committed for this run) | 832 questions; the gated layer arm scores a median precision of 1.000 and a pooled 0.995; the scrambled control sits 0.959 below it, bootstrap interval 0.939 to 0.977 |
-| Poisoning | `results-poisoning.json` `points` | one injected lie against one truth is returned half the time at z 4.45; two lies, 0.83 at z 5.04; three, always at z 6.11; the repeated-truth series is 0.0, 0.0, 0.33, 0.58 as reinforcement accumulates |
+| Poisoning | `results-poisoning.json` `points`, twelve seeds per point | one injected lie against one truth is returned half the time at z 4.45; two lies, 0.83 at z 5.04; three, always at z 6.11; the repeated-truth series is 0.0, 0.0, 0.33, 0.58 as reinforcement accumulates. A 24-seed rerun sits beside it in `results-poisoning-s24.json`: one lie 0.458 with silence 0.083 at z 4.40, two 0.875 at z 5.33, three 1.0 at z 6.57 |
 | Ablation, pooled | `results-ablation.json` `variantes` | full arm precision 0.995 with hallucination 0.011; without the z gate, precision 0.726 and hallucination 1.0; without decay, 0.880 with a stale rate of 0.417; the *eternal* arm that never forgets, 0.901 and the same 0.417 stale |
 | Calibration | `results-calibration.json` | concordance 0.9558 between z-score and correctness, monotone across bins |
 | Capacity | `results-capacity-surface.json` `cells` | 262,080 questions across the sweep; coverage saturates at 0.654 as the corpus grows past the vector's capacity |
 | Interference | `results-interference.json` `cellules` | precision at or above 0.980 across the subject-overlap grid |
 | Real models | `results-cost-seed1.json` | on Groq `openai/gpt-oss-120b`: the gated arm with a model answering over retrieved facts answers 53 questions out of the 104 and gets every one right at 69,213 tokens, about 1,306 per correct answer; a full-context arm answers 84 and gets 81 right at 145,899 tokens, about 1,801; an arm with no memory gets none right at 133,132 tokens; a per-question retrieval arm at 3,481 tokens each never finished inside the provider's 200,000-token daily budget |
 | Provenance, one vote per triple | `results-provenance.json` `attaque`, `cout_honnete` | forty seeds; with every repetition counted, one lie is served 0.40 of the time, two 0.875, three and beyond 1.0 at a median z of 6.15; with one write per `(subject, relation, object)`, every row is the same trial and reads 0.40 at z 4.73; on the unattacked corpus the rule moves coverage from 0.496 to 0.538 and hallucination from 0.011 to 0.006 |
-| Closed rooms | `results-chambre-close.json` `pieces` | six rigged environments, eighteen known facts and six never-stated pairs each; the healthy control, the clock rewound sixty days and the two-object store answer without inventing; the clock advanced ten years and a NaN in the trace go silent on all eighteen; saturation at ten times capacity invents on 2 of 6 never-stated pairs at z 4.83 |
+| Closed rooms | `results-chambre-close.json` `pieces`, one deterministic run at d = 2048 with no seed loop | six rigged environments, eighteen known facts and six never-stated pairs each; the healthy control, the clock rewound sixty days and the two-object store answer without inventing; the clock advanced ten years and a NaN in the trace go silent on all eighteen; saturation at ten times capacity invents on 2 of 6 never-stated pairs at z 4.83 |
 | Long confinement | `results-chambre-close.json` `detention` | the same store asked at nine ages with nothing relearned: 18 of 18 through day 111, 0 of 18 and no invention from six months to ten years |
 | Echo chamber | `results-chambre-echo.json` `lignes` | two instances sealed in together for eight rounds; one falsehood planted in the emptier one; the contradicted pair goes silent on both sides from round 1 and stays so, the median z runs 14.10 to 14.99 throughout, and a no-exchange control answers 18 of 18 |
 
@@ -3013,9 +3013,10 @@ store: on 7 September 2026 `query_gated` returned `math.inf` under three
 candidates, having no spread to doubt against, so a store that had just
 started or just been emptied by an erasure request answered every never-stated
 pair at infinite confidence — six inventions of six. `holomem` gained an
-absolute floor, `MIN_ABSOLUTE = 0.40`, on 8 September, chosen inside a
-measured gap between the worst true score and the best never-stated one, and
-the price is committed with the fix: two correct answers went silent, 4
+absolute floor, `MIN_ABSOLUTE = 0.40`, on 8 September, chosen inside a gap
+measured by a thirty-seed sweep in the store's own repository — five
+dimensions, one and two objects in the pool — between the worst true score
+and the best never-stated one, and the price is committed with the fix: two correct answers went silent, 4
 correct and 2 mute where there were 6, and `tests/test_chambres.py:81-112`
 asserts that exact pair so the floor cannot move unnoticed. Saturation is
 the room that does not hold: at ten times capacity the layer still invents on
@@ -3059,12 +3060,15 @@ harness does not separate them. The full-context arm at 78% with twice the
 tokens is the number a reader should hold against the retrieval arm, and it
 says retrieval here loses accuracy to save tokens rather than gaining it.
 
-**Tests.** 102 test functions under `tests/`, thirteen of them for the rooms
-and the provenance rule, and every one that exercises an arm, a room or the
-rule imports `holomem`, so a clone without it tests the scorer, corpus and
-statistics and not the subject. At `f5b361bb` that was 52 run and 21 skipped;
-the count at this pin was not re-run, and neither were the README's mutation
-figures (13 mutants killed by 40 tests). The eight room tests exist, in the
+**Tests.** 102 test functions under `tests/`, which pytest collects as 111
+cases because four of them are parametrised into thirteen. Thirteen functions
+are for the rooms and the provenance rule, and every one that exercises an
+arm, a room or the rule imports `holomem`, so a clone without it tests the
+scorer, corpus and statistics and not the subject. With the store present
+the one remaining skip is `tests/test_providers.py:110`, which skips when a
+provider account file is not configured and says so. At `f5b361bb` a clone
+without the store ran 52 and skipped 21; nothing was run at this pin, and
+neither were the README's mutation figures (13 mutants killed by 40 tests). The eight room tests exist, in the
 write-up's words, *"to go red when the behaviour changes, not to prove it is
 good"*; one of them froze the two-object defect and demanded its own deletion
 on the day the gate closed, and its replacement pins the fix with its price.
