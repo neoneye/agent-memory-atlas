@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A conversational memory with no
+embeddings anywhere: an LLM turns each session into dated facts under a
+topic taxonomy inside one XML artifact, a question compiles to an
+inspectable select-filter-sort plan executed over posting lists, and
+contradiction is settled by sorting on event time at read time — because
+nothing in the library can edit, supersede or delete a fact once it is
+written.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="KITE by
+Memoket — Agent Memory Atlas">
+    <meta property="og:description" content="A conversational memory
+with no embeddings anywhere: an LLM turns each session into dated facts
+under a topic taxonomy inside one XML artifact, a question compiles to
+an inspectable select-filter-sort plan executed over posting lists, and
+contradiction is settled by sorting on event time at read time — because
+nothing in the library can edit, supersede or delete a fact once it is
+written.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KITE by
+Memoket — Agent Memory Atlas">
+    <meta name="twitter:description" content="A conversational memory
+with no embeddings anywhere: an LLM turns each session into dated facts
+under a topic taxonomy inside one XML artifact, a question compiles to
+an inspectable select-filter-sort plan executed over posting lists, and
+contradiction is settled by sorting on event time at read time — because
+nothing in the library can edit, supersede or delete a fact once it is
+written.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>KITE by Memoket — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "KITE by Memoket",
+      "description": "A conversational memory with no embeddings anywhere: an LLM turns each session into dated facts under a topic taxonomy inside one XML artifact, a question compiles to an inspectable select-filter-sort plan executed over posting lists, and contradiction is settled by sorting on event time at read time \u2014 because nothing in the library can edit, supersede or delete a fact once it is written.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Vector-free symbolic memory in one XML
+file</p>
+          <h1>KITE by Memoket</h1>
+          <p class="document-deck">A conversational memory with no
+embeddings anywhere: an LLM turns each session into dated facts under a
+topic taxonomy inside one XML artifact, a question compiles to an
+inspectable select-filter-sort plan executed over posting lists, and
+contradiction is settled by sorting on event time at read time — because
+nothing in the library can edit, supersede or delete a fact once it is
+written.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/memoket/memoket-kite">
+              <span>Source</span>
+              <strong>memoket/memoket-kite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/memoket/memoket-kite/commit/8745fedab8d10ea698066583dfc3ba4e0a32e294" title="8745fedab8d10ea698066583dfc3ba4e0a32e294">
+              <span>Analyzed revision</span>
+              <code>8745feda…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memoket--memoket-kite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>memoket--memoket-kite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>KITE is Memoket's open symbolic memory for long-term conversational
+agents: about 8,300 lines of Python in the package, 22,400 with the
+benchmark harness and tests, Apache-2.0, zero runtime dependencies,
+alpha per its own classifier, and one commit history that ends at this
+pin on 21 August 2026. Its claim is unusual enough to be worth stating
+in its own terms — <strong>no embeddings anywhere</strong>.
+Conversations become dated facts in one XML file; a question compiles
+into a readable plan; the plan runs over posting lists; the reader model
+gets a small pack of facts and their source lines.</p>
+<p><strong>The design's whole answer to contradiction is read-time
+ordering.</strong> The README's example is the pitch: March says Marcus
+owns the Henderson account, June says Dana does, and a similarity search
+has no notion of <em>now</em>. KITE's plan sorts by event time and takes
+the head. That is a real mechanism and it is the only one — the public
+API is <code>load</code>, <code>remember</code>, <code>recall</code>,
+<code>answer</code>, and
+<code>grep -rn -i "def forget\|def delete\|def remove\|def retract\|def supersede" src/</code>
+returns nothing. A fact written wrongly is in the file for good, and an
+erasure request has no path through the library.</p>
+<p><strong>The benchmark infrastructure is built for a sceptic, and the
+artifact it verifies is not published.</strong>
+<code>benchmarks/reproduce/manifest.json</code> pins each dataset's
+upstream revision, immutable URL and SHA-256; <code>sealed.py</code>
+digests the judged rows; <code>verify.py</code> recomputes the published
+metric <em>from the bytes the digest check returned</em> rather than
+from a re-opened file, with a comment saying why — "recomputing from a
+re-opened file would accept any edit to the verdicts that preserved the
+row count". And <code>benchmarks/tools/leak_check.py</code> scans every
+string the shipped prompts export for terms concentrated in a small
+fraction of a benchmark corpus, a self-administered contamination check
+almost nothing in this atlas ships. What is missing is the input: the
+manifest names
+<code>artifacts/results/locomo-freeze2-0811/judged.jsonl</code> and a
+release asset <code>memoket-kite-v0.1.0-locomo.tar.gz</code>, no such
+file is committed (<code>find benchmarks -name "*.json*"</code> returns
+the manifest and nothing else), the manifest carries no
+<code>asset_sha256</code> so <code>prepare.py</code> refuses before it
+downloads, and a GET against the release URL returns 404 — the single
+v0.1.0 release has no assets. The verifier works; only the project can
+run it.</p>
+<p><strong>And the published configuration is not the shipped
+one.</strong> 93.51% on LoCoMo and 85.60% on LongMemEval-S are produced
+by per-benchmark <em>bindings</em>: each has its own knob settings, its
+own <code>KINDS</code> vocabulary and its own seed topic taxonomy.
+LoCoMo's binding turns on an inference pass with the reason written
+beside it — "Its QA set contains no unanswerable questions, so a bounded
+inference pass can only recover an answer, never invent a refusal" — and
+LongMemEval's turns on instance alignment, topic refinement, dual dates,
+speaker labels and two post-processing rules that LoCoMo declares none
+of. The library's own <code>DefaultMemoryProfile</code> declares none of
+these attributes, and the pipeline reads them with
+<code>getattr(profile, NAME, &lt;off&gt;)</code>, so a caller using
+<code>Memory.load(...)</code> gets the baseline. Saying so is not an
+accusation: every one of those switches is a named constant in a
+committed file with a comment explaining it. It is the sentence a reader
+needs before carrying the headline anywhere.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is <strong>a dated claim with its utterance
+attached</strong>. <code>remember()</code> sends one session to an
+extraction model and gets back facts; each fact keeps <code>src</code>
+ids pointing at <code>&lt;line&gt;</code> elements that stay in the same
+file, so every answer resolves to the words somebody actually said. The
+unit is small and typed: a <code>kind</code> from a closed list, a
+<code>who</code>, an event time, topic and entity codes from a
+controlled vocabulary, and facets for object class, place, event type
+and duration.</p>
+<p><strong>Truth is a sort order, not a state.</strong> There is no
+<code>valid_until</code>, no supersession edge, no tombstone, no
+rejected value. Two facts that contradict each other both live in the
+timeline, and the plan decides which one the reader sees.
+<code>FactRecord.when</code> returns the event time if there is one and
+the session date otherwise, and the sort runs on that. The consequence
+follows directly: correctness depends on the extraction having got the
+event time right, and on the compiled plan having asked for a sort — an
+under-specified plan returns both facts, ranked by a score in which
+confidence contributes <code>0.2 * CONF_ORDER[conf]</code>.</p>
+<p><strong>Not knowing is a first-class outcome, and it is computed
+without a model.</strong> <code>GateContext</code> takes the question's
+capitalised anchors, looks up each stem's document frequency in the
+store, and marks the premise at risk when they are all zero — "a
+question whose subject anchors have zero document frequency in the store
+asks about something memory has never seen; on a workload that contains
+unanswerable questions, that is a false premise rather than a retrieval
+failure". Weekday and month words are excluded from the anchor set with
+a stated reason: they are held structurally rather than as fact text, so
+their frequency is always zero and says nothing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every stage between the utterance and the answer is deterministic and inspectable except the two LLM calls at the ends — and the file only ever grows, so the June fact does not replace the March one anywhere; it wins because the compiled plan sorted on event time and took the head, which is the entire correction mechanism</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every stage between the utterance and the answer is deterministic and inspectable except the two LLM calls at the ends — and the file only ever grows, so the June fact does not replace the March one anywhere; it wins because the compiled plan sorted on event time and took the head, which is the entire correction mechanism
+flowchart TD
+  A[&quot;a session of messages&quot;] --&gt; B[&quot;remember() — one extraction call&quot;]
+  B --&gt; C[&quot;facts plus retrieval facets&quot;]
+  C --&gt; D[&quot;append to the XML timeline&quot;]
+  D --&gt; E[&quot;staged temp file, parsed by the loader before replacing the original&quot;]
+  E --&gt; F[&quot;one artifact — vocabulary, sessions, facts, raw lines&quot;]
+  F --&gt; G[&quot;load — posting lists rebuilt in memory, no index on disk&quot;]
+
+  H[&quot;a question&quot;] --&gt; I[&quot;compile — one LLM call to a JSON plan&quot;]
+  I --&gt; J[&quot;validate the plan against the vocabulary&quot;]
+  J --&gt; K[&quot;prune by time&quot;]
+  K --&gt; L[&quot;match by topic and entity code closure over postings&quot;]
+  L --&gt; M[&quot;filter — who, kind, facets, conf_min&quot;]
+  M --&gt; N[&quot;rank — token specificity plus 0.2 times the confidence order&quot;]
+  N --&gt; O{&quot;nothing matched&quot;}
+  O --&gt;|&quot;yes&quot;| P[&quot;refine — relax constraints in a fixed order, grep first&quot;]
+  P --&gt; Q{&quot;still nothing&quot;}
+  Q --&gt;|&quot;yes&quot;| R[&quot;empty result — the premise gate says the question was never answered&quot;]
+  O --&gt;|&quot;no&quot;| S[&quot;pipe — sort by event time, head, count&quot;]
+  S --&gt; T[&quot;pack — rows plus their source lines under a token cap&quot;]
+  T --&gt; U[&quot;answer — one reader call, citations are source ids&quot;]
+
+  G --&gt; K
+  V[&quot;a fact that contradicts an older one&quot;] --&gt; D
+  D --&gt; W[&quot;both stay in the file — nothing is edited, superseded or deleted&quot;]
+  W --&gt; S</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nothing has to be running. The library is a Python package with
+<code>dependencies = []</code>; the only optional extra is
+<code>tiktoken</code>, used for token accounting in the benchmark
+harness and replaced by a character estimate when absent. Memory is one
+or more XML files that a user owns, opens and can read. The one external
+requirement is an OpenAI-compatible endpoint for two calls per question
+— the plan compiler and the reader — plus one per remembered
+session.</p>
+<p>There are two API layers. <code>memoket_kite.Memory</code> is the
+public surface: load, remember, recall, answer, answer_with_evidence.
+<code>memoket_kite.research</code> is the lower one, exposing
+<code>SymbolicQuery</code>, <code>QueryPlan</code>,
+<code>Evidence</code>, <code>ExecutionTrace</code> and per-stage
+telemetry — built for method evaluation, and the layer the benchmark
+bindings drive.</p>
+<p><code>benchmarks/</code> is a third component and nearly as large as
+the library: per-benchmark bindings (adapter, build, evaluate, protocol,
+profile, score), shared machinery for judging, ownership, single-writer
+locking, canonicalisation and resumption, and the
+reproduce/verify/seal/leak-check tools.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Remember</strong> — <code>Memory.remember</code> →
+<code>build_session</code> validates and normalises the messages,
+stripping XML-illegal characters → <code>extract_facts</code> makes one
+model call → <code>storage.append_session</code> parses the artifact,
+refuses a duplicate session id, appends the session and its facts,
+merges the vocabulary, refuses a write whose vocabulary is
+<em>older</em> than the one on disk (a stale writer would drop symbols
+another writer added while keeping facts that reference them), writes a
+staged temporary file, loads it back the way a reader will, carries the
+original file's permission bits, and <code>os.replace</code>s it into
+place.</p>
+<p><strong>Compile</strong> — <code>pipeline/compile_plan.py</code>
+turns the question into a JSON plan; <code>research/query.py</code>
+validates every entry, rejecting an unknown <code>conf_min</code>, a
+malformed time bound or an unknown operator.</p>
+<p><strong>Execute</strong> — <code>core/algebra.py:execute</code> runs
+prune → match → filter → rank → refine → pack, logging each stage into a
+<code>Trace</code>. <code>_relax</code> is the refine ladder, relaxing
+in a fixed order so the same plan over the same memory takes the same
+steps.</p>
+<p><strong>Answer</strong> — <code>pipeline/answer.py</code> opens a
+ledger, computes the premise gate, packs rows and neighbour lines under
+a token cap, calls the reader, applies whatever post-processing rules
+the active profile declares, and snapshots the telemetry into the
+record.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The artifact has three parts: a <code>&lt;vocab&gt;</code> of topic
+and entity codes with aliases, a <code>&lt;timeline&gt;</code> of
+sessions, and inside each session its <code>&lt;fact&gt;</code> and
+<code>&lt;line&gt;</code> elements. <code>Store.load</code> reads them
+into <code>FactRecord</code>s and builds seven posting indexes — by
+topic, entity, kind, who, unit, object class, place and event — plus a
+token index for the lexical arm.</p>
+<p>Two times are stored and one is queried. <code>t</code> is the event
+time the extractor resolved; <code>unit_date</code> is the date of the
+session it was said in. <code>FactRecord.when</code> coalesces them —
+<code>t</code> if present, else <code>unit_date</code> — and every
+fact-level time filter and sort runs on that coalesced value
+(<code>algebra.py:678</code>, <code>:1025</code>, <code>:1140</code>).
+The raw-line filter uses <code>unit_date</code> directly
+(<code>:900</code>). So a reader can ask "what was true in February" and
+cannot separately ask "what had been said by February" about facts,
+which is why the bi-temporal mark is withheld: both timestamps exist,
+only one axis is queryable.</p>
+<p><code>conf</code> is <code>low</code>, <code>med</code> or
+<code>high</code>. It is used twice: as an optional floor
+(<code>conf_min</code>, validated and settable through the research
+API), and as a ranking bonus. Three ordered degrees of sureness with a
+threshold is the shape the rubric separates from a trust state — nothing
+here says "on record, not to be acted on".</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Matching starts from codes, not text. The plan's topics and entities
+are expanded through the vocabulary's closure (a topic includes its
+children, an entity its aliases), intersected over posting lists, and
+filtered by the remaining <code>where</code> clauses. Only then does
+text matter: <code>_score</code> blends per-fact token specificity — an
+inverse-document-frequency measure computed over the store — with a grep
+bonus and the confidence term.</p>
+<p><code>_relax</code> is the part worth studying. When a query returns
+nothing, constraints come off in a fixed order (grep first), and the
+trace records which steps were taken, so an empty result means "even the
+relaxed query found nothing" rather than "the first attempt was too
+narrow". That is what makes the abstention claim checkable, and it is
+exactly what the committed refusal test asserts.</p>
+<p>The pack stage bounds what reaches the reader: rows are admitted
+under a token cap with per-unit caps, neighbour lines are attached for
+context, and the ledger books every contributor in two currencies
+without altering a byte of the prompt. The README's "~1.6K tokens per
+question" is that cap doing its work — the LongMemEval binding sets
+<code>TOKEN_CAP=1700</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One model call per session, on the caller's thread, and the fact is
+retrievable as soon as the file is rewritten. There is no queue, no
+batching and no background consolidation; the consolidation stages that
+do exist — instance alignment across sessions, topic refinement against
+the final taxonomy — belong to the benchmark build scripts, not to
+<code>remember</code>.</p>
+<p>The write path's care is the notable part.
+<code>append_session</code> refuses a duplicate session id, refuses a
+vocabulary older than the one on disk, and — the step worth copying —
+parses the completed temporary file through <code>Store.load</code>
+before replacing the user's only durable copy, with the reasoning in a
+comment: "a symbol the writer allowed but the reader rejects produces
+valid XML that can never be opened again. Failing here costs this
+<code>remember()</code> call; failing later costs the memory."</p>
+<p>What the write path does not do is look at what is already there. No
+duplicate detection beyond an exact fact-id collision, no contradiction
+check, no supersession. The file grows monotonically.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no adapter for anything. No MCP server, no CLI entry point
+in <code>pyproject.toml</code>, no HTTP surface, no framework bindings —
+an agent uses this by importing it and calling four methods.
+<code>answer_with_evidence</code> returns an <code>Answer</code>
+carrying the retrieved facts and the citation ids, with a docstring that
+states the limit of its own receipts: "Evidence is the retrieved basis
+for the answer, not a proof of it: the reader chose its words, and the
+receipts record what it saw."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is structural.</strong> The raw utterances are in
+the same file as the facts extracted from them, a fact names its
+sources, and an answer names the ids it cited. A reader can follow any
+claim to the sentence it came from without leaving the artifact.</p>
+<p><strong>Durability is handled properly</strong> — staged write,
+load-back verification, permission preservation, atomic replace,
+stale-vocabulary refusal — and this is the one part of the system where
+a failure would be unrecoverable, since the XML file is the only
+copy.</p>
+<p><strong>Deletion and correction do not exist</strong>, which is a
+safety statement as much as a feature gap. There is no way to remove a
+fact about a person, no way to mark an extraction wrong, and no way to
+stop a stale fact being retrieved except to hope the plan sorts. For a
+memory holding conversations with users, that is the risk to weigh
+first.</p>
+<p><strong>The reader is the only unconstrained component.</strong>
+Everything between load and pack is deterministic and traced; the answer
+is whatever the model says over the pack, with declared post-processing
+rules applied afterward — and the changelog records that two earlier
+rules, a count repair and a zero-answer disclosure, were withdrawn, with
+the reasoning that a refusal rule must not act where the caller says the
+question has an answer, because "a refusal there is a certain miss".</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite or the benchmarks.</strong> The
+screen found one build-time execution path
+(<code>tests/conftest.py</code>, at collection) and one unpinned
+surface, nothing inside the dependency cooldown; I still kept the
+read-only posture, and the benchmark reproduction needs an API key and
+paid model calls in any case. Everything below is read from the
+committed code, except two checks made against GitHub: the release
+listing, and a GET against the asset URL the downloader builds.</p>
+<p>24 test files, 297 test functions, across unit, research, public-API
+and regression suites, with the LLM monkeypatched — no network, no skip
+paths. <code>tests/unit/test_algebra.py</code> is the important one: a
+single function loads the demo Codebook and runs eight subqueries, six
+asserting exact positive result sets and one asserting an empty one
+after the relaxation ladder.</p>
+<p><strong>The reproduction machinery</strong>, in the order a reader
+would use it: <code>prepare.py datasets</code> downloads LoCoMo and
+cleaned LongMemEval_S from the pinned immutable URLs, verifying SHA-256
+into a temporary file before moving it; <code>locomo.sh</code> and
+<code>longmemeval.sh</code> build Codebooks and judge answers, writing
+failed ids to <code>failed.txt</code> and exiting nonzero rather than
+retrying silently; <code>score.py --offline</code> recomputes a run's
+own metric from its own seal; <code>verify.py</code> checks a reference
+run against the manifest's Codebook count, row count and score, to
+within 1e-12, from digest-verified bytes;
+<code>leak_check.py --require-corpus</code> scans the shipped strings
+for corpus-specific terms.</p>
+<p><strong>Two gaps sit against that.</strong> The reference artifacts
+are not obtainable: no results file is committed, the manifest omits the
+<code>asset_sha256</code> that <code>prepare.py artifacts</code>
+requires — it raises "release asset is not published in manifest.json;
+run the full evaluation first" — and
+<code>https://github.com/memoket/memoket-kite/releases/download/v0.1.0/memoket-kite-v0.1.0-locomo.tar.gz</code>
+returns 404 against a release that carries no assets. And the numbers
+belong to the benchmark bindings rather than to the library:
+<code>INFER_PASS</code>, <code>INSTANCE_ALIGNMENT</code>,
+<code>TOPIC_REFINEMENT</code>, <code>DUAL_DATE</code>,
+<code>SPEAKER_LABEL</code>, <code>PROFILE_PACK</code>, the per-corpus
+token caps, the per-corpus <code>KINDS</code> and the seed taxonomies
+are all set in <code>benchmarks/*/profile.py</code>, and
+<code>DefaultMemoryProfile</code> declares none of them.</p>
+<p><strong>There is no paper.</strong> The README says a technical
+report is in preparation and that BibTeX will land with the arXiv id;
+<code>CITATION.cff</code> cites the software.
+<code>grep -rn -i "arxiv\|doi" README.md CITATION.cff docs/*.md</code>
+finds only that sentence.</p>
+<p><strong>The data licensing is handled better than the code it
+accompanies is licensed.</strong> <code>LICENSE-DATA.md</code> states
+that Apache-2.0 covers the source and not the benchmark data, that
+LoCoMo derivatives carry CC BY-NC 4.0 and LongMemEval derivatives MIT,
+and that datasets are downloaded from their publishers and never
+redistributed — with the upstream licence texts vendored under
+<code>licenses/third-party/</code>.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Recompute a published metric from digest-verified bytes, not
+from the file.</strong> <code>verify.py</code>'s comment is the whole
+idea: recomputing from a re-opened file accepts any edit that preserves
+the row count. Sealing the rows and scoring the sealed bytes closes
+that, and it costs a hash.</p>
+<p><strong>Ship a contamination gate and run it before publishing a
+number.</strong> <code>leak_check.py</code> scans every string the
+library's prompts export for terms that appear in only a handful of a
+corpus's documents — too specific to be task language, too rare to be
+coincidence — and reports them for review rather than as a verdict. A
+missing corpus is SKIPPED, and <code>--require-corpus</code> makes that
+an error.</p>
+<p><strong>Load the artifact back the way a reader will, before it
+replaces the only copy.</strong> Parsing alone accepts files the loader
+later refuses. Two lines, and the failure mode it prevents is the
+unrecoverable one.</p>
+<p><strong>Refuse a write whose vocabulary is older than the one on
+disk.</strong> A whole-file rewrite from a stale in-memory view silently
+drops symbols another writer added while keeping the facts that
+reference them; comparing symbol sets and failing closed is cheaper than
+any locking scheme.</p>
+<p><strong>Compute "the premise is false" without a model.</strong> Zero
+document frequency for every capitalised anchor in the question, with
+structural time words excluded from the anchor set. Deterministic,
+instant, and it distinguishes "never said" from "not found".</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let read-time ordering be the only correction
+mechanism.</strong> It works when the extractor gets the event time
+right and the compiler asks for a sort, and it silently returns both
+answers when either is missed. There is no state to inspect afterwards
+and no way to say which fact was meant to win.</p>
+<p><strong>Do not publish a score whose rows cannot be fetched.</strong>
+The verifier here is better than most and nobody outside the project can
+run it, which converts an unusual strength into an ordinary unverified
+claim.</p>
+<p><strong>Do not fold a benchmark's own properties into a configuration
+switch without saying so where the number is printed.</strong> "This QA
+set contains no unanswerable questions" is a fair reason to enable an
+inference pass and an unfair thing to leave only in the source when the
+README shows the result.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you want <strong>a memory a person can open in an
+editor</strong>: one file, typed facts, the original sentences beside
+them, and a query you can read. For a single-user assistant over a
+bounded history, the whole stack is four methods and no infrastructure,
+and the absence of a vector database is a genuine operational saving
+rather than a slogan.</p>
+<p>Do not take it where <strong>anything has to be corrected, forgotten
+or scoped</strong>. A wrong fact is permanent, a user's erasure request
+has no path, and two users' memories are separated only by being in
+different files — which is a real boundary, and one an application has
+to enforce itself. The alpha classifier on the package is honest.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>The file only grows.</strong> No deletion, no correction, no
+supersession, no retention. Over a long deployment the store accumulates
+every contradicted fact and every wrong extraction, all of them eligible
+for retrieval.</p>
+<p><strong>A wrong event time is unrecoverable and decisive.</strong>
+The event time is both the correction mechanism and an LLM output, and
+nothing re-checks it.</p>
+<p><strong>The whole memory is rewritten on every
+<code>remember</code>.</strong> <code>append_session</code> parses,
+mutates and rewrites the artifact each time; the write is atomic and
+verified, but its cost is linear in the memory's size and two processes
+writing the same file race on everything except the vocabulary, which is
+the only thing checked.</p>
+<p><strong>Confidence is doing two jobs.</strong> The same three-valued
+field contributes a ranking bonus and acts as a threshold, so tightening
+<code>conf_min</code> to exclude weak facts also changes the order of
+the ones that survive.</p>
+<p><strong>The published numbers and the packaged defaults are different
+configurations</strong>, and only the source says so.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the reproduction contract wholesale</strong> if you
+publish benchmark numbers: pinned dataset revision and hash, sealed
+rows, a verifier that recomputes without a model, a leak gate, and
+failed ids written to a file instead of a silent retry. Every piece of
+it is independent of anything else KITE does, and the contract is about
+600 lines.</p>
+<p><strong>Borrow the write path</strong> if your memory is a single
+file: stage, verify by loading, preserve mode, atomic replace, refuse a
+stale vocabulary.</p>
+<p><strong>Borrow the premise gate</strong> if abstention matters — it
+is about forty lines and needs no model.</p>
+<p><strong>Build correction yourself before adopting the store.</strong>
+The smallest version that would fit this design is a
+<code>valid_until</code> on the fact and one clause in the time filter;
+the mechanism is absent rather than difficult.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the reference run's judged output intended to be published? The
+manifest, the downloader and the verifier all expect it, and the release
+it names is empty — which reads like a packaging step that did not run
+rather than a decision.</li>
+<li>What happens to a memory after a year of sessions? Nothing in the
+tree prunes, compacts or archives, and every query rebuilds the posting
+lists from the whole artifact on load.</li>
+<li>The library-default profile carries none of the benchmark knobs.
+Whether an application is expected to author its own profile, and what
+the supported surface for that is, is not documented in
+<code>docs/api.md</code>.</li>
+<li><code>conf</code> is set by the extraction model. Nothing in the
+tree calibrates it, and no test asserts anything about its
+distribution.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Library</strong></p>
+<ul>
+<li><code>src/memoket_kite/memory.py</code> — the public
+<code>Memory</code>: <code>load</code>, <code>remember</code>,
+<code>recall</code>, <code>answer</code>,
+<code>answer_with_evidence</code></li>
+<li><code>src/memoket_kite/storage.py</code> —
+<code>append_session</code>, <code>_verify_loadable</code>,
+<code>_refuse_stale_vocab</code></li>
+<li><code>src/memoket_kite/core/algebra.py</code> — <code>Store</code>,
+<code>FactRecord</code>, <code>parse_plan</code>, <code>execute</code>,
+<code>_relax</code>, <code>_score</code>, <code>CONF_ORDER</code></li>
+<li><code>src/memoket_kite/core/vocab.py</code> — topic and entity
+codes, aliases, closure</li>
+<li><code>src/memoket_kite/pipeline/</code> — <code>extract.py</code>,
+<code>compile_plan.py</code>, <code>retrieve.py</code>,
+<code>answer.py</code>, <code>verdicts.py</code> (the premise gate),
+<code>ledger.py</code>, <code>postproc.py</code></li>
+<li><code>src/memoket_kite/research/</code> — <code>query.py</code>
+(plan validation), <code>codebook.py</code>,
+<code>profile.py</code></li>
+<li><code>src/memoket_kite/defaults.py</code> —
+<code>DefaultMemoryProfile</code></li>
+</ul>
+<p><strong>Benchmarks</strong></p>
+<ul>
+<li><code>benchmarks/reproduce/manifest.json</code>,
+<code>prepare.py</code>, <code>verify.py</code>, <code>sealed.py</code>,
+<code>package.py</code></li>
+<li><code>benchmarks/tools/leak_check.py</code></li>
+<li><code>benchmarks/locomo/profile.py</code>,
+<code>benchmarks/longmemeval/profile.py</code> — the per-benchmark
+bindings</li>
+<li><code>benchmarks/common/settings.py</code> — the knob baseline</li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>tests/unit/test_algebra.py</code>,
+<code>tests/unit/test_retrieval.py</code>,
+<code>tests/research/test_api.py</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -rn -i &quot;def forget\|def delete\|def remove\|def retract\|def supersede&quot; --include=&quot;*.py&quot; src/
+grep -rn -i &quot;supersede\|contradict\|conflict&quot; --include=&quot;*.py&quot; src/      # vocab id clashes only
+find benchmarks -name &quot;*.json&quot; -o -name &quot;*.jsonl&quot; -o -name &quot;*.csv&quot;       # manifest.json alone
+curl -sS -o /dev/null -w &quot;%{http_code}&quot; https://github.com/memoket/memoket-kite/releases/download/v0.1.0/memoket-kite-v0.1.0-locomo.tar.gz
+curl -sS https://api.github.com/repos/memoket/memoket-kite/releases       # one release, no assets
+grep -rn &quot;getattr(profile&quot; --include=&quot;*.py&quot; src/                          # every knob defaults off
+grep -rn -i &quot;arxiv\|doi&quot; README.md CITATION.cff docs/*.md                 # no paper</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/memoket/memoket-kite/commit/8745fedab8d10ea698066583dfc3ba4e0a32e294"><code class="commit-id" title="8745fedab8d10ea698066583dfc3ba4e0a32e294">8745feda…</code></a>
+— first reading, at the default branch's head, a commit dated 21 August
+2026. Screened before reading: no auto-run surface, one build-time
+execution path (<code>tests/conftest.py</code>, which runs at pytest
+collection), no dependency surface inside the seven-day cooldown, and
+one unpinned surface — a <code>pyproject.toml</code> with no lockfile
+beside it, which declares no runtime dependencies at all. Nothing was
+installed, built or run, and no test or benchmark in this repository was
+executed. Two checks were made against GitHub rather than the checkout:
+the repository's release listing, and a GET against the release-asset
+URL <code>prepare.py</code> constructs. Licence is Apache-2.0 per
+<code>LICENSE</code>; <code>LICENSE-DATA.md</code> separately governs
+benchmark data and anything derived from it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

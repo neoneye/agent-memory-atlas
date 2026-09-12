@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 436 reports.**
+**This page covers all 437 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3832,3 +3832,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: about 201,000 lines of Python across 377 modules, 391 test files holding roughly 7,060 test functions, an MCP server, a React Explorer, a 22-group CLI, seven vector backends, four graph backends and five triple stores, MIT, with a CHANGELOG back to June 2025 and no paper. The concurrency comments, the pickle refusal, the duplicate-key YAML loader and the reasoning written into `retract_node`'s cascade are careful work; the agent-memory half beside them is not finished, and nothing in the module list distinguishes the two.
 - Study when: you need an auditable knowledge graph for a regulated domain and want a worked example of retraction, erasure and retroactive correction as separate operations.
 - Do not copy when: you want a drop-in memory layer — take the graph and bring your own item store, or pin the three fixes first.
+
+### [`memoket-kite`](../systems/memoket-kite/)
+- Best idea: **a benchmark contract that a sceptic could actually use.** Dataset revision and SHA-256 pinned in a manifest, judged rows sealed by digest, a verifier that recomputes the published metric from the bytes the digest check returned rather than from a re-opened file — the comment says why — and a contamination gate that scans every shipped prompt string for terms concentrated in a small fraction of the corpus. Beside it, a memory that is one readable XML file with zero runtime dependencies and no embeddings anywhere. One mark, `negative_eval`, on a refusal assertion that fires after the relaxation ladder has run, with six positive result-set assertions over the same fixture.
+- Biggest risk: **nothing can be corrected, forgotten or scoped.** The public API is load, remember, recall, answer; there is no delete, no edit and no supersession, so a wrong extraction is permanent, an erasure request has no path, and contradiction is settled only by the compiled plan sorting on an event time the extraction model produced. And the two headline scores cannot be checked by a reader: the judged rows the manifest names are not committed, the manifest omits the asset hash its own downloader requires, and the release those artifacts belong to carries no assets.
+- Most reusable component: the reproduce-and-verify contract, which is independent of everything else here; then the write path — stage, load back the way a reader will, preserve the mode, atomic replace, refuse a stale vocabulary.
+- Maturity impression: about 8,300 lines in the package and 22,400 with the harness and tests, 24 test files holding 297 test functions with the model monkeypatched and no skip paths, seven docs pages, a data-licensing file that separates Apache-2.0 code from CC BY-NC benchmark derivatives, alpha per its own classifier, and one release. The reasoning written into the storage and refusal paths is a level above the average here; the memory lifecycle beside it is unbuilt rather than unfinished.
+- Study when: you want a memory a person can open in an editor, or a worked example of publishing a benchmark number honestly.
+- Do not copy when: a fact will ever need correcting, a user will ever ask to be forgotten, or two users' memories have to be separated by anything stronger than two files.
