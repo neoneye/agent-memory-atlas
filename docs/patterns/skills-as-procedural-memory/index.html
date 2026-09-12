@@ -381,6 +381,33 @@ has read the diff. And the loop never closes: its meta log declares
 prevents re-proposing an identical edit and nothing distinguishes an
 improvement from a regression. Declaring the states and not writing them
 is how a library keeps editing in a direction no one has checked.</p>
+<p><a href="../../systems/skillcorpus/">SkillCorpus</a> is the pattern
+at the other end of the supply chain: not an agent writing skills, but a
+pipeline admitting <em>other people's</em> — ~821,000 crawled files
+filtered by structural thresholds, an LLM judge over utility, robustness
+and safety, and a cross-source near-duplicate merge. Its transferable
+move is where the decisions live. Both judges write their verdict keyed
+on the SHA-256 of the body they judged —
+<code>quality_judgments(content_hash PRIMARY KEY)</code> and
+<code>dedup_judgments(pair_key)</code> over a sorted hash pair — and the
+build re-derives every exclusion from those caches before it exports. A
+skill excluded for a <code>cmd_injection</code> flag is excluded again
+the next time the same body is crawled, by the same verdict, and the
+judge is never re-asked. That is the thing SESA's eviction above is
+missing stated as a schema decision rather than a wish: an exclusion
+keyed on the value survives regeneration, and one keyed on the row does
+not. This library shows both, because the row-level markers here are
+clobbered by a re-ingest and only the hash-keyed caches hold.</p>
+<p>It also ships the test this page asks for.
+<code>test_an_unrelated_query_gets_nothing_from_the_local_source</code>
+builds twelve file-handling skills, asserts the weather query returns an
+empty block, and asserts in the next line that the same directory still
+answers <code>"fill an acroform"</code> — the third bullet below, with
+the control that stops it passing vacuously. What it has none of is a
+verification gate or a usage signal: no skill is executed, nothing
+observes whether following one worked, and the record type it was
+adapted from had counters and lineage fields that were deliberately
+dropped.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Store a skill, then execute the retrieved copy in a fresh context

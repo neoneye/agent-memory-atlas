@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 434 reports.**
+**This page covers all 435 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3816,3 +3816,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 242 commits since 22 March 2026, about 17,000 lines of Python and 13,400 of templates, 1,127 test functions, lint and a domain-by-framework matrix in CI. The soft spots are in the read path: the security test asserts a list has at least zero members, no bundled domain's tool query names the domain parameter, all eight agent templates discard the entities, preferences and traces the context call returns, a vector index is created over a property nothing writes and its two search functions have no callers, and the document browser returns any object-typed entity as a document.
 - Study when: you want a demo of an agent over a knowledge graph standing in five minutes, or an ingest pipeline with resumable watermarks and per-record failure isolation to copy.
 - Do not copy when: you need to correct or delete one memory, need relationships that read back, or need the long-term tier to reach the model without it writing the queries itself.
+
+### [`skillcorpus`](../systems/skillcorpus/)
+- Best idea: **every curation decision is keyed on the hash of the content it judged.** The LLM quality judge writes into `quality_judgments(content_hash PRIMARY KEY)` and the near-duplicate judge into `dedup_judgments(pair_key)` over a sorted hash pair; the build's fixed tail re-derives every exclusion from those caches before it exports, so re-crawling a body excluded for a hard-gate flag excludes it again by the same verdict without re-asking the judge. Two marks, `tombstone` and `negative_eval` — the second on a retrieval test that asserts a weather query returns nothing from a directory of twelve file-handling skills and, in the next line, that the same directory still answers "fill an acroform".
+- Biggest risk: **the corpus is third-party instructions retrieved by similarity and injected verbatim, and the gate protecting that is one model's opinion at build time.** Five hard-gate flags plus a single-pattern regex stand between a hostile `SKILL.md` and the agent's context; a build run without a reachable LLM applies none of it and produces an artifact that looks identical, with only a console warning to say so. Nothing an agent does ever writes back, so there is no usage signal to prune by.
+- Most reusable component: the pair of hash-keyed judgment tables and the unconditional `quality_pass → dedup_pass → license_audit → safety_gate → export` tail that reads them — portable to any store, and the reason a re-crawl cannot re-admit what was excluded.
+- Maturity impression: 297 tracked files, about 34,000 lines of Python and TypeScript, a paper at [arXiv:2607.15557](https://arxiv.org/abs/2607.15557) reporting 96,401 curated skills from ~821,000 crawled, sixteen producer test files plus eleven in the Python engine and a TypeScript mirror, four repository-hygiene checks in `make check-repo`, and five shipped host plugins with one of them documented as inert pending an upstream slot. The soft spots are on the store: `SkillStore.update` and `delete` have no caller, `get_by_content_hash` filters out the rows that record an exclusion, and the three benchmark harnesses in `evaluate/` ship with no committed result.
+- Study when: you are curating third-party procedural content at scale and the hard part is admission rather than recall, or you want per-turn skill retrieval with failure behaviour already worked out.
+- Do not copy when: you need memory an agent forms from its own experience, or a verification gate stronger than a model reading a 300-character excerpt.

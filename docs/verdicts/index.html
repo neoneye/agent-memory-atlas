@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 434 reports.</strong></p>
+<p><strong>This page covers all 435 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15521,6 +15521,53 @@ watermarks and per-record failure isolation to copy.</li>
 <li>Do not copy when: you need to correct or delete one memory, need
 relationships that read back, or need the long-term tier to reach the
 model without it writing the queries itself.</li>
+</ul>
+<h3 id="skillcorpus"><a
+href="../systems/skillcorpus/"><code>skillcorpus</code></a></h3>
+<ul>
+<li>Best idea: <strong>every curation decision is keyed on the hash of
+the content it judged.</strong> The LLM quality judge writes into
+<code>quality_judgments(content_hash PRIMARY KEY)</code> and the
+near-duplicate judge into <code>dedup_judgments(pair_key)</code> over a
+sorted hash pair; the build's fixed tail re-derives every exclusion from
+those caches before it exports, so re-crawling a body excluded for a
+hard-gate flag excludes it again by the same verdict without re-asking
+the judge. Two marks, <code>tombstone</code> and
+<code>negative_eval</code> — the second on a retrieval test that asserts
+a weather query returns nothing from a directory of twelve file-handling
+skills and, in the next line, that the same directory still answers
+"fill an acroform".</li>
+<li>Biggest risk: <strong>the corpus is third-party instructions
+retrieved by similarity and injected verbatim, and the gate protecting
+that is one model's opinion at build time.</strong> Five hard-gate flags
+plus a single-pattern regex stand between a hostile
+<code>SKILL.md</code> and the agent's context; a build run without a
+reachable LLM applies none of it and produces an artifact that looks
+identical, with only a console warning to say so. Nothing an agent does
+ever writes back, so there is no usage signal to prune by.</li>
+<li>Most reusable component: the pair of hash-keyed judgment tables and
+the unconditional
+<code>quality_pass → dedup_pass → license_audit → safety_gate → export</code>
+tail that reads them — portable to any store, and the reason a re-crawl
+cannot re-admit what was excluded.</li>
+<li>Maturity impression: 297 tracked files, about 34,000 lines of Python
+and TypeScript, a paper at <a
+href="https://arxiv.org/abs/2607.15557">arXiv:2607.15557</a> reporting
+96,401 curated skills from ~821,000 crawled, sixteen producer test files
+plus eleven in the Python engine and a TypeScript mirror, four
+repository-hygiene checks in <code>make check-repo</code>, and five
+shipped host plugins with one of them documented as inert pending an
+upstream slot. The soft spots are on the store:
+<code>SkillStore.update</code> and <code>delete</code> have no caller,
+<code>get_by_content_hash</code> filters out the rows that record an
+exclusion, and the three benchmark harnesses in <code>evaluate/</code>
+ship with no committed result.</li>
+<li>Study when: you are curating third-party procedural content at scale
+and the hard part is admission rather than recall, or you want per-turn
+skill retrieval with failure behaviour already worked out.</li>
+<li>Do not copy when: you need memory an agent forms from its own
+experience, or a verification gate stronger than a model reading a
+300-character excerpt.</li>
 </ul>
         </article>
       </div>

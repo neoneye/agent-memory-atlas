@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A pipeline that crawls public
+SKILL.md files into a SQLite library, judges each one with an LLM whose
+verdict is cached under the hash of the body it judged, and re-derives
+every exclusion from that cache on each build before exporting a parquet
+corpus; a per-turn engine then fans out over the local directory and the
+remote catalog, fuses by weighted RRF, and lets a gate put at most two
+skills into the agent's context.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SkillCorpus — Agent Memory Atlas">
+    <meta property="og:description" content="A pipeline that crawls
+public SKILL.md files into a SQLite library, judges each one with an LLM
+whose verdict is cached under the hash of the body it judged, and
+re-derives every exclusion from that cache on each build before
+exporting a parquet corpus; a per-turn engine then fans out over the
+local directory and the remote catalog, fuses by weighted RRF, and lets
+a gate put at most two skills into the agent's context.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SkillCorpus — Agent Memory Atlas">
+    <meta name="twitter:description" content="A pipeline that crawls
+public SKILL.md files into a SQLite library, judges each one with an LLM
+whose verdict is cached under the hash of the body it judged, and
+re-derives every exclusion from that cache on each build before
+exporting a parquet corpus; a per-turn engine then fans out over the
+local directory and the remote catalog, fuses by weighted RRF, and lets
+a gate put at most two skills into the agent's context.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SkillCorpus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SkillCorpus",
+      "description": "A pipeline that crawls public SKILL.md files into a SQLite library, judges each one with an LLM whose verdict is cached under the hash of the body it judged, and re-derives every exclusion from that cache on each build before exporting a parquet corpus; a per-turn engine then fans out over the local directory and the remote catalog, fuses by weighted RRF, and lets a gate put at most two skills into the agent's context.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Procedural memory curated by hash-keyed
+judgment, served two at a time</p>
+          <h1>SkillCorpus</h1>
+          <p class="document-deck">A pipeline that crawls public
+SKILL.md files into a SQLite library, judges each one with an LLM whose
+verdict is cached under the hash of the body it judged, and re-derives
+every exclusion from that cache on each build before exporting a parquet
+corpus; a per-turn engine then fans out over the local directory and the
+remote catalog, fuses by weighted RRF, and lets a gate put at most two
+skills into the agent's context.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/EverMind-AI/SkillCorpus">
+              <span>Source</span>
+              <strong>EverMind-AI/SkillCorpus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/EverMind-AI/SkillCorpus/commit/c82ca38dfd49a74bba656305915b80b56e9f17fc" title="c82ca38dfd49a74bba656305915b80b56e9f17fc">
+              <span>Analyzed revision</span>
+              <code>c82ca38d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/EverMind-AI--SkillCorpus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>EverMind-AI--SkillCorpus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SkillCorpus is EverMind's open pipeline for turning public
+<code>SKILL.md</code> files into an agent's procedural memory. It has
+two halves that share nothing but a parquet file: a
+<strong>producer</strong> (Apache-2.0 Python, <code>skillcorpus/</code>)
+that crawls source repositories, filters and judges what it finds, and
+writes a corpus; and a <strong>consumer</strong>
+(<code>skillcorpus_plugin/</code>, Python and TypeScript engines plus
+five host plugins) that searches that corpus on the turn and puts at
+most two skills into the agent's context. 297 tracked files, roughly
+34,000 lines of Python and TypeScript, MIT on <code>match/</code> and
+<code>evaluate/</code>, and a paper — <a
+href="https://arxiv.org/abs/2607.15557">arXiv:2607.15557</a>, submitted
+17 July 2026 — whose abstract reports ~821,000 crawled skills filtered
+to 96,401.</p>
+<p><strong>The mechanism worth reading is that every curation decision
+is keyed on the hash of the content it judged, not on the row it landed
+on.</strong> <code>quality_judgments</code> has
+<code>content_hash TEXT PRIMARY KEY</code>
+(<code>skillcorpus/curate/quality.py:200-208</code>) and
+<code>dedup_judgments</code> has a <code>pair_key</code> of two sorted
+content hashes (<code>skillcorpus/curate/dedup.py:35-44</code>). The
+build's fixed tail re-runs the gates that read them on every pass
+(<code>skillcorpus/cli.py:302-338</code>), so a skill excluded for a
+<code>cmd_injection</code> flag is excluded again the next time the same
+body is crawled, by the same cached verdict, without anyone having
+recorded a rejection anywhere else. That is the rejected-value tombstone
+this atlas asks for, arrived at sideways — the table was built as a
+cache to avoid paying the judge twice.</p>
+<p><strong>The row-level markers, by contrast, do not survive a
+re-crawl, and the code shows exactly where.</strong>
+<code>get_by_content_hash</code> filters <code>deleted = 0</code>
+(<code>skillcorpus/core/store.py:272-278</code>), <code>skill_id</code>
+is derived from the content hash, and <code>insert</code> is
+<code>INSERT OR REPLACE</code> (<code>:142-186</code>) writing
+<code>deleted</code> from a freshly built record. So re-ingesting an
+excluded body finds no duplicate, overwrites the excluded row, and
+clears both <code>deleted</code> and <code>superseded_by</code>. The
+exclusion comes back only because the gate runs afterwards. One
+<code>AND deleted = 0</code> is the entire difference between a store
+whose flags are load-bearing and one whose flags are a cache of a
+decision held elsewhere — and here the decision genuinely is held
+elsewhere, which is why the design survives its own clobbering.</p>
+<p><strong>Nothing an agent does ever writes back.</strong> There is no
+feedback surface, no usage counter, no outcome signal, no promotion of a
+skill that worked: the corpus flows one way, from public repositories
+through a batch build to a read-only artifact. The data model says so in
+its own header — <code>SkillRecord</code> is adapted from another
+project's and "drops the 4 counters / lineage / evolution fields (no
+execution tracking or evolution)"
+(<code>skillcorpus/core/models.py:1-6</code>). Compared with the atlas's
+reference for this shape, Voyager, the verification gate that makes a
+skill library trustworthy has been moved off the agent's execution and
+onto an LLM reviewer at build time.</p>
+<p><strong>The consumer half is the more carefully engineered of the
+two</strong>, and its care is about the turn rather than about truth:
+every optional stage degrades to a no-op, the rewrite and the gate each
+carry their own deadline, and <code>retrieve</code> returns
+<code>""</code> on any internal failure because "a retrieval problem
+must cost the turn its skills, never the turn itself"
+(<code>skillcorpus_plugin/engine-python/skillsearch/engine.py:19-22</code>).
+The bundle installer that materialises a remote skill's scripts is the
+one place where untrusted bytes reach the disk, and it is written like
+it knows that — path-traversal rejection, an extension allowlist, size
+caps, staging plus atomic rename
+(<code>hub_client.py:263-295</code>).</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is <strong>a procedure someone else wrote</strong>,
+admitted to the library by a pipeline and retrieved by similarity to the
+task. It is not learned, not revised by use, and not owned by the agent
+that reads it. The epistemic question the system answers is therefore
+not "is this true" but "may this be shipped" — and it answers it twice,
+with two booleans owned by two different gates that deliberately do not
+share a column.</p>
+<p><code>active</code> is the licence bit.
+<code>license_audit activate</code> sets it from a GREEN whitelist of
+source repositories; <code>export</code> filters
+<code>WHERE s.deleted = 0 AND s.active = 1</code>
+(<code>skillcorpus/export/corpus.py:38</code>). <code>deleted</code> is
+everything else — a near-duplicate loser (with
+<code>superseded_by</code> pointing at the winner) or a safety exclusion
+(with <code>superseded_by</code> left NULL, so the two are
+distinguishable afterwards). The safety gate's header explains the
+choice and is the clearest statement of the design's own reasoning:
+<code>active</code> "is the licence bit that
+<code>license_audit activate</code> owns and would re-set to 1, so using
+it here lets a later <code>activate</code> silently revive an excluded
+skill" (<code>skillcorpus/curate/safety_gate.py:7-13</code>).</p>
+<p><strong>There is no third state, and that is why the trust-state mark
+is withheld.</strong> A skill is in the corpus or out of it. Nothing
+expresses "held on record but not believed": an excluded skill is not
+retrievable at all, so no reader is ever handed something the system
+doubts. The three LLM facets that could ground such a state — utility,
+robustness, safety, each 0-10 — are a score, spent on a threshold at the
+gate and on a weighted <code>quality_score</code> used for ranking,
+exactly the collapse the rubric separates a state from.</p>
+<p><strong>What is durable is the judgement, not the row.</strong> Both
+LLM passes write their verdict under the hash of what they judged and
+skip a hash they have already seen. A rebuilt library therefore
+re-derives its exclusions from the same verdicts rather than re-asking,
+which makes the decisions stable across builds and immune to a re-crawl
+re-admitting a body under a new record.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a re-crawl of the same body reproduces the same content hash, so the row it lands on is overwritten and both of its exclusion markers are cleared — while the two judgment caches keyed on that hash survive untouched, and the build's fixed tail re-derives every exclusion from them before anything reaches the export</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a re-crawl of the same body reproduces the same content hash, so the row it lands on is overwritten and both of its exclusion markers are cleared — while the two judgment caches keyed on that hash survive untouched, and the build&#39;s fixed tail re-derives every exclusion from them before anything reaches the export
+flowchart TD
+  A[&quot;crawl — SKILL.md from a source repository&quot;] --&gt; B[&quot;parse and validate the frontmatter&quot;]
+  B --&gt; C{&quot;blocked.malware regex&quot;}
+  C --&gt;|&quot;fires&quot;| C1[&quot;rejected at ingest — nothing stored, no record of the value&quot;]
+  C --&gt;|&quot;passes&quot;| D[&quot;structural thresholds — body and description length&quot;]
+  D --&gt; E[&quot;content_hash — SHA-256 of the normalised body&quot;]
+  E --&gt; F{&quot;get_by_content_hash, which filters deleted = 0&quot;}
+  F --&gt;|&quot;a live row matches&quot;| G[&quot;DUPLICATE — the new copy is discarded&quot;]
+  F --&gt;|&quot;no live row, including when the match is soft-deleted&quot;| H[&quot;INSERT OR REPLACE on a skill_id derived from that hash&quot;]
+  H --&gt; I[&quot;the row is live again — deleted cleared, superseded_by cleared, active 0&quot;]
+  I --&gt; J[&quot;quality_pass — cache hit on content_hash, the judge is not re-asked&quot;]
+  J --&gt; K[&quot;dedup_pass — cache hit on the sorted content-hash pair&quot;]
+  K --&gt; L[&quot;license_audit activate — active = 1 for whitelisted sources&quot;]
+  L --&gt; M{&quot;safety_gate joins quality_judgments on content_hash&quot;}
+  M --&gt;|&quot;hard-gate flag or safety below 3&quot;| N[&quot;deleted = 1 again, superseded_by left NULL&quot;]
+  M --&gt;|&quot;otherwise&quot;| O[&quot;stays live&quot;]
+  N --&gt; P[&quot;export — WHERE deleted = 0 AND active = 1&quot;]
+  O --&gt; P
+  P --&gt; Q[&quot;parquet corpus and zstd attachment bundles&quot;]
+  Q --&gt; R[&quot;SkillHub catalog, or a host&#39;s own skills directory&quot;]
+  R --&gt; S[&quot;engine — BM25 locally, catalog fan-out, weighted RRF&quot;]
+  S --&gt; T[&quot;LLM gate — tool check, at most two survive&quot;]
+  T --&gt; U[&quot;rendered block injected into this turn&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two deployments that never run in the same process.</p>
+<p><strong>The producer</strong> is a CLI over a library directory,
+defaulting to <code>~/.skillcorpus</code> and relocatable by
+<code>SKILLCORPUS_HOME</code> (<code>skillcorpus/core/paths.py</code>).
+<code>cli build</code> reads a registry of sources from
+<code>configs/</code>, discovers repositories, clones or pulls them into
+a cache, and ingests every <code>SKILL.md</code> it finds. Then a fixed
+tail runs five stages as subprocesses — quality judging, cross-source
+dedup, licence activation, the safety gate, export — each isolated so an
+LLM or embedding pass cannot leak memory into the next
+(<code>skillcorpus/cli.py:293-300</code>). Standing this up needs an
+OpenAI-compatible chat endpoint for the judges, an embedding endpoint
+for near-duplicate detection, and a GitHub token for the licence
+refresh; every one of them is optional and the pipeline degrades, which
+is the operator-facing point: a no-LLM build produces a corpus that has
+passed the structural filters and the regex block and nothing else, and
+the safety gate prints a warning saying precisely that
+(<code>skillcorpus/curate/safety_gate.py:63-77</code>).</p>
+<p><strong>The retrieval models</strong> are a separate, self-hostable
+pair: a fine-tuned Qwen3-0.6B bi-encoder and a Qwen3-0.6B reranker
+behind an HTTP server with <code>/embed</code> and <code>/score</code>,
+about 2.5 GB of VRAM for both (<code>skillcorpus/match/serve.py</code>,
+<code>skillcorpus/match/README.md</code>). The training recipe for both
+— query synthesis, random negatives, listwise reranker data — is
+committed beside them.</p>
+<p><strong>The consumer</strong> is a library, not a service.
+<code>SkillSearch</code> is built once at host startup and holds its
+sources' indexes and connection pools; a host calls
+<code>retrieve(query)</code> and gets a rendered block, or
+<code>hits(query)</code> and renders its own
+(<code>skillcorpus_plugin/engine-python/skillsearch/engine.py:270-305</code>).
+The same design exists file-for-file in TypeScript
+(<code>engine-typescript/src/</code>: <code>bm25.ts</code>,
+<code>fusion.ts</code>, <code>gate.ts</code>,
+<code>hub-source.ts</code>, <code>refs.ts</code>, <code>zip.ts</code>),
+because the hosts are split between the two languages. Five plugins wrap
+it, and the WorkBuddy package shows both delivery modes in one tree:
+<code>hooks/hooks.json</code> registers a <code>UserPromptSubmit</code>
+command hook with a 10-second timeout for automatic mode, and
+<code>mcp/servers.json</code> registers a stdio MCP server exposing
+<code>skill_search</code> for on-demand mode.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Ingest one skill</strong> — <code>Ingester.ingest</code>
+(<code>skillcorpus/curate/pipeline.py:318-515</code>): find and parse
+<code>SKILL.md</code>, validate the frontmatter, run
+<code>check_safety</code> and reject on any <code>blocked.*</code> flag,
+apply body and description length thresholds, compute
+<code>content_hash</code> and <code>name_hash</code>, look for an exact
+live duplicate, then hand off to <code>_finalize_and_insert</code>
+(<code>:228-317</code>) which collects near-duplicate candidates, judges
+them, picks a single winner before acting, copies the bundle into the
+library, inserts, and only then supersedes the losers — "so a failed
+copy/insert cannot destroy the losers and leave a dangling
+<code>superseded_by</code>".</p>
+<p><strong>Judge quality</strong> — <code>quality_pass</code>
+(<code>skillcorpus/curate/quality_pass.py</code>) selects the hashes
+with no cached judgment, calls the LLM with a few-shot calibration
+prompt over three facets and a 19-flag vocabulary, and writes one row
+per content hash.</p>
+<p><strong>Exclude the unsafe</strong> — <code>run_safety_gate</code>
+(<code>skillcorpus/curate/safety_gate.py:29-79</code>) joins the cache
+to every live row and soft-deletes those with <code>safety &lt; 3</code>
+or a flag in <code>HARD_GATE_FLAGS</code>
+(<code>prompt_injection</code>, <code>cmd_injection</code>,
+<code>unsafe_exec</code>, <code>auth_bypass</code>,
+<code>csam_risk</code>, …). It then counts active rows with no judgment
+at all and warns that the active set "is NOT fully safety-vetted" — a
+fail-open it refuses to leave silent.</p>
+<p><strong>Export</strong> — <code>write_corpus</code>
+(<code>skillcorpus/export/corpus.py:198</code>) reads
+<code>WHERE s.deleted = 0 AND s.active = 1</code>, LEFT JOINs the
+quality subscores into a native struct column, and writes
+<code>skills.parquet</code> plus per-skill attachment tarballs.</p>
+<p><strong>Retrieve on the turn</strong> —
+<code>SkillSearch._search</code> (<code>engine.py:308-361</code>):
+optionally rewrite the query under <code>rewrite_timeout_s</code>; fan
+out across sources and fuse; hydrate bodies for metadata-only hits; drop
+exact-body duplicates; resolve <code>{baseDir}</code> references for
+local hits <em>before</em> the gate, because an unresolved path reads to
+the gate like a missing file; run the gate under
+<code>gate_timeout_s</code>, degrading to the top
+<code>max_select</code> on timeout; truncate to <code>top_k</code>;
+materialise remote bundles; resolve PathGuard placeholders.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One table holds the memories
+(<code>skillcorpus/core/models.py:130-167</code>). A <code>skills</code>
+row carries identity (<code>skill_id</code>, <code>name</code>,
+<code>description</code>, <code>body</code>, raw frontmatter),
+provenance (<code>source</code>, <code>source_url</code>,
+<code>source_path</code>, <code>license</code>), two hashes
+(<code>content_hash</code> of the normalised body,
+<code>name_hash</code> of the lowercased name), classification
+(<code>category</code> from a 16-class enum with per-class descriptions
+in the same file, <code>tags</code>), judgement
+(<code>quality_score</code> 0-1, <code>safety_flags</code>,
+<code>body_tokens</code>), structure (<code>has_scripts</code>,
+<code>has_references</code>), status (<code>deleted</code>,
+<code>superseded_by</code>, and an <code>active</code> column that
+exists in SQL but not on the dataclass), timestamps
+(<code>added_at</code>, <code>updated_at</code>) and
+<code>stored_path</code>.</p>
+<p>Two more tables hold the judgements, and they are the durable half.
+<code>quality_judgments(content_hash PRIMARY KEY, score, reason, judged_at, subscores)</code>
+— with a comment stating the contract: the judge "is frozen for this
+release, so the cache is keyed on <code>content_hash</code> alone — same
+body → same score" (<code>quality.py:210-214</code>).
+<code>dedup_judgments(pair_key PRIMARY KEY, is_duplicate, confidence, reason, judged_at)</code>
+where <code>pair_key</code> is the two content hashes sorted and joined.
+A <code>vec_skills</code> sqlite-vec table and a FAISS sidecar hold
+embeddings for near-duplicate search only.</p>
+<p>Time is single: <code>added_at</code> and <code>updated_at</code>,
+the latter overwritten in place, with no record of when a skill was
+valid as distinct from when the library learned it. No bi-temporal
+mark.</p>
+<p><code>active</code> deserves a note because it is invisible from
+Python. <code>SkillRecord</code> has no such field, and
+<code>insert</code> hardcodes <code>active = 0</code> on every write
+with the comment "a row lands inactive and
+<code>curate.license_audit</code> flips it per the GREEN whitelist"
+(<code>store.py:143-145</code>). The consequence is that
+<code>SkillStore.update</code>, which re-inserts the mutated record,
+would silently deactivate whatever it touched — which does not bite,
+because <code>update</code> and <code>delete</code> have no caller
+anywhere in the repository
+(<code>grep -rn '\.update(' --include='*.py' skillcorpus/ scripts/</code>
+finds only dict updates in tests and release scripts;
+<code>grep -rn '\.delete(' --include='*.py' skillcorpus/ scripts/</code>
+finds none). They are library surface with no producer; the correction
+path that exists is the pipeline.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The producer's vector index is not a retrieval arm.
+<code>find_near_duplicates</code> queries it at write time to find merge
+candidates; nothing reads it to answer a question.</p>
+<p>The consumer's retrieval is a fan-out. The local arm is a
+self-contained Okapi BM25 over every <code>SKILL.md</code> under the
+configured directories — workspace skills, a packaged builtin directory,
+and any extra named directories — with CJK-aware tokenisation and a
+stopword pass that prunes terms appearing in over half a corpus of at
+least a guard size, so that a directory of file-handling skills asked
+about the weather returns nothing rather than whichever skill happened
+to share the word "skill" (<code>skillsearch/local_pool.py</code>,
+<code>skillsearch/bm25.py</code>). The catalog arm is an HTTP call to
+SkillHub, filtered twice on the way back: a <code>hub_min_safety</code>
+floor of 0.7 on the published safety score, and
+<code>check_keyword_relevance</code>, a lexical guard whose
+<code>passed</code> is read at <code>sources/hub_source.py:73</code> and
+which requires a non-generic query term to match the name, description
+or tags. Two marketplace arms, ClawHub and skillhub.cn, are configured
+the same way.</p>
+<p>Fusion is weighted RRF at <code>k = 60</code> with per-source trust
+weights — local 1.0, hub 0.85, marketplaces 0.75 — collapsing
+cross-source duplicates and keeping the highest-scoring copy as the
+representative (<code>skillsearch/fusion.py</code>). The gate then sees
+name, description and a 300-character excerpt for each of up to
+<code>gate_pool = 10</code> candidates plus the tool names the agent
+holds this turn, and returns at most <code>max_select = 2</code>;
+<code>top_k</code> is also 2. An empty gate result is a valid "inject
+nothing"; a gate failure or timeout falls back to the top hits rather
+than to nothing, so a broken gate cannot silently empty the block.</p>
+<p>No scope key is applied anywhere on this path. The separation between
+a team's own skills and a public catalog is a physical one — different
+directories, different endpoints, different weights — which the rubric
+counts as a real boundary and a different mechanism, so the scope mark
+is withheld.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes do not happen on the turn. They happen when an operator runs
+<code>cli build</code>, and the whole library is re-derived: every
+source re-cloned or pulled, every skill re-ingested, every unjudged hash
+judged, every gate re-run, the corpus rewritten. There is no incremental
+refresh state and no cadence — <code>run_refresh</code>'s own docstring
+says so.</p>
+<p>Nothing blocks an agent, because nothing an agent does is a write.
+The lag between a skill being written and being retrievable is the lag
+of a build plus, for a host's own directory, one
+<code>invalidate()</code> — the local scan is cached for the life of the
+<code>SkillSearch</code> object, so a <code>SKILL.md</code> written
+after the first search is invisible until the host that watches the
+directory says otherwise (<code>engine.py:104-119</code>). A background
+pass does rewrite the whole store, and it is the build itself.</p>
+<p>Ingest-time exclusion has three shapes with different durability. A
+<code>blocked.malware</code> regex hit rejects before any write, so
+nothing records the value and a re-crawl simply re-rejects by the same
+rule. A structural threshold failure does the same. Everything after
+that lands in the database and is excluded afterwards by a gate reading
+a hash-keyed cache — which is the only one of the three whose decision
+is both recorded and re-appliable.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Two modes, exclusive by design. <strong>Automatic</strong>: a host
+hook fires before the model answers, calls <code>retrieve</code>, and
+injects a rendered block — no tool call, no skill names to remember.
+<strong>On demand</strong> (the default since 2 September 2026): the
+agent gets a <code>skill_search</code> MCP tool and decides when to pay
+for retrieval, which on a long task means paying at the step that needs
+it and not on the turns that do not.</p>
+<p>The five packaged hosts are OpenClaw 1.x and 2.0 (two packages,
+because 2.0 dropped the hook the 1.x plugin injected through),
+WorkBuddy, Hermes, Raven and the DeepSeek Harness. The README is
+explicit that Raven's automatic mode is shipped inert — it "will claim
+the <code>skills</code> stage once Raven merges its upstream
+<code>context_segments</code> slot, and is inert until then" — which is
+an unusual and welcome thing to say in a feature table.</p>
+<p>The engine is host-agnostic by construction:
+<code>extra_sources</code> takes anything with a
+<code>SkillSource</code> shape, "a host's memory backend, a private
+library, a second catalog", and <code>set_provider</code> exists so that
+a host's live <code>/model</code> switch moves retrieval to the new
+provider rather than leaving the rewriter and gate calling the
+credential that just stopped working.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What is defended well.</strong> The injection path treats the
+corpus as untrusted bytes. <code>_safe_extract</code>
+(<code>hub_client.py:263-295</code>) resolves each zip entry against the
+destination and raises on anything not <code>is_relative_to</code> it,
+skips disallowed extensions, caps per-file and total uncompressed size,
+and extracts into a staging directory renamed atomically into place so a
+partially extracted bundle is never visible under the final name.
+Placeholder resolution — mapping <code>{{SKILL_DIR}}</code>,
+<code>{{HOME}}</code> and friends onto the host's real filesystem — is
+off by default and documented as being only for a corpus a trusted
+PathGuard pass produced, "not for arbitrary third-party skills"
+(<code>engine.py:499-509</code>). Every optional stage fails closed
+toward <em>fewer</em> skills, and the one place that fails open — a gate
+error keeping the top hits — is stated as a deliberate choice with its
+reason.</p>
+<p><strong>What is not defended, because it cannot be here.</strong> The
+content is third-party procedural instructions, selected by similarity,
+rendered into the agent's context, with the paths to its executable
+scripts resolved to real locations on the host. The only barrier between
+a hostile <code>SKILL.md</code> and the agent's context is the LLM's own
+judgement at build time — the five hard-gate flags including
+<code>prompt_injection</code> and <code>unsafe_exec</code> — plus a
+single-pattern regex whose one rule matches a specific tool name
+(<code>skillcorpus/curate/safety.py:19-21</code>). The project is candid
+about what it removed and why: substring heuristics for suspicious
+content were dropped after "a stratified audit measured their
+false-positive rate above 90%". A build run without a reachable LLM
+applies none of this, and the gate says so in capitals.</p>
+<p><strong>Provenance is real and licence-aware.</strong> Every row
+keeps the source repository, the path within it and the upstream licence
+string; <code>license_audit</code> fetches SPDX ids from the GitHub API,
+builds a whitelist of GREEN categories, and activates only sources on
+it. <code>audit/license_safe_sources.json</code> in the tree is the demo
+whitelist — four public permissive sources — and its <code>_note</code>
+says the production whitelist is generated from a private CSV and not
+shipped. A drift test pins the JSON's <code>green_categories</code>
+against the code's <code>GREEN_LICENSES</code>
+(<code>skillcorpus/tests/test_license_filter.py</code>).</p>
+<p><strong>No mutation audit exists.</strong>
+<code>grep -rn "CREATE TABLE" --include="*.py" skillcorpus/</code>
+returns three tables — <code>skills</code>,
+<code>quality_judgments</code>, <code>dedup_judgments</code> — and none
+is an event log; no JSONL or append-only file records what changed. The
+engine can write a gate decision log to a path named by
+<code>SKILLSEARCH_GATE_LOG_PATH</code>, but that records a retrieval
+decision rather than a mutation, which is the other half of the pattern
+and not this mark.</p>
+<p><strong>No human review surface.</strong> The nearest things are the
+licence whitelist, which a person maintains but which adjudicates
+<em>sources</em> rather than content, and
+<code>dedup_pass --dry-run</code>, which prints the merges it would
+make. Nothing queues a skill for approval and nothing in the tree drains
+such a queue.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> The screen
+(<code>scripts/screen_repo.py</code>) reported sixteen dependency
+surfaces changed within a day of the pinned commit — the pin is the day
+after the tree was last touched — and this atlas does not install a
+third-party dependency published inside a seven-day window. Everything
+below is read from the committed code.</p>
+<p><code>make test</code> is <code>pytest -q skillcorpus/tests</code>:
+sixteen files covering the build chain, classification, clone safety,
+export, dedup, licence drift, safety, and an upgrade smoke test that
+reproduces a specific past failure — a schema migration that left every
+row <code>active = 0</code> and therefore exported an empty corpus. The
+engines carry their own suites (eleven files in
+<code>engine-python/tests</code>, and the TypeScript mirror), and the
+repository additionally runs four repository-hygiene checks in
+<code>make check-repo</code> — asset presence, file sizes, a project
+inventory, and release-version agreement across the plugin packages.</p>
+<p>Two suites hold must-not assertions and both are written against
+populated fixtures with controls, which is what keeps them from passing
+vacuously:</p>
+<ul>
+<li><code>test_an_unrelated_query_gets_nothing_from_the_local_source</code>
+(<code>engine-python/tests/test_bm25_stopwords.py:59-88</code>) builds
+twelve file-handling skills, asserts the weather query returns
+<code>""</code>, and then asserts <code>pdf-forms</code> comes back for
+<code>"fill an acroform"</code> from the same directory.</li>
+<li><code>test_write_corpus_full</code>
+(<code>skillcorpus/tests/test_corpus_export.py:65-106</code>) exports a
+three-row database — one live, one <code>deleted = 1</code>, one
+<code>active = 0</code> — and asserts exactly one row survives and which
+one; <code>test_safety_gate_excludes_unsafe</code> excludes two of four
+skills and asserts the clean one and the soft-flagged one stay.</li>
+</ul>
+<p><strong>The published benchmark numbers are not reproducible from
+this repository.</strong> <code>skillcorpus/evaluate/</code> holds three
+harnesses — SkillsBench, GDPVal and QwenClawBench — with runners,
+graders, task definitions and a results <em>format</em> document, but no
+result artifact:
+<code>find . -path ./.git -prune -o -type f \( -name "*.json" -o -name "*.csv" -o -name "*.jsonl" -o -name "*.parquet" \) -print</code>
+returns manifests, lockfiles, one example task and one test fixture, and
+nothing else. The README's Table 1 — pass rates from 8.8 to 13.0 on
+SkillsBench for OpenClaw with Qwen3.5-27B, up to 9.2 to 22.6 for Raven
+with Qwen3.5-397B, pooled deltas of +7.5, +1.51 and +2.79 percentage
+points — is cited to the paper and appears in the tree only in the two
+README files. The paper's abstract states the same headline (+7.5 pp,
+largest on SkillsBench) and adds what the README does not: that an
+operational analysis traces the gains to "a coverage boundary and a
+harness boundary", and that the corpus behind those numbers is 96,401
+skills filtered from ~821,000 crawled. The public demo corpus is
+1,000.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Key a curation decision on the hash of what was judged, not
+on the row.</strong> Two tables, one primary key each, and the property
+falls out: a re-crawl cannot re-admit a body under a new record, and a
+re-run cannot re-roll a verdict. It costs a column and it is the
+difference between an exclusion that holds and one that holds until the
+next import.</p>
+<p><strong>Make the exclusion flags orthogonal on purpose, and write
+down why.</strong> Using <code>deleted</code> for safety and
+<code>active</code> for licence, with a comment explaining that the
+reverse would let a later <code>activate</code> revive an excluded
+skill, is a two-line decision that prevents a whole class of
+order-dependent bug. So is leaving <code>superseded_by</code> NULL on a
+safety exclusion so the two kinds of exclusion stay distinguishable
+afterwards.</p>
+<p><strong>Warn loudly when a gate could not run.</strong> The safety
+gate counts active rows with no judgment and prints that the active set
+is not fully safety-vetted. A gate that silently passes everything when
+its judge is unreachable is the failure this catches, and it is
+cheap.</p>
+<p><strong>Bound each model call on the hot path separately, and degrade
+differently at each.</strong> A timed-out rewrite searches the raw
+query; a timed-out gate keeps the top two; a failed retrieval injects
+nothing. Three different fallbacks because three different things are
+being protected.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not let a library API that nobody calls stand in for a
+correction path.</strong> <code>SkillStore.update</code> and
+<code>SkillStore.delete</code> are unwired, and <code>update</code>
+would additionally reset <code>active</code> to 0 through the shared
+<code>insert</code>. If the pipeline is the only correction surface, say
+so and delete the rest.</p>
+<p><strong>Do not read a value-keyed dedup index through a filter that
+hides the rejections.</strong> <code>get_by_content_hash</code>
+filtering <code>deleted = 0</code> is what makes the row-level markers
+non-durable. The fix is one clause, and without the gates re-running
+afterwards it would be a live re-admission bug.</p>
+<p><strong>Do not assume a quality score can carry an epistemic
+state.</strong> Three 0-10 facets are enough to build a
+<code>candidate</code>/<code>admitted</code>/<code>rejected</code>
+ladder, and this design spends them on a threshold and a ranking weight
+instead, leaving "may this be acted on" expressible only as
+in-or-out.</p>
+<h3 id="fit">Fit</h3>
+<p>Read this if you are building <strong>procedural memory from
+third-party content</strong> — a skill layer, a playbook library, a
+prompt registry — and the hard part is curation rather than recall. The
+producer is the half worth borrowing, and its ideas survive being lifted
+out of Python: hash-keyed judgement caches, orthogonal exclusion flags,
+a fixed re-derived tail.</p>
+<p>Do not read it for <strong>experiential memory</strong>. Nothing here
+observes an agent, and the atlas's own pattern page is direct about what
+that costs: Voyager's gate is stronger than any judgment-based gate
+because "did it run and produce the intended state?" is checkable in a
+way an LLM's opinion of a document is not. Operationally, the producer
+is a batch job needing a chat endpoint, an embedding endpoint, a GitHub
+token and disk; the consumer is a library with a BM25 index and, at
+most, two model calls per turn, and a team that only wants the second
+half can take it without running the first.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>The corpus is an injection surface by construction.</strong>
+Retrieved-by-similarity third-party instructions, rendered into context,
+with script paths resolved onto the host. The defence is one LLM's
+build-time opinion plus a one-rule regex, and the automatic mode puts it
+on every turn without the agent asking.</p>
+<p><strong>A build without an LLM produces a corpus that looks the same
+and has passed almost nothing.</strong> The warning is printed; the
+artifact carries no marker distinguishing a fully gated corpus from a
+structurally filtered one.</p>
+<p><strong>The <code>deleted</code> marker is not
+self-sufficient.</strong> It survives only because the gates re-run. A
+consumer that reads the SQLite library directly rather than the exported
+parquet, or a pipeline variant that skips <code>_post_actions</code>,
+loses the exclusion without any error.</p>
+<p><strong>Provenance stops at the source repository.</strong> A skill's
+licence is inherited from its repo's SPDX id; a vendored or copied skill
+inside a permissive repository is activated on its host's licence, not
+its own. <code>_extract_license</code> prefers a frontmatter
+<code>license</code> field and falls back to the <em>name</em> of a
+LICENSE file in the skill directory, which is a filename rather than a
+licence.</p>
+<p><strong>No usage signal means no pruning signal.</strong> The library
+has no way to learn that a skill is never selected, never helps, or
+actively hurts — the pattern page names exactly this ("the library has
+no utility signal to prune by") as one of the ways a skill library fails
+over time.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the consumer</strong> if you want per-turn skill
+retrieval in an existing host: it is a library with a small surface,
+both languages are shipped, the plugin packages exist for five hosts,
+and the failure behaviour is already right.</p>
+<p><strong>Borrow the producer's shape, not its deployment</strong>, if
+you are curating third-party content: the hash-keyed judgement cache and
+the re-derived tail are portable to any store in an afternoon, and they
+are the parts that make repeated builds safe.</p>
+<p><strong>Build your own gate</strong> if the content is executable and
+the stakes are real. This one is a single LLM call over a 300-character
+excerpt at build time, with a hard-gate vocabulary chosen by the paper.
+An adopter running skills in a sandbox with observable effects can do
+materially better by gating on execution.</p>
+<p><strong>Do not adopt this as a memory layer.</strong> It stores what
+other people wrote, not what your agent learned, and the two problems
+share a retrieval stack and nothing else.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>The hosted SkillHub catalog is where most adopters' skills will come
+from, and its curation, its safety scores and its update cadence are not
+in this repository. The <code>hub_min_safety</code> default of 0.7
+filters on a number this tree neither computes nor documents the scale
+of.</li>
+<li><code>skill_id</code> is <code>{source}__{slug}__{hash8}</code> — an
+8-character prefix of the content hash. Two distinct bodies colliding on
+the prefix with the same source and name would collide as records;
+nothing in the tree checks for it, and the exact-duplicate path compares
+the full hash, so a collision would be an overwrite rather than a
+merge.</li>
+<li>The paper reports 96,401 curated skills and a coverage-boundary
+analysis; the repository ships a 1,000-skill demo. What the gates reject
+at full scale — the ratio of structural to safety to duplicate
+exclusions — is measurable only by someone who runs the full crawl.</li>
+<li><code>evaluate/</code> can produce the published table but no
+committed run does. A single committed result file per benchmark would
+let a reader recompute a pooled delta rather than take it from a
+README.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Producer</strong></p>
+<ul>
+<li><code>skillcorpus/core/models.py</code> — <code>SkillRecord</code>,
+the 16-class <code>Category</code> enum, <code>SCHEMA_SQL</code></li>
+<li><code>skillcorpus/core/store.py</code> — <code>SkillStore</code>:
+<code>insert</code> (<code>INSERT OR REPLACE</code>),
+<code>get_by_content_hash</code>, <code>supersede</code>,
+<code>find_near_duplicates</code>, the FAISS sidecar</li>
+<li><code>skillcorpus/curate/pipeline.py</code> —
+<code>Ingester.ingest</code>, <code>_finalize_and_insert</code>,
+<code>_collect_near_dup_candidates</code>, <code>_make_id</code></li>
+<li><code>skillcorpus/curate/quality.py</code> —
+<code>QUALITY_JUDGMENT_SCHEMA</code>, <code>HARD_GATE_FLAGS</code>, the
+few-shot judge</li>
+<li><code>skillcorpus/curate/safety.py</code> /
+<code>safety_gate.py</code> — the regex block at ingest; the hard gate
+over cached judgments</li>
+<li><code>skillcorpus/curate/dedup.py</code> /
+<code>dedup_pass.py</code> — <code>DEDUP_JUDGMENT_SCHEMA</code>, the
+cross-source merge</li>
+<li><code>skillcorpus/curate/license.py</code> /
+<code>license_audit.py</code> — GREEN/YELLOW/RED categories,
+<code>refresh</code>/<code>build</code>/<code>validate</code>/<code>apply</code>/<code>activate</code></li>
+<li><code>skillcorpus/export/corpus.py</code> —
+<code>write_corpus</code>, the parquet schema, attachment tarballs</li>
+<li><code>skillcorpus/cli.py</code> — <code>_post_actions</code> (the
+fixed tail), <code>run_refresh</code></li>
+<li><code>skillcorpus/match/</code> — bi-encoder and reranker training,
+<code>serve.py</code>, <code>eval_compare.py</code></li>
+</ul>
+<p><strong>Consumer</strong></p>
+<ul>
+<li><code>skillcorpus_plugin/engine-python/skillsearch/engine.py</code>
+— <code>SkillSearch.retrieve</code>, <code>_search</code>,
+<code>_run_gate</code>, <code>_hydrate_refs</code></li>
+<li><code>.../skillsearch/fusion.py</code>, <code>bm25.py</code>,
+<code>local_pool.py</code>, <code>relevance.py</code>,
+<code>gate.py</code>, <code>rewriter.py</code>,
+<code>refs.py</code></li>
+<li><code>.../skillsearch/hub_client.py</code> —
+<code>_safe_extract</code>, install caching</li>
+<li><code>skillcorpus_plugin/engine-typescript/src/</code> — the same
+design in TypeScript</li>
+<li><code>skillcorpus_plugin/plugin-workbuddy/hooks/hooks.json</code>,
+<code>mcp/servers.json</code> — automatic and on-demand delivery</li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>skillcorpus/tests/test_safety_gate.py</code>,
+<code>test_corpus_export.py</code>, <code>test_license_filter.py</code>,
+<code>test_upgrade_smoke.py</code></li>
+<li><code>skillcorpus_plugin/engine-python/tests/test_bm25_stopwords.py</code>,
+<code>test_gate_defaults.py</code>, <code>test_relevance.py</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -rn &quot;CREATE TABLE&quot; --include=&quot;*.py&quot; skillcorpus/
+grep -rn &quot;DELETE FROM quality_judgments\|DROP TABLE&quot; --include=&quot;*.py&quot; .
+grep -rn &quot;\.update(\|\.delete(&quot; --include=&quot;*.py&quot; skillcorpus/ scripts/
+grep -rn &quot;supersede(&quot; --include=&quot;*.py&quot; .
+find . -path ./.git -prune -o -type f \( -name &quot;*.json&quot; -o -name &quot;*.csv&quot; -o -name &quot;*.jsonl&quot; -o -name &quot;*.parquet&quot; \) -print</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/EverMind-AI/SkillCorpus/commit/c82ca38dfd49a74bba656305915b80b56e9f17fc"><code class="commit-id" title="c82ca38dfd49a74bba656305915b80b56e9f17fc">c82ca38d…</code></a>
+— first reading, at a commit dated 11 September 2026. Screened before
+reading: no auto-run surface, one build-time execution path (the
+<code>Makefile</code>, whose default target was checked), sixteen
+dependency surfaces inside the seven-day cooldown, and twelve unpinned
+surfaces across the requirements files, the two
+<code>pyproject.toml</code> files without lockfiles beside them, and
+four plugin manifests whose <code>^</code> ranges sit above present
+lockfiles. The cooldown finding is what it looks like — the pin is one
+day after the tree was last touched — and the posture that follows is
+the same either way: nothing was installed, nothing was built, and no
+test in this repository was run, so every claim above is read from the
+committed code. The shipped WorkBuddy plugin's
+<code>hooks/hooks.json</code> and <code>mcp/servers.json</code> register
+a <code>UserPromptSubmit</code> command hook and a stdio MCP server in
+an adopting host rather than in this checkout, and are described in
+section 8 as delivery mechanisms rather than as screening findings.
+Licence is Apache-2.0 per <code>LICENSE</code>, with
+<code>skillcorpus/match/</code> and
+<code>skillcorpus/evaluate/skillsbench/</code> carrying their own MIT
+files.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
