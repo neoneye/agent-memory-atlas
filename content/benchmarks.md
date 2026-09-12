@@ -2913,9 +2913,9 @@ re-derivation that AOEP does not.
 <a id="membench"></a>
 ### membench — decay and expiry scored against a corpus that says when a fact stopped being true
 
-A benchmark of one author, fourteen commits between 5 and 6 September 2026,
+A benchmark of one author, twenty commits between 5 and 12 September 2026,
 MIT, pinned at
-[`f5b361bb33105adf99c1ec8ce1161340004276c4`](https://github.com/polmanas1998-star/membench/commit/f5b361bb33105adf99c1ec8ce1161340004276c4).
+[`573774587b0e681dfc939b02cd8b9b37c34ba720`](https://github.com/polmanas1998-star/membench/commit/573774587b0e681dfc939b02cd8b9b37c34ba720).
 It is here because it scores *forgetting on a schedule* — a fact that
 faded, expired or was superseded on a known day must not be returned after
 it — and because the numbers below are read from the artifacts it commits,
@@ -2938,10 +2938,12 @@ data is shortcut, not memory.
 
 **The subject is the author's own store.** The arms in `membench/arms.py`
 wrap `polmanas1998-star/holomem`, an FHRR holographic vector memory with a
-45-day half-life, a weight floor of 0.18 and a forget threshold of 111 days,
-plus a z-score gate of 4 on retrieval. The harness is the evidence the atlas
-reads; the store is not analysed here, and the `holomem` repository was
-created on 2 September 2026, three days before the harness.
+45-day half-life counted from a fact's last confirmation, a weight floor of
+0.18 and a forget threshold of 111 days, plus a z-score gate of 4 on
+retrieval. The store has [its own report](../systems/holomem/), pinned three
+days before the fix described under the closed rooms below; the harness is
+what this page reads. The `holomem` repository was created on 2 September
+2026, three days before the harness.
 
 **What the committed results say.**
 
@@ -2954,6 +2956,10 @@ created on 2 September 2026, three days before the harness.
 | Capacity | `results-capacity-surface.json` `cells` | 262,080 questions across the sweep; coverage saturates at 0.654 as the corpus grows past the vector's capacity |
 | Interference | `results-interference.json` `cellules` | precision at or above 0.980 across the subject-overlap grid |
 | Real models | `results-cost-seed1.json` | on Groq `openai/gpt-oss-120b`: the gated arm with a model answering over retrieved facts answers 53 questions out of the 104 and gets every one right at 69,213 tokens, about 1,306 per correct answer; a full-context arm answers 84 and gets 81 right at 145,899 tokens, about 1,801; an arm with no memory gets none right at 133,132 tokens; a per-question retrieval arm at 3,481 tokens each never finished inside the provider's 200,000-token daily budget |
+| Provenance, one vote per triple | `results-provenance.json` `attaque`, `cout_honnete` | forty seeds; with every repetition counted, one lie is served 0.40 of the time, two 0.875, three and beyond 1.0 at a median z of 6.15; with one write per `(subject, relation, object)`, every row is the same trial and reads 0.40 at z 4.73; on the unattacked corpus the rule moves coverage from 0.496 to 0.538 and hallucination from 0.011 to 0.006 |
+| Closed rooms | `results-chambre-close.json` `pieces` | six rigged environments, eighteen known facts and six never-stated pairs each; the healthy control, the clock rewound sixty days and the two-object store answer without inventing; the clock advanced ten years and a NaN in the trace go silent on all eighteen; saturation at ten times capacity invents on 2 of 6 never-stated pairs at z 4.83 |
+| Long confinement | `results-chambre-close.json` `detention` | the same store asked at nine ages with nothing relearned: 18 of 18 through day 111, 0 of 18 and no invention from six months to ten years |
+| Echo chamber | `results-chambre-echo.json` `lignes` | two instances sealed in together for eight rounds; one falsehood planted in the emptier one; the contradicted pair goes silent on both sides from round 1 and stays so, the median z runs 14.10 to 14.99 throughout, and a no-exchange control answers 18 of 18 |
 
 The pattern is the one the section above predicts. **Decay buys stale-rate,
 and the gate buys precision.** Removing decay leaves precision at 0.880 but
@@ -2965,18 +2971,86 @@ questions. The poisoning result is the more useful negative: one lie among
 truths is returned half the time, and reinforcement of the truth needs
 three to four repetitions before it pulls ahead.
 
-**The poisoning harness holds time still, by construction.** `poisoning.py`
-builds the store with its clock fixed at one day (`now_fn=lambda: ts`,
-`poisoning.py:68-69`) and passes that same instant as `created_ts` to every
-write — the sixty background facts, each repetition of the truth and each
-repetition of the lie (`poisoning.py:91`, `:94`, `:96`) — then queries at the
-same instant. Truth and lie land on the same day on the same pair, so the
-curve isolates repetition count from recency: what it measures is mass, and
-the 45-day half-life is never engaged. That is a property of the harness
-rather than a result, and it bounds the row above. The case the contradiction
-test below asks for — the correction arriving weeks after the lie, with decay
-as the only thing arguing for it — is not run, and in this harness could not
-be, because no write ever carries a different timestamp.
+**The poisoning row is a lower bound taken with the store's recency defence
+switched off.** `poisoning.py` builds the store with its clock fixed at one
+day (`now_fn=lambda: ts`, `poisoning.py:68-69`) and passes that same instant
+as `created_ts` to every write — the sixty background facts, each repetition
+of the truth and each repetition of the lie (`poisoning.py:91`, `:94`,
+`:96`) — then queries at the same instant. The store's weights decay from a
+fact's last confirmation, and that stamp comes from the same fixed clock, so
+neither timestamp ever differs between two writes and the 45-day half-life is
+never engaged. Truth and lie land on the same day on the same pair, which
+isolates repetition count from recency — the harness's stated intent — and it
+also disables the one mechanism this layer has against repetition, which is
+that a fresh correction outweighs stale mass. What the curve measures is mass
+alone. The case the contradiction test below asks for — the correction
+arriving weeks after the lie, with decay as the only thing arguing for it —
+is not run, and in this harness could not be. The confinement bench found
+the same property from the other side: backdating `created_ts` aged nothing,
+because decay runs from `last_seen_ts`, and the write-up records the re-run
+with the clock advanced instead.
+
+**One vote per triple removes the attacker's certainty, not the error.**
+`provenance.py` reruns the attack with each `(subject, relation, object)`
+written once, the most recent kept, because the store carries no provenance
+field and one write per source is the nearest thing to it. The flat right-hand
+column is a tautology the script prints a warning about — under the rule every
+row is the same trial, one truth against one lie — and the residue is the
+result: the lie is still served four times in ten, at a median z of 4.73,
+above the gate. The rule's price on the unattacked corpus does not show,
+and the script says why rather than claiming the price is zero: every
+`(subject, relation)` pair in the corpus is unique and a reinforced fact only
+repeats its own object, so the rule never removes information there, only
+mass, and removing mass from a holographic sum lowers everyone else's noise.
+The corpus has no case where repetition is the only signal separating a strong
+belief from a weak one, *"so the cell is empty, it is not at zero."*
+
+**The closed rooms ask whether a rigged environment makes the layer shout or
+lie.** `chambre_close.py` learns eighteen facts and asks about them and about
+six pairs nobody stated, under six conditions, with a healthy control so the
+bench cannot only measure its own severity. The finding was the two-object
+store: on 7 September 2026 `query_gated` returned `math.inf` under three
+candidates, having no spread to doubt against, so a store that had just
+started or just been emptied by an erasure request answered every never-stated
+pair at infinite confidence — six inventions of six. `holomem` gained an
+absolute floor, `MIN_ABSOLUTE = 0.40`, on 8 September, chosen inside a
+measured gap between the worst true score and the best never-stated one, and
+the price is committed with the fix: two correct answers went silent, 4
+correct and 2 mute where there were 6, and `tests/test_chambres.py:81-112`
+asserts that exact pair so the floor cannot move unnoticed. Saturation is
+the room that does not hold: at ten times capacity the layer still invents on
+two of six never-stated pairs at z 4.83, and nothing in the output says so.
+The clock rewound is harmless because `effective_weight` clamps age at zero;
+the clock advanced and the corrupted trace both end in silence, which is the
+failure the bench calls correct.
+
+**Decay is a mute, not a delete.** The confinement bench ages one store with
+nothing relearned and finds the cliff between day 109 and day 112: 18 of 18
+answered through the 111-day threshold, then silence, with no invention out to
+a hundred thousand simulated years. What it also finds is that `len(mem)`
+never changes, because a faded fact leaves the trace and not the list.
+`forget_faded()` exists in the store, and the write-up states that nothing in
+the library or the product calls it; `tests/test_chambres.py:186-216` pins the
+structure — fifty facts aged four hundred days are all still held until the
+explicit call removes exactly fifty. The measured cost is 8.5× on every query
+at two thousand faded facts, for identical accuracy. The consequence the
+write-up draws is the one this page cares about: *"if someone asks to be
+erased, decay does not erase them."*
+
+**Two contradicting instances erase the fact rather than corrupting it.**
+`chambre_echo.py` tells eighteen facts to instance A, plants one falsehood in
+instance B beside five true facts, then lets them learn from each other above
+the gate for eight rounds with no outside voice. At round 1 the emptier
+instance states its falsehood at z 47.0 against the truth's 17.7, because a
+winner separates more cleanly in a smaller pool; after one exchange the two
+claims annihilate, the gate shuts on both sides, and the pair stays mute for
+every later round. A knew the fact and can never answer it again. Against a
+no-exchange control at 18 of 18, the loop costs one fact in eighteen, and the
+median z of 14.10 to 14.99 carries no trace of it — a memory sealed in with
+its twin is exactly as sure of itself as one talking to the world. The
+write-up's first verdict, that the loop manufactures agreement, was thrown
+away for the right reason: B starts nearly empty, so agreement can only rise,
+and only the control makes the cost legible.
 
 **The real-model column is the caveat.** The synthetic arms score near one;
 the model that reads retrieved facts and answers in words gets 51%. Some of
@@ -2985,19 +3059,27 @@ harness does not separate them. The full-context arm at 78% with twice the
 tokens is the number a reader should hold against the retrieval arm, and it
 says retrieval here loses accuracy to save tokens rather than gaining it.
 
-**Tests.** 89 test functions under `tests/`; a fresh clone without `holomem`
-installed runs 52 and skips 21, so the scorer, corpus and statistics are
-tested without the subject, and the arms are not. The README's mutation
-figures (13 mutants killed by 40 tests) were not re-run.
+**Tests.** 102 test functions under `tests/`, thirteen of them for the rooms
+and the provenance rule, and every one that exercises an arm, a room or the
+rule imports `holomem`, so a clone without it tests the scorer, corpus and
+statistics and not the subject. At `f5b361bb` that was 52 run and 21 skipped;
+the count at this pin was not re-run, and neither were the README's mutation
+figures (13 mutants killed by 40 tests). The eight room tests exist, in the
+write-up's words, *"to go red when the behaviour changes, not to prove it is
+good"*; one of them froze the two-object defect and demanded its own deletion
+on the day the gate closed, and its replacement pins the fix with its price.
 
 **Against the thirteen-step sequence above,** membench covers steps 5 to 8
 — the ones AOEP leaves open — for *scheduled* forgetting: it re-asks after
 the day a fact should have gone and scores silence. It does not delete on
 instruction, re-feed a source, or run a background job; it never exercises a
-tombstone, because the store has none — a fact fades by weight, and the
-`FORGET_THRESHOLD_DAYS` floor is the whole of its deletion story. It is a
-decay benchmark, run once, on one store, by that store's author, with
-controls good enough that the numbers mean what they say.
+tombstone, because the store has none — a fact fades by weight, the
+`FORGET_THRESHOLD_DAYS` floor is the whole of its deletion story, and the
+confinement bench shows the fade leaves the fact stored until a purge nothing
+calls. It is a decay benchmark, run on one store, by that store's author, with
+controls good enough that the numbers mean what they say, and the rooms and
+the echo chamber are the same author testing the environment and the loop
+rather than the accuracy.
 
 <a id="contradiction-test"></a>
 
@@ -3029,6 +3111,7 @@ how the old value is displaced:
 | **Retraction** | "My sister is a doctor" | "I misspoke — I don't have a sister" | Nothing replaces the value. There is no newer fact for recency to prefer, so a system with no negative memory has nothing to work with. |
 | **Partial supersession** | "I'm an engineer at Acme" | "I got promoted to manager" | Systems that supersede whole records lose the employer along with the role. |
 | **Bounded validity** | "I was vegetarian for ten years" | "I stopped in 2024" | Both are true, of different periods. Only a system tracking validity separately from record time can answer "was I vegetarian in 2022?" |
+| **Equal-weight contradiction** | "I live in Berlin", from one source | "I live in Lisbon", from a second source of the same standing, with no later word from either | Neither value is newer or better attested. A system that resolves contradiction by margin can lose both: membench's echo chamber, on the [benchmarks page](#membench), found two instances that contradicted each other once went silent on that pair on both sides and stayed so, an erasure the confidence score never reported. Score silence here as its own outcome, not as a pass on hygiene. |
 
 **Score five things, not one.** The single question "what does it answer" hides
 the interesting failures:
@@ -3080,7 +3163,10 @@ most systems in the deletion sequence in §6, and it belongs here too.
 are different problems: the first tests within-session handling, the second
 tests whether the older memory has decayed, been consolidated into a summary, or
 been folded into a profile — and a summary that still says Berlin is a
-correction that only reached the surface layer.
+correction that only reached the surface layer. A harness that stamps every
+write with one clock cannot vary the gap at all, and its contradiction row is
+then a lower bound with recency switched off; membench's poisoning bench is
+the committed example.
 
 ### The procedure
 
