@@ -7,13 +7,15 @@ page_kind: system
 source_name: "kwaroran/RisuAI"
 source_url: https://github.com/kwaroran/RisuAI
 archive_name: "kwaroran--RisuAI"
-revision: 316e430bedbe68c80060ce74c5a1fff88f3bdf97
-revision_url: https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97
-analyzed_at: 2026-07-29
+revision: cad8595aa39620df4246f56918f0962c2aa0263a
+revision_url: https://github.com/kwaroran/RisuAI/commit/cad8595aa39620df4246f56918f0962c2aa0263a
+analyzed_at: 2026-09-13
 capabilities: "human_review"
+capability_evidence:
+  human_review: "the HypaV3 summary store — a modal over machine-written summaries carrying five verbs | src/lib/Others/HypaV3Modal.svelte:276 (merge), :405 (bulk pin), src/lib/Others/HypaV3Modal/modal-summary-item.svelte:143 (pin), :233 (delete-from-here), :274 (accept a re-roll), src/lib/Others/HypaV3Modal/bulk-resummary-result.svelte | a person can edit a summary's text, delete from a point onward, merge two summaries with a union of their source message ids, pin one so the selection bands always carry it, and bulk re-summarise with the result shown before it is accepted. The producer is the user acting in the chat UI, and the approval is the write: `summary.text = rerolled` at modal-summary-item.svelte:274 runs only after the person accepts the proposed replacement, which is the same operation the 2023 generation performed silently on a threshold. The review is over content and lifecycle rather than over an epistemic status — nothing here records that a summary was judged wrong, only that it was changed or removed, which is why `trust_state` and `tombstone` are withheld | none — no test file in the repository exercises the memory system at all; `find . -path ./node_modules -prune -o -name \"*.test.ts\" -print | xargs grep -ln \"hypa\\|Hypa\\|supaMemory\\|HypaV3\\|summarize\"` returns two files at this pin, a translator-preset decoder rejecting a payload named HypaV3 and a scripting test that mocks the memory module out"
 stack_storage: "files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A summary of a contiguous run of chat messages, carrying the set of message ids it was derived from, an importance pin, a category and tags"
   storage: "Per-chat-room JSON in the local database, with an embedding cache keyed by content and model"
@@ -363,14 +365,25 @@ or not.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The repository has roughly thirty test files. They cover the ChatML parser, the
-CBS scripting language across five files, storage and remote-save cleanup, chat
-paging, the source map, networking, the translator, TTS hooks, inlays, MCP
-modules and request parameters. This is a team that writes tests.
+The repository has 24 test files. They cover the ChatML parser, the CBS scripting
+language across five files, storage and remote-save cleanup, cold storage, chat
+paging, the source map, networking, the translator, TTS hooks, inlays, image
+handling, GUI rendering and request parameters. This is a team that writes tests.
 
-**Not one of them touches memory.** Searching every test file for `hypa`,
-`supaMemory` or `summar` returns two files, both unrelated — a translator preset
-test and an OpenAI request test.
+**Not one of them touches memory.**
+
+```sh
+find . -path ./node_modules -prune -o -name "*.test.ts" -print \
+  | xargs grep -ln "hypa\|Hypa\|supaMemory\|HypaV3\|summarize"
+```
+
+Two files match at the pinned commit and neither exercises the memory system.
+`src/ts/translator/presets.test.ts:136-149` builds a payload whose `name` field
+is the string `"HypaV3"` and asserts the translator-preset decoder *rejects* it —
+the word is a fixture, not a subject. And `src/ts/process/scriptings.test.ts:50`
+reads `vi.mock('./memory/hypamemory', () => ({ HypaProcesser: vi.fn() }))`: the
+memory module's only appearance in this suite is as something stubbed out so a
+scripting test does not have to load it.
 
 So: three generations of summarizer, a provenance invariant, an orphan-cleaning
 rule, a four-band budget with a validation constraint, and an RRF fusion — none
@@ -513,5 +526,7 @@ better than any of this atlas's prose about it.
 - None covering memory. ~30 test files elsewhere in `src/`.
 
 ## History
+
+**2026-09-13** — [`cad8595aa39620df4246f56918f0962c2aa0263a`](https://github.com/kwaroran/RisuAI/commit/cad8595aa39620df4246f56918f0962c2aa0263a) — 77 commits past the previous pin and **not one of them touches memory**: `git diff --name-only 316e430bedbe68c80060ce74c5a1fff88f3bdf97..HEAD -- src/ts/process/memory/` returns nothing, and the review surface — `HypaV3Modal.svelte` and its five child components — is byte-identical. Every line number in the appendix was re-checked against the new checkout and every one still resolves to the symbol it names. The 77 commits went to the translator, the CBS parser, plugin APIs, model ids and a cold-storage offload for character assets and plugin data; `collectColdStorageBackupPayloads` is typed `Pick<Database, 'characters'|'pluginCustomStorage'>`, so it does not reach chat messages and cannot orphan a summary through `chatMemos`. `human_review` re-verified against the five verbs at the modal and unchanged. The no-memory-test claim was re-run and holds, with the two incidental matches now named in section 10 — one of them a `vi.mock` of the memory module itself. A repository this active leaving one subsystem untouched between 2026-07-29 and 2026-09-13 is a fact about the subsystem, and the reading stands as it was.
 
 **2026-07-29** — [`316e430bedbe68c80060ce74c5a1fff88f3bdf97`](https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97) — first reading.

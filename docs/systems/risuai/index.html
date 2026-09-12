@@ -106,14 +106,14 @@ all three still ship.</p>
               <strong>kwaroran/RisuAI</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97" title="316e430bedbe68c80060ce74c5a1fff88f3bdf97">
+            <a class="meta-pill revision-pill" href="https://github.com/kwaroran/RisuAI/commit/cad8595aa39620df4246f56918f0962c2aa0263a" title="cad8595aa39620df4246f56918f0962c2aa0263a">
               <span>Analyzed revision</span>
-              <code>316e430b…</code>
+              <code>cad8595a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kwaroran--RisuAI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -489,15 +489,23 @@ can say — but there is no record that anything was removed, so
 that is either selected or not.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>The repository has roughly thirty test files. They cover the ChatML
-parser, the CBS scripting language across five files, storage and
-remote-save cleanup, chat paging, the source map, networking, the
-translator, TTS hooks, inlays, MCP modules and request parameters. This
-is a team that writes tests.</p>
-<p><strong>Not one of them touches memory.</strong> Searching every test
-file for <code>hypa</code>, <code>supaMemory</code> or
-<code>summar</code> returns two files, both unrelated — a translator
-preset test and an OpenAI request test.</p>
+<p>The repository has 24 test files. They cover the ChatML parser, the
+CBS scripting language across five files, storage and remote-save
+cleanup, cold storage, chat paging, the source map, networking, the
+translator, TTS hooks, inlays, image handling, GUI rendering and request
+parameters. This is a team that writes tests.</p>
+<p><strong>Not one of them touches memory.</strong></p>
+<pre class="sh"><code>find . -path ./node_modules -prune -o -name &quot;*.test.ts&quot; -print \
+  | xargs grep -ln &quot;hypa\|Hypa\|supaMemory\|HypaV3\|summarize&quot;</code></pre>
+<p>Two files match at the pinned commit and neither exercises the memory
+system. <code>src/ts/translator/presets.test.ts:136-149</code> builds a
+payload whose <code>name</code> field is the string
+<code>"HypaV3"</code> and asserts the translator-preset decoder
+<em>rejects</em> it — the word is a fixture, not a subject. And
+<code>src/ts/process/scriptings.test.ts:50</code> reads
+<code>vi.mock('./memory/hypamemory', () =&gt; ({ HypaProcesser: vi.fn() }))</code>:
+the memory module's only appearance in this suite is as something
+stubbed out so a scripting test does not have to load it.</p>
 <p>So: three generations of summarizer, a provenance invariant, an
 orphan-cleaning rule, a four-band budget with a validation constraint,
 and an RRF fusion — none of it tested, in a repository that tests its
@@ -662,6 +670,27 @@ pin (143), delete-from-here (233), accept re-roll (274)</li>
 <code>src/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/kwaroran/RisuAI/commit/cad8595aa39620df4246f56918f0962c2aa0263a"><code class="commit-id" title="cad8595aa39620df4246f56918f0962c2aa0263a">cad8595a…</code></a>
+— 77 commits past the previous pin and <strong>not one of them touches
+memory</strong>:
+<code>git diff --name-only 316e430bedbe68c80060ce74c5a1fff88f3bdf97..HEAD -- src/ts/process/memory/</code>
+returns nothing, and the review surface —
+<code>HypaV3Modal.svelte</code> and its five child components — is
+byte-identical. Every line number in the appendix was re-checked against
+the new checkout and every one still resolves to the symbol it names.
+The 77 commits went to the translator, the CBS parser, plugin APIs,
+model ids and a cold-storage offload for character assets and plugin
+data; <code>collectColdStorageBackupPayloads</code> is typed
+<code>Pick&lt;Database, 'characters'|'pluginCustomStorage'&gt;</code>,
+so it does not reach chat messages and cannot orphan a summary through
+<code>chatMemos</code>. <code>human_review</code> re-verified against
+the five verbs at the modal and unchanged. The no-memory-test claim was
+re-run and holds, with the two incidental matches now named in section
+10 — one of them a <code>vi.mock</code> of the memory module itself. A
+repository this active leaving one subsystem untouched between
+2026-07-29 and 2026-09-13 is a fact about the subsystem, and the reading
+stands as it was.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97"><code class="commit-id" title="316e430bedbe68c80060ce74c5a1fff88f3bdf97">316e430b…</code></a>
 — first reading.</p>

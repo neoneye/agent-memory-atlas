@@ -7292,7 +7292,7 @@ Privacy/deletion:
 - [Project-N-E-K-O/N.E.K.O](https://github.com/Project-N-E-K-O/N.E.K.O) at [`b51d4532c59c03b6221bb74560b12e797af9307c`](https://github.com/Project-N-E-K-O/N.E.K.O/commit/b51d4532c59c03b6221bb74560b12e797af9307c)
 - [netease-youdao/LobsterAI](https://github.com/netease-youdao/LobsterAI) at [`2921c1e5bddbd96a503da4acd7538cac45bcd0f2`](https://github.com/netease-youdao/LobsterAI/commit/2921c1e5bddbd96a503da4acd7538cac45bcd0f2) — not a report; cited in the OpenClaw analysis
 - [SillyTavern/SillyTavern](https://github.com/SillyTavern/SillyTavern) at [`8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8`](https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8)
-- [kwaroran/RisuAI](https://github.com/kwaroran/RisuAI) at [`316e430bedbe68c80060ce74c5a1fff88f3bdf97`](https://github.com/kwaroran/RisuAI/commit/316e430bedbe68c80060ce74c5a1fff88f3bdf97)
+- [kwaroran/RisuAI](https://github.com/kwaroran/RisuAI) at [`cad8595aa39620df4246f56918f0962c2aa0263a`](https://github.com/kwaroran/RisuAI/commit/cad8595aa39620df4246f56918f0962c2aa0263a)
 - [jofizcd/Soul-of-Waifu](https://github.com/jofizcd/Soul-of-Waifu) at [`747048b3b3ad7d321a667630018f7ffc04eb5f6d`](https://github.com/jofizcd/Soul-of-Waifu/commit/747048b3b3ad7d321a667630018f7ffc04eb5f6d)
 - [SugarcaneDefender/z-waif](https://github.com/SugarcaneDefender/z-waif) at [`aaf905c12efcbd2a709a3b2285f55e554d47484f`](https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f)
 - [yakami129/VirtualWife](https://github.com/yakami129/VirtualWife) at [`c8afd6d3ce6bb6f58988c649c50299d36b63e08f`](https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f)
