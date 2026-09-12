@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 435 reports.</strong></p>
+<p><strong>This page covers all 436 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -15568,6 +15568,54 @@ skill retrieval with failure behaviour already worked out.</li>
 <li>Do not copy when: you need memory an agent forms from its own
 experience, or a verification gate stronger than a model reading a
 300-character excerpt.</li>
+</ul>
+<h3 id="semantica"><a
+href="../systems/semantica/"><code>semantica</code></a></h3>
+<ul>
+<li>Best idea: <strong>a removal vocabulary with four distinct words in
+it.</strong> Retract closes a validity window and leaves the record
+queryable before the cut; purge removes the content and keeps a
+tombstone holding only the id, the time and a reason, because keeping
+the content would defeat what the tombstone records; an
+<code>ErasureCoordinator</code> drives that across every store that
+holds a copy and returns a receipt naming which ones it reached; and
+<code>apply_revision</code> supersedes a fact retroactively while the
+prior version stays queryable on the record-time axis. Four marks —
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code> — though they
+guard four different subsystems and none of them guards the agent-memory
+item store.</li>
+<li>Biggest risk: <strong>the filter predicate behind that store returns
+True for any key it does not recognise.</strong> It knows
+<code>type</code>, <code>start_date</code> and <code>end_date</code>. So
+<code>forget(conversation_id=...)</code> and
+<code>forget(user_id=...)</code> — both in the method's own docstring —
+match every item and empty the store, and
+<code>retrieve(query, user_id=...)</code> returns everyone's memories
+without raising or logging. The <code>days_old</code> arm of the same
+function was fixed one commit before this pin; the regression file that
+landed with it tests that arm three ways and neither of the other two.
+One level down, <code>retrieve</code>'s vector branch builds its results
+and the loop that consumes them is indented into the sibling
+<code>elif</code>, so with the vector store the package ships, long-term
+recall falls through to keyword matching.</li>
+<li>Most reusable component: the bitemporal fact model and its query —
+four timestamps, one <code>time_axis</code> parameter, and a tested
+fallback for facts written before the record-time axis existed.</li>
+<li>Maturity impression: about 201,000 lines of Python across 377
+modules, 391 test files holding roughly 7,060 test functions, an MCP
+server, a React Explorer, a 22-group CLI, seven vector backends, four
+graph backends and five triple stores, MIT, with a CHANGELOG back to
+June 2025 and no paper. The concurrency comments, the pickle refusal,
+the duplicate-key YAML loader and the reasoning written into
+<code>retract_node</code>'s cascade are careful work; the agent-memory
+half beside them is not finished, and nothing in the module list
+distinguishes the two.</li>
+<li>Study when: you need an auditable knowledge graph for a regulated
+domain and want a worked example of retraction, erasure and retroactive
+correction as separate operations.</li>
+<li>Do not copy when: you want a drop-in memory layer — take the graph
+and bring your own item store, or pin the three fixes first.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A graph-native context platform
+whose ContextGraph carries a worked-out temporal model — validity time
+beside record time, retraction that closes a window rather than
+deleting, purge that leaves a content-free tombstone, and a mutation
+callback that lands in an append-only SQLite log — sitting beside an
+AgentMemory whose retrieval filter recognises three keys and silently
+ignores every other, so the same forget(conversation_id=...) the
+docstring shows deletes the entire store.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Semantica — Agent Memory Atlas">
+    <meta property="og:description" content="A graph-native context
+platform whose ContextGraph carries a worked-out temporal model —
+validity time beside record time, retraction that closes a window rather
+than deleting, purge that leaves a content-free tombstone, and a
+mutation callback that lands in an append-only SQLite log — sitting
+beside an AgentMemory whose retrieval filter recognises three keys and
+silently ignores every other, so the same forget(conversation_id=...)
+the docstring shows deletes the entire store.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Semantica — Agent Memory Atlas">
+    <meta name="twitter:description" content="A graph-native context
+platform whose ContextGraph carries a worked-out temporal model —
+validity time beside record time, retraction that closes a window rather
+than deleting, purge that leaves a content-free tombstone, and a
+mutation callback that lands in an append-only SQLite log — sitting
+beside an AgentMemory whose retrieval filter recognises three keys and
+silently ignores every other, so the same forget(conversation_id=...)
+the docstring shows deletes the entire store.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Semantica — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Semantica",
+      "description": "A graph-native context platform whose ContextGraph carries a worked-out temporal model \u2014 validity time beside record time, retraction that closes a window rather than deleting, purge that leaves a content-free tombstone, and a mutation callback that lands in an append-only SQLite log \u2014 sitting beside an AgentMemory whose retrieval filter recognises three keys and silently ignores every other, so the same forget(conversation_id=...) the docstring shows deletes the entire store.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two memory stores under one façade, and
+only one of them is governed</p>
+          <h1>Semantica</h1>
+          <p class="document-deck">A graph-native context platform whose
+ContextGraph carries a worked-out temporal model — validity time beside
+record time, retraction that closes a window rather than deleting, purge
+that leaves a content-free tombstone, and a mutation callback that lands
+in an append-only SQLite log — sitting beside an AgentMemory whose
+retrieval filter recognises three keys and silently ignores every other,
+so the same forget(conversation_id=...) the docstring shows deletes the
+entire store.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/semantica-agi/semantica">
+              <span>Source</span>
+              <strong>semantica-agi/semantica</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/semantica-agi/semantica/commit/7057387775ecdf74c14e38d0067fd8e1267eaaf8" title="7057387775ecdf74c14e38d0067fd8e1267eaaf8">
+              <span>Analyzed revision</span>
+              <code>70573877…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-12</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/semantica-agi--semantica" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>semantica-agi--semantica</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Semantica is a graph-native context platform: ingest enterprise data,
+extract entities, build a context graph and a knowledge graph, reason
+over them deterministically, and keep decision provenance as a
+by-product of the structure. MIT, about 201,000 lines of Python across
+377 modules in the package plus an MCP server, a React Explorer, 391
+test files holding roughly 7,060 test functions, and a CHANGELOG running
+back to June 2025. No paper: <code>CITATION.cff</code> cites the
+software at v0.7.0 and nothing in the README or the docs points at an
+arXiv id or a DOI
+(<code>grep -rn -i "arxiv\|doi" README.md CITATION.cff</code> returns
+nothing).</p>
+<p><strong>Two memory stores sit under one façade and only one of them
+is governed.</strong> The <code>ContextGraph</code> has a temporal model
+worked out to a depth few systems here reach:
+<code>valid_from</code>/<code>valid_until</code> on every node and edge,
+<code>recorded_at</code>/<code>superseded_at</code> on knowledge-graph
+relationships, a query that takes either axis or both, retraction that
+closes a window rather than deleting, purge that removes the content and
+leaves a tombstone recording that a purge happened <em>without</em> the
+purged content, and a mutation callback that an attached version manager
+writes into an append-only SQLite log. Beside it,
+<code>AgentMemory</code> is a process dict with a JSON save file, and
+its filter predicate recognises three keys.</p>
+<p><strong>That predicate is where the design fails, and it fails twice
+in the same function.</strong> <code>AgentContext.forget</code> builds a
+filter dict from <code>memory_id</code>, <code>conversation_id</code>,
+<code>user_id</code> and <code>days_old</code> and passes it to
+<code>clear_memory</code>, which asks <code>_matches_filters</code>
+about each item. <code>_matches_filters</code> checks <code>type</code>,
+<code>start_date</code> and <code>end_date</code> and returns
+<code>True</code> for everything else
+(<code>semantica/context/agent_memory.py:995-1028</code>). So
+<code>forget(conversation_id="conv1")</code> — the second example in the
+method's own docstring — matches every item in the store and deletes all
+of them; <code>forget(user_id=...)</code> does the same. One commit
+before this pin, the maintainers fixed the third arm:
+<code>days_old</code> had mapped to <code>start_date</code>, so it
+deleted memories <em>newer</em> than the cutoff, and the regression file
+that landed with the fix tests <code>days_old</code> three ways and the
+other two arms not at all.</p>
+<p><strong>The long-term retrieval arm is dead for the configuration the
+package ships.</strong> <code>AgentMemory.retrieve</code> branches on
+the vector store's shape: <code>search_vectors</code> first, then
+<code>search</code>. The <code>search_vectors</code> branch builds
+result objects at <code>agent_memory.py:517</code> — and the loop that
+filters them and appends them to <code>results</code> sits inside the
+<code>elif</code> (<code>:524</code>, one indent level in from
+<code>:519</code>), so the first branch's work is discarded.
+<code>semantica.vector_store.VectorStore</code> defines both methods
+(<code>:740</code> and <code>:758</code>), so it takes the dead branch,
+<code>results</code> stays empty, and retrieval falls through to
+<code>_keyword_search</code> — word overlap over the in-process
+items.</p>
+<p><strong>What is genuinely worth reading here is the vocabulary of
+removal.</strong> Most systems in this atlas have one delete. This one
+has four, distinguished in code and in docstrings: close the window
+(<code>retract_node</code>), remove the data and keep a content-free
+receipt (<code>purge_node</code>), drive that across every store that
+holds a copy and return a record of which ones were reached
+(<code>ErasureCoordinator</code>), and supersede a fact retroactively
+while keeping the prior version queryable on the record-time axis
+(<code>apply_revision</code>). The purge docstring is unusually honest
+about its own limit: <em>"this is one step of an erasure workflow, not
+the whole of it,"</em> and callers <em>"should not treat a
+<code>True</code> here as proof the content is gone."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory in the context graph is <strong>an assertion with a
+lifetime</strong>, and the design's central idea is that a lifetime has
+two axes. <code>valid_from</code>/<code>valid_until</code> say when the
+assertion was true of the world.
+<code>recorded_at</code>/<code>superseded_at</code> say when this store
+held it. <code>BiTemporalFact</code>
+(<code>semantica/kg/temporal_model.py:27-66</code>) carries all four,
+and <code>TemporalGraphQuery</code> turns the pair you name into the
+bounds it tests: <code>axis='valid'</code> for the first,
+<code>axis='transaction'</code> for the second,
+<code>time_axis='both'</code> to require both
+(<code>temporal_query.py:748-812</code>).</p>
+<p><strong>Retraction is a temporal act, not a deletion, and the
+docstring draws the line the rubric cares about.</strong>
+<code>retract_node</code> closes <code>valid_until</code> and records a
+retraction with a reason; the node stays in <code>has_node</code>, stays
+in <code>stats</code>, stays in <code>state_at</code> for any time
+before the cut, and leaves the active view. Its cascade is reasoned
+about rather than assumed: leaving edges active around an inactive node
+<em>"means <code>find_active_nodes</code> drops the node while its
+relationships still read as current."</em></p>
+<p><strong>Purge is the other act, and its tombstone is deliberately
+content-free.</strong> <code>self._tombstones[("node", target)]</code>
+holds the entity id, the kind, <code>purged_at</code> and a reason —
+<em>"deliberately without the purged content, since retaining it would
+defeat the point."</em> That is correct for erasure and it is exactly
+why it is not a rejected-value tombstone:
+<code>grep -n "_tombstones" semantica/context/context_graph.py</code>
+returns eleven lines, and every one of them is a write, a clear, or one
+of the two accessors
+<code>get_tombstone</code>/<code>list_tombstones</code>. No write path
+consults it, so re-adding the purged content is not refused. Edge ids
+make the near-miss sharp, because <code>_default_edge_id</code> derives
+them from source, target, type, weight and metadata — the key is already
+the value, and one lookup in <code>add_edges</code> would close the
+gap.</p>
+<p><strong>Belief is not a state anywhere in this system.</strong>
+Conflicts are detected across five types and resolved by a strategy —
+voting, credibility-weighted, most-recent, first-seen,
+highest-confidence, or a flag for manual review — and the output is a
+<code>ResolutionResult</code> with <code>resolved: bool</code> and a
+confidence float. Nothing writes a status onto the stored fact, so the
+store cannot express "on record, not believed".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the context graph and the agent memory are two stores with two different governance stories — the left keeps a validity window, a record-time axis, a retraction record and a purge tombstone, and emits every mutation to an append-only log; the right is a dict whose one filter predicate knows three keys and answers True to everything else, which is why the same argument that scopes a read is silently dropped and the same argument that scopes a deletion deletes the store</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the context graph and the agent memory are two stores with two different governance stories — the left keeps a validity window, a record-time axis, a retraction record and a purge tombstone, and emits every mutation to an append-only log; the right is a dict whose one filter predicate knows three keys and answers True to everything else, which is why the same argument that scopes a read is silently dropped and the same argument that scopes a deletion deletes the store
+flowchart TD
+  A[&quot;agent or operator writes a memory&quot;] --&gt; B{&quot;which store&quot;}
+  B --&gt;|&quot;AgentContext.remember&quot;| C[&quot;AgentMemory.store — dict, short-term buffer, optional vector&quot;]
+  B --&gt;|&quot;graph construction&quot;| D[&quot;ContextGraph.add_nodes / add_edges&quot;]
+
+  D --&gt; E[&quot;node carries valid_from and valid_until&quot;]
+  E --&gt; F[&quot;KG relationship also carries recorded_at and superseded_at&quot;]
+  F --&gt; G[&quot;query_at_time — axis valid, axis transaction, or both&quot;]
+  D --&gt; H[&quot;every add, retraction and purge fires mutation_callback&quot;]
+  H --&gt; I[&quot;attach_to_graph bound — INSERT into the SQLite mutation_log&quot;]
+  H --&gt;|&quot;not attached, the default&quot;| J[&quot;nothing recorded&quot;]
+  E --&gt; K{&quot;removal&quot;}
+  K --&gt;|&quot;retract_node&quot;| L[&quot;window closed — leaves the active view, stays in state_at before the cut&quot;]
+  K --&gt;|&quot;purge_node&quot;| M[&quot;removed — tombstone keeps id, time and reason, never the content&quot;]
+  M --&gt; N[&quot;no write path reads _tombstones, so the same content can be added back&quot;]
+
+  C --&gt; O[&quot;retrieve — short-term, then vector, then keyword&quot;]
+  O --&gt; P{&quot;vector store shape&quot;}
+  P --&gt;|&quot;has search_vectors — the packaged VectorStore&quot;| Q[&quot;results built at line 517 and never consumed&quot;]
+  P --&gt;|&quot;has search only&quot;| R[&quot;results filtered and appended&quot;]
+  Q --&gt; S[&quot;falls through to keyword search over the process dict&quot;]
+  O --&gt; T[&quot;_matches_filters — type, start_date, end_date&quot;]
+  T --&gt; U[&quot;any other key returns True&quot;]
+  U --&gt; V[&quot;retrieve(user_id=...) returns everyone&#39;s memories&quot;]
+  U --&gt; W[&quot;forget(conversation_id=...) matches every item and empties the store&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One installable package with twenty-six subpackages, and nothing that
+has to be running for the core to work: graph construction, reasoning
+and provenance are deterministic, and <code>semantica.llms</code> is
+optional and vendor-neutral. What an operator actually stands up depends
+on how much of the platform they want.</p>
+<p>The minimum is a Python process: <code>AgentContext</code> builds an
+<code>AgentMemory</code>, a <code>ContextGraph</code> and a
+<code>VectorStore</code> and holds them in memory, persisting on demand
+— <code>agent_memory.json</code>, a graph JSON or Markdown directory.
+Add a backend and the same interfaces move onto Neo4j, FalkorDB, AGE or
+Neptune for property graphs; Jena, RDF4J, Oxigraph, Blazegraph or Anzo
+for triples; FAISS, sqlite-vec, pgvector, Qdrant, Milvus, Pinecone or
+Weaviate for vectors. The audit trail needs one more deliberate step: a
+<code>TemporalVersionManager</code> constructed with a
+<code>storage_path</code> (without one it is in-memory) and attached to
+the graph.</p>
+<p>Three access surfaces sit on top. A 22-group CLI shipped with the
+package. A FastAPI <strong>Explorer</strong> with routes for graph,
+memories, decisions, provenance, temporal, annotations, ontology,
+vocabulary, SPARQL, enrichment, export/import and Markdown resources,
+behind a React workspace UI. And a JSON-RPC <strong>MCP server</strong>
+(<code>semantica_mcp/</code>) exposing graph, retrieval, extraction,
+reasoning, decision and export tools, which is how an agent reaches any
+of this.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write a memory</strong> — <code>AgentMemory.store</code>
+(<code>agent_memory.py:323-451</code>): generate or accept an id, stamp
+an aware UTC timestamp (with a comment recording the bug that made that
+mandatory — a naive local stamp on a UTC+8 host pushed fresh memories
+eight hours outside every date window), append to the short-term buffer
+and prune it by count and token budget, embed and index if a vector
+store is bound, put the item in the dict and the id in a bounded deque,
+push entities into the knowledge graph, update statistics, apply
+retention.</p>
+<p><strong>Read a memory</strong> — <code>AgentMemory.retrieve</code>
+(<code>:456-575</code>): keyword-match the short-term buffer, then the
+vector branch described above, then <code>_keyword_search</code> if
+nothing has been collected, then sort by score and cut at
+<code>min_score</code> and <code>max_results</code>.</p>
+<p><strong>Retract</strong> — <code>ContextGraph.retract_node</code>
+(<code>context_graph.py:2680-2784</code>): under the graph lock, close
+<code>valid_until</code> with <code>_closing_valid_until</code> (which
+never widens an existing bound), write a retraction record, and cascade
+to incident edges — snapshotting the already-retracted edge ids before
+the loop, because <code>edge_id</code> is content-derived and not
+guaranteed unique, so reading the live dict inside the loop would let
+one duplicate block the other from ever being closed.</p>
+<p><strong>Erase</strong> — <code>ErasureCoordinator</code>
+(<code>context/erasure.py</code>): drives <code>purge_node</code> plus
+deletion in the memory store and the bound vector store, and returns a
+receipt recording which stores it reached.</p>
+<p><strong>Correct retroactively</strong> —
+<code>TemporalVersionManager.apply_revision</code>
+(<code>kg/temporal_query.py:1397-1465</code>): stamp the superseded
+fact's <code>superseded_at</code> with the revision time and keep it,
+insert a replacement with the new validity window, its own
+<code>recorded_at</code>, an id suffixed with a collision-resistant
+revision token and a provenance entry naming its role, and warn when the
+new window overlaps a sibling.</p>
+<p><strong>Audit</strong> —
+<code>TemporalVersionManager.attach_to_graph</code>
+(<code>change_management/managers.py:414-451</code>) binds
+<code>mutation_callback</code>; every <code>ADD_NODE</code>,
+<code>UPDATE_NODE</code>, <code>REMOVE_NODE</code> and the edge
+equivalents then INSERT a row into <code>mutation_log</code> with the
+full payload.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryItem</code> is content, timestamp, a free-form metadata
+dict, extracted entities and relationships, an optional embedding and an
+id. Embeddings are explicitly not persisted (<code>to_dict</code> drops
+them, <code>from_dict</code> sets them to <code>None</code>, "regenerate
+on demand"), and <code>load</code> refuses a legacy <code>.pkl</code>
+file rather than unpickling it — a deliberate, commented refusal.</p>
+<p><code>ContextNode</code> is id, type, content, metadata, properties
+and the two validity bounds. <code>ContextEdge</code> adds
+<code>edge_id</code> and <code>family_id</code>, both resolved by
+<code>_resolve_edge_identity</code> from the edge's own content when not
+supplied, so an identical edge re-added produces the same id — and a
+revision produces a new <code>edge_id</code> under the same
+<code>family_id</code>, which is how a corrected edge stays linked to
+what it replaced.</p>
+<p>Knowledge-graph relationships are plain dicts, and the bitemporal
+wrapper says so in a design note: facts <em>"continue to live as plain
+relationship dicts in the graph,"</em> and <code>BiTemporalFact</code>
+exists only to normalise them so existing callers can keep reading
+<code>valid_from</code>/<code>valid_until</code> directly. That is the
+honest version of a backward-compatible migration, and it has a
+consequence worth naming: <code>recorded_at</code> defaults to
+<code>valid_from</code> when absent, so a fact written without a record
+time answers a transaction-axis query using its validity time. There is
+a committed test for exactly that fallback.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>ContextRetriever</code> is the designed path: a vector arm and
+a BFS graph-expansion arm to a configurable hop limit, combined under
+<code>hybrid_alpha</code> (0 for vector only, 1 for graph only), with a
+content-hash dedup on non-graph results, a boost of up to 20% for graph
+results carrying more related entities, and another 20% for a result
+found by both arms.</p>
+<p><code>AgentMemory.retrieve</code> is the path an agent hits through
+<code>AgentContext</code>, and it has three arms of which one is broken.
+The short-term arm is a keyword match over the last few items. The
+long-term vector arm is the dead branch. The fallback is
+<code>_keyword_search</code> over word overlap. <code>min_score</code>
+defaults to <code>0.0</code>, so nothing is excluded by score unless a
+caller asks.</p>
+<p>Filtering is where the two halves diverge most. The context graph's
+active view applies the temporal window on every read, and
+<code>find_active_nodes</code>, <code>state_at</code> and
+<code>ContextNode.is_active</code> all agree about it.
+<code>AgentMemory</code>'s filter recognises <code>type</code>,
+<code>start_date</code> and <code>end_date</code>. A
+<code>user_id</code> passed to <code>retrieve</code> is neither applied
+nor refused — the scope key is stored on the item and consulted only by
+<code>get_by_user</code>, which walks the dict itself.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Nothing is deferred. <code>store()</code> returns after the item is
+in the dict, in the buffer, in the vector index and in the graph, so a
+memory is retrievable immediately and the caller pays the embedding
+latency inline. There is no extraction model on the write path —
+entities and relationships are supplied by the caller or produced by a
+deterministic extraction stage beforehand — and no background
+consolidation rewrites the store.</p>
+<p>The one thing that runs on every write is the retention policy, and
+it is applied <em>after</em> the insert (<code>:436</code>), which is
+why the <code>forget</code> regression test has to construct its context
+with <code>retention_days=None</code> to keep a deliberately aged
+fixture from being deleted on arrival.</p>
+<p>The context graph's writes go through
+<code>add_nodes</code>/<code>add_edges</code> under a lock, with the
+mutation callback fired per entity when one is attached, and
+<code>_suspend_mutation_callback</code> guarding restores so that
+loading a saved graph does not replay as a stream of new mutations.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the agent-facing surface:
+<code>semantica_mcp/mcp/tools/</code> holds graph, retrieval,
+extraction, reasoning, decision and export tool modules, dispatched by a
+JSON-RPC <code>tools/call</code> handler.
+<code>handle_retrieve_context</code>,
+<code>handle_store_document</code>, <code>handle_update_document</code>
+and <code>handle_remove_document</code> are the memory-shaped four;
+documents are chunked, id'd by a hash of source, version, index and
+text, and upserted with the previous version's rows removed by matching
+source and version.</p>
+<p><code>integrations/</code> carries adapters for Agno and CrewAI among
+others, each with its own test directory. The Explorer is for people
+rather than agents, and the Memory workspace there is the only place a
+stored memory can be edited by hand.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The concurrency discipline is careful and the comments
+explain themselves.</strong> Every <code>AgentMemory</code> state
+mutation runs under <code>_with_memory_lock</code>; the graph takes its
+own lock and snapshots payloads inside it, <em>"not read back after the
+lock is released: a concurrent <code>clear()</code> would otherwise wipe
+the record out from under the emission below."</em>
+<code>_snapshot_memory_state</code>/<code>_restore_memory_state</code>
+give the Markdown apply path a rollback.</p>
+<p><strong>Provenance is the product.</strong> Per-source credibility
+tracking, conflict detection across value, type, relationship, temporal
+and logical conflicts, decision records with causal chains and policy
+checks, a provenance manager with integrity verification, and an RDF
+exporter that emits both time axes. A regulated-domain reader will find
+more here than in almost anything else in this atlas.</p>
+<p><strong>And the epistemic layer stops short of the store.</strong>
+<code>_flag_for_manual_review</code> returns a
+<code>ResolutionResult</code> with
+<code>metadata={"requires_manual_review": True}</code>;
+<code>grep -rn "requires_manual_review"</code> finds the producer, one
+assertion in <code>tests/conflicts/test_conflicts.py:310</code>, and
+nothing else. The flag is returned to whoever called the resolver and is
+never persisted, queued or surfaced — the review workflow the module's
+docstring advertises is the caller's to build.</p>
+<p><strong>The Explorer's route handlers are defensive in one direction
+only.</strong> <code>temporal_patterns</code> catches
+<code>ImportError</code> and returns an empty list, catches every other
+exception and turns it into a 500 with the detail withheld. Broad, but
+it fails closed.</p>
+<p><strong>The security posture around persistence is good.</strong>
+Pickle loading is refused with a stated reason; YAML is parsed through a
+<code>SafeLoader</code> subclass that rejects duplicate keys rather than
+silently taking the last; SPARQL and Cypher have dedicated escaping and
+sanitising modules; Markdown writes are staged before rename.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I did not run this suite.</strong> Three dependency surfaces
+changed the day of the pin — inside the seven-day cooldown this atlas
+applies before installing anything — and four <code>conftest.py</code>
+files execute at pytest collection. Everything below is read from the
+committed code, and the one behavioural claim I verified was verified
+offline: I transcribed <code>_matches_filters</code> and
+<code>forget</code>'s filter-dict build into a scratch script and ran it
+over a three-item fixture, which deletes all three for both
+<code>forget(conversation_id=...)</code> and
+<code>forget(user_id=...)</code>.</p>
+<p>391 test files, about 7,060 test functions, roughly 133,000 lines —
+larger than most implementations in this atlas. The context directory
+alone has 38 files, and the ones that pin the mechanisms above are worth
+naming: <code>test_context_graph_retraction.py</code> (retraction,
+purge, cascade, index integrity, the audit emission),
+<code>test_erasure_coordinator.py</code> (cross-store erasure receipts),
+<code>test_temporal_versioning.py</code> (revision, checksums,
+collision-resistant suffixes), <code>tests/kg/test_kg.py</code> (both
+time axes), <code>test_agent_memory_markdown.py</code> and
+<code>test_context_graph_markdown.py</code> (the revision-checked edit
+path).</p>
+<p>The negative assertions are written the way this atlas asks for:
+<code>test_retracted_node_leaves_the_active_view</code> pairs
+<code>assertNotIn("alice", active)</code> with
+<code>assertIn("bob", active)</code> over the same populated graph, and
+<code>test_history_before_the_retraction_is_preserved</code> pairs
+presence before the cut with absence after it. Neither can pass over an
+empty result.</p>
+<p><strong>Two coverage gaps are load-bearing.</strong> No test passes a
+scope filter to <code>AgentMemory.retrieve</code> and asserts that
+another user's memories stay out — the assertion that would have caught
+the ignored filter key. And <code>test_agent_context_forget.py</code>,
+added with the fix one commit before this pin, tests
+<code>days_old</code> three ways and neither of the other two filter
+arms of the same function.</p>
+<p><strong>The performance table is qualified in the README
+itself</strong>, which is rarer than it should be: the 6,000×
+node-search figure is stated as a v0.5.0 measurement on a 118,000-node
+graph with the hardware named, and the deduplication figures are
+labelled <em>"historical measurements recorded in CHANGELOG.md rather
+than an automated <code>tests/</code> assertion,"</em> with a pointer to
+<code>tests/vector_store/test_performance_benchmarks.py</code> — which
+exists — for measuring your own. No result artifact is committed, so
+none of the numbers can be recomputed from this tree.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Separate retraction from erasure, and give each its own
+record.</strong> Closing a validity window and destroying data are
+different operations with different audiences — one keeps a decision
+explainable, the other answers a legal request — and most systems in
+this atlas collapse them into one <code>deleted</code> flag. The purge
+tombstone that omits the content on purpose is the detail that shows the
+distinction was thought through rather than named.</p>
+<p><strong>Return a receipt saying which stores an erasure actually
+reached.</strong> <code>ErasureCoordinator</code> exists because a
+<code>True</code> from a single store is not proof, and the purge
+docstring says so to the caller who might otherwise believe it.</p>
+<p><strong>Carry both time axes and let the query pick.</strong> Four
+timestamps and one <code>time_axis</code> parameter answer "what was
+true then" and "what did we believe then" separately, which is the whole
+argument for bitemporality, and the fallback — record time defaults to
+validity time when absent — is tested rather than assumed.</p>
+<p><strong>Derive an edge id from the edge's content, and keep a
+<code>family_id</code> across revisions.</strong> Identity that survives
+a correction is what makes a supersession chain navigable, and it comes
+almost for free.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Do not write a filter predicate that returns True for keys it
+does not know.</strong> Every failure in this report's risk section is
+that one line. A predicate that raised on an unrecognised key would have
+turned three silent data-loss paths into three loud errors, and the cost
+is a <code>set</code> difference.</p>
+<p><strong>Do not branch retrieval on <code>hasattr</code> across two
+method names.</strong> The dispatch picked the branch whose consumption
+loop was indented into its sibling, and nothing failed — recall just got
+quietly worse, which is the hardest kind of regression to notice from
+outside.</p>
+<p><strong>Do not ship a review flag with no queue behind it.</strong>
+<code>requires_manual_review</code> in a returned dict is a suggestion
+to the caller; the module's own documentation calls it a workflow.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this seriously if you are building <strong>an auditable
+knowledge graph for a regulated domain</strong> and memory is one
+consumer of it among several. The temporal model, the erasure vocabulary
+and the provenance machinery are the most complete treatment of "why
+does the system believe this" in this part of the atlas, and the
+deterministic-by-default stance means the graph does not change shape
+because a model was in a different mood.</p>
+<p>Do not take it as a <strong>drop-in agent memory</strong>. The
+<code>AgentMemory</code> half is the least finished part of a large
+codebase: its long-term arm does not run in the packaged configuration,
+its filters silently ignore the scope keys it stores, and the deletion
+API deletes more than it is asked to. A team that wants Semantica's
+graph and its own memory layer can have exactly that — the two are
+separable, and the seam is <code>AgentContext</code>.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong><code>forget(conversation_id=...)</code> and
+<code>forget(user_id=...)</code> empty the store.</strong> Both appear
+in the method's docstring as examples. The filter dict is built
+correctly and the predicate that receives it recognises neither key.</p>
+<p><strong>A scope key that is stored, documented, and not applied on
+the retrieval path.</strong>
+<code>retrieve(query, user_id="alice")</code> returns every user's
+memories. Nothing raises, nothing logs.</p>
+<p><strong>The packaged vector store takes a code path that discards its
+own results.</strong> Silent recall degradation: retrieval still returns
+something, from a keyword fallback, so the symptom is worse answers
+rather than an error.</p>
+<p><strong>The audit trail is off unless the adopter wires it, and
+in-memory unless they pass a path.</strong> Nothing under
+<code>semantica/</code> calls <code>attach_to_graph</code>; the
+mechanism is real, the default is no record.</p>
+<p><strong>A tombstone nothing consults.</strong> Purge records what was
+removed and when, and the write paths never look at it, so the same
+content can be re-added immediately. The near-miss is one lookup wide
+for edges, whose ids are already content-derived.</p>
+<p><strong>Surface area versus depth.</strong> 201,000 lines across
+twenty-six subpackages, with seven vector backends, four graph backends
+and five triple stores. The parts this report examined closely divide
+sharply into carefully-reasoned and not-yet-finished, and there is no
+way to tell which is which from the module list.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p><strong>Borrow the temporal model.</strong> Four fields and an axis
+parameter, portable to any store, and the semantics are already worked
+out including the awkward cases — retraction that never widens a window,
+a revision that keeps the superseded version queryable, a record-time
+fallback for facts written before the axis existed.</p>
+<p><strong>Borrow the erasure vocabulary, not necessarily the
+code.</strong> Retract, purge, receipt. Three words that make a
+correction policy expressible; most memory systems in this atlas cannot
+say the second without losing the first.</p>
+<p><strong>Build your own memory item store, or bring one.</strong> The
+graph is the reason to be here.</p>
+<p><strong>If you adopt as is, pin the three fixes first</strong>: make
+<code>_matches_filters</code> reject unknown keys, move the
+result-consumption loop out of the <code>elif</code>, and call
+<code>attach_to_graph</code> with a <code>storage_path</code> at
+startup. All three are small, and the first one is the difference
+between a scoped delete and an empty store.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Was the <code>search_vectors</code> branch ever exercised in a
+deployment? Its result objects carry <code>.id</code>,
+<code>.score</code> and <code>.metadata</code> — exactly what the
+consumption loop wants — which suggests the loop was moved rather than
+never written.</li>
+<li><code>_matches_filters</code> is the predicate behind
+<code>retrieve</code>, <code>clear_memory</code>, <code>count</code> and
+<code>list</code>. Whether the intended contract is "unknown keys are
+ignored" or "unknown keys narrow" changes what half the public API
+means, and the code does not say.</li>
+<li><code>attach_to_graph</code> is the audit trail's only entry point
+and no caller under <code>semantica/</code> uses it. Whether the
+Explorer, the CLI or the MCP server is expected to wire it is not
+documented in the tree.</li>
+<li>The 118,000-node production graph behind the performance table is
+not in this repository, and no result artifact is committed, so the
+figures are unverifiable from the source.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Memory</strong></p>
+<ul>
+<li><code>semantica/context/agent_memory.py</code> —
+<code>MemoryItem</code>, <code>AgentMemory</code>: <code>store</code>
+(:323), <code>retrieve</code> (:456), <code>_matches_filters</code>
+(:995), <code>clear_memory</code> (:680), <code>get_by_user</code>
+(:1478), the Markdown export/apply pair (:1674-1755)</li>
+<li><code>semantica/context/agent_context.py</code> — the façade;
+<code>forget</code> (:654)</li>
+<li><code>semantica/context/context_graph.py</code> —
+<code>ContextNode</code>/<code>ContextEdge</code> (:419, :462),
+<code>retract_node</code> (:2680), <code>purge_node</code> (:2842),
+<code>get_tombstone</code> (:3023), <code>_emit_mutation</code>
+(:3166)</li>
+<li><code>semantica/context/erasure.py</code> — cross-store erasure with
+receipts</li>
+<li><code>semantica/context/context_retriever.py</code> — hybrid vector
+plus graph expansion</li>
+</ul>
+<p><strong>Temporal and audit</strong></p>
+<ul>
+<li><code>semantica/kg/temporal_model.py</code> —
+<code>BiTemporalFact</code> (:27)</li>
+<li><code>semantica/kg/temporal_query.py</code> —
+<code>_get_axis_bounds</code> (:748), <code>apply_revision</code>
+(:1397)</li>
+<li><code>semantica/change_management/managers.py</code> —
+<code>attach_to_graph</code>, <code>record_mutation</code>
+(:414-451)</li>
+<li><code>semantica/change_management/version_storage.py</code> —
+<code>mutation_log</code> schema (:317), <code>save_mutation</code>
+(:508)</li>
+</ul>
+<p><strong>Surfaces</strong></p>
+<ul>
+<li><code>semantica/explorer/routes/</code> — <code>memories.py</code>,
+<code>markdown.py</code>, <code>temporal.py</code>,
+<code>provenance.py</code>, <code>decisions.py</code>, and nine
+more</li>
+<li><code>explorer/src/workspaces/MemoryWorkspace.tsx</code>,
+<code>GraphWorkspace/useMarkdownEditor.ts</code></li>
+<li><code>semantica_mcp/mcp/tools/</code> — graph, retrieval,
+extraction, reasoning, decisions, export</li>
+</ul>
+<p><strong>Tests cited</strong></p>
+<ul>
+<li><code>tests/context/test_context_graph_retraction.py</code>,
+<code>test_erasure_coordinator.py</code>,
+<code>test_agent_context_forget.py</code>,
+<code>test_agent_memory_markdown.py</code></li>
+<li><code>tests/kg/test_kg.py</code>,
+<code>tests/change_management/test_temporal_versioning.py</code>,
+<code>test_audit_trail.py</code>,
+<code>tests/conflicts/test_conflicts.py</code></li>
+</ul>
+<p><strong>Commands this reading used</strong></p>
+<pre class="sh"><code>python3 scripts/screen_repo.py &lt;checkout&gt;
+grep -n &quot;_tombstones&quot; semantica/context/context_graph.py        # writes, clears, two accessors
+grep -rn &quot;requires_manual_review&quot; --include=&quot;*.py&quot; .            # producer plus one test assertion
+grep -rn &quot;attach_to_graph&quot; --include=&quot;*.py&quot; .                   # tests only, nothing under semantica/
+grep -rn &quot;mutation_log&quot; --include=&quot;*.py&quot; .                      # one INSERT, one label-backfill UPDATE
+grep -rn -i &quot;arxiv\|doi&quot; README.md CITATION.cff                 # no paper
+awk &#39;NR&gt;=494 &amp;&amp; NR&lt;=556 {match($0,/[^ ]/); ...}&#39; semantica/context/agent_memory.py  # branch indentation</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-12</strong> — <a
+href="https://github.com/semantica-agi/semantica/commit/7057387775ecdf74c14e38d0067fd8e1267eaaf8"><code class="commit-id" title="7057387775ecdf74c14e38d0067fd8e1267eaaf8">70573877…</code></a>
+— first reading, at the default branch's head on the day it was read.
+Screened before reading: no auto-run surface; four
+<code>conftest.py</code> files that execute at pytest collection; three
+dependency surfaces changed the same day, inside the seven-day cooldown;
+and two unpinned surfaces, <code>pyproject.toml</code> with no lockfile
+beside it and an Explorer <code>package.json</code> with forty floating
+ranges above a present lockfile. Nothing was installed, built or run,
+and no test in this repository was executed. The one behavioural claim
+in this report that is not read directly off the code — that
+<code>forget(conversation_id=...)</code> selects every stored item — was
+checked by transcribing <code>_matches_filters</code> and
+<code>forget</code>'s filter-dict build into a scratch script outside
+the tree and running it over a three-item fixture. Licence is MIT per
+<code>LICENSE</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

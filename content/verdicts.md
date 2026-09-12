@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 435 reports.**
+**This page covers all 436 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3824,3 +3824,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 297 tracked files, about 34,000 lines of Python and TypeScript, a paper at [arXiv:2607.15557](https://arxiv.org/abs/2607.15557) reporting 96,401 curated skills from ~821,000 crawled, sixteen producer test files plus eleven in the Python engine and a TypeScript mirror, four repository-hygiene checks in `make check-repo`, and five shipped host plugins with one of them documented as inert pending an upstream slot. The soft spots are on the store: `SkillStore.update` and `delete` have no caller, `get_by_content_hash` filters out the rows that record an exclusion, and the three benchmark harnesses in `evaluate/` ship with no committed result.
 - Study when: you are curating third-party procedural content at scale and the hard part is admission rather than recall, or you want per-turn skill retrieval with failure behaviour already worked out.
 - Do not copy when: you need memory an agent forms from its own experience, or a verification gate stronger than a model reading a 300-character excerpt.
+
+### [`semantica`](../systems/semantica/)
+- Best idea: **a removal vocabulary with four distinct words in it.** Retract closes a validity window and leaves the record queryable before the cut; purge removes the content and keeps a tombstone holding only the id, the time and a reason, because keeping the content would defeat what the tombstone records; an `ErasureCoordinator` drives that across every store that holds a copy and returns a receipt naming which ones it reached; and `apply_revision` supersedes a fact retroactively while the prior version stays queryable on the record-time axis. Four marks — `bitemporal`, `audit_log`, `human_review`, `negative_eval` — though they guard four different subsystems and none of them guards the agent-memory item store.
+- Biggest risk: **the filter predicate behind that store returns True for any key it does not recognise.** It knows `type`, `start_date` and `end_date`. So `forget(conversation_id=...)` and `forget(user_id=...)` — both in the method's own docstring — match every item and empty the store, and `retrieve(query, user_id=...)` returns everyone's memories without raising or logging. The `days_old` arm of the same function was fixed one commit before this pin; the regression file that landed with it tests that arm three ways and neither of the other two. One level down, `retrieve`'s vector branch builds its results and the loop that consumes them is indented into the sibling `elif`, so with the vector store the package ships, long-term recall falls through to keyword matching.
+- Most reusable component: the bitemporal fact model and its query — four timestamps, one `time_axis` parameter, and a tested fallback for facts written before the record-time axis existed.
+- Maturity impression: about 201,000 lines of Python across 377 modules, 391 test files holding roughly 7,060 test functions, an MCP server, a React Explorer, a 22-group CLI, seven vector backends, four graph backends and five triple stores, MIT, with a CHANGELOG back to June 2025 and no paper. The concurrency comments, the pickle refusal, the duplicate-key YAML loader and the reasoning written into `retract_node`'s cascade are careful work; the agent-memory half beside them is not finished, and nothing in the module list distinguishes the two.
+- Study when: you need an auditable knowledge graph for a regulated domain and want a worked example of retraction, erasure and retroactive correction as separate operations.
+- Do not copy when: you want a drop-in memory layer — take the graph and bring your own item store, or pin the three fixes first.
