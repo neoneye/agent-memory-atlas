@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 453 reports.**
+**This page covers all 454 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3969,3 +3969,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, ~41,900 lines of Go in one ~170 MB binary with the embedding model and database compiled in, a paper at [arXiv:2607.14390](https://arxiv.org/abs/2607.14390), adapters for seven agent tools, and a benchmark harness whose unflattering results are committed beside it.
 - Study when: a team lives in one repository and wants the reasoning behind commits to reach everyone's agent without operating anything.
 - Do not copy when: memory must hold judgements rather than conversations, or an agent must be told reliably that nothing is known.
+
+### [`openlore`](../systems/openlore/)
+- Best idea: every configured docset root is an access carve-out, so a path is readable only when the most-specific docset covering it is granted — a grant on the root docset does not reach into the per-user namespaces nested underneath it.
+- Biggest risk: the human-approval protocol is complete except for the approver. The deferral error, six commands that handle it, the inbox, the resume path and its re-admission guard all ship; the only callers of `WriteOp.Pending` are three test files, and the approvals plugin is named in a comment and absent from the repository.
+- Most reusable component: putting the scope on the filesystem rather than on the query, so forty reimplemented Unix commands inherit the boundary without knowing docsets exist.
+- Maturity impression: Apache-2.0, ~38,600 lines of Go serving Markdown over SSH and MCP with no index, no database and no model, a startup check that refuses two docsets sharing a display root because read and write authorization would break the tie differently, and `awk` and `jq` reimplemented against the virtual filesystem.
+- Study when: several agents or people must read one Markdown corpus and the hard requirement is who may see what.
+- Do not copy when: the knowledge needs a lifecycle — OKF defines draft, stable and deprecated, validates them on write, and no read path filters on any of them.

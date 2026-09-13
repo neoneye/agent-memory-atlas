@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A shared Markdown knowledge base
+served to agents over SSH as a scope-filtered virtual filesystem, whose
+complete human-approval protocol — parking, attribution, resume,
+re-admission guard — is produced by nothing in the repository.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenLore — Agent Memory Atlas">
+    <meta property="og:description" content="A shared Markdown knowledge
+base served to agents over SSH as a scope-filtered virtual filesystem,
+whose complete human-approval protocol — parking, attribution, resume,
+re-admission guard — is produced by nothing in the repository.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenLore — Agent Memory Atlas">
+    <meta name="twitter:description" content="A shared Markdown
+knowledge base served to agents over SSH as a scope-filtered virtual
+filesystem, whose complete human-approval protocol — parking,
+attribution, resume, re-admission guard — is produced by nothing in the
+repository.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenLore — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenLore",
+      "description": "A shared Markdown knowledge base served to agents over SSH as a scope-filtered virtual filesystem, whose complete human-approval protocol \u2014 parking, attribution, resume, re-admission guard \u2014 is produced by nothing in the repository.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every seam for approval except the
+approver</p>
+          <h1>OpenLore</h1>
+          <p class="document-deck">A shared Markdown knowledge base
+served to agents over SSH as a scope-filtered virtual filesystem, whose
+complete human-approval protocol — parking, attribution, resume,
+re-admission guard — is produced by nothing in the repository.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/aakarim/OpenLore">
+              <span>Source</span>
+              <strong>aakarim/OpenLore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/aakarim/OpenLore/commit/dbd44007d63159f26002ac07986b8e96bf82eb68" title="dbd44007d63159f26002ac07986b8e96bf82eb68">
+              <span>Analyzed revision</span>
+              <code>dbd44007…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aakarim--OpenLore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>aakarim--OpenLore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenLore is an agent-native knowledge base — Apache-2.0, about 38,600
+lines of Go excluding tests — that serves shared Markdown to agents over
+SSH as a virtual filesystem. There is no ingestion pipeline, no vector
+database and no model in the path; the README says so as a design
+position rather than a limitation, and the code agrees. An agent reads
+with <code>ls</code>, <code>cat</code>, <code>grep</code> and
+<code>find</code>, or through MCP, and what it sees is scoped to its
+identity.</p>
+<p>The scoping is the most carefully built part of this system, and it
+goes further than the design needed. Each identity holds grants on named
+docsets; a session's filesystem is wrapped so reads are confined to the
+display roots it may read. The detail that makes it a boundary rather
+than a prefix match is that every docset root is also a carve-out: a
+path is readable only when the <em>most specific</em> docset covering it
+is granted, so a grant on the root docset does not reach into a nested
+one. Startup then refuses three shapes outright — a grant no plugin
+provides, a writable <code>guest</code> grant, and two docsets sharing a
+display root, that last one because "read scoping resolves the governing
+docset by root length while write authorization
+(<code>mostSpecificDocset</code>) breaks ties by name, so the two could
+disagree on who governs the shared subtree."</p>
+<p>The finding is the other half of the product promise. The README
+offers "identity-scoped access, controlled writes, validation and human
+approval when you need them", and three of those four are in this
+repository. The approval machinery is remarkable for how complete it is
+everywhere except at the point of asking a person:
+<code>PendingChangeError</code> is defined and documented as "NOT a
+failure"; six shell commands — <code>write</code>, <code>rm</code>,
+<code>mv</code>, <code>patch</code>, <code>publish</code>,
+<code>skills</code> — catch it and report exit 0 with a reference; the
+inbox handles it; <code>WriteOp.Pending(ref)</code> exists as the helper
+a middleware calls to park a change; <code>CommitChangeSet</code> is the
+resume path, and carries a guard against re-running admission so "the
+approval middleware [cannot] defer it again in an infinite loop."
+Nothing in the tree calls <code>Pending</code>. Outside tests, the
+string <code>&amp;PendingChangeError{</code> appears once, inside that
+helper. The three write middlewares that ship — rules, agent-skills,
+shell-exec — validate or reject; none defers. The seam names its absent
+consumer in a comment: "the knowledge-backend approvals plugin."</p>
+<p>Three marks. <code>scope_enforced</code> and
+<code>negative_eval</code> rest on the same access model and its tests.
+<code>audit_log</code> is earned on a genuine append-only mutation
+journal with attribution. <code>human_review</code> is withheld, and
+<code>trust_state</code> is withheld for a reason worth reading in
+section 9: OKF defines <code>draft</code> / <code>stable</code> /
+<code>deprecated</code> and a <code>verified</code> event list,
+validates both on write, and no read path filters on either.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is a file, and the design's whole argument is that this
+is enough if the boundary around the file is real. Nothing is extracted,
+embedded, summarised or scored. What makes the knowledge base more than
+a shared folder is three things layered on the filesystem: who may see
+which subtree, what a write must satisfy before it lands, and what is
+recorded once it does.</p>
+<p>Reads go through a per-session filesystem that only exposes granted
+docsets. Writes go through an admission chain of middleware, then into a
+single ordered log with one applier, so a compare-and-swap runs against
+current state with no concurrent writers — and because mkdir, remove and
+write all flow through the same log, "a write can never race ahead of
+(or land on) a removed path."</p>
+<p>The admission chain is where judgement was meant to live. A
+middleware may allow the write, reject it, or <em>defer</em> it —
+returning a <code>PendingChangeError</code> that parks an immutable,
+content-addressed <code>ChangeSet</code> for someone to approve later.
+The <code>ChangeSet</code> "deliberately carries no approver / status /
+capability / proposer fields: those are the consumer's policy concern,
+not part of the content-addressed change." That is a clean separation,
+and it is also the reason the approval story can be entirely absent
+while every part that surrounds it looks finished.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the deferral path is built end to end — park, report, resume, guard against re-admission — and the only thing that can enter it is a middleware calling Pending, which nothing outside the test files does</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the deferral path is built end to end — park, report, resume, guard against re-admission — and the only thing that can enter it is a middleware calling Pending, which nothing outside the test files does
+flowchart TD
+    A[&quot;agent writes over SSH or MCP&quot;] --&gt; B[&quot;admission chain&lt;br/&gt;rules, agent-skills, shell-exec&quot;]
+    B --&gt;|&quot;allow&quot;| C[&quot;ordered write log&lt;br/&gt;single applier, CAS&quot;]
+    B --&gt;|&quot;reject&quot;| D[&quot;hard error&quot;]
+    B -.-&gt;|&quot;defer: op.Pending(ref)&lt;br/&gt;no shipped middleware calls this&quot;| E[&quot;PendingChangeError&lt;br/&gt;immutable ChangeSet parked&quot;]
+    E --&gt; F[&quot;shell reports exit 0 + ref&lt;br/&gt;write, rm, mv, patch, publish, skills&quot;]
+    F --&gt; G[&quot;consumer&#39;s held-changeset store&lt;br/&gt;not in this repository&quot;]
+    G --&gt; H[&quot;a person approves&quot;]
+    H --&gt; I[&quot;CommitChangeSet&lt;br/&gt;skips admission so the gate&lt;br/&gt;cannot defer it forever&quot;]
+    I --&gt; C
+    C --&gt; J[&quot;history journal: time, actor,&lt;br/&gt;action, content hash&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go binary serving SSH, and the knowledge is ordinary Markdown on
+disk. The virtual filesystem in <code>pkg/vfs</code> and
+<code>pkg/openlore/vfs.go</code> maps configured paths onto display
+roots, so the tree an agent walks is a projection rather than the layout
+on disk — aliases expose the same content at a second display root while
+the first stays canonical "for home, inbox, policy, hooks, and
+changesets."</p>
+<p>The shell is not a wrapper around a system shell.
+<code>pkg/shell</code> implements its own lexer, parser and command set
+against the virtual filesystem: <code>awk</code> at 1,326 lines and
+<code>jq</code> at 2,195 are real reimplementations, beside
+<code>cut</code>, <code>comm</code>, <code>diff</code>, <code>du</code>,
+<code>expr</code>, <code>find</code>, <code>grep</code> and the rest.
+That is the retrieval layer — there is no index and no ranking, and the
+one mention of vectors in the tree is a comment marking where a plugin
+could add "hybrid/vector retrieval behind this interface."</p>
+<p>Identity is configured rather than discovered. An identity holds
+roles, a <code>home</code> docset whose display path becomes
+<code>$HOME</code> and the session's working directory, and a list of
+<code>match</code> predicates resolving token claims to it — including
+workload-identity-federation exchanges matching on <code>sub</code>,
+<code>sub_prefix</code>, <code>aud</code> or <code>claims</code> with
+narrowing scope and TTL. Grants are named and registered by plugins,
+which is why an unregistered grant is a startup failure rather than a
+silent denial.</p>
+<p>What an operator runs is the binary plus a config; there is no
+database. The history journal is sharded JSONL in a directory whose path
+segments are SHA-256 hashes, so "file history queries never scan
+unrelated history, and recursive deletes remove only the affected index
+subtree."</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Session construction</strong> — <code>server.go:959</code>
+wraps the session filesystem:
+<code>newScopedReadFS(sessionFS, s.readableRoots(id), s.allDocsetRoots())</code>.</li>
+<li><strong>Read scope</strong> — <code>authz.go:491</code>
+<code>readableRoots</code> collects granted display roots plus system
+mounts; <code>authz.go:526</code> <code>scopedReadFS</code> applies the
+most-specific docset rule on Stat, ReadDir and ReadFile.</li>
+<li><strong>Startup validation</strong> — <code>authz.go:22</code>
+<code>validateGrants</code> fails closed on an unregistered grant, a
+writable guest grant, and a shared display root.</li>
+<li><strong>Admission</strong> — <code>middleware.go:37</code> documents
+the three outcomes; <code>:67</code> <code>WriteOp.Pending</code> builds
+the deferral; <code>server.go:891</code> restates the contract.</li>
+<li><strong>Ordered apply</strong> — <code>writelog.go</code> is the
+single serialized applier and the sole writer to the substrate;
+<code>Submit</code> blocks until applied, which is why the log is
+"in-memory and non-durable by design".</li>
+<li><strong>History</strong> — <code>history.go:204</code>
+<code>Record</code> appends to <code>events.jsonl</code>, then purges
+per-file shards for <code>remove</code> and <code>remove_all</code>;
+<code>:282</code> <code>Query</code> reads the global journal or one
+shard depending on whether a file key was given.</li>
+<li><strong>Format validation</strong> — <code>okf_plugin.go:85</code>
+calls <code>okf.Validate</code> on write;
+<code>pkg/okf/families.go</code> holds the shape checks.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a Markdown file. Optional frontmatter follows OKF, the
+OpenLore Knowledge Format, whose v0.2 families cover provenance
+(<code>generated</code> with an ISO 8601 <code>at</code>), trust
+(<code>verified</code> as a list of <code>{by, at}</code> events),
+lifecycle (<code>status</code>, <code>stale_after</code>) and attested
+computation.</p>
+<p>That vocabulary is the most interesting thing in the data model and
+the least load-bearing. <code>CheckStatus</code> accepts exactly
+<code>draft</code>, <code>stable</code> and <code>deprecated</code> and
+warns on anything else; absent means stable and "is never a finding".
+<code>CheckVerified</code> requires each event to carry a non-empty
+<code>by</code> and a valid timestamp, normalising a bare mapping to a
+one-element list. <code>CheckStaleAfter</code> insists on an absolute
+<code>YYYY-MM-DD</code> rather than a relative TTL, which is a good call
+— a relative TTL in a file that outlives its author means nothing.</p>
+<p>All three are shape checks that emit warning diagnostics at write
+time. Outside <code>pkg/okf</code>, nothing in the server, the shell or
+the virtual filesystem reads <code>status</code>, <code>verified</code>
+or <code>stale_after</code>. A document marked <code>deprecated</code>
+is listed, catted and grepped exactly like a stable one, and a
+<code>stale_after</code> date that has passed changes nothing.</p>
+<p>The history record is separate and deliberately thin: time,
+attribution, file key, action, content hash. It "deliberately excludes
+mutation payloads: current and historical file contents belong in the
+filesystem or a separate content-addressed store, not in the query
+index."</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no ranking, because there is no retrieval engine. An agent
+runs <code>grep</code> or <code>find</code> over the scoped tree and
+reads what comes back, which means recall is exactly as good as the
+agent's query and the corpus's organisation — and, unusually for this
+atlas, entirely inspectable. A human can run the same command and get
+the same bytes.</p>
+<p>The scoping is what makes this defensible at more than one identity.
+Because the filter is on the filesystem rather than on a query layer,
+every command inherits it: <code>grep -r /</code> from a guest session
+cannot match inside a docset the guest was not granted, without
+<code>grep</code> needing to know that docsets exist. Retrofitting a
+scope predicate onto forty command implementations would have been the
+obvious way to get this wrong.</p>
+<p>Reads are also where the docset carve-out rule earns its complexity.
+Granting an identity the root docset is the natural way to say "can see
+the general knowledge base", and without the carve-out that grant would
+silently include every nested docset — the per-agent and per-user
+namespaces — because they live underneath it on the same backing
+filesystem. The rule inverts that default: a nested docset overrides its
+ancestor, so nesting is a boundary rather than inheritance.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every mutation is a <code>ChangeSet</code> — immutable, serialisable,
+content-addressed, with the action discriminating the payload.
+Directories are first-class entries so mkdir and remove are logged
+operations too, which is what lets the single applier order a write
+against a remove rather than racing it.</p>
+<p>Writes are compare-and-swap. A <code>ReadTracker</code> on the
+session filesystem remembers the content hash of everything read during
+the session, so a whole-file overwrite is checked "against the version
+the caller last saw — without the caller naming a hash", and fails if
+the file changed since. That is the right default for an agent that read
+a file, thought about it, and is writing it back several turns
+later.</p>
+<p>The write log is in-memory and non-durable, and the reasoning is
+sound rather than a shortcut: <code>Submit</code> blocks until the
+applier replies, so "nothing is ever 'accepted' until it is applied and
+durable in the substrate, so a crash loses only in-flight,
+un-acknowledged writes." Durability lives in the filesystem and, for
+parked changes, in a consumer store this repository does not
+implement.</p>
+<p>Attribution is carried beside the change rather than inside it —
+principal plus an optional delegate — and is recorded with each commit,
+which is what makes the history journal answer "who", including for a
+write made on someone's behalf.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>SSH is the headline and MCP is the one that will matter more. The
+same scoped filesystem backs both, which is the point: there is one
+access model rather than one per protocol.
+<code>ssh openlore.sh agents &gt;&gt; AGENTS.md</code> generates the
+block that tells an agent how to reach the knowledge base, and
+<code>ssh openlore.sh teach</code> pipes setup instructions into an
+agent CLI.</p>
+<p>The skills surface is the most agent-specific part —
+<code>pkg/agentskills</code> and <code>pkg/shell/cmds/skills.go</code>
+import, enable, disable and validate skill bundles, and
+<code>skills.go</code> is one of the six commands that already handles a
+parked change correctly, setting <code>r.Status = "pending"</code> and
+reporting rather than failing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — earned, and the nesting rule is the reason.</strong>
+Covered in section 6. The startup check that refuses two docsets sharing
+a display root deserves separate credit: it is a consistency failure
+between two subsystems that would have produced an inconsistent
+authorization model at runtime rather than an error, and the config is
+rejected instead.</p>
+<p><strong>Audit — earned, with one boundary worth stating.</strong>
+<code>events.jsonl</code> gets every committed mutation, removes
+included, before anything else happens, and carries the actor. What a
+remove additionally does is purge that file's per-file shard, so a
+history query <em>scoped to a deleted file</em> returns an empty page
+while the global journal still holds the write and the delete. It is an
+index decision with an auditing consequence, and the module states it
+plainly rather than leaving it to be discovered.</p>
+<p><strong>Human review — withheld, and it is the report's
+finding.</strong> The mark asks for a surface where a person inspects,
+approves or adjudicates. Everything around that surface exists: the
+deferral error, its documentation as an informational outcome, six
+commands that handle it, the inbox path, the resume entry point, the
+guard against deferring a resumed change forever, and an exported
+<code>RegisterPlugin</code> seam naming the plugin that would supply it.
+The producer does not. <code>op.Pending(...)</code> is called in
+<code>middleware_test.go</code>, <code>server_seams_test.go</code> and
+<code>inbox_http_test.go</code> — three test files — and nowhere else;
+the shipped write middlewares validate or reject. This is the corpus's
+usual declared-and-unwired shape with one difference worth respecting:
+it is unwired <em>by design</em>, an extension point rather than an
+unfinished feature. The mark is still withheld, because a reader
+choosing a system for its approval workflow would be adopting an
+interface, not a workflow.</p>
+<p><strong>Trust state — withheld, and this is the clean version of a
+common trap.</strong> OKF has everything the mark's shape asks for: a
+discrete vocabulary
+(<code>draft</code>/<code>stable</code>/<code>deprecated</code>), a
+separate trust family recording who verified a document and when, a
+written spec with section numbers, and validation that runs on every
+write. What it does not have is a read that excludes anything. A search
+for <code>status</code>, <code>verified</code> and
+<code>stale_after</code> outside <code>pkg/okf</code> finds the fields
+nowhere in the server, the shell or the filesystem layer. The state
+answers "what is this document's standing" and nothing ever asks.</p>
+<p><strong>Tombstone — withheld.</strong> A search for
+<code>tombstone</code>, <code>rejected_</code>, <code>blocklist</code>
+and <code>denylist</code> across the Go sources returns nothing. A
+remove deletes the file and purges its history shard; nothing records
+that its content was wrong, so nothing prevents the same text being
+written back.</p>
+<p><strong>Bitemporal — withheld.</strong> No <code>valid_from</code>,
+<code>valid_at</code>, <code>as_of</code> or <code>effective_date</code>
+anywhere. History records carry one <code>Time</code>, the commit
+instant.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The suite is broad and mostly paired with the file it tests — the
+command set alone has a <code>_test.go</code> beside nearly every
+implementation, which is what a reimplementation of <code>awk</code> and
+<code>jq</code> requires to be trustworthy.</p>
+<p>The access-control tests are the ones that matter for this report,
+and they are built the right way round.
+<code>TestScopedReadFS_HidesUngrantDocsetAncestorsFromRootGrant</code>
+seeds four namespaces with distinct content, then asserts that a
+root-granted guest's listing contains none of <code>agent</code>,
+<code>user</code> or <code>channel</code> and that <code>Stat</code> and
+<code>ReadDir</code> on each fail. In the same function it grants a
+second identity the nested <code>/agent/jared</code> docset and requires
+that <code>/agent</code> becomes navigable and
+<code>/agent/jared/secret.md</code> readable — so the negative
+assertions run against a filesystem proven to hold the hidden material,
+and the fixture cannot pass by being empty.
+<code>TestScopedReadFS_HidesSiblingDocsets</code> repeats the pattern
+for siblings.</p>
+<p><code>okf_plugin_test.go</code> carries a small piece of discipline
+worth copying: it asserts that an OKF rejection is "a hard error, not a
+<code>PendingChangeError</code> which would be mis-read as 'pending'".
+The two outcomes are adjacent in the middleware contract and confusing
+them would turn a refusal into a silent parking.</p>
+<p>The deferral tests are thorough about the protocol and, read against
+the producer search, they are also the whole population of it: three
+files construct a pending change to verify the machinery around it
+behaves.</p>
+<p>No paper. A search of the README and <code>docs/</code> for
+<code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>citation</code> and <code>doi</code> finds nothing, and there is
+no <code>CITATION.cff</code>. There is no benchmark and no retrieval
+evaluation, which is consistent — there is no ranking to evaluate.</p>
+<p>The suite was not run here: <code>go.mod</code> and
+<code>go.sum</code> changed the day of the pin and sit inside the
+seven-day cooldown, and the <code>Makefile</code> is an execution
+surface the screen flagged.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make nesting a boundary, not inheritance.</strong> A grant
+on <code>/</code> that silently includes every per-user docset
+underneath it is the default most systems ship. Resolving the <em>most
+specific</em> docset and letting it override the ancestor inverts it,
+and it is a few lines.</li>
+<li><strong>Fail closed at startup on an authorization config that two
+subsystems would read differently.</strong> Two docsets sharing a
+display root is refused because read scoping resolves by root length and
+write authorization by name. That class of bug is invisible until
+someone reads the wrong file.</li>
+<li><strong>Put the scope on the filesystem, not on the query.</strong>
+Forty commands inherit the boundary without knowing it exists.</li>
+<li><strong>Compare-and-swap against what the caller last read</strong>,
+tracked by the session rather than named by the caller. An agent writing
+back a file it read six turns ago gets a conflict instead of
+clobbering.</li>
+<li><strong>Keep the approver out of the change.</strong> A
+content-addressed <code>ChangeSet</code> that carries no status or
+approver field can be parked, replayed and verified independently of
+whatever policy decided to hold it.</li>
+<li><strong>Guard the resume path against the gate that parked
+it.</strong> <code>CommitChangeSet</code> skips admission precisely so
+an approved change cannot be deferred again.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping a vocabulary no read consults.</strong>
+<code>draft</code>/<code>stable</code>/<code>deprecated</code> is
+validated on write and ignored on read, so a deprecated document is
+served like any other. Either filter on it or do not define it.</li>
+<li><strong>A validated <code>stale_after</code> that expires
+nothing.</strong> The insistence on an absolute date is right and
+nothing acts on the date.</li>
+<li><strong>Purging the index that answers the question a delete
+raises.</strong> "Who last edited this before it was removed" is exactly
+the file-scoped query that comes back empty.</li>
+<li><strong>Naming the absent component in a comment and nowhere
+else.</strong> "The knowledge-backend approvals plugin" is the only
+description of the thing the README's fourth promise depends on.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take OpenLore if several agents, repositories or people must read the
+same Markdown and the important requirement is <em>who may see
+what</em>. That is the part that is built, tested and thought through,
+and it is genuinely hard to retrofit. The absence of an index is a
+feature at this scale: a human can reproduce any agent's read with the
+same command, which is worth more than ranking for a corpus of runbooks
+and skills.</p>
+<p>It fits badly as the memory an agent writes to from its own
+experience. Nothing extracts, nothing consolidates, nothing decays, and
+nothing records that a document became wrong — the lifecycle vocabulary
+exists and is inert. Recall degrades the way a shared drive degrades, by
+growing.</p>
+<p>If the deciding factor is human approval of agent writes, understand
+what you are adopting. The protocol is well designed and you would be
+implementing the middleware and the held-changeset store yourself,
+against an interface that has never had a non-test implementation in
+this repository.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>The approval promise has no implementation here.</strong>
+Section 9. A deployment that needs review must supply the plugin.</li>
+<li><strong>Lifecycle and trust metadata are decorative at this
+commit.</strong> An agent that respects <code>status: deprecated</code>
+does so because it read the frontmatter itself, not because the system
+withheld anything.</li>
+<li><strong>File-scoped history does not survive the file.</strong> The
+global journal does.</li>
+<li><strong>No index means no staleness signal.</strong> A knowledge
+base whose freshness mechanism is a validated date nothing enforces
+relies entirely on people noticing.</li>
+<li><strong>The write log is non-durable by design</strong>, which is
+correct given await semantics, but it means a parked change's durability
+is the consumer's problem — and the consumer is absent.</li>
+<li><strong>Reimplemented Unix tools are a large surface.</strong>
+<code>awk</code> and <code>jq</code> at 1,326 and 2,195 lines are well
+tested here, and they are still two parsers an operator now depends on
+for correct reads.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the access model whole. The docset carve-out rule, the startup
+consistency check, and wrapping the filesystem rather than the query are
+three independently useful ideas, and none of them depends on the rest
+of OpenLore.</p>
+<p>Borrow the change/approval protocol as a design, knowing you supply
+the ends. The separation — an immutable content-addressed change, an
+admission chain with three outcomes, a resume entry point that skips
+admission — is the right shape for any system where an agent proposes
+and a person disposes, and the parts that are here are the parts that
+are easy to get subtly wrong.</p>
+<p>Build your own if the knowledge must have a lifecycle. OKF describes
+one precisely enough to implement; implementing it means adding a
+read-path filter this system does not have, at which point you are
+changing how every command behaves.</p>
+<p>Do not adopt this for retrieval quality. It does not compete on that
+axis and does not claim to.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the approvals plugin public, and is the held-changeset store it
+needs specified anywhere beyond the <code>ChangeSet</code>
+contract?</li>
+<li>Will anything ever read OKF <code>status</code> and
+<code>verified</code>, or are they intended purely as metadata for the
+reading agent to interpret?</li>
+<li>Should a remove leave a marker in the per-file shard rather than
+purging it, so the file-scoped query answers "deleted at T by X" instead
+of nothing?</li>
+<li>What happens to a parked <code>ChangeSet</code> whose target has
+since been removed by an earlier-approved change — the applier orders
+writes against removes, but the parked change was admitted against a
+tree that no longer exists.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Access control</strong></p>
+<ul>
+<li><code>pkg/openlore/authz.go</code> (<code>:22</code>
+<code>validateGrants</code>, <code>:491</code>
+<code>readableRoots</code>, <code>:526</code> <code>scopedReadFS</code>,
+<code>:539</code> its constructor)</li>
+<li><code>pkg/openlore/authorize.go</code>,
+<code>identity.go:19</code></li>
+<li><code>pkg/openlore/server.go:959</code> — the per-session wrap</li>
+<li><code>internal/config/config.go</code> (<code>:313</code>
+<code>DocsetAccess</code>, <code>:348</code> <code>DocsetSpec</code>,
+<code>:434</code> identity fields)</li>
+</ul>
+<p><strong>Writes and the approval seam</strong></p>
+<ul>
+<li><code>pkg/vfs/changeset.go</code> (<code>:14</code> actions,
+<code>:41</code> the <code>ChangeSet</code> contract, <code>:652</code>
+<code>PendingChangeError</code>)</li>
+<li><code>pkg/openlore/middleware.go</code> (<code>:37</code> the three
+outcomes, <code>:67</code> <code>Pending</code>)</li>
+<li><code>pkg/openlore/writelog.go</code>, <code>server.go</code>
+(<code>:742</code> <code>RegisterPlugin</code>, <code>:764</code>
+<code>CommitChangeSet</code>, <code>:891</code> the middleware
+contract)</li>
+<li><code>pkg/openlore/rules_plugin.go:259</code>,
+<code>agent_skills_plugin.go:570</code>, <code>shellexec.go:143</code> —
+the three shipped write middlewares</li>
+</ul>
+<p><strong>History</strong></p>
+<ul>
+<li><code>pkg/openlore/history.go</code> (<code>:24</code> the record,
+<code>:53</code> the recorder contract, <code>:69</code> the JSONL
+store, <code>:204</code> <code>Record</code>, <code>:282</code>
+<code>Query</code>)</li>
+</ul>
+<p><strong>Format</strong></p>
+<ul>
+<li><code>pkg/okf/families.go</code> (<code>:127</code>
+<code>CheckVerified</code>, <code>:159</code> <code>CheckStatus</code>,
+<code>:175</code> <code>CheckStaleAfter</code>),
+<code>version.go:17</code>, <code>okf.go</code></li>
+<li><code>pkg/openlore/okf_plugin.go:85</code></li>
+</ul>
+<p><strong>Retrieval surface</strong></p>
+<ul>
+<li><code>pkg/shell/shell.go</code>, <code>parser/</code>,
+<code>cmds/</code> (<code>grep.go</code>, <code>find.go</code>,
+<code>cat.go</code>, <code>awk.go</code>, <code>jq.go</code>,
+<code>skills.go</code>, <code>write.go</code>, <code>rm.go</code>,
+<code>mv.go</code>, <code>patch.go</code>, <code>publish.go</code>)</li>
+<li><code>pkg/vfs/vfs.go</code> (<code>:255</code>
+<code>WriteScopeFS</code>, <code>:271</code>
+<code>ReadTracker</code>)</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>pkg/openlore/authz_test.go:310-365</code>,
+<code>middleware_test.go</code>, <code>server_seams_test.go</code>,
+<code>middleware_fs_test.go</code>, <code>okf_plugin_test.go:230</code>,
+<code>pkg/shell/cmds/pending_change_test.go</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn &#39;&amp;PendingChangeError{&#39; --include=&#39;*.go&#39; . | grep -v &#39;_test&#39;
+grep -rn &#39;\.Pending(&#39; --include=&#39;*.go&#39; .
+grep -rni &#39;approvals plugin\|ApprovalMiddleware\|approvalPlugin&#39; --include=&#39;*.go&#39; .
+grep -rn &#39;&quot;status&quot;\|&quot;verified&quot;\|&quot;deprecated&quot;\|stale_after&#39; --include=&#39;*.go&#39; \
+  pkg/openlore/ pkg/vfs/ pkg/shell/ internal/ | grep -v &#39;_test&#39;
+grep -rn &#39;okf\.&#39; --include=&#39;*.go&#39; pkg/openlore/ | grep -v &#39;_test&#39;
+grep -rni &#39;tombstone\|rejected_\|blocklist\|denylist&#39; --include=&#39;*.go&#39; pkg/ internal/ | grep -v &#39;_test&#39;
+grep -rni &#39;valid_from\|valid_at\|as_of\|asOf\|effective_date&#39; --include=&#39;*.go&#39; pkg/ internal/ | grep -v &#39;_test&#39;
+grep -rni &#39;embedding\|vector\|cosine\|bm25&#39; --include=&#39;*.go&#39; pkg/ internal/ | grep -v &#39;_test&#39;
+grep -rn -i &#39;arxiv\|bibtex\|@article\|citation\|doi&#39; README.md docs/
+grep -rn &#39;newScopedReadFS(&#39; --include=&#39;*.go&#39; .</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/aakarim/OpenLore/commit/dbd44007d63159f26002ac07986b8e96bf82eb68"><code class="commit-id" title="dbd44007d63159f26002ac07986b8e96bf82eb68">dbd44007…</code></a>
+— first reading. Screened first: <code>go.mod</code> and
+<code>go.sum</code> changed the day of the pin and sit inside the 7-day
+cooldown, and the <code>Makefile</code> is a build-time execution
+surface. Nothing was installed and no suite was run. Three marks.
+<code>scope_enforced</code> is earned on a per-session filesystem wrap
+confining reads to granted docset roots, where every docset root is also
+a carve-out so a nested docset overrides an ancestor grant, with startup
+failing closed on an unregistered grant, a writable guest grant, and two
+docsets sharing a display root. <code>audit_log</code> is earned on an
+append-only <code>events.jsonl</code> carrying time, attribution, action
+and content hash for every committed mutation, with the stated limit
+that a remove purges that file's per-file query shard.
+<code>negative_eval</code> is earned on access tests naming files a
+given identity must not see, over a populated fixture, with the positive
+control in the same function. <code>human_review</code> is withheld: the
+deferral protocol is complete — the error type, six commands handling
+it, the inbox, the resume path and its re-admission guard — and the only
+callers of <code>WriteOp.Pending</code> are three test files, with the
+approvals plugin named in a comment and absent from the repository.
+<code>trust_state</code> is withheld because OKF validates
+<code>draft</code>/<code>stable</code>/<code>deprecated</code> and a
+<code>verified</code> event list on write and no read path filters on
+either. <code>tombstone</code> and <code>bitemporal</code> are withheld
+on searches recorded in the appendix.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
