@@ -7,13 +7,16 @@ page_kind: system
 source_name: "proxysoul/Empryo"
 source_url: https://github.com/proxysoul/Empryo
 archive_name: "proxysoul--Empryo"
-revision: e6b5885db1232f35a52eb9faeae1023ab46d5685
-revision_url: https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685
-analyzed_at: 2026-07-31
+revision: f771fc238e6426706a28773a9aaa01b967c70342
+revision_url: https://github.com/proxysoul/Empryo/commit/f771fc238e6426706a28773a9aaa01b967c70342
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "the memory tools — separate read and write scope resolvers over `global` and `project`, applied before the store is touched | src/core/tools/memory.ts:222, :296-304, :383, :402, :425, :459 | `resolveWriteScope(args.scope)` runs at every write entry point and `resolveReadScope(args.scope)` at the read, which also handles a `disabled` resolution by refusing rather than falling through to a wider scope. Ids are resolved within the resolved scope — `manager.resolveId(readScope, args.id)` — so a scope is a lookup boundary and not only a filter applied afterwards. Writes default to `project` rather than `global`, which is the safer side of a default a caller may omit | src/core/tools tests"
+  human_review: "the MemoryBrowser — a person acting on stored memories, including bulk review of similarity clusters | src/core/commands/context.ts:10, src/core/memory/manager.ts:398, src/core/memory/db.ts:622, :637, :995 | one popup owns *\"browse / cleanup / settings via tabs\"*. The browse tab offers per-row pin and unpin and a soft delete with a `restore` beside it, so a removal by a person is reversible and recorded rather than destructive. The cleanup tab is the less common half: `db.ts:995` builds cluster groups as connected components of the similar-edge graph and `manager.ts:398` drives a deep cleanup over them, presenting candidates in similarity clusters for bulk delete, pin or skip. This is a review queue over an existing store rather than approval before a write | src/core/memory tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A record with a four-value category, summary, details, topics, file references and a unique content hash"
   storage: "SQLite with FTS over two tokenizers, a 384-dimension embedding column, and a `memory_edges` similarity graph"
@@ -429,5 +432,7 @@ upsert at `:298`, supersede at `:660`, read filters at `:807`).
 **Licence** — `LICENSE` (Business Source License 1.1).
 
 ## History
+
+**2026-09-13** — [`f771fc238e6426706a28773a9aaa01b967c70342`](https://github.com/proxysoul/Empryo/commit/f771fc238e6426706a28773a9aaa01b967c70342) — re-read, 27 commits past the previous pin, and the memory subsystem is unchanged. The 42,033 added lines are localization catalogues for Arabic, French, Korean and Russian, five published morph cells, CI workflows and a locale validator; excluding locales, morphs, assets and documentation, the range touches only workflow files, Mintlify pages and `scripts/validate-locales.ts`. Both marks stand and both mechanisms were re-checked in the tree rather than carried forward — `resolveWriteScope` and `resolveReadScope` still gate every memory tool entry point, and the MemoryBrowser still owns browse, cleanup and settings with cluster-based bulk review over the similar-edge graph. Evidence records were written for both, which the report previously carried none of, and the stack row was promoted from seeded to reviewed after reading `src/core/memory/db.ts`. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-31** — [`e6b5885db1232f35a52eb9faeae1023ab46d5685`](https://github.com/proxysoul/Empryo/commit/e6b5885db1232f35a52eb9faeae1023ab46d5685) — first reading.
