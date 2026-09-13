@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 446 reports.**
+**This page covers all 447 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -255,6 +255,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - On the reported run: `p = 0.0005` recomputes exactly as a one-sided sign test over 15 discordant pairs, and the paired test is the right one for two arms over the same nineteen files. The write-up discloses that no final decision changed — fourteen of nineteen were policy declines either way — so *"this run measured a population where a verdict change was structurally impossible"*, and publishes a null result: three of the four seeded judgements *"changed nothing when retired"*. No run artifact is committed; the numbers are the authors', with a reproduction protocol beside them.
 - Study when: you need memory a regulator will read, or you have a status field and have not yet decided whether it filters or ranks.
 - Do not copy when: you need a correction that survives the next consolidation pass, or a judgement that was right until the regulation changed — timestamps here are record time only.
+
+### [`cass-memory-system`](../systems/cass-memory-system/)
+- Best idea: a blocklist keyed on the rule's own text and matched at 0.85 Jaccard overlap, so a rule the user forgot cannot return by being reworded — which is what an LLM actually produces when it re-learns a deleted lesson.
+- Biggest risk: the usage-analytics half of the tracking module is unwired. Five typed event writers with a closed action vocabulary, an append-only log and a green test suite, and no caller anywhere in the source — so the store that promotes, demotes and blocks rules keeps no record of having done so.
+- Most reusable component: rendering prohibitions as their own PITFALLS section rather than mixing them with the rules, and keeping the reason and timestamp on every forget.
+- Maturity impression: ~97,100 lines of TypeScript with large end-to-end CLI suites, sanitisation tested against a secret reaching a prompt, and a decision log carrying a required reason on every curation action.
+- Study when: you want an agent's rules explicit, reviewable as a file, and correctable by a deletion that actually holds.
+- Do not copy when: you need the history of a rule rather than its current state — the module that would tell you exists and is not connected.
 
 ### [`claude-mem`](../systems/claude-mem/)
 - Best idea: durable hook queue, canonical SQLite commit, then best-effort semantic/cloud projections and bounded timeline injection.
