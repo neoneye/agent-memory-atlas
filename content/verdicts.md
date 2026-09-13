@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 445 reports.**
+**This page covers all 446 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -370,6 +370,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: carefully built, with feature-gated backends and committed plans naming its own gaps.
 - Study when: memory and documents should be one substrate, or you need a genuinely offline path.
 - Do not copy when: a chunk is not a good enough unit — there is no claim, status, or correction record.
+
+### [`mentedb`](../systems/mentedb/)
+- Best idea: `AS OF t` judges every memory against the instant asked for rather than dropping whatever is currently invalid, so a superseded fact is visible when you ask about a moment it was true — and `Created` and `ValidAt` are both members of the planner's field enum, so the two axes are queryable in one statement.
+- Biggest risk: the primary `recall(query: &str)` takes only an MQL string, so the boundary lives in whatever the caller composed; the typed reads beside it demand agent and user ids, and the one an agent is most likely to call does not.
+- Most reusable component: the AS OF regression test, whose three negatives each sit beside a positive over the same three-memory store, and a dedup test written from the production symptom it fixed.
+- Maturity impression: ~61,800 lines of Rust across fourteen crates with its own page store, a WAL with a documented entry format and CRC32, HNSW and BM25 indexes, a replication crate and Python and TypeScript SDKs.
+- Study when: your application needs to ask what it believed at a past moment — very little else in this atlas answers that as directly.
+- Do not copy when: the boundary must be enforced by the engine rather than by the query, a wrong value must be unable to return, or a reviewer needs somewhere to stand.
 
 ### [`mercury-agent`](../systems/mercury-agent/)
 - Best idea: three independent grades — confidence, importance, durability — plus a subconscious tier and a user-facing learning pause.

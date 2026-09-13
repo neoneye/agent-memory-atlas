@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A purpose-built Rust memory engine
+with a WAL, HNSW and BM25 under a query language whose AS OF clause
+judges a memory against the instant asked for rather than dropping
+whatever is currently invalid.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MenteDB — Agent Memory Atlas">
+    <meta property="og:description" content="A purpose-built Rust memory
+engine with a WAL, HNSW and BM25 under a query language whose AS OF
+clause judges a memory against the instant asked for rather than
+dropping whatever is currently invalid.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MenteDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A purpose-built Rust
+memory engine with a WAL, HNSW and BM25 under a query language whose AS
+OF clause judges a memory against the instant asked for rather than
+dropping whatever is currently invalid.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MenteDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MenteDB",
+      "description": "A purpose-built Rust memory engine with a WAL, HNSW and BM25 under a query language whose AS OF clause judges a memory against the instant asked for rather than dropping whatever is currently invalid.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">AS OF, in a query language of its own</p>
+          <h1>MenteDB</h1>
+          <p class="document-deck">A purpose-built Rust memory engine
+with a WAL, HNSW and BM25 under a query language whose AS OF clause
+judges a memory against the instant asked for rather than dropping
+whatever is currently invalid.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/nambok/mentedb">
+              <span>Source</span>
+              <strong>nambok/mentedb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/nambok/mentedb/commit/4ba993dcf52f0a17065a9a2484fe59777dcd45d4" title="4ba993dcf52f0a17065a9a2484fe59777dcd45d4">
+              <span>Analyzed revision</span>
+              <code>4ba993dc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/nambok--mentedb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>nambok--mentedb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MenteDB is a memory engine written as a database — about 61,800 lines
+of Rust across fourteen crates, with its own page store, a write-ahead
+log, an HNSW vector index, a BM25 index, a graph crate, a replication
+crate, and Python and TypeScript SDKs over the top.</p>
+<p><strong>Its distinctive contribution is a query language with two
+time axes</strong>, and the semantics are argued in the AST rather than
+left to a reader. <code>Field</code> carries <code>Created</code> for
+record time and <code>ValidAt</code> for validity, both usable in one
+statement, and the comment on <code>ValidAt</code> states what
+<code>AS OF</code> means and why:</p>
+<blockquote>
+<p>Temporal validity at a point in time: <code>AS OF &lt;t&gt;</code>
+keeps only memories that were valid at timestamp <code>t</code>
+(valid_from &lt;= t &lt; valid_until), so a query can see what was true
+at a past moment, including facts later superseded.</p>
+</blockquote>
+<p>The last clause is the design decision. Most stores in this atlas
+that track validity use it to <em>drop</em> what is currently invalid;
+this one judges each memory against the instant asked for, so a
+superseded fact is visible when you ask about a moment it was true and
+hidden when you ask about now. <code>invalidate_memory</code>
+(<code>crates/mentedb/src/lib.rs:1966</code>) closes a window rather
+than deleting a row, which is what makes that possible.</p>
+<p><strong>The test that pins it is the best thing in the
+repository.</strong>
+<code>as_of_recalls_the_validity_window_including_superseded_facts</code>
+stores three memories — one always valid, one superseded at t=1000, one
+valid only from t=2000 — and then asks at two instants:</p>
+<pre class="rust"><code>// AS OF 500: stable + superseded are valid; future is not yet valid.
+assert!(has(&amp;at_500, &quot;stable fact&quot;));
+assert!(has(&amp;at_500, &quot;was true early then replaced&quot;));
+assert!(!has(&amp;at_500, &quot;becomes true later&quot;));</code></pre>
+<p>Every negative sits beside a positive over the same populated store,
+so neither can pass on an empty result. That earns
+<code>negative_eval</code>, and it is the kind that is about a
+particular memory rather than a rate.</p>
+<p><strong>Beside it is a regression written from a real
+failure.</strong> <code>crates/mentedb/tests/memory_dedup.rs:84</code>
+opens with the bug it exists for: <em>"i use next.js for the front end"
+then "now i use react for the front end" left BOTH facts live, and
+recall kept answering with the stale one</em>, and it records that the
+old rule <em>"only created an edge, never invalidating the loser out of
+recall."</em> A test that names the production symptom and the mechanism
+that failed is worth more than three that assert a happy path.</p>
+<p>Three marks. <code>scope_enforced</code> is earned with a bound worth
+reading in section 6, and the other three are withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row with a validity window, and time is the axis
+everything turns on.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — invalidation closes a window rather than deleting a row, so the same store answers differently depending on the instant the query names</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: invalidation closes a window rather than deleting a row, so the same store answers differently depending on the instant the query names
+flowchart TB
+    T[&quot;turn&quot;] --&gt; EX[&quot;extraction&quot;]
+    EX --&gt; M[(&quot;memory row:&lt;br/&gt;embedding, salience, confidence,&lt;br/&gt;agent_id, user_id, space_id,&lt;br/&gt;valid_from, valid_until, created_at&quot;)]
+    M --&gt; CONF{&quot;contradicts a live value?&quot;}
+    CONF --&gt;|yes| INV[&quot;invalidate_memory:&lt;br/&gt;close the loser&#39;s valid_until&quot;]
+    CONF --&gt;|no| LIVE[&quot;stays live&quot;]
+    INV --&gt; M
+    Q[&quot;MQL query&quot;] --&gt; P[&quot;parse + plan&quot;]
+    P --&gt; F1{&quot;AS OF t supplied?&quot;}
+    F1 --&gt;|yes| W[&quot;keep rows where&lt;br/&gt;valid_from &amp;lt;= t &amp;lt; valid_until&quot;]
+    F1 --&gt;|no| NOW[&quot;keep rows valid now&quot;]
+    W --&gt; IDX
+    NOW --&gt; IDX[&quot;HNSW + BM25 + graph&quot;]
+    IDX --&gt; CW[&quot;context window,&lt;br/&gt;token-budget aware&quot;]
+    W -.-&gt;|&quot;a superseded fact is visible&lt;br/&gt;at an instant it was true&quot;| CW</code></pre></details></figure>
+<p>The dotted edge is what separates this from a store that simply hides
+invalid rows.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Fourteen crates, and the separation is the kind a database has rather
+than the kind a library has: <code>mentedb-storage</code> owns pages and
+the WAL, <code>mentedb-index</code> owns HNSW and BM25,
+<code>mentedb-query</code> owns the AST, parser and planner,
+<code>mentedb-graph</code>, <code>mentedb-consolidation</code>,
+<code>mentedb-extraction</code>, <code>mentedb-embedding</code>,
+<code>mentedb-replication</code>, <code>mentedb-server</code> and
+<code>mentedb-cli</code> sit around them, and <code>mentedb-core</code>
+holds the types they share.</p>
+<p><strong>What has to be running is nothing.</strong> It is an embedded
+engine — open a directory, get a <code>MenteDb</code>. The server crate
+and the Docker compose file are for when you want it hosted, and the
+Python and TypeScript SDKs bind the same core.</p>
+<p>The WAL is
+<code>//! Write-Ahead Log: append-only log for crash recovery</code>
+with a documented on-disk entry format carrying an LSN, a page id,
+compressed data and a CRC32. It is durability infrastructure — see
+section 9 for why that is not the audit mark.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Memory type</strong> —
+<code>crates/mentedb-core/src/memory.rs</code>: ids and scope (41-70),
+validity window (76-80), <code>created_at</code> (58).</li>
+<li><strong>Query language</strong> —
+<code>crates/mentedb-query/src/ast.rs</code>: <code>Field</code>
+including <code>Created</code> and <code>ValidAt</code> (80-95),
+<code>Operator</code> (97-113);
+<code>crates/mentedb-query/src/parser.rs</code> — <code>AS OF</code>
+parse tests (709, 731).</li>
+<li><strong>Recall</strong> — <code>crates/mentedb/src/lib.rs</code>:
+<code>recall</code> (1429), <code>query</code> (1445),
+<code>recall_reranked</code> (1458),
+<code>recall_similar_filtered</code> (1501),
+<code>recall_for_action</code> (1567).</li>
+<li><strong>Invalidation</strong> —
+<code>crates/mentedb/src/lib.rs:1966</code>
+(<code>invalidate_memory</code>), dedup and supersession around
+<code>:2674-2693</code>.</li>
+<li><strong>Scope on reads</strong> —
+<code>crates/mentedb/src/lib.rs:4182-4188</code>
+(<code>all_entity_names</code>), <code>:4226</code>, <code>:4517</code>,
+<code>:4559</code>, cluster ownership at <code>:3054</code>.</li>
+<li><strong>Storage</strong> —
+<code>crates/mentedb-storage/src/engine.rs</code>,
+<code>wal.rs</code>.</li>
+<li><strong>Indexes</strong> —
+<code>crates/mentedb-index/src/hnsw.rs</code>,
+<code>bm25.rs</code>.</li>
+<li><strong>Tests</strong> —
+<code>crates/mentedb/tests/integration.rs</code> (AS OF at 1856),
+<code>memory_dedup.rs</code> (84), <code>scenarios.rs</code>,
+<code>realistic.rs</code>, <code>process_turn.rs</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory carries content, an embedding, a <code>MemoryType</code>, a
+<code>Salience</code>, a <code>Confidence</code>, an access count and
+timestamps, plus three identifiers — <code>agent_id</code>,
+<code>user_id</code>, <code>space_id</code> — and an optional
+<code>valid_from</code> / <code>valid_until</code> pair.</p>
+<p><code>Confidence</code> is a number and <code>Salience</code> is a
+number. There is no discrete status:
+<code>crates/mentedb-core/src/conflict.rs</code> defines a
+<code>Resolution</code> enum with <code>KeepLatest</code> and
+<code>KeepHighestConfidence</code>, which is a <em>strategy</em> for
+choosing between two rows rather than a state recorded on either.
+<strong><code>trust_state</code> is withheld</strong> — the rubric asks
+for a status that can withhold a memory, and a confidence float ranks
+rather than withholds.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>MQL is parsed to an AST, planned, and run against HNSW, BM25 and the
+graph, with results assembled into a token-budgeted context window.</p>
+<p><strong>Scope is enforced where a parameter demands it and
+expressible everywhere else.</strong> The entity and cluster reads take
+the keys as mandatory positional arguments —
+<code>all_entity_names(&amp;self, user: UserId, agent: AgentId)</code>
+compares <code>mem.agent_id != agent || mem.user_id != user</code>
+before using a row, and the consolidation path refuses a cluster
+containing another user's memory (<code>:3054</code>). Those are real
+read-path predicates on a stored key, and they earn the mark.</p>
+<p>The bound is the primary path.
+<code>recall(&amp;self, query: &amp;str)</code> takes only an MQL
+string, so whether a general recall is scoped depends on whether the
+caller wrote <code>Agent</code> or <code>Space</code> into the query. A
+deployment that serves two users from one database and does not template
+the scope into every query has no boundary on that path.
+<code>Agent</code> and <code>Space</code> are <code>Field</code>
+members, so the language can express it; the engine does not insist.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>process_turn</code> extracts memories from a turn and stores
+them; writes are synchronous into the page store behind the WAL, and
+retrievable immediately.</p>
+<p><strong>Supersession closes a window rather than deleting a
+row</strong>, which is the write half of the AS OF design. When a new
+value contradicts a live one, the loser's <code>valid_until</code> is
+set. The dedup regression records what that fixed: before it, the rule
+<em>"only created an edge, never invalidating the loser out of
+recall"</em>, so both facts stayed live and recall kept answering with
+the stale one.</p>
+<p><strong><code>tombstone</code> is withheld.</strong> Nothing keys a
+record on a rejected value:</p>
+<pre class="sh"><code>grep -rn -i &quot;tombstone&quot; crates --include=&quot;*.rs&quot;</code></pre>
+<p>Nothing in the storage engine at the pinned commit. A superseded
+memory keeps its content and its closed window, so the store remembers
+<em>that</em> a value stopped being true and can still return it for an
+earlier instant — which is more than most manage and is not the same as
+refusing to re-assert it. The same fact extracted again tomorrow is a
+new live row.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Rust library first, with Python and TypeScript SDKs, a CLI, and a
+server crate with an admin query endpoint. The integration surface is
+MQL: an agent that can compose a query gets the full language, including
+<code>AS OF</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The WAL, the CRC32 per entry and the replication crate are the
+reliability story, and they are the parts of this that look most like a
+database.</p>
+<p><strong><code>audit_log</code> is withheld, deliberately.</strong> A
+write-ahead log is an append-only record of mutations, which is close
+enough to the words of the rubric to need an answer. Its purpose here is
+crash recovery, its entries are physical — an LSN, a page id, compressed
+page data — and it carries no actor, no action vocabulary and no reason.
+It cannot answer <em>who changed this memory and why</em>, only <em>what
+bytes must be replayed</em>, and a checkpoint discards it once the pages
+are durable. The atlas treats git history the same way: a real
+mechanism, noted in prose, not this mark.</p>
+<p><strong><code>human_review</code> is withheld</strong> for absence —
+there is no surface where a person inspects or adjudicates a memory.
+<code>test_pipeline_audit.py</code> at the repository root is a manual
+verification script that requires a live OpenAI or Anthropic key, not a
+review surface and not a committed test.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Substantial Rust test suites — <code>integration.rs</code> at 1,910
+lines, <code>realistic.rs</code> at 1,119, <code>scenarios.rs</code> at
+1,089 — plus <code>benchmarks/longmemeval/</code>, which carries a
+requirements file pinning nothing and calling OpenAI and Anthropic, so
+the benchmark is a harness rather than a committed result.</p>
+<p>The two tests that matter are described in section 1. What makes the
+AS OF one count is that its three negatives each sit beside a positive
+over the same three-memory store, so none can pass against a retriever
+that returned nothing — the failure mode that makes most negative
+assertions in this corpus worthless.</p>
+<p>No paper: a grep of the README, <code>ARCHITECTURE.md</code>,
+<code>VISION.md</code> and <code>docs/</code> for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>Citation</code> and
+<code>doi</code> returns nothing, and there is no
+<code>CITATION.cff</code>.</p>
+<p>Nothing was run. The screen reports two cargo <code>build.rs</code>
+build-time execution points and a floating benchmark requirements
+file.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make validity a query field, not a filter the store applies
+for you.</strong> <code>AS OF t</code> judging each row against the
+instant asked for — rather than dropping whatever is invalid now — is
+the difference between a store that has history and a store that can be
+<em>asked</em> about history. It costs one enum member and one
+comparison.</p>
+<p><strong>Invalidate by closing a window, never by deleting.</strong>
+The row stays readable at an earlier instant, which is what makes the
+previous point possible.</p>
+<p><strong>Put the semantics in the AST comment.</strong> The three
+lines on <code>ValidAt</code> say what the operator does and what it
+deliberately does not do. A reader of the planner does not have to
+reconstruct the intent from the comparison.</p>
+<p><strong>Write the regression test from the symptom.</strong> <em>"i
+use next.js for the front end" then "now i use react"</em> names the
+user-visible failure, and the comment adds the mechanism that failed —
+an edge was created and the loser was never invalidated out of recall.
+Both halves are needed for the test to survive a refactor.</p>
+<p><strong>Pair every temporal negative with a positive at the same
+instant.</strong> Three <code>assert!(!has(...))</code> calls in that
+test would prove nothing on their own.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Letting the primary read path take no scope.</strong>
+<code>recall(query: &amp;str)</code> is a clean signature and it means
+the boundary lives in whatever string the caller composed. The typed
+reads beside it demand the ids; the one an agent is most likely to call
+does not.</p>
+<p><strong>Reading a WAL as an audit trail.</strong> It is append-only
+and it records mutations and it is still the wrong thing to point at
+when someone asks what happened to a memory. Two mechanisms, two
+purposes.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants memory with database properties —
+durability, replication, an index they can reason about, and a query
+language they can template — and that will template the scope into those
+queries themselves. The temporal model is the best reason to choose it:
+if your application needs to ask what it believed last March, very
+little else in this atlas answers that as directly.</p>
+<p>It is the wrong fit where the boundary must be enforced by the engine
+rather than by the query, where a wrong value must be unable to return,
+or where a reviewer needs somewhere to stand. Those are all absences
+rather than weaknesses of the parts that exist.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>recall</code> take the scope?</strong> Every
+typed read beside it does, and the asymmetry is the one thing between
+this and an enforced boundary.</li>
+<li><strong>Does anything consult <code>valid_until</code> when
+extracting?</strong> A fact invalidated last week and re-extracted today
+becomes a new live row, and the closed window beside it is the record
+that could have prevented it.</li>
+<li><strong>Is <code>space_id</code> used anywhere on a read
+path?</strong> It is on the row beside <code>agent_id</code> and
+<code>user_id</code>, and it did not appear in the comparisons those two
+do.</li>
+<li><strong>What does the replication crate do with a closed validity
+window?</strong> Two replicas disagreeing about when a fact stopped
+being true is the interesting failure, and it was not traced here.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Core types</strong></p>
+<ul>
+<li><code>crates/mentedb-core/src/memory.rs</code> — ids (41-50), type
+and embedding (52-56), <code>created_at</code> (58), scores (64-66),
+<code>space_id</code> (68), validity (76-80)</li>
+<li><code>crates/mentedb-core/src/conflict.rs</code> —
+<code>Resolution</code> (22)</li>
+<li><code>crates/mentedb-core/src/edge.rs</code>,
+<code>tier.rs</code></li>
+</ul>
+<p><strong>Query</strong></p>
+<ul>
+<li><code>crates/mentedb-query/src/ast.rs</code> — <code>Field</code>
+with <code>Created</code> and <code>ValidAt</code> (80-95),
+<code>Operator</code> (97-113)</li>
+<li><code>crates/mentedb-query/src/parser.rs</code> — <code>AS OF</code>
+parse tests (709, 731)</li>
+</ul>
+<p><strong>Engine</strong></p>
+<ul>
+<li><code>crates/mentedb/src/lib.rs</code> — <code>recall</code> (1429),
+<code>query</code> (1445), <code>recall_similar_filtered</code> (1501),
+<code>recall_for_action</code> (1567), <code>invalidate_memory</code>
+(1966), supersession (2674-2693), cluster ownership (3054),
+<code>all_entity_names</code> (4182-4188), further scope comparisons
+(4226, 4517, 4559)</li>
+<li><code>crates/mentedb-storage/src/engine.rs</code>,
+<code>wal.rs</code> (format at 3-8)</li>
+<li><code>crates/mentedb-index/src/hnsw.rs</code>,
+<code>bm25.rs</code></li>
+</ul>
+<p><strong>Tests and benchmarks</strong></p>
+<ul>
+<li><code>crates/mentedb/tests/integration.rs</code> — AS OF
+(1856-1900), <code>valid_until</code> (135)</li>
+<li><code>crates/mentedb/tests/memory_dedup.rs</code> — the
+production-bug regression (84-122)</li>
+<li><code>crates/mentedb/tests/scenarios.rs</code>,
+<code>realistic.rs</code>, <code>process_turn.rs</code></li>
+<li><code>benchmarks/longmemeval/</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn -i &quot;tombstone&quot; crates --include=&quot;*.rs&quot;
+grep -rn -iE &quot;review|approve|human&quot; crates --include=&quot;*.rs&quot; | grep -v tests
+grep -rn -i &quot;arxiv|bibtex|@article|citation|doi&quot; README.md ARCHITECTURE.md VISION.md docs/
+ls CITATION.cff</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/nambok/mentedb/commit/4ba993dcf52f0a17065a9a2484fe59777dcd45d4"><code class="commit-id" title="4ba993dcf52f0a17065a9a2484fe59777dcd45d4">4ba993dc…</code></a>
+— first reading. Screened first: two cargo <code>build.rs</code>
+build-time execution points and a benchmark requirements file pinning
+nothing, so nothing was installed and <code>cargo test</code> was not
+run. Three marks. <code>bitemporal</code> is earned on two queryable
+fields rather than two columns — <code>Created</code> and
+<code>ValidAt</code> are both members of the planner's
+<code>Field</code> enum — which is the distinction that cost another
+system in this corpus the same mark on the same day.
+<code>audit_log</code> is withheld on a deliberate reading: the
+write-ahead log is append-only and records mutations, and its entries
+are physical pages with no actor, action or reason, so it answers what
+must be replayed rather than what changed and why.
+<code>scope_enforced</code> is earned on the typed reads that take the
+ids as mandatory parameters, with the bound recorded that the primary
+<code>recall</code> takes only a query string.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
