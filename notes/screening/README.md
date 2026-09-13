@@ -9,16 +9,16 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 345 of 455 screened at the report's current pin.**
+**Progress: 346 of 455 screened at the report's current pin.**
 
-11 further record(s) describe a revision the report has since moved
+10 further record(s) describe a revision the report has since moved
 off, and 99 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 139 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 171 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 172 |
 | Repositories with build-time execution (`EXEC`) | 256 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -44,7 +44,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
-| [`basic-memory`](../../content/systems/basic-memory.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
+| [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`claude-mem`](../../content/systems/claude-mem.md) | `.claude/settings.json`, `.github/copilot-instructions.md` |
