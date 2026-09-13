@@ -236,18 +236,18 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| Files on disk | 218 | 144 | | Lexical | 277 | 184 |
-| SQLite | 212 | 123 | | Vector | 272 | 158 |
+| Files on disk | 219 | 145 | | Lexical | 277 | 185 |
+| SQLite | 212 | 124 | | Vector | 272 | 159 |
 | Postgres | 88 | 50 | | Graph | 104 | 64 |
-| Delegated to the adopter | 40 | 18 | | No arm named in the review | 86 | 35 |
+| Delegated to the adopter | 39 | 18 | | No arm named in the review | 86 | 35 |
 | Graph database | 27 | 17 | |  |  |  |
 | In-process only | 26 | 10 | |  |  |  |
 | Chroma | 25 | 11 | |  |  |  |
 | Qdrant | 20 | 10 | |  |  |  |
 | LanceDB | 14 | 7 | |  |  |  |
 | Redis | 13 | 4 | |  |  |  |
+| Embedded key-value | 9 | 4 | |  |  |  |
 | Milvus | 8 | 5 | |  |  |  |
-| Embedded key-value | 8 | 3 | |  |  |  |
 | FAISS | 7 | 4 | |  |  |  |
 | MongoDB | 6 | 4 | |  |  |  |
 | DuckDB | 3 | 2 | |  |  |  |
@@ -255,6 +255,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Elasticsearch | 2 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
 
-Counted across 455 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 261 of 455 reports have been read that way, and the other 194 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 455 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 262 of 455 reports have been read that way, and the other 193 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

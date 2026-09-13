@@ -7,17 +7,17 @@ page_kind: system
 source_name: moltis-org/moltis
 source_url: https://github.com/moltis-org/moltis
 archive_name: "moltis-org--moltis"
-revision: 1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
-revision_url: https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872
-analyzed_at: 2026-07-27
+revision: 8f633cc36e5a053d6ccd0d1af22e767665a7cb93
+revision_url: https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93
+analyzed_at: 2026-09-13
 capabilities: ""
-stack_storage: "sqlite, delegated"
+stack_storage: "sqlite, files, kv"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Chunk of a Markdown file"
-  storage: "SQLite with vectors; pluggable local, OpenAI, batch, and fallback embeddings"
-  retrieval: "Hybrid keyword plus vector, optional LLM rerank, citation modes"
+  storage: "Two interchangeable backends behind one contract — the built-in SQLite database with vectors, or zvec collections on disk with a redb cache — plus pluggable local, OpenAI, batch and fallback embeddings"
+  retrieval: "Hybrid keyword plus vector fused by reciprocal rank or a weighted sum, optional LLM rerank, citation modes"
   write: "Corpus files plus sanitized session transcripts, one `sync()` chokepoint"
   update_delete: "Edit or delete the file and reindex"
   scoping: "Indexed directory only"
@@ -73,6 +73,10 @@ chat session → sanitize → markdown file → file-watcher / sync() → indexe
 `crates/memory/src/` — `lib.rs`, `manager.rs`, `chunker.rs`, `config.rs`, `schema.rs`, `search.rs`, `reranking.rs`, `session_export.rs`, `runtime.rs`, `error.rs`, plus the embedding family and a `contract.rs` compiled under `#[cfg(test)]`.
 
 Feature flags gate real cost: `local-embeddings` pulls in llama-cpp-2 with an explicit `#[allow(unsafe_code)]` and the comment "FFI wrappers for llama-cpp-2 require unsafe Send/Sync impls"; `file-watcher` gates filesystem watching. A deployment that wants neither compiles neither.
+
+`crates/memory-zvec/` is a second backend behind the same `MemoryStore` trait, storing chunks as zvec collections on disk with a redb cache beside them. What makes the pair worth reading is that neither is the reference: `crates/memory-zvec/tests/contract.rs` runs one suite against both, case for case — roundtrip, vector search, keyword-only search, hybrid with RRF and with a weighted sum, file operations, cache operations — so a behavioural difference between the two is a test failure rather than a surprise at deployment.
+
+`crates/memory-zvec/src/path.rs` carries a small piece of hardening worth copying. `resolve_data_subpath` refuses absolute paths, empty strings and `..` traversal before joining a config-supplied component to the data directory, and states the reason: Rust's `Path::join` *"silently discards the base when given an absolute"* path, so a `db_path` field in a config file would otherwise create collection and cache files anywhere on the filesystem.
 
 Design plans are committed alongside: `plans/postgres-pgvector-memory-backend.md` and `plans/core-memory-lifecycle-unification.md`.
 
@@ -180,7 +184,7 @@ For a corpus-and-index system, the measurement that matters is retrieval quality
 ### Steal
 
 - **Make "no embeddings" a constructor, not a failure mode.** `keyword_only()` plus `has_embeddings()` turns degradation into a supported, inspectable configuration.
-- **Sanitize transcripts before they become corpus.** Now the fourth independent instance in this atlas of a system needing to strip its own output before capture.
+- **Sanitize transcripts before they become corpus.** A recurring need in this atlas: a system that indexes its own output has to strip it before capture, or the index learns the assistant's phrasing alongside the user's facts.
 - **Content-hash prefixes for file addressing**, so citations survive renames.
 - **Citation mode as explicit configuration** where chunks are the only provenance you have.
 - **One reindex entry point** for every write path.
@@ -229,5 +233,7 @@ Do not copy:
 - Plans: `plans/postgres-pgvector-memory-backend.md`, `plans/core-memory-lifecycle-unification.md`.
 
 ## History
+
+**2026-09-13** — [`8f633cc36e5a053d6ccd0d1af22e767665a7cb93`](https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93) — re-read, 148 commits past the previous pin across 776 files. The memory subsystem gained a second backend: `crates/memory-zvec` stores chunks as zvec collections with a redb cache, sits behind the same `MemoryStore` trait as the built-in SQLite store, and is held to it by a shared contract suite that runs the same cases against both. `search.rs` was substantially rewritten and the hybrid path now names its fusion — reciprocal rank or a weighted sum. `capabilities` stays empty and the withholdings were re-checked rather than carried forward: no scope key on any read path, and no trust, tombstone or temporal field on a chunk. `negative_eval` is refused on the new suite specifically — its nearest case, `sqlite_empty_search_returns_empty`, asserts an empty store returns nothing, which is the vacuous shape rather than a committed case keeping particular material out of a populated result. The stack row was promoted from seeded to reviewed and corrected: storage is the SQLite database plus, on the zvec backend, collection files and an embedded key-value cache. Screened again first: two auto-run surfaces, three dependency files inside the 7-day cooldown, five build-time execution surfaces; nothing was installed and no suite was run.
 
 **2026-07-27** — [`1f53cd27b1a21c36b61ceda7a8ea65a35deb7872`](https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872) — first reading.

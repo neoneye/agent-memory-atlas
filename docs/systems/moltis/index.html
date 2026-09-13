@@ -109,14 +109,14 @@ back into the same corpus so conversations become searchable notes.</p>
               <strong>moltis-org/moltis</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872" title="1f53cd27b1a21c36b61ceda7a8ea65a35deb7872">
+            <a class="meta-pill revision-pill" href="https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93" title="8f633cc36e5a053d6ccd0d1af22e767665a7cb93">
               <span>Analyzed revision</span>
-              <code>1f53cd27…</code>
+              <code>8f633cc3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/moltis-org--moltis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -214,6 +214,23 @@ llama-cpp-2 with an explicit <code>#[allow(unsafe_code)]</code> and the
 comment "FFI wrappers for llama-cpp-2 require unsafe Send/Sync impls";
 <code>file-watcher</code> gates filesystem watching. A deployment that
 wants neither compiles neither.</p>
+<p><code>crates/memory-zvec/</code> is a second backend behind the same
+<code>MemoryStore</code> trait, storing chunks as zvec collections on
+disk with a redb cache beside them. What makes the pair worth reading is
+that neither is the reference:
+<code>crates/memory-zvec/tests/contract.rs</code> runs one suite against
+both, case for case — roundtrip, vector search, keyword-only search,
+hybrid with RRF and with a weighted sum, file operations, cache
+operations — so a behavioural difference between the two is a test
+failure rather than a surprise at deployment.</p>
+<p><code>crates/memory-zvec/src/path.rs</code> carries a small piece of
+hardening worth copying. <code>resolve_data_subpath</code> refuses
+absolute paths, empty strings and <code>..</code> traversal before
+joining a config-supplied component to the data directory, and states
+the reason: Rust's <code>Path::join</code> <em>"silently discards the
+base when given an absolute"</em> path, so a <code>db_path</code> field
+in a config file would otherwise create collection and cache files
+anywhere on the filesystem.</p>
 <p>Design plans are committed alongside:
 <code>plans/postgres-pgvector-memory-backend.md</code> and
 <code>plans/core-memory-lifecycle-unification.md</code>.</p>
@@ -364,9 +381,10 @@ exported session plus queries about it — is something
 mode.</strong> <code>keyword_only()</code> plus
 <code>has_embeddings()</code> turns degradation into a supported,
 inspectable configuration.</li>
-<li><strong>Sanitize transcripts before they become corpus.</strong> Now
-the fourth independent instance in this atlas of a system needing to
-strip its own output before capture.</li>
+<li><strong>Sanitize transcripts before they become corpus.</strong> A
+recurring need in this atlas: a system that indexes its own output has
+to strip it before capture, or the index learns the assistant's phrasing
+alongside the user's facts.</li>
 <li><strong>Content-hash prefixes for file addressing</strong>, so
 citations survive renames.</li>
 <li><strong>Citation mode as explicit configuration</strong> where
@@ -439,6 +457,28 @@ which is turn-shaped rather than prose-shaped?</li>
 <code>plans/core-memory-lifecycle-unification.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e767665a7cb93"><code class="commit-id" title="8f633cc36e5a053d6ccd0d1af22e767665a7cb93">8f633cc3…</code></a>
+— re-read, 148 commits past the previous pin across 776 files. The
+memory subsystem gained a second backend:
+<code>crates/memory-zvec</code> stores chunks as zvec collections with a
+redb cache, sits behind the same <code>MemoryStore</code> trait as the
+built-in SQLite store, and is held to it by a shared contract suite that
+runs the same cases against both. <code>search.rs</code> was
+substantially rewritten and the hybrid path now names its fusion —
+reciprocal rank or a weighted sum. <code>capabilities</code> stays empty
+and the withholdings were re-checked rather than carried forward: no
+scope key on any read path, and no trust, tombstone or temporal field on
+a chunk. <code>negative_eval</code> is refused on the new suite
+specifically — its nearest case,
+<code>sqlite_empty_search_returns_empty</code>, asserts an empty store
+returns nothing, which is the vacuous shape rather than a committed case
+keeping particular material out of a populated result. The stack row was
+promoted from seeded to reviewed and corrected: storage is the SQLite
+database plus, on the zvec backend, collection files and an embedded
+key-value cache. Screened again first: two auto-run surfaces, three
+dependency files inside the 7-day cooldown, five build-time execution
+surfaces; nothing was installed and no suite was run.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/moltis-org/moltis/commit/1f53cd27b1a21c36b61ceda7a8ea65a35deb7872"><code class="commit-id" title="1f53cd27b1a21c36b61ceda7a8ea65a35deb7872">1f53cd27…</code></a>
 — first reading.</p>
