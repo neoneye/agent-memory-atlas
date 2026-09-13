@@ -7,9 +7,9 @@ page_kind: system
 source_name: "agentscope-ai/ReMe"
 source_url: https://github.com/agentscope-ai/ReMe
 archive_name: "agentscope-ai--ReMe"
-revision: 550317c3bfb755d985a0401194827eaa9676a5bc
-revision_url: https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc
-analyzed_at: 2026-07-29
+revision: 9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1
+revision_url: https://github.com/agentscope-ai/ReMe/commit/9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1
+analyzed_at: 2026-09-13
 capabilities: ""
 stack_storage: "faiss, files"
 stack_retrieval: "lexical, vector, graph"
@@ -478,5 +478,7 @@ YAML prompts
 `benchmark/result-beam.md`, `reme/steps/benchmark/{lme,beam}/`
 
 ## History
+
+**2026-09-13** — [`9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1`](https://github.com/agentscope-ai/ReMe/commit/9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1) — re-read, 98 commits past the previous pin across 640 files. `capabilities` stays empty and each candidate was checked against the new code rather than assumed. The largest addition is a rebuildable tag index over file frontmatter with filtered hybrid search, but `_resolve_tag_filter` in `reme/steps/index/search.py:144` merges tag-derived paths into the ordinary file-store filter on the caller's request, so tags are a facet the searcher chooses rather than a stored key the reader cannot widen, and `scope_enforced` stays withheld. `negative_eval` is the closer call and is refused on a stated distinction: `test_configured_frontmatter_key_contract` does build a populated fixture and pair its negative with a positive control in the same function — a file whose tags sit under the unconfigured key returns nothing while the configured one returns its path — but what it pins is which frontmatter key the index reads, a parsing contract, not that particular material must be kept out of a result for correctness or safety. No trust status, no rejected-value record and no second time axis appeared. Worth recording about the project: `reme/steps/evolve/proactive/` carries numbered annotations — *"audit item 2"*, *"audit item 3"*, *"audit item 7"*, *"audit item 9"* — tying each guard in the code back to the finding that prompted it. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-29** — [`550317c3bfb755d985a0401194827eaa9676a5bc`](https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc) — first reading.

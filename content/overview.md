@@ -7285,7 +7285,7 @@ Privacy/deletion:
 - [memodb-io/memobase](https://github.com/memodb-io/memobase) at [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901)
 - [kingjulio8238/Memary](https://github.com/kingjulio8238/Memary) at [`b2331a2c0844d66f69acd607b9e4dbaba56552c1`](https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1)
 - [MemoriLabs/Memori](https://github.com/MemoriLabs/Memori) at [`538b61f245295aa1a43df8033879f8293627f74d`](https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d)
-- [agentscope-ai/ReMe](https://github.com/agentscope-ai/ReMe) at [`550317c3bfb755d985a0401194827eaa9676a5bc`](https://github.com/agentscope-ai/ReMe/commit/550317c3bfb755d985a0401194827eaa9676a5bc)
+- [agentscope-ai/ReMe](https://github.com/agentscope-ai/ReMe) at [`9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1`](https://github.com/agentscope-ai/ReMe/commit/9ad3dafce5666c55e8cd5b16cc5ffba42da6cce1)
 - [oceanbase/powercontext](https://github.com/oceanbase/powercontext) at [`9d1b48449345b1ec7af1144aa1b81bb776478851`](https://github.com/oceanbase/powercontext/commit/9d1b48449345b1ec7af1144aa1b81bb776478851)
 - [volcengine/MineContext](https://github.com/volcengine/MineContext) at [`171c7a9ea8091e326ddcf0f10718aa1b58c83c65`](https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65)
 - [memodb-io/Acontext](https://github.com/memodb-io/Acontext) at [`259d73bfdebeed35ec2d4211ddc060a2d4126bc6`](https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6)
