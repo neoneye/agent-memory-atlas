@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 450 reports.**
+**This page covers all 451 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -994,6 +994,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: ~11,700 lines of Rust, a stratified interpreter with seminaive fixpoint, magic-sets demand evaluation, proof trees with cycle protection, a status table with one honest "not yet" among twenty-seven shipped rows, and a clean screen.
 - Study when: you would rather debug a rule than a ranking function, and want "why do I believe this" answered by a derivation rather than a citation.
 - Do not copy when: memory must be scoped between principals, a wrong belief must be recorded as wrong rather than dated out, or the team cannot write Datalog — the rules are the memory.
+
+### [`linggen-memory`](../systems/linggen-memory/)
+- Best idea: `#[default]` on the restrictive variant. `AccountScope::Owner` compiles `account_id IS NULL` into the WHERE clause, so a caller who never heard of accounts reads the owner's rows rather than everyone's — one word that decides whether the scope is a boundary or a convention.
+- Biggest risk: supersession points forward and says nothing. `superseded_by` records which row won, not why or who decided, so a re-extraction of the losing fact is indistinguishable from a new observation.
+- Most reusable component: naming which half of a job is mechanical and which is judgement, in the module that does the mechanical half — the chain scan is read-only and zero-LLM, and the merge belongs to the caller.
+- Maturity impression: ~14,600 lines of Rust over LanceDB with two tables on one connection, a numbered spec the source cites by section, and a written policy for when a tag prefix graduates to a column.
+- Study when: one person runs memory across several agent surfaces and wants the scope right by default and the condensing decisions left to the agent.
+- Do not copy when: a correction must hold against re-assertion, or you need to answer when something changed and who changed it.
 
 ### [`logseq`](../systems/logseq/)
 - Best idea: the user defines the schema and the agent must write inside it. Properties carry a declared type and cardinality, tags are classes that extend other tags, and `listTags`/`listProperties` let a model discover the ontology before writing in it. Everywhere else the memory model is the vendor's; here it is the user's.

@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first LanceDB memory whose
+account scope defaults to the owner's rows as a WHERE clause, and whose
+condense stage computes supersession chains mechanically so the agent
+deciding them never pages the store through its context.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Linggen
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first LanceDB
+memory whose account scope defaults to the owner's rows as a WHERE
+clause, and whose condense stage computes supersession chains
+mechanically so the agent deciding them never pages the store through
+its context.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Linggen
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first LanceDB
+memory whose account scope defaults to the owner's rows as a WHERE
+clause, and whose condense stage computes supersession chains
+mechanically so the agent deciding them never pages the store through
+its context.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Linggen Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Linggen Memory",
+      "description": "A local-first LanceDB memory whose account scope defaults to the owner's rows as a WHERE clause, and whose condense stage computes supersession chains mechanically so the agent deciding them never pages the store through its context.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The default account filter is a closed
+one</p>
+          <h1>Linggen Memory</h1>
+          <p class="document-deck">A local-first LanceDB memory whose
+account scope defaults to the owner's rows as a WHERE clause, and whose
+condense stage computes supersession chains mechanically so the agent
+deciding them never pages the store through its context.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/linggen/linggen-memory">
+              <span>Source</span>
+              <strong>linggen/linggen-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/linggen/linggen-memory/commit/2abbd4ff8f3b847d25e49f5c2a02714dcda995e1" title="2abbd4ff8f3b847d25e49f5c2a02714dcda995e1">
+              <span>Analyzed revision</span>
+              <code>2abbd4ff…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/linggen--linggen-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>linggen--linggen-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Linggen Memory is a local-first memory service — about 14,600 lines
+of Rust over LanceDB, with a CLI, an HTTP API, an MCP server and a
+daemon. Two tables on one connection: <code>episodic</code> for staged
+short-term material and <code>semantic</code> for curated long-term
+facts.</p>
+<p>One mark, and it is earned on a detail most systems get the other way
+round.</p>
+<p><strong>The account scope defaults to a closed filter.</strong>
+<code>AccountScope</code> is a three-value enum whose
+<code>#[default]</code> is <code>Owner</code>, and the filter builder
+compiles it directly into the query:</p>
+<pre class="rust"><code>AccountScope::Owner =&gt; clauses.push(&quot;account_id IS NULL&quot;.to_string()),
+AccountScope::Id(id) =&gt; clauses.push(format!(&quot;account_id = ...&quot;)),
+AccountScope::Any =&gt; {}</code></pre>
+<p>A caller who has never heard of accounts gets the owner's rows, not
+everyone's. The comment explains why the default is shaped that way —
+<em>"every caller that never heard of accounts keeps seeing exactly what
+it saw before the field existed"</em> — which is a back-compatibility
+argument that happens to produce the safe default. <code>Any</code>
+exists and is documented as being for maintenance that walks the whole
+store.</p>
+<p>This report has read several systems this week whose scope key is
+optional, whose default is unfiltered, or whose boundary lives in
+whatever query string the caller composed. Making the enum's default the
+restrictive variant is a one-word decision — <code>#[default]</code> on
+<code>Owner</code> rather than on <code>Any</code> — and it is the
+difference between a boundary and a convention.</p>
+<p><strong>The second thing worth reading is a division of
+labour.</strong> <code>src/http/chains.rs</code> computes supersession
+chains — <em>"same-subject rows where the newest completes or obsoletes
+the rest"</em> — and states its own scope precisely:</p>
+<blockquote>
+<p>This endpoint computes them so the condense mission's agent (which is
+Memory-tools-only and cannot script) never has to page the whole store
+through its context. Read-only, zero-LLM — judgment and the actual
+<code>replace_ids</code> merges belong to the caller.</p>
+</blockquote>
+<p>The mechanical part is done by the server because the agent cannot
+script; the judgement is left to the agent because the server should not
+guess. Naming which half is which, and why, is the part most designs
+leave implicit.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A fact is staged, promoted, and eventually condensed — and every read
+is filtered by account before anything is scored.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the account scope compiles into the query before ranking, and the condense stage separates the mechanical chain detection from the merge decision it hands back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the account scope compiles into the query before ranking, and the condense stage separates the mechanical chain detection from the merge decision it hands back
+flowchart TB
+    W[&quot;write&quot;] --&gt; EPI[(&quot;episodic table —&lt;br/&gt;staged short-term&quot;)]
+    EPI --&gt; PROM[&quot;promotion&quot;]
+    PROM --&gt; SEM[(&quot;semantic table —&lt;br/&gt;curated long-term&quot;)]
+    Q[&quot;query&quot;] --&gt; F{&quot;Filters&quot;}
+    F --&gt; ACC[&quot;account: default Owner&lt;br/&gt;→ account_id IS NULL&quot;]
+    F --&gt; CTX[&quot;contexts / contexts_any&quot;]
+    F --&gt; REST[&quot;type, tier, origin,&lt;br/&gt;outcome, since/until, project path&quot;]
+    ACC --&gt; SCAN[&quot;filtered candidate set&quot;]
+    CTX --&gt; SCAN
+    REST --&gt; SCAN
+    SCAN --&gt; HYB[&quot;hybrid fuse:&lt;br/&gt;cosine + keyword boost,&lt;br/&gt;score floor&quot;]
+    HYB --&gt; OUT[&quot;results&quot;]
+    SEM --&gt; CH[&quot;chain scan (read-only, zero-LLM):&lt;br/&gt;same-subject rows, newest obsoletes&quot;]
+    CH -.-&gt;|&quot;judgement and replace_ids&lt;br/&gt;belong to the caller&quot;| AG[&quot;condense agent&quot;]
+    AG --&gt; SUP[&quot;superseded_by set on the row&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>LanceDB, opened once per invocation — the CLI is one-shot in v0.1 —
+with the table auto-created on first open. <code>open_semantic</code>
+and <code>open_episodic</code> bind the two tables on the same
+connection with the same schema and per-table ANN index isolation.</p>
+<p>There is a <code>doc/memory-spec.md</code> and a
+<code>doc/tech-spec.md</code>, and the source refers to them by numbered
+section (<code>§2 Condense</code>), so the code and the specification
+are kept in correspondence rather than the specification being a
+README.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store and filters</strong> —
+<code>src/memory/store.rs</code>: <code>AccountScope</code> (37-47),
+<code>Filters</code> (85-105), the clause builder (170-172),
+<code>MemoryPatch</code> (275), <code>MemoryStore</code> (528).</li>
+<li><strong>Types</strong> — <code>src/memory/types.rs</code>:
+<code>Memory</code> (40), <code>MemoryType</code> (210),
+<code>Outcome</code> (284), <code>Origin</code> (338), <code>Tier</code>
+(398).</li>
+<li><strong>Schema</strong> — <code>src/memory/schema.rs</code>:
+<code>superseded_by</code> (85), encode and decode (139, 195, 241).</li>
+<li><strong>Hybrid retrieval</strong> —
+<code>src/memory/hybrid.rs</code>: <code>Candidate</code> (61),
+<code>fuse</code> and the floor tests (195-240).</li>
+<li><strong>Condense</strong> —
+<code>src/http/chains.rs:1-12</code>.</li>
+<li><strong>Maintenance</strong> —
+<code>src/memory/maintenance.rs</code>: <code>Footprint</code> (45),
+<code>Report</code> (170).</li>
+<li><strong>Surfaces</strong> — <code>src/cli/mod.rs</code>,
+<code>src/http/memory.rs</code>, <code>src/http/mcp.rs</code>,
+<code>src/daemon/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A fact carries content, an optional vector — <em>"may briefly be
+<code>None</code> between insert and embed passes"</em>, and search
+ignores rows without one — plus two label dimensions with a stated
+difference. <code>contexts</code> are hierarchical and path-like
+(<code>code/linggen</code>, <code>music/piano</code>) and are the
+primary filter dimension; <code>tags</code> are free-form with a prefix
+convention (<code>intent:learn</code>, <code>topic:coding</code>,
+<code>person:bob</code>), and the comment sets a rule for graduating
+one: <em>"promote a prefix to a first-class field only if it becomes
+heavily filtered in practice."</em> That is a schema-evolution policy
+written down, which is rarer than it should be.</p>
+<p>Three enums carry meaning: <code>MemoryType</code> (fact, preference,
+decision and others), <code>Outcome</code> (positive, negative, neutral
+— <em>"only meaningful for action-flavored types"</em> and nullable for
+a preference), and <code>Origin</code> (user, agent, derived).</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>Origin</code> records who authored a fact and <code>Outcome</code>
+records how an action turned out; neither is an epistemic status of the
+claim, and neither withholds a fact from a reader. A
+<code>derived</code> fact is retrieved on the same footing as a
+<code>user</code> one.</p>
+<p><strong><code>tombstone</code> is withheld.</strong>
+<code>superseded_by</code> is a column on the row and the merge is
+performed by the caller through <code>replace_ids</code>; nothing is
+keyed on the superseded content, so the same fact extracted again is a
+new row.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Filters first, then a hybrid fuse of cosine similarity and a keyword
+boost against a score floor. The floor's behaviour is pinned by three
+adjacent tests: a strong cosine ranks first, a 0.55 cosine <em>with</em>
+a keyword match is lifted over a 0.6 floor, and a 0.40 cosine with no
+keyword match is dropped.</p>
+<p><strong><code>negative_eval</code> is withheld</strong>, and the
+reason is the same distinction this atlas has had to make elsewhere.
+<code>floor_still_drops_low_cosine_non_matches</code> asserts a result
+set is empty, its sibling tests prove <code>fuse</code> returns rows for
+admissible input, so it is not vacuous — but it is a property of a
+scoring threshold rather than a claim that particular material must be
+withheld from a reader. The mark asks whether what the mechanism holds
+could turn out to be false; a candidate below a cosine floor could
+not.</p>
+<p>The project-path filter is worth a line because it refuses the easy
+implementation: it is <em>"not an equality filter"</em>, because paths
+nest and a row from a subdirectory belongs to the work above it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes land in <code>episodic</code> and are promoted to
+<code>semantic</code>. Embedding may lag the insert, and the read path
+excludes rows without a vector rather than treating a missing embedding
+as a zero.</p>
+<p>Condensation is the interesting write. The chain scan is read-only
+and calls no model; it hands the agent a list of same-subject chains,
+and the agent decides which rows to merge and issues
+<code>replace_ids</code>. The server refuses to be the thing that
+decides what obsoletes what.</p>
+<p><strong><code>audit_log</code> is withheld</strong> for absence —
+there is no append-only record of mutations:</p>
+<pre class="sh"><code>grep -rn -iE &quot;append.only|audit|journal|history&quot; src/memory/*.rs src/update/*.rs</code></pre>
+<p>Nothing outside comments at the pinned commit. A merged-away fact
+leaves a <code>superseded_by</code> pointer and no record of who merged
+it or why.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four surfaces — CLI, HTTP, MCP, daemon — over one store, plus a
+plugins directory. The condense contract is the notable one: the agent
+is described in the source as <em>"Memory-tools-only and cannot
+script"</em>, and the endpoint exists specifically because of that
+constraint. Designing an endpoint around what the calling agent cannot
+do is a more useful framing than designing around what it can.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The account scope is the safety story and section 1 covers it. Beside
+it, the maintenance pass <em>"picks its person from
+<code>distinct_accounts</code>"</em> rather than assuming a single
+owner, so a multi-account store does not get one person's dream applied
+to everyone.</p>
+<p>What is missing is any record of change. No audit log, no provenance
+beyond <code>origin</code>, and supersession that points forward without
+saying why. For a local-first personal store that is a defensible
+position; it means the system can tell you what it believes and not how
+it came to stop believing something else.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests live beside the modules — <code>hybrid.rs</code>,
+<code>types.rs</code>, <code>schema.rs</code> and <code>store.rs</code>
+all carry <code>#[cfg(test)]</code> blocks — with a
+<code>benchmark/</code> directory and a <code>doc/</code> tree beside
+them.</p>
+<p>The hybrid floor tests are the best-constructed group: three cases
+that between them pin what the floor admits, what a keyword boost lifts,
+and what is dropped, each with the reasoning in the assertion
+message.</p>
+<p>No paper and no <code>CITATION.cff</code>.</p>
+<p>Nothing was run. The screen reports dependency manifests changed
+inside the seven-day cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make the restrictive variant your enum's default.</strong>
+<code>#[default]</code> on <code>Owner</code> rather than on
+<code>Any</code> is one word, and it decides whether a caller who forgot
+about scoping sees one person's rows or everyone's. Most scope bugs in
+this corpus are this word.</p>
+<p><strong>Say which half of a job is mechanical and which is judgement,
+in the module that does the mechanical half.</strong> The chain scan is
+read-only and zero-LLM and says so; the merge belongs to the caller and
+it says that too.</p>
+<p><strong>Design the endpoint around what the caller cannot
+do.</strong> <em>"The condense mission's agent is Memory-tools-only and
+cannot script"</em> is why a whole endpoint exists. It is a better
+starting point than a list of capabilities.</p>
+<p><strong>Write down when a tag graduates to a column.</strong>
+<em>"Promote a prefix to a first-class field only if it becomes heavily
+filtered in practice"</em> is a schema-evolution policy that stops the
+metadata blob becoming permanent.</p>
+<p><strong>Make a nested scope filter nest.</strong> A project path that
+matches by equality gets the wrong answer the first time a subdirectory
+has its own rows.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Supersession that points forward and says nothing.</strong>
+<code>superseded_by</code> records which row won and not why, who
+decided, or what was rejected — so a re-extraction of the losing fact is
+indistinguishable from a new observation.</p>
+<p><strong>Treating <code>origin</code> as trust.</strong> User, agent
+and derived are useful provenance and they do not gate anything; a
+derived fact ranks alongside one a person stated.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits one person running memory on their own machine across
+several agent surfaces, who wants the store to be inspectable, the scope
+to be right by default, and the condensing decisions to stay with the
+agent rather than the server.</p>
+<p>It is the wrong fit where a correction has to hold against
+re-assertion, or where you need to answer <em>when did this change and
+who changed it</em> — the store keeps the current belief and the
+pointer, and nothing else.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should the condense merge record its reason?</strong> The
+endpoint already computes the chain and the caller already has the
+judgement; only the write is missing it.</li>
+<li><strong>What does <code>Any</code> cost in practice?</strong> It is
+the one variant that pushes no clause, and it is reachable from
+maintenance paths.</li>
+<li><strong>How does a fact get from <code>episodic</code> to
+<code>semantic</code>?</strong> The promotion is the point at which a
+staged observation becomes a curated belief and it was not traced in
+full here.</li>
+<li><strong>Does anything reconcile <code>superseded_by</code> against a
+re-extraction?</strong> The column is on the row and the dedup path was
+not traced to it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Store</strong></p>
+<ul>
+<li><code>src/memory/store.rs</code> — <code>AccountScope</code>
+(37-47), <code>Filters</code> (85-105), clause builder (170-172),
+<code>MemoryPatch</code> (275), <code>MemoryStore</code> (528)</li>
+<li><code>src/memory/schema.rs</code> — <code>superseded_by</code> (85,
+139, 195, 241)</li>
+<li><code>src/memory/types.rs</code> — <code>Memory</code> (40), enums
+(210, 284, 338, 398)</li>
+</ul>
+<p><strong>Retrieval and maintenance</strong></p>
+<ul>
+<li><code>src/memory/hybrid.rs</code> — <code>Candidate</code> (61),
+floor tests (195-240)</li>
+<li><code>src/memory/recall.rs</code>,
+<code>src/memory/maintenance.rs</code> (45, 170)</li>
+</ul>
+<p><strong>Surfaces</strong></p>
+<ul>
+<li><code>src/http/chains.rs</code> (1-12),
+<code>src/http/memory.rs</code>, <code>src/http/mcp.rs</code>,
+<code>src/cli/mod.rs</code>, <code>src/cli/client.rs</code>,
+<code>src/daemon/</code></li>
+</ul>
+<p><strong>Specification</strong></p>
+<ul>
+<li><code>doc/memory-spec.md</code>, <code>doc/tech-spec.md</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn -iE &quot;append.only|audit|journal|history&quot; src/memory/*.rs src/update/*.rs
+grep -rn -i &quot;tombstone&quot; src/ --include=&quot;*.rs&quot;
+grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md doc/
+ls CITATION.cff</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/linggen/linggen-memory/commit/2abbd4ff8f3b847d25e49f5c2a02714dcda995e1"><code class="commit-id" title="2abbd4ff8f3b847d25e49f5c2a02714dcda995e1">2abbd4ff…</code></a>
+— first reading. Screened first: dependency manifests changed inside the
+seven-day cooldown, so nothing was installed and no test was run. One
+mark. <code>scope_enforced</code> is earned on an
+<code>AccountScope</code> enum whose <code>#[default]</code> is the
+restrictive variant, compiled into the WHERE clause as
+<code>account_id IS NULL</code>, so a caller who never sets it reads the
+owner's rows rather than everyone's. <code>negative_eval</code> is
+withheld although a non-vacuous emptiness assertion exists: it pins a
+cosine floor, which is a property of a scoring threshold rather than a
+claim that particular material must be withheld.
+<code>trust_state</code> is withheld because <code>origin</code> and
+<code>outcome</code> are provenance and result rather than epistemic
+status, and <code>tombstone</code> because <code>superseded_by</code>
+points forward from a row without keying anything on the superseded
+content.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
