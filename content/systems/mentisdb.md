@@ -7,10 +7,14 @@ page_kind: system
 source_name: "CloudLLM-ai/mentisdb"
 source_url: https://github.com/CloudLLM-ai/mentisdb
 archive_name: "CloudLLM-ai--mentisdb"
-revision: ec020f7c1f67fd6c03409c98453b217d74add475
-revision_url: https://github.com/CloudLLM-ai/mentisdb/commit/ec020f7c1f67fd6c03409c98453b217d74add475
-analyzed_at: 2026-08-15
+revision: 6e8a1429d233d68b455ceafbc83de0b59a5fea01
+revision_url: https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01
+analyzed_at: 2026-09-13
 capabilities: "bitemporal, audit_log, negative_eval"
+capability_evidence:
+  bitemporal: "the thought relation — when a fact was true, apart from when the record was appended | src/lib.rs:2201-2233, tests/invalidation_search_tests.rs:155-162 | `ThoughtRelation` carries `valid_at` and `invalid_at` as optional timestamps, serialised only when set, beside the append-only record's own `timestamp` and chain position. The read side is what makes it bitemporal rather than two spare columns: a point-in-time query takes an `as_of` instant, and `as_of_keeps_thoughts_valid_at_that_time` pins that such a query still surfaces a thought that was valid then even though it was superseded later — so the store answers what it held to be true at a past moment, not only what it holds now | tests/invalidation_search_tests.rs"
+  audit_log: "the thought chain — an append-only record whose every entry hashes its predecessor | src/lib.rs:617, :2678, :3896, :4242 | every appended record carries a `prev_hash`, and the stored hash covers the record contents plus the previous record's hash, so *\"offline tampering\"* of an earlier entry breaks every hash after it. The chain is the store's own write path rather than a sidecar, and the module is explicit that concurrent appends are the case the design has to answer. The guarantee is detection rather than prevention, which the report states where the gate is described | the chain-verification tests in the suite"
+  negative_eval: "default search — a superseded thought must not come back unless the caller asks for it | tests/invalidation_search_tests.rs:33-40, :155-162 | `default_search_excludes_superseded_thoughts` appends a thought, supersedes it, and asserts it is absent from both the default query and ranked search. It is not vacuous by construction: the same test requires the thought to reappear when `include_invalidated` is set, so the row is proven present in the store before the default path is asserted to withhold it, and the point-in-time case beside it requires the same row to surface under an `as_of` that precedes the supersession | tests/invalidation_search_tests.rs, 286 lines"
 stack_storage: "files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -183,6 +187,23 @@ files, not a database — a fact worth knowing for an operator expecting SQLite.
   updated on append (`:5005`); default `query()` drops invalidated ids
   (`:5750`, `if !query.include_invalidated && self.is_invalidated(...)`); a
   near-duplicate (Jaccard ≥ threshold) auto-attaches `Supersedes` (`:4910-4920`).
+**The skill registry has two ways to stop trusting something, and they differ in
+the way the `tombstone` definition cares about.** `revoke_skill` sets a status
+and — unlike `deprecate_skill` — is *"not automatically cleared by a subsequent
+upload to the same `skill_id`"*, deliberately: the instruction is to publish a
+corrected skill under a new id and *"leave the revoked entry as a permanent audit
+record."* A rejection that survives a re-upload to the same key is closer to this
+mark than most mechanisms in the corpus get. `delete_skill` is the other
+direction, described as *"the explicit exception to the registry's append-only
+lifecycle"* — it removes every version, and afterwards *"the same `skill_id` can
+be uploaded again as a fresh"* active skill.
+
+The mark is still withheld, on the clause that decides it: the revocation is
+keyed on the **id**, not on the content, and the documented remedy is to
+republish the same material under a different id. Nothing consults the revoked
+entry when new material arrives, so the record stops one key being reused
+untrusted rather than stopping a rejected value from returning.
+
 - **Bitemporal read** — `ThoughtRelation.valid_at`/`invalid_at` (`:2199-2210`); the
   `as_of` query param (`:3189`) and `is_invalidated_as_of` (`:8304`).
 - **Retrieval** — `query()` filter loop (`:5748`); `search/lexical.rs` BM25,
@@ -424,5 +445,7 @@ adapter is a trait waiting for one.
 - `WHITEPAPER.md` — the ledger, tamper-evidence and typing design.
 
 ## History
+
+**2026-09-13** — [`6e8a1429d233d68b455ceafbc83de0b59a5fea01`](https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01) — re-read, four commits past the previous pin across 36 files. All three marks stand and each mechanism was re-checked rather than carried forward: `valid_at` and `invalid_at` remain on the relation type in `src/lib.rs:2201-2233`, `tests/invalidation_search_tests.rs` is intact at 286 lines, and the hash-chained audit gate is unchanged. The skill registry gained a permanent delete and a documented revocation lifecycle, recorded above: revoking resists a re-upload to the same id by design, while deleting frees the id for reuse. `tombstone` stays withheld because the revocation is keyed on the id rather than the content, and the project's own instruction for a corrected skill is to publish it under a new id. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-15** — [`ec020f7c1f67fd6c03409c98453b217d74add475`](https://github.com/CloudLLM-ai/mentisdb/commit/ec020f7c1f67fd6c03409c98453b217d74add475) — first reading. Screened before opening: no auto-run surface, one build-time exec, one unpinned surface; nothing was installed or run. The SHA-256 hash chain and its refuse-to-load verification, the append-only supersession with the invalidation-set exclusion, the relation-hosted `valid_at`/`invalid_at` with `as_of`, and the Ed25519-verified skill registry were read from `src/lib.rs`, `src/server.rs` and `src/skills.rs` and cross-checked against the committed `invalidation_search_tests.rs` and the wider suite. `bitemporal`, `audit_log` and `negative_eval` are earned; `trust_state` (types and a derived set, no status field), `scope_enforced` (opt-in tag, not identity-enforced) and `tombstone` (supersession keyed on id, not value) are withheld. The two hash-excluded fields and the unverified thought signatures were confirmed in code against the whitepaper's claims. No external paper exists; a `WHITEPAPER.md` is in the tree.

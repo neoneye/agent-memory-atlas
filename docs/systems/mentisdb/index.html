@@ -112,14 +112,14 @@ registry.</p>
               <strong>CloudLLM-ai/mentisdb</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/CloudLLM-ai/mentisdb/commit/ec020f7c1f67fd6c03409c98453b217d74add475" title="ec020f7c1f67fd6c03409c98453b217d74add475">
+            <a class="meta-pill revision-pill" href="https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01" title="6e8a1429d233d68b455ceafbc83de0b59a5fea01">
               <span>Analyzed revision</span>
-              <code>ec020f7c…</code>
+              <code>6e8a1429…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CloudLLM-ai--mentisdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -322,7 +322,28 @@ a server integrity endpoint (<code>server.rs:4584</code>).</li>
 default <code>query()</code> drops invalidated ids (<code>:5750</code>,
 <code>if !query.include_invalidated &amp;&amp; self.is_invalidated(...)</code>);
 a near-duplicate (Jaccard ≥ threshold) auto-attaches
-<code>Supersedes</code> (<code>:4910-4920</code>).</li>
+<code>Supersedes</code> (<code>:4910-4920</code>). <strong>The skill
+registry has two ways to stop trusting something, and they differ in the
+way the <code>tombstone</code> definition cares about.</strong>
+<code>revoke_skill</code> sets a status and — unlike
+<code>deprecate_skill</code> — is <em>"not automatically cleared by a
+subsequent upload to the same <code>skill_id</code>"</em>, deliberately:
+the instruction is to publish a corrected skill under a new id and
+<em>"leave the revoked entry as a permanent audit record."</em> A
+rejection that survives a re-upload to the same key is closer to this
+mark than most mechanisms in the corpus get. <code>delete_skill</code>
+is the other direction, described as <em>"the explicit exception to the
+registry's append-only lifecycle"</em> — it removes every version, and
+afterwards <em>"the same <code>skill_id</code> can be uploaded again as
+a fresh"</em> active skill.</li>
+</ul>
+<p>The mark is still withheld, on the clause that decides it: the
+revocation is keyed on the <strong>id</strong>, not on the content, and
+the documented remedy is to republish the same material under a
+different id. Nothing consults the revoked entry when new material
+arrives, so the record stops one key being reused untrusted rather than
+stopping a rejected value from returning.</p>
+<ul>
 <li><strong>Bitemporal read</strong> —
 <code>ThoughtRelation.valid_at</code>/<code>invalid_at</code>
 (<code>:2199-2210</code>); the <code>as_of</code> query param
@@ -618,6 +639,21 @@ superseded/invalidated exclusion and <code>as_of</code> tests.</li>
 design.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01"><code class="commit-id" title="6e8a1429d233d68b455ceafbc83de0b59a5fea01">6e8a1429…</code></a>
+— re-read, four commits past the previous pin across 36 files. All three
+marks stand and each mechanism was re-checked rather than carried
+forward: <code>valid_at</code> and <code>invalid_at</code> remain on the
+relation type in <code>src/lib.rs:2201-2233</code>,
+<code>tests/invalidation_search_tests.rs</code> is intact at 286 lines,
+and the hash-chained audit gate is unchanged. The skill registry gained
+a permanent delete and a documented revocation lifecycle, recorded
+above: revoking resists a re-upload to the same id by design, while
+deleting frees the id for reuse. <code>tombstone</code> stays withheld
+because the revocation is keyed on the id rather than the content, and
+the project's own instruction for a corrected skill is to publish it
+under a new id. Screened again first; nothing was installed and no suite
+was run.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/CloudLLM-ai/mentisdb/commit/ec020f7c1f67fd6c03409c98453b217d74add475"><code class="commit-id" title="ec020f7c1f67fd6c03409c98453b217d74add475">ec020f7c…</code></a>
 — first reading. Screened before opening: no auto-run surface, one
