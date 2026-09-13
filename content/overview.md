@@ -7275,7 +7275,7 @@ Privacy/deletion:
 - [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d)
 - [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03)
 - [chaitanyagiri/munder-difflin](https://github.com/chaitanyagiri/munder-difflin) at [`5f7de6e464fda1345ceb6d41548ec72178e7e6d8`](https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8)
-- [imran31415/kube-coder](https://github.com/imran31415/kube-coder) at [`1a9008facf0776165c26ff8ba80ceff999b4504c`](https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c)
+- [imran31415/kube-coder](https://github.com/imran31415/kube-coder) at [`351228ad8654dbca9392f44a7fcd2d84a291fbff`](https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff)
 - [munch2u-a11y/Cognitive-Spatial-Memory](https://github.com/munch2u-a11y/Cognitive-Spatial-Memory) at [`39df03a18d202a25f4c066d662109f85128886ef`](https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d202a25f4c066d662109f85128886ef)
 - [esengine/DeepSeek-Reasonix](https://github.com/esengine/DeepSeek-Reasonix) at [`d95e2510cfb3088fb51787668b61a7982b94849b`](https://github.com/esengine/DeepSeek-Reasonix/commit/d95e2510cfb3088fb51787668b61a7982b94849b)
 - [Morephine/feltstate](https://github.com/Morephine/feltstate) at [`0f9ef23b62b65416a0cdb18d389ffa6b5af066b7`](https://github.com/Morephine/feltstate/commit/0f9ef23b62b65416a0cdb18d389ffa6b5af066b7)

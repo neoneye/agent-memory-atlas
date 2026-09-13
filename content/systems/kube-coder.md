@@ -7,9 +7,9 @@ page_kind: system
 source_name: "imran31415/kube-coder"
 source_url: https://github.com/imran31415/kube-coder
 archive_name: "imran31415--kube-coder"
-revision: 1a9008facf0776165c26ff8ba80ceff999b4504c
-revision_url: https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c
-analyzed_at: 2026-08-16
+revision: 351228ad8654dbca9392f44a7fcd2d84a291fbff
+revision_url: https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   scope_enforced: "the memory store, every retrieval arm | charts/workspace/memory/manager.py | search applies the namespaces allow-list and namespace_scope root to the FTS pass, the LIKE degradation and the ids loaded by _fetch_by_ids, so an out-of-scope hit cannot be fused back in | charts/workspace/tests/memory_scope_test.py"
@@ -323,5 +323,7 @@ library you would vendor on its own.
   `memory_pending_queue_test.py`, `memory_rollback_compat_test.py` and four more
 
 ## History
+
+**2026-09-13** — [`351228ad8654dbca9392f44a7fcd2d84a291fbff`](https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff) — re-read, 40 commits past the previous pin, and the memory subsystem is unchanged. The range touches 101 files and adds 10,544 lines across the mobile client, the dashboard SPA, the hypervisor, the orchestrator and the skills set; not one changed path contains `memory`. All four files the marks rest on — `charts/workspace/memory/manager.py` for `scope_enforced` and `audit_log`, `charts/workspace/web/src/routes/memory/index.tsx` for `human_review`, and `charts/workspace/tests/memory_scope_test.py` for `negative_eval` — are byte-identical, checked by diff. All four marks stand. Screened again first: no auto-run surface, one build-time execution surface and two unpinned dependency surfaces; nothing was installed and no suite was run.
 
 **2026-08-16** — [`1a9008facf0776165c26ff8ba80ceff999b4504c`](https://github.com/imran31415/kube-coder/commit/1a9008facf0776165c26ff8ba80ceff999b4504c) — First reading, at 752 commits. Screened first: 0 auto-run surfaces, 1 build-time execution path (`Makefile`), 6 manifests inside the seven-day cooldown; nothing was installed, built or run. Four marks — `scope_enforced`, `audit_log`, `human_review`, `negative_eval`. Three withheld and stated in place: no epistemic status (`confidence` is a ranking float), no validity time separate from record time, and no rejected-value tombstone — `soft_delete` writes the removal into `memory_history` and `upsert` sets `deleted_at=NULL` without consulting it, so re-writing the same `(namespace, key)` revives a deleted memory. No paper; the linked `kubecoder-bench` measures the agent rather than the memory.
