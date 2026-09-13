@@ -7272,7 +7272,7 @@ Privacy/deletion:
 - [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`3cc70160deb0eda7f67fbf5b0c0780000f5c342d`](https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d)
 - [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`fbbbfb16d68d66dc1ff029a9c06844d3b900e29d`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d)
 - [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`0303dc0066e0c071c8468536acc6219c183e2f97`](https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97)
-- [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d)
+- [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`d84f9235a69d45a4fe326aaa691ad024699d0daa`](https://github.com/noamschwartz/atlas-memory-demo/commit/d84f9235a69d45a4fe326aaa691ad024699d0daa)
 - [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03)
 - [chaitanyagiri/munder-difflin](https://github.com/chaitanyagiri/munder-difflin) at [`5f7de6e464fda1345ceb6d41548ec72178e7e6d8`](https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8)
 - [imran31415/kube-coder](https://github.com/imran31415/kube-coder) at [`351228ad8654dbca9392f44a7fcd2d84a291fbff`](https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff)

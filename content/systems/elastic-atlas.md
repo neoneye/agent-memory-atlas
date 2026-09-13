@@ -7,10 +7,12 @@ page_kind: system
 source_name: noamschwartz/atlas-memory-demo
 source_url: https://github.com/noamschwartz/atlas-memory-demo
 archive_name: "noamschwartz--atlas-memory-demo"
-revision: 0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
-revision_url: https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d
-analyzed_at: 2026-07-28
+revision: d84f9235a69d45a4fe326aaa691ad024699d0daa
+revision_url: https://github.com/noamschwartz/atlas-memory-demo/commit/d84f9235a69d45a4fe326aaa691ad024699d0daa
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "recall — `user_id` as a stored field AND-ed into the query rather than a label on the row | backend/app/atlas/memory/operations.py, backend/app/atlas/consolidate.py | every memory document carries `user_id` for persona isolation across the three indices, and recall filters on it: the RRF pass over BM25 and semantic is issued against the owning persona's `user_id`, so one persona's facts are not reachable from another's recall. The same key scopes consolidation, which resolves candidates against existing facts for that user only | backend/tests"
 stack_storage: "elastic"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -283,5 +285,7 @@ Read the eval scripts first; they are the most transferable part.
 - Model and index description: `ATLAS.md`.
 
 ## History
+
+**2026-09-13** — [`d84f9235a69d45a4fe326aaa691ad024699d0daa`](https://github.com/noamschwartz/atlas-memory-demo/commit/d84f9235a69d45a4fe326aaa691ad024699d0daa) — re-read, three commits past the previous pin, all of them on the memory path. The mark stands and its evidence is now recorded. Two additions are worth naming. `fact_type` gained validation on write, and the test file states the gap it closed exactly: facts typed `identity` or `constraint` are *"injected into the system prompt on every future turn"*, and while the agent's tool schema constrains the value with a JSON enum, consolidation handed `write_memory` the extractor's raw JSON, so *"an invented or misspelled type reached the index unchallenged"* — one gate on one caller, and a second write path around it. And consolidation gained retrieval-backed deduplication, whose reasoning is the useful part: the recency slice it previously compared against is a window, so *"the fact one position past it is invisible to the extractor"*; checking each candidate against its nearest existing facts by meaning rather than age removes that cliff and *"catches contradictions that share no vocabulary with the fact they contradict"*. The pass returns dropped duplicates and facts it attached a `supersedes_id` the extractor missed — supersession rather than a rejected-value record, so `tombstone` stays withheld, and `fact_type` is a genre rather than an epistemic status, so `trust_state` does too. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-28** — [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d) — first reading.
