@@ -109,14 +109,14 @@ backends.</p>
               <strong>cognicore-dev/cognicore-env</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/cognicore-dev/cognicore-env/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46" title="4f6bd9d0c8e4c6050504a47eb027791875043d46">
+            <a class="meta-pill revision-pill" href="https://github.com/cognicore-dev/cognicore-env/commit/cfe1fd11e08b2be9774789ce7f11f15c6083c87e" title="cfe1fd11e08b2be9774789ce7f11f15c6083c87e">
               <span>Analyzed revision</span>
-              <code>4f6bd9d0…</code>
+              <code>cfe1fd11…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-21</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cognicore-dev--cognicore-env" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -387,6 +387,26 @@ float.</p>
 an <code>openenv.yaml</code> manifest. The breadth is unusual for a
 memory library and reflects that this is packaged as an environment
 rather than as a dependency.</p>
+<p><code>cognicore/integrations/chatgpt.py</code> adds a hosted surface
+with Supabase-backed auth beside it, and one of its tools is worth
+reading for how it states its own limits.
+<code>cognicore_delete_all_data</code> is a right-to-erasure path: it
+authenticates <em>"exclusively through the validated Context/sub
+claim"</em>, deletes the user's logical records from an isolated
+per-tenant SQLite database, runs <code>VACUUM</code>, and attempts
+physical removal of the database, WAL and SHM files. Two of its six
+documented behaviours are refusals to overclaim — it <em>"does not
+silently claim physical deletion succeeded if the OS prevents it"</em>,
+and its closing note says <code>VACUUM</code> <em>"does not guarantee
+cryptographic erasure of physical disk sectors"</em> and that standard
+file deletion leaves filesystem snapshots, backups and storage-level
+copies untouched. That is a deletion feature describing the space
+between what it does and what a reader might assume it does, which is
+rarer than the feature.</p>
+<p>It is not a tombstone, and the distinction is the usual one: it
+erases a user's records wholesale rather than recording that a
+particular value was rejected, so nothing stops the same content being
+written again.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong><code>trust_state</code> — earned.</strong> A discrete
@@ -566,6 +586,23 @@ strategies, reflections</li>
 <code>analyze_verdicts.py</code>, <code>results/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/cognicore-dev/cognicore-env/commit/cfe1fd11e08b2be9774789ce7f11f15c6083c87e"><code class="commit-id" title="cfe1fd11e08b2be9774789ce7f11f15c6083c87e">cfe1fd11…</code></a>
+— re-read, 23 commits past the previous pin. Both marks stand, and all
+three files they rest on — <code>cognicore/memory/base.py</code>,
+<code>sqlite_backend.py</code> and <code>scoped.py</code> — are
+byte-identical across the range, checked by diff. The work is in
+<code>cognicore/integrations/</code>: a hosted ChatGPT surface with
+Supabase auth, OAuth authorize, token and register proxy endpoints for
+MCP client auto-registration, secured remote MCP transport routes, and
+deployment configs for three hosts. A
+<code>cognicore_delete_all_data</code> erasure tool arrives with it, and
+section 8 records what it refuses to claim rather than what it claims.
+<code>tombstone</code> stays withheld: wholesale erasure of a user's
+records is not a record of a rejected value, and nothing prevents the
+same content being written again. Screened again first: two auto-run
+surfaces, one build-time execution surface and two unpinned dependency
+surfaces; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>cognicore-dev/cognicore-my-openenv</code> to
 <code>cognicore-dev/cognicore-env</code>, upstream of the pinned commit

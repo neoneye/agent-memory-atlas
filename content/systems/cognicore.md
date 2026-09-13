@@ -7,9 +7,9 @@ page_kind: system
 source_name: "cognicore-dev/cognicore-env"
 source_url: https://github.com/cognicore-dev/cognicore-env
 archive_name: "cognicore-dev--cognicore-env"
-revision: 4f6bd9d0c8e4c6050504a47eb027791875043d46
-revision_url: https://github.com/cognicore-dev/cognicore-env/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46
-analyzed_at: 2026-08-21
+revision: cfe1fd11e08b2be9774789ce7f11f15c6083c87e
+revision_url: https://github.com/cognicore-dev/cognicore-env/commit/cfe1fd11e08b2be9774789ce7f11f15c6083c87e
+analyzed_at: 2026-09-13
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
   trust_state: "the memory entry, defaulted at the schema rather than assigned by a writer | cognicore/memory/base.py:145, cognicore/memory/sqlite_backend.py:48 | `state TEXT DEFAULT 'candidate'` in the DDL and `state: str = \"candidate\"` on the dataclass, moving through `verified`, `active` and `archived`. It is consulted rather than displayed: `sqlite_backend.py:588` counts only entries `WHERE state NOT IN ('archived', 'deleted')` and `:643` applies the same predicate to the category read before its `LIMIT`, so an archived entry is withheld from retrieval rather than merely marked. A separate `correct` flag and eight outcome counters sit on a different axis | tests/test_memory.py, tests/test_advanced_memory.py"
@@ -236,6 +236,24 @@ and UI server (`cognicore/ui/server.py`, `dashboard.html`), and an `openenv.yaml
 manifest. The breadth is unusual for a memory library and reflects that this is
 packaged as an environment rather than as a dependency.
 
+`cognicore/integrations/chatgpt.py` adds a hosted surface with Supabase-backed
+auth beside it, and one of its tools is worth reading for how it states its own
+limits. `cognicore_delete_all_data` is a right-to-erasure path: it authenticates
+*"exclusively through the validated Context/sub claim"*, deletes the user's
+logical records from an isolated per-tenant SQLite database, runs `VACUUM`, and
+attempts physical removal of the database, WAL and SHM files. Two of its six
+documented behaviours are refusals to overclaim — it *"does not silently claim
+physical deletion succeeded if the OS prevents it"*, and its closing note says
+`VACUUM` *"does not guarantee cryptographic erasure of physical disk sectors"*
+and that standard file deletion leaves filesystem snapshots, backups and
+storage-level copies untouched. That is a deletion feature describing the space
+between what it does and what a reader might assume it does, which is rarer than
+the feature.
+
+It is not a tombstone, and the distinction is the usual one: it erases a user's
+records wholesale rather than recording that a particular value was rejected, so
+nothing stops the same content being written again.
+
 ## 9. Reliability, Safety, and Trust
 
 **`trust_state` — earned.** A discrete `state` column defaulting to `candidate`,
@@ -385,6 +403,8 @@ environment with a benchmark programme and a paper directory attached.
   `run_reranking_benchmark.py`, `analyze_verdicts.py`, `results/`
 
 ## History
+
+**2026-09-13** — [`cfe1fd11e08b2be9774789ce7f11f15c6083c87e`](https://github.com/cognicore-dev/cognicore-env/commit/cfe1fd11e08b2be9774789ce7f11f15c6083c87e) — re-read, 23 commits past the previous pin. Both marks stand, and all three files they rest on — `cognicore/memory/base.py`, `sqlite_backend.py` and `scoped.py` — are byte-identical across the range, checked by diff. The work is in `cognicore/integrations/`: a hosted ChatGPT surface with Supabase auth, OAuth authorize, token and register proxy endpoints for MCP client auto-registration, secured remote MCP transport routes, and deployment configs for three hosts. A `cognicore_delete_all_data` erasure tool arrives with it, and section 8 records what it refuses to claim rather than what it claims. `tombstone` stays withheld: wholesale erasure of a user's records is not a record of a rejected value, and nothing prevents the same content being written again. Screened again first: two auto-run surfaces, one build-time execution surface and two unpinned dependency surfaces; nothing was installed and no suite was run.
 
 **2026-09-13** — the repository was renamed from `cognicore-dev/cognicore-my-openenv` to `cognicore-dev/cognicore-env`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/cognicore-dev--cognicore-env` to match.
 
