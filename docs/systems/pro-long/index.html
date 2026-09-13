@@ -110,14 +110,14 @@ budget-matched rerun that cuts its own headline.</p>
               <strong>alexisfox7/PRO-LONG</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/alexisfox7/PRO-LONG/commit/e30ac528c68b66abd68c802424d3724a85e927a8" title="e30ac528c68b66abd68c802424d3724a85e927a8">
+            <a class="meta-pill revision-pill" href="https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4" title="9d2f2d46fea8759ed494ce5b0166c7004a2e97c4">
               <span>Analyzed revision</span>
-              <code>e30ac528…</code>
+              <code>9d2f2d46…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-12</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alexisfox7--PRO-LONG" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -243,10 +243,27 @@ flowchart TD
   SB -.-&gt;|&quot;agent bytes inflate the offset,&lt;br/&gt;so the next sync skips real log&quot;| GAP[&quot;history the agent never receives&lt;br/&gt;— no checksum, no warning&quot;]
   AGENT --&gt;|&quot;actions.json&quot;| ENV</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
+<p><strong>The repository holds two things, and only one is the
+paper's.</strong> The ARC-AGI-3 agent the rest of this report describes
+lives under <code>research/arc-agi-3/</code>. Beside it is a second,
+smaller product: <code>src/</code> is a TypeScript installer that wires
+an append-only <code>.prolong/log.jsonl</code> into a coding CLI —
+Claude Code, opencode, pi and an OpenAI agent each get a template — and
+ships a skill telling the agent to treat that file as external memory,
+retrieved with <code>rg</code>, <code>tail</code> and <code>jq</code>
+rather than through any index.</p>
+<p>It is worth reading for one instruction, which is the kind of thing
+most skills omit: after recovering history, <em>"verify old observations
+against the current workspace before acting on them."</em> A log of what
+happened is not a claim about what is true now, and the skill says so to
+the agent that will read it.</p>
+<p>The log is the memory rather than a record of changes to one, so it
+earns no <code>audit_log</code>; there is no scope key, no status field
+and no second clock, so the rest stay withheld too.</p>
 <p>Two backends implement one interface.
-<code>prolong_agent/agent/base.py</code> (190 lines) holds session-state
-persistence, <code>actions.json</code> parsing and the truncation
-helper; <code>claude_code_agent.py</code> (847 lines) and
+<code>research/arc-agi-3/prolong_agent/agent/base.py</code> (191 lines)
+holds session-state persistence, <code>actions.json</code> parsing and
+the truncation helper; <code>claude_code_agent.py</code> (847 lines) and
 <code>codex_agent.py</code> (1,063 lines) each drive a headless coding
 agent inside a Docker container.</p>
 <ul>
@@ -579,12 +596,15 @@ part is 200 lines and an idea.</p>
 <li><strong>The sync-offset defect</strong>, above. The highest-severity
 item, because it degrades the memory rather than breaking it: an agent
 gets a log with a hole in it and cannot tell.</li>
-<li><strong>No tombstone, and the word is taken.</strong>
-<code>consume_clear_tombstone</code> in <code>base.py:97</code> marks
-that a <em>session</em> was cleared. Nothing anywhere is keyed on a
+<li><strong>No tombstone.</strong> Nothing anywhere is keyed on a
 rejected value, so an agent that writes a refuted hypothesis into
 <code>notes.md</code> and later re-reads it has no mechanism preventing
-the mistake from returning.</li>
+the mistake from returning. The nearest thing the repository ever had
+was <code>consume_clear_tombstone</code>, which marked that a
+<em>session</em> had been cleared rather than that a claim was wrong; it
+and its <code>clear_session</code> partner were removed in favour of a
+<code>_clear_files</code> helper, and the word no longer appears in the
+tree.</li>
 <li><strong>Belief and observation in one undifferentiated
 stream.</strong> The <code>[PLAN]</code> blocks the harness folds into
 the log are the agent's own guesses, stored beside board states with no
@@ -637,40 +657,40 @@ they stay so.</li>
 </thead>
 <tbody>
 <tr>
-<td><code>prolong_agent/agent/base.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/agent/base.py</code></td>
 <td>Session state, <code>actions.json</code> parsing,
 <code>_copy_truncated_log</code>,
 <code>consume_clear_tombstone</code></td>
 </tr>
 <tr>
-<td><code>prolong_agent/agent/claude_code_agent.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/agent/claude_code_agent.py</code></td>
 <td>Claude Code backend, container pool, the incremental sync at line
 509</td>
 </tr>
 <tr>
-<td><code>prolong_agent/agent/codex_agent.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/agent/codex_agent.py</code></td>
 <td>Codex backend, duplicate truncation helper, the stateless wipe</td>
 </tr>
 <tr>
-<td><code>prolong_agent/agent/prompts.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/agent/prompts.py</code></td>
 <td>Both system prompts and the four user-prompt templates</td>
 </tr>
 <tr>
-<td><code>prolong_agent/agent/swarm.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/agent/swarm.py</code></td>
 <td>CLI, including <code>--log-window</code>, <code>--workspace</code>,
 <code>--baseline</code></td>
 </tr>
 <tr>
-<td><code>prolong_agent/environment/runner.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/environment/runner.py</code></td>
 <td>The turn loop, <code>_log_action</code>, the <code>--resume</code>
 replay</td>
 </tr>
 <tr>
-<td><code>prolong_agent/utils/log_parser.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/utils/log_parser.py</code></td>
 <td>Reconstructs executed actions from the log's own text</td>
 </tr>
 <tr>
-<td><code>prolong_agent/utils/sandbox_net.py</code></td>
+<td><code>research/arc-agi-3/prolong_agent/utils/sandbox_net.py</code></td>
 <td>Network isolation for the agent container</td>
 </tr>
 <tr>
@@ -689,6 +709,24 @@ replay</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4"><code class="commit-id" title="9d2f2d46fea8759ed494ce5b0166c7004a2e97c4">9d2f2d46…</code></a>
+— re-read, 18 commits past the previous pin and a restructuring: 256
+files changed, 3,709 lines added against 9,841 removed. The ARC-AGI-3
+implementation moved wholesale under <code>research/arc-agi-3/</code>,
+so every path in the appendix gained that prefix, and a TypeScript
+installer for coding CLIs arrived beside it, described in section 4. Two
+published claims are corrected. <code>consume_clear_tombstone</code> at
+<code>base.py:97</code> no longer exists — it and
+<code>clear_session</code> were replaced by a <code>_clear_files</code>
+helper, and the word <code>tombstone</code> appears nowhere in the tree
+— so the observation that the word was taken for session-clearing is
+recorded as the repository's own history rather than as current state.
+The mark itself is unaffected: nothing is keyed on a rejected value, and
+<code>capabilities</code> stays empty. The paper the report already
+cites, <a href="https://arxiv.org/abs/2607.20064">arXiv:2607.20064</a>,
+now has a <code>CITATION.cff</code> and a README badge beside it.
+Screened again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-08-12</strong> — <a
 href="https://github.com/alexisfox7/PRO-LONG/commit/e30ac528c68b66abd68c802424d3724a85e927a8"><code class="commit-id" title="e30ac528c68b66abd68c802424d3724a85e927a8">e30ac528…</code></a>
 — first reading. The screen reported one auto-run surface, an empty

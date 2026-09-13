@@ -7,9 +7,9 @@ page_kind: system
 source_name: "alexisfox7/PRO-LONG"
 source_url: https://github.com/alexisfox7/PRO-LONG
 archive_name: "alexisfox7--PRO-LONG"
-revision: e30ac528c68b66abd68c802424d3724a85e927a8
-revision_url: https://github.com/alexisfox7/PRO-LONG/commit/e30ac528c68b66abd68c802424d3724a85e927a8
-analyzed_at: 2026-08-12
+revision: 9d2f2d46fea8759ed494ce5b0166c7004a2e97c4
+revision_url: https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4
+analyzed_at: 2026-09-13
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -137,7 +137,24 @@ flowchart TD
 
 ## 3. Architecture
 
-Two backends implement one interface. `prolong_agent/agent/base.py` (190 lines)
+**The repository holds two things, and only one is the paper's.** The ARC-AGI-3
+agent the rest of this report describes lives under `research/arc-agi-3/`.
+Beside it is a second, smaller product: `src/` is a TypeScript installer that
+wires an append-only `.prolong/log.jsonl` into a coding CLI — Claude Code,
+opencode, pi and an OpenAI agent each get a template — and ships a skill telling
+the agent to treat that file as external memory, retrieved with `rg`, `tail` and
+`jq` rather than through any index.
+
+It is worth reading for one instruction, which is the kind of thing most skills
+omit: after recovering history, *"verify old observations against the current
+workspace before acting on them."* A log of what happened is not a claim about
+what is true now, and the skill says so to the agent that will read it.
+
+The log is the memory rather than a record of changes to one, so it earns no
+`audit_log`; there is no scope key, no status field and no second clock, so the
+rest stay withheld too.
+
+Two backends implement one interface. `research/arc-agi-3/prolong_agent/agent/base.py` (191 lines)
 holds session-state persistence, `actions.json` parsing and the truncation
 helper; `claude_code_agent.py` (847 lines) and `codex_agent.py` (1,063 lines)
 each drive a headless coding agent inside a Docker container.
@@ -404,10 +421,13 @@ API key, and the transferable part is 200 lines and an idea.
 - **The sync-offset defect**, above. The highest-severity item, because it
   degrades the memory rather than breaking it: an agent gets a log with a hole in
   it and cannot tell.
-- **No tombstone, and the word is taken.** `consume_clear_tombstone` in
-  `base.py:97` marks that a *session* was cleared. Nothing anywhere is keyed on a
-  rejected value, so an agent that writes a refuted hypothesis into `notes.md`
-  and later re-reads it has no mechanism preventing the mistake from returning.
+- **No tombstone.** Nothing anywhere is keyed on a rejected value, so an agent
+  that writes a refuted hypothesis into `notes.md` and later re-reads it has no
+  mechanism preventing the mistake from returning. The nearest thing the
+  repository ever had was `consume_clear_tombstone`, which marked that a
+  *session* had been cleared rather than that a claim was wrong; it and its
+  `clear_session` partner were removed in favour of a `_clear_files` helper, and
+  the word no longer appears in the tree.
 - **Belief and observation in one undifferentiated stream.** The `[PLAN]` blocks
   the harness folds into the log are the agent's own guesses, stored beside board
   states with no marker.
@@ -450,18 +470,20 @@ demands isolation, not because the memory does.
 
 | Path | What it holds |
 | --- | --- |
-| `prolong_agent/agent/base.py` | Session state, `actions.json` parsing, `_copy_truncated_log`, `consume_clear_tombstone` |
-| `prolong_agent/agent/claude_code_agent.py` | Claude Code backend, container pool, the incremental sync at line 509 |
-| `prolong_agent/agent/codex_agent.py` | Codex backend, duplicate truncation helper, the stateless wipe |
-| `prolong_agent/agent/prompts.py` | Both system prompts and the four user-prompt templates |
-| `prolong_agent/agent/swarm.py` | CLI, including `--log-window`, `--workspace`, `--baseline` |
-| `prolong_agent/environment/runner.py` | The turn loop, `_log_action`, the `--resume` replay |
-| `prolong_agent/utils/log_parser.py` | Reconstructs executed actions from the log's own text |
-| `prolong_agent/utils/sandbox_net.py` | Network isolation for the agent container |
+| `research/arc-agi-3/prolong_agent/agent/base.py` | Session state, `actions.json` parsing, `_copy_truncated_log`, `consume_clear_tombstone` |
+| `research/arc-agi-3/prolong_agent/agent/claude_code_agent.py` | Claude Code backend, container pool, the incremental sync at line 509 |
+| `research/arc-agi-3/prolong_agent/agent/codex_agent.py` | Codex backend, duplicate truncation helper, the stateless wipe |
+| `research/arc-agi-3/prolong_agent/agent/prompts.py` | Both system prompts and the four user-prompt templates |
+| `research/arc-agi-3/prolong_agent/agent/swarm.py` | CLI, including `--log-window`, `--workspace`, `--baseline` |
+| `research/arc-agi-3/prolong_agent/environment/runner.py` | The turn loop, `_log_action`, the `--resume` replay |
+| `research/arc-agi-3/prolong_agent/utils/log_parser.py` | Reconstructs executed actions from the log's own text |
+| `research/arc-agi-3/prolong_agent/utils/sandbox_net.py` | Network isolation for the agent container |
 | `scorecards/` | Four committed result files, including the 500-action rerun |
 | `release_logs/` | 25 full workspaces — `logs.txt`, `notes.md`, `actions.json`, `CLAUDE.md` |
 | `environment_files/` | Three games committed for offline runs |
 
 ## History
+
+**2026-09-13** — [`9d2f2d46fea8759ed494ce5b0166c7004a2e97c4`](https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4) — re-read, 18 commits past the previous pin and a restructuring: 256 files changed, 3,709 lines added against 9,841 removed. The ARC-AGI-3 implementation moved wholesale under `research/arc-agi-3/`, so every path in the appendix gained that prefix, and a TypeScript installer for coding CLIs arrived beside it, described in section 4. Two published claims are corrected. `consume_clear_tombstone` at `base.py:97` no longer exists — it and `clear_session` were replaced by a `_clear_files` helper, and the word `tombstone` appears nowhere in the tree — so the observation that the word was taken for session-clearing is recorded as the repository's own history rather than as current state. The mark itself is unaffected: nothing is keyed on a rejected value, and `capabilities` stays empty. The paper the report already cites, [arXiv:2607.20064](https://arxiv.org/abs/2607.20064), now has a `CITATION.cff` and a README badge beside it. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-12** — [`e30ac528c68b66abd68c802424d3724a85e927a8`](https://github.com/alexisfox7/PRO-LONG/commit/e30ac528c68b66abd68c802424d3724a85e927a8) — first reading. The screen reported one auto-run surface, an empty `.gitmodules`, and a `uv.lock` unchanged for 158 days; nothing was installed and nothing in the tree was executed. The sync defect in section 9 was verified by re-deriving the routine over a scratch file pair, without importing the repository, and then checked against the 25 committed runs — in every one the agent's `workspace/logs.txt` is an exact byte prefix of the host master, so the defect is latent rather than realised.
