@@ -7,9 +7,9 @@ page_kind: system
 source_name: "RuneLind/muninn"
 source_url: https://github.com/RuneLind/muninn
 archive_name: "RuneLind--muninn"
-revision: 6cc58ebdf2f82707488a8ed7f021b20987bef925
-revision_url: https://github.com/RuneLind/muninn/commit/6cc58ebdf2f82707488a8ed7f021b20987bef925
-analyzed_at: 2026-08-20
+revision: d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736
+revision_url: https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736
+analyzed_at: 2026-09-13
 capabilities: "trust_state, scope_enforced, human_review, negative_eval"
 capability_evidence:
   trust_state: "the wiki proposal, not the extracted memory | db/init.sql (`wiki_proposals`), src/db/wiki-proposals.ts, src/gardener/apply.ts | `wiki_proposals.status` is `draft|approved|applied|rejected|stale|error` with a `resolved_at` timestamp — a candidate a person approves or rejects, an applied state meaning it became a page, and `stale`, which `apply.ts` returns when `sha256(current) !== proposal.baseHash` because *\"the target file must be exactly as it was at draft time\"*. A partial unique index over `status IN ('draft','approved')` stops two live proposals for the same topic. The `memories` table carries no status column at all, so the mark covers the drafted-knowledge tier and not the extracted one | src/gardener/apply.test.ts"
@@ -273,6 +273,51 @@ with personal and shared counts and recent tags, and a search. The one place a
 person can change what the system believes is the gardener queue, which is about
 wiki pages.
 
+### Choosing the scope key, and writing down why
+
+`src/db/user-identities.ts` maps an Entra session onto a `users` row, and it is
+the clearest statement in this corpus of a question most scoped stores never
+answer out loud: *which claim is safe to key on.*
+
+The answer is one claim and the reasoning is in the file. `oid` is used because
+it is *"the only claim immutable for a person within a tenant."* `NAVident` is
+explicitly refused as a key — it *"is re-issued when someone leaves and a new
+hire takes the ident"*, so *"keying on it would eventually resolve two different
+humans to one account"* — and is kept as a mutable refreshed column used only to
+mint a readable id the first time. `tenant` is *"provenance, never a check"*,
+written verbatim and deliberately not compared against the token's own `tid`.
+
+This matters to `scope_enforced` in a way the mark itself cannot express. The
+mark certifies that a stored key reaches the query; it says nothing about whether
+the key identifies who it claims to. A boundary keyed on a recycled employee
+number is enforced exactly as diligently as one keyed on an immutable subject id,
+and leaks anyway, one resignation at a time. Every scoped store in this atlas has
+made this choice; this is one of the few that records it.
+
+### A dashboard read path, scoped by argument
+
+`dashboardSearchMemories` arrived with a dashboard redesign and takes `botName`
+and `scope` as optional parameters, threading them into `buildSearchFilters`.
+`getMemoriesByUser(botName?)` has the same shape: with a bot name it filters
+`WHERE m.bot_name = $1`, without one it does not. The route at
+`src/dashboard/routes/memsearch-routes.ts:33` passes both through from the
+request.
+
+That is a different arrangement from the one the mark rests on. `searchMemories`
+takes `userId` as a mandatory first positional argument, so the per-user
+predicate cannot be omitted by forgetting a parameter; the dashboard path's
+predicates can be. An operator console that can see across bots is a defensible
+product decision — the point is that the two surfaces enforce by different means,
+and only one is structural.
+
+The file says as much about itself. The comment above the `shared` branch notes
+it is a **cross-user read**, narrowed in `searchMemories` *"AND in
+`searchMemoriesHybrid` below: this function is the no-embedding fallback the
+hybrid one delegates to, so a fix applied to only one of them is inert on exactly
+the path that happens to be taken. That split is this repo's documented recurring
+failure class."* A project that names its own recurring failure class, in the
+file where it recurs, is doing something most of this corpus does not.
+
 ## 9. Reliability, Safety, and Trust
 
 **Scope — awarded**, per section 6, and it is enforced in the place that is easy
@@ -492,5 +537,9 @@ it is a choice about which writes deserved governance, and it went the wrong way
 | `src/dashboard/routes/wiki-gardener-routes.ts` | The approve/reject surface and the guarded-versus-unguarded asymmetry |
 
 ## History
+
+**2026-09-13** — [`d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736`](https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736) — 90 commits and about 128,000 added lines, most of it a YouTube summarizer unrelated to memory. All four marks re-verified. The report's finding holds unchanged: `src/db/memories.ts` still exposes no delete of any kind — `saveMemory`, four read paths, an embedding backfill and statistics — so the extracted tier is still written by a model with no review and no way to remove a row, beside a wiki tier where every draft is proposed and applied under review.
+
+Two additions are recorded above: `src/db/user-identities.ts`, which keys identity on `oid` alone and writes down why a re-issued employee number is unsafe as a key, and a dashboard search path whose bot and scope predicates are optional arguments where `searchMemories` takes its user id as a mandatory positional. The screen reports a new `RUNS` finding that was not present at the previous pin: `.claude/settings.json` registers a `PreToolUse` hook running `bash -c` against the proposed tool command. Nothing was installed and no hook was registered; the dependency manifest changed three days before the pin, inside the cooldown, and carries fifteen floating ranges with no lockfile beside it.
 
 **2026-08-20** — [`6cc58ebdf2f82707488a8ed7f021b20987bef925`](https://github.com/RuneLind/muninn/commit/6cc58ebdf2f82707488a8ed7f021b20987bef925) — first reading. Screened before anything was read: one auto-run surface (`.claude/settings.json`), no build-time execution, one unpinned surface, one file inside the seven-day cooldown; nothing was installed, no database was started and no test was run. `db/init.sql` and all 65 migrations were read before any absence claim about storage was written, which is how the `wiki_proposals` state machine and the `benchmark_retrieval_runs` table were found. Marks: `scope_enforced` and `negative_eval` on the memory tier, `trust_state` and `human_review` on the wiki tier — the split is the report's central finding rather than an accounting detail.
