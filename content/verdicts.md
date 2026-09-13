@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 451 reports.**
+**This page covers all 452 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3953,3 +3953,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: about 54,200 lines of Rust against 16,100 in 74 test files holding 454 cases, oxigraph over one N-Quads file per tier, a tree-sitter pass over 29 grammars, a Svelte dashboard, version 0.15.2. Licensed FSL-1.1-ALv2 — source-available with an Apache-2.0 future licence, which is why the API reports `NOASSERTION`. One stale header: `scope.rs` still calls itself a dormant primitive with zero non-test callers, and `crud/project.rs` calls it.
 - Study when: you want a structured workspace graph pushed into an agent's turn at hook moments rather than fetched on request, or a worked RDF supersession chain with its failure modes written down.
 - Do not copy when: you need a tenant boundary inside one tier, a correction that survives the same fact being learned again, or an epistemic status a reader can act on.
+
+### [`xerj`](../systems/xerj/)
+- Best idea: two clocks filled from genuinely different sources — an edge's `valid_at` is the source file's mtime and its `created_at` is the indexing run's wall clock, so the bitemporal record answers a question rather than storing one number twice.
+- Biggest risk: invalidation is keyed on an `edge_id` that hashes `valid_at` into itself, so saving the source file re-teaches the same claim under an id the invalidation never covered, and the rejection stays on disk describing an identity nothing will compute again.
+- Most reusable component: `brain_is_a_security_boundary.rs`, which walks every door that reaches the backing index — the generic ES surface, the native router and the percent-encoded spelling — on the premise that an access check on the feature-named handler alone is a boundary that only looks like one.
+- Maturity impression: Apache-2.0, about 380,000 lines of Rust across sixteen crates shipping as one static binary, with the memory API a 2,306-line adapter over the engine's own search paths and a module doc that states its audit log's coverage gaps in the file that implements it.
+- Study when: a search node is already in the architecture and you would otherwise run a vector database beside it, or you want a worked example of a bitemporal edge schema.
+- Do not copy when: memories need epistemic state, review or a durable rejection — that machinery lives on the edges here, and it is keyed on an identity a text editor can change.

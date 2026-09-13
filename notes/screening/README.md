@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 336 of 451 screened at the report's current pin.**
+**Progress: 337 of 452 screened at the report's current pin.**
 
 11 further record(s) describe a revision the report has since moved
 off, and 104 report(s) have no record at all.
@@ -18,8 +18,8 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 135 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 171 |
-| Repositories with build-time execution (`EXEC`) | 249 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 172 |
+| Repositories with build-time execution (`EXEC`) | 250 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
