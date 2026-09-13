@@ -7,9 +7,9 @@ page_kind: system
 source_name: ctxr-dev/llm-wiki-memory
 source_url: https://github.com/ctxr-dev/llm-wiki-memory
 archive_name: "ctxr-dev--llm-wiki-memory"
-revision: 1e315b196212e0130117817512affac2fa95ae1c
-revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/1e315b196212e0130117817512affac2fa95ae1c
-analyzed_at: 2026-08-20
+revision: 4e7f98f3851ca51a8159852aff57a2512794a877
+revision_url: https://github.com/ctxr-dev/llm-wiki-memory/commit/4e7f98f3851ca51a8159852aff57a2512794a877
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, human_review"
 capability_evidence:
   scope_enforced: "every MCP tool, on the read path | mcp-server/, scripts/lib/wiki-store.mjs | every tool requires a `scopes` argument and every write requires an explicit target, so a read resolves against a named private-plus-repository chain rather than a default, and an unscoped read is not expressible through the surface | test/cli-scopes.test.mjs, test/wire-memory-surfaces.test.mjs"
@@ -26,7 +26,7 @@ matrix:
   scoping: "Private brain plus explicit repository wiki levels; workspace/area/task/subject facets"
   integration: "MCP, CLI, Claude Code lifecycle hooks, shared instructions, and a local web app that edits through the engine"
   background: "Detached flush, daily compile, opt-in consolidation, cron healing, git/cache maintenance"
-  trust: "Body hash, capture audit, git history, user-gated lessons, and a fail-closed quality judge whose `memory.quality: unverified` marker no read path consults; no candidate/verified/rejected state"
+  trust: "Body hash, capture audit, git history, user-gated lessons, and a fail-closed quality judge whose `memory.quality: unverified` marker the code itself calls a reserved affordance — preserved on every write, consulted by no read; no candidate/verified/rejected state"
   strengths: "Recoverable capture, explicit targets, deterministic layout/topology, excellent operational tests"
   risks: "LLM atoms become active without verification; the one epistemic marker has four writers and no reader; vector-only primary retrieval; linear scans; git is not erasure"
 ---
@@ -120,6 +120,17 @@ Deployment assumes Node.js 20+, a local filesystem, the npm dependency, an optio
 - `mcp-server/tools-write.mjs` registers `save_lesson`, `save_to_dataset`, and `write_memory`; `mcp-server/tools-absorb.mjs` registers `absorb_document`.
 - `mcp-server/mcp-scopes.mjs` creates the active federated wiki context from required `scopes`.
 - `scripts/lib/context/write.mjs` parses a strict nested write request; `scripts/lib/context/target.mjs` requires an explicit target.
+**The write gates run in a stated order, and the reason is given in both
+directions.** `runWriteGates` in `mcp-server/mcp-write-dispatch.mjs` runs the L3
+consent gate, then the inline-body size bound, then the quality judge. Consent is
+first because *"a gated write with no consent must be refused and audited as a
+consent violation whatever else is wrong with it"* — a refusal that would
+otherwise be reported as a size or quality problem when the real event is a
+consent violation, which is the one an auditor needs. The size bound precedes the
+judge because *"the judge is an LLM round-trip — refusing afterwards would burn a
+provider call on a body we were never going to store."* One ordering, two
+independent justifications, both written where the order is enforced.
+
 - `mcp-server/mcp-write-dispatch.mjs::dispatchWrite()` validates topology paths, applies P0 scarcity, remaps invalid path facets, stamps repository identity, enters the selected write target, and batches one logical commit.
 - `scripts/lib/wiki-mutate.mjs::writeMemory()` creates a new leaf and can archive/delete a superseded ID. `saveDocument()` performs recursive upsert-by-name and relocation when facets change.
 - `scripts/lib/wiki-render.mjs::renderLeaf()` creates schema-compatible frontmatter, content hash, covers, brief, tags, update date, and nested metadata.
@@ -459,6 +470,8 @@ The storage/search modules can be reimplemented cleanly, but the full experience
 - `PERFORMANCE.md`
 
 ## History
+
+**2026-09-13** — [`4e7f98f3851ca51a8159852aff57a2512794a877`](https://github.com/ctxr-dev/llm-wiki-memory/commit/4e7f98f3851ca51a8159852aff57a2512794a877) — re-read, 18 commits past the previous pin across 178 files, most of it webapp rendering of rich HTML, SVG and diagrams in leaves, Windows path handling, and tests. Both marks stand: `scripts/lib/wiki-store.mjs` is unchanged, and the consent gate behind `human_review` survived a `mcp-write-dispatch.mjs` edit that documented the pre-write gate order and its reasoning, recorded in section 4. The standing criticism holds and is now sharper in the project's own words: `wiki-identity.mjs:143` preserves `memory.quality` on every write and describes it as recorded *"so the read side (consolidate/recall) can treat such a leaf cautiously — a reserved affordance"*, so the marker a fail-closed judge stamps is still consulted by nothing. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-20** — [`1e315b196212e0130117817512affac2fa95ae1c`](https://github.com/ctxr-dev/llm-wiki-memory/commit/1e315b196212e0130117817512affac2fa95ae1c) — re-pinned after a dormant repository resumed: 29 commits and 510 files since the previous pin, +55,114 / −7,087. Screened again before reading: one auto-run surface (`AGENTS.md`, addressed to a reading agent and recorded as data), fifty floating ranges behind a lockfile, one manifest inside the seven-day cooldown; nothing was installed and nothing was run. Marks hold at `scope_enforced` and `human_review`, both now carrying evidence records, and three things moved.
 
