@@ -213,15 +213,59 @@ database-level guard is scoped to live rows too (<code>0024:78</code>,
 is invisible to the check that would have caught it coming back, and it
 is simply inserted again. The <code>fact_invalidation_events</code>
 table records why each fact died and is read by exactly one function,
-which serves a history endpoint. <strong>The organisation key is missing
-from the search SQL.</strong> All four legs filter on
-<code>project_id</code>; the retriever is constructed with
-<code>org_id</code> and spends it on a Prometheus label. Isolation is
-real — a route guard above and RLS below — but not in the query.
-<strong>The cross-tenant tests do not run.</strong> Every test in
-<code>tests/security/test_cross_tenant.py</code> sits under a
-class-level skip, and CI runs only the unit and integration directories.
-<strong>Two documented things are not there:</strong>
+which serves a history endpoint. The same conflict-scan query
+<em>does</em> filter <code>Fact.organization_id</code>
+(<code>:569</code>), so the organisation key is present on the write
+path and the gap is specific to the read one.</p>
+<p><strong>The organisation key is missing from the two vector legs, and
+only those.</strong> The BM25 legs take it and use it:
+<code>search_by_bm25(query, project_id, org_id, …)</code> compiles
+<code>WHERE project_id = :project_id AND organization_id = :org_id</code>
+in both repositories (<code>repositories/fact_repository.py:1145</code>,
+<code>:1180-1181</code>;
+<code>repositories/episode_repository.py:456</code>,
+<code>:484-485</code>). Their vector siblings do not —
+<code>search_by_vector(embedding, project_id, limit)</code> has no
+organisation parameter at all (<code>fact_repository.py:1086</code>,
+<code>episode_repository.py:410</code>), so a caller could not pass the
+key if it wanted to. The graph leg is org-scoped by namespace:
+<code>org_id</code> is a required argument to
+<code>retrieve_graph</code>
+(<code>services/hybrid_retriever.py:657</code>,
+<code>packages/graph_backend/falkordb.py:1603-1606</code>) and the
+backend selects a graph named
+<code>f"openzync_{org_id}_{project_id}"</code> (<code>:171</code>).</p>
+<p>That the two halves of the same pair disagree — one accepting the
+key, one unable to — is what makes this read as an oversight rather than
+a decision. Several repository methods carry the filter conditionally
+(<code>fact_repository.py:224</code>, <code>:792</code>,
+<code>:848</code>, <code>:915</code>), so the pattern exists throughout;
+the vector search signatures are where it was not repeated.</p>
+<p><strong>Underneath the SQL, row-level security fails closed</strong>,
+which is worth establishing rather than assuming. The policy reads
+<code>current_setting('app.bypass_rls', true) = 'true' OR organization_id = current_setting('app.org_id')::UUID</code>
+(<code>migrations/versions/0001_initial_schema.py:275-277</code>). The
+bypass check passes <code>missing_ok</code>; the org check does not, so
+a session where <code>app.org_id</code> was never set raises rather than
+returning rows — the failure is an error, not a silent full-table read.
+<code>dependencies/db.py:73-83</code> sets both GUCs with
+<code>set_config(..., true)</code>, which is transaction-local, so a
+pooled connection cannot carry a previous request's organisation into
+the next one.</p>
+<p>So the missing predicate is a defence-in-depth gap rather than a live
+leak: a route guard above, a fail-closed policy below, and one layer
+between them that does not restate the boundary.</p>
+<p><strong>The cross-tenant tests do not run, and they are the ones that
+would settle it.</strong> <code>TestCrossTenantIsolation</code> carries
+a class-level
+<code>@pytest.mark.skip(reason="Requires real DB + 3 seeded organizations")</code>
+(<code>tests/security/test_cross_tenant.py:50</code>), and no CI job
+names that directory: <code>.github/workflows/ci.yml</code> invokes
+<code>pytest tests/unit/</code> and
+<code>pytest tests/unit/ tests/integration/</code>. The property is
+written down and nothing executes it, so the isolation this design does
+hold is asserted by reading rather than by running. <strong>Two
+documented things are not there:</strong>
 <code>episodes.token_count</code> is described in the model, returned to
 every client and written by no code, and the community summaries the
 README places in the assembled context are a hardcoded empty list in the
@@ -706,6 +750,41 @@ rg -n &#39;search_by_vector&#39; --glob &#39;*.py&#39; .                   # 2 d
 rg -l -i &#39;mcp&#39; --glob &#39;*.py&#39; .                             # every hit is the must-change-password JWT claim
 rg -i &#39;FORCE ROW LEVEL SECURITY&#39; .                         # none: the app role&#39;s RLS depends on table ownership</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — re-read at the same commit;
+<code class="commit-id" title="cf05de752d903d84c2a56802418bda1e311bb7f2">cf05de75…</code> is still the
+repository head, so nothing upstream has moved and
+<code>analyzed_at</code> is unchanged. Both of the report's first two
+findings hold, and <strong>one of them was published wider than the code
+supports.</strong></p>
+<p><em>"The organisation key is missing from the search SQL. All four
+legs filter on <code>project_id</code>"</em> was wrong. Both BM25 legs
+take an <code>org_id</code> argument and compile
+<code>AND organization_id = :org_id</code>
+(<code>repositories/fact_repository.py:1180-1181</code>,
+<code>repositories/episode_repository.py:484-485</code>); the graph leg
+selects a per-tenant graph keyed on the organisation; and the conflict
+scan on the write path filters <code>Fact.organization_id</code> at
+<code>:569</code>. The key is absent from exactly two methods —
+<code>search_by_vector</code> in each repository, which take no
+organisation parameter at all, so a caller could not pass one. The
+report's own section 12 had this right while section 1 did not, which is
+the worse direction: a reader meets section 1 first. Section 1, the
+<code>scope_enforced</code> record and the risks line are corrected to
+the narrower claim.</p>
+<p>Two things were added rather than corrected. The row-level security
+beneath the SQL <strong>fails closed</strong>: the policy reads
+<code>current_setting('app.org_id')</code> without
+<code>missing_ok</code>, so a session where the GUC was never set raises
+instead of returning rows, and <code>dependencies/db.py:73-83</code>
+writes both settings transaction-locally, so a pooled connection cannot
+carry one request's organisation into the next. And the skipped suite is
+the adjacent unasserted case for exactly this gap:
+<code>TestCrossTenantIsolation</code> carries a class-level skip at
+<code>tests/security/test_cross_tenant.py:50</code> and no CI job names
+that directory, while the conflict scan's organisation isolation
+<em>is</em> covered by a case in <code>tests/integration/</code>, which
+CI does run. The retraction finding is unchanged and its open question
+stays open.</p>
 <p><strong>2026-09-08</strong> — <a
 href="https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2"><code class="commit-id" title="cf05de752d903d84c2a56802418bda1e311bb7f2">cf05de75…</code></a>
 — first reading, at the head of <code>main</code>, four days after the

@@ -13,7 +13,7 @@ analyzed_at: 2026-09-08
 capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   bitemporal: "validity time on the fact, held apart from record time, and applied by one predicate every read path shares | models/fact.py:122-128, repositories/fact_repository.py:34-58, services/hybrid_retriever.py:491-493, :597-599, repositories/fact_repository.py:842, migrations/versions/0024_add_temporal_exclusion_facts.py:66-80 | a fact carries `valid_from` and `valid_to` for when it was true and `invalid_at` for a hard retraction, beside the `created_at`/`updated_at` of the row itself; `_effective_at_clause(t)` builds one boolean expression — not retracted at `t`, and `t` inside `[valid_from, valid_to)` — and both search legs, the point-in-time reader and the project-wide reader all apply it, with an `as_of` parameter threaded from the route through the retriever to the graph backends; a GiST exclusion constraint over `tstzrange(valid_from, valid_to)` enforces non-overlap in the database. The limit worth stating: `valid_from` defaults to insert time, so unless the extractor emits an explicit window the validity axis collapses onto record time | tests/integration/test_fact_supersession.py:681-757, tests/integration/test_temporal_conflicts.py:600-703"
-  scope_enforced: "a project key on every search leg and Postgres row-level security under it | dependencies/project_auth.py:34, services/hybrid_retriever.py:405, :488, :543, :596, migrations/versions/0001_initial_schema.py:266-316, dependencies/db.py:73-83 | `require_project_membership` gates every project-scoped route, all four SQL legs of hybrid search carry `project_id` in the WHERE clause, and beneath that eleven tables including `episodes` and `facts` have RLS policies matching `organization_id` against `current_setting('app.org_id')`, with the setting written per request and per worker job. The gap is worth naming: the retriever holds `org_id` and uses it only for a metrics label, so the organisation key is enforced by RLS and by the route guard rather than by the search SQL | tests/integration/test_fact_supersession.py:31-32 (org isolation of the conflict scan); the cross-tenant suite at tests/security/test_cross_tenant.py:50 is skipped and CI never runs that directory"
+  scope_enforced: "a project key on every search leg and Postgres row-level security under it | dependencies/project_auth.py:34, services/hybrid_retriever.py:405, :488, :543, :596, migrations/versions/0001_initial_schema.py:266-316, dependencies/db.py:73-83 | `require_project_membership` gates every project-scoped route, all four SQL legs of hybrid search carry `project_id` in the WHERE clause, and beneath that eleven tables including `episodes` and `facts` have RLS policies matching `organization_id` against `current_setting('app.org_id')`, with the setting written per request and per worker job. The gap is worth naming precisely, because it is two methods rather than the search path: both BM25 legs compile `WHERE project_id = :project_id AND organization_id = :org_id` (repositories/fact_repository.py:1145, :1180-1181; repositories/episode_repository.py:456, :484-485), while their vector siblings take no organisation parameter at all (fact_repository.py:1086, episode_repository.py:410) so a caller could not supply one. The graph leg is org-scoped by namespace (packages/graph_backend/falkordb.py:171, :1603-1606) and the conflict scan on the write path filters `Fact.organization_id` directly (repositories/fact_repository.py:569). So the organisation key reaches the write path, the graph leg and the two BM25 legs, and is absent only from the two vector ones. The RLS layer under it fails closed rather than open: the policy reads `current_setting('app.org_id')` without `missing_ok`, so an unset session raises instead of returning rows, and `dependencies/db.py:73-83` writes both GUCs transaction-locally so a pooled connection cannot carry a previous request's organisation | tests/integration/test_fact_supersession.py:31-32 (org isolation of the conflict scan); the cross-tenant suite at tests/security/test_cross_tenant.py:50 is skipped and CI never runs that directory"
   audit_log: "an append-only audit row for every mutating request, written off the request path | middleware/audit.py:333-344, services/worker/tasks/audit_log.py:72, services/audit_log_service.py:70, models/audit_log.py:1-66, workers/tasks/merge_duplicate_entities.py:473 | the audit middleware enqueues a `write_audit_log` job for every non-exempt HTTP request — only health, metrics and docs are exempt — carrying the organisation, the actor and its type, the action, the resource type and id, a details blob, the caller's address and a trace id; the worker inserts into `audit_logs`, a model documented as immutable and append-only that deliberately omits `updated_at`; the entity-merge worker writes a second record with a before-and-after payload | routers/audit_log.py:39, :81-82 (org-scoped, permission-gated read)"
   negative_eval: "a superseded fact given the same embedding as its successor and asserted absent from both legs | tests/integration/test_fact_supersession.py:681-757 | the case ingests a claim, supersedes it, then writes the identical embedding onto both rows so the superseded one must rank if the temporal filter fails, and asserts the successor present and the predecessor absent in the vector leg and again in the BM25 leg — a positive control in the same assertion block, run against a real Postgres through testcontainers and executed by CI | tests/integration/test_temporal_conflicts.py:600-703, test_fact_supersession_api.py:346, test_graph_backend_postgres.py:792"
 stack_storage: "postgres, graph"
@@ -30,7 +30,7 @@ matrix:
   background: "Enrichment, embedding, entity linking, blob text extraction, audit writes, entity merging, community summarisation, observation computation, webhook delivery, user summaries, orphan-blob cleanup, and cron jobs that reconcile stalled enrichment and expire graph edges"
   trust: "A confidence float on a fact, thresholded at 0.3 once at extraction time and never read again; no status, no state, and no filter on it at read time"
   strengths: "One temporal predicate shared by every read path rather than re-derived per query; an as-of parameter threaded from the route to the graph backends; a database-level exclusion constraint backing the application's temporal logic; row-level security under the application's own scope checks; a negative test that forces the ranking to fail if the filter does"
-  risks: "A retracted or superseded fact is invisible to the conflict scan that runs before the next write, so the same triple is simply inserted again; the search SQL carries the project key but not the organisation key, leaving that to route guards and row-level security; the cross-tenant test suite is skipped and CI never runs it; `episodes.token_count` is returned to clients and written by nothing; community summaries are hardcoded empty in the retriever that the README says assembles them"
+  risks: "A retracted or superseded fact is invisible to the conflict scan that runs before the next write, so the same triple is simply inserted again; the two vector search legs carry the project key but cannot carry the organisation key, which their BM25 siblings and the graph leg do, leaving those two to a route guard above and a fail-closed row-level security policy below; the cross-tenant test suite is skipped and CI never runs it; `episodes.token_count` is returned to clients and written by nothing; community summaries are hardcoded empty in the retriever that the README says assembles them"
 ---
 
 ## 1. Executive Summary
@@ -86,12 +86,51 @@ scoped to live rows too (`0024:78`, `WHERE (invalid_at IS NULL)`), so a triple
 someone retracted is invisible to the check that would have caught it coming
 back, and it is simply inserted again. The `fact_invalidation_events` table
 records why each fact died and is read by exactly one function, which serves a
-history endpoint. **The organisation key is missing from the search SQL.** All
-four legs filter on `project_id`; the retriever is constructed with `org_id` and
-spends it on a Prometheus label. Isolation is real — a route guard above and
-RLS below — but not in the query. **The cross-tenant tests do not run.** Every
-test in `tests/security/test_cross_tenant.py` sits under a class-level skip, and
-CI runs only the unit and integration directories. **Two documented things are
+history endpoint. The same conflict-scan query *does* filter
+`Fact.organization_id` (`:569`), so the organisation key is present on the write
+path and the gap is specific to the read one.
+
+**The organisation key is missing from the two vector legs, and only those.**
+The BM25 legs take it and use it: `search_by_bm25(query, project_id, org_id, …)`
+compiles `WHERE project_id = :project_id AND organization_id = :org_id` in both
+repositories (`repositories/fact_repository.py:1145`, `:1180-1181`;
+`repositories/episode_repository.py:456`, `:484-485`). Their vector siblings do
+not — `search_by_vector(embedding, project_id, limit)` has no organisation
+parameter at all (`fact_repository.py:1086`, `episode_repository.py:410`), so a
+caller could not pass the key if it wanted to. The graph leg is org-scoped by
+namespace: `org_id` is a required argument to `retrieve_graph`
+(`services/hybrid_retriever.py:657`, `packages/graph_backend/falkordb.py:1603-1606`)
+and the backend selects a graph named `f"openzync_{org_id}_{project_id}"`
+(`:171`).
+
+That the two halves of the same pair disagree — one accepting the key, one
+unable to — is what makes this read as an oversight rather than a decision.
+Several repository methods carry the filter conditionally
+(`fact_repository.py:224`, `:792`, `:848`, `:915`), so the pattern exists
+throughout; the vector search signatures are where it was not repeated.
+
+**Underneath the SQL, row-level security fails closed**, which is worth
+establishing rather than assuming. The policy reads
+`current_setting('app.bypass_rls', true) = 'true' OR organization_id =
+current_setting('app.org_id')::UUID` (`migrations/versions/0001_initial_schema.py:275-277`).
+The bypass check passes `missing_ok`; the org check does not, so a session where
+`app.org_id` was never set raises rather than returning rows — the failure is an
+error, not a silent full-table read. `dependencies/db.py:73-83` sets both GUCs
+with `set_config(..., true)`, which is transaction-local, so a pooled connection
+cannot carry a previous request's organisation into the next one.
+
+So the missing predicate is a defence-in-depth gap rather than a live leak: a
+route guard above, a fail-closed policy below, and one layer between them that
+does not restate the boundary.
+
+**The cross-tenant tests do not run, and they are the ones that would settle
+it.** `TestCrossTenantIsolation` carries a class-level
+`@pytest.mark.skip(reason="Requires real DB + 3 seeded organizations")`
+(`tests/security/test_cross_tenant.py:50`), and no CI job names that directory:
+`.github/workflows/ci.yml` invokes `pytest tests/unit/` and
+`pytest tests/unit/ tests/integration/`. The property is written down and
+nothing executes it, so the isolation this design does hold is asserted by
+reading rather than by running. **Two documented things are
 not there:** `episodes.token_count` is described in the model, returned to every
 client and written by no code, and the community summaries the README places in
 the assembled context are a hardcoded empty list in the retriever
@@ -499,5 +538,11 @@ rg -i 'FORCE ROW LEVEL SECURITY' .                         # none: the app role'
 ```
 
 ## History
+
+**2026-09-13** — re-read at the same commit; `cf05de752d903d84c2a56802418bda1e311bb7f2` is still the repository head, so nothing upstream has moved and `analyzed_at` is unchanged. Both of the report's first two findings hold, and **one of them was published wider than the code supports.**
+
+*"The organisation key is missing from the search SQL. All four legs filter on `project_id`"* was wrong. Both BM25 legs take an `org_id` argument and compile `AND organization_id = :org_id` (`repositories/fact_repository.py:1180-1181`, `repositories/episode_repository.py:484-485`); the graph leg selects a per-tenant graph keyed on the organisation; and the conflict scan on the write path filters `Fact.organization_id` at `:569`. The key is absent from exactly two methods — `search_by_vector` in each repository, which take no organisation parameter at all, so a caller could not pass one. The report's own section 12 had this right while section 1 did not, which is the worse direction: a reader meets section 1 first. Section 1, the `scope_enforced` record and the risks line are corrected to the narrower claim.
+
+Two things were added rather than corrected. The row-level security beneath the SQL **fails closed**: the policy reads `current_setting('app.org_id')` without `missing_ok`, so a session where the GUC was never set raises instead of returning rows, and `dependencies/db.py:73-83` writes both settings transaction-locally, so a pooled connection cannot carry one request's organisation into the next. And the skipped suite is the adjacent unasserted case for exactly this gap: `TestCrossTenantIsolation` carries a class-level skip at `tests/security/test_cross_tenant.py:50` and no CI job names that directory, while the conflict scan's organisation isolation *is* covered by a case in `tests/integration/`, which CI does run. The retraction finding is unchanged and its open question stays open.
 
 **2026-09-08** — [`cf05de752d903d84c2a56802418bda1e311bb7f2`](https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2) — first reading, at the head of `main`, four days after the last commit. Screened before anything was read: no auto-run surface, seven build-time execution points in `conftest.py` files and a Makefile, two unpinned surfaces, nothing inside the seven-day cooldown; nothing was installed or run, and the read was made from a full clone. Four marks. `bitemporal` rests on one shared predicate rather than on the columns: `_effective_at_clause` is applied by both search legs, the point-in-time reader and the project reader, with a database-level exclusion constraint under it. `scope_enforced` rests on a project key in all four search legs plus row-level security, with the organisation key's absence from that SQL stated in section 9. `audit_log` rests on a per-request enqueue into an append-only table. `negative_eval` rests on a case that gives the superseded row the same embedding as its successor so ranking cannot do the filter's work. `tombstone`, `trust_state` and `human_review` were each examined and withheld, the first with its near-miss in section 9. The reading covers the fact model, the temporal machinery, the ingest and enrichment pipeline, the hybrid retriever and the tenancy layers; the graph backends, the community algorithms, the webhook and blob subsystems and the thirty routers beyond memory, search, facts and audit were treated as context.
