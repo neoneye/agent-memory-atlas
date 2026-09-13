@@ -7,9 +7,9 @@ page_kind: system
 source_name: "bytechefhq/bytechef"
 source_url: https://github.com/bytechefhq/bytechef
 archive_name: "bytechefhq--bytechef"
-revision: ee145ac61fc2bb816c1f883c5adc721f60b32879
-revision_url: https://github.com/bytechefhq/bytechef/commit/ee145ac61fc2bb816c1f883c5adc721f60b32879
-analyzed_at: 2026-08-17
+revision: 93c2ca2f19d84c69a2d779d8d282f644e8894071
+revision_url: https://github.com/bytechefhq/bytechef/commit/93c2ca2f19d84c69a2d779d8d282f644e8894071
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, human_review"
 capability_evidence:
   scope_enforced: "the knowledge base, the vector read path | server/libs/modules/components/ai/vectorstore/knowledgebase/src/main/java/com/bytechef/component/ai/vectorstore/knowledgebase/util/KnowledgeBaseVectorStoreWrapper.java | `similaritySearch` builds `eq(knowledge_base_id, id)` and AND-s any caller filter onto it, so a workflow-supplied expression can narrow the set and cannot widen it; `KnowledgeBaseFacadeImpl.buildFilterExpression` does the same for the platform search, and `delete(Filter.Expression)` is scoped the same way | none — the wrapper has no test file, and no test writes two knowledge bases and asserts a search of one misses the other"
@@ -536,5 +536,7 @@ and a live environment.
   `CheckForViolationsAdvisorTest`, `AbstractAiAgentChatActionTest`
 
 ## History
+
+**2026-09-13** — [`93c2ca2f19d84c69a2d779d8d282f644e8894071`](https://github.com/bytechefhq/bytechef/commit/93c2ca2f19d84c69a2d779d8d282f644e8894071) — re-read, 466 commits past the previous pin, and the memory surfaces barely moved. Both marks stand. The knowledge base gained a `KnowledgeBaseReferenceResolver` that lets a workflow name a knowledge base and have the reference validated, registered only when `bytechef.ai.knowledge-base.enabled` is true, alongside a migration making the knowledge base name unique per environment — a naming and reference change rather than a scoping one. Chat memory gained documentation for its component variants and nothing else. Both published criticisms were re-checked against the tree rather than carried forward and both hold: `TenantRoutingS3ChatMemoryRepository` still composes its bucket as `bucketPrefix + "-" + tenantId` from a `TenantContext` that defaults to `public`, so an unbound thread still reaches a real bucket rather than an error, and `findConversationIds()` still returns every conversation in the store with no scope key. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-17** — [`ee145ac61fc2bb816c1f883c5adc721f60b32879`](https://github.com/bytechefhq/bytechef/commit/ee145ac61fc2bb816c1f883c5adc721f60b32879) — First reading, at 18,645 commits on a repository whose first commit is dated 12 June 2016, at `v0.32.1-SNAPSHOT`. Screened before reading: 0 auto-run surfaces, 0 build-time execution paths, 0 dependency surfaces inside the seven-day cooldown, 11 unpinned manifests (six with lockfiles unchanged for 18 to 1,030 days), and 2 agent-directed files — `AGENTS.md` and `CLAUDE.md`, both contributor guidance for the React client, read as data. Nothing was installed, built or run; the Gradle monorepo needs Postgres, pgvector and a broker to test. In scope on the knowledge base rather than on the chat memory: documents are chunked, embedded, retrieved by a stored key, editable chunk by chunk and deletable across three stores, while the nine chat-memory backends are Spring AI `MessageWindowChatMemory` over a durable repository — a window, not a lifecycle. Two marks: `scope_enforced` (`KnowledgeBaseVectorStoreWrapper` AND-s `knowledge_base_id` into every search and cannot be widened by a caller filter) and `human_review` (chunk-level edit and delete, re-embedded on an event). Four near-misses stated in place — a document `status` that is a pipeline stage no read path consults, Spring Data auditing columns where an append-only mutation record would be, an `environment_id` written into every chunk's metadata and never filtered on, and a guardrail suite that asserts unsanitized text must not be *persisted* without any test asserting a foreign chunk must not be *retrieved*. No paper.
