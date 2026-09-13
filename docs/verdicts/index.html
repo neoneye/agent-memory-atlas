@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 454 reports.</strong></p>
+<p><strong>This page covers all 455 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16227,6 +16227,33 @@ and the hard requirement is who may see what.</li>
 <li>Do not copy when: the knowledge needs a lifecycle — OKF defines
 draft, stable and deprecated, validates them on write, and no read path
 filters on any of them.</li>
+</ul>
+<h3 id="agent-memoryforge"><a
+href="../systems/agent-memoryforge/"><code>agent-memoryforge</code></a></h3>
+<ul>
+<li>Best idea: memory is Markdown first and SQLite second, with a
+rebuild path from the workspace tree — the index is derived, so an
+operator can read and diff the memory without the service running.</li>
+<li>Biggest risk: <code>_actor_role</code> returns <code>system</code>
+for a missing field and <code>system</code> is on the privileged list,
+so a caller that omits <code>actor_role</code> passes every private-tier
+check and reads every user's short-term memory, working memory and
+preferences in the workspace.</li>
+<li>Most reusable component: filtering a conversation for distillation
+value before spending a model call on it, and refusing a caller-supplied
+<code>memory_url</code> override on the proxy that would otherwise fetch
+what it is told to.</li>
+<li>Maturity impression: MIT, ~42,300 lines of Python across a gateway,
+a key-guarded memory service, an SDK, an MCP server and an operator
+portal, with quotas, encrypted workspace secrets and an internal key
+check that refuses to start unauthenticated outside an explicit
+local-dev opt-in.</li>
+<li>Study when: a multi-tenant product needs a memory plane under a
+framework already chosen, and the team wants quotas and a portal rather
+than another agent runtime.</li>
+<li>Do not copy when: memory must be correct rather than present — there
+is no verification state, no correction record and no committed
+retrieval evaluation.</li>
 </ul>
         </article>
       </div>

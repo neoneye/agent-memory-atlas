@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 454 reports.**
+**This page covers all 455 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3977,3 +3977,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, ~38,600 lines of Go serving Markdown over SSH and MCP with no index, no database and no model, a startup check that refuses two docsets sharing a display root because read and write authorization would break the tie differently, and `awk` and `jq` reimplemented against the virtual filesystem.
 - Study when: several agents or people must read one Markdown corpus and the hard requirement is who may see what.
 - Do not copy when: the knowledge needs a lifecycle — OKF defines draft, stable and deprecated, validates them on write, and no read path filters on any of them.
+
+### [`agent-memoryforge`](../systems/agent-memoryforge/)
+- Best idea: memory is Markdown first and SQLite second, with a rebuild path from the workspace tree — the index is derived, so an operator can read and diff the memory without the service running.
+- Biggest risk: `_actor_role` returns `system` for a missing field and `system` is on the privileged list, so a caller that omits `actor_role` passes every private-tier check and reads every user's short-term memory, working memory and preferences in the workspace.
+- Most reusable component: filtering a conversation for distillation value before spending a model call on it, and refusing a caller-supplied `memory_url` override on the proxy that would otherwise fetch what it is told to.
+- Maturity impression: MIT, ~42,300 lines of Python across a gateway, a key-guarded memory service, an SDK, an MCP server and an operator portal, with quotas, encrypted workspace secrets and an internal key check that refuses to start unauthenticated outside an explicit local-dev opt-in.
+- Study when: a multi-tenant product needs a memory plane under a framework already chosen, and the team wants quotas and a portal rather than another agent runtime.
+- Do not copy when: memory must be correct rather than present — there is no verification state, no correction record and no committed retrieval evaluation.

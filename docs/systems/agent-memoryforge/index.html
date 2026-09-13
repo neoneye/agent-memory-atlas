@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-tenant memory plane whose
+private tiers are filtered per hit against the record's owner — and
+whose actor role defaults to <code>system</code>, which is on the
+privileged list.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Agent-MemoryForge — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-tenant memory plane
+whose private tiers are filtered per hit against the record's owner —
+and whose actor role defaults to <code>system</code>, which is on the
+privileged list.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agent-MemoryForge — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-tenant memory
+plane whose private tiers are filtered per hit against the record's
+owner — and whose actor role defaults to <code>system</code>, which is
+on the privileged list.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Agent-MemoryForge — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Agent-MemoryForge",
+      "description": "A multi-tenant memory plane whose private tiers are filtered per hit against the record's owner \u2014 and whose actor role defaults to `system`, which is on the privileged list.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The absent actor role is the privileged
+one</p>
+          <h1>Agent-MemoryForge</h1>
+          <p class="document-deck">A multi-tenant memory plane whose
+private tiers are filtered per hit against the record's owner — and
+whose actor role defaults to <code>system</code>, which is on the
+privileged list.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hellangleZ/Agent-MemoryForge">
+              <span>Source</span>
+              <strong>hellangleZ/Agent-MemoryForge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hellangleZ/Agent-MemoryForge/commit/770b4eefe9882fff4b590ce9fac307faf2566b8d" title="770b4eefe9882fff4b590ce9fac307faf2566b8d">
+              <span>Analyzed revision</span>
+              <code>770b4eef…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hellangleZ--Agent-MemoryForge" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hellangleZ--Agent-MemoryForge</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Agent-MemoryForge is a memory plane rather than an agent framework —
+MIT, about 42,300 lines of Python — that sits under LangChain,
+LangGraph, AutoGen, CrewAI or a custom loop and gives them
+tenant-isolated, tiered, searchable memory behind an authenticated REST
+API. The README is unusually clear about what it is not trying to be,
+and the code matches that framing: there is a gateway, a memory service,
+an SDK, an MCP server, an operator portal, quota accounting and a
+distillation worker, and no agent runtime anyone is obliged to
+adopt.</p>
+<p>The storage design is the part worth copying. Memory is files first —
+Markdown in a per-workspace directory tree — with SQLite as a
+rebuildable index carrying FTS5 and a vector table, and
+<code>_rebuild_index_from_workspace</code> to reconstruct it from the
+files. That inverts the usual arrangement, where the database is
+authoritative and the export is a convenience, and it means an operator
+can read the memory with <code>cat</code>.</p>
+<p>Three boundaries stack, and the report's value is in separating them,
+because only one is this atlas's <code>scope_enforced</code> mark. The
+tenant and workspace boundary is a <em>physical partition</em>:
+<code>workspace_root(tenant_id, workspace_id)</code> gives each
+workspace its own directory and its own index. The <code>scope</code>
+column on the index — <code>project</code>, <code>user</code>,
+<code>session</code> — is a <em>caller-supplied facet</em> that applies
+no filter at all when the request omits it. The mark is earned by the
+third: <code>_PRIVATE_TIERS</code> (<code>stm</code>, <code>wm</code>,
+<code>preferences</code>) are filtered per hit against an owner id read
+off the record, at six separate read sites.</p>
+<p>That third boundary is also where the finding is. The predicate
+is:</p>
+<pre class="python"><code>def _actor_role(payload): return str(payload.get(&quot;actor_role&quot;) or &quot;system&quot;).strip().lower() or &quot;system&quot;
+_PRIVILEGED_ACTOR_ROLES = {&quot;admin&quot;, &quot;system&quot;, &quot;service&quot;}</code></pre>
+<p>An absent <code>actor_role</code> becomes <code>system</code>, and
+<code>system</code> is privileged. A request that simply omits the field
+passes every private-tier check and reads every user's short-term
+memory, working memory and preferences in the workspace. The default is
+the permissive one, which is the inverse of how the rest of this
+repository is built — the same service refuses to start without an
+internal API key unless an explicit local-dev variable is set, and
+compares that key with <code>hmac.compare_digest</code>.</p>
+<p>Three marks: <code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. <code>audit_log</code> is earned with its
+durability stated, because the durable backend is off by default.
+<code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>human_review</code> are withheld on
+searches recorded in the appendix.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory here is tiered by how long it should live and who it belongs
+to, not by how confident anyone is that it is true. A conversation
+produces a short-term summary (<code>stm</code>). A task carries
+working-memory state (<code>wm</code>). A user accumulates preferences.
+A distillation worker turns conversations into semantic facts and
+business decisions that outlive both.</p>
+<p>Nothing in that pipeline records an epistemic judgement. A distilled
+fact is written as a file and indexed; if it is wrong, the correction is
+another write, and the two sit beside each other ranked by relevance.
+Working memory has a lifecycle — items move to done or cancelled and the
+context builder stops injecting them, with the comment that they are
+"preserved for audit but not" injected — but that is task state, not a
+claim about truth.</p>
+<p>What the system does model carefully is <em>who may see what</em>,
+and it models it three times at three different levels. Understanding
+which level catches which threat is the whole of using this safely.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three boundaries stack, and only the innermost is a predicate on the record — the outer two are a directory per workspace and a facet the caller chooses, so the owner check is what stands between two users of one workspace</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three boundaries stack, and only the innermost is a predicate on the record — the outer two are a directory per workspace and a facet the caller chooses, so the owner check is what stands between two users of one workspace
+flowchart TD
+    R[&quot;request: bearer token + x-workspace-id&quot;] --&gt; A[&quot;gateway: _assert_workspace_access&lt;br/&gt;membership lookup, 31 call sites&quot;]
+    A --&gt;|&quot;not a member&quot;| D1[&quot;403&quot;]
+    A --&gt; B[&quot;_scoped_memory_client&lt;br/&gt;binds tenant, workspace, actor id, actor role&quot;]
+    B --&gt; C[&quot;memory service: _require_internal_api_key&lt;br/&gt;500 if unset outside local-dev opt-in&quot;]
+    C --&gt; P[&quot;workspace_root(tenant, workspace)&lt;br/&gt;one directory and index per workspace&lt;br/&gt;— a physical partition, not the mark&quot;]
+    P --&gt; F[&quot;index search: tier / scope / kind / path filters&lt;br/&gt;scope is caller-supplied; omitted means no filter&quot;]
+    F --&gt; O{&quot;tier in stm, wm, preferences?&quot;}
+    O --&gt;|&quot;no&quot;| H[&quot;hit returned&quot;]
+    O --&gt;|&quot;yes&quot;| G[&quot;_actor_can_read_private(payload, owner)&quot;]
+    G --&gt;|&quot;role in admin, system, service&quot;| H
+    G --&gt;|&quot;actor == owner on the record&quot;| H
+    G --&gt;|&quot;otherwise&quot;| X[&quot;hit dropped&quot;]
+    G -.-&gt;|&quot;actor_role absent defaults to system&quot;| H</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two services and a portal. The gateway
+(<code>agent_runtime/product/gateway</code>) holds authentication,
+workspace membership, quota accounting and the chat path; the memory
+service (<code>agent_memory_service</code>) holds the store and the
+index and is reachable only with an internal API key. The portal is a
+React app over gateway routes, and <code>agent_memory_lib</code> is the
+SDK both the gateway and external callers use.</p>
+<p>The store is the <code>file_first</code> backend. Each tenant and
+workspace gets a directory under
+<code>~/.agent_memory_service/workspaces</code>, and inside it the tiers
+are directories of Markdown. <code>index_sqlite.py</code> keeps
+<code>docs</code> — path, entry id, tier, scope, memory kind,
+created_at, content, metadata JSON and a preference key — with an FTS5
+virtual table kept in sync by three triggers, plus a <code>vecs</code>
+table for embeddings. <code>index_pgvector.py</code> is the alternate
+backend with the same filters expressed as
+<code>scope = ANY(%s)</code>.</p>
+<p>Two operational details are done well.
+<code>safe_workspace_path</code> raises "Path escapes workspace root"
+rather than normalising a traversal away, and the search path refuses
+<code>path_prefixes</code> that leave the workspace with a 422. And the
+internal key check fails closed: no key configured means a 500 unless
+<code>AGENT_MEMORY_SERVICE_ALLOW_UNAUTHENTICATED_LOCAL_DEV</code> is
+explicitly set and the environment is not production.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Gateway search</strong> — <code>core_routes.py:855</code>
+resolves the workspace, calls
+<code>_assert_workspace_access(me, workspace_id)</code>, builds a client
+bound to tenant, workspace, actor id and actor role, then proxies.</li>
+<li><strong>Workspace membership</strong> —
+<code>portal_helpers.py:392</code> <code>_assert_workspace_access</code>
+looks the user's role up in the portal config and admits admins.</li>
+<li><strong>Service auth</strong> —
+<code>agent_memory_service/app.py:95</code>
+<code>_require_internal_api_key</code>.</li>
+<li><strong>Store root</strong> — <code>file_first/paths.py:29</code>
+<code>workspace_root</code>, <code>:35</code>
+<code>safe_workspace_path</code>.</li>
+<li><strong>Index search</strong> —
+<code>file_first/index_sqlite.py:397</code> builds the
+<code>WHERE</code> from tiers, scopes, memory kinds and path prefixes;
+<code>:306</code> is the vector arm.</li>
+<li><strong>Private-tier gate</strong> —
+<code>backends/file_first.py:107</code>
+<code>_actor_can_read_private</code>, applied at <code>:1147</code>,
+<code>:1173</code>, <code>:1195</code>, <code>:1476</code>,
+<code>:1499</code> and <code>:1527</code>.</li>
+<li><strong>Audit</strong> — <code>observability.py:77</code> and
+<code>:174</code> <code>record_audit</code>; call sites in
+<code>core_routes.py</code> including <code>memory.write</code> at
+<code>:794</code>.</li>
+<li><strong>Distillation</strong> —
+<code>scripts/memory_distill_worker.py</code>, enqueued at
+<code>core_routes.py:1983</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The index row is the interesting artifact, because it carries four
+independent narrowing keys: <code>tier</code> (lifetime),
+<code>scope</code> (<code>project</code> / <code>user</code> /
+<code>session</code>), <code>memory_kind</code>, and
+<code>pref_key</code>, each with its own index. Owner is not one of
+them. It is recovered at read time — <code>_owner_from_hit_path</code>
+parses it out of the stored path for preferences, and the other call
+sites take <code>metadata['user_id']</code> out of the row's JSON.</p>
+<p>That is a defensible choice for a file-first design, where the path
+is the identity, and it is worth noticing because it means the owner
+check costs a metadata parse per hit rather than a <code>WHERE</code>
+clause. A row whose metadata lacks <code>user_id</code> yields an empty
+owner, and <code>_actor_can_read_private</code> returns false for an
+empty owner unless the role is privileged — so the failure direction
+there is closed, which is right.</p>
+<p>The <code>scope</code> column is the one to be careful about. It is
+indexed, it is applied as <code>scope IN (...)</code> on both the FTS
+and the vector arm in the SQLite backend and as
+<code>scope = ANY(%s)</code> in pgvector, and it comes from the request
+body: <code>scopes=list(req.scopes) if req.scopes else None</code>. The
+builder only appends the clause <code>if scopes:</code>, so omitting it
+searches every scope in the workspace. It is a facet for the caller's
+convenience, not a boundary, and nothing in the gateway constrains
+it.</p>
+<p>There is no validity time and no record time beyond
+<code>created_at</code>; a search for <code>valid_from</code>,
+<code>valid_at</code>, <code>as_of</code> and <code>effective_</code>
+across the service and the gateway returns nothing.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 with a porter tokenizer over <code>docs.content</code>, and
+cosine over the <code>vecs</code> table, both narrowed by the same four
+key filters and then merged by the backend. The vector arm carries its
+own <code>scopes</code> parameter and the file-first backend passes a
+separate <code>vector_scopes</code> at two of the call sites, so the two
+arms can be narrowed differently.</p>
+<p>Private-tier filtering happens after retrieval, per hit. That is the
+correct place for it given the owner is not a column — but it means a
+private row is read out of the index, its metadata parsed, and then
+dropped, so the filter protects the response rather than the query. For
+a workspace where one user's private memories dominate the corpus,
+<code>top_k</code> is spent before filtering; the code does not
+over-fetch to compensate.</p>
+<p>The context builder above this
+(<code>agent_memory_framework/memory_runtime</code>) does the assembly,
+and it is where the hardcoded facets live: it searches
+<code>scopes=["project"]</code> at two sites, which is a deliberate
+narrowing for the framework's own agent rather than a general
+default.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is a file write plus an index upsert, synchronous, through
+the authenticated service. Preferences carry a <code>pref_key</code> so
+a later write to the same key can be found and replaced; the index has a
+dedicated <code>idx_docs_pref_key</code> for it.</p>
+<p>Distillation is the asynchronous half.
+<code>conversation_value_filter.py</code> (651 lines) decides whether a
+conversation is worth distilling at all before the worker spends a model
+call on it, which is the right order and is not always how this is
+built. The worker then writes semantic facts and decisions as new
+memories. A comment in the worker draws a line worth quoting for anyone
+building the same thing: durable claims "should come from durable
+evidence (audit/trace/commits), not distillation."</p>
+<p>Nothing rewrites the whole store, and nothing decays. Working-memory
+items reach <code>done</code> or <code>cancelled</code> and stop being
+injected while remaining on disk.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four ways in, and the design goal is that none of them owns the
+agent. The REST API and the Python SDK are the primary path;
+<code>agent_memory_mcp_server.py</code> exposes memory as MCP tools; the
+<code>agent_memory_framework</code> adapters plug into LangChain and
+LangGraph while leaving those frameworks as the agent owner; and the
+portal is for operators rather than agents.</p>
+<p>The MCP surface has a per-workspace tool policy with an allowlist and
+a denylist, which is about which <em>tools</em> an agent may call rather
+than which memories it may read — worth separating from the memory
+scoping, because the word denylist appears in both conversations.</p>
+<p>Workspace secrets are encrypted at rest in the portal config, and the
+gateway refuses a caller-supplied <code>memory_url</code> override with
+"memory_url override is not allowed" — a small hardening that a test
+pins, and exactly the kind of parameter that turns a proxy into an
+SSRF.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — earned on the owner check, and the three levels
+should not be conflated.</strong> Section 1 separates them. The one that
+protects two users of the same workspace from each other is
+<code>_actor_can_read_private</code>, and it is the only one of the
+three that is a predicate over a stored key on the record.</p>
+<p><strong>The permissive default is the finding.</strong>
+<code>_actor_role</code> returns <code>system</code> for a missing field
+and <code>system</code> is in <code>_PRIVILEGED_ACTOR_ROLES</code>, so a
+payload without <code>actor_role</code> reads every private tier. Three
+things scope how bad this is, and all three are worth stating rather
+than one. The memory service is not end-user-reachable: it requires an
+internal API key, compared in constant time, and refuses to start
+without one outside an explicit local-dev flag. The gateway always
+supplies the role —
+<code>actor_role=str(ctx.get("role") or "user")</code> — so the shipped
+path never omits it. And <code>actor_role</code> is an optional field on
+the request model (<code>actor_role: str | None = None</code>), so any
+other holder of the internal key that forgets it is silently privileged
+rather than refused. It is a defence-in-depth defect rather than a live
+hole, and the fix is one line: default to the least privilege and
+require the caller to claim more.</p>
+<p><strong>Audit — earned, with durability off by default.</strong> The
+event carries the actor, the action, the resource and the outcome, and
+memory mutations are among the actions. The durable path is Redis with
+an <code>rpush</code>/<code>ltrim</code> transaction; it is enabled only
+by <code>AGENT_OBSERVABILITY_REDIS_ENABLED</code>, which defaults to
+<code>0</code>, and the fallback keeps 5,000 events in a Python list
+that a restart erases. A deployment that has not set that variable has
+an audit surface in the portal and no audit record after a redeploy.</p>
+<p><strong>Negative eval — earned.</strong> Section 10.</p>
+<p><strong>Trust state — withheld.</strong> A search for a confidence or
+verification field across the file-first backend returns nothing.
+Working memory's <code>active</code> / <code>done</code> /
+<code>cancelled</code> is a task lifecycle: it answers whether the task
+is finished, not whether the content is true, and the context builder
+uses it to decide what to inject rather than what to believe.</p>
+<p><strong>Tombstone — withheld.</strong> The only denylist in the tree
+is the MCP tool policy. Nothing records a rejected memory value, so a
+distillation pass can re-assert something a user corrected.</p>
+<p><strong>Bitemporal — withheld.</strong> One <code>created_at</code>,
+no validity axis, no as-of read.</p>
+<p><strong>Human review — withheld.</strong> The portal is an operator
+surface for workspaces, members, quotas, secrets and audit. A search for
+<code>approve</code>, <code>adjudicat</code>, <code>review_queue</code>
+and <code>pending_review</code> across the gateway and the memory
+service returns nothing: no one approves a memory before it is stored or
+after.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The unit suite is broad — roughly sixty files covering the gateway,
+the file-first backend, distillation parsing, the conversation value
+filter, context assembly, quotas and the MCP server — plus an
+integration directory and a top-level <code>e2e_suite.py</code>.</p>
+<p><code>test_file_first_memory.py:371-449</code> is the one that
+carries a mark. It writes Alice a preference, an <code>stm</code> entry
+whose content is the literal string "Alice private conversation
+summary", and a <code>wm</code> task state. It then searches as Bob for
+"Alice private" restricted to the <code>stm</code> tier and asserts
+<code>bob_search["hits"] == []</code>, and asserts that Bob's direct
+reads of the preference and the working memory raise, one of them a
+403.</p>
+<p>That negative assertion is not vacuous, and the reason is the fixture
+rather than a second assertion: the stored row contains the query terms,
+so the FTS arm matches it, and removing
+<code>_actor_can_read_private</code> returns the row to Bob. The
+owner-side control is in the same test — Alice reads the same
+<code>stm["path"]</code> and asserts truthy content, and reads her task
+state back as <code>{"a": 1}</code>. The limit worth stating is that
+Alice's control is a direct read rather than the same search, so nothing
+asserts the search arm returns her row to her.</p>
+<p>Two more tests are worth naming.
+<code>test_file_first_search_returns_503_when_index_corrupt</code> pins
+that a corrupt index is an error rather than an empty result, which is
+the failure mode that turns a broken store into a confident "nothing
+found". <code>test_agent_gateway.py:185</code> asserts
+<code>"do not log this memory text" not in str(summary)</code> — a
+redaction check, and worth distinguishing from the retrieval exclusion
+above: it is about leakage into logs, not about what recall returns.</p>
+<p>No paper, no <code>CITATION.cff</code>, and no benchmark or retrieval
+evaluation. The README's Verification section describes end-to-end runs
+against live providers rather than a scored harness, and nothing
+committed reports a retrieval number.</p>
+<p>The suite was not run: two <code>conftest.py</code> files execute on
+pytest collection, <code>pyproject.toml</code> declares dependencies
+with no lockfile, and <code>portal-ui</code> carries fifteen floating
+ranges.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Files first, index rebuildable.</strong> The Markdown is
+authoritative and SQLite is derived, with
+<code>_rebuild_index_from_workspace</code> to prove it. An operator can
+read and diff the memory without the service running.</li>
+<li><strong>Filter a value-worth check before the model call.</strong>
+<code>conversation_value_filter</code> decides whether a conversation
+deserves distillation before a token is spent.</li>
+<li><strong>Refuse a caller-supplied service URL.</strong> "memory_url
+override is not allowed", pinned by a test, on a proxy that would
+otherwise fetch what it is told to.</li>
+<li><strong>Fail closed on a missing service key, and say which variable
+to set.</strong> A 500 with the variable name beats a silent open port,
+and the local-dev escape hatch is explicit, named and refused in
+production.</li>
+<li><strong>Raise on a path that escapes the workspace</strong> rather
+than normalising it.</li>
+<li><strong>Keep the internal key comparison constant-time.</strong>
+<code>hmac.compare_digest</code> on a header is a small habit that costs
+nothing.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Defaulting an authorization input to the privileged
+value.</strong> <code>actor_role or "system"</code> with
+<code>system</code> privileged means every caller that forgets the field
+is an administrator. Default to the least privilege; make the caller
+claim more.</li>
+<li><strong>Shipping the durable audit behind a default-off
+flag.</strong> The portal shows an audit view either way, so the surface
+does not tell an operator whether the record survives a restart.</li>
+<li><strong>Letting an omitted filter mean no filter on a key named
+<code>scope</code>.</strong> The name reads like a boundary and behaves
+like a facet.</li>
+<li><strong>Filtering private rows after <code>top_k</code>.</strong>
+The gate is correct and the ranking budget is spent on rows that will be
+dropped.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if you are building a multi-tenant product on top of an
+agent framework you have already chosen, and you want the memory plane
+to be somebody else's code. That is the stated purpose and the shape of
+the repository matches it: the gateway, quotas, portal, MCP config and
+encrypted workspace secrets are the things a team discovers it needs
+three months after the demo, and they are here.</p>
+<p>It fits badly where memory needs to be right rather than present.
+There is no verification state, no correction record, and no evaluation
+of retrieval, so the quality of what comes back is whatever FTS5 and the
+embedder produce over whatever distillation wrote.</p>
+<p>Before deploying it with more than one user per workspace, set
+<code>actor_role</code> on every internal caller and consider inverting
+the default. That is the single change between a careful isolation model
+and one that is bypassed by omission.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong><code>actor_role</code> defaults to a privileged
+role.</strong> The report's finding, scoped in section 9.</li>
+<li><strong>Audit durability is opt-in.</strong>
+<code>AGENT_OBSERVABILITY_REDIS_ENABLED</code> defaults to off; the
+fallback is a 5,000-entry in-process list.</li>
+<li><strong><code>get_tenant_context</code> trusts
+<code>X-Tenant-ID</code>.</strong> It defaults the tenant to
+<code>tenant_{user_id}</code> and performs no membership check. No route
+uses it — it is exported from the gateway package and nothing more — but
+it is exported, and an adopter wiring it into a new route would get
+header-asserted tenancy.</li>
+<li><strong><code>scope</code> is not a boundary.</strong> Omitting it
+searches every scope in the workspace.</li>
+<li><strong>Nothing records a correction</strong>, so distillation can
+re-assert what a user fixed.</li>
+<li><strong>Two <code>conftest.py</code> execute on collection</strong>,
+so a reviewer who runs the suite to evaluate the project is executing
+repository code before any test runs.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the file-first arrangement. Authoritative Markdown with a
+rebuildable SQLite index is a good default for memory that humans will
+eventually need to audit, and the rebuild path is what makes the claim
+true rather than aspirational.</p>
+<p>Borrow the product scaffolding if you are shipping this as a service.
+Quotas, usage accounting, workspace membership, encrypted secrets and an
+operator portal are weeks of unglamorous work and they are complete
+enough here to study.</p>
+<p>Do not borrow the authorization defaults. The direction of every
+default in <code>_actor_role</code> and
+<code>_make_observability_store</code> is toward permissive and
+non-durable, and both are one line from the opposite.</p>
+<p>Build your own if the memory needs epistemic state. Adding
+verification to this means adding a column, a writer and a read-path
+filter through six call sites — tractable, but it is a change to the
+retrieval contract rather than an addition beside it.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the <code>system</code> default on <code>_actor_role</code>
+deliberate — a convenience for service-to-service calls that predates
+the private tiers — or an oversight?</li>
+<li>Why is Redis audit durability off by default when the portal exposes
+an audit view unconditionally?</li>
+<li>Is <code>get_tenant_context</code> a leftover from a single-tenant
+mode, and is anything outside this repository importing it?</li>
+<li>Should private-tier filtering move into the query, given the owner
+is recoverable from the path for preferences and could be a column for
+the rest?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Store and index</strong></p>
+<ul>
+<li><code>agent_memory_service/file_first/paths.py</code>
+(<code>:29</code> <code>workspace_root</code>, <code>:35</code>
+<code>safe_workspace_path</code>)</li>
+<li><code>agent_memory_service/file_first/index_sqlite.py</code>
+(<code>:10</code> schema, <code>:306</code> the vector arm,
+<code>:397</code> <code>search</code>),
+<code>index_pgvector.py:251</code></li>
+<li><code>agent_memory_service/backends/file_first.py</code>
+(<code>:95</code> <code>_PRIVATE_TIERS</code>, <code>:107</code>
+<code>_actor_can_read_private</code>, <code>:117</code>
+<code>_owner_from_hit_path</code>, <code>:180</code> the path-prefix
+refusal, <code>:492</code> <code>_ws_root</code>, <code>:608</code> the
+rebuild)</li>
+</ul>
+<p><strong>Service and gateway</strong></p>
+<ul>
+<li><code>agent_memory_service/app.py</code> (<code>:82</code> the key
+lookup, <code>:95</code> the dependency)</li>
+<li><code>agent_runtime/product/gateway/core_routes.py</code>
+(<code>:855</code> search, <code>:794</code> <code>memory.write</code>
+audit, <code>:1983</code> distill enqueue)</li>
+<li><code>agent_runtime/product/gateway/portal_helpers.py</code>
+(<code>:392</code> <code>_assert_workspace_access</code>,
+<code>:534</code> <code>_scoped_memory_client</code>, <code>:62</code>
+<code>_make_observability_store</code>)</li>
+<li><code>agent_runtime/product/gateway/deps.py:78</code> —
+<code>get_tenant_context</code></li>
+<li><code>agent_runtime/product/observability.py</code>
+(<code>:48</code> <code>AuditEvent</code>, <code>:70</code> in-memory,
+<code>:146</code> Redis)</li>
+<li><code>agent_runtime/product/usage_store.py:141</code>,
+<code>auth_store.py:273</code></li>
+</ul>
+<p><strong>Memory logic</strong></p>
+<ul>
+<li><code>conversation_value_filter.py</code>,
+<code>scripts/memory_distill_worker.py:340</code></li>
+<li><code>agent_memory_framework/memory_runtime/context_builder.py:409</code>,
+<code>:478</code></li>
+<li><code>agent_memory_lib/client.py:126</code> —
+<code>with_scope</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/unit/test_file_first_memory.py:371-449</code>, and the
+corrupt-index case at <code>:452</code></li>
+<li><code>tests/unit/test_agent_gateway.py:185</code>,
+<code>:421</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn &#39;scopes=&#39; --include=&#39;*.py&#39; . | grep -v tests/
+grep -rn &#39;get_tenant_context&#39; --include=&#39;*.py&#39; . | grep -v &#39;def get_tenant_context&#39;
+grep -rn &#39;_actor_can_read_private(&#39; --include=&#39;*.py&#39; . | grep -v &#39;def &#39;
+grep -rni &#39;tombstone\|rejected_value\|do_not_store\|blocklist\|denylist&#39; \
+  --include=&#39;*.py&#39; agent_memory_service/ agent_runtime/ agent_memory_framework/ | grep -v tests/
+grep -rni &#39;&quot;verified&quot;\|&quot;pending&quot;\|&quot;candidate&quot;\|confidence\|trust&#39; \
+  --include=&#39;*.py&#39; agent_memory_service/backends/file_first.py
+grep -rni &#39;valid_from\|valid_at\|as_of\|effective_&#39; --include=&#39;*.py&#39; \
+  agent_memory_service/ agent_runtime/ | grep -v tests/
+grep -rni &#39;approve\|adjudicat\|review_queue\|pending_review&#39; --include=&#39;*.py&#39; \
+  agent_runtime/ agent_memory_service/ | grep -v tests/
+grep -rn &#39;ObservabilityStore\|record_audit&#39; --include=&#39;*.py&#39; . | grep -v tests/
+grep -rn -i &#39;arxiv\|bibtex\|@article\|citation\|doi&#39; README.md docs/</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/hellangleZ/Agent-MemoryForge/commit/770b4eefe9882fff4b590ce9fac307faf2566b8d"><code class="commit-id" title="770b4eefe9882fff4b590ce9fac307faf2566b8d">770b4eef…</code></a>
+— first reading. Screened first: two <code>conftest.py</code> files that
+execute on pytest collection, a <code>pyproject.toml</code> with no
+lockfile beside it, and fifteen floating ranges in
+<code>portal-ui/package.json</code>. Nothing was installed and no suite
+was run. Three marks. <code>scope_enforced</code> is earned on the
+private-tier owner check applied per hit at six read sites, deliberately
+separated in the report from the two boundaries beside it that do not
+qualify: the per-workspace directory partition, and the caller-supplied
+<code>scope</code> facet that applies no filter when omitted.
+<code>audit_log</code> is earned on gateway audit events naming the
+actor for memory mutations, with the limit stated that the durable Redis
+backend is opt-in and the default keeps 5,000 events in a process-local
+list. <code>negative_eval</code> is earned on a test where one user's
+search for another's stored text returns no hits over a fixture
+containing the exact query terms, with the owner-side read control in
+the same test. The finding is that <code>_actor_role</code> defaults to
+<code>system</code>, which is on the privileged list, so a caller
+omitting the field passes every private-tier check — scoped by the fact
+that the memory service requires an internal API key and the gateway
+always sets the role. <code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>human_review</code> are withheld on
+searches recorded in the appendix.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
