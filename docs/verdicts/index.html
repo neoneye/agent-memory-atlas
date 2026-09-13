@@ -11560,36 +11560,48 @@ are then sorted by verdict class first —
 atlas complains repeatedly that retrieval strength and truth end up in
 one number; here they are two, and the one meaning <em>this still
 exists</em> wins.</li>
-<li>Second idea: <strong>deletion propagates from the filesystem into
-the memory.</strong> <code>kb-autosync</code> hooks
-<code>tool_result</code>, parses the agent's own <code>mv</code>,
-<code>rm</code>, <code>rmdir</code>, <code>trash</code> and
-<code>git rm</code> — including <code>mv a b dir/</code> multi-source
-semantics — resolves paths deterministically because <em>"tool_result
-has no cwd"</em>, and calls <code>graft delete</code> for nodes anchored
-at a removed path. Beside it, a warn-only guard that fires after three
-consecutive grep-style searches without a knowledge lookup, and a
-first-prompt injection capped in time because <em>"a hung graft must
-never stall the first prompt"</em>.</li>
-<li>Biggest risk: <strong>a failed existence check deletes the
-node</strong>, guarded only by a bounded basename search — so a file
-moved outside that search, archived, or on an unmounted volume is
-indistinguishable from one deleted, and the note goes with it.
-<code>handle_stale</code> is the data-destroying path and has no test;
-the repository's single test file covers the search guard. And nothing
-about trust is persisted: a verdict is computed, used to sort one result
-set, and discarded, so a node that was stale last week and rebuilt today
-leaves no record of either.</li>
-<li>Maturity impression: roughly two dozen files of shell, Python and
-three TypeScript extensions, a launchd job, one test. No capability
-mark. <code>trust_state</code> is withheld deliberately and it is the
-report's most interesting sentence — the rubric asks for a discrete
-status <em>as a field</em>, and this is a computation, while its effect
-is stronger than the mark measures because <code>STALE</code> does not
-withhold a memory, it removes it. <code>scope_enforced</code> is
-withheld too: <code>--scope</code> is a path substring applied at query
-time, not a stored key. The store itself is Graft, a separate daemon
-this repository does not contain.</li>
+<li>Second idea: <strong>the hint is never believed.</strong>
+<code>kb-autosync</code> appends one line — a path — to a hints file,
+and a single-writer reconciler reads that path from disk and makes the
+graph match whatever is actually there, so a missed, duplicated or wrong
+hint cannot corrupt the graph. Beside it, a warn-only guard that fires
+after three consecutive pathless discovery searches without a knowledge
+lookup, and a first-prompt injection capped in time because <em>"a hung
+graft must never stall the first prompt"</em>.</li>
+<li>Biggest risk: <strong>installing the package does three kinds of
+work on the machine.</strong> <code>postinstall</code> wires enforcement
+stacks into whichever agent harnesses it detects, builds the
+<code>graftd</code> binary from vendored C, and spawns a
+<em>detached</em> background indexer that outlives the install — with
+every error swallowed because <em>"npm must never see a nonzero exit
+from this script"</em>, and one opt-out variable a reader has to know to
+set. Beneath that, a failed existence check still deletes the node,
+guarded only by a bounded basename search, so a file moved outside that
+search or on an unmounted volume is indistinguishable from one
+deleted.</li>
+<li>Maturity impression: a Node CLI with Python and TypeScript
+extensions, a launchd job, roughly thirty test files, and a committed
+LongMemEval harness that publishes its own baseline — recall@25 of 0.80
+single-session and 0.90 multi-session against a 95% target — with a
+root-cause analysis locating one failure in the vendored dependency's
+<code>build_scoped_fts_query</code>, which FTS5 reads as an implicit AND
+over every question token. One capability mark.
+<code>negative_eval</code> is earned on secret extraction: eight classes
+skipped before storage, six shapes asserted absent from the produced
+facts, and <code>meta.skippedSecrets === 6</code> asserted alongside so
+the case cannot pass over an empty extraction. <code>tombstone</code> is
+refused on the mechanism that most resembles it —
+<code>fact_history</code> archives a retraction with
+<code>invalidated_at</code> and <code>superseded_by</code>, and a fact
+that returns purges its own archived rows. <code>trust_state</code> is
+withheld deliberately and remains the report's most interesting
+sentence: the rubric asks for a discrete status <em>as a field</em>, and
+this is a computation, while its effect is stronger than the mark
+measures because <code>STALE</code> does not withhold a memory, it
+removes it. <code>scope_enforced</code> is withheld:
+<code>--scope</code> is a path substring applied at query time, and the
+0.9.0 "scope-aware guard" counts pathless searches rather than scoping
+memory.</li>
 <li>Study when: your memories reference something checkable — files,
 commits, tickets, URLs — and you want freshness to be an observation
 rather than a decay heuristic. The four-line rank change is the whole

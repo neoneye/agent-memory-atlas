@@ -7,25 +7,27 @@ page_kind: system
 source_name: "ArihantDeva/heimdall"
 source_url: https://github.com/ArihantDeva/heimdall
 archive_name: "ArihantDeva--heimdall"
-revision: 70ad71d06328d94331041da6aa10ab9c54b96be5
-revision_url: https://github.com/ArihantDeva/heimdall/commit/70ad71d06328d94331041da6aa10ab9c54b96be5
-analyzed_at: 2026-08-22
-capabilities: ""
+revision: 874a2003411797272dd52bcdfa899e6d3c5661d1
+revision_url: https://github.com/ArihantDeva/heimdall/commit/874a2003411797272dd52bcdfa899e6d3c5661d1
+analyzed_at: 2026-09-13
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "fact extraction — six concrete secret shapes asserted absent from the produced facts, with the skip counter as the vacuity guard | bin/lib/facts.mjs:13-27, tests/facts.test.mjs:91-116 | `SECRET_RES` holds eight patterns and `facts.mjs` skips a matching utterance before anything is stored, commented as a trust boundary rather than a preference, with the matched content never logged so that the counter in `meta.skippedSecrets` is the only observable trace. `FC-09` feeds a buffer carrying six secret shapes, asserts for each needle that no produced fact contains it, then asserts `meta.skippedSecrets === 6` — the count is what stops the case passing over an empty extraction — and `FC-03` pins the empty buffer at zero facts and zero skips so the counter itself cannot drift. The boundary this guards is extraction rather than the read path: the assertion is that the material never becomes a fact, and so can never be recalled | `node --test`; not run — the package installs a postinstall hook that wires harnesses and spawns a detached indexer"
 stack_storage: "delegated, sqlite"
 stack_retrieval: "vector, lexical"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A Graft node — either a seeded knowledge-base note anchored to a filesystem path, or a file/symbol node projected from a row in Heimdall's own journal"
-  storage: "Graft, whose C source is now vendored but whose binary is not, plus Heimdall's own authoritative SQLite journal at `~/.heimdall/journal.db`"
+  storage: "Graft, whose C source is vendored and whose binary is compiled from it at install time, plus Heimdall's own authoritative SQLite journal at `~/.heimdall/journal.db` and a `fact_history` archive beside it"
   retrieval: "`graft retrieve` for candidates plus a graph walk, then a per-hit verdict computed by checking the anchor path and its content, with the verdict as the primary sort key and the score only breaking ties"
   write: "A level-triggered reconciler: a hook appends a path hint, a single writer reads that file from disk and makes the graph match it. The hint is never believed and never replayed"
-  update_delete: "A vanished file retracts exactly the nodes its path owns and leaves an `absent` row behind; separately, at read time, a missing anchor is rehomed by a bounded basename search or the node is deleted through `graft delete`"
+  update_delete: "A vanished file retracts exactly the nodes its path owns and leaves an `absent` row behind; retracted facts are archived with `invalidated_at` and an optional `superseded_by`, capped at fifty rows per source path and purged outright when the same fact returns"
   scoping: "A `--scope` substring match against the result's path at query time; no stored scope key"
   integration: "An npm CLI, adapters that write hook config for pi, Claude Code, Codex, Cursor and Windsurf, three agent extensions, and a launchd job"
-  background: "A single-writer daemon draining the queue, an audit that compares the journal against the filesystem, and a read-only `heimdall verify` that reports drift without repairing it"
+  background: "A single-writer daemon draining the queue, an audit that compares the journal against the filesystem, a read-only `heimdall verify` that reports drift without repairing it, and a detached indexer the install hook spawns"
   trust: "Four computed verdicts — STRONG, REBUILT, WEAK, STALE, plus REMOVED and NOPATH — assigned per hit at read time and never persisted"
   strengths: "A queued path is a hint that something changed, never a description of what — so a missed, duplicated or wrong hint cannot corrupt the graph"
-  risks: "The journal is declared authoritative over a projection that nothing ever reads back, and the node-deleting read path still has no test"
+  risks: "Installing the package wires detected agent harnesses and spawns a detached indexer, swallowing every error so npm cannot see a failure; and the journal is declared authoritative over a projection that nothing ever reads back"
 ---
 
 ## 1. Executive Summary
@@ -37,7 +39,7 @@ not from lack of storage but from lack of retrieval with trust."* The store
 underneath is Graft, a separate C daemon; Heimdall seeds it, keeps it current,
 and labels what comes out.
 
-The mechanism the report was first written for is in `bin/kb_search_verify.py`.
+The mechanism at the centre of the design is in `bin/kb_search_verify.py`.
 Every search hit is checked against the filesystem at read time and assigned a
 verdict — `STRONG` (lexical coverage plus a live path), `REBUILT` (the path moved
 and the node was rebuilt), `WEAK` (semantic only), `STALE` (the anchor is gone,
@@ -50,11 +52,39 @@ That is the atlas's most repeated complaint answered directly. This corpus is
 full of systems where retrieval strength and truth end up in one number; here
 they are two, and the one that means *this still exists* wins.
 
-**The write path is now a different system.** At the first reading, the graph was
-kept current by an extension that regex-parsed the agent's own `mv`, `rm` and
-`git rm` out of `tool_result` and issued `graft delete` from the hook. That is
-gone. `extensions/kb-autosync.ts` now appends one line — a path — to a hints
-file, and `bin/lib/reconcile.mjs` reads the file from disk and makes the graph
+**A fact layer sits beside the graph.** `bin/lib/facts.mjs` extracts facts from
+a prompt log or notes file with four ordered kinds — preference, assertion,
+declaration, negation — where the order is the precedence, and it is a pure
+function of bytes and path: the same buffer always produces the same facts, ids
+included, because *"nothing here reads the clock, the environment, or any other
+file"*. That property is what makes reconcile idempotent. The id is a SHA-256 of
+the body, dedup runs at a 0.97 Jaccard over character trigrams, and the dedup key
+excludes provenance so *"line shifts can't dodge or skew the gate"*. Secrets are
+matched against eight patterns and skipped before storage, with the matched text
+never logged — a counter is the only trace.
+
+**Retractions are archived and then un-archived.** `fact_history` mirrors the
+owned-node columns and adds `invalidated_at` and a nullable `superseded_by`, set
+only when one fact replaced another; a deletion of the source archives its facts
+with `superseded_by` NULL. The archive is bounded at fifty rows per source path,
+and a fact that comes back purges its own stale archived rows. That last rule is
+why this is not a tombstone: the mark asks for a durable record of a rejected
+value that stops later extraction re-asserting it, and here re-assertion is
+exactly what erases the record. The project draws the same line itself for code
+files, whose retraction is *"not a belief change, just a file edit"* and is never
+archived at all.
+
+**Installing the package does work on the machine.** `bin/postinstall.mjs` runs
+on `npm install`: it wires enforcement stacks into whichever agent harnesses it
+detects, ensures the `graftd` binary exists by finding or building it, and spawns
+a **detached** background `heimdall index` so the corpus builds while the user
+keeps working. Every error is swallowed by design — *"npm must never see a
+nonzero exit from this script"* — and the single opt-out is
+`HEIMDALL_NO_AUTOINIT=1`. Three separate kinds of side effect, one of which
+outlives the install command, behind a variable a reader has to know to set.
+
+**The write path is level-triggered.** `extensions/kb-autosync.ts` appends one
+line — a path — to a hints file, and `bin/lib/reconcile.mjs` reads the file from disk and makes the graph
 match whatever is actually there. Its header states the property the whole design
 turns on:
 
@@ -76,7 +106,7 @@ Neither can see what the other did.
 
 ## 2. Mental Model
 
-Heimdall now holds two independent answers to one question — *does the thing this
+Heimdall holds two independent answers to one question — *does the thing this
 memory points at still exist?* — computed by different code, at different times,
 against the same store.
 
@@ -104,8 +134,8 @@ index. The graph is a projection of this; if they disagree, this wins and the
 graph gets rebuilt."*
 
 Control is **background-managed** for freshness and **agent-facing** for reading.
-The agent searches and is warned when it does not; it still does not file
-memories through Heimdall at all.
+The agent searches and is warned when it does not; it does not file memories
+through Heimdall at all.
 
 ## 3. Architecture
 
@@ -160,20 +190,20 @@ TypeScript agent extensions, a launchd job, and six test files.
 `vendor/graft/` holds Graft's C source under Apache 2.0 — 49 files, described in
 `VENDORED.md` as *"the actual code — daemon, CLI, storage, embed, retrieve,
 explore, verify, http."* `vendor/graphify/` holds the tree-sitter code-graph
-extractor under MIT. Neither is a build: `build/` and `third_party/` —
-llama.cpp, sqlite-vec, BLAKE3, mpack — are explicitly **not** vendored, so the
-store is still a binary you have to produce or install, and `heimdall doctor`
-tells you when it is missing. One detail is worth flagging rather than resolving:
+extractor under MIT. `third_party/` carries sqlite-vec, BLAKE3 and mpack in
+tree; llama.cpp is pulled at configure time by CMake `FetchContent`. The binary
+itself is not committed — `bin/lib/graft-build.mjs` compiles it, and the install
+hook runs that build — and `heimdall doctor` tells you when it is missing. One detail is worth flagging rather than resolving:
 `VENDORED.md` gives the upstream as `github.com/tinygrad/graft`, while the
 LICENSE file vendored beside it reads *"Copyright 2026 Andrea Redegalli"*. The
 provenance note and the licence in the same directory do not name the same party.
 
-**Persistence.** Heimdall now has its own. `~/.heimdall/journal.db` is opened
+**Persistence.** Heimdall has its own. `~/.heimdall/journal.db` is opened
 with `PRAGMA journal_mode = WAL` so a reader never blocks the writer, and
 `PRAGMA synchronous = FULL` under the comment *"Durability over speed: this file
 is the source of truth."* Five tables: `paths`, `owned_nodes`, `owned_edges`,
-`pending_edges`, `queue`. Graft remains the retrieval engine and is now the
-*projection*, reached over its CLI through `bin/lib/sink.mjs`.
+`pending_edges`, `queue`, plus `fact_history`. Graft is the retrieval engine and
+the *projection*, reached over its CLI through `bin/lib/sink.mjs`.
 
 **Search stack.** Unchanged: Graft supplies semantic candidates, Heimdall adds a
 lexical coverage measure plus a graph walk, so the arms are vector and lexical
@@ -181,8 +211,8 @@ with the lexical half used for *verification* rather than recall.
 
 ### Deployment and ergonomics
 
-Still a personal-machine tool — Node, Python, bash, launchd, a Graft binary you
-must be running — but installable now: `heimdall init --harness pi|claude-code|codex|cursor|windsurf|all`
+A personal-machine tool — Node, Python, bash, launchd, a Graft binary that must
+be running — and installable: `heimdall init --harness pi|claude-code|codex|cursor|windsurf|all`
 writes the hook configuration each harness expects, and `bin/lib/adapters.mjs`
 has a test per target. Nothing is containerised and nothing is multi-user.
 
@@ -239,12 +269,12 @@ so a below-cap row is only drift when the capability itself is new.
 **Verification.** `bin/kb_search_verify.py` — unchanged in shape, extended in
 substance. `extract_paths(text)` pulls candidate anchors out of a node's body;
 coverage is a token overlap between the query and the hit; a `STALE` hit with an
-id goes to `handle_stale`, whose docstring still gives the reason it exists —
+id goes to `handle_stale`, whose docstring gives the reason it exists —
 *"Desktop gets reorganized aggressively"* — and which runs a bounded basename
 search, returning `REBUILT` when it finds the file elsewhere and `STALE` when it
 does not, in which case the node is removed. Since the first reading the verdict
 also folds in **file content**: a hit whose file exists but whose text does not
-lexically cover the query no longer reaches `STRONG`.
+lexically cover the query does not reach `STRONG`.
 
 **Ranking.** `vrank = {"STRONG": 0, "REBUILT": 0, "WEAK": 1, "STALE": 2,
 "REMOVED": 2, "NOPATH": 3}` is the primary sort key and the score is secondary.
@@ -253,8 +283,8 @@ lexically cover the query no longer reaches `STRONG`.
 warns after three consecutive grep-style searches that did not consult
 knowledge. It is *"warn-only, never block"*, one warning per firing action.
 
-**Hinting.** `extensions/kb-autosync.ts` is now twenty-odd lines of work and a
-long header explaining what it stopped doing. *"Appending a line is all this
+**Hinting.** `extensions/kb-autosync.ts` is twenty-odd lines of work under a
+long header explaining what it deliberately does not do. *"Appending a line is all this
 does, so it is non-blocking and needs no lock, no sqlite, no graft, and no
 debounce."*
 
@@ -436,9 +466,24 @@ home directory.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Fifty-three cases across six files, against one at the first reading. Twenty-three
-of them are in `tests/reconcile.test.mjs`, and they test the properties the design
-claims rather than the functions it exports:
+`bench/` is a committed LongMemEval harness — ingest, recall, judge, metrics and
+a purge script — with its runs recorded and its conclusions written up in
+`bench/analysis.md`. The baseline table is published rather than summarised:
+over `--subset cycle1` (20 single-session-user, 10 multi-session), recall at 1,
+5, 10 and 25 reads 0.20 / 0.25 / 0.30 / 0.80 for single-session and
+0.30 / 0.50 / 0.60 / 0.90 for multi-session, against a stated target of 95%.
+
+The analysis is worth reading for what it does with those numbers. It names two
+confirmed failure mechanisms at code level, and the first is in the vendored
+dependency rather than in Heimdall: `build_scoped_fts_query` in
+`vendor/graft/src/storage/storage.c` joins every question token with a plain
+space, which FTS5 reads as an implicit AND, so a row must contain all of them
+and the gold session rarely matches. Publishing a low number and then locating
+it precisely in someone else's C is a different act from publishing a high one.
+
+The suite spans roughly thirty files. Twenty-three cases are in
+`tests/reconcile.test.mjs`, and they test the properties the design claims
+rather than the functions it exports:
 
 - N concurrent writers on one path converge to one node set; 300 hints from
   separate processes collapse to one queue row.
@@ -562,6 +607,8 @@ it against notes you cannot regenerate.
 - **Tests:** `tests/reconcile.test.mjs`, `tests/kb-verify.test.mjs`, `tests/guard.test.mjs`, `tests/adapters.test.mjs`, `tests/cli-contract.test.mjs`, `tests/init.test.mjs`
 
 ## History
+
+**2026-09-13** — [`874a2003411797272dd52bcdfa899e6d3c5661d1`](https://github.com/ArihantDeva/heimdall/commit/874a2003411797272dd52bcdfa899e6d3c5661d1) — re-read, 111 commits past the previous pin, 222 files and 146,613 added lines, most of them vendored C. Screened again first, and the screen changed: `package.json` carries a `postinstall` that wires detected agent harnesses, builds the `graftd` binary and spawns a detached background indexer, swallowing every error so npm cannot see a failure. Nothing was installed and no suite was run. `negative_eval` is earned where the report previously declared no marks: `facts.mjs` skips eight classes of secret before storage, and `FC-09` asserts six concrete secret shapes are absent from the produced facts while asserting `meta.skippedSecrets === 6`, so the case cannot pass over an empty extraction. `tombstone` is refused on the mechanism that most resembles it — `fact_history` archives a retraction with `invalidated_at` and an optional `superseded_by`, and a fact that returns purges its own archived rows, which is the inverse of what the mark asks. Two published claims are corrected: `third_party/` carries sqlite-vec, BLAKE3 and mpack in tree rather than being explicitly un-vendored, with llama.cpp pulled by CMake `FetchContent` and the binary compiled by `bin/lib/graft-build.mjs`; and a committed LongMemEval harness under `bench/` publishes its own baseline — recall@25 of 0.80 single-session and 0.90 multi-session against a 95% target — with a root-cause analysis locating one failure in the vendored dependency's `build_scoped_fts_query`. The 0.9.0 "scope-aware guard" is a search-behaviour nudge, not memory scoping: it counts consecutive pathless discovery searches, and `scope_enforced` is unaffected.
 
 **2026-08-22** — [`70ad71d06328d94331041da6aa10ab9c54b96be5`](https://github.com/ArihantDeva/heimdall/commit/70ad71d06328d94331041da6aa10ab9c54b96be5) — re-pinned after fifteen commits. Screened again before reading: no auto-executing surface, no build-time execution, three files inside the seven-day cooldown, and two unpinned dependency surfaces — three floating ranges in `package.json` against a present lockfile, and sixteen `>=` requirements in `vendor/graphify/requirements.txt`. Nothing was installed, no daemon was started and no search was run. The write path was replaced: the command-parsing autosync is now a hint emitter, and a level-triggered reconciler over a SQLite journal converges the graph from disk, with a single-writer lock, generation-checked commits and an audit. Graft's C source and Graphify are vendored, without their build trees. The test count went from one file to six; the verification logic gained tests and `handle_stale` still has none. No capability mark changes: the journal's `absent` row is keyed on a path rather than a rejected value, it is updated in place rather than appended to, and the verdicts are still computed at read time and discarded.
 

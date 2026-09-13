@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 236 of 455 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 198 of
+<li><strong>Negative evidence is almost never tested.</strong> 199 of
 455 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,8 +324,8 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-forty-two tombstones, one hundred and ninety-eight negative-eval suites
-— are counts <em>over inspectable code</em>, and a closed system could
+forty-two tombstones, one hundred and ninety-nine negative-eval suites —
+are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
 presence: finding a tombstone proves someone built one, while not
@@ -12507,9 +12507,10 @@ file</td>
 <td>A Graft node — either a seeded knowledge-base note anchored to a
 filesystem path, or a file/symbol node projected from a row in
 Heimdall's own journal</td>
-<td>Graft, whose C source is now vendored but whose binary is not, plus
-Heimdall's own authoritative SQLite journal at
-<code>~/.heimdall/journal.db</code></td>
+<td>Graft, whose C source is vendored and whose binary is compiled from
+it at install time, plus Heimdall's own authoritative SQLite journal at
+<code>~/.heimdall/journal.db</code> and a <code>fact_history</code>
+archive beside it</td>
 <td><code>graft retrieve</code> for candidates plus a graph walk, then a
 per-hit verdict computed by checking the anchor path and its content,
 with the verdict as the primary sort key and the score only breaking
@@ -12518,25 +12519,28 @@ ties</td>
 writer reads that file from disk and makes the graph match it. The hint
 is never believed and never replayed</td>
 <td>A vanished file retracts exactly the nodes its path owns and leaves
-an <code>absent</code> row behind; separately, at read time, a missing
-anchor is rehomed by a bounded basename search or the node is deleted
-through <code>graft delete</code></td>
+an <code>absent</code> row behind; retracted facts are archived with
+<code>invalidated_at</code> and an optional <code>superseded_by</code>,
+capped at fifty rows per source path and purged outright when the same
+fact returns</td>
 <td>A <code>--scope</code> substring match against the result's path at
 query time; no stored scope key</td>
 <td>An npm CLI, adapters that write hook config for pi, Claude Code,
 Codex, Cursor and Windsurf, three agent extensions, and a launchd
 job</td>
 <td>A single-writer daemon draining the queue, an audit that compares
-the journal against the filesystem, and a read-only
-<code>heimdall verify</code> that reports drift without repairing
-it</td>
+the journal against the filesystem, a read-only
+<code>heimdall verify</code> that reports drift without repairing it,
+and a detached indexer the install hook spawns</td>
 <td>Four computed verdicts — STRONG, REBUILT, WEAK, STALE, plus REMOVED
 and NOPATH — assigned per hit at read time and never persisted</td>
 <td>A queued path is a hint that something changed, never a description
 of what — so a missed, duplicated or wrong hint cannot corrupt the
 graph</td>
-<td>The journal is declared authoritative over a projection that nothing
-ever reads back, and the node-deleting read path still has no test</td>
+<td>Installing the package wires detected agent harnesses and spawns a
+detached indexer, swallowing every error so npm cannot see a failure;
+and the journal is declared authoritative over a projection that nothing
+ever reads back</td>
 </tr>
 <tr>
 <td><code>helix-agi</code></td>
@@ -24806,7 +24810,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>198 of 455:</em> <a
+<p><em>199 of 455:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
@@ -24865,6 +24869,7 @@ href="../systems/graphnosis/"><code>graphnosis</code></a>, <a
 href="../systems/graymatter/"><code>graymatter</code></a>, <a
 href="../systems/grok-build/"><code>grok-build</code></a>, <a
 href="../systems/hatchdoor/"><code>hatchdoor</code></a>, <a
+href="../systems/heimdall/"><code>heimdall</code></a>, <a
 href="../systems/helix-agi/"><code>helix-agi</code></a>, <a
 href="../systems/helm/"><code>helm</code></a>, <a
 href="../systems/hermes-agent/"><code>hermes-agent</code></a>, <a
@@ -25027,7 +25032,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> One
-hundred and ninety-eight repositories of four hundred and fifty-five
+hundred and ninety-nine repositories of four hundred and fifty-five
 assert that particular material must <em>not</em> be retrieved — the
 assertion every scope, deletion and correction claim in this document
 ultimately rests on. Read together rather than one at a time, they split
@@ -31354,7 +31359,7 @@ against the ABI it implements</li>
 <li><a
 href="https://github.com/ArihantDeva/heimdall">ArihantDeva/heimdall</a>
 at <a
-href="https://github.com/ArihantDeva/heimdall/commit/70ad71d06328d94331041da6aa10ab9c54b96be5"><code class="commit-id" title="70ad71d06328d94331041da6aa10ab9c54b96be5">70ad71d0…</code></a>
+href="https://github.com/ArihantDeva/heimdall/commit/874a2003411797272dd52bcdfa899e6d3c5661d1"><code class="commit-id" title="874a2003411797272dd52bcdfa899e6d3c5661d1">874a2003…</code></a>
 — read only, re-screened at the re-pin; no auto-run surface, no
 build-time execution, three files inside the seven-day cooldown and two
 unpinned dependency surfaces (three floating ranges in
