@@ -7,10 +7,17 @@ page_kind: system
 source_name: "itechmeat/open-second-brain"
 source_url: https://github.com/itechmeat/open-second-brain
 archive_name: "itechmeat--open-second-brain"
-revision: 8d05a62a329dc650113f6c45ca2108727a3b07a9
-revision_url: https://github.com/itechmeat/open-second-brain/commit/8d05a62a329dc650113f6c45ca2108727a3b07a9
-analyzed_at: 2026-08-13
-capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review"
+revision: 54bb28d9b760758446e494e3c6473f6534dfbdee
+revision_url: https://github.com/itechmeat/open-second-brain/commit/54bb28d9b760758446e494e3c6473f6534dfbdee
+analyzed_at: 2026-09-13
+capabilities: "tombstone, trust_state, scope_enforced, audit_log, negative_eval, human_review"
+capability_evidence:
+  tombstone: "a user-rejected rule, keyed on its topic and consulted before anything regrows | src/cli/brain/verbs/reject.ts:58, src/core/brain/preference.ts:308-314, :1203, src/core/brain/dream-scan.ts:161-171, src/core/brain/dream-plan-topics.ts:229, :248, :268 | `o2b brain reject --reason <text>` writes `user_rejected_reason` into the retired file's frontmatter, and it is set only for user-rejected retirements — an automatic retirement leaves it undefined, so the field distinguishes a judgement from a decay. The read is what makes it a tombstone rather than an archive: `dream-plan-topics.ts:248` builds the suppressor set as the retired rules for a topic that carry the field, and matching signals are swallowed before candidate planning because re-growing the rule from fresh signals is what the user asked against. The record survives the value it rejected and is consulted on the path that would otherwise re-assert it | tests/core/brain/dream-plan-topics tests asserting a `signal-suppressed` entry, and the complementary case asserting the log does NOT contain one"
+  trust_state: "a preference's status, read as a filter on what reaches the active set | src/core/brain/types.ts:89-102, src/core/brain/active.ts:149, :156 | `BRAIN_PREFERENCE_STATUS` is three discrete values — `unconfirmed`, `confirmed` and `quarantine` — and the last is a probation state for a previously-confirmed rule whose recent evidence is dominantly negative. It is a state rather than a score because it is used to filter: `active.ts:149` admits only `confirmed` into the active rule set and `:156` routes `quarantine` elsewhere, so an unconfirmed or quarantined preference does not reach the model as an active rule. A person moves a rule into `confirmed` through `o2b brain feedback` | tests/core/brain covering the status transitions and the active-set composition"
+  scope_enforced: "recall — an owner token stored on a preference and applied as a visibility predicate on the per-request fact surface | src/core/brain/owner-scoped-facts.ts:1-15, src/core/graph/agent-scope.ts | a preference may declare an `owner:` token; owner-scoped recall keeps each owner's facts separate while ownerless facts stay shared. The module deliberately reuses `agent-scope.ts`'s `pageOwner` and `isOwnerVisible` rather than reimplementing the rule, so the fact layer and the search layer share one visibility definition instead of drifting apart. It is wired into `brain_query`, the per-request fact-recall surface. The honest limit is in its own header: with no scope requested the behaviour is byte-identical to unscoped recall, so the predicate narrows only when a caller supplies a scope | tests/mcp/visibility-scope.test.ts, tests/openclaw/page-search-visibility.test.ts"
+  audit_log: "an append-only per-preference audit trail in the vault the system owns | src/core/brain/log.ts:2, :19-23, Brain/log/pref-audit/<pref-id>.jsonl | the Brain log is a dated markdown file per day plus a JSONL trail per preference, and `appendLogEvent` is documented as preserving previous bytes verbatim — the log is append-only, with atomicity achieved by reading and rewriting rather than by an in-place edit. Entries record the mutations the dream pass and the CLI make to preferences, including the `signal-suppressed` entry naming both the signal and the suppressor that swallowed it | tests/core/brain/log tests, and the complementary `expect(log).not.toContain(\"signal-suppressed\")` case"
+  human_review: "the feedback and reject verbs — a person decides what becomes an active rule and what is retired with a reason | src/cli/brain/verbs/feedback.ts:170, :259, src/cli/brain/verbs/reject.ts:58, src/cli/brain/verbs/intent-review.ts | nothing a session captures becomes a preference on its own: signals wait for the nightly dream pass, which proposes, and a person moves a candidate to `confirmed` through `o2b brain feedback` — `feedback.ts:170` sets `status: BRAIN_PREFERENCE_STATUS.confirmed` and the command reports it. The other half of the disposition is `o2b brain reject --reason`, which retires the rule and records why in the same act, so the approval surface and the rejection surface both produce durable state rather than only a display | tests/cli covering the feedback and reject verbs"
+  negative_eval: "the visibility suites — a withheld page must answer byte for byte as an absent one, over a fixture proven to hold it | tests/mcp/visibility-not-found-parity.test.ts:1-19, :162-205, :230-274, tests/mcp/visibility-matrix.test.ts | the file states the threat before the cases: both key spaces are enumerable — a chunk id is a sequential integer and a preference id is `pref-<topic-slug>` — so *\"a distinguishable refusal is an existence oracle over exactly the population the boundary exists to hide\"*. Each case pairs its halves: the artifact `toContain(MARKER)` at local reach and `not.toContain(MARKER)` at remote, and a withheld preference's error string, with the id masked, must equal the absent-key error exactly. The vacuity guard is explicit and named — one case asserts the topic *\"really does have a row to withhold, so the count above is not trivially equal\"*, and the header states the rule the atlas applies from outside: *\"A probe that never saw the marker at local reach would be a clean sweep over an empty fixture\"* | `bun test`; not run — a dependency surface changed inside the 7-day cooldown"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -361,13 +368,24 @@ and, in the complementary case, `expect(log).not.toContain("signal-suppressed")`
 `tests/core/brain/temporal/weekly-brief.test.ts` checks that the contradictions
 list combines suppression with violated evidence.
 
-The `negative_eval` mark is **withheld and it is close.** Those suppression
-assertions are the right shape — committed cases pinning that particular material
-does not appear — but what they assert is that a signal is not *promoted*, which
-is the write path. The mark as this atlas defines it wants a case asserting that
-particular material is not *retrieved*, and the retrieval suite's filters are not
-pinned that way. The mechanism is there; the assertion is one layer upstream of
-where the mark looks.
+The suppression assertions above pin the write path — that a signal is not
+*promoted*. The read path is pinned separately, and that is what earns
+`negative_eval`. `tests/mcp/visibility-not-found-parity.test.ts` takes the two
+primitives that accept a caller-supplied key rather than a query — a chunk id
+through `expandHit`, and a Brain artifact id through the templated `osb://`
+resources — and asserts that a withheld page is refused with the message an
+absent key produces, byte for byte once the id is masked. The file argues why
+that is the assertion worth making: both key spaces are enumerable, a chunk id
+being a sequential integer and a preference id `pref-<topic-slug>`, so *"a
+distinguishable refusal is an existence oracle over exactly the population the
+boundary exists to hide."*
+
+It carries its own vacuity guard, and names it. Every artifact case pairs
+`toContain(MARKER)` at local reach with `not.toContain(MARKER)` at remote, one
+case exists only to assert that the topic *"really does have a row to withhold,
+so the count above is not trivially equal"*, and the header states the rule
+outright: *"A probe that never saw the marker at local reach would be a clean
+sweep over an empty fixture."*
 
 What is absent is any retrieval-quality measurement — no fixture corpus with
 expected hits, no precision or recall figure, no benchmark committed. For a
@@ -502,6 +520,8 @@ are each a file or two and separable from the rest.
 `tests/core/brain/temporal/weekly-brief.test.ts`, `tests/core/brain.types.test.ts`.
 
 ## History
+
+**2026-09-13** — [`54bb28d9b760758446e494e3c6473f6534dfbdee`](https://github.com/itechmeat/open-second-brain/commit/54bb28d9b760758446e494e3c6473f6534dfbdee) — re-read, 19 commits past the previous pin but 1,016 files and 149,801 added lines, most of it a visibility boundary built out across the MCP surface. `negative_eval` is added as a sixth mark on `tests/mcp/visibility-not-found-parity.test.ts` and the matrix suite beside it, which pin that a withheld read is byte-for-byte indistinguishable from an absent one — the file argues the threat itself, that both key spaces are enumerable and a distinguishable refusal is an existence oracle over the population the boundary hides. The five existing marks were re-checked against the new tree rather than carried forward, and `tombstone` was traced end to end: `o2b brain reject --reason` writes `user_rejected_reason` at `src/cli/brain/verbs/reject.ts:58`, `preference.ts:1203` parses it, `dream-scan.ts:171` carries it, and `dream-plan-topics.ts:248` filters the suppressor set on it, so the rejected-value record still has a live producer on a path a user can reach and a live consumer that keeps the rule from re-growing. Screened again first: a dependency surface changed inside the 7-day cooldown; nothing was installed and no suite was run.
 
 **2026-08-13** — [`8d05a62a329dc650113f6c45ca2108727a3b07a9`](https://github.com/itechmeat/open-second-brain/commit/8d05a62a329dc650113f6c45ca2108727a3b07a9)
 — first reading, at v1.45.0. Screened before reading: 2 auto-run surfaces
