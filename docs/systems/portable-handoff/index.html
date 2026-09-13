@@ -112,14 +112,14 @@ declare is capped by where it came from.</p>
               <strong>legoambarish/portable-handoff</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e" title="4c9b7f7309803d009ce795af9f397875f23d567e">
+            <a class="meta-pill revision-pill" href="https://github.com/legoambarish/portable-handoff/commit/ec5f203b2bf042a74377d4a51cafb695d25efdef" title="ec5f203b2bf042a74377d4a51cafb695d25efdef">
               <span>Analyzed revision</span>
-              <code>4c9b7f73…</code>
+              <code>ec5f203b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/legoambarish--portable-handoff" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -268,6 +268,17 @@ Paths</h2>
 dirty state, changed files, and per-file hashes, each stamped
 <code>Provenance.GIT</code> and <code>Trust.VERIFIED</code>
 (<code>gitfacts.py:138</code>).</p>
+<p>One guard in that path is worth naming because it defends the
+capsule's central claim. A repository with no commits reports
+<code>HEAD</code> as git's all-zero object id, which matches the hex
+pattern a commit is validated against, so recording it verbatim
+<em>"would let a capsule claim a specific commit exists when nothing has
+been committed at all."</em> <code>_is_null_oid</code> rejects it and
+the field becomes <code>None</code> instead, and a case named
+<code>test_unborn_branch_worktree_commit_is_not_a_fabricated_hash</code>
+pins it. For a format whose whole value is that a receiving agent can
+trust the facts half without re-deriving it, a fabricated commit id is
+the worst available failure.</p>
 <p><strong>Meaning capture.</strong> The model writes a draft JSON
 against <code>schemas/handoff-v1.schema.json</code>;
 <code>skills/handoff/SKILL.md</code> and the per-host command files tell
@@ -567,6 +578,22 @@ codex_sqlite, cursor, cursor_live, transcript_file)</li>
 <code>tests/quality/evaluate_quality.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/legoambarish/portable-handoff/commit/ec5f203b2bf042a74377d4a51cafb695d25efdef"><code class="commit-id" title="ec5f203b2bf042a74377d4a51cafb695d25efdef">ec5f203b…</code></a>
+— re-read, three commits past the previous pin. The mark stands and the
+fact-capture path gained a guard: an unborn branch reports
+<code>HEAD</code> as the all-zero object id, which satisfies the
+40-to-64 hex-character check a commit was validated against, so a
+capsule built in a repository with no commits recorded a commit that
+does not exist. <code>_is_null_oid</code> now rejects it and the field
+is <code>None</code>. Around it, 222 lines of cases cover unusual git
+states — unborn branch, detached HEAD, publication against a remote,
+multiple remotes, a capped changed-file list whose total is not capped,
+a symlinked untracked file that is neither hashed nor marked existing,
+and three paths outside any repository. <code>negative_eval</code> is
+unchanged: it rests on the rendered capsule and the parser's error path,
+and these new cases pin fact collection rather than retrieval. Screened
+again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e"><code class="commit-id" title="4c9b7f7309803d009ce795af9f397875f23d567e">4c9b7f73…</code></a>
 — first reading, at version 0.1.0. Screened before anything was read: no

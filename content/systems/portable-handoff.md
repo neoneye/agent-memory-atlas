@@ -7,9 +7,9 @@ page_kind: system
 source_name: "legoambarish/portable-handoff"
 source_url: https://github.com/legoambarish/portable-handoff
 archive_name: "legoambarish--portable-handoff"
-revision: 4c9b7f7309803d009ce795af9f397875f23d567e
-revision_url: https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e
-analyzed_at: 2026-08-20
+revision: ec5f203b2bf042a74377d4a51cafb695d25efdef
+revision_url: https://github.com/legoambarish/portable-handoff/commit/ec5f203b2bf042a74377d4a51cafb695d25efdef
+analyzed_at: 2026-09-13
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the rendered capsule and the parser's own error path | tests/integration/test_blocking_and_briefing.py, tests/security/test_adversarial.py | committed cases assert that particular material must not appear — a detected secret must be absent from the rendered Markdown while its `[REDACTED:github]` marker is present, and a duplicate-key parse failure must not echo the offending value into the exception text; the redaction case pairs the absence with a presence assertion in the same fixture, so it cannot pass on an empty render | tests/integration/test_blocking_and_briefing.py::test_secrets_are_redacted_without_disclosing_the_match; tests/security/test_adversarial.py::test_malformed_json_never_echoes_content"
@@ -157,6 +157,16 @@ which is the one part the README does not spell out as a trust consequence.
 **Fact capture.** `preflight.py` and `gitfacts.py` — repository root, remote,
 branch, commit, dirty state, changed files, and per-file hashes, each stamped
 `Provenance.GIT` and `Trust.VERIFIED` (`gitfacts.py:138`).
+
+One guard in that path is worth naming because it defends the capsule's central
+claim. A repository with no commits reports `HEAD` as git's all-zero object id,
+which matches the hex pattern a commit is validated against, so recording it
+verbatim *"would let a capsule claim a specific commit exists when nothing has
+been committed at all."* `_is_null_oid` rejects it and the field becomes `None`
+instead, and a case named
+`test_unborn_branch_worktree_commit_is_not_a_fabricated_hash` pins it. For a
+format whose whole value is that a receiving agent can trust the facts half
+without re-deriving it, a fabricated commit id is the worst available failure.
 
 **Meaning capture.** The model writes a draft JSON against
 `schemas/handoff-v1.schema.json`; `skills/handoff/SKILL.md` and the per-host
@@ -421,5 +431,7 @@ session.
 - **Tests:** `tests/security/test_adversarial.py`, `tests/integration/test_blocking_and_briefing.py`, `tests/integration/test_create_load.py`, `tests/quality/evaluate_quality.py`
 
 ## History
+
+**2026-09-13** — [`ec5f203b2bf042a74377d4a51cafb695d25efdef`](https://github.com/legoambarish/portable-handoff/commit/ec5f203b2bf042a74377d4a51cafb695d25efdef) — re-read, three commits past the previous pin. The mark stands and the fact-capture path gained a guard: an unborn branch reports `HEAD` as the all-zero object id, which satisfies the 40-to-64 hex-character check a commit was validated against, so a capsule built in a repository with no commits recorded a commit that does not exist. `_is_null_oid` now rejects it and the field is `None`. Around it, 222 lines of cases cover unusual git states — unborn branch, detached HEAD, publication against a remote, multiple remotes, a capped changed-file list whose total is not capped, a symlinked untracked file that is neither hashed nor marked existing, and three paths outside any repository. `negative_eval` is unchanged: it rests on the rendered capsule and the parser's error path, and these new cases pin fact collection rather than retrieval. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-20** — [`4c9b7f7309803d009ce795af9f397875f23d567e`](https://github.com/legoambarish/portable-handoff/commit/4c9b7f7309803d009ce795af9f397875f23d567e) — first reading, at version 0.1.0. Screened before anything was read: no auto-executing surface, one build-time execution point, one dependency manifest inside the seven-day cooldown and no lockfile beside `pyproject.toml`; nothing was installed and no command was run. The trust cap and the command classifier were established by reading `models.py` and `command_safety.py` against the committed tests rather than by producing a capsule.
