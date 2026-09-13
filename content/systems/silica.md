@@ -41,16 +41,6 @@ vault, a codebase's docs, research material — as agent-writable memory. About
 CLI, a Claude Code plugin, an MCP server and a web UI over one vault. It targets
 the Open Knowledge Format v0.2 and runs local inference optionally.
 
-The repository was named `kiycoh/silica-harness` at the commit this report is
-pinned to and has since been renamed to `kiycoh/silica-core`. The rename is
-complete in code rather than in the README alone — `pyproject.toml` declares
-`name = "silica-core"`, and the old spelling appears nowhere in the current
-README, including the banner URLs, the badge links and the
-`uvx --from 'silica-harness[mcp]'` invocation that carried it in three places at
-the pin. The distribution `silica-harness` remains resolvable on PyPI alongside
-`silica-core`. Links in this report point at the current name, which is where
-GitHub redirects the old one; the project name, Silica, did not change.
-
 Its thesis is in one sentence of the README: *"the harness guides, the LLM
 proposes, a parser and an FSM verify and execute, and every write is verified
 against a source, reverted if corrupted."* The model never writes; it proposes
@@ -466,5 +456,7 @@ that can refuse to serve a disputed claim rather than annotate it.
   assertions, `test_bitemporal_invariants.py` the stamp invariants
 
 ## History
+
+**2026-09-13** — the repository was renamed from `kiycoh/silica-harness` to `kiycoh/silica-core`, upstream of the pinned commit and after the reading below. The rename reaches the code rather than the README alone: `pyproject.toml` declares `name = "silica-core"`, and the old spelling survives nowhere in the tree — at `300fab2e1686e6401a059ec62161ba5a46fce356` it appeared in the banner URLs, the DeepWiki and licence badges, both plugin-marketplace commands and the `uvx --from 'silica-harness[mcp]'` invocation. The distribution `silica-harness` resolves on PyPI beside `silica-core`. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug stays `silica`, so no published URL moved and no redirect stub was needed. The archive fork was renamed to `agent-memory-atlas-archive/kiycoh--silica-core` to match, after the owner wrote in to report the stale name.
 
 **2026-08-23** — [`300fab2e1686e6401a059ec62161ba5a46fce356`](https://github.com/kiycoh/silica-core/commit/300fab2e1686e6401a059ec62161ba5a46fce356) — first reading, AGPL-3.0, ~72,700 lines of Python across 208 modules, 955 commits since 25 May 2026. Screened before anything was read: four auto-run surfaces — a `.claude-plugin/` marketplace and plugin manifest, a `hooks/hooks.json` registering SessionStart, PreCompact and Stop, and an `mcp.json` — three build-time execution points, and both `pyproject.toml` and `uv.lock` changed the day of the pin, inside the cooldown. Nothing was installed, no hook was registered, no eval was run and no vault was opened. One screen finding is a false positive worth recording: `silica/router/states/setup.py` was flagged as install-time execution on its filename and is an FSM state. Four marks. `trust_state` is withheld deliberately rather than for absence — the contested flag is rendered into the recall block as `| contested: <reason>` instead of gating admissibility, so a disputed claim reaches the model annotated rather than withheld. `scope_enforced` is withheld because separation is per vault; `tombstone` because nothing keys on a removed value.
