@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An encrypted offline vault whose
+audit chain anchors its own length against truncation, and whose
+memory-shape rule moved from the MCP handshake into a refusal after the
+handshake version was measured at a 1,938-character median.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Compartment — Agent Memory Atlas">
+    <meta property="og:description" content="An encrypted offline vault
+whose audit chain anchors its own length against truncation, and whose
+memory-shape rule moved from the MCP handshake into a refusal after the
+handshake version was measured at a 1,938-character median.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Compartment — Agent Memory Atlas">
+    <meta name="twitter:description" content="An encrypted offline vault
+whose audit chain anchors its own length against truncation, and whose
+memory-shape rule moved from the MCP handshake into a refusal after the
+handshake version was measured at a 1,938-character median.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Compartment — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Compartment",
+      "description": "An encrypted offline vault whose audit chain anchors its own length against truncation, and whose memory-shape rule moved from the MCP handshake into a refusal after the handshake version was measured at a 1,938-character median.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The prompt was measured and replaced with a
+door</p>
+          <h1>Compartment</h1>
+          <p class="document-deck">An encrypted offline vault whose
+audit chain anchors its own length against truncation, and whose
+memory-shape rule moved from the MCP handshake into a refusal after the
+handshake version was measured at a 1,938-character median.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MaxFreedomPollard/Compartment">
+              <span>Source</span>
+              <strong>MaxFreedomPollard/Compartment</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MaxFreedomPollard/Compartment/commit/2686197034ed103a2d4283f1e679a7c8a2d929b6" title="2686197034ed103a2d4283f1e679a7c8a2d929b6">
+              <span>Analyzed revision</span>
+              <code>26861970…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MaxFreedomPollard--Compartment" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MaxFreedomPollard--Compartment</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Compartment is an encrypted, fully offline memory vault — Apache-2.0,
+about 30,700 lines of Python, one sealed <code>.vault</code> file, with
+an MCP server, a Claude Code plugin, a Gemini extension, a menu-bar app
+and a CLI over it. A passphrase the user sets is the only credential,
+and the project never generates one.</p>
+<p>Four marks, and the two things worth reading are both cases of a
+design decision being <em>argued</em> in the file that implements
+it.</p>
+<p><strong>The audit chain knows what a hash chain cannot
+catch.</strong> <code>audit.py</code> states the problem and its answer
+in eleven lines:</p>
+<blockquote>
+<p>A forward-only chain cannot catch a truncation of its own tail: lop
+the last three entries off and what remains still verifies, just
+shorter. So the head and the length are anchored outside the chain, in
+the meta table, every time the vault is saved. <code>verify()</code>
+then requires the chain to EXTEND that anchor: fewer entries than were
+anchored, or a different hash at the anchored position, is reported as
+removal rather than passing as a clean shorter log.</p>
+</blockquote>
+<p>Hash-chained audit logs are not rare in this corpus. One that notices
+its own blind spot and closes it is.</p>
+<p><strong>The store gate replaced a prompt after measuring the
+prompt.</strong> The header of <code>gate.py</code> records what
+happened:</p>
+<blockquote>
+<p>An instruction asking for one-or-two-sentence memories shipped in the
+MCP handshake and was measured not to work: against a real vault the
+median organic memory was 1,938 characters — session logs, headed lists,
+narrated paragraphs — because prose advice competes with everything else
+in a busy context and loses. A structured refusal arrives at the exact
+moment of the mistake, names what to do instead, and is obeyed.</p>
+</blockquote>
+<p>This atlas records a great many memory policies that live in prompt
+text. Here is one that was tried, measured against a real vault, found
+not to work, and moved into code — with the number kept.</p>
+<p>The gate is also careful about where it applies. It is <em>"enforced
+only where an author can rephrase: agent- and operator-authored
+stores"</em>, and the restore and capture paths — imports, journal
+replay, pack installs, the Claude Code hook, the Hermes auto-capture
+writer — <em>"pass verbatim text they have no license to rewrite, and
+bypass with <code>_gate=False</code>."</em> A shape rule that rewrote an
+import would be corrupting a record rather than improving one.</p>
+<p><strong>The reason it is protecting.</strong> The same header states
+why one claim per record matters, and it is a retrieval argument rather
+than a tidiness one: <em>"A blob embeds as the centroid of its topics,
+so it matches many queries weakly; when it does match, one relevant
+sentence drags kilobytes into the reader's context."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a record in a namespace inside a sealed file, and the
+caller's ACL decides which namespaces exist as far as they are
+concerned.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the gate refuses a badly shaped memory at the door on authored paths only, while restore paths bypass it verbatim, and every write lands in a journal and a hash chain anchored against truncation</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the gate refuses a badly shaped memory at the door on authored paths only, while restore paths bypass it verbatim, and every write lands in a journal and a hash chain anchored against truncation
+flowchart TB
+    UNLOCK[&quot;Vault.unlock(path, passphrase)&quot;] --&gt; RAM[&quot;decrypt payload,&lt;br/&gt;replay journal,&lt;br/&gt;rebuild vector index in RAM&quot;]
+    A[&quot;agent or operator store&quot;] --&gt; G{&quot;store gate:&lt;br/&gt;one claim, shape checked&quot;}
+    G --&gt;|refused| MSG[&quot;structured refusal naming&lt;br/&gt;what to do instead&quot;]
+    G --&gt;|accepted| W[&quot;write&quot;]
+    IMP[&quot;import, journal replay,&lt;br/&gt;pack install, capture hook&quot;] --&gt;|&quot;_gate=False, verbatim&quot;| W
+    W --&gt; J[(&quot;journal + fsync&quot;)]
+    W --&gt; AU[(&quot;hash-chained audit log,&lt;br/&gt;head and length anchored in meta&quot;)]
+    W --&gt; DB[(&quot;records + relations,&lt;br/&gt;inside the seal&quot;)]
+    Q[&quot;search(query, caller)&quot;] --&gt; ACL{&quot;ACL: readable namespaces&lt;br/&gt;for this caller&quot;}
+    ACL --&gt; DB
+    DB --&gt; R[&quot;results&quot;]
+    TS[&quot;tombstone(record_id, by)&quot;] --&gt; KEEP[&quot;row, ciphertext and vectors stay —&lt;br/&gt;history and export keep it&quot;]
+    TS --&gt; FTS[&quot;FTS row removed —&lt;br/&gt;the keyword channel cannot surface it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One file. <code>Vault.create</code> writes a sealed
+<code>.vault</code>; <code>Vault.unlock</code> decrypts the payload into
+RAM, replays the journal and rebuilds the vector index in memory; writes
+are journaled and fsynced; <code>save()</code> compacts and reseals and
+<code>lock()</code> drops key material from the process.</p>
+<p><strong>The vector index is never persisted</strong> — it is rebuilt
+on unlock. That costs startup time and means an attacker with the file
+gets ciphertext rather than embeddings, which for a vault whose premise
+is offline encryption is the right trade.</p>
+<p>The ACL config lives <em>next to</em> the vault as plaintext
+<code>&lt;vault&gt;.config.json</code>, and the file says why that is
+safe: it <em>"contains no secrets — only ACLs and preferences."</em></p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Vault lifecycle</strong> —
+<code>src/compartment/vault.py:1-12</code> (the docstring states it),
+<code>_readable_namespaces</code> (1096), <code>search</code>
+(1125-1141), tombstone dispatch (923), journal ops including
+<code>forget</code> (725-732).</li>
+<li><strong>Audit</strong> —
+<code>src/compartment/audit.py:1-12</code>.</li>
+<li><strong>ACL</strong> — <code>src/compartment/acl.py:1-6</code>,
+defaults (23), <code>default_namespace</code> (99), <code>_match</code>
+specificity (103-106).</li>
+<li><strong>Store gate</strong> —
+<code>src/compartment/gate.py:1-30</code>.</li>
+<li><strong>Store layer</strong> —
+<code>src/compartment/store.py</code>: <code>relations</code> validity
+columns (90-91), <code>tombstone</code> (274-282),
+<code>find_relations</code> with <code>as_of</code> (652-676).</li>
+<li><strong>Curation</strong> —
+<code>src/compartment/curate.py:1-12</code>, <code>apply_plan</code>
+(105).</li>
+<li><strong>Crypto</strong> — <code>src/compartment/crypto.py</code>;
+embedding daemon in <code>embed_daemon.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record carries ciphertext, a namespace, a <code>kind</code> and
+tags. Relations are a separate subject-predicate-object table with
+<code>valid_from</code>, <code>valid_to</code> and a
+<code>created</code> timestamp.</p>
+<p>There is no epistemic status on a record — no candidate, verified or
+rejected — so <strong><code>trust_state</code> is withheld</strong>.
+<code>kind</code> is a genre and tags are labels.</p>
+<p><strong><code>tombstone</code> is withheld</strong>, and the
+near-miss is interesting. <code>store.tombstone(record_id, by)</code>
+sets <code>superseded_by</code> and the docstring describes a deliberate
+asymmetry: <em>"The row, its ciphertext and its vectors stay — history
+is kept, and export still carries it — but its FTS row goes, so the
+keyword channel can never surface it."</em> That is supersession keyed
+on a record id, which the rubric names as not the mark, and the partial
+removal is a thoughtful design: the record survives for audit and export
+while one retrieval arm loses it permanently. Nothing is keyed on the
+<em>content</em>, so the same claim stored again is a new live
+record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three channels: FTS keyword search, vectors held in RAM, and a
+deterministic relation filter. The ACL is applied first —
+<code>search</code> resolves the caller's readable namespaces before
+anything is scored — and <code>as_of</code> on the relation filter keeps
+windows covering an instant, with open-ended windows always
+matching.</p>
+<p>Namespace scoping is the boundary and it is not optional: the caller
+is a required argument, so there is no call shape that skips it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write is journaled and fsynced before the vault is resealed, so
+a crash loses at most the compaction rather than the write. The journal
+is replayed on unlock, and the <code>forget</code> operation is
+explicitly built to be replayable.</p>
+<p>The gate sits in front of authored writes only. Its bypass is not a
+loophole but the correct behaviour for a path that is restoring somebody
+else's text, and the distinction is stated where the flag is
+defined.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server (<code>mcp.json</code>, <code>server.json</code>), a
+Claude Code plugin with hooks, a Gemini extension, a desktop menu bar
+and systray, and a CLI. The screen flags three auto-run surfaces, which
+is what a tool designed to be installed into several harnesses looks
+like.</p>
+<p><code>curate.py</code> is the interesting integration: it splits blob
+memories into atomic ones, and it <em>"never invents the split.
+Compartment never calls an LLM and never touches the network, so the
+intelligence that turns one 2,000-character blob into five one-claim
+memories comes from outside — the user's own agent, reading the listing
+this module produces and writing the plan this module applies."</em> The
+module owns the bookkeeping and delegates the judgement.
+<strong><code>human_review</code> is withheld</strong> because the plan
+is authored by an agent rather than approved by a person, and no command
+prompts for an approval — but the split of mechanics from judgement is
+worth copying regardless.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The threat model is a stolen file and a tampered log, and both are
+addressed. The payload is sealed with a user-set passphrase, the vector
+index never touches disk, <code>lock()</code> drops key material from
+the process, and the audit chain detects insertion, reordering and
+truncation.</p>
+<p><code>packs/*</code> namespaces being read-only for every caller
+including the <code>*</code> default is the ACL detail worth noting:
+shipped content cannot be edited by a caller who was granted
+everything.</p>
+<p>What is absent is epistemics. Nothing records that a memory was
+judged wrong, and supersession is by id, so the vault's defence is
+against tampering rather than against being mistaken.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A substantial suite, and
+<code>tests/test_starter_visibility.py</code> is the one that earns the
+mark. <code>test_the_recent_feed_hides_seeded_memories</code> asserts no
+seeded memory appears in the feed, and on the very next line asserts
+<code>out["counts"]["seeded"] == 6665</code> — so the absence is
+measured against a store containing six and a half thousand of exactly
+the material being excluded. The count <em>is</em> the vacuity guard,
+and it is the cleanest instance of that pairing this atlas has read.</p>
+<p>Its docstring explains why the test exists, which is rarer still:
+<em>"Unchanged behaviour, stated so the fix below cannot be read as a
+licence to bury real memories under thousands of starting
+ones."</em></p>
+<p><code>longmemeval.py</code> and <code>bench.py</code> are in the
+tree; no committed result was found for either. No paper and no
+<code>CITATION.cff</code>.</p>
+<p>Nothing was run. The screen reports three auto-run surfaces — a
+<code>.claude-plugin/</code> marketplace manifest, <code>mcp.json</code>
+and <code>server.json</code> — and a <code>tests/conftest.py</code> that
+executes on collection.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Anchor your audit chain's length outside the chain.</strong>
+A hash chain proves nothing about its own tail. Writing the head and the
+count into a separate table on every save, and requiring a later
+verification to <em>extend</em> that anchor, turns a silent truncation
+into a reported removal. Eleven lines of comment and a meta-table
+row.</p>
+<p><strong>Measure the prompt before you trust it, and keep the
+number.</strong> <em>"The median organic memory was 1,938
+characters"</em> is the sentence that justifies moving a rule from the
+handshake into a refusal. Most projects in this corpus have the rule in
+the prompt and no measurement either way.</p>
+<p><strong>Refuse at the door, and say what to do instead.</strong> A
+structured refusal <em>"arrives at the exact moment of the mistake,
+names what to do instead, and is obeyed"</em> — which is what prose
+advice in a system prompt cannot do.</p>
+<p><strong>Exempt the paths that are restoring, not authoring.</strong>
+The gate bypasses imports, journal replay and capture hooks
+<em>"verbatim text they have no license to rewrite"</em>. A shape rule
+applied to a restore is data corruption.</p>
+<p><strong>Take the caller as a required argument on your read
+path.</strong> <code>search(query, caller, ...)</code> has no call shape
+that omits the scope.</p>
+<p><strong>Keep the record and drop it from one channel.</strong>
+Tombstoning here retains the row, the ciphertext and the vectors for
+history and export while removing the FTS row permanently. Two different
+questions — can it be audited, can it be found — answered
+separately.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Superseding by id when the risk is re-assertion.</strong> The
+record is removed from the keyword channel and nothing is keyed on its
+content, so the same claim arriving again is simply a new record.</p>
+<p><strong>Storing a record time you cannot query.</strong>
+<code>created</code> sits beside <code>valid_from</code> and
+<code>valid_to</code> and no filter reads it, so the vault can say what
+was true in March and not what it believed in March.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone who wants agent memory that is genuinely private —
+encrypted at rest, no network, no model calls from the library itself —
+and who will keep a passphrase. The audit design makes it a reasonable
+choice where the question "has this been tampered with" has to have an
+answer.</p>
+<p>It is the wrong fit where memory must be shared across people or
+machines, where correction has to bind against re-assertion, or where
+you want the system itself to summarize and split memories — it
+deliberately delegates that to your agent and applies the plan.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Would keying supersession on content fit the sealed
+design?</strong> The ciphertext is there; a digest of the plaintext at
+write time would be enough.</li>
+<li><strong>Should <code>created</code> be filterable?</strong> The
+column exists and the as-of machinery is already written for the other
+axis.</li>
+<li><strong>What does <code>apply_plan</code> do with a plan that
+contradicts the audit chain?</strong> The curation path applies an
+externally authored plan, and the chain records the result rather than
+gating it.</li>
+<li><strong>Was the 1,938-character median re-measured after the gate
+shipped?</strong> The number that justified the change is the number
+that would show it worked.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Vault and storage</strong></p>
+<ul>
+<li><code>src/compartment/vault.py</code> — lifecycle docstring (1-12),
+<code>_readable_namespaces</code> (1096), <code>search</code>
+(1125-1141), tombstone dispatch (923), journal <code>forget</code>
+(725-732)</li>
+<li><code>src/compartment/store.py</code> — relation validity (90-91),
+<code>tombstone</code> (274-282), <code>find_relations</code> with
+<code>as_of</code> (652-676)</li>
+<li><code>src/compartment/crypto.py</code>, <code>embed.py</code>,
+<code>embed_daemon.py</code></li>
+</ul>
+<p><strong>Governance</strong></p>
+<ul>
+<li><code>src/compartment/audit.py</code> — the chain and its anchor
+(1-12)</li>
+<li><code>src/compartment/acl.py</code> — namespace grants (1-6, 23,
+99-106)</li>
+<li><code>src/compartment/gate.py</code> — the measurement and the
+bypass (1-30)</li>
+<li><code>src/compartment/curate.py</code> — mechanics-versus-judgement
+(1-12), <code>apply_plan</code> (105)</li>
+</ul>
+<p><strong>Surfaces</strong></p>
+<ul>
+<li><code>mcp.json</code>, <code>server.json</code>,
+<code>.claude-plugin/</code>, <code>gemini-extension.json</code>,
+<code>src/compartment/menubar.py</code>, <code>systray.py</code>,
+<code>cli.py</code>, <code>claude_hooks.py</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_starter_visibility.py</code> (92-97, 150),
+<code>tests/test_acl_audit_packs.py</code>,
+<code>tests/test_atomic_and_retag.py</code> (404),
+<code>tests/test_long_memory_recall.py</code> (109)</li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn -i &quot;tombstone&quot; src/compartment/store.py
+grep -n &quot;created&quot; src/compartment/store.py | grep -iE &quot;WHERE|&lt;=|&gt;=&quot;
+grep -n &quot;confirm\|apply\|--yes\|dry&quot; src/compartment/curate.py
+grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md docs/</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/MaxFreedomPollard/Compartment/commit/2686197034ed103a2d4283f1e679a7c8a2d929b6"><code class="commit-id" title="2686197034ed103a2d4283f1e679a7c8a2d929b6">26861970…</code></a>
+— first reading. Screened first: three auto-run surfaces — a
+<code>.claude-plugin/</code> marketplace manifest, <code>mcp.json</code>
+and <code>server.json</code> — and a <code>tests/conftest.py</code> that
+executes on collection. Nothing was installed, no harness was wired and
+the suite was not run. Four marks. <code>audit_log</code> is earned on a
+hash chain that anchors its own head and length in the meta table so a
+tail truncation is reported as removal rather than verifying as a
+shorter log. <code>bitemporal</code> is earned with a stated limit: the
+validity window is independently settable and queryable through
+<code>as_of</code>, while the <code>created</code> record timestamp is
+stored and not filterable. <code>tombstone</code> is withheld —
+supersession is keyed on a record id, and the interesting half is that
+the row, ciphertext and vectors are kept for history and export while
+the FTS row is removed permanently. <code>human_review</code> is
+withheld because curation applies a plan an agent wrote rather than one
+a person approved.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

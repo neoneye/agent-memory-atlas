@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 447 reports.**
+**This page covers all 448 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -418,6 +418,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: compact and carefully reasoned, with unusually good design documentation and no visible memory tests.
 - Study when: a fast producer feeds a slow consolidator, or you want git history that reads as a record of belief.
 - Do not copy when: memory must grow past what fits in every prompt, or must be scoped per project.
+
+### [`compartment`](../systems/compartment/)
+- Best idea: the audit chain anchors its own head and length in the meta table on every save, because a forward-only chain cannot catch a truncation of its own tail — so `verify()` requires the chain to extend the anchor and reports a shorter log as removal rather than passing it.
+- Biggest risk: supersession is keyed on a record id and nothing is keyed on content, so a claim removed from the keyword channel can be stored again as a new live record.
+- Most reusable component: measuring the prompt before trusting it. A one-or-two-sentence instruction shipped in the MCP handshake was measured against a real vault at a 1,938-character median, and the rule moved into a structured refusal at the door — with the number kept in the source.
+- Maturity impression: Apache-2.0, ~30,700 lines of Python in one sealed encrypted vault, a vector index rebuilt in RAM rather than persisted, and a starter-visibility test whose negative is guarded by asserting the store holds 6,665 of the excluded memories.
+- Study when: agent memory has to be genuinely private and tamper-evident, and someone will keep a passphrase.
+- Do not copy when: memory must be shared across people or machines, correction has to bind against re-assertion, or you want the system itself to split and summarize rather than applying a plan your agent wrote.
 
 ### [`cowagent`](../systems/cowagent/)
 - Best idea: a dated intermediate layer that gives consolidation a naturally bounded unit, plus written distillation rules and a dream diary.
