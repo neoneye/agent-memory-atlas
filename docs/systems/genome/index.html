@@ -114,14 +114,14 @@ harmful.</p>
               <strong>NORTHTEKDevs/genome</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NORTHTEKDevs/genome/commit/9358910aaf7ec8336e12a63a7b17a7269554e330" title="9358910aaf7ec8336e12a63a7b17a7269554e330">
+            <a class="meta-pill revision-pill" href="https://github.com/NORTHTEKDevs/genome/commit/ea76cf924b2382499a158b8c7ad8a815913c962f" title="ea76cf924b2382499a158b8c7ad8a815913c962f">
               <span>Analyzed revision</span>
-              <code>9358910a…</code>
+              <code>ea76cf92…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-23</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NORTHTEKDevs--genome" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -484,8 +484,18 @@ honestly.</p>
 holds on all three temporal reads.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>252 test functions across 39 files, about 9,100 lines, running in
-public CI, plus an install canary workflow. I did not run them.</p>
+<p>Test functions across roughly forty files, about ten thousand lines,
+running in public CI, plus an install canary workflow. I did not run
+them.</p>
+<p><code>tests/test_journal_durability.py</code> is the one to read for
+how the project tests a durability claim rather than asserting it. Its
+cases cover the fsync itself, the write-ahead ordering, the cancellation
+line that reverses a mutation which raised after its journal line was
+durable, a cross-process check that no sequence number is duplicated,
+and — the case that names the defect it was written for — that a slow
+holder is never stolen from. The commit that added it reports
+reproducing the stolen lock in a Linux container before clearing it,
+which is the harder half of fixing a race.</p>
 <p><strong>The benchmark material is the reason to read this repository
 even if you never install it.</strong> <code>benchmarks/</code> holds
 the harnesses and their committed result files; <code>RESULTS.md</code>
@@ -672,6 +682,31 @@ beside each</li>
 <code>CITATION.cff</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/NORTHTEKDevs/genome/commit/ea76cf924b2382499a158b8c7ad8a815913c962f"><code class="commit-id" title="ea76cf924b2382499a158b8c7ad8a815913c962f">ea76cf92…</code></a>
+— re-read, six commits past the previous pin. Screened again first: two
+auto-run surfaces and two unpinned dependency surfaces, unchanged in
+kind; nothing was installed and no suite was run. All five marks hold
+and the producer check was re-run on each. The substantive change is to
+the mechanism <code>audit_log</code> rests on. The journal line was
+appended after the inner store committed and only flushed; it is written
+and <code>os.fsync</code>'d before the store mutates, and a mutation
+that raises after its line is durable is cancelled by a second reversing
+line so a replay still reproduces live state. The sidecar mutex was a
+create-with-<code>O_EXCL</code>-and-spin lock that broke a stale lock
+after a fixed spin count, which on Linux let a holder slower than that
+count lose the mutex mid-critical-section; it is an OS advisory lock,
+<code>fcntl.flock</code> or <code>msvcrt.locking</code>, with the module
+stating why. MCP <code>forget</code> gained a <code>min_score</code>
+cosine floor, defaulting to 0.5, and refuses below it while naming the
+best candidate — before, a query with no relevance floor deleted its
+nearest neighbour. The trust firewall gained an HTTP surface and
+matching SDK reach. None of the four was a finding this atlas published;
+the repository attributes them to an external review and ships tests for
+each, including a Linux-container reproduction of the stolen lock. The
+report's standing criticism is unaffected: the journal still makes
+deletion reversible, because a purged memory's text stays in the
+log.</p>
 <p><strong>2026-08-23</strong> — <a
 href="https://github.com/NORTHTEKDevs/genome/commit/9358910aaf7ec8336e12a63a7b17a7269554e330"><code class="commit-id" title="9358910aaf7ec8336e12a63a7b17a7269554e330">9358910a…</code></a>
 — first reading, at version 1.1.0, 86 commits since 13 July 2026.
