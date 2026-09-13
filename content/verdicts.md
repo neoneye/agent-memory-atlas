@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 452 reports.**
+**This page covers all 453 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3961,3 +3961,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, about 380,000 lines of Rust across sixteen crates shipping as one static binary, with the memory API a 2,306-line adapter over the engine's own search paths and a module doc that states its audit log's coverage gaps in the file that implements it.
 - Study when: a search node is already in the architecture and you would otherwise run a vector database beside it, or you want a worked example of a bitemporal edge schema.
 - Do not copy when: memories need epistemic state, review or a durable rejection — that machinery lives on the edges here, and it is keyed on an identity a text editor can change.
+
+### [`rekal`](../systems/rekal/)
+- Best idea: the recall citation graph keeps two counts apart and ranks on only one — a recall edge is the ranker's own past output, so boosting on it is a loop, while a drill edge is an agent's decision to open the session and is evidence from outside the ranker.
+- Biggest risk: the `SILENCE` verdict is scored at zero. Two committed LoCoMo runs of 1,888 questions each report `gates: {INJECT: 1888}` and `want_silence_pass_rate: 0.0` over 446 adversarial questions with no answer in the corpus, at the same confidence floors the binary ships.
+- Most reusable component: memory that travels as git objects on the push a team already runs, with a merge gate on the export path so unmerged work never leaves the machine — no sync service, no second permission model.
+- Maturity impression: Apache-2.0, ~41,900 lines of Go in one ~170 MB binary with the embedding model and database compiled in, a paper at [arXiv:2607.14390](https://arxiv.org/abs/2607.14390), adapters for seven agent tools, and a benchmark harness whose unflattering results are committed beside it.
+- Study when: a team lives in one repository and wants the reasoning behind commits to reach everyone's agent without operating anything.
+- Do not copy when: memory must hold judgements rather than conversations, or an agent must be told reliably that nothing is known.
