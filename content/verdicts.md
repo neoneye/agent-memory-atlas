@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 448 reports.**
+**This page covers all 449 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -606,6 +606,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: a legible research implementation with an MCP server, a vector variant and a playground around a 2,100-line core.
 - Study when: you want the tiered architecture in a form small enough to read in an afternoon, or a base for experiments on promotion policy.
 - Do not copy when: real users are involved — no provenance, no correction, no audit, and a merged profile string makes a deletion request unanswerable.
+
+### [`mnemo-cortex`](../systems/mnemo-cortex/)
+- Best idea: seal only the half that must not change. Every record splits into a TESTIMONY — the words, who said them, when — and a FILING of category, tags and supersession that the nightly dreamer is expected to rewrite. The chain covers the first, so reclassification does not break integrity.
+- Biggest risk: `false` is the bottom rung of the confidence ladder, so the judgement that a value is wrong is the one an ordinary `high_probability` write outranks and overwrites. The sync code special-cases it; the local write path does not.
+- Most reusable component: a ledger that states its own limits — "local evidence, not third-party proof: whoever can write the memory files can also rewrite the ledger from scratch" — and then names what it does catch.
+- Maturity impression: ~36,300 lines of Python, five verification states including `disputed` for a record a broken chain cannot vouch for, a capture gate that pauses recording during credential work, and a USB courier that syncs two installations with no cloud.
+- Study when: agents run on machines you own, memory must never leave them, and you want to know after a bad migration whether anything changed.
+- Do not copy when: a correction must hold against re-assertion, or the boundary between agents needs to be a query predicate rather than a directory and a token pin.
 
 ### [`memu`](../systems/memu/)
 - Best idea: rank the slice, return the file — the embed/search unit and the context payload are different sizes, and a file scores as the max of its segments.

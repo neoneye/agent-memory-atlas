@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local memory server that seals
+the testimony and lets the filing change, with a three-rung confidence
+ladder whose lowest rung is the judgement that something is false — and
+is therefore the one an ordinary write can overwrite.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mnemo
+Cortex — Agent Memory Atlas">
+    <meta property="og:description" content="A local memory server that
+seals the testimony and lets the filing change, with a three-rung
+confidence ladder whose lowest rung is the judgement that something is
+false — and is therefore the one an ordinary write can overwrite.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mnemo
+Cortex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local memory server that
+seals the testimony and lets the filing change, with a three-rung
+confidence ladder whose lowest rung is the judgement that something is
+false — and is therefore the one an ordinary write can overwrite.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mnemo Cortex — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mnemo Cortex",
+      "description": "A local memory server that seals the testimony and lets the filing change, with a three-rung confidence ladder whose lowest rung is the judgement that something is false \u2014 and is therefore the one an ordinary write can overwrite.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The ladder protects the wrong end</p>
+          <h1>Mnemo Cortex</h1>
+          <p class="document-deck">A local memory server that seals the
+testimony and lets the filing change, with a three-rung confidence
+ladder whose lowest rung is the judgement that something is false — and
+is therefore the one an ordinary write can overwrite.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GuyMannDude/mnemo-cortex">
+              <span>Source</span>
+              <strong>GuyMannDude/mnemo-cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GuyMannDude/mnemo-cortex/commit/ef056f3410fc3321c7e6059739f74d687a6cac28" title="ef056f3410fc3321c7e6059739f74d687a6cac28">
+              <span>Analyzed revision</span>
+              <code>ef056f34…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GuyMannDude--mnemo-cortex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>GuyMannDude--mnemo-cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mnemo Cortex is a local memory server for agents — about 36,300 lines
+of Python, per-tenant JSON memories, a SQLite facts store, an HTTP API,
+MCP bridges, a nightly synthesis pass and a USB courier that syncs two
+installations with no cloud and no VPN.</p>
+<p>Three marks. The design idea worth taking is <strong>sealing only the
+half that must not change.</strong></p>
+<p><code>ledger.py</code> splits every record in two. The TESTIMONY is
+what the person or agent said — the summary, the key facts, the
+decisions, who said it and when. The FILING is what the store did with
+it afterwards — category, tags, <code>superseded_by</code>,
+reclassification marks. The filing is <em>expected</em> to change,
+because the nightly dreamer reclassifies and a later write supersedes.
+The testimony is not: <em>"once a memory is saved, its words must never
+silently become other words."</em></p>
+<p>So the chain covers the testimony and leaves the filing alone. A hash
+chain over the whole record would break every time the dreamer did its
+job, and a project that hit that would probably have dropped the chain
+rather than split the record.</p>
+<p><strong>It is honest about what sealing proves.</strong> The module
+says so in its own words — <em>"local evidence, not third-party proof:
+whoever can write the memory files can also rewrite the ledger from
+scratch"</em> — and then names what it does catch: <em>"a bad migration,
+a half-finished script, a sync that mangled a file, a stick that carried
+something the origin never wrote — and it catches it every time."</em>
+That is the correct claim for a local-first tool, stated where an
+operator will read it.</p>
+<p>The verification states are unusually careful, and one of them is a
+state most designs do not have a name for. A record is
+<code>sealed</code>, <code>altered</code>, <code>missing</code>,
+<code>unsealed</code> — or <strong><code>disputed</code></strong>, which
+applies only when the chain is broken and means the record <em>matches
+an entry the chain cannot vouch for</em>, because <em>"a hash chain
+cannot say WHICH"</em> entry was tampered with. Most systems collapse
+that into "invalid".</p>
+<p><strong>And then the finding the report is named for.</strong>
+<code>facts_store.py</code> defines a three-rung confidence ladder —
+<code>false</code>, <code>high_probability</code>, <code>verified</code>
+— and enforces it on writes so that <em>"lower confidence cannot
+silently overwrite higher"</em>. <code>false</code> is rung zero.</p>
+<p>The consequence is at <code>facts_store.py:280</code>, in the branch
+that handles a contradicting value:</p>
+<pre class="python"><code>if new_rank &gt;= existing_rank:</code></pre>
+<p>A fact demoted to <code>false</code> — the explicit judgement that a
+value is wrong — sits at the bottom of the ladder, so <strong>any
+ordinary <code>high_probability</code> write of a different value
+outranks it and overwrites it.</strong> The ladder protects
+<code>verified</code> from being weakened and leaves <code>false</code>
+unprotected, which is the inverse of what a correction mechanism needs.
+<code>demote()</code> exists only because <em>"the promotion ladder
+otherwise blocks verified→false"</em>, so the judgement is hard to
+record and easy to erase.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory has two halves with different rules, and a fact has a
+rung.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the chain seals the testimony while the filing stays mutable, and on the facts side the demotion to false sits at the bottom of the ladder that is supposed to protect judgements</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the chain seals the testimony while the filing stays mutable, and on the facts side the demotion to false sits at the bottom of the ladder that is supposed to protect judgements
+flowchart TB
+    IN[&quot;agent or person writes&quot;] --&gt; CG{&quot;capture gate:&lt;br/&gt;paused for sensitive work?&quot;}
+    CG --&gt;|paused| SKIP[&quot;not recorded&quot;]
+    CG --&gt;|open| CL[&quot;classifier tiers it&quot;]
+    CL --&gt; DD{&quot;bounded near-duplicate check&quot;}
+    DD --&gt; REC[&quot;record&quot;]
+    REC --&gt; TES[&quot;TESTIMONY — words, who, when&quot;]
+    REC --&gt; FIL[&quot;FILING — category, tags,&lt;br/&gt;superseded_by, reclassification&quot;]
+    TES --&gt; LED[(&quot;ledger.jsonl:&lt;br/&gt;sha256 of sealed fields&lt;br/&gt;+ prev hash + own hash&quot;)]
+    FIL -.-&gt;|&quot;changes freely —&lt;br/&gt;the dreamer reclassifies&quot;| FIL
+    DREAM[&quot;nightly dreamer&quot;] --&gt; FIL
+    LED --&gt; V{&quot;verify&quot;}
+    V --&gt; ST[&quot;sealed / altered / missing /&lt;br/&gt;unsealed / disputed&quot;]
+    F[&quot;fact (entity, attribute)&quot;] --&gt; LAD{&quot;confidence ladder&quot;}
+    LAD --&gt; VER[&quot;verified&quot;]
+    LAD --&gt; HP[&quot;high_probability&quot;]
+    LAD --&gt; FA[&quot;false — excluded from&lt;br/&gt;the default read&quot;]
+    HP -.-&gt;|&quot;new_rank &amp;gt;= existing_rank&lt;br/&gt;overwrites a demotion&quot;| FA</code></pre></details></figure>
+<p>The dotted edge on the right is the finding in section 1.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>An HTTP server plus a CLI over per-tenant directories of JSON
+memories, with <code>facts.sqlite</code> shared globally in WAL mode.
+Nothing about it is hosted: the README's premise is that the whole thing
+runs on your machine.</p>
+<p><strong>The sync story is a USB stick.</strong> <code>stick.py</code>
+is <em>"NOT a server"</em> — both machines run full Mnemo and the stick
+carries the delta between them: memory JSONs, trajectory JSONLs, the
+brain git repo and a project pad. <em>"Plug in → sync; pull out → carry
+→ plug in → the other machine catches up. No cloud, no VPN."</em> For a
+design whose threat model is that nothing should leave the machine over
+a network, a courier is a coherent answer rather than a novelty.</p>
+<p>A retired file is kept as
+<code>mem0_bridge.py.retired-20260523</code> — dated in the filename
+rather than deleted, which is a small habit that matches the ledger's
+philosophy.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ledger</strong> — <code>agentb/ledger.py:1-34</code> (the
+testimony/filing split, the limits, the five states).</li>
+<li><strong>Facts</strong> — <code>agentb/facts_store.py</code>:
+<code>CONFIDENCE_LEVELS</code> (24), <code>get</code> with
+<code>include_false</code> (149), <code>query</code> (165),
+<code>save</code> and the rank comparison (206-300), <code>demote</code>
+(321), <code>history</code> (370), <code>contradictions</code>
+(385).</li>
+<li><strong>Sync merge rules</strong> —
+<code>agentb/stick_facts.py:10-20</code>, <code>:72</code>.</li>
+<li><strong>Capture gate</strong> —
+<code>agentb/capture_gate.py:1-9</code>.</li>
+<li><strong>Classifier</strong> — <code>agentb/classify.py:1-10</code>;
+dedup in <code>agentb/dedup.py</code>.</li>
+<li><strong>Courier</strong> — <code>agentb/stick.py:1-8</code>.</li>
+<li><strong>Dreamer</strong> — <code>mnemo-dream.py:1-8</code>.</li>
+<li><strong>Server and scope</strong> — <code>agentb/server.py</code>:
+<code>_enforce_scope</code> (994-1000), scoped token pinning (966-968,
+1857-1859).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two stores with different shapes. Memories are JSON per tenant with
+the testimony/filing split. Facts are rows in SQLite keyed on a
+composite primary key of <code>(entity, attribute)</code> — one current
+value per pair — with a confidence rung, an evidence source, a source
+memory id and a source agent, and an append-only
+<code>fact_history</code> beside them.</p>
+<p><strong>Memories are never deleted.</strong> Demotion keeps the JSON,
+which is what makes <code>missing</code> a meaningful ledger state
+rather than an ordinary condition: a sealed file that is gone <em>"is
+news"</em>.</p>
+<p><strong><code>tombstone</code> is withheld, and the project calls it
+one.</strong> <code>agentb/stick_facts.py:20</code> says <em>"'false' IS
+the tombstone state"</em>, and for synchronisation that is exactly right
+— a newer <code>false</code> row propagates the judgement across the
+courier without needing a delete operation, which is a clean answer to
+distributed deletion. Locally it does not bind: <code>false</code> ranks
+lowest, the contradiction branch admits any write whose rank is greater
+than or equal to the existing one, and nothing is keyed on the rejected
+value. The same wrong value re-asserted at <code>high_probability</code>
+takes the row back.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search with a lexical channel, and an <code>explore</code>
+mode that deliberately does not return the best match first — it
+surfaces an adjacent memory, with a test asserting both that it returns
+something and that the noise band does not pad the result.</p>
+<p>Facts read through <code>get</code>, which excludes
+<code>false</code> by default, and <code>query</code>, which takes
+filters and orders by <code>last_updated</code>.</p>
+<p>Scope is a tenant directory plus a scoped token pinned to one agent,
+enforced by <code>_enforce_scope</code> as a 403 when the request's
+<code>agent_id</code> does not match the pin — and it fails closed on a
+missing id, because <em>"it would otherwise land in the 'default'
+tenant."</em> <strong><code>scope_enforced</code> is withheld</strong>
+on the rubric's explicit carve-out: this is a physical partition plus an
+authorisation check rather than a stored key applied as a filter on a
+query. It is arguably a stronger boundary than a predicate; it is a
+different one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and pass three things on the way in: a capture
+gate, a classifier and a bounded duplicate check.</p>
+<p><strong>The capture gate is a user-facing pause</strong>, and its
+rationale is a privacy argument rather than a performance one: the
+auto-capture pipeline syncs terminal activity every sixty seconds, and
+<em>"during a credential rotation or any secret-handling work, even
+redaction-pattern misses"</em> are a risk worth stopping recording for.
+A redaction suite exists and the gate exists because redaction is not
+trusted to be complete.</p>
+<p>The nightly dreamer reads the day across all agents, synthesizes a
+brief, and writes it back so every agent gets it at startup — and its
+reclassifications land in the filing, which is the half the ledger does
+not seal.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An HTTP server with scoped tokens, a CLI, and MCP bridges under
+<code>integrations/</code>. The courier is the cross-machine story.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The ledger is the reliability story and section 1 covers it. Two
+details belong here.</p>
+<p><code>unsealed</code> is a first-class state rather than an error:
+pre-ledger stores, records carried in by a courier, or anything written
+by a tool that bypassed the server are unsealed rather than invalid, and
+<code>seal_unsealed</code> adopts them. A system whose sync mechanism is
+a USB stick needs that state to exist, and defining it deliberately is
+better than discovering it.</p>
+<p>The sync merge rules are reasoned in <code>stick_facts.py</code>: a
+newer <code>false</code> beats anything because <em>"demote() is an
+explicit judgment ('this is wrong') and must propagate"</em>, while
+<em>"a STALE 'false' loses"</em>. So across machines, the judgement is
+protected by recency. Locally, on the same ladder, it is not protected
+at all — the two halves of the same design disagree about how much a
+demotion is worth.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A substantial suite. <code>tests/test_explore_mode.py</code> is the
+one that earns <code>negative_eval</code>, and its structure is the
+reason: three positive assertions — default mode returns the bullseye
+first, explore returns results at all, explore surfaces the adjacent
+memory first — stand between the fixture and
+<code>assert "far" not in explore_ids</code>, each with the reason
+attached as an assertion message. A retriever that returned nothing
+would fail two of them before reaching the negative.</p>
+<p><code>tests/test_redact.py</code> covers the write path: private key
+blocks and high-entropy tokens must not survive redaction.
+<code>tests/test_nomic_prefix.py:225</code> asserts an embedding prefix
+does not leak into stored rows, which is the kind of bug that is
+invisible until someone greps their own database.</p>
+<p>No paper and no <code>CITATION.cff</code>.</p>
+<p>Nothing was run. The screen reports four dependency manifests under
+<code>integrations/</code> changed the day of the pin, inside the
+seven-day cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Split the record into the half that must not change and the
+half that must.</strong> Sealing everything makes the chain break on
+ordinary work; sealing nothing makes it worthless. Testimony and filing
+is the cut, and naming the two halves is what makes the rule
+enforceable.</p>
+<p><strong>Say what your integrity check does not prove.</strong>
+<em>"Local evidence, not third-party proof"</em> costs one sentence and
+stops an operator trusting it against an adversary who has the disk.</p>
+<p><strong>Give a broken chain its own state.</strong>
+<code>disputed</code> — matching an entry the chain cannot vouch for —
+is honest about the fact that a hash chain localises a break but not a
+culprit.</p>
+<p><strong>Make "written by something that bypassed us" a state, not an
+error.</strong> <code>unsealed</code> plus an adopt operation is what
+lets a courier-based sync exist at all.</p>
+<p><strong>Let the user stop the recorder.</strong> A capture gate for
+credential work admits that redaction patterns miss, which is true, and
+gives the user the one control that actually closes the hole.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Ranking your rejection state at the bottom of your confidence
+ladder.</strong> <code>false</code> is the judgement that something is
+wrong, and here it is the rung that everything outranks. A contradicting
+<code>high_probability</code> write takes the row back, so the
+correction survives exactly until the next ordinary assertion. If a
+ladder governs overwrites, the rejected state needs to sit outside it or
+above it — and the sync code already treats it that way, which makes the
+local behaviour look like an oversight rather than a position.</p>
+<p><strong>Calling something a tombstone when it is a sync
+marker.</strong> It is a good sync marker — propagating a judgement
+instead of a delete is the right design for a courier. It is not a
+durable record keyed on the rejected value, and the two get conflated
+because the word is the same.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits someone running agents on their own machines who wants
+memory that never leaves them, can be carried between them physically,
+and can be checked for tampering after a bad migration. The ledger
+design is the reason to read it even if you never run it.</p>
+<p>It is the wrong fit where a correction must hold against
+re-assertion, or where the boundary between agents needs to be a query
+predicate rather than a directory and a token.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>false</code> sit outside the ladder?</strong>
+The sync rules already special-case it; the local write path does
+not.</li>
+<li><strong>What happens to a <code>disputed</code> record?</strong> The
+state is defined precisely and what an operator is meant to do with one
+is not in the module.</li>
+<li><strong>Does the dreamer's reclassification ever touch the
+testimony?</strong> It is supposed to write only the filing, and nothing
+in the ledger would catch it if a future pass did — the chain would
+simply report <code>altered</code>, which is the point.</li>
+<li><strong>How does the courier reconcile two ledgers?</strong> Both
+machines seal independently, and the merge rules are written for facts
+rather than chains.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Integrity</strong></p>
+<ul>
+<li><code>agentb/ledger.py</code> — testimony/filing (1-10), the chain
+(11-17), stated limits (18-23), the five states (24-34)</li>
+</ul>
+<p><strong>Facts</strong></p>
+<ul>
+<li><code>agentb/facts_store.py</code> — <code>CONFIDENCE_LEVELS</code>
+(24), <code>get</code> (149), <code>query</code> (165),
+<code>save</code> and the rank comparison (206-300), <code>demote</code>
+(321), <code>history</code> (370), <code>contradictions</code>
+(385)</li>
+<li><code>agentb/stick_facts.py</code> — merge rules and the tombstone
+claim (10-20, 72)</li>
+</ul>
+<p><strong>Write path</strong></p>
+<ul>
+<li><code>agentb/capture_gate.py</code> (1-9),
+<code>agentb/classify.py</code> (1-10),
+<code>agentb/dedup.py</code></li>
+</ul>
+<p><strong>Sync and synthesis</strong></p>
+<ul>
+<li><code>agentb/stick.py</code> (1-8), <code>mnemo-dream.py</code>
+(1-8)</li>
+</ul>
+<p><strong>Server</strong></p>
+<ul>
+<li><code>agentb/server.py</code> — <code>_enforce_scope</code>
+(994-1000), token pinning (966-968, 1857-1859)</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/test_explore_mode.py</code> (112-124),
+<code>tests/test_redact.py</code> (95-111),
+<code>tests/test_nomic_prefix.py</code> (225),
+<code>tests/test_stick.py</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn -i &quot;tombstone&quot; agentb/*.py
+grep -n &quot;confidence&quot; agentb/facts_store.py | grep -iE &quot;WHERE|SELECT|order|filter&quot;
+grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md
+ls CITATION.cff</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/GuyMannDude/mnemo-cortex/commit/ef056f3410fc3321c7e6059739f74d687a6cac28"><code class="commit-id" title="ef056f3410fc3321c7e6059739f74d687a6cac28">ef056f34…</code></a>
+— first reading. Screened first: four dependency manifests under
+<code>integrations/</code> changed the day of the pin and inside the
+seven-day cooldown, so nothing was installed and the suite was not run.
+Three marks. <code>audit_log</code> is earned on a chain that seals the
+testimony and deliberately leaves the filing mutable, with five
+verification states including <code>disputed</code> for a record a
+broken chain cannot vouch for, and a stated limit that it is local
+evidence rather than proof. <code>trust_state</code> is earned on a
+three-value confidence ladder whose lowest rung is excluded from the
+default read. <code>tombstone</code> is withheld although the source
+calls <code>false</code> the tombstone state: it is a good sync marker
+and does not bind locally, because <code>false</code> ranks lowest and
+the contradiction branch admits any write of equal or greater rank.
+<code>scope_enforced</code> is withheld on the rubric's carve-out — a
+tenant directory plus a token pin enforced as a 403 is a partition and
+an authorisation check rather than a key on a query.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
