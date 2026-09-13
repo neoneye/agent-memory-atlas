@@ -166,10 +166,12 @@ deletes remove only the affected index subtree."
 
 ## 5. Memory Data Model
 
-The unit is a Markdown file. Optional frontmatter follows OKF, the OpenLore
-Knowledge Format, whose v0.2 families cover provenance (`generated` with an
-ISO 8601 `at`), trust (`verified` as a list of `{by, at}` events), lifecycle
-(`status`, `stale_after`) and attested computation.
+The unit is a Markdown file. Optional frontmatter follows OKF — the Google Open
+Knowledge Format, an external spec this project validates against rather than
+one of its own, read from the `okf_version` declaration in the root `index.md`.
+Its v0.2 families cover provenance (`generated` with an ISO 8601 `at`), trust
+(`verified` as a list of `{by, at}` events), lifecycle (`status`,
+`stale_after`) and attested computation.
 
 That vocabulary is the most interesting thing in the data model and the least
 load-bearing. `CheckStatus` accepts exactly `draft`, `stable` and `deprecated`

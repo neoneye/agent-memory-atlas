@@ -7,10 +7,12 @@ page_kind: system
 source_name: "fellowgeek/mcp-memory"
 source_url: https://github.com/fellowgeek/mcp-memory
 archive_name: "fellowgeek--mcp-memory"
-revision: 4514d1fd162598e65280c15ea2df017698fcbf16
-revision_url: https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16
-analyzed_at: 2026-08-15
+revision: a50a87708628d0822af439015503de47c35d7acc
+revision_url: https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "namespace — a stored key applied in SQL on every read arm, and contained on disk by a validator that refuses traversal | db.py, okf_engine.py:236-244 | `namespace` is a column on the index and a predicate on search, retrieve and delete rather than a label, and it also partitions the on-disk directories. The disk half is only a boundary because the key is validated before it is used as a path: `okf_engine` rejects empty keys, `.` and `..` traversal tokens, backslash tricks and multi-segment namespaces with `ValueError`, and the index row is not committed until the resolved path has been checked — three separate fixes landed for exactly this, so the containment is deliberate rather than incidental | test_memory.py"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -86,6 +88,15 @@ memory_search(query?, tags?, namespace?)
   -> python: drop rows whose tags don't intersect
   -> returns okf_payload  -- status / verified / stale_after ignored throughout
 ```
+
+OKF is not this project's format. It is the Google Open Knowledge Format, an
+external spec under `GoogleCloudPlatform/knowledge-catalog`, and that matters for
+how much the finding below weighs: the fields being written and never read are a
+shared standard's, not one author's invention. [OpenLore](../openlore/)
+implements the same spec independently, validates the same `status` and
+`verified` families on write, and also consults neither on any read. Two
+implementations of one specification arriving at the same half is evidence about
+what the spec makes easy, rather than about either project's care.
 
 The frontmatter carries a rich vocabulary the read path never touches, and the
 diagram below draws exactly that: the fields flow in at write time and dead-end.
@@ -347,5 +358,7 @@ in the record; this implementation just does not read them yet.
 - `SPEC.md`, `OKF_RULES.md` — verbatim copies of the external Open Knowledge Format spec.
 
 ## History
+
+**2026-09-13** — [`a50a87708628d0822af439015503de47c35d7acc`](https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc) — re-read, nine commits past the previous pin. The mark stands and its on-disk half was hardened by three separate fixes from two outside contributors: memory keys are contained inside the store, `.` and `..` traversal tokens plus backslash tricks and multi-segment namespaces are refused with `ValueError` in `okf_engine.py:236-244`, and the index row is no longer committed before the resolved path is validated. None was a finding this atlas published — the report's criticism is about the trust vocabulary — but they matter to the mark, because a namespace that partitions directories is only a boundary while a key cannot leave them. The standing criticism holds: `verified`, `status` and `stale_after` are still consulted by no read path. The report now also states that OKF is the Google Open Knowledge Format rather than this project's own, and notes that OpenLore implements the same spec and reaches the same place. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-15** — [`4514d1fd162598e65280c15ea2df017698fcbf16`](https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16) — first reading. Screened before opening: a `requirements.txt` inside the seven-day cooldown and one build-time exec (the setup wizard); nothing was installed or run. The upsert-and-mirror store, the FTS5 read path, the namespace filter, and the write-only handling of OKF's `status`/`verified`/`stale_after` (serialized in `okf_engine.py`, absent from every `WHERE`/`ORDER BY` in `db.py`) were read from the five source files and cross-checked against `test_memory.py`. `scope_enforced` is earned on the namespace filter; the other six marks are withheld, each because the field exists and nothing consumes it. No paper or citation file exists in the tree.

@@ -110,14 +110,14 @@ trust-and-lifecycle fields, none of which any read path consults.</p>
               <strong>fellowgeek/mcp-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16" title="4514d1fd162598e65280c15ea2df017698fcbf16">
+            <a class="meta-pill revision-pill" href="https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc" title="a50a87708628d0822af439015503de47c35d7acc">
               <span>Analyzed revision</span>
-              <code>4514d1fd…</code>
+              <code>a50a8770…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fellowgeek--mcp-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -203,6 +203,17 @@ memory_search(query?, tags?, namespace?)
   -&gt; WHERE namespace = ?                        scope filter
   -&gt; python: drop rows whose tags don&#39;t intersect
   -&gt; returns okf_payload  -- status / verified / stale_after ignored throughout</code></pre>
+<p>OKF is not this project's format. It is the Google Open Knowledge
+Format, an external spec under
+<code>GoogleCloudPlatform/knowledge-catalog</code>, and that matters for
+how much the finding below weighs: the fields being written and never
+read are a shared standard's, not one author's invention. <a
+href="../openlore/">OpenLore</a> implements the same spec independently,
+validates the same <code>status</code> and <code>verified</code>
+families on write, and also consults neither on any read. Two
+implementations of one specification arriving at the same half is
+evidence about what the spec makes easy, rather than about either
+project's care.</p>
 <p>The frontmatter carries a rich vocabulary the read path never
 touches, and the diagram below draws exactly that: the fields flow in at
 write time and dead-end.</p>
@@ -510,6 +521,24 @@ search, delete, tool flow, checkpoint.</li>
 the external Open Knowledge Format spec.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/fellowgeek/mcp-memory/commit/a50a87708628d0822af439015503de47c35d7acc"><code class="commit-id" title="a50a87708628d0822af439015503de47c35d7acc">a50a8770…</code></a>
+— re-read, nine commits past the previous pin. The mark stands and its
+on-disk half was hardened by three separate fixes from two outside
+contributors: memory keys are contained inside the store, <code>.</code>
+and <code>..</code> traversal tokens plus backslash tricks and
+multi-segment namespaces are refused with <code>ValueError</code> in
+<code>okf_engine.py:236-244</code>, and the index row is no longer
+committed before the resolved path is validated. None was a finding this
+atlas published — the report's criticism is about the trust vocabulary —
+but they matter to the mark, because a namespace that partitions
+directories is only a boundary while a key cannot leave them. The
+standing criticism holds: <code>verified</code>, <code>status</code> and
+<code>stale_after</code> are still consulted by no read path. The report
+now also states that OKF is the Google Open Knowledge Format rather than
+this project's own, and notes that OpenLore implements the same spec and
+reaches the same place. Screened again first; nothing was installed and
+no suite was run.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/fellowgeek/mcp-memory/commit/4514d1fd162598e65280c15ea2df017698fcbf16"><code class="commit-id" title="4514d1fd162598e65280c15ea2df017698fcbf16">4514d1fd…</code></a>
 — first reading. Screened before opening: a
