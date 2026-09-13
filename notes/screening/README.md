@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 347 of 455 screened at the report's current pin.**
+**Progress: 348 of 455 screened at the report's current pin.**
 
 10 further record(s) describe a revision the report has since moved
-off, and 98 report(s) have no record at all.
+off, and 97 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 139 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 175 |
-| Repositories with build-time execution (`EXEC`) | 258 |
+| Repositories with an auto-run surface (`RUNS`) | 140 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 176 |
+| Repositories with build-time execution (`EXEC`) | 259 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -165,6 +165,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
+| [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |

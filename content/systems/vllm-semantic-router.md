@@ -7,9 +7,9 @@ page_kind: system
 source_name: "vllm-project/semantic-router"
 source_url: https://github.com/vllm-project/semantic-router
 archive_name: "vllm-project--semantic-router"
-revision: 6ae15901163cb9790d1b7c9d72b5caefad21ee78
-revision_url: https://github.com/vllm-project/semantic-router/commit/6ae15901163cb9790d1b7c9d72b5caefad21ee78
-analyzed_at: 2026-08-09
+revision: 648ae9855fcc4eb91b36110033a7cc445683fbc4
+revision_url: https://github.com/vllm-project/semantic-router/commit/648ae9855fcc4eb91b36110033a7cc445683fbc4
+analyzed_at: 2026-09-13
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "milvus, qdrant, redis, memory"
 stack_retrieval: "vector"
@@ -484,6 +484,8 @@ before the first memory is stored.
 `src/semantic-router/pkg/memory/*_test.go`
 
 ## History
+
+**2026-09-13** — [`648ae9855fcc4eb91b36110033a7cc445683fbc4`](https://github.com/vllm-project/semantic-router/commit/648ae9855fcc4eb91b36110033a7cc445683fbc4) — re-read, 398 commits past the previous pin. Both marks stand and both mechanisms were re-checked in the tree: `pkg/memory/store.go` with `milvus_filter.go` still carry the per-user filter, and `e2e/testing/memory_tests/test_isolation.py` still stores one user's PIN, waits for storage, queries as a second user and fails if the digits appear — with a positive control that the owner can see their own memory and a bidirectional case beside it. Two changes are worth recording. The semantic cache is skipped for queries past the embedding window, which closes a false-hit class rather than a performance one: beyond the window two different queries sharing a long prefix embed identically, so a hit could return another query's answer, and the new case builds exactly that prefix. And the project removed a set of cache and memory tuning fields from its own configuration on the grounds that nothing read them — the declared-and-unwired shape this atlas looks for, found and closed by the project itself rather than reported here. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-09** — [`6ae15901163cb9790d1b7c9d72b5caefad21ee78`](https://github.com/vllm-project/semantic-router/commit/6ae15901163cb9790d1b7c9d72b5caefad21ee78) —
 first reading, from the
