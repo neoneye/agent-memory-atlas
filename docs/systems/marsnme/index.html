@@ -111,14 +111,14 @@ CHECK.</p>
               <strong>marsmanleo/marsnme</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316" title="3ed1b0bc7bbccfd40efd13df366d0f538d155316">
+            <a class="meta-pill revision-pill" href="https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876" title="25b7d6c1b4e698189b9db0e35a593b9a6a41b876">
               <span>Analyzed revision</span>
-              <code>3ed1b0bc…</code>
+              <code>25b7d6c1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/marsmanleo--marsnme" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -171,6 +171,29 @@ hoping the right thing is salient; this one lets one agent say something
 that says it was built to be queried rather than bolted on — unread
 notes for a body is the hot path and it has an index shaped for exactly
 that.</p>
+<p><strong>A second, wider mailbox sits beside it.</strong>
+<code>board_posts</code> is a wall: one table per profile schema holding
+<code>from_source</code>, <code>from_body</code>, <code>"to"</code>
+defaulting to <code>all</code>, a topic, a four-value type enum
+(<code>stuck</code>, <code>turn</code>, <code>collide</code>,
+<code>gate</code>), an <code>acked_by</code> JSON map,
+<code>expires_at</code> and <code>archived_at</code>.
+<code>board_post</code> documents the distinction plainly —
+<em>"to="all" broadcasts to the wall; to="<body>" is a private
+note"</em> — <code>session_boot</code> fetches unread posts for the
+booting body, and <code>session_close</code> posts to it.</p>
+<p><strong>The private note is not private, and the reason is one method
+call.</strong> <code>board_read</code> builds its query with
+<code>URLSearchParams</code>, sets the addressing filter —
+<code>query.set('or', '(to.eq.all,to.eq.${body})')</code> — and then,
+four lines later, sets the same key again for the expiry window.
+<code>set</code> replaces; <code>append</code> would have added. The
+addressing filter never reaches the request, and the only post-fetch
+filter in the handler removes already-acknowledged posts, so a note
+addressed to one body is returned to whoever calls, with the intended
+recipient rendered in the response as <code>to</code>. The same feature
+is written correctly 1,900 lines earlier: <code>session_boot</code>'s
+auto-unread path sets <code>or</code> once and its filter survives.</p>
 <p><strong>Two more mechanisms are worth naming</strong>: provenance as
 a database constraint (section 7) and a three-tier recall with stated
 character budgets (section 6).</p>
@@ -248,10 +271,21 @@ href="../memory-ts/">memory-ts</a> reach the same shape from different
 directions — progressive disclosure is quietly becoming the consensus
 answer to injection cost, and this is the version that names the
 budgets.</p>
+<p><strong>Search is semantic.</strong> <code>search_memories</code>
+embeds the query with Jina (<code>jina-embeddings-v3</code>, 1024
+dimensions) and calls the <code>search_memories_semantic</code> RPC,
+filtering the returned rows by an optional <code>min_similarity</code>.
+The three disclosure tiers above sit on top of that result, not on a
+keyword match.</p>
 <p><strong>Scope is structural</strong> — a Postgres schema per profile
 — so there is no scope key on a read path and
 <code>scope_enforced</code> is not earned. <code>body</code> is an
-<em>addressee</em> for notes rather than a retrieval filter.</p>
+<em>addressee</em> rather than a retrieval filter, and the board is the
+sharpest illustration of the difference: <code>board_posts."to"</code>
+is a stored scope key, <code>board_read</code> writes the predicate that
+would apply it, and the predicate is overwritten before the request is
+sent. A key that is stored, filtered on in intent, and not filtered on
+in fact is the exact case the mark exists to exclude.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p><strong>Provenance is a database CHECK constraint.</strong> A chunk
 whose <code>origin</code> is not in the allowlist is rejected by
@@ -307,11 +341,17 @@ the evidence offered is a user story from the creator — "Leo, MarsNMe
 creator (3 months of daily use across 4 AI tools)" — which is honestly
 attributed as the author's own experience rather than presented as an
 independent result.</p>
-<p>At 3,900 lines with sixteen tools across two deployment targets, the
-untested surface that matters most is the handoff: a note that is
-delivered twice, or marked read without being delivered, loses a message
-between agents silently, and the <code>read_at</code> column is exactly
-what a test would assert on.</p>
+<p>At this size, with tools across two deployment targets, the untested
+surface that matters most is the handoff: a note that is delivered
+twice, or marked read without being delivered, loses a message between
+agents silently, and the <code>read_at</code> column is exactly what a
+test would assert on.</p>
+<p>The board shows what that absence costs. A search for a committed
+case naming <code>board_read</code> or <code>board_post</code> returns
+nothing, and the defect in section 1 is the kind a single test would
+have caught: post as one body addressed to a second, read as a third,
+assert the post is absent. The two implementations of the same filter
+disagree, and nothing in the repository compares them.</p>
 <p><strong>I ran nothing.</strong></p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
@@ -406,6 +446,28 @@ notes: three-layer recall, body-to-body handoff, auto
 <code>CHANGELOG.md</code>, <code>AGENTS.md</code>,
 <code>SECURITY.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876"><code class="commit-id" title="25b7d6c1b4e698189b9db0e35a593b9a6a41b876">25b7d6c1…</code></a>
+— re-read, three commits past the previous pin. Screened again first:
+one auto-run surface and two unpinned dependency surfaces, unchanged in
+kind from the previous reading; nothing was installed and nothing was
+run. Three commits understated the change: they add a
+<code>board_posts</code> table per profile schema and a wall of
+<code>board_read</code> / <code>board_post</code> /
+<code>board_ack</code> tools, with <code>session_boot</code> fetching
+unread posts and <code>session_close</code> posting. The finding is in
+<code>board_read</code>, which sets an addressing filter on a
+<code>URLSearchParams</code> key and then sets the same key again for
+the expiry window; <code>set</code> replaces, so the filter that makes a
+private note private never reaches the request, and the handler's only
+post-fetch filter removes acknowledged posts.
+<code>session_boot</code>'s copy of the same query sets the key once and
+is correct. No mark changes — <code>scope_enforced</code> stays
+withheld, now on a stored key whose predicate is written and discarded
+rather than on structural scoping alone. The stack row was promoted from
+seeded to reviewed and corrected while re-reading: retrieval is a Jina
+1024-dimension embedding through a <code>search_memories_semantic</code>
+RPC, not the lexical arm the seeded guess recorded.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316"><code class="commit-id" title="3ed1b0bc7bbccfd40efd13df366d0f538d155316">3ed1b0bc…</code></a>
 — first reading. Screened before reading; the tree was read, nothing was

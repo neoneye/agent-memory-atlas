@@ -7,25 +7,25 @@ page_kind: system
 source_name: "marsmanleo/marsnme"
 source_url: https://github.com/marsmanleo/marsnme
 archive_name: "marsmanleo--marsnme"
-revision: 3ed1b0bc7bbccfd40efd13df366d0f538d155316
-revision_url: https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316
-analyzed_at: 2026-08-09
+revision: 25b7d6c1b4e698189b9db0e35a593b9a6a41b876
+revision_url: https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876
+analyzed_at: 2026-09-13
 capabilities: ""
 stack_storage: "postgres"
-stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_retrieval: "vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row or a vault chunk, carrying an origin from a constrained allowlist"
   storage: "Postgres on Supabase with a schema per profile, plus a Cloudflare deployment"
-  retrieval: "Three tools of escalating detail — an 80-char preview, a 300-char summary, the full text"
+  retrieval: "Semantic search over a 1024-dimension Jina embedding through a Postgres RPC, read back through three tools of escalating detail — an 80-char preview, a 300-char summary, the full text"
   write: "Sixteen MCP tools; every chunk's origin must match a database CHECK constraint"
   update_delete: "Short-term memories expire; closing a session promotes those about to"
-  scoping: "A Postgres schema per profile; body is the addressee for handoff notes"
+  scoping: "A Postgres schema per profile; body is the addressee for handoff notes and for board posts, where the read filter is written and then discarded"
   integration: "MCP across Claude, Cursor, Perplexity and Warp, with a curl-to-bash installer"
   background: "Auto batch_promote on session close — 48-hour window, up to five memories"
   trust: "Origin as provenance, enforced by a constraint; nothing epistemic on a memory"
   strengths: "An addressed, indexed, read-marked handoff note between agents"
-  risks: "One profile schema has the origin constraint and the other does not, as documented"
+  risks: "`board_read` sets its addressing filter and overwrites it one line later, so a post addressed to one body is returned to every caller; one profile schema has the origin constraint and the other does not, as documented"
 ---
 
 ## 1. Executive Summary
@@ -60,6 +60,25 @@ agent say something *to* another and know it arrived.
 The index on `(recipient_body, read_at)` is the detail that says it was built to
 be queried rather than bolted on — unread notes for a body is the hot path and it
 has an index shaped for exactly that.
+
+**A second, wider mailbox sits beside it.** `board_posts` is a wall: one table
+per profile schema holding `from_source`, `from_body`, `"to"` defaulting to
+`all`, a topic, a four-value type enum (`stuck`, `turn`, `collide`, `gate`), an
+`acked_by` JSON map, `expires_at` and `archived_at`. `board_post` documents the
+distinction plainly — *"to=\"all\" broadcasts to the wall; to=\"<body>\" is a
+private note"* — `session_boot` fetches unread posts for the booting body, and
+`session_close` posts to it.
+
+**The private note is not private, and the reason is one method call.**
+`board_read` builds its query with `URLSearchParams`, sets the addressing filter
+— `query.set('or', '(to.eq.all,to.eq.${body})')` — and then, four lines later,
+sets the same key again for the expiry window. `set` replaces; `append` would
+have added. The addressing filter never reaches the request, and the only
+post-fetch filter in the handler removes already-acknowledged posts, so a note
+addressed to one body is returned to whoever calls, with the intended recipient
+rendered in the response as `to`. The same feature is written correctly 1,900
+lines earlier: `session_boot`'s auto-unread path sets `or` once and its filter
+survives.
 
 **Two more mechanisms are worth naming**: provenance as a database constraint
 (section 7) and a three-tier recall with stated character budgets (section 6).
@@ -143,9 +162,19 @@ from different directions — progressive disclosure is quietly becoming the
 consensus answer to injection cost, and this is the version that names the
 budgets.
 
+**Search is semantic.** `search_memories` embeds the query with Jina
+(`jina-embeddings-v3`, 1024 dimensions) and calls the
+`search_memories_semantic` RPC, filtering the returned rows by an optional
+`min_similarity`. The three disclosure tiers above sit on top of that result,
+not on a keyword match.
+
 **Scope is structural** — a Postgres schema per profile — so there is no scope
 key on a read path and `scope_enforced` is not earned. `body` is an *addressee*
-for notes rather than a retrieval filter.
+rather than a retrieval filter, and the board is the sharpest illustration of
+the difference: `board_posts."to"` is a stored scope key, `board_read` writes
+the predicate that would apply it, and the predicate is overwritten before the
+request is sent. A key that is stored, filtered on in intent, and not filtered
+on in fact is the exact case the mark exists to exclude.
 
 ## 7. Write Mechanics
 
@@ -206,10 +235,16 @@ a user story from the creator — "Leo, MarsNMe creator (3 months of daily use
 across 4 AI tools)" — which is honestly attributed as the author's own experience
 rather than presented as an independent result.
 
-At 3,900 lines with sixteen tools across two deployment targets, the untested
-surface that matters most is the handoff: a note that is delivered twice, or
-marked read without being delivered, loses a message between agents silently, and
-the `read_at` column is exactly what a test would assert on.
+At this size, with tools across two deployment targets, the untested surface
+that matters most is the handoff: a note that is delivered twice, or marked read
+without being delivered, loses a message between agents silently, and the
+`read_at` column is exactly what a test would assert on.
+
+The board shows what that absence costs. A search for a committed case naming
+`board_read` or `board_post` returns nothing, and the defect in section 1 is the
+kind a single test would have caught: post as one body addressed to a second,
+read as a third, assert the post is absent. The two implementations of the same
+filter disagree, and nothing in the repository compares them.
 
 **I ran nothing.**
 
@@ -292,5 +327,7 @@ handoff, auto `batch_promote`, the CoCo-only tool surface), `CHANGELOG.md`,
 `AGENTS.md`, `SECURITY.md`
 
 ## History
+
+**2026-09-13** — [`25b7d6c1b4e698189b9db0e35a593b9a6a41b876`](https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876) — re-read, three commits past the previous pin. Screened again first: one auto-run surface and two unpinned dependency surfaces, unchanged in kind from the previous reading; nothing was installed and nothing was run. Three commits understated the change: they add a `board_posts` table per profile schema and a wall of `board_read` / `board_post` / `board_ack` tools, with `session_boot` fetching unread posts and `session_close` posting. The finding is in `board_read`, which sets an addressing filter on a `URLSearchParams` key and then sets the same key again for the expiry window; `set` replaces, so the filter that makes a private note private never reaches the request, and the handler's only post-fetch filter removes acknowledged posts. `session_boot`'s copy of the same query sets the key once and is correct. No mark changes — `scope_enforced` stays withheld, now on a stored key whose predicate is written and discarded rather than on structural scoping alone. The stack row was promoted from seeded to reviewed and corrected while re-reading: retrieval is a Jina 1024-dimension embedding through a `search_memories_semantic` RPC, not the lexical arm the seeded guess recorded.
 
 **2026-08-09** — [`3ed1b0bc7bbccfd40efd13df366d0f538d155316`](https://github.com/marsmanleo/marsnme/commit/3ed1b0bc7bbccfd40efd13df366d0f538d155316) — first reading. Screened before reading; the tree was read, nothing was installed, and the hosted service was not used.

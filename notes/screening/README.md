@@ -9,15 +9,15 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 340 of 455 screened at the report's current pin.**
+**Progress: 341 of 455 screened at the report's current pin.**
 
 11 further record(s) describe a revision the report has since moved
-off, and 104 report(s) have no record at all.
+off, and 103 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 136 |
+| Repositories with an auto-run surface (`RUNS`) | 137 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 174 |
 | Repositories with build-time execution (`EXEC`) | 252 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -94,6 +94,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
+| [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
