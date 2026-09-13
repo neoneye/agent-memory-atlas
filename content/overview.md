@@ -7257,7 +7257,7 @@ Privacy/deletion:
 - [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) at [`8c90697aced835c8fa027861febcce7de02a9bc2`](https://github.com/QwenLM/qwen-code/commit/8c90697aced835c8fa027861febcce7de02a9bc2)
 - [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`3cc70160deb0eda7f67fbf5b0c0780000f5c342d`](https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d)
 - [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`fbbbfb16d68d66dc1ff029a9c06844d3b900e29d`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d)
-- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`b017db4449d592a982944986c2e3c18652bb36ad`](https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad)
+- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`0303dc0066e0c071c8468536acc6219c183e2f97`](https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97)
 - [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`0bd36a7b177a09aad97dc78efeb5fb43b9322f6d`](https://github.com/noamschwartz/atlas-memory-demo/commit/0bd36a7b177a09aad97dc78efeb5fb43b9322f6d)
 - [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03)
 - [chaitanyagiri/munder-difflin](https://github.com/chaitanyagiri/munder-difflin) at [`5f7de6e464fda1345ceb6d41548ec72178e7e6d8`](https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8)

@@ -112,14 +112,14 @@ than only successes.</p>
               <strong>neo4j-labs/agent-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad" title="b017db4449d592a982944986c2e3c18652bb36ad">
+            <a class="meta-pill revision-pill" href="https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97" title="0303dc0066e0c071c8468536acc6219c183e2f97">
               <span>Analyzed revision</span>
-              <code>b017db44…</code>
+              <code>0303dc00…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neo4j-labs--agent-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -178,13 +178,31 @@ kind… while remaining fully back-compatible with the legacy string +
 boolean API". An <em>indexable error kind</em> makes "what else failed
 this way" a query.</p>
 <p>Two more things are worth a builder's attention. Multi-tenancy is
-<strong>fail-closed</strong> — <code>_enforce_multi_tenant</code>
-"raise[s] if multi-tenant is on and <code>user_identifier</code> is
-missing", so the dangerous default of returning everything is
-unreachable once the mode is on. And preferences carry
-<code>valid_from</code> / <code>valid_until</code> with an
-<code>supersede_preference</code> that is explicitly "idempotent:
-re-running on an already-superseded preference is a" no-op.</p>
+<strong>fail-closed on the write path</strong> —
+<code>_enforce_multi_tenant</code>
+(<code>memory/long_term.py:431</code>) <em>"raise[s] if multi-tenant is
+on and <code>user_identifier</code> is missing"</em>, so a preference
+cannot be stored unattributed once the mode is on. And preferences carry
+<code>valid_from</code> / <code>valid_until</code> with a
+<code>supersede_preference</code> that is explicitly <em>"idempotent:
+re-running on an already-superseded preference is a"</em> no-op.</p>
+<p><strong>Which read path carries the scope key is worth stating
+exactly, because only one does.</strong>
+<code>get_preferences_for</code> (<code>:830</code>) takes a
+<code>user_identifier</code> and compiles it into the pattern —
+<code>MATCH (u:User {identifier: $user_identifier})-[:HAS_PREFERENCE]-&gt;(p:Preference)</code>
+(<code>:854</code>) — so the stored key reaches the query and
+<code>scope_enforced</code> is earned there. The semantic surface does
+not: <code>search_entities</code> (<code>:1073</code>),
+<code>search_preferences</code> (<code>:1139</code>) and
+<code>get_context</code> (<code>:1260</code>) accept no user parameter
+at all, and the last of those is the one whose docstring reads <em>"Get
+long-term context for LLM prompts"</em>. So the boundary holds where a
+caller asks for one user's preferences by name, and the path an agent
+uses to assemble its context is unscoped.
+<code>_enforce_multi_tenant</code> does not close that: it is an
+argument check on writes, and no amount of fail-closed writing filters a
+read that never takes the key.</p>
 <p>Reservations: bi-temporal validity and supersession apply to
 <em>preferences</em>, not to every memory kind; there is no value-level
 tombstone; and the reasoning tier's value depends on retrieval surfacing
@@ -357,6 +375,44 @@ than with any one agent's.</p>
 Agents SDK examples. The MCP tool surface is nearly a thousand lines, so
 the integration is a first-class part of the package rather than a
 wrapper.</p>
+<h3
+id="a-typescript-client-a-hosted-service-and-one-guard-in-two-places">A
+TypeScript client, a hosted service, and one guard in two places</h3>
+<p>The largest arrival is <code>typescript/</code> — a client, not a
+second implementation. <code>RestTransport</code> <em>"talks to the
+hosted Neo4j Agent Memory Service REST API"</em> at a <code>/v1</code>
+root, so the enforcement described above stays in Python and the client
+cannot weaken it by reimplementing a query badly. Integrations for
+Strands, Mastra and the Vercel AI SDK arrived with it.</p>
+<p>One surface crosses both languages and is guarded in only one. A
+read-only Cypher console lets a caller run arbitrary <code>MATCH</code>
+against the graph, which is an escape hatch around every scoped accessor
+by construction, so where the read-only check lives is the whole
+question.</p>
+<p>On the Python side it lives in one place and is shared.
+<code>is_read_only_query</code> (<code>core/query.py:41</code>) is
+called by the direct-Bolt accessor (<code>:72</code>), by the hosted
+NAMS accessor (<code>nams/query.py:53</code>) and by the MCP tool
+(<code>mcp/_tools.py:777</code>) — which imports it under its old
+private name with a comment recording the move and why: <em>"so the bolt
+and NAMS Cypher accessors share the same validator."</em> One predicate,
+three surfaces, no second opinion. The Strands agent tool that exposes
+the console to a model routes through the NAMS accessor, so its
+docstring claim that writes are <em>"rejected client-side"</em> is
+accurate.</p>
+<p>The TypeScript <code>QueryConsole.cypher</code> has no such check. It
+passes the string straight to the transport, and its header states a
+different guarantee — <em>"Hosted service only: write operations are
+rejected with HTTP 400"</em> — so the same logical surface is defended
+client-side in Python and server-side in TypeScript, by a component that
+is not in this repository:</p>
+<pre class="sh"><code>grep -rn -i &quot;readonly\|isReadOnly\|read_only&quot; typescript/src --include=&quot;*.ts&quot;</code></pre>
+<p>Nothing at the pinned commit but <code>private readonly</code> field
+modifiers. This is not a defect in the client — a hosted service that
+trusts no client is the right design, and a client-side check would be a
+convenience rather than a boundary. It is a difference in what a reader
+of this repository can verify: the Python guarantee is checkable here
+and the TypeScript one is a claim about a service that is not.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -469,6 +525,35 @@ over the same conversation?</li>
 <code>benchmarks/metrics.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97"><code class="commit-id" title="0303dc0066e0c071c8468536acc6219c183e2f97">0303dc00…</code></a>
+— 116 commits and about 187,000 added lines past the previous pin, most
+of it a new <code>typescript/</code> client and integrations for
+Strands, Mastra and the Vercel AI SDK. Both marks re-verified in the
+Python implementation, which the client calls rather than
+reimplements.</p>
+<p><strong>A published claim is corrected in the direction that
+matters.</strong> The first reading named
+<code>_enforce_multi_tenant</code> as the scope mechanism; it is an
+argument check on the write path, and it cannot filter a read. The
+predicate that earns <code>scope_enforced</code> is in
+<code>get_preferences_for</code>, which compiles the caller's
+<code>user_identifier</code> into a
+<code>MATCH (u:User {identifier: $user_identifier})</code> pattern. The
+bound now recorded with it: <code>search_entities</code>,
+<code>search_preferences</code> and <code>get_context</code> accept no
+user parameter, so the semantic path an agent uses to assemble a prompt
+is unscoped. The mark stands on the by-user read and the report says
+which read carries it.</p>
+<p>Section 8 records the Cypher console, whose read-only check is shared
+by three Python surfaces through one predicate and absent from the
+TypeScript client, which states the guarantee as a server-side HTTP 400
+instead. Three separate near-misses were dropped before publication on
+this reading — a guard that looked missing in <code>nams/query.py</code>
+and was present, a private alias in <code>mcp/_tools.py</code> that
+looked like a typo and is documented, and a raw-Cypher escape hatch that
+looked unguarded in Python and is not — each found by grepping the whole
+tree rather than the file in hand.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/neo4j-labs/agent-memory/commit/b017db4449d592a982944986c2e3c18652bb36ad"><code class="commit-id" title="b017db4449d592a982944986c2e3c18652bb36ad">b017db44…</code></a>
 — first reading.</p>
