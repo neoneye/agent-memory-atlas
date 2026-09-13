@@ -7,10 +7,13 @@ page_kind: system
 source_name: "npc-worldwide/npcpy"
 source_url: https://github.com/npc-worldwide/npcpy
 archive_name: "npc-worldwide--npcpy"
-revision: a31ba52203062f7a586a901f6870176bf3961707
-revision_url: https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707
-analyzed_at: 2026-07-30
+revision: 5c9d84801ab039c1f44fa918323ff5368330837b
+revision_url: https://github.com/npc-worldwide/npcpy/commit/5c9d84801ab039c1f44fa918323ff5368330837b
+analyzed_at: 2026-09-13
 capabilities: "trust_state, human_review"
+capability_evidence:
+  trust_state: "the memory row's status, with exactly one value on the retrieval path | npcpy/memory/knowledge_store.py:108, :178, :547, npcpy/serve.py:1656, :2354 | `add` defaults `status` to `pending_approval`, and the four values a row can carry are `pending_approval`, `auto-extracted`, `human-approved` and `human-rejected`. It is a state rather than a score because it decides admission, not order: the context-assembly read is `get_memories(status=\"human-approved\", limit=max_memories)` at both the store and the server, so a pending, auto-extracted or rejected row reaches no prompt. The store genuinely separates having something on record from believing it | tests/test_memory_processor.py"
+  human_review: "adjudication before the memory takes effect, not a view of what already did | npcpy/memory/knowledge_store.py:178, npcpy/serve.py:5871, :5937 | `get_pending_approvals` is `get_memories(status=\"pending_approval\")`, the server exposes an `approve_memories` endpoint, and the queue read at `:5937` pulls every pending row with no limit. Because the retrieval path admits only `human-approved`, an extraction nobody has said yes to is inert rather than merely flagged — which is the strong form of this mark | tests/test_memory_processor.py"
 stack_storage: "files"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -53,11 +56,25 @@ the strongest form of the column: adjudication *before* the memory takes effect,
 not a UI for inspecting what already did.
 
 The gap is on the other side of the same mechanism. `human-rejected` is a status
-on a row. Nothing consults it when the next extraction pass runs, so the same
-sentence extracted again arrives as a fresh `pending_approval` candidate and the
-user is asked the same question. The rejection is recorded and never used — the
-quarantine shape this atlas has recorded before in the OWASP guard, arriving
-here in a system that otherwise takes human judgement more seriously than most.
+on a row, and no read path filters on it: the same sentence extracted again
+arrives as a fresh `pending_approval` candidate and the user is asked the same
+question. The rejection is recorded and never used — the quarantine shape this
+atlas has recorded before in the OWASP guard, arriving here in a system that
+otherwise takes human judgement more seriously than most.
+
+The documentation describes the loop that would close it.
+`docs/guides/knowledge-graphs.md` states that approved and rejected memories
+*"are fed back as positive and negative examples to future extraction calls,
+creating a self-improving quality loop."* The only code that consumes rejections
+is `npcpy/ft/memory_trainer.py`, and three things separate it from that
+sentence. It runs only inside a fine-tuning job launched with
+`strategy == 'memory_classifier'`, so it is an operator action rather than
+anything the extraction pass does. Its examples come from the request body —
+`training_data = data.get('trainingData', [])` — not from a query against the
+store. And it partitions on `status in ['approved', 'model-approved']`, which is
+not the vocabulary the store writes: a row carrying the store's own
+`human-approved` matches neither, and would be sorted into the *rejected*
+bucket. The loop is documented, the trainer exists, and nothing joins them.
 
 ## 2. Mental Model
 
@@ -241,5 +258,7 @@ becomes the user's whole experience of the product.
 | `npcpy/memory/knowledge_index.py` | 129 | The index |
 
 ## History
+
+**2026-09-13** — [`5c9d84801ab039c1f44fa918323ff5368330837b`](https://github.com/npc-worldwide/npcpy/commit/5c9d84801ab039c1f44fa918323ff5368330837b) — re-read, 61 commits past the previous pin. `npcpy/memory/knowledge_store.py` was substantially rewritten, 202 lines added against 162 removed of 364, and both marks survive it: the four-value status field is intact, `add` still defaults to `pending_approval`, and the context read is still `get_memories(status="human-approved")` at both the store and the server, so admission rather than ranking is still what the status decides. The published criticism also holds, and is sharpened. `docs/guides/knowledge-graphs.md` claims approved and rejected memories are fed back as positive and negative examples to future extraction calls; the only consumer of rejections is a classifier fine-tune reachable through a `strategy == 'memory_classifier'` job, fed from the request body rather than from the store, and partitioning on `['approved', 'model-approved']` — values the store never writes, so a row carrying its own `human-approved` would be sorted as rejected. Evidence records were written for both marks, which the report previously carried none of. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-30** — [`a31ba52203062f7a586a901f6870176bf3961707`](https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707) — first reading.

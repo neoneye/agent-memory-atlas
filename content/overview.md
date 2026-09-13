@@ -7321,7 +7321,7 @@ Privacy/deletion:
 - [reescalder/agent-memory-supabase](https://github.com/reescalder/agent-memory-supabase) at [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53)
 - [showjihyun/livingfeed](https://github.com/showjihyun/livingfeed) at [`732d8bed74abb17b3079f2841911227c91468002`](https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002)
 - [Cosmonapse/cosmonapse-core](https://github.com/Cosmonapse/cosmonapse-core) at [`4746260080c925bed78a5b2ec6fb099f70278bd3`](https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3)
-- [npc-worldwide/npcpy](https://github.com/npc-worldwide/npcpy) at [`a31ba52203062f7a586a901f6870176bf3961707`](https://github.com/npc-worldwide/npcpy/commit/a31ba52203062f7a586a901f6870176bf3961707)
+- [npc-worldwide/npcpy](https://github.com/npc-worldwide/npcpy) at [`5c9d84801ab039c1f44fa918323ff5368330837b`](https://github.com/npc-worldwide/npcpy/commit/5c9d84801ab039c1f44fa918323ff5368330837b)
 - [juggler-ai/juggler](https://github.com/juggler-ai/juggler) at [`1e570ec310cf38f02b943dcf1e6865ef9c0aa6df`](https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df)
 - [jihadkhawaja/magicore](https://github.com/jihadkhawaja/magicore) at [`ae8ba6bb1a8213066e7655581c5326fce93424c3`](https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3) — formerly jihadkhawaja/mem0sharp; read only
 - [yashneil75/gitlord](https://github.com/yashneil75/gitlord) at [`42b0bab151777c1ee38ced7ab2805b0699e7a8a1`](https://github.com/yashneil75/gitlord/commit/42b0bab151777c1ee38ced7ab2805b0699e7a8a1)
