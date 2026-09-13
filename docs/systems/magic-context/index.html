@@ -112,14 +112,14 @@ axes.</p>
               <strong>cortexkit/magic-context</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09" title="113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09">
+            <a class="meta-pill revision-pill" href="https://github.com/cortexkit/magic-context/commit/799c0fc226ef88144db7b0b084d1405563b141fc" title="799c0fc226ef88144db7b0b084d1405563b141fc">
               <span>Analyzed revision</span>
-              <code>113f3e48…</code>
+              <code>799c0fc2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cortexkit--magic-context" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -269,8 +269,8 @@ subagent invocations, and historian runs.</li>
 <code>compartment-lease.ts</code>, <code>fail-closed-block.ts</code>,
 <code>context-authority.ts</code>,
 <code>storage-identity-merge.ts</code>,
-<code>storage-identity-rekey-map.ts</code>,
-<code>schema-version-fence.ts</code>.</li>
+<code>storage-identity-rekey-map.ts</code>, the schema fence in
+<code>storage-db.ts</code>.</li>
 <li><strong>Memory</strong>: <code>memory/</code> — types, promotion,
 embeddings (local, OpenAI, synapse), <code>embedding-identity.ts</code>,
 <code>embedding-probe.ts</code>, <code>embedding-ssrf.ts</code>,
@@ -652,6 +652,30 @@ be inherited or reset?</li>
 <code>packages/e2e-tests/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/cortexkit/magic-context/commit/799c0fc226ef88144db7b0b084d1405563b141fc"><code class="commit-id" title="799c0fc226ef88144db7b0b084d1405563b141fc">799c0fc2…</code></a>
+— re-read, 1,475 commits past the previous pin across 1,556 files. All
+three marks stand and each mechanism was located in the current tree
+rather than carried forward. One cited path is corrected:
+<code>schema-version-fence.ts</code> no longer exists as a file, having
+consolidated into <code>storage-db.ts</code> and
+<code>migrations.ts</code>, with only its test remaining — and that test
+states the bug class it guards, adding a migration while forgetting to
+raise the supported-version ceiling, which makes the database refuse to
+open and silently disables the feature. The mutation log gained a
+property worth naming: mutation types are <code>archive</code>,
+<code>delete</code>, <code>update</code> and <code>superseded</code>,
+terminal ones mean the memory left the active set, and the render fold
+gives terminal states precedence over a later <code>update</code> so
+that an update queued after an archive or delete cannot resurrect a
+memory that is gone. Un-archiving goes through an epoch-bump
+re-materialize rather than through the log. That is still not a
+<code>tombstone</code> — the record is keyed on the memory id rather
+than the rejected content, and the un-archive path exists — but it is
+the guard a rejected-value record would need. Evidence records were
+written for all three marks, which the report previously carried none
+of. Screened again first; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09"><code class="commit-id" title="113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09">113f3e48…</code></a>
 — first reading.</p>

@@ -7,10 +7,14 @@ page_kind: system
 source_name: cortexkit/magic-context
 source_url: https://github.com/cortexkit/magic-context
 archive_name: "cortexkit--magic-context"
-revision: 113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
-revision_url: https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09
-analyzed_at: 2026-07-27
+revision: 799c0fc226ef88144db7b0b084d1405563b141fc
+revision_url: https://github.com/cortexkit/magic-context/commit/799c0fc226ef88144db7b0b084d1405563b141fc
+analyzed_at: 2026-09-13
 capabilities: "trust_state, scope_enforced, audit_log"
+capability_evidence:
+  trust_state: "the memory row — a verification status distinct from its lifecycle status, set by checking the memory against the files it describes | packages/plugin/src/features/magic-context/storage-db.ts:1249-1250, context-authority.ts:1308, :1344, migrations.ts:1923 | a memory carries `verification_status` and `verified_at` alongside `status`, so how it is doing and whether it has been checked are two fields rather than one. The schema states the sentinel: `verified_at=0` means mapped, with the backing files known, but not yet content-verified; `map-memories` sets `mapped_at` with `verified_at=0` and verification sets `verified_at` to now. A memory re-enters verification when git reports one of its mapped files changed since that memory own last verification, so the state is empirical rather than a judgement about the claim | the verification tests in packages/plugin"
+  scope_enforced: "cross-project read — one SQL predicate joining the scope lattice, a shareable flag, a category allowlist and workspace membership | packages/plugin/src/features/magic-context/memory/visibility.ts:6, memory/storage-memory.ts:774, :855, memory/types.ts:23 | `MemoryScope` is `project`, `ecosystem` or `universe`, and the shared-read predicate is a single composed clause: status in active or permanent, unexpired, `shareable = 1`, scope in the lattice, category drawn from a caller-supplied allowlist, and — the part that makes it a boundary rather than a label — `project_path IN (SELECT project_path FROM mc_workspace_members WHERE workspace_id = :workspace_id)` with `project_path <> :reader_project`. Membership is looked up per read rather than trusted from the request, and the reader own project is excluded from the shared arm | the visibility tests in packages/plugin"
+  audit_log: "two append-only mutation logs whose terminal entries cannot be undone by a later update | packages/plugin/src/features/magic-context/storage-memory-mutation-log.ts:1-14, storage-m0-mutation-log.ts | mutation types are `archive`, `delete`, `update` and `superseded`, and the module draws the line the mark cares about: terminal mutations mean the memory left the active set, while `update` is non-terminal. The render fold gives terminal states precedence over a later `update`, stated as the reason — so an update queued after an archive or delete cannot resurrect a memory that is gone. Un-archiving is possible, but only through an epoch-bump full re-materialize, never through the log itself | packages/plugin mutation-log tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -107,7 +111,7 @@ The core lives in `packages/plugin/src/features/magic-context/`, with harness ad
 Core modules, grouped by concern:
 
 - **Storage and schema**: `migrations.ts` (seventy versions), `storage.ts`, `storage-db.ts`, `storage-ops.ts`, `storage-schema-helpers.ts`, plus per-concern stores for primers, notes, tags, project state, source, subagent invocations, and historian runs.
-- **Integrity**: `storage-memory-mutation-log.ts` and `storage-m0-mutation-log.ts` (append-only mutation audit), `compartment-lease.ts`, `fail-closed-block.ts`, `context-authority.ts`, `storage-identity-merge.ts`, `storage-identity-rekey-map.ts`, `schema-version-fence.ts`.
+- **Integrity**: `storage-memory-mutation-log.ts` and `storage-m0-mutation-log.ts` (append-only mutation audit), `compartment-lease.ts`, `fail-closed-block.ts`, `context-authority.ts`, `storage-identity-merge.ts`, `storage-identity-rekey-map.ts`, the schema fence in `storage-db.ts`.
 - **Memory**: `memory/` — types, promotion, embeddings (local, OpenAI, synapse), `embedding-identity.ts`, `embedding-probe.ts`, `embedding-ssrf.ts`, `normalize-hash.ts`, `cosine-similarity.ts`, `project-identity.ts`.
 - **Dreamer**: `dreamer/` — `task-registry.ts`, `task-scheduler.ts`, `task-gates.ts`, `cron.ts`, `lease.ts`, `verify.ts`, `verify-gate.ts`, `verify-prompt.ts`, `map-memories.ts`, `classify.ts`, `promote-primers.ts`, `refresh-primers.ts`, `retrospective-learnings.ts`, `retrospective-orphan-sweep.ts`, `open-opencode-db.ts`.
 - **Retrieval and context**: `search.ts`, `search-measurement.ts`, `message-index.ts`, `compaction.ts`, `overflow-detection.ts`, `primer-clustering.ts`, `literal-probes.ts`, `recursive-text-splitter.ts`.
@@ -304,5 +308,7 @@ Do not copy:
 - Tests: 473 files across `packages/`, including `migrations-v*.test.ts` and the CAS-race suites; `packages/e2e-tests/`.
 
 ## History
+
+**2026-09-13** — [`799c0fc226ef88144db7b0b084d1405563b141fc`](https://github.com/cortexkit/magic-context/commit/799c0fc226ef88144db7b0b084d1405563b141fc) — re-read, 1,475 commits past the previous pin across 1,556 files. All three marks stand and each mechanism was located in the current tree rather than carried forward. One cited path is corrected: `schema-version-fence.ts` no longer exists as a file, having consolidated into `storage-db.ts` and `migrations.ts`, with only its test remaining — and that test states the bug class it guards, adding a migration while forgetting to raise the supported-version ceiling, which makes the database refuse to open and silently disables the feature. The mutation log gained a property worth naming: mutation types are `archive`, `delete`, `update` and `superseded`, terminal ones mean the memory left the active set, and the render fold gives terminal states precedence over a later `update` so that an update queued after an archive or delete cannot resurrect a memory that is gone. Un-archiving goes through an epoch-bump re-materialize rather than through the log. That is still not a `tombstone` — the record is keyed on the memory id rather than the rejected content, and the un-archive path exists — but it is the guard a rejected-value record would need. Evidence records were written for all three marks, which the report previously carried none of. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-27** — [`113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09`](https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09) — first reading.

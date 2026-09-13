@@ -7241,7 +7241,7 @@ Privacy/deletion:
 - [OSU-NLP-Group/HippoRAG](https://github.com/OSU-NLP-Group/HippoRAG) at [`e37fba2af1a951ac340d837a7c02efb9d8c9544a`](https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a)
 - [MineDojo/Voyager](https://github.com/MineDojo/Voyager) at [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89)
 - [joonspk-research/generative_agents](https://github.com/joonspk-research/generative_agents) at [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4)
-- [cortexkit/magic-context](https://github.com/cortexkit/magic-context) at [`113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09`](https://github.com/cortexkit/magic-context/commit/113f3e4824e0ea03a73f2c1e8a57a5ab0bbf7a09)
+- [cortexkit/magic-context](https://github.com/cortexkit/magic-context) at [`799c0fc226ef88144db7b0b084d1405563b141fc`](https://github.com/cortexkit/magic-context/commit/799c0fc226ef88144db7b0b084d1405563b141fc)
 - [earendil-works/pi](https://github.com/earendil-works/pi) at [`a597371bda2af70372d1323d550483b5f4a0ae36`](https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36)
 - [aiming-lab/MetaClaw](https://github.com/aiming-lab/MetaClaw) at [`922caf3a1cd093fb316e95183a8acc8aa47b3b21`](https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21)
 - [HKUDS/nanobot](https://github.com/HKUDS/nanobot) at [`b99e0f937e828504e0f93dbe35dfd6b1540e20b2`](https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2)
