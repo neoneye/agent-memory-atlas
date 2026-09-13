@@ -4,11 +4,11 @@ eyebrow: "Twenty-five numbers nobody derived"
 description: "A hand-typed 5×5 sectoral interdependence matrix and twelve elaborately named constants sit under a claim of biological alignment, above a project-isolation test that actually holds."
 root: ../..
 page_kind: system
-source_name: "CaviraOSS/OpenMemory"
-source_url: https://github.com/CaviraOSS/OpenMemory
-archive_name: "CaviraOSS--OpenMemory"
+source_name: "CaviraOSS/LongMemory"
+source_url: https://github.com/CaviraOSS/LongMemory
+archive_name: "CaviraOSS--LongMemory"
 revision: 9fdfc2ac09317881d0cdad6efd8b4859fc886323
-revision_url: https://github.com/CaviraOSS/OpenMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323
+revision_url: https://github.com/CaviraOSS/LongMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "sqlite, postgres"
@@ -338,4 +338,6 @@ table `:11-24`, the SaaS comparison `:28-`)
 
 ## History
 
-**2026-08-09** — [`9fdfc2ac09317881d0cdad6efd8b4859fc886323`](https://github.com/CaviraOSS/OpenMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323) — first reading, on `main`. The README announces a rewrite in progress on a separate branch, which was not read. Screened before reading; the tree was read, never installed, and no test was run.
+**2026-09-13** — the repository was renamed from `CaviraOSS/OpenMemory` to `CaviraOSS/LongMemory`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/CaviraOSS--LongMemory` to match.
+
+**2026-08-09** — [`9fdfc2ac09317881d0cdad6efd8b4859fc886323`](https://github.com/CaviraOSS/LongMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323) — first reading, on `main`. The README announces a rewrite in progress on a separate branch, which was not read. Screened before reading; the tree was read, never installed, and no test was run.

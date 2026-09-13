@@ -4,11 +4,11 @@ eyebrow: "Deterministic first, model second"
 description: "A path-cost graph memory whose procedural half puts a cheap deterministic check in front of every expensive one — worth-storing, conflict detection and retrieval triggering are each two-level, rules then a model."
 root: ../..
 page_kind: system
-source_name: "FlowElement-ai/m_flow"
-source_url: https://github.com/FlowElement-ai/m_flow
-archive_name: "FlowElement-ai--m_flow"
+source_name: "FlowElement-xinliuyuansu/m_flow"
+source_url: https://github.com/FlowElement-xinliuyuansu/m_flow
+archive_name: "FlowElement-xinliuyuansu--m_flow"
 revision: da2766c5ebf45ff10440b419465c8ec0df674022
-revision_url: https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022
+revision_url: https://github.com/FlowElement-xinliuyuansu/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022
 analyzed_at: 2026-08-02
 capabilities: ""
 stack_storage: "graph"
@@ -357,4 +357,6 @@ well defined and the repository does not run it.
 
 ## History
 
-**2026-08-02** — [`da2766c5ebf45ff10440b419465c8ec0df674022`](https://github.com/FlowElement-ai/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022) — first reading.
+**2026-09-13** — the repository was renamed from `FlowElement-ai/m_flow` to `FlowElement-xinliuyuansu/m_flow`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/FlowElement-xinliuyuansu--m_flow` to match.
+
+**2026-08-02** — [`da2766c5ebf45ff10440b419465c8ec0df674022`](https://github.com/FlowElement-xinliuyuansu/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022) — first reading.

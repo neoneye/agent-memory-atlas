@@ -4,11 +4,11 @@ eyebrow: "Search for what would refute the answer"
 description: "A second retrieval against an inverted query, scored for contradiction, so a strong conflict makes the question unanswerable instead of picking a side."
 root: ../..
 page_kind: system
-source_name: "vbcherepanov/claude-total-memory"
-source_url: https://github.com/vbcherepanov/claude-total-memory
-archive_name: "vbcherepanov--claude-total-memory"
+source_name: "vbcherepanov/total-agent-memory"
+source_url: https://github.com/vbcherepanov/total-agent-memory
+archive_name: "vbcherepanov--total-agent-memory"
 revision: 14ccb6ca95567e58fd2a12b59096a818039f6d86
-revision_url: https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86
+revision_url: https://github.com/vbcherepanov/total-agent-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86
 analyzed_at: 2026-09-11
 capabilities: "bitemporal, scope_enforced, negative_eval"
 capability_evidence:
@@ -36,7 +36,7 @@ matrix:
 
 total-agent-memory is a 68,000-line MIT Python memory layer for coding agents,
 distributed through PyPI, npm, Homebrew, GHCR and nine IDE installers. It is
-pinned here at `vbcherepanov/claude-total-memory`, the URL it was cloned from;
+pinned here at `vbcherepanov/total-agent-memory`, the URL it was cloned from;
 the package, the README title and the project's own container badge all say
 `total-agent-memory`, so the repository has been renamed and GitHub is
 redirecting. This report uses the new name and the old URL.
@@ -411,6 +411,8 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`14ccb6ca95567e58fd2a12b59096a818039f6d86`](https://github.com/vbcherepanov/claude-total-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86) — re-read, 88 files past the previous pin in a single commit, of which the memory paths account for 467 insertions; the bulk is vendored plugin and skill-pack material. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. The source changes are caching and packaging — a shared concept-extractor per connection, a warm node-name cache with a 60-second TTL, a pinnable model cache — and touch no memory semantics. **The benchmark story changed for the better, on a problem larger than the one this report named.** The LongMemEval runner had carried its own BM25 / RRF / MMR / CrossEncoder stack, so the 96.2% it published described that stack rather than the shipped software; a `--modes store` path was added and defaulted, driving a real `Store` and `Recall.search`, and the headline was revised **down to 95.1%** with the reason printed — *"We would rather publish the smaller number that is about the product."* The cross-system comparison remains a `recall_any` against another project's differently-defined headline, now stated as +9.7 pp rather than +10.8, with both recall variants and the caveat still printed beneath it. Appendix anchors re-pinned: `_decide` moved to `verifier.py:408`, and the `vs-competitors.md` line numbers shifted. Screened before reading: five auto-run surfaces including twenty hook scripts, two dependency manifests inside the cooldown, sixteen unpinned ranges; nothing was installed or run.
+**2026-09-13** — the repository was renamed from `vbcherepanov/claude-total-memory` to `vbcherepanov/total-agent-memory`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/vbcherepanov--total-agent-memory` to match.
 
-**2026-08-09** — [`616d9a6f8b507c16b4cdfef4e823af59d949cc09`](https://github.com/vbcherepanov/claude-total-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.
+**2026-09-11** — [`14ccb6ca95567e58fd2a12b59096a818039f6d86`](https://github.com/vbcherepanov/total-agent-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86) — re-read, 88 files past the previous pin in a single commit, of which the memory paths account for 467 insertions; the bulk is vendored plugin and skill-pack material. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. The source changes are caching and packaging — a shared concept-extractor per connection, a warm node-name cache with a 60-second TTL, a pinnable model cache — and touch no memory semantics. **The benchmark story changed for the better, on a problem larger than the one this report named.** The LongMemEval runner had carried its own BM25 / RRF / MMR / CrossEncoder stack, so the 96.2% it published described that stack rather than the shipped software; a `--modes store` path was added and defaulted, driving a real `Store` and `Recall.search`, and the headline was revised **down to 95.1%** with the reason printed — *"We would rather publish the smaller number that is about the product."* The cross-system comparison remains a `recall_any` against another project's differently-defined headline, now stated as +9.7 pp rather than +10.8, with both recall variants and the caveat still printed beneath it. Appendix anchors re-pinned: `_decide` moved to `verifier.py:408`, and the `vs-competitors.md` line numbers shifted. Screened before reading: five auto-run surfaces including twenty hook scripts, two dependency manifests inside the cooldown, sixteen unpinned ranges; nothing was installed or run.
+
+**2026-08-09** — [`616d9a6f8b507c16b4cdfef4e823af59d949cc09`](https://github.com/vbcherepanov/total-agent-memory/commit/616d9a6f8b507c16b4cdfef4e823af59d949cc09) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.

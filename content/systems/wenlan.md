@@ -4,11 +4,11 @@ eyebrow: "A living wiki over memory"
 description: "A dismissed mind-map node keeps its fingerprint, and the unique index makes re-proposing it a no-op — a value-keyed tombstone on the suggestion layer, not the fact layer."
 root: ../..
 page_kind: system
-source_name: "7xuanlu/origin"
-source_url: https://github.com/7xuanlu/origin
-archive_name: "7xuanlu--origin"
+source_name: "7xuanlu/wenlan"
+source_url: https://github.com/7xuanlu/wenlan
+archive_name: "7xuanlu--wenlan"
 revision: 82d30581723cc59f806f4c5364fc1e4c225b57b2
-revision_url: https://github.com/7xuanlu/origin/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2
+revision_url: https://github.com/7xuanlu/wenlan/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2
 analyzed_at: 2026-09-10
 capabilities: "tombstone, scope_enforced, human_review, negative_eval"
 capability_evidence:
@@ -35,7 +35,7 @@ matrix:
 
 ## 1. Executive Summary
 
-Wenlan — the repository is `7xuanlu/origin`, and the product renamed — is a
+Wenlan — the repository is `7xuanlu/wenlan`, and the product renamed — is a
 local-first knowledge base that maintains Markdown wiki pages from captured
 memory and external sources. Apache-2.0, roughly 485,000 lines of Rust across
 five crates, with a desktop app, an MCP server, a CLI and an HTTP server over one
@@ -445,6 +445,8 @@ atlas, and the reason it works is a database constraint rather than a policy.
 
 ## History
 
-**2026-09-10** — [`82d30581723cc59f806f4c5364fc1e4c225b57b2`](https://github.com/7xuanlu/origin/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2) — read again, 333 commits and 1,206 files past the previous pin against 268,626 insertions. The three awarded marks hold and now carry evidence records: the page-map fingerprint is still unique per page with `ON CONFLICT … DO NOTHING`, the `Tombstoned` outcome is still a named variant the caller handles, `ReadScope` still branches the SQL rather than trimming its result, and the refinement queue still carries `awaiting_review` under a partial index. **`negative_eval` is added as a first-reading error.** The report said no committed case asserts that particular material must not be returned; `crates/wenlan-mcp/tests/space_roundtrip_e2e.rs` asserted exactly that at the previous pin, in the same file at lines 189-192, with the in-scope positive control immediately before it — and the tree carries further exclusion assertions in `space_scoping_e2e.rs` and four in the refinement queue. The claim was made against the evaluation harness, which is positive-signal, and not against the test tree, which is where the assertions are. Test attributes run 5,819. Screened before reading: a dependency surface changed within the seven-day cooldown; nothing was installed, built or run.
+**2026-09-13** — the repository was renamed from `7xuanlu/origin` to `7xuanlu/wenlan`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/7xuanlu--wenlan` to match.
 
-**2026-08-09** — [`87ee2831a8b9445026c33139adfd8d87bf60ad45`](https://github.com/7xuanlu/origin/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45) — first reading. Screened before reading: three auto-run surfaces (`.claude/hooks/`, `.claude/settings.json`, `.githooks/`), build-time execution in two `build.rs` files and an npm manifest, and eleven dependency manifests changed inside the seven-day cooldown including `Cargo.lock`. The tree was read, never built, and no test or eval was run.
+**2026-09-10** — [`82d30581723cc59f806f4c5364fc1e4c225b57b2`](https://github.com/7xuanlu/wenlan/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2) — read again, 333 commits and 1,206 files past the previous pin against 268,626 insertions. The three awarded marks hold and now carry evidence records: the page-map fingerprint is still unique per page with `ON CONFLICT … DO NOTHING`, the `Tombstoned` outcome is still a named variant the caller handles, `ReadScope` still branches the SQL rather than trimming its result, and the refinement queue still carries `awaiting_review` under a partial index. **`negative_eval` is added as a first-reading error.** The report said no committed case asserts that particular material must not be returned; `crates/wenlan-mcp/tests/space_roundtrip_e2e.rs` asserted exactly that at the previous pin, in the same file at lines 189-192, with the in-scope positive control immediately before it — and the tree carries further exclusion assertions in `space_scoping_e2e.rs` and four in the refinement queue. The claim was made against the evaluation harness, which is positive-signal, and not against the test tree, which is where the assertions are. Test attributes run 5,819. Screened before reading: a dependency surface changed within the seven-day cooldown; nothing was installed, built or run.
+
+**2026-08-09** — [`87ee2831a8b9445026c33139adfd8d87bf60ad45`](https://github.com/7xuanlu/wenlan/commit/87ee2831a8b9445026c33139adfd8d87bf60ad45) — first reading. Screened before reading: three auto-run surfaces (`.claude/hooks/`, `.claude/settings.json`, `.githooks/`), build-time execution in two `build.rs` files and an npm manifest, and eleven dependency manifests changed inside the seven-day cooldown including `Cargo.lock`. The tree was read, never built, and no test or eval was run.

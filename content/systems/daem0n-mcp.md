@@ -4,11 +4,11 @@ eyebrow: "You may not write until you prove you asked"
 description: "Mutating tools are blocked by middleware until the agent holds a signed, expiring token proving it called context_check — consultation as a precondition, not a convention."
 root: ../..
 page_kind: system
-source_name: "dasblueyeddevil/daem0n-mcp"
-source_url: https://github.com/dasblueyeddevil/daem0n-mcp
-archive_name: "dasblueyeddevil--daem0n-mcp"
+source_name: "9thLevelSoftware/Daem0n-MCP"
+source_url: https://github.com/9thLevelSoftware/Daem0n-MCP
+archive_name: "9thLevelSoftware--Daem0n-MCP"
 revision: 00809c67c03938014ac3ea470ef3600f7ccebabc
-revision_url: https://github.com/dasblueyeddevil/daem0n-mcp/commit/00809c67c03938014ac3ea470ef3600f7ccebabc
+revision_url: https://github.com/9thLevelSoftware/Daem0n-MCP/commit/00809c67c03938014ac3ea470ef3600f7ccebabc
 analyzed_at: 2026-08-09
 capabilities: "bitemporal, audit_log"
 stack_storage: "sqlite, qdrant"
@@ -383,4 +383,6 @@ Dreaming), `Summon_Daem0n.md`, `Banish_Daem0n.md`, `REVIEW.md`,
 
 ## History
 
-**2026-08-09** — [`00809c67c03938014ac3ea470ef3600f7ccebabc`](https://github.com/dasblueyeddevil/daem0n-mcp/commit/00809c67c03938014ac3ea470ef3600f7ccebabc) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
+**2026-09-13** — the repository was renamed from `dasblueyeddevil/daem0n-mcp` to `9thLevelSoftware/Daem0n-MCP`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/9thLevelSoftware--Daem0n-MCP` to match.
+
+**2026-08-09** — [`00809c67c03938014ac3ea470ef3600f7ccebabc`](https://github.com/9thLevelSoftware/Daem0n-MCP/commit/00809c67c03938014ac3ea470ef3600f7ccebabc) — first reading. Screened before reading; the tree was read, never installed, and no test was run.

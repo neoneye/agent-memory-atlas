@@ -4,11 +4,11 @@ eyebrow: "A vocabulary argued from its own data"
 description: "1,268 resolved findings, exactly one recorded as an error — so the project added a word for 'was never true' and wrote the argument down: what the surface does not name, the practitioner does not reach for."
 root: ../..
 page_kind: system
-source_name: "nubaeon/empirica"
-source_url: https://github.com/nubaeon/empirica
-archive_name: "nubaeon--empirica"
+source_name: "EmpiricaAI/empirica"
+source_url: https://github.com/EmpiricaAI/empirica
+archive_name: "EmpiricaAI--empirica"
 revision: 2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
-revision_url: https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
+revision_url: https://github.com/EmpiricaAI/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
 analyzed_at: 2026-09-11
 capabilities: "trust_state, scope_enforced, audit_log"
 capability_evidence:
@@ -389,7 +389,9 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`2584d2a8dd94ff674fb254f9acd3770ac9ea89ed`](https://github.com/nubaeon/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed) — re-read, 344 files and 38,476 insertions past the previous pin in a single commit, the bulk of it tests. **All three marks re-verified and unchanged, and the report's stated risk holds verbatim**: `empirica/data/epistemic_source.py` still closes with *"This is v0 — the data primitive only. The routing rule (gate route to 'investigate' when claims are high but evidence is all-intuition) is deferred until calibration history accumulates"*, and no gate decision reads the source ratio. The tag is now normalised at seven repository call sites and validated on the batch path, so the primitive is firmer while the rule it exists for is still absent.
+**2026-09-13** — the repository was renamed from `nubaeon/empirica` to `EmpiricaAI/empirica`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/EmpiricaAI--empirica` to match.
+
+**2026-09-11** — [`2584d2a8dd94ff674fb254f9acd3770ac9ea89ed`](https://github.com/EmpiricaAI/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed) — re-read, 344 files and 38,476 insertions past the previous pin in a single commit, the bulk of it tests. **All three marks re-verified and unchanged, and the report's stated risk holds verbatim**: `empirica/data/epistemic_source.py` still closes with *"This is v0 — the data primitive only. The routing rule (gate route to 'investigate' when claims are high but evidence is all-intuition) is deferred until calibration history accumulates"*, and no gate decision reads the source ratio. The tag is now normalised at seven repository call sites and validated on the batch path, so the primitive is firmer while the rule it exists for is still absent.
 
 **What is worth reading here is two new regression suites, because each documents a silent failure in a mechanism this report credits.** `test_delete_artifacts_qdrant_audit_integrity.py` records that `delete-artifacts --apply` returned `{"ok": true, "deleted": 1}` while doing none of three things: the vector was never removed (writers derive the point id from a 15-hex md5 prefix, the deleter used 16 digits plus a modulo, so it addressed a point that does not exist), the eidetic mirror was never touched, and the promised audit row was never written because the `INSERT` named `project_decisions`, *"a table that exists nowhere in the schema"*. All three were invisible because Qdrant answers the delete of an absent point with `status: completed` and every failure path was a bare `except Exception: pass`. The suite's closing line is the lesson: *"These tests assert against the storage layer and the returned report — never against the fact that the call did not raise."* `empirica/core/retrieval_telemetry.py:25-35` now carries the same warning as a module comment, naming both traps — `mistakes_made` rather than `mistakes`, and `project_decisions` which does not exist — and observing that either *"produces a clean, exception-free, zero-row UPDATE"*.
 
@@ -397,4 +399,4 @@ Run from the root of the checkout at the pinned commit.
 
 Screened before reading: fourteen findings; nothing was installed or run.
 
-**2026-08-09** — [`d64b6416e8850e867bff3ee5ed0402dc842128d2`](https://github.com/nubaeon/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
+**2026-08-09** — [`d64b6416e8850e867bff3ee5ed0402dc842128d2`](https://github.com/EmpiricaAI/empirica/commit/d64b6416e8850e867bff3ee5ed0402dc842128d2) — first reading. Screened before reading; the tree was read, never installed, and no test was run.

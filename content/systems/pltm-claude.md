@@ -4,11 +4,11 @@ eyebrow: "A third verdict with nowhere to live"
 description: "A four-judge jury returns approve, reject or quarantine on every write — and quarantine is stored by halving a float and appending a marker into a free-text field."
 root: ../..
 page_kind: system
-source_name: "Alby2007/PLTM-Claude"
-source_url: https://github.com/Alby2007/PLTM-Claude
-archive_name: "Alby2007--PLTM-Claude"
+source_name: "Alby2007/PLTM-Claude-repost-"
+source_url: https://github.com/Alby2007/PLTM-Claude-repost-
+archive_name: "Alby2007--PLTM-Claude-repost-"
 revision: 5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
-revision_url: https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
+revision_url: https://github.com/Alby2007/PLTM-Claude-repost-/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 analyzed_at: 2026-08-09
 capabilities: "scope_enforced"
 stack_storage: "sqlite"
@@ -367,4 +367,6 @@ print `:458`), `benchmarks/compare_with_mem0.py` (the apples-to-apples framing
 
 ## History
 
-**2026-08-09** — [`5146bfbfd2f210674da5a3b16c04ac0ddf6803f0`](https://github.com/Alby2007/PLTM-Claude/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.
+**2026-09-13** — the repository was renamed from `Alby2007/PLTM-Claude` to `Alby2007/PLTM-Claude-repost-`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/Alby2007--PLTM-Claude-repost-` to match.
+
+**2026-08-09** — [`5146bfbfd2f210674da5a3b16c04ac0ddf6803f0`](https://github.com/Alby2007/PLTM-Claude-repost-/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.

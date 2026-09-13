@@ -4,11 +4,11 @@ eyebrow: Curated coding-agent memory
 description: A coding-agent memory layer whose distinctive move is a deterministic structural-loss guard that detects and repairs what an LLM rewrite would silently delete.
 root: ../..
 page_kind: system
-source_name: campfirein/cipher
-source_url: https://github.com/campfirein/cipher
-archive_name: "campfirein--cipher"
+source_name: campfirein/byterover-cli
+source_url: https://github.com/campfirein/byterover-cli
+archive_name: "campfirein--byterover-cli"
 revision: 1052ac1a5dd0fde4da8693d4712064f7876c269c
-revision_url: https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c
+revision_url: https://github.com/campfirein/byterover-cli/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c
 analyzed_at: 2026-07-27
 capabilities: ""
 stack_storage: "files"
@@ -297,6 +297,8 @@ Do not copy:
 
 ## History
 
-**2026-08-09** — the repository has been renamed `campfirein/byterover-cli`; `campfirein/cipher` redirects to it and the pin below resolves unchanged. Recorded because an outside corpus listed the new name as an uncovered system, and a join on `source_url` cannot see a rename.
+**2026-09-13** — the repository was renamed from `campfirein/cipher` to `campfirein/byterover-cli`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/campfirein--byterover-cli` to match.
 
-**2026-07-27** — [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/cipher/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c) — first reading.
+**2026-08-09** — the repository has been renamed `campfirein/byterover-cli`; `campfirein/byterover-cli` redirects to it and the pin below resolves unchanged. Recorded because an outside corpus listed the new name as an uncovered system, and a join on `source_url` cannot see a rename.
+
+**2026-07-27** — [`1052ac1a5dd0fde4da8693d4712064f7876c269c`](https://github.com/campfirein/byterover-cli/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c) — first reading.

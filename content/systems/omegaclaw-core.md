@@ -4,11 +4,11 @@ eyebrow: "The fork that removed the ledger"
 description: "A neural-symbolic agent whose long-term memory is written only when the model calls remember — with a live test that sends a fact-shaped sentence and asserts no vector was written, and its explicit-remember twin as the control."
 root: ../..
 page_kind: system
-source_name: "asi-alliance/OmegaClaw-Core"
-source_url: https://github.com/asi-alliance/OmegaClaw-Core
-archive_name: "asi-alliance--OmegaClaw-Core"
+source_name: "singnet/Omega"
+source_url: https://github.com/singnet/Omega
+archive_name: "singnet--Omega"
 revision: b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
-revision_url: https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
+revision_url: https://github.com/singnet/Omega/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
 analyzed_at: 2026-08-21
 capabilities: "negative_eval"
 capability_evidence:
@@ -403,4 +403,6 @@ still running over there.
 
 ## History
 
-**2026-08-21** — [`b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f`](https://github.com/asi-alliance/OmegaClaw-Core/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f) — first reading. Screened before reading: build-time execution declared in six `conftest.py` files under `Autotests/`; nothing was installed, no container was built and no test was run, so every claim about the suite is from reading it. `negative_eval` awarded on the no-autoremember test and its control, with the mark's write-side form stated in the evidence record. The shared early history with [MeTTaClaw](../mettaclaw/) was established by comparing root commits, which are identical in both repositories, and the divergence in `src/memory.metta` — 61 lines against 112, with the promotion ledger absent — by diffing the two files directly.
+**2026-09-13** — the repository was renamed from `asi-alliance/OmegaClaw-Core` to `singnet/Omega`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/singnet--Omega` to match.
+
+**2026-08-21** — [`b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f`](https://github.com/singnet/Omega/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f) — first reading. Screened before reading: build-time execution declared in six `conftest.py` files under `Autotests/`; nothing was installed, no container was built and no test was run, so every claim about the suite is from reading it. `negative_eval` awarded on the no-autoremember test and its control, with the mark's write-side form stated in the evidence record. The shared early history with [MeTTaClaw](../mettaclaw/) was established by comparing root commits, which are identical in both repositories, and the divergence in `src/memory.metta` — 61 lines against 112, with the promotion ledger absent — by diffing the two files directly.

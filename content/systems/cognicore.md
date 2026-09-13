@@ -4,11 +4,11 @@ eyebrow: "Candidate-to-verified memory with a utility ledger"
 description: "A memory entry that carries a discrete state, a scope pair, provenance columns and eight outcome counters, behind swappable SQLite, Chroma, graph and hybrid backends."
 root: ../..
 page_kind: system
-source_name: "cognicore-dev/cognicore-my-openenv"
-source_url: https://github.com/cognicore-dev/cognicore-my-openenv
-archive_name: "cognicore-dev--cognicore-my-openenv"
+source_name: "cognicore-dev/cognicore-env"
+source_url: https://github.com/cognicore-dev/cognicore-env
+archive_name: "cognicore-dev--cognicore-env"
 revision: 4f6bd9d0c8e4c6050504a47eb027791875043d46
-revision_url: https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46
+revision_url: https://github.com/cognicore-dev/cognicore-env/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46
 analyzed_at: 2026-08-21
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
@@ -386,7 +386,9 @@ environment with a benchmark programme and a paper directory attached.
 
 ## History
 
-**2026-08-21** — [`4f6bd9d0c8e4c6050504a47eb027791875043d46`](https://github.com/cognicore-dev/cognicore-my-openenv/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46) — re-pinned 24 commits and roughly +8,900 lines on. Screened again: two auto-run surfaces (`.claude-plugin/`, `.cursorrules`), one build-time `Makefile`, two unpinned surfaces and two files inside the cooldown; nothing was installed and nothing was run. Marks unchanged at `trust_state` and `scope_enforced`.
+**2026-09-13** — the repository was renamed from `cognicore-dev/cognicore-my-openenv` to `cognicore-dev/cognicore-env`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/cognicore-dev--cognicore-env` to match.
+
+**2026-08-21** — [`4f6bd9d0c8e4c6050504a47eb027791875043d46`](https://github.com/cognicore-dev/cognicore-env/commit/4f6bd9d0c8e4c6050504a47eb027791875043d46) — re-pinned 24 commits and roughly +8,900 lines on. Screened again: two auto-run surfaces (`.claude-plugin/`, `.cursorrules`), one build-time `Makefile`, two unpinned surfaces and two files inside the cooldown; nothing was installed and nothing was run. Marks unchanged at `trust_state` and `scope_enforced`.
 
 **One correction, from an artifact that was committed at the previous pin and not opened.** Section 10 listed the repository's benchmark *files* and did not read `benchmark_output/benchmark_report.md`, which holds a completed run: version 0.9.3, seed 42, six environments, 90 task runs per condition, one variable. Its numbers are now in section 10, including the two that cut against its own headline — the aggregate gain comes from one environment of six, and repeated failures rose from 76 to 91 under the condition whose hypothesis is about not repeating failures.
 
@@ -395,4 +397,4 @@ The scope description is also sharpened rather than corrected: `ScopedMemory.sea
 New at this pin: a commerce layer (`cognicore/commerce/`) that shares and clones memories between backends and prices them in a marketplace, described in section 8 — an imported memory resets to `candidate` and keeps the sender's `confidence`; structured experience extraction; Figma and ElevenLabs integrations; and a five-layer architecture refactor.
 
 
-**2026-08-04** — [`760cdde49328a6cca8c430256b072cc1c4f48247`](https://github.com/cognicore-dev/cognicore-my-openenv/commit/760cdde49328a6cca8c430256b072cc1c4f48247) — first reading.
+**2026-08-04** — [`760cdde49328a6cca8c430256b072cc1c4f48247`](https://github.com/cognicore-dev/cognicore-env/commit/760cdde49328a6cca8c430256b072cc1c4f48247) — first reading.
