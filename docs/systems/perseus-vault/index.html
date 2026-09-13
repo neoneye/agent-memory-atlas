@@ -146,6 +146,21 @@ tombstone stores a digest rather than the value it refuses.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
+<p><strong>The source of this report no longer exists upstream.</strong>
+<code>Perseus-Computing-LLC/perseus-vault</code> returns 404, and so
+does the pinned commit <code>9c829207</code>. Unlike <a
+href="../sovereign/">AMITY</a>, the atlas holds a copy: the fork at <a
+href="https://github.com/agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault"><code>agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault</code></a>
+was taken on 2026-09-09 with every branch, so <code>9c829207</code> and
+every file path below are readable there. Links in the body point at the
+dead upstream because that is where the reading happened; the archive is
+the working route.</p>
+<p>The deletion also cost the project its identity in GitHub's own
+records. An orphaned fork network is reparented onto a surviving sibling
+rather than left headless, so the fork's <code>parent</code> reads
+<code>johan--/mneme</code>, an unrelated repository, and the project's
+own 2026-09-06 head sits on a preserved branch beside
+<code>main</code>.</p>
 <p>Perseus Vault is roughly 63,000 lines of Rust over 666 commits,
 MIT-licensed, shipping one binary and one SQLite file with no services.
 It exposes memory through an MCP stdio server plus LangGraph, CrewAI and
@@ -706,6 +721,57 @@ than restating figures.</p>
 <p>The untested surface is the one the tool-count finding exposes:
 nothing in CI runs the audit's verification command, so a claim with a
 documented check went stale anyway.</p>
+<h3
+id="the-last-twenty-four-commits-which-survive-only-in-the-archive">The
+last twenty-four commits, which survive only in the archive</h3>
+<p>The archive fork holds 24 commits and about 92,600 added lines past
+the pin, the project's final weeks before the repository was deleted.
+Four benchmark lanes arrived in them, and one is worth reading on its
+own terms.</p>
+<p><strong><code>benchmark/hostile_memory_gauntlet/</code> grades
+lifecycle rather than answers.</strong> Its README states the separation
+directly — it is <em>"deliberately separate from the answer-facing
+LongMemEval arm"</em> and grades <em>"memory evidence and lifecycle
+decisions, not generated natural-language answers"</em> — and its case
+protocol runs down the same axes this atlas's rubric does: current
+versus superseded evidence, out-of-order valid-time writes,
+foreign-scope refusal, scope isolation, prompt-injection and low-trust
+admission, replay idempotency, deletion and tombstone behaviour,
+provenance preservation. Every probe names <strong>required and
+forbidden record IDs</strong>, every record carries a SHA-256 of its
+exact text with its scope, actor, trust class, valid-time interval and
+record time, and the loader refuses a probe that asks for evidence from
+the wrong scope. A valid run must declare <code>network_calls: 0</code>
+and <code>offline: true</code>; there is no judge model anywhere in
+it.</p>
+<p>What makes it different from the gold set on <a
+href="../../benchmarks/">this atlas's benchmarks page</a> is the
+provider boundary. The contract is four functions — <code>reset</code>,
+<code>ingest</code>, <code>forget</code>, <code>retrieve</code> — with
+six written semantics an adapter must translate rather than silently
+drop, including that a late older write <em>"must not resurrect stale
+evidence at a later <code>as_of</code>"</em> and that hostile or
+low-trust writes must return
+<code>quarantined</code>/<code>rejected</code> with a reason code rather
+than becoming serveable. It is built to be pointed at somebody else's
+store.</p>
+<p>It does not escape the authorship problem, and it says so. The
+committed fixture is <em>"a small synthetic control suite… not the
+private holdout and cannot establish a general product claim by
+itself"</em>, so the grading corpus is not in the repository, and no
+report for any provider — Perseus Vault included — is committed under
+it. The contract is portable; the cases are not. A benchmark whose
+corpus lives outside the repository and whose repository has been
+deleted is now unreachable in both halves.</p>
+<p>The other three lanes are <code>benchmark/amr/</code> (a
+provider-free AMR 0.1 conformance lane),
+<code>benchmark/experience_transfer/</code> (a corpus with
+<code>corpus.sha256</code>, <code>label_commitments.json</code> and a
+reference workflow carrying <code>receipts.json</code>), and a
+provider-free LongMemEval-V2 readiness lane.
+<code>src/task_state.rs</code> arrived at 2,056 lines in the same
+window, alongside an evidence-sufficiency gate at the answer
+boundary.</p>
 <h2 id="10a-mechanisms-beside-the-store">10a. Mechanisms beside the
 store</h2>
 <p>Three pieces of machinery sit next to the entity store rather than
@@ -902,6 +968,30 @@ supersede, correct, purge).</li>
 <code>integrations/autogen/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — the upstream repository is gone.
+<code>Perseus-Computing-LLC/perseus-vault</code> and the pinned commit
+<code class="commit-id" title="9c829207a4b44a8e679ba912b4c1c5608c8f1e36">9c829207…</code> both return 404.
+The pin is deliberately not moved: the reading below was of that commit,
+and it is still readable in the atlas's fork, taken 2026-09-09 with
+every branch rather than the default one. All seven marks were
+re-verified there at the pin — <code>rejected_value_tombstones</code>
+and <code>normalize_rejected_value</code>, <code>epistemic_state</code>,
+<code>valid_from_unix_ms</code> beside <code>recorded_at_unix_ms</code>,
+the <code>workspace_hash</code> recall predicate, the
+<code>prev_hash</code> journal chain and <code>admission_decide</code>
+are all present and unchanged. The fork also holds 24 commits and
+~92,600 added lines past the pin, which exist nowhere else; section 10
+records what arrived in them, the hostile memory gauntlet chief among
+it. <code>analyzed_at</code> is unchanged because the body was
+re-verified rather than re-derived.</p>
+<p>Two archive facts belong with it. GitHub reparents an orphaned fork
+network onto a surviving sibling, so this fork's <code>parent</code>
+became <code>johan--/mneme</code>, and a sync that trusted that field
+reset the fork's default branch onto an unrelated 2026-06-29 head; the
+real 2026-09-06 head was preserved first, at
+<code>agent-memory-atlas-archive/2026-09-13-00-38-39</code>, and has
+been restored to <code>main</code>. <code>archive_sync.py</code> now
+refuses to follow a reparent.</p>
 <p><strong>2026-08-27</strong> — <a
 href="https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36"><code class="commit-id" title="9c829207a4b44a8e679ba912b4c1c5608c8f1e36">9c829207…</code></a>
 — fifth reading, twenty commits on, five new modules totalling roughly

@@ -38,6 +38,19 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report no longer exists upstream.**
+`Perseus-Computing-LLC/perseus-vault` returns 404, and so does the pinned commit
+`9c829207`. Unlike [AMITY](../sovereign/), the atlas holds a copy: the fork at
+[`agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault`](https://github.com/agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault)
+was taken on 2026-09-09 with every branch, so `9c829207` and every file path below
+are readable there. Links in the body point at the dead upstream because that is
+where the reading happened; the archive is the working route.
+
+The deletion also cost the project its identity in GitHub's own records. An
+orphaned fork network is reparented onto a surviving sibling rather than left
+headless, so the fork's `parent` reads `johan--/mneme`, an unrelated repository,
+and the project's own 2026-09-06 head sits on a preserved branch beside `main`.
+
 Perseus Vault is roughly 63,000 lines of Rust over 666 commits, MIT-licensed,
 shipping one binary and one SQLite file with no services. It exposes memory
 through an MCP stdio server plus LangGraph, CrewAI and AutoGen adapters, stores
@@ -559,6 +572,50 @@ The untested surface is the one the tool-count finding exposes: nothing in CI
 runs the audit's verification command, so a claim with a documented check went
 stale anyway.
 
+### The last twenty-four commits, which survive only in the archive
+
+The archive fork holds 24 commits and about 92,600 added lines past the pin, the
+project's final weeks before the repository was deleted. Four benchmark lanes
+arrived in them, and one is worth reading on its own terms.
+
+**`benchmark/hostile_memory_gauntlet/` grades lifecycle rather than answers.**
+Its README states the separation directly — it is *"deliberately separate from
+the answer-facing LongMemEval arm"* and grades *"memory evidence and lifecycle
+decisions, not generated natural-language answers"* — and its case protocol runs
+down the same axes this atlas's rubric does: current versus superseded evidence,
+out-of-order valid-time writes, foreign-scope refusal, scope isolation,
+prompt-injection and low-trust admission, replay idempotency, deletion and
+tombstone behaviour, provenance preservation. Every probe names **required and
+forbidden record IDs**, every record carries a SHA-256 of its exact text with its
+scope, actor, trust class, valid-time interval and record time, and the loader
+refuses a probe that asks for evidence from the wrong scope. A valid run must
+declare `network_calls: 0` and `offline: true`; there is no judge model anywhere
+in it.
+
+What makes it different from the gold set on [this atlas's benchmarks
+page](../../benchmarks/) is the provider boundary. The contract is four
+functions — `reset`, `ingest`, `forget`, `retrieve` — with six written semantics
+an adapter must translate rather than silently drop, including that a late older
+write *"must not resurrect stale evidence at a later `as_of`"* and that hostile
+or low-trust writes must return `quarantined`/`rejected` with a reason code
+rather than becoming serveable. It is built to be pointed at somebody else's
+store.
+
+It does not escape the authorship problem, and it says so. The committed fixture
+is *"a small synthetic control suite… not the private holdout and cannot
+establish a general product claim by itself"*, so the grading corpus is not in
+the repository, and no report for any provider — Perseus Vault included — is
+committed under it. The contract is portable; the cases are not. A benchmark
+whose corpus lives outside the repository and whose repository has been deleted
+is now unreachable in both halves.
+
+The other three lanes are `benchmark/amr/` (a provider-free AMR 0.1 conformance
+lane), `benchmark/experience_transfer/` (a corpus with `corpus.sha256`,
+`label_commitments.json` and a reference workflow carrying `receipts.json`), and
+a provider-free LongMemEval-V2 readiness lane. `src/task_state.rs` arrived at
+2,056 lines in the same window, alongside an evidence-sufficiency gate at the
+answer boundary.
+
 ## 10a. Mechanisms beside the store
 
 Three pieces of machinery sit next to the entity store rather than inside it,
@@ -732,6 +789,10 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-09-13** — the upstream repository is gone. `Perseus-Computing-LLC/perseus-vault` and the pinned commit `9c829207a4b44a8e679ba912b4c1c5608c8f1e36` both return 404. The pin is deliberately not moved: the reading below was of that commit, and it is still readable in the atlas's fork, taken 2026-09-09 with every branch rather than the default one. All seven marks were re-verified there at the pin — `rejected_value_tombstones` and `normalize_rejected_value`, `epistemic_state`, `valid_from_unix_ms` beside `recorded_at_unix_ms`, the `workspace_hash` recall predicate, the `prev_hash` journal chain and `admission_decide` are all present and unchanged. The fork also holds 24 commits and ~92,600 added lines past the pin, which exist nowhere else; section 10 records what arrived in them, the hostile memory gauntlet chief among it. `analyzed_at` is unchanged because the body was re-verified rather than re-derived.
+
+Two archive facts belong with it. GitHub reparents an orphaned fork network onto a surviving sibling, so this fork's `parent` became `johan--/mneme`, and a sync that trusted that field reset the fork's default branch onto an unrelated 2026-06-29 head; the real 2026-09-06 head was preserved first, at `agent-memory-atlas-archive/2026-09-13-00-38-39`, and has been restored to `main`. `archive_sync.py` now refuses to follow a reparent.
 
 **2026-08-27** — [`9c829207a4b44a8e679ba912b4c1c5608c8f1e36`](https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36) — fifth reading, twenty commits on, five new modules totalling roughly 7,000 lines of Rust. All seven marks stand and none changed; no claim in this report went stale.
 
