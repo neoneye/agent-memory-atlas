@@ -110,14 +110,14 @@ person promotes it.</p>
               <strong>thefullnacho/hestia</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351" title="e6841239a9644035df88bb49f429385382238351">
+            <a class="meta-pill revision-pill" href="https://github.com/thefullnacho/hestia/commit/71b9e8610a7e20620c92c0189fd1075742d147fb" title="71b9e8610a7e20620c92c0189fd1075742d147fb">
               <span>Analyzed revision</span>
-              <code>e6841239…</code>
+              <code>71b9e861…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/thefullnacho--hestia" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -160,17 +160,20 @@ conversation in the background, and they <em>"land in a review inbox
 store."</em> <code>brain/review_notes.py</code> is the human step, and
 says why: <em>"nothing becomes part of the brain's live memory until you
 promote it here, so the brain learns in the open and you stay in control
-(determinism over intelligence)."</em> The bypass exists —
-<code>HESTIA_NOTETAKER_AUTOWRITE</code> — and it is <strong>off by
-default</strong>, which is the difference between a review gate and a
-decoration.</p>
+(determinism over intelligence)."</em> No deployment variable opens a
+way around it: the module states that <em>"deployment environment
+variables cannot bypass this gate"</em>, and a test sets the legacy
+<code>HESTIA_NOTETAKER_AUTOWRITE=1</code> and asserts the fact reaches
+the inbox and not the store. That is the difference between a review
+gate and a decoration.</p>
 <p><strong>Also good:</strong> the store's write whitelist errors loudly
 rather than coercing, and a committed test asserts that the refused fact
 is absent afterwards.</p>
-<p><strong>Weakest:</strong> recall is keyword overlap over every
-record, <code>confidence</code> is written and only ever used as a
-tiebreak, and once a fact is promoted there is no way to mark it wrong —
-the correction surface is a text editor and a <code>rm</code>.</p>
+<p><strong>Weakest:</strong> recall is lexical over every record with no
+semantic arm, <code>confidence</code> is written and displayed and read
+by nothing that ranks, and once a fact is promoted there is no way to
+mark it wrong — the correction surface is a text editor and a
+<code>rm</code>.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a markdown file. A <em>proposed</em> memory is a markdown
 file somewhere else.</p>
@@ -184,7 +187,7 @@ file somewhere else.</p>
              memory/&lt;id&gt;.md                ← live: type, confidence, source,
                       ▲                       last_seen, links, pinned + text
                       │
-        memory tool: write ──┘        recall ──► keyword overlap, top-k
+        memory tool: write ──┘        recall ──► BM25, capped at twenty
                              (the model&#39;s own two operations)</code></pre>
 <p>The only lifecycle is <strong>proposed → live</strong>, and it is
 crossed by a person. After that there are no states: nothing marks a
@@ -198,8 +201,8 @@ with unreviewed inferences — is held behind the inbox. The system treats
 a live fact as true and says so by putting the judgement step before the
 store rather than after it.</p>
 <h2 id="3-architecture">3. Architecture</h2>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, with the bypass off by default</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
-%% caption: the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, with the bypass off by default
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, and no deployment variable opens a path around it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>flowchart TD
+%% caption: the model may write through its own tool, and the background extraction may only propose — facts from the note-taker land in a review inbox and reach the live store only when a person promotes them, and no deployment variable opens a path around it
     subgraph clients[&quot;Windows into the brain&quot;]
         PHONE[&quot;phone&quot;]
         TERM[&quot;terminal&quot;]
@@ -219,11 +222,10 @@ store rather than after it.</p>
     clients --&gt; BRAIN --&gt; LLM
     BRAIN --&gt; TOOL
     TOOL --&gt;|&quot;write&quot;| STORE
-    TOOL --&gt;|&quot;recall: keyword overlap&quot;| STORE
+    TOOL --&gt;|&quot;recall: BM25, pins break ties&quot;| STORE
     BRAIN --&gt; NOTE
     NOTE --&gt;|&quot;novel vs live AND vs queue&quot;| INBOX
     INBOX --&gt; REVIEW --&gt;|&quot;promote&quot;| STORE
-    NOTE -.-&gt;|&quot;AUTOWRITE=1 only&quot;| STORE
     BRAIN --&gt;|&quot;GET /memory/inbox&quot;| INBOX</code></pre></details></figure>
 <p><strong>Runtime shape.</strong> A Python service
 (<code>brain/</code>) exposing an OpenAI-compatible endpoint with an
@@ -240,10 +242,14 @@ record carrying id, type and confidence. The records are
 <code>memory/README.md</code>: they are runtime data, and a reader who
 wants the design's <em>"every learned fact is an auditable diff"</em> is
 told to point the env var at a dedicated git repository.</p>
-<p><strong>Search.</strong> Keyword overlap in
-<code>memory_store.recall</code>, with <code>pinned</code> worth
-<code>0.5</code> and <code>confidence</code> folded in as <em>"gentle
-tiebreakers"</em>. <code>memory/README.md</code> is explicit that this
+<p><strong>Search.</strong> BM25 in <code>memory_store.recall</code>,
+over a token stream filtered by a 48-word stop list and drawn from each
+record's id, body and link aliases. Rarity comes from the corpus
+document frequency and the length normalization uses the store's own
+average; the sort key is <code>(score, pinned)</code>, so a pin breaks a
+tie and cannot promote an irrelevant record, and <code>confidence</code>
+is not in the key at all. The result is capped at twenty however large
+<code>k</code> is. <code>memory/README.md</code> is explicit that this
 is v1: <em>"vector recall is a planned upgrade (markdown stays the
 source of truth, the index is derived)."</em></p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
@@ -269,16 +275,17 @@ remove what it wrote.</p>
 stamps <code>source: f"{source}@{today}"</code> and
 <code>last_seen</code>, writes one file, and calls
 <code>_reindex()</code> to regenerate <code>INDEX.md</code>.
-<code>recall(query, k)</code> scores by keyword overlap and adds the
-tiebreakers. <code>context_block(query, k)</code> renders the selected
-records for injection.</p>
+<code>recall(query, k)</code> scores by BM25 and sorts on
+<code>(score, pinned)</code>. <code>context_block(query, k)</code>
+renders the selected records for injection.</p>
 <p><strong>The note-taker.</strong> <code>brain/note_taker.py</code>
 extracts candidate facts, checks novelty against <em>both</em> the live
 store and the existing queue (<code>:131</code> — <em>"True if this fact
 isn't already known (live memory) or already queued (inbox)"</em>), and
 writes one proposal per fact as reviewable markdown (<code>:160</code>).
-<code>AUTOWRITE</code> (<code>:32</code>) defaults to
-<code>"0"</code>.</p>
+The module's docstring states the invariant it holds: <em>"Background
+extraction always requires review; deployment environment variables
+cannot bypass this gate."</em></p>
 <p><strong>The review step.</strong> <code>brain/review_notes.py</code>
 is the promote/discard CLI; <code>brain/hestia.py:346</code> exposes
 <code>GET /memory/inbox</code>.</p>
@@ -379,12 +386,38 @@ refusal raises <em>and</em> the content is asserted absent, so a
 rejected write cannot leave a partial record. Its comment dates the
 change to an audit nit closed on 2026-07-22 and states the alternative
 it rejected, which is unusually legible for a test.</p>
-<p><code>test_memory_inbox.py</code> covers the proposal path. A
-<code>benchmarks/</code> directory and
-<code>brain/eval_keymatch.py</code> exist beside <code>sft_gen.py</code>
-and <code>sft_gen_v2.py</code>, so keyword-match evaluation and
-fine-tune data generation are both present; no committed result artifact
-reports a score.</p>
+<p>Three more negative cases sit beside it, and each one can fail.
+<code>test_irrelevant_pinned_memory_is_not_recalled</code> writes a
+pinned record and asserts an unrelated query returns nothing — which is
+exactly the assertion that would have failed under a scoring rule that
+added a bonus for <code>pinned</code> rather than sorting on it second.
+<code>test_common_question_words_do_not_count_as_relevance</code> stores
+<em>"the car is in the garage"</em> and asserts that <em>"what is the
+coffee"</em> recalls nothing, a query that shares two tokens with the
+record and matches it without the stop list.
+<code>test_alias_links_retrieve_and_context_carries_provenance</code> is
+the positive control for both: a record written with
+<code>links=['coffee']</code> is recalled by <code>coffee</code> and its
+rendered block carries <code>source=user@</code>.</p>
+<p><code>test_note_taker.py</code> adds the fourth, on the gate rather
+than on recall:
+<code>test_legacy_autowrite_flag_cannot_bypass_review</code> sets the
+legacy environment variable, asserts a proposal was produced, asserts
+the fact is absent from live memory, and asserts the inbox file exists —
+so the case distinguishes "the gate held" from "extraction did
+nothing".</p>
+<p><code>test_memory_inbox.py</code> covers the proposal path, and
+<code>test_recipe_review.py</code> covers the same propose-then-promote
+shape applied to imported recipes through <code>recipe_drafts.py</code>
+and <code>recipe_review.py</code>. Evaluation is a directory of scripts
+— <code>eval_keymatch.py</code>, <code>eval_heldout.py</code>,
+<code>eval_briefing.py</code>, <code>eval_models.py</code>,
+<code>eval_support.py</code> and <code>eval_conversation.py</code> —
+beside <code>sft_gen.py</code> and <code>sft_gen_v2.py</code>; no
+committed result artifact reports a score. The conversation harness
+states the discipline it works under in its own docstring: <em>"Quality
+is reviewed from transcripts, never inferred from keyword success
+alone."</em></p>
 <p><strong>What I would want:</strong> a case asserting that a fact
 deleted from live memory is not re-proposed by the note-taker on the
 next mention. As read, the novelty check would treat it as new, which is
@@ -464,6 +497,27 @@ show?</li>
 <code>brain/eval_keymatch.py</code>, <code>benchmarks/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/thefullnacho/hestia/commit/71b9e8610a7e20620c92c0189fd1075742d147fb"><code class="commit-id" title="71b9e8610a7e20620c92c0189fd1075742d147fb">71b9e861…</code></a>
+— re-read, 59 commits past the previous pin. Screened again first: no
+auto-run surface, two dependency files inside the 7-day cooldown and
+three unpinned surfaces; nothing was installed and the suite was not
+run. Both marks hold and both gained evidence. The published claim that
+a <code>HESTIA_NOTETAKER_AUTOWRITE</code> bypass exists and is off by
+default is corrected: the flag no longer bypasses approval,
+<code>note_taker.py</code> states that deployment environment variables
+cannot bypass the gate, and
+<code>test_legacy_autowrite_flag_cannot_bypass_review</code> sets it to
+<code>1</code> and asserts the fact lands in the inbox rather than live
+memory. Recall was rewritten from term-overlap counting to BM25 with a
+stop list, corpus rarity and length normalization; <code>pinned</code>
+moved from a <code>0.5</code> score bonus to the second element of the
+sort key, so it breaks ties and cannot promote an irrelevant record, and
+<code>confidence</code> is no longer read by any ranking while remaining
+in the context block. Results are capped at twenty. Three recall cases
+and one gate case were added to the committed negative set, and the
+propose-then-promote shape now also covers imported recipes through
+<code>recipe_drafts.py</code> and <code>recipe_review.py</code>.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351"><code class="commit-id" title="e6841239a9644035df88bb49f429385382238351">e6841239…</code></a>
 — first reading. Screened before anything was read: no auto-executing

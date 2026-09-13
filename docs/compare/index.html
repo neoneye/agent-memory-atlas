@@ -12643,9 +12643,9 @@ it</td>
 <td>A directory of markdown under <code>HESTIA_MEMORY_DIR</code> with an
 auto-generated <code>INDEX.md</code>; records are gitignored as runtime
 data</td>
-<td>Keyword overlap scored across records, with <code>pinned</code> and
-<code>confidence</code> as gentle tiebreakers, rendered into a context
-block</td>
+<td>BM25 over every record with a stop-word list, length normalization
+and corpus rarity; <code>pinned</code> breaks ties only, and the result
+is capped at twenty</td>
 <td>A two-op <code>memory</code> tool the model calls, plus a background
 note-taker that proposes rather than writes</td>
 <td>Files a person can edit or delete; no supersession, no
@@ -12655,13 +12655,14 @@ rejected-value record, no delete op on the tool</td>
 phone, terminal, kitchen mic and Home Assistant</td>
 <td>A note-taker extracting durable facts into a review inbox,
 deduplicated against live memory and the queue</td>
-<td>A <code>confidence</code> float and a <code>pinned</code> flag used
-for ranking; no discrete state and nothing that withholds</td>
+<td>A <code>confidence</code> float written and shown in the context
+block but read by no ranking, and a <code>pinned</code> flag that only
+breaks ties; no discrete state and nothing that withholds</td>
 <td>The review inbox is the default path, the write whitelist errors
 loudly, and the deterministic work is deliberately kept away from the
 model</td>
-<td>Recall is keyword overlap over the whole store, and a promoted fact
-has no way to be marked wrong later</td>
+<td>Recall is lexical over the whole store with no semantic arm, and a
+promoted fact has no way to be marked wrong later</td>
 </tr>
 <tr>
 <td><code>hexis</code></td>
@@ -31364,7 +31365,7 @@ licence and vendoring note</li>
 <li><a
 href="https://github.com/thefullnacho/hestia">thefullnacho/hestia</a> at
 <a
-href="https://github.com/thefullnacho/hestia/commit/e6841239a9644035df88bb49f429385382238351"><code class="commit-id" title="e6841239a9644035df88bb49f429385382238351">e6841239…</code></a>
+href="https://github.com/thefullnacho/hestia/commit/71b9e8610a7e20620c92c0189fd1075742d147fb"><code class="commit-id" title="71b9e8610a7e20620c92c0189fd1075742d147fb">71b9e861…</code></a>
 — read only; no auto-run surface, one build-time execution point, three
 unpinned surfaces. Nothing was installed, no local model was pulled and
 no service was started; the memory records are gitignored runtime data
