@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first memory engine whose
+every write is stamped pending unless it came from a local agent, and
+whose only path to approved is a browser session with a CSRF token and a
+written reason.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engraphis — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first memory engine
+whose every write is stamped pending unless it came from a local agent,
+and whose only path to approved is a browser session with a CSRF token
+and a written reason.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engraphis — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first memory
+engine whose every write is stamped pending unless it came from a local
+agent, and whose only path to approved is a browser session with a CSRF
+token and a written reason.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engraphis — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engraphis",
+      "description": "A local-first memory engine whose every write is stamped pending unless it came from a local agent, and whose only path to approved is a browser session with a CSRF token and a written reason.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Approval a bearer token cannot grant</p>
+          <h1>Engraphis</h1>
+          <p class="document-deck">A local-first memory engine whose
+every write is stamped pending unless it came from a local agent, and
+whose only path to approved is a browser session with a CSRF token and a
+written reason.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Coding-Dev-Tools/engraphis">
+              <span>Source</span>
+              <strong>Coding-Dev-Tools/engraphis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6" title="c4964809e2a519daf3022d21b0b6a24b4af99ef6">
+              <span>Analyzed revision</span>
+              <code>c4964809…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Coding-Dev-Tools--engraphis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Coding-Dev-Tools--engraphis</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engraphis is a local-first memory engine for coding agents —
+Apache-2.0, about 79,200 lines of Python, one SQLite file, a dashboard,
+an MCP server and a v2 HTTP API. It stores memories typed working,
+episodic, semantic or procedural, retrieves them through vector, BM25
+and graph arms fused by RRF, and packs the result to a token budget.</p>
+<p><strong>It is open-core, and the boundary is stated rather than
+implied.</strong> The README says this repository holds <em>"the free
+local engine, dashboard, MCP server, and customer-side clients"</em>
+while <em>"hosted sync, analytics, automation, and team services run on
+the official hosted service; their server implementations are not
+distributed here."</em> The memory engine is in the tree; what a reader
+cannot check is the hosted half, and the report covers only the half
+that is here.</p>
+<p>Six of this atlas's seven marks are earned, and the one that carries
+the design is <strong>an approval an agent structurally cannot
+perform.</strong></p>
+<p>Every write is stamped <code>pending</code> unless it came from a
+local agent source that did not arrive over <code>http</code>,
+<code>mcp</code> or <code>remote</code> ingress, in which case it is
+<code>approved</code> (<code>service.py:641-655</code>). The comment
+above that branch names the attack it exists for: an external caller
+must not be able to <em>"submit <code>source=\"agent\"</code> and
+self-approve prompt-visible content."</em> A third state,
+<code>quarantined</code>, is applied by the poisoning detector. The read
+path is where the state bites — the packer drops a memory when
+<code>quarantined or review_state == REVIEW_PENDING or conflicted</code>
+(<code>service.py:7011-7014</code>), so a pending claim is stored,
+listable and invisible to the model.</p>
+<p>The only way out of <code>pending</code> is a person.
+<code>POST /dashboard/review/approve</code>
+(<code>dashboard_app.py:637</code>) states its own boundary in the
+docstring — <em>"This is intentionally not a v2 API or MCP operation. A
+bearer token cannot invoke it: the caller must hold the HttpOnly browser
+session and echo the per-session CSRF value returned only by the
+same-origin login exchange"</em> — and refuses a missing session cookie,
+a missing browser header, a mismatched CSRF token and an empty
+<code>reason</code> with 401, 403, 403 and 422. The MCP side is
+read-only by design: the review inbox tool lists pending, quarantined
+and conflicting records and returns no quarantined bodies to an agent at
+all.</p>
+<p>Most systems in this atlas that hold a review state let the same
+interface that writes a memory also bless it. This one makes the
+approving principal a different kind of caller, in code, and says so
+where a maintainer will read it.</p>
+<p><strong>Two axes of time, both reachable.</strong>
+<code>valid_from</code> and <code>valid_to</code> are world time;
+<code>valid_to_recorded_at</code> is commented in the schema as the
+<em>"system-time when valid_to was learned"</em>. The historical-support
+query binds them to separate parameters
+(<code>service.py:9694-9702</code>), and the MCP recall tool exposes
+<code>valid_at</code> and <code>known_at</code> as distinct arguments
+beside <code>as_of</code>, so an agent can ask what was true at one
+instant as it was known at another.</p>
+<p><strong>What is withheld, and it is the interesting one.</strong>
+<code>tombstone</code> is refused. <code>core/sync.py</code> has
+tombstones and takes them seriously — <em>"secure-erase tombstones are
+terminal within their known repository scope"</em> — but they are
+<strong>delete-sync markers keyed on an id</strong>, the mechanism this
+atlas's rubric names as explicitly not the mark. Nothing here keys a
+record on a rejected <em>value</em>, so a claim a reviewer refused can
+be extracted again tomorrow and arrives, correctly, as
+<code>pending</code>. The review gate catches it; no record says it was
+already judged.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a claim with a review state and two clocks. It enters
+<code>pending</code> or <code>approved</code> depending on where it came
+from, and the packer — not the store — decides whether it reaches the
+model.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — ingress decides the initial review state, the packer enforces it on every read, and the only edge out of pending is an authenticated browser session that must supply a reason</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: ingress decides the initial review state, the packer enforces it on every read, and the only edge out of pending is an authenticated browser session that must supply a reason
+flowchart TB
+    ING[&quot;write arrives&quot;] --&gt; Q{&quot;local agent source,&lt;br/&gt;and not via http / mcp / remote?&quot;}
+    Q --&gt;|yes| APP[&quot;review_state = approved&quot;]
+    Q --&gt;|no| PEND[&quot;review_state = pending&quot;]
+    ING --&gt; DET[&quot;poisoning detector&quot;]
+    DET --&gt;|suspicious| QUAR[&quot;quarantined&quot;]
+    CONS[&quot;consolidation job&quot;] --&gt; PEND
+    PEND --&gt; PACK
+    QUAR --&gt; PACK
+    APP --&gt; PACK{&quot;context packer&quot;}
+    PACK --&gt;|&quot;quarantined, pending or conflicted&quot;| DROP[&quot;excluded from the packed prompt&quot;]
+    PACK --&gt;|approved| PROMPT[&quot;reaches the model&quot;]
+    PEND -.-&gt;|&quot;POST /dashboard/review/approve&lt;br/&gt;browser session + CSRF + reason&quot;| APP
+    QUAR -.-&gt;|&quot;listable, bodies never returned to an agent&quot;| INBOX[&quot;MCP review inbox, read-only&quot;]
+    PEND -.-&gt; INBOX</code></pre></details></figure>
+<p>The dotted edge is the whole design: it is the only transition into
+<code>approved</code>, and it is the only one an MCP client cannot
+take.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One SQLite database and one process.
+<code>engraphis/core/schema.py</code> defines memories, an entity/edge
+graph with per-edge supports, a portable vector table, a job queue and a
+hash-chained <code>audit</code> ledger. There is no server to stand up,
+and the dashboard, the MCP server and the v2 API are three front ends
+over the same store.</p>
+<p><strong>What it costs to run.</strong> A Python install and a SQLite
+file. Embedding, consolidation and graph indexing run as queued jobs
+rather than inline, so a write returns before its vector exists. The
+Dockerfile and two compose files are for the dashboard, not a required
+service.</p>
+<p><strong>The audit ledger is chained.</strong>
+<code>audit(id, ts, actor, action, target, detail, prev_hash)</code>
+hashes each entry over its predecessor (<code>store.py:205-208</code>),
+so a row removed from the middle is detectable. The schema comments
+record that the table had no index at all and that every read was a full
+scan — a fact about the project's own history, kept where the fix
+landed.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema</strong> — <code>engraphis/core/schema.py</code>:
+<code>memories</code> (81), <code>memory_entities</code> (121),
+<code>events</code> (518), <code>audit</code> (531).</li>
+<li><strong>Review state</strong> —
+<code>engraphis/core/poisoning.py:18-19</code> defines the vocabulary;
+<code>engraphis/service.py:641-655</code> assigns it at ingress;
+<code>:7011-7014</code> enforces it in the packer.</li>
+<li><strong>Approval</strong> —
+<code>engraphis/dashboard_app.py:637-668</code>.</li>
+<li><strong>Review inbox</strong> —
+<code>engraphis/mcp_server.py:3097-3110</code>.</li>
+<li><strong>Recall</strong> — <code>engraphis/core/recall.py</code>:
+pipeline header (1-12), scope predicates (1716-1725).</li>
+<li><strong>Bi-temporal read</strong> —
+<code>engraphis/service.py:9694-9702</code>; the MCP parameters at
+<code>engraphis/mcp_server.py:1004-1010</code>.</li>
+<li><strong>Audit chain</strong> —
+<code>engraphis/core/store.py:205-208</code>, writers at
+<code>:5932</code>, <code>:8480</code>.</li>
+<li><strong>Sync tombstones</strong> —
+<code>engraphis/core/sync.py:29-30</code>, <code>:83-84</code>.</li>
+<li><strong>Security gate</strong> —
+<code>eval/adversarial_memory_security.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carries the claim, its type, a
+<code>scope</code> of session, repo, workspace or user, and a wide set
+of scoring fields — <code>importance</code>, <code>surprise</code>,
+<code>stability</code>, <code>confidence</code>,
+<code>access_count</code>, <code>last_access</code>.
+<code>confidence</code> is a model/extraction number used as a scoring
+multiplier, and the schema comment says so; it is not the trust state,
+which lives in the provenance blob.</p>
+<p>Time is four columns. <code>valid_from</code> and
+<code>valid_to</code> bound world time; <code>ingested_at</code> is
+system-time validity; <code>valid_to_recorded_at</code> records when the
+closure was learned. <code>modified_hlc</code> holds a hybrid logical
+clock for descriptive state, which is what makes the hosted sync half
+possible without the usual last-writer-wins collapse.</p>
+<p><code>subject_key</code> and <code>claim_kind</code> are on the row
+as <em>"stable claim subject"</em> and <em>"optional claim
+predicate/category"</em>. They are the natural key a value-level
+tombstone would hang on, which is what makes the absence of one a near
+miss rather than an oversight.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The pipeline is stated at the top of <code>recall.py</code>: scope
+and time filter, then hybrid candidate generation across vector, lexical
+and graph arms, RRF fusion, retention-aware weighted scoring, rerank,
+context packing, reinforce. The graph arm is Personalized PageRank over
+the entity graph seeded at the query's entities, with a
+<code>graph_mode="1hop"</code> kept for ablation against the older
+expansion.</p>
+<p>Scope is applied before ranking, as predicates rather than as a
+post-filter. The nullable arms are worth reading before treating it as
+tenancy: <code>(workspace_id=? OR workspace_id IS NULL)</code> admits
+unscoped rows into a scoped query, deliberately, so a memory written
+without a workspace is visible from all of them.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous into SQLite and the expensive work is queued:
+embedding, consolidation and graph indexing run as jobs, so <strong>a
+memory is durable before it is retrievable by vector</strong>. The lag
+is the queue's, not a fixed interval.</p>
+<p>The review stamp is the write path's most consequential line, and it
+is decided by two facts about the caller — the declared source name and
+the ingress it arrived on. An in-process local agent gets
+<code>approved</code>; anything over <code>http</code>, <code>mcp</code>
+or <code>remote</code> gets <code>pending</code> regardless of what it
+claims about itself. The security eval asserts the downgrade directly: a
+caller that submits <code>trusted=True</code> ends up with
+<code>trusted: False</code>, <code>review_state: pending</code> and
+<code>trust_downgraded: True</code>.</p>
+<p><strong>Consolidation writes back as <code>pending</code></strong>
+(<code>core/consolidate.py:1360</code>, <code>:1739</code>,
+<code>:1786</code>, <code>:2039</code>). That is the conservative choice
+and it has a cost worth naming: the system's own summarizer produces
+material only a person can release, so a deployment nobody reviews
+accumulates consolidated memories that never reach a prompt.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a v2 HTTP API, a dashboard, and a
+<code>.claude-plugin/</code> marketplace manifest. The MCP surface is
+the interesting one because of what it refuses: recall tools take
+<code>as_of</code>, <code>valid_at</code>, <code>known_at</code>, a
+token budget, a retrieval profile and per-type limits, while the review
+inbox is <code>readOnlyHint</code> and returns no quarantined bodies. An
+agent can read everything it is allowed to see, see that more exists,
+and approve none of it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Memory poisoning is an explicit threat model, stated at the top of
+<code>service.py</code>: <em>"validate and sanitize all untrusted input
+before it reaches the store — ingested content is untrusted and memory
+poisoning is an explicit threat."</em></p>
+<p>The defences stack: ingress-derived review state, a poisoning
+detector that can quarantine, a packer that drops both, and an approval
+path an agent cannot reach. The audit ledger chains its entries. Secure
+erase emits sync tombstones that are terminal within their repository
+scope.</p>
+<p>What is missing is a memory of judgements. A rejected claim leaves no
+record keyed on its content, so the same assertion re-extracted tomorrow
+is a fresh <code>pending</code> row and a fresh decision for whoever
+reviews it. For a system this careful about who may approve, not
+remembering what was refused is the asymmetry to fix.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>eval/</code> holds around thirty harnesses — ablation,
+chunking, consolidation ranking, context economy, capacity matrices, an
+external arm and a red-team poisoning suite — plus
+<code>BENCHMARKS.md</code> and <code>EVIDENCE.md</code>. No paper: a
+grep of the README and docs for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>Citation</code> and <code>doi</code>
+returns nothing, and there is no <code>CITATION.cff</code>.</p>
+<p><strong><code>eval/adversarial_memory_security.py</code> is the one
+to read</strong>, and it is the best instance of the shape this atlas
+keeps asking for. The fixture seeds four adversarial inputs into one
+small graph — an instruction-shaped external memory, a detector-bypass
+memory, a caller self-asserting <code>trusted=True</code>, and three
+edges built to pull the pending data into a trusted query — and then
+checks that none of it reaches the packed prompt while a trusted control
+still does.</p>
+<p>Each absence metric carries its own vacuity guard <strong>inside the
+same expression</strong>:</p>
+<pre class="python"><code>&quot;poisoned_direct_edge_absent_from_prompt_graph&quot;: _rate(
+    direct_edge in raw_edge_ids and direct_edge not in prompt_edge_ids
+    and pending_id in raw_graph_ids and pending_id not in prompt_graph_ids
+),</code></pre>
+<p>The edge must be present in the raw graph before its absence from the
+prompt counts for anything, so the metric cannot pass because retrieval
+returned nothing — the failure mode that makes most negative assertions
+in this corpus worthless.
+<code>trusted_memory_available_in_prompt_graph</code> is the paired
+control and requires the memory, its id and its marker text.</p>
+<p>The gate states its own limits rather than leaving them to a reader:
+one fixed ingress and topology, <em>"a regression gate, not a
+measurement of real-world attack prevalence or detector recall"</em>,
+with grounded-answer coverage explicitly deferred to a different
+suite.</p>
+<p>Nothing was run. The screen reports two auto-run surfaces — a
+<code>.claude-plugin/</code> marketplace manifest and committed
+<code>.githooks/</code> — and seven dependency files changed the day of
+the pin, inside the seven-day cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Make the approving principal a different kind of caller, in
+code.</strong> Not a role flag on the same API — a different
+authentication mechanism entirely. A bearer token cannot reach this
+approve endpoint; only a browser session with a CSRF token can. An agent
+that can call every other tool still cannot bless its own memory, and
+that property is structural rather than a policy someone might
+relax.</p>
+<p><strong>Require a reason on approval.</strong> Empty
+<code>reason</code> returns 422. It costs one line and turns an audit
+row into something a later reader can use.</p>
+<p><strong>Derive trust from ingress, not from the payload.</strong>
+<code>trusted=True</code> in a request is downgraded, and the eval
+asserts the downgrade. Anything a caller says about its own
+trustworthiness is a claim, not evidence.</p>
+<p><strong>Put the vacuity guard inside the metric.</strong>
+<code>x in raw and x not in prompt</code> in one expression cannot pass
+on an empty result. This is cheaper than a separate control test and it
+cannot be separated from the assertion it protects.</p>
+<p><strong>Say what the gate does not cover, in the gate.</strong> The
+<code>scope.limitations</code> block is three sentences and it stops the
+number being read as more than it is.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Holding a review state with no memory of refusals.</strong> A
+rejected claim leaves nothing keyed on its value, so re-extraction
+produces a new <code>pending</code> row and the reviewer decides again.
+The row already carries <code>subject_key</code> and
+<code>claim_kind</code>; the tombstone is a table away.</p>
+<p><strong>Letting the summarizer write into the review queue with no
+plan for who empties it.</strong> Consolidation output lands
+<code>pending</code>. In a deployment where nobody opens the dashboard,
+the system's own best summaries are the memories it cannot use.</p>
+<p><strong>Nullable scope predicates in a query you might call a
+boundary.</strong> <code>(workspace_id=? OR workspace_id IS NULL)</code>
+is the right behaviour for a single-user tool and the wrong shape to
+inherit if the same code later serves two tenants.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits one developer or a small team running memory on their own
+machine, who want to see and correct what the agent remembers, and who
+will actually open the dashboard. The review gate is the product: if
+nobody reviews, everything arriving over MCP stays invisible to the
+model, and the system quietly does less than it appears to.</p>
+<p>It is the wrong fit where memory must be written by remote agents and
+be immediately usable — the ingress rule makes that a contradiction —
+and where the hosted half matters, since that code is not here to
+read.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Will a rejected value ever be remembered as
+rejected?</strong> <code>subject_key</code> and <code>claim_kind</code>
+are already on the row.</li>
+<li><strong>Who empties the review queue in an unattended deployment,
+and what happens to consolidation output that nobody ever
+approves?</strong></li>
+<li><strong>Is the <code>NULL</code> arm of the scope predicate
+load-bearing, or a migration artifact?</strong> It decides whether the
+workspace key is a boundary or a default.</li>
+<li><strong>Does the hosted sync half preserve the review state across
+devices?</strong> The hybrid logical clock suggests the design
+anticipated it; the server is not here.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Schema and store</strong></p>
+<ul>
+<li><code>engraphis/core/schema.py</code> — <code>memories</code> (81),
+<code>memory_entities</code> (121), <code>events</code> (518),
+<code>audit</code> (531)</li>
+<li><code>engraphis/core/store.py</code> —
+<code>_audit_entry_hash</code> (205), audit writers (5932, 8480), legacy
+review-state migration (2938-2997)</li>
+</ul>
+<p><strong>Review and trust</strong></p>
+<ul>
+<li><code>engraphis/core/poisoning.py</code> —
+<code>REVIEW_PENDING</code>, <code>REVIEW_APPROVED</code> (18-19)</li>
+<li><code>engraphis/service.py</code> — ingress stamp (641-655), packer
+enforcement (7011-7014)</li>
+<li><code>engraphis/dashboard_app.py</code> — approve endpoint
+(637-668)</li>
+<li><code>engraphis/mcp_server.py</code> — review inbox (3097-3110),
+quarantine description (513-514)</li>
+</ul>
+<p><strong>Retrieval and time</strong></p>
+<ul>
+<li><code>engraphis/core/recall.py</code> — pipeline (1-12), scope
+predicates (1716-1725)</li>
+<li><code>engraphis/service.py</code> — bi-temporal historical support
+(9694-9702)</li>
+<li><code>engraphis/mcp_server.py</code> — <code>as_of</code> /
+<code>valid_at</code> / <code>known_at</code> (1004-1010)</li>
+</ul>
+<p><strong>Sync</strong></p>
+<ul>
+<li><code>engraphis/core/sync.py</code> — tombstone semantics (29-30),
+constants (83-84)</li>
+</ul>
+<p><strong>Evaluation</strong></p>
+<ul>
+<li><code>eval/adversarial_memory_security.py</code> — fixture (1-34),
+metrics and controls (226-248)</li>
+<li><code>eval/</code>, <code>BENCHMARKS.md</code>,
+<code>EVIDENCE.md</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn -i &quot;tombstone\|rejected_value&quot; --include=&quot;*.py&quot; engraphis/
+grep -rn &quot;review_state&quot; --include=&quot;*.py&quot; . | grep -v &quot;/tests/\|/eval/&quot;
+grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md docs/
+ls CITATION.cff</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6"><code class="commit-id" title="c4964809e2a519daf3022d21b0b6a24b4af99ef6">c4964809…</code></a>
+— first reading. Screened before anything was read: two auto-run
+surfaces, a <code>.claude-plugin/</code> marketplace manifest and
+committed <code>.githooks/pre-commit</code>, plus seven dependency files
+changed the day of the pin and inside the seven-day cooldown. Nothing
+was installed, no hook was registered and no eval was run. Six marks.
+<code>tombstone</code> is withheld deliberately rather than for absence
+— <code>core/sync.py</code> implements tombstones and they are
+delete-sync markers keyed on an id, which this atlas's rubric names as
+not the mark. <code>human_review</code> was nearly withheld in error:
+the MCP inbox is read-only and a grep of the routes for
+<code>review_state</code> returns nothing, which reads as a display-only
+surface until a wider search finds
+<code>POST /dashboard/review/approve</code> calling into the service
+rather than touching the field. The open-core boundary is stated in the
+README and only the local engine was read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

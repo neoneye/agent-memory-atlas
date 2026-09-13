@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 441 reports.**
+**This page covers all 442 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1788,6 +1788,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 780,000 lines of Go with forty-plus packages, MVCC snapshot isolation, Bolt/Cypher/gRPC/GraphQL/Qdrant/MCP surfaces, and an audit module citing GDPR, HIPAA, FISMA, SOC2 and SOX by clause rather than by name.
 - Study when: you are building the memory layer and want validity enforceable and history queryable underneath it.
 - Do not copy when: you expected a memory product — nothing here decides what to remember or resolves a contradiction.
+
+### [`engraphis`](../systems/engraphis/)
+- Best idea: approval is a different kind of caller. `POST /dashboard/review/approve` cannot be reached by a bearer token — it needs the HttpOnly browser session and a per-session CSRF value — so an agent that can call every other tool structurally cannot bless its own memory, and it must supply a written reason.
+- Biggest risk: a review state with no memory of refusals. A rejected claim leaves nothing keyed on its value, so the same assertion re-extracted tomorrow arrives as a fresh `pending` row and a fresh decision, while `subject_key` and `claim_kind` sit unused on the row.
+- Most reusable component: the vacuity guard written inside the metric — `x in raw_edge_ids and x not in prompt_edge_ids` in one expression, so a negative assertion cannot pass because retrieval returned nothing.
+- Maturity impression: Apache-2.0 and open-core, ~79,200 lines of Python over one SQLite file, around thirty eval harnesses, and a security gate that states its own limits as "a regression gate, not a measurement of real-world attack prevalence or detector recall".
+- Study when: you want memory an agent writes and a person releases, and you will actually open the dashboard to release it.
+- Do not copy when: remote agents must write memory that is immediately usable — the ingress rule makes that a contradiction — or when the hosted half matters, since that code is not in the repository.
 
 ### [`empirica`](../systems/empirica/)
 

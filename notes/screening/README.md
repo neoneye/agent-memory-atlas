@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 326 of 441 screened at the report's current pin.**
+**Progress: 327 of 442 screened at the report's current pin.**
 
 11 further record(s) describe a revision the report has since moved
 off, and 104 report(s) have no record at all.
@@ -18,8 +18,8 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 130 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 165 |
-| Repositories with build-time execution (`EXEC`) | 242 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 166 |
+| Repositories with build-time execution (`EXEC`) | 243 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -64,6 +64,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`engram`](../../content/systems/engram.md) | `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
+| [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
 | [`fidelis`](../../content/systems/fidelis.md) | `server.json` |
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
@@ -94,7 +95,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
-| [`mem0sharp`](../../content/systems/mem0sharp.md) | `.gitattributes` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
