@@ -29,6 +29,17 @@ Upstream disappearing is the case the archive exists for and is not a failure
 here: the fork is left exactly as it is, recorded as `upstream-gone`, and it
 becomes the only surviving copy.
 
+A deleted upstream has a second form that does not look like one. GitHub does
+not leave an orphaned fork network parentless — it reparents the network onto a
+surviving sibling — so `parent` keeps naming *a* repository, just not the one
+the archive forked. Following it silently is how a snapshot gets overwritten
+with a stranger's history. Every fork's `parent` is therefore checked against
+its own `<owner>--<repo>` name before anything is read from it, and a
+disagreement is classified rather than followed: a rename (the old name
+redirects to the parent) is the same repository and is synced, reported as
+`current-upstream-renamed` so a person can rename the fork; anything else is
+`upstream-reparented` and nothing is touched.
+
 Scope: the default branch is tracked. Every other branch is captured once, at
 fork time, and divergence in them is reported rather than followed — mirroring
 every branch of every repository is a different and much more expensive job.
@@ -121,12 +132,74 @@ def head_sha(full_name: str, branch: str) -> str | None:
     return payload.get("sha") if status == 200 and isinstance(payload, dict) else None
 
 
+def candidate_upstreams(fork_name: str) -> list[str]:
+    """Every `owner/repo` a `<owner>--<repo>` fork name could have come from.
+
+    Usually one. More when a name contains a second `--`, which happens because
+    GitHub allows it in an account name: `johan--/mneme` forks as
+    `johan----mneme`, and splitting on the first separator would read that as
+    `johan/--mneme`. Every split point is offered instead, so a real upstream is
+    always among the candidates and a match is never missed.
+    """
+    out, idx = [], fork_name.find("--")
+    while idx != -1:
+        owner, repo = fork_name[:idx], fork_name[idx + 2:]
+        if owner and repo:
+            out.append(f"{owner}/{repo}")
+        idx = fork_name.find("--", idx + 1)
+    return out
+
+
+def classify_parent(fork_name: str, parent: str) -> tuple[str, str | None]:
+    """Does `parent` still name the repository this fork was taken from?
+
+    GitHub's `parent` is not stable. When the root of a fork network is deleted
+    the network is reparented onto a surviving sibling, and the field then names
+    a repository the archive never forked. Following it is not a no-op: the
+    sibling's history is unrelated, so every sync sees a divergence and resets
+    the archived default branch onto a stranger's commits. That happened to
+    `Perseus-Computing-LLC--perseus-vault` on 2026-09-13 — deleted upstream,
+    reparented to `johan--/mneme`, and one sync moved `main` from a 6 September
+    head to an unrelated 29 June one. Nothing was lost, because the preserve
+    step ran first, but the archive's default branch showed the wrong project.
+
+    A rename produces the same disagreement and is harmless: the repository is
+    the same one under a new name. The two are told apart by asking what the
+    original name does now — GitHub redirects a rename and 404s a deletion — so
+    the check costs one request, and only on a fork whose name already
+    disagrees.
+
+    Returns `(verdict, matched_name)` where verdict is `ok`, `renamed` or
+    `reparented`.
+    """
+    candidates = candidate_upstreams(fork_name)
+    if not candidates:
+        return "ok", None                      # not a `--` name; nothing to check
+    if parent.lower() in {c.lower() for c in candidates}:
+        return "ok", parent
+    for candidate in candidates:
+        # urllib follows the redirect a rename leaves behind, so a 200 whose
+        # `full_name` is the parent means the repository moved rather than died.
+        status, moved = request("GET", f"{API}/repos/{candidate}")
+        if status == 200 and isinstance(moved, dict) \
+                and (moved.get("full_name") or "").lower() == parent.lower():
+            return "renamed", candidate
+    return "reparented", None
+
+
 def sync_one(fork: dict, dry_run: bool) -> dict:
     name = fork["name"]
     fork_full = f"{ORG}/{name}"
     parent = (fork.get("parent") or {}).get("full_name")
     if not parent:
         return {"fork": fork_full, "status": "no-parent"}
+
+    verdict, matched = classify_parent(name, parent)
+    if verdict == "reparented":
+        # Touch nothing. The fork is the archived copy of a repository that no
+        # longer exists, and the only thing `parent` still offers is somebody
+        # else's history.
+        return {"fork": fork_full, "upstream": parent, "status": "upstream-reparented"}
 
     status, upstream = request("GET", f"{API}/repos/{parent}")
     if status == 404:
@@ -144,7 +217,11 @@ def sync_one(fork: dict, dry_run: bool) -> dict:
     if not our_sha:
         return {"fork": fork_full, "upstream": parent, "status": "fork-head-unreadable"}
     if up_sha == our_sha:
-        return {"fork": fork_full, "upstream": parent, "status": "current", "sha": up_sha}
+        # A renamed upstream is still the right upstream, so the sync is correct
+        # and complete — but the fork's own name is now stale and only a person
+        # can rename it, so say so instead of reporting `current` and moving on.
+        status_name = "current-upstream-renamed" if verdict == "renamed" else "current"
+        return {"fork": fork_full, "upstream": parent, "status": status_name, "sha": up_sha}
 
     # Is our head still in upstream's history? Compare inside the fork, which can
     # see both sides of the object network.
