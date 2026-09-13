@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 443 reports.**
+**This page covers all 444 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -460,6 +460,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, ~13,900 lines of Python at version 1.1.0, 252 tests in public CI, two papers with DOIs and PDFs in-tree, a self-verification module that monkeypatches `socket.connect` to prove the write path is offline, and boundary validation at the record type — NaN embeddings, unpaired surrogates, NUL bytes, whitespace-only content — each rule carrying its reason. Five capability marks; `trust_state` is the one that took deciding, awarded because the tiers withhold rather than reorder.
 - Study when: you want per-user memory that runs where it serves, you need *what was true in March* rather than *what do we know now*, or you are building anything whose audit story is a log — the reproducibility argument here is the most carefully stated in the corpus, exceptions enumerated.
 - Do not copy when: the scope boundary has to be enforced rather than remembered, durable deletion has to survive your own audit log, or a single scope will grow past what an exact cosine scan per query can carry.
+
+### [`agentos-framerslab`](../systems/agentos-framerslab/)
+- Best idea: cite the paper in the file that implements it. `RetrievalInducedForgetting.ts` names Anderson & Spellman 1995 and says which account of the effect it implements, so a reader can check the code against the claim — rare in cognitive-sounding memory code.
+- Biggest risk: correction is entirely a strength effect. Four mechanisms make a wrong memory less retrievable and none records that it was wrong, so a suppressed trace and an unused one are indistinguishable afterwards.
+- Most reusable component: warning when a config is set that cannot take effect — passing `cognitiveMechanisms` with memory disabled logs that it will be ignored, rather than silently doing nothing.
+- Maturity impression: ~64,200 lines under `src/cognition/memory` with GraphRAG in SQL and Neo4j, ten mechanisms from the cognitive literature all wired behind one optional config key, and large test files beside the store.
+- Study when: you want memory that behaves like human memory — recency and salience effects, gist over detail, retrieval that reshapes what is retrieved.
+- Do not copy when: memory must be governed. There is no review surface, no epistemic status, no record of a correction, and the careful audit trail covers the context window rather than the store.
 
 ### [`ai-agent-automation`](../systems/ai-agent-automation/)
 

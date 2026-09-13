@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript agent framework whose
+memory implements retrieval-induced forgetting, reconsolidation and
+feeling-of-knowing from the cognitive literature — and whose only
+epistemic boundary is an agency id compiled into the vector query.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentOS — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript agent
+framework whose memory implements retrieval-induced forgetting,
+reconsolidation and feeling-of-knowing from the cognitive literature —
+and whose only epistemic boundary is an agency id compiled into the
+vector query.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentOS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript agent
+framework whose memory implements retrieval-induced forgetting,
+reconsolidation and feeling-of-knowing from the cognitive literature —
+and whose only epistemic boundary is an agency id compiled into the
+vector query.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentOS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentOS",
+      "description": "A TypeScript agent framework whose memory implements retrieval-induced forgetting, reconsolidation and feeling-of-knowing from the cognitive literature \u2014 and whose only epistemic boundary is an agency id compiled into the vector query.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Ten mechanisms from the psychology, one
+from the rubric</p>
+          <h1>AgentOS</h1>
+          <p class="document-deck">A TypeScript agent framework whose
+memory implements retrieval-induced forgetting, reconsolidation and
+feeling-of-knowing from the cognitive literature — and whose only
+epistemic boundary is an agency id compiled into the vector query.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/framerslab/agentos">
+              <span>Source</span>
+              <strong>framerslab/agentos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/framerslab/agentos/commit/f66718d6e18460b45c45dc4a476745dd7c00e319" title="f66718d6e18460b45c45dc4a476745dd7c00e319">
+              <span>Analyzed revision</span>
+              <code>f66718d6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/framerslab--agentos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>framerslab--agentos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentOS is a TypeScript agent framework whose
+<code>src/cognition/memory</code> runs to about 64,200 lines across
+retrieval, consolidation, a knowledge graph in both SQL and Neo4j, a
+GraphRAG engine and a context pipeline. It is the largest memory
+subsystem this atlas has read inside a general agent framework rather
+than a memory product.</p>
+<p><strong>Its distinctive contribution is a mechanisms layer drawn from
+the cognitive literature</strong>, with the papers cited in the source.
+Ten are implemented: retrieval-induced forgetting, reconsolidation,
+involuntary recall, a metacognitive feeling-of-knowing detector,
+temporal gist, schema encoding, source-confidence decay, emotion
+regulation, persona drift, and spreading activation beside them.
+<code>RetrievalInducedForgetting.ts</code> opens by naming its source —
+<em>"Inhibition account (Anderson &amp; Spellman, 1995)"</em> — and
+implements competitor suppression as a strength effect on similar
+traces.</p>
+<p>That layer is <strong>opt-in and wired</strong>, which is worth
+separating carefully because ten named mechanisms is the exact shape
+that usually hides an unwired one. All eight of the imported mechanism
+functions are called inside <code>CognitiveMechanismsEngine</code>, the
+engine is constructed at <code>CognitiveMemoryManager.ts:360-362</code>
+behind <code>if (config.cognitiveMechanisms)</code>, and
+<code>cognitiveMechanisms</code> is a documented option on the public
+agent API. The producer is the adopter. The project also handles the one
+misconfiguration that would silently disable everything: passing
+<code>cognitiveMechanisms</code> while memory is off logs a warning that
+<em>"the cognitiveMechanisms config will be ignored"</em>
+(<code>src/api/agent.ts:749-757</code>) rather than failing quietly.</p>
+<p><strong>One mark of the seven.</strong> <code>scope_enforced</code>
+is earned on the agency layer, where
+<code>const metadataFilter: MetadataFilter = { agencyId }</code> is
+built unconditionally and passed as the vector provider's filter
+(<code>AgencyMemoryManager.ts:455-471</code>). A per-agency collection
+exists beside it, which is a physical partition and not what earns the
+mark; the predicate is.</p>
+<p>The other six are withheld, and the pattern in the refusals is the
+finding.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a trace with a strength, and the epistemics are
+continuous throughout — nothing here is ever <em>rejected</em>, only
+weakened.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every correction mechanism here adjusts a strength or a confidence, so a wrong memory becomes less retrievable rather than being recorded as wrong</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every correction mechanism here adjusts a strength or a confidence, so a wrong memory becomes less retrievable rather than being recorded as wrong
+flowchart TB
+    W[&quot;write: trace with embedding,&lt;br/&gt;strength, importance, valence&quot;] --&gt; CONS[&quot;consolidation pipeline&quot;]
+    CONS --&gt; STORE[(&quot;vector index + knowledge graph&quot;)]
+    Q[&quot;query&quot;] --&gt; RET[&quot;vector search + spreading activation&quot;]
+    STORE --&gt; RET
+    RET --&gt; MECH{&quot;cognitiveMechanisms configured?&quot;}
+    MECH --&gt;|no| OUT[&quot;results returned unchanged&quot;]
+    MECH --&gt;|yes| ENG[&quot;CognitiveMechanismsEngine&quot;]
+    ENG --&gt; RIF[&quot;retrieval-induced forgetting:&lt;br/&gt;suppress competitor strength&quot;]
+    ENG --&gt; REC[&quot;reconsolidation:&lt;br/&gt;rewrite on recall&quot;]
+    ENG --&gt; FOK[&quot;feeling-of-knowing:&lt;br/&gt;metacognitive signal&quot;]
+    ENG --&gt; SCD[&quot;source-confidence decay&quot;]
+    RIF --&gt; OUT
+    REC --&gt; OUT
+    FOK --&gt; OUT
+    SCD --&gt; OUT
+    OUT --&gt; CTX[&quot;context assembly&quot;]
+    CTX --&gt; CL[(&quot;CompactionLog:&lt;br/&gt;what was compressed, dropped, preserved&quot;)]
+    CL -.-&gt;|&quot;records the window, not the store&quot;| NOTE[&quot;no append-only record&lt;br/&gt;of a memory mutation&quot;]</code></pre></details></figure>
+<p>The dotted edge is the distinction section 9 turns on.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>A library, not a service. The store is an in-process vector index
+with optional write-through to a durable <code>Brain</code>, plus a
+knowledge graph behind an interface with SQL and Neo4j implementations,
+and a vector provider the adopter binds. What has to be running is
+whatever the adopter chose; the default is in-process only.</p>
+<p><code>GraphRAGEngine.ts</code> at 2,162 lines is the largest single
+file, with a Neo4j variant beside it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Mechanisms</strong> —
+<code>src/cognition/memory/mechanisms/</code>:
+<code>CognitiveMechanismsEngine.ts</code> (imports at 36-43,
+construction gate at <code>CognitiveMemoryManager.ts:360-362</code>),
+<code>retrieval/RetrievalInducedForgetting.ts</code>,
+<code>retrieval/Reconsolidation.ts</code>,
+<code>retrieval/InvoluntaryRecall.ts</code>,
+<code>retrieval/MetacognitiveFOK.ts</code>,
+<code>consolidation/TemporalGist.ts</code>,
+<code>consolidation/SchemaEncoding.ts</code>,
+<code>consolidation/SourceConfidenceDecay.ts</code>,
+<code>consolidation/EmotionRegulation.ts</code>,
+<code>PersonaDriftMechanism.ts</code>, <code>defaults.ts</code>.</li>
+<li><strong>Public option</strong> —
+<code>src/api/agent.ts:749-757</code>,
+<code>src/api/types.ts:1437</code>.</li>
+<li><strong>Store</strong> —
+<code>src/cognition/memory/retrieval/store/MemoryStore.ts</code>,
+<code>Brain.ts</code>, <code>SqlKnowledgeGraph.ts</code>.</li>
+<li><strong>Graph retrieval</strong> —
+<code>retrieval/graph/graphrag/GraphRAGEngine.ts</code>,
+<code>Neo4jGraphRAGEngine.ts</code>,
+<code>graph/knowledge/IKnowledgeGraph.ts</code>.</li>
+<li><strong>Scope</strong> —
+<code>src/agents/agency/AgencyMemoryManager.ts:455-471</code>.</li>
+<li><strong>Compaction transparency</strong> —
+<code>src/cognition/memory/pipeline/context/CompactionLog.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A trace carries an embedding, a strength, an importance score,
+emotional valence and tags. <code>IKnowledgeGraph.ts:110</code> declares
+an optional <code>validFrom</code>, and there is no
+<code>validUntil</code> and no record-time field anywhere:</p>
+<pre class="sh"><code>grep -rn &quot;validUntil\|valid_until\|recordedAt\|transactionTime&quot; src/cognition/memory --include=&quot;*.ts&quot;</code></pre>
+<p>Nothing at the pinned commit. <strong><code>bitemporal</code> is
+withheld</strong> — one optional timestamp is a creation date, not a
+second axis.</p>
+<p>There is no status enum on a trace. Confidence is a number,
+<code>SourceConfidenceDecay</code> reduces it over time, and
+<code>MetacognitiveFOK</code> computes a feeling-of-knowing signal — all
+continuous. <strong><code>trust_state</code> is withheld</strong>: the
+rubric asks for a discrete status including one that withholds a memory,
+and a decaying float never withholds, it only ranks lower.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over the in-process index, spreading activation over
+the knowledge graph, and a GraphRAG engine for community-level
+questions. When the mechanisms engine is configured, results pass
+through it before returning: competitors are suppressed, a
+feeling-of-knowing signal is attached, and an involuntary recall may be
+injected.</p>
+<p>Scope is applied at the agency layer rather than per trace. Inside
+one agency, retrieval does not filter by contributing agent unless the
+caller passes <code>fromRoles</code>, which is a narrowing convenience
+rather than a boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through a consolidation pipeline and are synchronous from
+the caller's view; decay and the mechanisms run over the store
+afterwards. There is no queue between writing and retrievability.</p>
+<p><strong>Forgetting is entirely a strength effect.</strong>
+Retrieval-induced forgetting reduces competitor strength with a floor so
+it does not <em>"kick dead traces"</em>; source-confidence decay lowers
+a number. Nothing is recorded as having been wrong.
+<strong><code>tombstone</code> is withheld</strong>, and the shape of
+the near-miss is unusual: most systems in this corpus lack a tombstone
+because they lack any correction mechanism, while this one has four and
+none of them writes down what was corrected.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A framework API — <code>createAgent</code> with a memory option and
+an optional <code>cognitiveMechanisms</code> config, an agency layer for
+multi-agent sharing, and a memory facade at
+<code>io/facade/Memory.ts</code>. No MCP server and no HTTP surface: the
+integration is that you are writing TypeScript against it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>CompactionLog</code> is the piece most likely to be mistaken
+for an audit log, and the distinction matters enough to state. Its
+header is accurate about what it does: <em>"Transparency audit trail for
+context window compaction. Every compaction event is logged with full
+provenance: what was compressed, the summary produced, entities
+preserved, content dropped, traces created."</em> That is a careful,
+queryable record — and it records <strong>what reached the model in one
+run</strong>, which cannot later turn out to be false. It happened.</p>
+<p><strong><code>audit_log</code> is withheld</strong> because no
+append-only record of mutations to the memory store exists:</p>
+<pre class="sh"><code>grep -rn -iE &quot;append.?only|mutationLog|auditTrail&quot; src/cognition/memory --include=&quot;*.ts&quot;</code></pre>
+<p>Nothing outside tests at the pinned commit. The engineering effort
+here sits on the context window, and the store beside it has no
+ledger.</p>
+<p><strong><code>human_review</code> is withheld</strong> for absence:
+the <code>review</code> matches in this tree are
+<code>MemoryReflector</code> and <code>Reconsolidation</code>, both
+automatic passes. There is no surface where a person inspects or
+adjudicates a memory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Substantial: <code>tests/memory/</code> plus <code>__tests__</code>
+directories throughout, including a 1,558-line
+<code>MemoryStore.brainhydration.test.ts</code> and a 997-line
+<code>SqlKnowledgeGraph.test.ts</code>. <code>CITATION.cff</code> is a
+software citation; there is no paper of the project's own, and the
+citations that matter are the psychology papers named in the mechanism
+sources.</p>
+<p><strong><code>negative_eval</code> is withheld, and the reason is
+worth stating precisely</strong> because the tests do contain negative
+assertions. <code>SpreadingActivation.spec.ts:37</code> asserts
+<code>expect(ids).not.toContain('A')</code> under the title
+<em>"excludes seed nodes from results"</em>, and it is paired with a
+populated control two lines above (<code>toContain('B')</code>,
+<code>toContain('C')</code>), so it is not vacuous. It is simply about a
+different thing: that a graph walk does not return its own seed is an
+algorithm invariant, and <code>not.toContain('D')</code> for a node two
+hops away is a depth-limit check. Neither asserts that particular
+material must be withheld from a reader. The mark asks whether what the
+mechanism holds could turn out to be false; a spreading-activation seed
+exclusion could not.</p>
+<p>Nothing was run. The screen reports an npm <code>prepare</code>
+lifecycle that builds on install, a <code>prepublishOnly</code> chain,
+and both <code>package.json</code> and <code>pnpm-lock.yaml</code>
+changed the day before the pin, inside the seven-day cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Cite the paper in the file that implements it.</strong>
+<code>RetrievalInducedForgetting.ts</code> names Anderson &amp; Spellman
+1995 and states which account of the effect it implements, so a reader
+can check whether the code matches the claim. Most cognitive-sounding
+memory code in this corpus cites nothing.</p>
+<p><strong>Warn when a config is set that cannot take effect.</strong>
+Passing <code>cognitiveMechanisms</code> with memory disabled logs that
+the config will be ignored. The alternative — silently doing nothing —
+is how a feature comes to be believed in for months.</p>
+<p><strong>Give the expensive layer a dynamic import behind its own
+config key.</strong> The mechanisms engine is imported only when
+configured, so an adopter who does not want it does not pay for it, and
+the gate is one legible line.</p>
+<p><strong>Log what compaction dropped, not just what it kept.</strong>
+<code>CompactionLog</code> records content dropped and entities
+preserved, which is the half that lets someone ask why an agent forgot
+something mid-conversation.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Correcting only by weight.</strong> Four mechanisms here make
+a wrong memory less retrievable and none records that it was wrong. A
+trace suppressed by retrieval-induced forgetting and a trace nobody has
+needed lately are indistinguishable afterwards, so the system cannot
+answer <em>why</em> something stopped surfacing.</p>
+<p><strong>Auditing the window and calling it memory.</strong> The
+compaction log is genuinely good and it is a record of one run's context
+assembly. A reader who wants to know what happened to a <em>memory</em>
+— when it changed, who changed it — has nothing to read.</p>
+<p><strong>Letting a boundary be a collection.</strong> The per-agency
+collection is a real separation, and the predicate beside it is what
+survives a refactor that moves two agencies into one store.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team building on AgentOS that wants memory to behave
+like human memory — recency and salience effects, gist over detail,
+retrieval that reshapes what is retrieved. The mechanisms are the reason
+to choose it and they are implemented with more care than the framing
+usually gets.</p>
+<p>It is the wrong fit where a memory has to be <em>governed</em>: there
+is no review surface, no epistemic status, no record of a correction,
+and no audit of the store. A system that must answer "who changed this
+and why" needs a different store beside this one, and at that point the
+cognitive layer is the thing worth keeping rather than the memory.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Would a discrete status fit the mechanisms, or fight
+them?</strong> The design is continuous on purpose, and a
+<code>rejected</code> state is a different theory of memory from
+decay.</li>
+<li><strong>What happens to a suppressed trace over time?</strong>
+Retrieval-induced forgetting has a floor so it does not kill dead
+traces; whether suppression accumulates across many retrievals is not
+traced here.</li>
+<li><strong>Is the compaction log ever reconciled against the
+store?</strong> It records traces created during compaction, which is
+the one place the two could be joined.</li>
+<li><strong>How many adopters pass
+<code>cognitiveMechanisms</code>?</strong> The whole distinctive layer
+is off by default, and the examples in the tree do not set it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Mechanisms</strong></p>
+<ul>
+<li><code>src/cognition/memory/mechanisms/CognitiveMechanismsEngine.ts</code>
+— imports (36-43)</li>
+<li><code>mechanisms/retrieval/</code> —
+<code>RetrievalInducedForgetting.ts</code> (source cited at 2-9, floor
+at 25), <code>Reconsolidation.ts</code>,
+<code>InvoluntaryRecall.ts</code>, <code>MetacognitiveFOK.ts</code></li>
+<li><code>mechanisms/consolidation/</code> —
+<code>TemporalGist.ts</code>, <code>SchemaEncoding.ts</code>,
+<code>SourceConfidenceDecay.ts</code>,
+<code>EmotionRegulation.ts</code></li>
+<li><code>mechanisms/PersonaDriftMechanism.ts</code>,
+<code>mechanisms/defaults.ts</code>, <code>mechanisms/types.ts</code>
+(the undefined default, 5)</li>
+</ul>
+<p><strong>Wiring</strong></p>
+<ul>
+<li><code>src/cognition/memory/CognitiveMemoryManager.ts</code> —
+construction gate (360-362)</li>
+<li><code>src/api/agent.ts</code> — the ignored-config warning
+(749-757); <code>src/api/types.ts:1437</code></li>
+</ul>
+<p><strong>Store and retrieval</strong></p>
+<ul>
+<li><code>retrieval/store/MemoryStore.ts</code>, <code>Brain.ts</code>,
+<code>SqlKnowledgeGraph.ts</code></li>
+<li><code>retrieval/graph/graphrag/GraphRAGEngine.ts</code>,
+<code>Neo4jGraphRAGEngine.ts</code></li>
+<li><code>retrieval/graph/knowledge/IKnowledgeGraph.ts</code> —
+<code>validFrom</code> (110)</li>
+</ul>
+<p><strong>Scope and transparency</strong></p>
+<ul>
+<li><code>src/agents/agency/AgencyMemoryManager.ts</code> — metadata
+filter (455-471)</li>
+<li><code>src/cognition/memory/pipeline/context/CompactionLog.ts</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>tests/memory/SpreadingActivation.spec.ts</code> (37, 84),
+<code>tests/memory/</code> generally,
+<code>retrieval/store/__tests__/MemoryStore.brainhydration.test.ts</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn &quot;validUntil\|valid_until\|recordedAt\|transactionTime&quot; src/cognition/memory --include=&quot;*.ts&quot;
+grep -rn -iE &quot;append.?only|mutationLog|auditTrail&quot; src/cognition/memory --include=&quot;*.ts&quot;
+grep -rn &quot;cognitiveMechanisms&quot; src examples docs | grep -v &quot;__tests__\|\.spec\.&quot;</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/framerslab/agentos/commit/f66718d6e18460b45c45dc4a476745dd7c00e319"><code class="commit-id" title="f66718d6e18460b45c45dc4a476745dd7c00e319">f66718d6…</code></a>
+— first reading. Screened first: an npm <code>prepare</code> lifecycle
+that builds on install, a <code>prepublishOnly</code> chain, and both
+<code>package.json</code> and <code>pnpm-lock.yaml</code> changed the
+day before the pin, inside the cooldown. Nothing was installed and no
+test was run. One mark. The producer test was run on all ten cognitive
+mechanisms because ten named components is the shape that usually hides
+an unwired one; all are called, the engine is constructed behind an
+optional config key, and that key is a documented option on the public
+agent API, so the producer is the adopter rather than nothing.
+<code>audit_log</code> is withheld on a deliberate distinction:
+<code>CompactionLog</code> is a careful provenance record of what
+reached the model in one run, which cannot turn out to be false, and no
+append-only record of store mutations exists. <code>negative_eval</code>
+is withheld although negative assertions exist and are non-vacuous —
+they assert a graph walk excludes its own seed, which is an algorithm
+invariant rather than a claim that material must be withheld.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
