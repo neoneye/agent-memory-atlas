@@ -110,14 +110,14 @@ written, and its explicit-remember twin as the control.</p>
               <strong>singnet/Omega</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/singnet/Omega/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f" title="b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f">
+            <a class="meta-pill revision-pill" href="https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41" title="7bab4b3e614fac56dbf5d21835f6d619cff60b41">
               <span>Analyzed revision</span>
-              <code>b96afaa3…</code>
+              <code>7bab4b3e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-21</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/singnet--Omega" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -141,12 +141,24 @@ written, and its explicit-remember twin as the control.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>OmegaClaw is the ASI Alliance's neural-symbolic agent framework on
-the Hyperon stack, Apache-2.0, 296 files, 1,145 commits since 21
-February 2026 — about 1,580 lines of MeTTa, 4,680 lines of Python
-outside the tests, and 15,680 lines of tests across 32 files. Its README
-describes the same constraint its sibling does: <em>"a minimalist
-MeTTa-based core of approximately 200 lines of code."</em></p>
+<p><strong>The framework is called Omega and the repository is
+<code>singnet/Omega</code>.</strong> It was
+<code>asi-alliance/OmegaClaw-Core</code> when this report was first
+written, and the rename is a transfer as well as a rename — the owner
+changed too, so the old path redirects rather than resolving. The rename
+has reached the code: the live memory test prints
+<code>=== Omega: no-autoremember live ===</code> where it printed
+<code>OmegaClaw</code>. It has not finished reaching the prose, where
+the README still says <code>OmegaClaw</code> five times against
+<code>Omega</code> thirty-two, and the banner image the pin's README
+opened with is gone. This report keeps the name it was published under;
+the agent built on the framework is called Oma in both.</p>
+<p>Omega is the ASI Alliance's neural-symbolic agent framework on the
+Hyperon stack, Apache-2.0, 296 files, 1,145 commits since 21 February
+2026 — about 1,580 lines of MeTTa, 4,680 lines of Python outside the
+tests, and 15,680 lines of tests across 32 files. Its README describes
+the same constraint its sibling does: <em>"a minimalist MeTTa-based core
+of approximately 200 lines of code."</em></p>
 <p><strong>It shares early history with <a
 href="../mettaclaw/">MeTTaClaw</a> — the root commits are identical in
 both repositories — and the two have diverged on exactly the question
@@ -343,6 +355,47 @@ with its own reference document and tutorials on grounded and reliable
 reasoning. The documentation set is 26 files and includes an internals
 reference for the loop, the memory store, skill dispatch and extension
 points.</p>
+<h3 id="memory-leaves-by-an-operator-door-the-model-cannot-open">Memory
+leaves by an operator door the model cannot open</h3>
+<p><code>src/memory_export.py</code> and
+<code>docs/reference-memory-portability.md</code> add a
+<code>/memory-export</code> command that copies persistent user memory
+out of a deployment so it can be restored before another agent starts.
+What is worth reading is how carefully it is kept away from the
+agent.</p>
+<p>The doc states the boundary in its own words — <em>"an operator
+workflow, not an LLM skill"</em> — and the code holds it.
+<code>/memory-export</code> is intercepted as a chat command before
+dispatch; it appears nowhere in a skill registry, a MeTTa definition or
+a prompt, so the model has no affordance to invoke it:</p>
+<pre class="sh"><code>grep -rn &quot;memory-export\|memory_export&quot; --include=&quot;*.py&quot; --include=&quot;*.metta&quot; \
+  --include=&quot;*.txt&quot; --include=&quot;*.json&quot; .</code></pre>
+<p>Four constraints stack on top of that. Export is <strong>off by
+default</strong> — <code>is_export_enabled</code> reads
+<code>memoryExportEnabled</code> with a <code>False</code> default and
+accepts only a literal true, and the launcher needs
+<code>--enable-memory-export</code>. The destination is <strong>not a
+parameter</strong>: archives land on the fixed container mount
+<code>/memory-transfer</code>, and the doc says plainly that <em>"the
+agent never accepts arbitrary runtime export paths"</em>. An
+<strong>authenticated user id</strong> is required, taken from the
+channel authorization layer rather than from the message. And on
+WebSocket the handler <em>"derives a non-reversible principal from the
+token so the credential itself is never used as an identifier"</em> — a
+distinction most projects skip, because a token makes a convenient key
+right up until it is logged.</p>
+<p><code>tests/test_memory_export.py</code> is 381 lines against a
+131-line module, and the cases are refusals: export without the policy
+enabled, export without an authenticated user, WebSocket export without
+a bearer token, and a confirmation command asserted to be <em>no longer
+supported</em> so a removed affordance cannot come back unnoticed.
+<code>test_module_import_does_not_require_memory_portability</code> pins
+that importing the module does not drag in the portability dependency,
+which is what keeps an off-by-default feature genuinely off.</p>
+<p>These are refusals on an egress path rather than on retrieval, so
+they do not widen the <code>negative_eval</code> mark, which rests on
+the no-autoremember pair. They are the same instinct applied one door
+further out.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Negative eval — awarded</strong>, on the pair described in
@@ -540,6 +593,28 @@ mock</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41"><code class="commit-id" title="7bab4b3e614fac56dbf5d21835f6d619cff60b41">7bab4b3e…</code></a>
+— 130 commits past the previous pin. The repository moved from
+<code>asi-alliance/OmegaClaw-Core</code> to <code>singnet/Omega</code>,
+a transfer and a rename together, so the old path redirects rather than
+resolving; <code>source_name</code>, <code>source_url</code>,
+<code>revision_url</code>, <code>archive_name</code> and the
+repositories-inspected entry follow it, and the archive fork was renamed
+to <code>agent-memory-atlas-archive/singnet--Omega</code>. The report's
+title and slug are unchanged pending a decision: the framework renamed
+itself, the change has reached the code but not all of the README, and
+<a href="../mettaclaw/">MetaClaw</a> refers to this project by its
+former name in prose that describes the fork relationship.</p>
+<p><code>negative_eval</code> re-verified:
+<code>Autotests/test_memory_no_autoremember.py</code> is unchanged but
+for its own banner string, which prints <code>Omega</code> where it
+printed <code>OmegaClaw</code> — the rename reaching the test output is
+the clearest evidence it is real. <code>src/memory_export.py</code> and
+a 381-line test file add an operator-only memory export, off by default,
+to a fixed mount path, requiring an authenticated principal; section 8
+records it. Its assertions are refusals on an egress path rather than on
+retrieval, so the mark is not widened.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>asi-alliance/OmegaClaw-Core</code> to <code>singnet/Omega</code>,
 upstream of the pinned commit and after the reading below. No

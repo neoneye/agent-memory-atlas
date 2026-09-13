@@ -7,9 +7,9 @@ page_kind: system
 source_name: "singnet/Omega"
 source_url: https://github.com/singnet/Omega
 archive_name: "singnet--Omega"
-revision: b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
-revision_url: https://github.com/singnet/Omega/commit/b96afaa361f9426e1b7c2e36bdf187fa3a5a6b0f
-analyzed_at: 2026-08-21
+revision: 7bab4b3e614fac56dbf5d21835f6d619cff60b41
+revision_url: https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41
+analyzed_at: 2026-09-13
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the write path, asserted against a real model rather than a mock | Autotests/test_memory_no_autoremember.py, Autotests/test_memory_chromadb.py | `test_memory_no_autoremember` counts rows in ChromaDB, sends a fact-shaped statement that asks for nothing, and asserts the count did not grow — the agent *\"is allowed to acknowledge via (send ...) or even (pin ...), but must not write a ChromaDB vector unless it explicitly chose to\"*. It refuses to mock the model and says why: the question *\"does the agent voluntarily call remember on a fact-shaped sentence?\"* is *\"only meaningful with a real model\"*. `test_memory_chromadb` is the control on the same counter — after an explicit remember prompt the vector count must grow by at least one — so neither test can pass by the store being broken. This is the write-side form of the mark rather than a read-path exclusion | the two tests are the mechanism"
@@ -32,7 +32,17 @@ matrix:
 
 ## 1. Executive Summary
 
-OmegaClaw is the ASI Alliance's neural-symbolic agent framework on the Hyperon
+**The framework is called Omega and the repository is `singnet/Omega`.** It was
+`asi-alliance/OmegaClaw-Core` when this report was first written, and the rename
+is a transfer as well as a rename — the owner changed too, so the old path
+redirects rather than resolving. The rename has reached the code: the live
+memory test prints `=== Omega: no-autoremember live ===` where it printed
+`OmegaClaw`. It has not finished reaching the prose, where the README still says
+`OmegaClaw` five times against `Omega` thirty-two, and the banner image the pin's
+README opened with is gone. This report keeps the name it was published under;
+the agent built on the framework is called Oma in both.
+
+Omega is the ASI Alliance's neural-symbolic agent framework on the Hyperon
 stack, Apache-2.0, 296 files, 1,145 commits since 21 February 2026 — about 1,580
 lines of MeTTa, 4,680 lines of Python outside the tests, and 15,680 lines of
 tests across 32 files. Its README describes the same constraint its sibling does:
@@ -239,6 +249,46 @@ reference document and tutorials on grounded and reliable reasoning. The
 documentation set is 26 files and includes an internals reference for the loop,
 the memory store, skill dispatch and extension points.
 
+### Memory leaves by an operator door the model cannot open
+
+`src/memory_export.py` and `docs/reference-memory-portability.md` add a
+`/memory-export` command that copies persistent user memory out of a deployment
+so it can be restored before another agent starts. What is worth reading is how
+carefully it is kept away from the agent.
+
+The doc states the boundary in its own words — *"an operator workflow, not an LLM
+skill"* — and the code holds it. `/memory-export` is intercepted as a chat
+command before dispatch; it appears nowhere in a skill registry, a MeTTa
+definition or a prompt, so the model has no affordance to invoke it:
+
+```sh
+grep -rn "memory-export\|memory_export" --include="*.py" --include="*.metta" \
+  --include="*.txt" --include="*.json" .
+```
+
+Four constraints stack on top of that. Export is **off by default** —
+`is_export_enabled` reads `memoryExportEnabled` with a `False` default and
+accepts only a literal true, and the launcher needs `--enable-memory-export`. The
+destination is **not a parameter**: archives land on the fixed container mount
+`/memory-transfer`, and the doc says plainly that *"the agent never accepts
+arbitrary runtime export paths"*. An **authenticated user id** is required, taken
+from the channel authorization layer rather than from the message. And on
+WebSocket the handler *"derives a non-reversible principal from the token so the
+credential itself is never used as an identifier"* — a distinction most projects
+skip, because a token makes a convenient key right up until it is logged.
+
+`tests/test_memory_export.py` is 381 lines against a 131-line module, and the
+cases are refusals: export without the policy enabled, export without an
+authenticated user, WebSocket export without a bearer token, and a confirmation
+command asserted to be *no longer supported* so a removed affordance cannot come
+back unnoticed. `test_module_import_does_not_require_memory_portability` pins
+that importing the module does not drag in the portability dependency, which is
+what keeps an off-by-default feature genuinely off.
+
+These are refusals on an egress path rather than on retrieval, so they do not
+widen the `negative_eval` mark, which rests on the no-autoremember pair. They are
+the same instinct applied one door further out.
+
 ## 9. Reliability, Safety, and Trust
 
 **Negative eval — awarded**, on the pair described in section 1. Two properties
@@ -402,6 +452,10 @@ still running over there.
 | `src/loop.metta` | The continuous execution loop |
 
 ## History
+
+**2026-09-13** — [`7bab4b3e614fac56dbf5d21835f6d619cff60b41`](https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41) — 130 commits past the previous pin. The repository moved from `asi-alliance/OmegaClaw-Core` to `singnet/Omega`, a transfer and a rename together, so the old path redirects rather than resolving; `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry follow it, and the archive fork was renamed to `agent-memory-atlas-archive/singnet--Omega`. The report's title and slug are unchanged pending a decision: the framework renamed itself, the change has reached the code but not all of the README, and [MetaClaw](../mettaclaw/) refers to this project by its former name in prose that describes the fork relationship.
+
+`negative_eval` re-verified: `Autotests/test_memory_no_autoremember.py` is unchanged but for its own banner string, which prints `Omega` where it printed `OmegaClaw` — the rename reaching the test output is the clearest evidence it is real. `src/memory_export.py` and a 381-line test file add an operator-only memory export, off by default, to a fixed mount path, requiring an authenticated principal; section 8 records it. Its assertions are refusals on an egress path rather than on retrieval, so the mark is not widened.
 
 **2026-09-13** — the repository was renamed from `asi-alliance/OmegaClaw-Core` to `singnet/Omega`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/singnet--Omega` to match.
 
