@@ -7,9 +7,9 @@ page_kind: system
 source_name: "QwenLM/Qwen-MM-Plugins"
 source_url: https://github.com/QwenLM/Qwen-MM-Plugins
 archive_name: "QwenLM--Qwen-MM-Plugins"
-revision: f4e02952a059f3a0a23081f72e5faa7956d1b3af
-revision_url: https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af
-analyzed_at: 2026-08-10
+revision: ad8139d58ebca5740df2be3a6871a2e9c1d31e36
+revision_url: https://github.com/QwenLM/Qwen-MM-Plugins/commit/ad8139d58ebca5740df2be3a6871a2e9c1d31e36
+analyzed_at: 2026-09-13
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -31,10 +31,34 @@ matrix:
 ## 1. Executive Summary
 
 Qwen-MM-Plugins is an Apache-2.0 plugin suite — "make any agent harness
-multimodal-native" — that ships eight capabilities behind one MCP framework:
+multimodal-native" — that ships capabilities behind one MCP framework:
 `blender`, `freecad`, `omni-av`, `video-edit`, `edu-agent`, `example`, `core`,
-and `video-memory`. Seven of them are tool bundles. The eighth is a memory
-system, and it is the only part of the repository this report covers.
+`video-memory` and `omni-memory`. Most are tool bundles. Two are memory systems,
+and they are the only part of the repository this report covers.
+
+`omni-memory` is the second, built around a semantic triple store rather than a
+scene graph, with a dozen MCP tools — `search_facts`, `search_dialogue`,
+`get_people`, `get_person_dialogue`, `get_timeline`, `get_moment`,
+`plan_and_search`, `replay_and_answer`, `watch_and_answer` and the status and
+overview reads beside them.
+
+Its one epistemic mechanism is supersession, and it is wired at both ends.
+`stages.py:414-422` resolves two triples that claim the same key by a stated
+precedence — *"Keep winner by confidence > evidence-count > recency(new). Loser
+-> superseded"* — stamping the loser `status = "superseded"` and recording
+`superseded_by` as the winner's key. Four reads in `mem_core.py` (`:57`, `:125`,
+`:180`, `:349`) then filter `status != "superseded"`, so a displaced triple is
+excluded from the active set rather than deleted.
+
+That earns no mark, and the reason is worth stating because the shape is close
+to two of them. It is not a `tombstone`: the record is keyed on the triple that
+lost, not on the value that was wrong, and nothing consults it to stop the same
+claim arriving again — a later build that re-extracts the loser with better
+evidence simply wins the next comparison. It is not `trust_state` either: the
+status is *derived* by a deterministic comparison rather than asserted about
+whether the claim is true, and its two values answer which of two rows is
+current rather than whether either may be believed. A `confidence` number feeds
+that comparison, and a score is not a state.
 
 `video-memory` is about 5,600 lines of Python that turn a long video into a
 persistent, queryable graph and then hand an agent nine MCP tools to explore it.
@@ -505,6 +529,8 @@ asked.
 - `tests/test_video_memory.py` — two functions over the server
 
 ## History
+
+**2026-09-13** — [`ad8139d58ebca5740df2be3a6871a2e9c1d31e36`](https://github.com/QwenLM/Qwen-MM-Plugins/commit/ad8139d58ebca5740df2be3a6871a2e9c1d31e36) — re-read, 168 commits past the previous pin. A second memory capability arrived: `omni-memory`, a semantic triple store with a dozen MCP tools and 489 lines of committed tests, described in section 1. `capabilities` stays empty and the reasoning is recorded rather than assumed. Its supersession mechanism has a real producer and real consumers — `stages.py:414-422` stamps the losing triple `status = "superseded"` with a `superseded_by` key after a stated precedence, and four reads in `mem_core.py` filter on it — but supersession is keyed on the row that lost rather than on the value that was wrong, and the status is derived by comparison rather than asserted about truth, so neither `tombstone` nor `trust_state` is earned. There is one timestamp per moment and no record-time axis, so `bitemporal` stays withheld; the new tests assert error-absence and behaviour rather than that particular material is not retrieved, so `negative_eval` does too. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-10** — [`f4e02952a059f3a0a23081f72e5faa7956d1b3af`](https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af)
 — first reading, covering the `video-memory` capability only; the other seven

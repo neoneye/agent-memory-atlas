@@ -112,14 +112,14 @@ times, and never corrected.</p>
               <strong>QwenLM/Qwen-MM-Plugins</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af" title="f4e02952a059f3a0a23081f72e5faa7956d1b3af">
+            <a class="meta-pill revision-pill" href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/ad8139d58ebca5740df2be3a6871a2e9c1d31e36" title="ad8139d58ebca5740df2be3a6871a2e9c1d31e36">
               <span>Analyzed revision</span>
-              <code>f4e02952…</code>
+              <code>ad8139d5…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-10</strong>
+              <strong>2026-09-13</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/QwenLM--Qwen-MM-Plugins" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -144,12 +144,41 @@ times, and never corrected.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Qwen-MM-Plugins is an Apache-2.0 plugin suite — "make any agent
-harness multimodal-native" — that ships eight capabilities behind one
-MCP framework: <code>blender</code>, <code>freecad</code>,
+harness multimodal-native" — that ships capabilities behind one MCP
+framework: <code>blender</code>, <code>freecad</code>,
 <code>omni-av</code>, <code>video-edit</code>, <code>edu-agent</code>,
-<code>example</code>, <code>core</code>, and <code>video-memory</code>.
-Seven of them are tool bundles. The eighth is a memory system, and it is
-the only part of the repository this report covers.</p>
+<code>example</code>, <code>core</code>, <code>video-memory</code> and
+<code>omni-memory</code>. Most are tool bundles. Two are memory systems,
+and they are the only part of the repository this report covers.</p>
+<p><code>omni-memory</code> is the second, built around a semantic
+triple store rather than a scene graph, with a dozen MCP tools —
+<code>search_facts</code>, <code>search_dialogue</code>,
+<code>get_people</code>, <code>get_person_dialogue</code>,
+<code>get_timeline</code>, <code>get_moment</code>,
+<code>plan_and_search</code>, <code>replay_and_answer</code>,
+<code>watch_and_answer</code> and the status and overview reads beside
+them.</p>
+<p>Its one epistemic mechanism is supersession, and it is wired at both
+ends. <code>stages.py:414-422</code> resolves two triples that claim the
+same key by a stated precedence — <em>"Keep winner by confidence &gt;
+evidence-count &gt; recency(new). Loser -&gt; superseded"</em> —
+stamping the loser <code>status = "superseded"</code> and recording
+<code>superseded_by</code> as the winner's key. Four reads in
+<code>mem_core.py</code> (<code>:57</code>, <code>:125</code>,
+<code>:180</code>, <code>:349</code>) then filter
+<code>status != "superseded"</code>, so a displaced triple is excluded
+from the active set rather than deleted.</p>
+<p>That earns no mark, and the reason is worth stating because the shape
+is close to two of them. It is not a <code>tombstone</code>: the record
+is keyed on the triple that lost, not on the value that was wrong, and
+nothing consults it to stop the same claim arriving again — a later
+build that re-extracts the loser with better evidence simply wins the
+next comparison. It is not <code>trust_state</code> either: the status
+is <em>derived</em> by a deterministic comparison rather than asserted
+about whether the claim is true, and its two values answer which of two
+rows is current rather than whether either may be believed. A
+<code>confidence</code> number feeds that comparison, and a score is not
+a state.</p>
 <p><code>video-memory</code> is about 5,600 lines of Python that turn a
 long video into a persistent, queryable graph and then hand an agent
 nine MCP tools to explore it. The memory outlives the session that built
@@ -672,6 +701,25 @@ build</li>
 server</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/ad8139d58ebca5740df2be3a6871a2e9c1d31e36"><code class="commit-id" title="ad8139d58ebca5740df2be3a6871a2e9c1d31e36">ad8139d5…</code></a>
+— re-read, 168 commits past the previous pin. A second memory capability
+arrived: <code>omni-memory</code>, a semantic triple store with a dozen
+MCP tools and 489 lines of committed tests, described in section 1.
+<code>capabilities</code> stays empty and the reasoning is recorded
+rather than assumed. Its supersession mechanism has a real producer and
+real consumers — <code>stages.py:414-422</code> stamps the losing triple
+<code>status = "superseded"</code> with a <code>superseded_by</code> key
+after a stated precedence, and four reads in <code>mem_core.py</code>
+filter on it — but supersession is keyed on the row that lost rather
+than on the value that was wrong, and the status is derived by
+comparison rather than asserted about truth, so neither
+<code>tombstone</code> nor <code>trust_state</code> is earned. There is
+one timestamp per moment and no record-time axis, so
+<code>bitemporal</code> stays withheld; the new tests assert
+error-absence and behaviour rather than that particular material is not
+retrieved, so <code>negative_eval</code> does too. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-08-10</strong> — <a
 href="https://github.com/QwenLM/Qwen-MM-Plugins/commit/f4e02952a059f3a0a23081f72e5faa7956d1b3af"><code class="commit-id" title="f4e02952a059f3a0a23081f72e5faa7956d1b3af">f4e02952…</code></a>
 — first reading, covering the <code>video-memory</code> capability only;
