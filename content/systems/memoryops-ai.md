@@ -7,9 +7,9 @@ page_kind: system
 source_name: "patibandlavenkatamanideep/memoryops-ai"
 source_url: https://github.com/patibandlavenkatamanideep/memoryops-ai
 archive_name: "patibandlavenkatamanideep--memoryops-ai"
-revision: df73ad4c37f6e6d55d0e66596b90ad0b95294e97
-revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/df73ad4c37f6e6d55d0e66596b90ad0b95294e97
-analyzed_at: 2026-08-18
+revision: b357e90be763824494ca4eaa279803d26561b6af
+revision_url: https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/b357e90be763824494ca4eaa279803d26561b6af
+analyzed_at: 2026-09-13
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "the memory record | services/api/app/db/entities.py, services/api/app/routes/memories.py | `status` is a discrete field whose values include `pending`, and admission can hold sensitive content there rather than storing it active; the PATCH route moves it through approve, reject and archive, and `retrieve_active` reads `status == _ACTIVE` only, so a pending record reaches no prompt | services/api/tests/test_memory_route_authorization.py and the governance suite"
@@ -574,6 +574,8 @@ before relying on a `forget`.
 - Licence: `LICENSE` (MIT).
 
 ## History
+
+**2026-09-13** — [`b357e90be763824494ca4eaa279803d26561b6af`](https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/b357e90be763824494ca4eaa279803d26561b6af) — re-read, four commits past the previous pin, and the memory engine is unchanged. Every changed file sits under `apps/web/` or `docs/`: a Next.js runtime migration, production dependency packaging, UX and accessibility work, and documentation. Both paths the marks rest on — `infra/db/migrations/004_rls_policies.sql` with `services/api/app/db/postgres_repo.py` for `scope_enforced`, and `services/api/app/routes/memories.py` for `human_review` and `trust_state` — are byte-identical across the range, verified by diff rather than inferred from the commit subjects. All five marks stand. One fact about the project is worth recording: its own `docs/web-control-plane.md` had described authorization as an ordinal persona ladder, and that commit replaces the description with the generated capability contract after checking it — `memory_admin` holds no `evidence:read` while `auditor` does, and the `owner` persona holds no `ops:*` permission at all, so the ladder was wrong in a checkable way. The same commit draws the line this atlas cares about, that `canAttempt()` answers whether a persona may attempt a request shape rather than whether it is authorized on a record, because the browser cannot know a memory's owner. Screened again first: no auto-run surface, four build-time execution surfaces and four unpinned dependency surfaces; nothing was installed and no suite was run.
 
 **2026-08-18** — [`df73ad4c37f6e6d55d0e66596b90ad0b95294e97`](https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/df73ad4c37f6e6d55d0e66596b90ad0b95294e97) — re-read three commits on, and nothing in the memory layer moved. All three are `feat(web)`: an enterprise UI foundation, a public landing route, and the landing experience itself, touching `apps/web/` and two docs files. The diff against every path this report's appendix names — the store and its invariants, the gates, the evidence chain, the evals, the retriever, the RLS verifier — is empty. The screen reported no auto-run file, four `conftest.py` executing on collection and no dependency surface inside its cooldown; nothing was installed and no test was run. Marks and matrix unchanged.
 
