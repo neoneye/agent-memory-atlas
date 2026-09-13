@@ -7,15 +7,15 @@ page_kind: system
 source_name: "Krilliac/Sonder-runtime"
 source_url: https://github.com/Krilliac/Sonder-runtime
 archive_name: "Krilliac--Sonder-runtime"
-revision: eb93f60d8380b096a6fefbf34c053fb20dccde4f
-revision_url: https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f
-analyzed_at: 2026-08-22
+revision: cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190
+revision_url: https://github.com/Krilliac/Sonder-runtime/commit/cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190
+analyzed_at: 2026-09-13
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval, tombstone"
 capability_evidence:
   trust_state: "the lesson, moved by outcome statistics rather than by a writer | retriever.py:390 (`lesson_quarantine`), :309 (`band_loss_rate`), :372 (`_attribution`) | a lesson is active, quarantined or on probation, and the transition is computed rather than set: `lesson_quarantine` tests a loss run against the base rate for the lesson`s own retrieval-frequency band, `_attribution` deduplicates blame across lessons that were co-retrieved, and a later positive outcome rehabilitates. Quarantined lessons are dropped before ranking rather than down-weighted | tests/test_retriever.py:343 `test_positive_outcome_rehabilitates_quarantined_lesson`, and :274 for the lexical-fallback interaction"
   tombstone: "the distillation seam, keyed on the lesson text | sonder_runtime/adapters/memory_store.py:98 (`lesson_tombstones`), :2190 (`lesson_text_tombstoned`), grounded_extraction.py (`is_tombstoned_duplicate`) | the near-duplicate pruner deletes redundant lessons keeping one representative and writes a content-hashed tombstone, and distillation checks it before writing so a pruned value cannot be re-derived from a later interaction, returning `rejected_value`. It is keyed on the value rather than the row, and it does not cover quarantine — a quarantined lesson has no tombstone and can return through a fresh distillation | tests/test_lesson_pruner.py, tests/test_reflection.py"
-  audit_log: "preference refinement, protected by triggers rather than by convention | sonder_runtime/adapters/memory_store.py:228 (`refinement_history`), :246-250 | every apply and rollback is journalled with optimistic version checks, and the table is append-only by construction: `refinement_history_no_update` and `refinement_history_no_delete` are BEFORE triggers that raise, so the log cannot be edited by the code that writes it | tests/test_refinement_transactions.py"
-  scope_enforced: "interactions, tasks, preferences and sessions, filtered by project and an account scope the serving layer supplies | sonder_runtime/adapters/memory_store.py:197 (`account_scope`) | the scope key is stored on the row and applied as a filter on the read path, with the account scope coming from the authenticated serving layer rather than from the caller`s argument. Lessons are deliberately outside it — global procedural knowledge, stated as a design position rather than an omission | tests/test_task_http_scope.py"
+  audit_log: "preference refinement, protected by triggers rather than by convention | sonder_runtime/adapters/memory_store.py:228 (`refinement_history`), :246-250 | every apply and rollback is journalled with optimistic version checks, and the table is append-only by construction: `refinement_history_no_update` and `refinement_history_no_delete` are BEFORE triggers that raise, so the log cannot be edited by the code that writes it | tests/test_refinement_transactions.py. A second, independent audit surface sits beside it: `memory_replication_log` takes an ordered `(source_id, source_epoch, sequence)` journal row per authoritative fact mutation in the same SQLite commit as the fact itself — `tests/test_authoritative_memory_source.py:21` asserts the two commit together and `:165` asserts the fact is rolled back when the journal rejects, so a fact cannot exist without the evidence of how it got there"
+  scope_enforced: "interactions, tasks, preferences and sessions, filtered by project and an account scope the serving layer supplies | sonder_runtime/adapters/memory_store.py:197 (`account_scope`) | the scope key is stored on the row and applied as a filter on the read path, with the account scope coming from the authenticated serving layer rather than from the caller`s argument. Lessons are deliberately outside it — global procedural knowledge, stated as a design position rather than an omission | tests/test_task_http_scope.py, plus `tests/test_authoritative_memory_source.py:389` (`test_authoritative_fact_source_never_widens_its_project_scope`) and `tests/test_memory_learning_diagnostics.py:206`, which asserts the write-path duplicate check matches inside a project and returns None for the same text in another — the seam where a dedup would otherwise read across the boundary"
   negative_eval: "retrieval, asserting a quarantined lesson does not reach the ranked set | tests/test_retriever.py | quarantined lessons are excluded before ranking and the suite exercises that boundary from both sides — a lesson driven to quarantine by repeated losses, and the same lesson rehabilitated by a later positive outcome, so the exclusion cannot pass by the retriever returning nothing | tests/test_retriever.py:274, :343"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -31,7 +31,7 @@ matrix:
   background: "Distillation, near-duplicate pruning, age-decay ranking, contradiction detection and quarantine, all driven by accumulated outcomes"
   trust: "A lesson is active, quarantined or on probation by outcome statistics; preferences carry confidence, evidence_count and an enabled flag; every outcome records who judged it"
   strengths: "Outcome-gated quarantine that deduplicates blame across co-retrieved lessons and tests a loss run against the lesson's own frequency-band base rate before suppressing it, with a probation path back"
-  risks: "The whole loop trusts an outcome signal whose provenance is often machine or unknown; near-duplicate pruning now tombstones the rejected value, but quarantine still suppresses a lesson without one, so a quarantined lesson re-distilled from a fresh interaction can return"
+  risks: "The whole loop trusts an outcome signal whose provenance is often machine or unknown; near-duplicate pruning tombstones the rejected value, but quarantine suppresses a lesson without one, so a quarantined lesson re-distilled from a fresh interaction can return"
 ---
 
 ## 1. Executive Summary
@@ -83,10 +83,10 @@ implementations that acts on it).
 The weakness is the same fact read from the other side. The loop is only as good
 as the outcome signal, and in practice much of that signal is `machine` or
 `unknown` — the code treats those categories with visible suspicion, which is the
-right instinct and also an admission that the ground truth is thin. And the
-rejected-value gap is now half-closed: near-duplicate pruning writes a
+right instinct and also an admission that the ground truth is thin. The
+rejected-value gap is half-closed: near-duplicate pruning writes a
 content-hashed tombstone that distillation refuses to re-derive, so a pruned
-duplicate cannot come back — but quarantine still *suppresses* a lesson without
+duplicate cannot come back — but quarantine *suppresses* a lesson without
 recording a rejected value, so a lesson quarantined for being harmful, then
 re-distilled from a fresh interaction, can re-enter.
 
@@ -128,16 +128,16 @@ the design's sophistication:
 - **Age-decay ranking** — a lesson loses ground over a 30-day half-life to
   fresher lessons, blended with usage evidence; not deletion but demotion.
 
-One of these paths now records a *rejected value* and one does not. Near-duplicate
+One of these paths records a *rejected value* and one does not. Near-duplicate
 pruning writes a `lesson_tombstones` row keyed on the pruned lesson's
 normalized-text SHA-256, carrying its embedding but — by an explicit comment —
 never its text, and distillation refuses a candidate that matches one, by exact
 hash and by semantic similarity to those embeddings, terminating with
 `result: rejected_value`. So a pruned duplicate cannot be re-distilled, and
-`tombstone` is earned. Quarantine is the path that still does *not* tombstone: it
+`tombstone` is earned. Quarantine is the path that does *not* tombstone: it
 keeps the row and suppresses it, so a lesson quarantined for being harmful, then
 re-distilled from a fresh interaction, can return. The machinery to close that is
-now one call away — the same tombstone check the pruner triggers, extended from
+one call away — the same tombstone check the pruner triggers, extended from
 pruning to quarantine.
 
 ```mermaid
@@ -356,20 +356,20 @@ interaction that produced a storable lesson, gated by the concreteness and dedup
 checks, so noise does not accumulate.
 
 Deletion has the two shapes above — reversible quarantine and irreversible
-near-duplicate pruning — and they now differ in exactly the way that matters.
+near-duplicate pruning — and they differ in exactly the way that matters.
 Pruning writes a `lesson_tombstones` row keyed on the rejected lesson's content
 hash and embedding, and distillation checks a candidate against it by both exact
 hash and semantic match, returning `rejected_value`; a pruned duplicate cannot be
-re-distilled. Quarantine still leaves no rejected-value record — it keeps the row
+re-distilled. Quarantine leaves no rejected-value record — it keeps the row
 and suppresses it — so a lesson quarantined as harmful can be re-distilled from a
-fresh interaction and return. Closing that is now a one-line extension: the
+fresh interaction and return. Closing that is a one-line extension: the
 tombstone check the pruner already triggers, applied when a lesson is quarantined
 rather than only when it is pruned.
 
 ### An outbox in the memory schema, one layer from the live path
 
 Migration revision 5 concatenates `OUTBOX_DDL` into the memory schema, so every
-database now carries an `outbox_events` table — id, event type, aggregate type
+database carries an `outbox_events` table — id, event type, aggregate type
 and id, a `sequence`, a payload, a correlation id, `created_at` and a nullable
 `published_at`, under `UNIQUE(aggregate_type, aggregate_id, sequence)`. The
 module states the contract: *"State mutations and their events are committed
@@ -448,9 +448,9 @@ credit-assignment discipline the atlas argues for and finds almost nowhere.
 trusts an outcome signal that is frequently `machine` or `unknown`; the code's
 suspicion of those categories is correct but does not manufacture ground truth
 where there is none, so a store fed only machine-graded outcomes is a store
-grading itself, however carefully the weights are set. Near-duplicate pruning now
+grading itself, however carefully the weights are set. Near-duplicate pruning
 writes a content-hashed rejected-value tombstone that distillation honours, so a
-pruned duplicate cannot come back; quarantine still suppresses without one, so a
+pruned duplicate cannot come back; quarantine suppresses without one, so a
 quarantined lesson can be re-distilled from a fresh interaction and resurrect.
 And the base-rate test's need for evidence gives a new harmful lesson a grace
 period.
@@ -460,6 +460,67 @@ with apply/rollback and version checks — which earns `audit_log`. Concurrency 
 handled with claim tokens and liveness-guarded abandoned-claim recovery. There is
 no encryption of the local database mentioned; the store is as private as the
 disk.
+
+### A fact cannot exist without the record of how it arrived
+
+`sonder_runtime/adapters/persistence/sqlite/memory_replication.py` adds a bounded
+ordered journal for authoritative fact mutations, and the placement is argued in
+a comment rather than assumed: the journal tables live in the same `memory.db`
+as the mutations they describe because *"an authoritative fact state row and the
+journal evidence must share a single SQLite commit"*
+(`memory_store.py:258-266`). `memory_authoritative_fact_state(project, fact_id,
+source_id, version, tombstoned)` is keyed on `(project, fact_id)`, and
+`memory_replication_log` carries `(source_id, source_epoch, sequence,
+entity_kind, entity_id, version)` with `CHECK` constraints refusing a zero epoch
+or sequence.
+
+Two tests make the coupling real rather than conventional:
+`test_authoritative_fact_source_commits_fact_and_journal_record_together` and
+`test_authoritative_fact_source_rolls_back_materialized_fact_when_journal_rejects`.
+The second is the one that matters — the fact is discarded when its journal row
+is refused, so the failure direction is a lost write rather than an unexplained
+memory. `test_default_unit_of_work_preserves_the_legacy_unjournaled_fact_path`
+is the positive control that the older path still works, so the suite is not
+asserting into a feature that is switched off.
+
+The journal is explicitly **not** a replication system: the module header says it
+is *"deliberately provider-neutral: a replicated database or transport must
+supply ownership, durability, and network delivery guarantees around this
+journal."* `SQLiteMemoryReplicationProjection` (`memory_projection.py:153`)
+applies ordered records to one database to rebuild derived recall indexes, and
+takes a `project_scope` of its own. `sonder_runtime/domain/memory/retention_gate.py`
+sits beside it on the same principle — a pure eligibility decision for removing a
+versioned record that *"does not open a database, delete a file, replicate data,
+contact a provider, or implement consensus"*, returned for an adapter to re-check
+at its own side-effect boundary.
+
+The `tombstoned` column here is row-level, keyed on `(project, fact_id)`, and
+does not extend the `tombstone` mark this report already carries — that one is
+earned at the distillation seam on the lesson *text*, which is the value rather
+than the row.
+
+### Duplicate facts are refused at the write path, inside one project
+
+`sonder_remember_fact` (`server.py:13468`) normalises a candidate and asks
+whether the project already holds it before writing, and the reason is a budget
+argument the code states: facts *"are injected into EVERY project-scoped prompt,
+so storing the same assertion twice spends prompt budget on a repeat forever."*
+`normalize_fact_text` (`memory_store.py:3441`) collapses whitespace and
+casefolds, and `find_duplicate_fact_in` (`:3452`) takes already-loaded rows so a
+caller holding a repository rather than a connection can ask the same question.
+
+The scope discipline is written where it can be got wrong. The call site passes
+`uow.memory.facts_for_project(project_id)` and says why — *"a fact another
+project already knows must still be stored here, never referenced across the
+scope"* — and the helper's own docstring repeats it: *"Callers must pass rows
+from ONE project only: matching across projects would let a fact leak between
+scopes, and scoping is a privacy boundary, not a convenience filter."* A
+de-duplicator is the classic place a scope boundary is quietly widened for
+efficiency, and both halves of this one refuse to.
+
+A refused write returns the id of the fact that already says it, and names
+`sonder_forget_fact` as the way to replace it, so the caller is told what to do
+rather than that nothing happened.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -554,8 +615,8 @@ guards, an outcome-gated memory punishes the memories that get the hard tasks an
 lets a co-failing cohort escape, which is backwards.
 
 **Do not suppress without a rejected-value record if re-derivation is likely.**
-Sonder shows both halves: its pruner now writes a content-hashed tombstone that
-distillation checks, so a pruned duplicate cannot come back — but quarantine still
+Sonder shows both halves: its pruner writes a content-hashed tombstone that
+distillation checks, so a pruned duplicate cannot come back — but quarantine
 keeps the row without a rejected-value record, so a quarantined lesson can be
 re-distilled from a fresh interaction and return. If your extractor runs
 continuously, a suppression that does not tombstone the value invites it back.
@@ -585,13 +646,13 @@ self-modifying agent around them.
 ## 12. Open Questions
 
 - What fraction of outcomes in practice carry `caller` provenance versus
-  `machine`/`unknown`? The improvement report now surfaces the buckets
+  `machine`/`unknown`? The improvement report surfaces the buckets
   (`legacy/unknown provenance: N` beside the caller-judged and autograded rates)
   rather than a blended number, but no committed run reports the ratio on real
   traffic — and the trust math is only as strong as it.
-- Distillation now checks a candidate against *pruned* lessons via the tombstone
+- Distillation checks a candidate against *pruned* lessons via the tombstone
   registry, by exact hash and by embedding. Does the same check ever run against
-  *quarantined* lessons, or is quarantine still the one suppression a
+  *quarantined* lessons, or is quarantine the one suppression a
   re-derivation can undo? At this reading it is the latter.
 - Are the quarantine constants (five losses, two distinct tasks, 24-hour
   probation) tuned against anything, or chosen? Each is defended in a comment,
@@ -641,6 +702,12 @@ self-modifying agent around them.
 - `tests/test_lesson_pruner.py`, `tests/test_memory_store.py` — tombstones written without lesson text; purged when their source interaction is deleted.
 
 ## History
+
+**2026-09-13** — [`cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190`](https://github.com/Krilliac/Sonder-runtime/commit/cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190) — 333 commits and about 163,000 added lines past the previous pin, and **the mechanism this report is named for is byte-identical**: `retriever.py` and `reflection.py` are unchanged, and `band_loss_rate` (:309), `_attribution` (:372) and `lesson_quarantine` (:390) all resolve to the same line numbers they were cited at. All five marks re-verified at the new pin.
+
+What arrived is beside the store rather than inside it: a bounded ordered journal for authoritative fact mutations that commits in the same SQLite transaction as the fact, with a committed test that the fact is rolled back when the journal rejects; a pure retention-eligibility gate that touches no database; and a write-path duplicate check scoped to one project, whose call site and helper docstring both state that matching across projects would leak. The `audit_log` and `scope_enforced` records are extended to name these as second subsystems. The row-level `tombstoned` column on `memory_authoritative_fact_state` does not extend the `tombstone` mark, which is earned on the lesson text.
+
+One near-miss worth recording as method: `find_duplicate_fact` has no caller outside its own test, which reads as a declared-and-unwired mechanism until a whole-tree grep finds the write path calling the sibling `find_duplicate_fact_in` at `server.py:13495`. Two variants exist because some callers hold a repository and some a connection; only one is wired, and the mechanism is live.
 
 **2026-08-22** — [`eb93f60d8380b096a6fefbf34c053fb20dccde4f`](https://github.com/Krilliac/Sonder-runtime/commit/eb93f60d8380b096a6fefbf34c053fb20dccde4f) — re-pinned 474 commits and +146,315 lines on. Screened again: no auto-run surface, two build-time execution points, two unpinned surfaces; nothing was installed and nothing was run. Marks unchanged at `trust_state`, `scope_enforced`, `audit_log`, `negative_eval` and `tombstone`.
 
