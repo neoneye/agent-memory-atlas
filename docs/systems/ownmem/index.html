@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A git-native memory for coding
+agents whose candidate ledger keeps every refusal with the reason and
+the summary, because a rejection with no record of what was rejected
+reads exactly like an extractor that never fired.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OwnMem — Agent Memory Atlas">
+    <meta property="og:description" content="A git-native memory for
+coding agents whose candidate ledger keeps every refusal with the reason
+and the summary, because a rejection with no record of what was rejected
+reads exactly like an extractor that never fired.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OwnMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A git-native memory for
+coding agents whose candidate ledger keeps every refusal with the reason
+and the summary, because a rejection with no record of what was rejected
+reads exactly like an extractor that never fired.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OwnMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OwnMem",
+      "description": "A git-native memory for coding agents whose candidate ledger keeps every refusal with the reason and the summary, because a rejection with no record of what was rejected reads exactly like an extractor that never fired.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A rejection you cannot tell from
+silence</p>
+          <h1>OwnMem</h1>
+          <p class="document-deck">A git-native memory for coding agents
+whose candidate ledger keeps every refusal with the reason and the
+summary, because a rejection with no record of what was rejected reads
+exactly like an extractor that never fired.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/grpcer/ownmem">
+              <span>Source</span>
+              <strong>grpcer/ownmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/grpcer/ownmem/commit/14f4edec52ebc5d1dcf7794f451d3e6d2c64e969" title="14f4edec52ebc5d1dcf7794f451d3e6d2c64e969">
+              <span>Analyzed revision</span>
+              <code>14f4edec…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/grpcer--ownmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>grpcer--ownmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OwnMem is git-native memory for coding agents — Apache-2.0, about
+35,300 lines of JavaScript, no database. Memories are markdown topics in
+the repository's working tree, retrieved by a feature-weighted lexical
+ranker, and everything the system knows travels with a clone.</p>
+<p>Five marks, and two of them are the same idea applied twice:
+<strong>a refusal is a record, not an absence.</strong></p>
+<p><code>rejectMemoryCandidate</code>
+(<code>lib/memory-candidates.mjs:333</code>) throws unless the caller
+supplies a reason, moves the candidate into
+<code>ledger.rejected</code>, and keeps its summary. The docstring says
+why, and it is the argument this atlas makes about tombstones in the
+project's own words:</p>
+<blockquote>
+<p>The reason is required and the summary is kept, because a rejection
+with no record of what was rejected is indistinguishable from a
+candidate that was never generated, and the next reader cannot tell
+whether the extractor is quiet or the queue is being silently
+drained.</p>
+</blockquote>
+<p>The record binds because the key is a value. <code>candidateId</code>
+is
+<code>digest("recovery &lt;identity&gt; &lt;first_failure_at&gt;")</code>
+(<code>:90-92</code>), so re-running the extractor over the same
+observation produces the same id, and <code>mergeMemoryCandidates</code>
+suppresses it rather than putting it back in front of a reviewer. That
+is a value-keyed tombstone, and the atlas counts few.</p>
+<p><strong>The second good idea is that the schema argues.</strong>
+<code>schemas/promotion/decision.schema.json</code> carries nine
+lifecycle states, six risk tiers and four automation modes, and then
+three <code>allOf</code> rules that encode the invariants rather than
+leaving them to the policy layer. Each states its reasoning in a
+<code>description</code>:</p>
+<ul>
+<li>R4 and R5 <em>"can never be encoded as automatic, whatever the
+evidence or the repository configuration says. Written here as well as
+in the policy so that a producer building a decision by hand is bound by
+it."</em></li>
+<li>R5 is the control plane — <em>"policy, gates, permissions, this
+system's own code"</em> — and <em>"may not take effect from inside at
+all, so R5 is not merely non-automatic."</em> The system cannot promote
+a change to its own governance.</li>
+<li>An <code>auto</code> decision that also names a blocker is refused
+as <em>"self-contradictory, and it is the exact shape a bug in the
+resolver would produce."</em></li>
+</ul>
+<p>That last one is a schema constraint written against a specific
+failure of a specific component, which is rarer than the constraint.</p>
+<p><strong>What is withheld.</strong> <code>scope_enforced</code> is
+refused: scope tokens exist on a topic and reach
+<code>scopeOverlapFeature</code> in the ranker
+(<code>lib/memory-ranker.mjs:228-233</code>), where they contribute to a
+relevance score. Nothing filters on them, so a scope here changes what
+ranks first rather than what is visible. <code>bitemporal</code> is
+refused for absence — a grep of <code>lib/</code> and
+<code>schemas/</code> for <code>valid_from</code>,
+<code>valid_until</code>, <code>as_of</code> and their camel-case
+spellings returns nothing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a proposal that has to survive a lifecycle before
+anything reads it, and the extractor is not allowed to skip ahead.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — candidate is the one lifecycle with no path into a delivered context, and a rejection is keyed on a digest of the observation so the next extraction pass is suppressed rather than re-queued</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: candidate is the one lifecycle with no path into a delivered context, and a rejection is keyed on a digest of the observation so the next extraction pass is suppressed rather than re-queued
+flowchart TB
+    OBS[&quot;extractor observes a recovery,&lt;br/&gt;a correction or a proposal&quot;] --&gt; ID[&quot;candidate_id = digest(identity + first_failure_at)&quot;]
+    ID --&gt; MERGE{&quot;already in ledger.rejected?&quot;}
+    MERGE --&gt;|yes| SUP[&quot;suppressed — not re-queued&quot;]
+    MERGE --&gt;|no| CAND[&quot;lifecycle: candidate&lt;br/&gt;requires_human_review: true&lt;br/&gt;can_authorize_actions: false&quot;]
+    CAND --&gt; REV{&quot;a person decides&quot;}
+    REV --&gt;|reject, reason required| REJ[&quot;ledger.rejected keeps&lt;br/&gt;the id, the reason, the summary&quot;]
+    REV --&gt;|promote| DEC[&quot;promotion decision:&lt;br/&gt;risk R0-R5, automation mode&quot;]
+    DEC --&gt; GATE{&quot;risk tier&quot;}
+    GATE --&gt;|&quot;R4 / R5&quot;| HUMAN[&quot;pr-only or forbidden —&lt;br/&gt;never auto, whatever the config says&quot;]
+    GATE --&gt;|&quot;R0-R3&quot;| AUTO[&quot;auto, review or pr-only&quot;]
+    HUMAN --&gt; LIFE[&quot;observed / shadow / advisory / active&quot;]
+    AUTO --&gt; LIFE
+    LIFE --&gt; READ[&quot;ranker delivers context&quot;]
+    CAND -.-&gt;|&quot;no path into a delivered context&quot;| READ</code></pre></details></figure>
+<p>The dotted edge is the one the source comment insists on:
+<code>observed</code> is a lifecycle a memory can be recalled at, and
+<code>candidate</code> is not.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>No service and no database. The store is the repository: markdown
+topics, a candidate ledger, append-only promotion receipts and daily
+JSONL event files, all committed. A clone carries the memory, and
+<code>git log</code> is the history of it.</p>
+<p><strong>What it costs to run.</strong> Node, and nothing else. There
+is no embedding step and no vector index — retrieval is lexical, which
+is why the benchmark can be deterministic and offline.</p>
+<p><strong>Distribution is four front ends over the same files</strong>:
+a CLI, a Claude Code plugin, a Gemini extension manifest, and a
+skills/commands directory.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Candidates and refusals</strong> —
+<code>lib/memory-candidates.mjs</code>: <code>candidateId</code> (90),
+emission with <code>requires_human_review</code> (300-302),
+<code>mergeMemoryCandidates</code> (306-330),
+<code>rejectMemoryCandidate</code> (333-350).</li>
+<li><strong>Promotion contract</strong> —
+<code>schemas/promotion/decision.schema.json</code>: the enums (12-32),
+the three invariant rules (55+);
+<code>schemas/promotion/receipt.schema.json</code>;
+<code>schemas/promotion/review-material.schema.json</code>.</li>
+<li><strong>Receipt ledger</strong> —
+<code>lib/memory-promotion-receipt.mjs</code>: the stated shape (10,
+22), digest-not-text (222-224), <code>promotionAnchorRootSha256</code>
+(209).</li>
+<li><strong>Event log</strong> —
+<code>lib/memory-observability.mjs</code>: daily file pattern (59),
+<code>recordMemoryObservabilityEvent</code> (270), torn-line trim
+(218).</li>
+<li><strong>Ranking</strong> — <code>lib/memory-ranker.mjs</code>:
+feature list (26), <code>scopeOverlapFeature</code> (228).</li>
+<li><strong>Duplicates</strong> —
+<code>lib/memory-duplicates.mjs</code>:
+<code>createMemoryFingerprint</code> (39),
+<code>compareMemoryFingerprints</code> (80).</li>
+<li><strong>Benchmark</strong> —
+<code>benchmarks/public-benchmark.mjs</code>:
+<code>negativeAccuracy</code> (266), worst-language gates (381-383);
+<code>benchmarks/corpus.json</code> (negatives at 167).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A topic is markdown with front matter. The interesting fields are the
+governance ones: a <code>lifecycle</code> from the nine-value
+vocabulary, a <code>logical_type</code> of <code>normative</code>,
+<code>procedural</code>, <code>factual</code>, <code>diagnostic</code>,
+<code>preference</code> or <code>feedback</code>, scope tokens, and a
+risk tier that travels with any promotion decision about it.</p>
+<p>The candidate ledger is a separate object with
+<code>candidates</code> and <code>rejected</code> maps, both keyed on
+the same digest. A rejected entry keeps the reason and the summary —
+enough for a later reader to see what was refused without the material
+being retained in full.</p>
+<p><code>logical_type</code> is deliberately nullable, and the comment
+at <code>lib/memory-candidates.mjs:237-239</code> explains the null
+case: a user correction is <em>"a lead about memories that already exist
+being wrong, not a proposal to write a new one of some type. What a
+reviewer does with it is retire, correct or narrow the scope."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A lexical ranker over tokenized topics with a named feature list —
+code symbols, code tests, authority documents, scopes and others —
+combined by weight. There is no embedding arm and no graph arm.</p>
+<p>Scope is a feature, not a filter. <code>scopeOverlapFeature</code>
+tokenizes a document's <code>metadata.scopes</code> and measures overlap
+with the query, returning 0 when the topic declares none. A memory
+scoped to one area is therefore ranked lower for an unrelated query and
+never hidden from it, which is the right behaviour for a
+single-repository tool and the wrong shape to inherit as a boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are file writes, synchronous, and there is no lag before a
+memory is retrievable — the ranker reads the working tree. What stands
+between an observation and a delivered context is the lifecycle, not a
+queue.</p>
+<p>Extraction is idempotent by construction: the candidate id is a
+digest, so a second pass over the same observation updates
+<code>last_seen_at</code> and leaves <code>first_seen_at</code> alone,
+<em>"which is how a growing failure count reaches the reviewer without
+spawning a second entry"</em>. The same key is what makes a refusal
+durable.</p>
+<p>The promotion receipt ledger is append-only and stores anchors rather
+than content: a file hash, a symbol fingerprint, a git object, and for
+feedback the hash of the query. The module says the separation plainly —
+it is <em>"one append-only ledger; applying a change is somebody else's
+decision"</em> — so the record of what was decided is not also the
+mechanism that enacts it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI plus plugin manifests for Claude Code and Gemini, and a
+<code>skills/</code> directory. The agent-facing contract is the
+lifecycle: an agent can read <code>active</code> and
+<code>advisory</code> memories, can cause candidates to be generated,
+and cannot promote one. <code>can_authorize_actions: false</code> is
+stamped on every candidate at emission.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The README grounds the design in five external papers — Reflexion,
+AgentPoison, CaMeL on prompt injection, selective classification for
+abstention, and metamorphic testing — which is unusual and worth noting
+because the influence is visible in the code rather than decorative:
+abstention is a measured benchmark metric, and the control-plane rule is
+CaMeL's separation applied to the system's own governance.</p>
+<p><code>CITATION.cff</code> is a software citation, not a paper. There
+is no paper of the project's own.</p>
+<p>The torn-write detail in the event log is the kind of care that
+suggests the ledger is meant to be trusted: an interrupted trailing
+partial line is removed before appending <em>"so it cannot corrupt the
+next event"</em>.</p>
+<p>What is missing is a boundary. Everything here is one repository's
+memory, and the design leans on that — no scope filter, no principal, no
+tenancy. That is coherent rather than careless, and it is the thing that
+stops the design generalising.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Four self-tests under <code>test/</code> — structure, public surface,
+evolution and a multilingual tokenizer — plus
+<code>benchmarks/public-benchmark.mjs</code> over a committed corpus
+with a multilingual supplement.</p>
+<p><strong>The negative arm is the part worth copying.</strong>
+<code>benchmarks/corpus.json</code> commits sixteen
+<code>negative_queries</code> — nonsense across locales, <em>"quantum
+foam renderer calibrates lunar antenna"</em> and its Chinese and Polish
+variants — and <code>negativeAccuracy</code> counts a case as passing
+<strong>only when the ranking is empty</strong>, recording every
+non-empty result as a <code>false_positive</code> carrying the query and
+what was wrongly returned. A metric that named only a rate would hide
+which query broke; this one hands back the counterexample.</p>
+<p>It is not vacuous, and the reason is structural rather than lucky:
+the same run computes <code>recall_at_1</code> over the same corpus, so
+a configuration that returned nothing for everything would fail the
+positive metrics in the same report.
+<code>worst_language_negative_abstain_rate</code> gates the worst locale
+rather than the mean, which is the right aggregation for a multilingual
+claim.</p>
+<p>The shape is abstention on unrelated queries rather than a named
+value that must not come back — this report awards
+<code>negative_eval</code> on it and says which kind it is.</p>
+<p>Nothing was run. The screen reports one auto-run surface and two
+dependency files changed within the seven-day cooldown.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Keep the refusal, with the reason.</strong> Not the decision
+— the <em>record</em>. A rejection that deletes the candidate leaves a
+queue that looks identical whether the extractor is quiet or a reviewer
+is draining it silently, and nobody can tell from the outside which they
+are looking at.</p>
+<p><strong>Key the refusal on a digest of the observation.</strong> Then
+re-extraction is suppressed automatically and idempotence and durability
+are the same mechanism.</p>
+<p><strong>Put the invariant in the schema as well as the
+policy</strong>, and say in the description that you did it twice on
+purpose. <em>"Written here as well as in the policy so that a producer
+building a decision by hand is bound by it"</em> is the sentence that
+makes a duplicated rule a design rather than an oversight.</p>
+<p><strong>Make your own control plane the highest risk tier.</strong>
+R5 covers policy, gates, permissions and the system's own code, and
+cannot take effect from inside at all. A memory system that can promote
+a change to its own promotion rules has no rules.</p>
+<p><strong>Return the counterexample, not just the rate.</strong>
+<code>false_positives</code> carries the query and the wrong answer, so
+a regression names itself.</p>
+<p><strong>Score abstention beside recall on one corpus.</strong> The
+positive metric is what stops the negative one passing vacuously, and
+running both in the same pass makes that structural instead of a
+convention.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Reading a scope as a boundary when it is a ranking
+feature.</strong> <code>scopes</code> here raises a score and hides
+nothing. That is fine for one repository and would be a leak the first
+time two principals shared a store.</p>
+<p><strong>Putting a timestamp inside the key you want to suppress
+on.</strong> <code>first_failure_at</code> is in the digest, so the same
+identity failing again next week is a new candidate and the earlier
+refusal does not reach it. Defensible — it is new evidence — but it
+means the tombstone binds an observation rather than a claim.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants project memory reviewed like code, in
+the repository, with no service to run and a git history of every
+decision. The governance is the product: nine lifecycle states and six
+risk tiers are a lot of ceremony for a single developer, and exactly
+right where a wrong memory would be expensive and a reviewer already
+exists.</p>
+<p>It is the wrong fit where memory must be scoped between principals,
+where retrieval needs semantic reach beyond lexical matching, or where
+nobody will review — the lifecycle guarantees that unreviewed candidates
+never reach a context, so an unattended deployment gets a queue instead
+of a memory.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should the rejection digest drop the timestamp?</strong>
+Keying on identity alone would make a refusal bind a claim rather than
+one observation of it.</li>
+<li><strong>What empties the candidate queue in a repository nobody
+reviews?</strong> Nothing promotes on its own below R4 unless configured
+to, and <code>candidate</code> has no path into a delivered
+context.</li>
+<li><strong>Does the receipt ledger get verified?</strong> The anchors
+are recomputable by design; whether anything recomputes them is not
+visible in the tree.</li>
+<li><strong>Would a semantic arm break the abstention metric?</strong>
+The sixteen negatives pass today against a lexical ranker, and an
+embedding arm returns something for everything.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Candidates, refusals and promotion</strong></p>
+<ul>
+<li><code>lib/memory-candidates.mjs</code> — <code>candidateId</code>
+(90), emission (300-302), <code>mergeMemoryCandidates</code> (306-330),
+<code>rejectMemoryCandidate</code> (333-350)</li>
+<li><code>schemas/promotion/decision.schema.json</code> — enums (12-32),
+invariant rules (55+)</li>
+<li><code>schemas/promotion/receipt.schema.json</code>,
+<code>schemas/promotion/review-material.schema.json</code></li>
+<li><code>lib/memory-promotion-receipt.mjs</code> — ledger shape (10,
+22), digest-not-text (222-224)</li>
+<li><code>lib/memory-review-material.mjs</code></li>
+</ul>
+<p><strong>Store and retrieval</strong></p>
+<ul>
+<li><code>schemas/memory.schema.json</code>;
+<code>lib/memory-ranker.mjs</code> — features (26),
+<code>scopeOverlapFeature</code> (228)</li>
+<li><code>lib/memory-duplicates.mjs</code> —
+<code>createMemoryFingerprint</code> (39)</li>
+<li><code>lib/memory-observability.mjs</code> — daily files (59),
+torn-line trim (218), record (270)</li>
+</ul>
+<p><strong>Evaluation</strong></p>
+<ul>
+<li><code>benchmarks/public-benchmark.mjs</code> —
+<code>negativeAccuracy</code> (266-276), worst-language gates
+(381-383)</li>
+<li><code>benchmarks/corpus.json</code> — <code>negative_queries</code>
+(167); <code>benchmarks/supplement.json</code></li>
+<li><code>test/</code> — four self-tests</li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn &quot;valid_from\|valid_until\|validFrom\|as_of\|asOf&quot; lib/ schemas/
+grep -rn &quot;scopes&quot; lib/memory-ranker.mjs
+grep -rn -i &quot;arxiv\|doi&quot; README.md</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/grpcer/ownmem/commit/14f4edec52ebc5d1dcf7794f451d3e6d2c64e969"><code class="commit-id" title="14f4edec52ebc5d1dcf7794f451d3e6d2c64e969">14f4edec…</code></a>
+— first reading. Screened first: one auto-run surface and two dependency
+files changed within the seven-day cooldown, so nothing was installed
+and neither the self-tests nor the benchmark was run; every claim about
+them is a claim about their committed source. Five marks.
+<code>tombstone</code> is earned on a refusal keyed on a digest of the
+observation, with the reason required and the summary kept — one of the
+few in this corpus where the project's own docstring makes the argument.
+<code>scope_enforced</code> is withheld: scope tokens reach a ranking
+feature and no filter. <code>bitemporal</code> is withheld for absence,
+with the grep recorded in the appendix. <code>CITATION.cff</code> is a
+software citation; the project has no paper of its own, and the five
+papers the README cites are external influences.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

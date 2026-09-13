@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 442 reports.**
+**This page covers all 443 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -1225,6 +1225,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you want to see a distance and a similarity read from the same field a hundred lines apart, and a test suite that passes over both.
 - Do not copy when: you need deletion to mean anything — `delete` removes the SQLite row and never calls the Chroma delete that retrieval reads, and one deletion also stalls long-term consolidation permanently by leaving a sixteen-message block short.
 
+
+### [`ownmem`](../systems/ownmem/)
+- Best idea: a refusal is a record. `rejectMemoryCandidate` throws without a reason, keeps the summary, and later extractions of the same digest are suppressed — because "a rejection with no record of what was rejected is indistinguishable from a candidate that was never generated".
+- Biggest risk: the rejection digest includes the first failure timestamp, so the same identity failing again is a new candidate the earlier refusal does not reach; and scope tokens are a ranking feature rather than a filter, so a scope changes order and hides nothing.
+- Most reusable component: schema-level invariants that bind a hand-built decision — R4 and R5 can never be automatic "whatever the evidence or the repository configuration says", and R5, the control plane, "may not take effect from inside at all".
+- Maturity impression: Apache-2.0, ~35,300 lines of JavaScript, no database, four self-tests and a committed multilingual benchmark whose sixteen negative queries must return nothing and whose worst-language abstain rate is gated.
+- Study when: you want project memory reviewed like code, in the repository, with a git history of every promotion decision.
+- Do not copy when: memory must be scoped between principals, retrieval needs semantic reach, or nobody will review — an unreviewed candidate has no path into a delivered context by design.
 
 ### [`palazzo`](../systems/palazzo/)
 - Best idea: the write-ahead log is a *precondition* for a destructive operation, not a record of it. `log_strict` fails the delete when the audit entry cannot be durably appended, on the stated reasoning that the WAL is the only trail — and the entry carries a text preview, so it says what was removed.

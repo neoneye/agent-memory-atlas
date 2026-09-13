@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 327 of 442 screened at the report's current pin.**
+**Progress: 328 of 443 screened at the report's current pin.**
 
 11 further record(s) describe a revision the report has since moved
 off, and 104 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 130 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 166 |
+| Repositories with an auto-run surface (`RUNS`) | 131 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 167 |
 | Repositories with build-time execution (`EXEC`) | 243 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -126,6 +126,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
+| [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
 | [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
