@@ -7,9 +7,9 @@ page_kind: system
 source_name: "AdultSwimmer/AuraOS"
 source_url: https://github.com/AdultSwimmer/AuraOS
 archive_name: "AdultSwimmer--AuraOS"
-revision: c7d6651a98b8581e372864a4976c5a8a4c8290e4
-revision_url: https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4
-analyzed_at: 2026-08-21
+revision: 81dffa9ba95334b3ded57f9237750372ab80815d
+revision_url: https://github.com/AdultSwimmer/AuraOS/commit/81dffa9ba95334b3ded57f9237750372ab80815d
+analyzed_at: 2026-09-13
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -441,7 +441,10 @@ forget.
   root, real conversation logs under `memory/logs/`, and 368 MB of Drive upload
   temporaries.
 - **No licence.** Public and all rights reserved by default, which makes reuse a
-  question rather than a decision.
+  question rather than a decision. An MIT licence existed briefly: it was
+  committed on 26 August 2026 carrying an unsubstituted template placeholder —
+  `Copyright (c) $year Anthony Dulong` — and deleted on 3 September, so the
+  question is open by the repository's own most recent decision.
 
 ## 13. Build-vs-Borrow Takeaways
 
@@ -490,5 +493,7 @@ atlas has it either.
 | `.tmp.driveupload/` | 2,214 files and 368 MB of Google Drive upload temporaries |
 
 ## History
+
+**2026-09-13** — [`81dffa9ba95334b3ded57f9237750372ab80815d`](https://github.com/AdultSwimmer/AuraOS/commit/81dffa9ba95334b3ded57f9237750372ab80815d) — re-read, 14 commits past the previous pin, and the memory mechanism is unchanged. Not one `.py`, `.js`, `.ts`, `.sql` or `.json` file differs across the range: the 52,502 added lines are transcripts, screenshots, PDFs and Word documents assembling a dispute with a model provider, plus community boilerplate. No mark changes and `capabilities` stays empty. The one correction is to the licence note: an MIT licence carrying an unsubstituted `Copyright (c) $year Anthony Dulong` was committed on 26 August 2026 and deleted on 3 September, so the tree at this commit still has no licence file. Screened again first: no auto-run surface, two build-time execution surfaces and three unpinned requirements files; nothing was installed and nothing was run.
 
 **2026-08-21** — [`c7d6651a98b8581e372864a4976c5a8a4c8290e4`](https://github.com/AdultSwimmer/AuraOS/commit/c7d6651a98b8581e372864a4976c5a8a4c8290e4) — first reading, at the fourth commit of a repository two days old. Screened before anything was read: no auto-executing surface, two build-time execution points in documentation Makefiles, three unpinned requirement files and three dependency files inside the seven-day cooldown; nothing was installed, no model was pulled and no server was started. Every Python file outside the vendored documentation was read in full, which is how the absent consumer for `knowledge/processed/` and the unvalidated `user_id` path were established. `capabilities: ""` — assessed against all seven and none is present.
