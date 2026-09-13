@@ -4,11 +4,11 @@ eyebrow: "A control that proves the metric can move"
 description: "A transactional write path over a markdown vault whose contradictions stay visible until a person resolves them, whose per-claim clock is a comment rather than frontmatter, and whose eval harness refuses to run a gate whose metric cannot fail."
 root: ../..
 page_kind: system
-source_name: "kiycoh/silica-harness"
-source_url: https://github.com/kiycoh/silica-harness
-archive_name: "kiycoh--silica-harness"
+source_name: "kiycoh/silica-core"
+source_url: https://github.com/kiycoh/silica-core
+archive_name: "kiycoh--silica-core"
 revision: 300fab2e1686e6401a059ec62161ba5a46fce356
-revision_url: https://github.com/kiycoh/silica-harness/commit/300fab2e1686e6401a059ec62161ba5a46fce356
+revision_url: https://github.com/kiycoh/silica-core/commit/300fab2e1686e6401a059ec62161ba5a46fce356
 analyzed_at: 2026-08-23
 capabilities: "bitemporal, audit_log, human_review, negative_eval"
 capability_evidence:
@@ -40,6 +40,16 @@ vault, a codebase's docs, research material — as agent-writable memory. About
 72,700 lines of Python across 208 modules, 955 commits since 25 May 2026, with a
 CLI, a Claude Code plugin, an MCP server and a web UI over one vault. It targets
 the Open Knowledge Format v0.2 and runs local inference optionally.
+
+The repository was named `kiycoh/silica-harness` at the commit this report is
+pinned to and has since been renamed to `kiycoh/silica-core`. The rename is
+complete in code rather than in the README alone — `pyproject.toml` declares
+`name = "silica-core"`, and the old spelling appears nowhere in the current
+README, including the banner URLs, the badge links and the
+`uvx --from 'silica-harness[mcp]'` invocation that carried it in three places at
+the pin. The distribution `silica-harness` remains resolvable on PyPI alongside
+`silica-core`. Links in this report point at the current name, which is where
+GitHub redirects the old one; the project name, Silica, did not change.
 
 Its thesis is in one sentence of the README: *"the harness guides, the LLM
 proposes, a parser and an FSM verify and execute, and every write is verified
@@ -457,4 +467,4 @@ that can refuse to serve a disputed claim rather than annotate it.
 
 ## History
 
-**2026-08-23** — [`300fab2e1686e6401a059ec62161ba5a46fce356`](https://github.com/kiycoh/silica-harness/commit/300fab2e1686e6401a059ec62161ba5a46fce356) — first reading, AGPL-3.0, ~72,700 lines of Python across 208 modules, 955 commits since 25 May 2026. Screened before anything was read: four auto-run surfaces — a `.claude-plugin/` marketplace and plugin manifest, a `hooks/hooks.json` registering SessionStart, PreCompact and Stop, and an `mcp.json` — three build-time execution points, and both `pyproject.toml` and `uv.lock` changed the day of the pin, inside the cooldown. Nothing was installed, no hook was registered, no eval was run and no vault was opened. One screen finding is a false positive worth recording: `silica/router/states/setup.py` was flagged as install-time execution on its filename and is an FSM state. Four marks. `trust_state` is withheld deliberately rather than for absence — the contested flag is rendered into the recall block as `| contested: <reason>` instead of gating admissibility, so a disputed claim reaches the model annotated rather than withheld. `scope_enforced` is withheld because separation is per vault; `tombstone` because nothing keys on a removed value.
+**2026-08-23** — [`300fab2e1686e6401a059ec62161ba5a46fce356`](https://github.com/kiycoh/silica-core/commit/300fab2e1686e6401a059ec62161ba5a46fce356) — first reading, AGPL-3.0, ~72,700 lines of Python across 208 modules, 955 commits since 25 May 2026. Screened before anything was read: four auto-run surfaces — a `.claude-plugin/` marketplace and plugin manifest, a `hooks/hooks.json` registering SessionStart, PreCompact and Stop, and an `mcp.json` — three build-time execution points, and both `pyproject.toml` and `uv.lock` changed the day of the pin, inside the cooldown. Nothing was installed, no hook was registered, no eval was run and no vault was opened. One screen finding is a false positive worth recording: `silica/router/states/setup.py` was flagged as install-time execution on its filename and is an FSM state. Four marks. `trust_state` is withheld deliberately rather than for absence — the contested flag is rendered into the recall block as `| contested: <reason>` instead of gating admissibility, so a disputed claim reaches the model annotated rather than withheld. `scope_enforced` is withheld because separation is per vault; `tombstone` because nothing keys on a removed value.
