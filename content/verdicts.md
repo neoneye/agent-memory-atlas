@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 444 reports.**
+**This page covers all 445 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -194,6 +194,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: deeply integrated and heavily tested framework feature.
 - Study when: long agent conversations exceed model context.
 - Do not copy when: exact evidence retrieval is the primary requirement.
+
+### [`memex-zettel`](../systems/memex-zettel/)
+- Best idea: the credential gate runs on the query as well as the write, and its test asserts the rejection message never echoes the token it refused — `expect(result.error).not.toContain("sk-proj")`.
+- Biggest risk: archiving is the only correction, and it records that something left rather than that it was wrong, so an agent that produced a bad card once can produce it again with no signal.
+- Most reusable component: testing a secret detector for false positives — "allows security architecture language without raw secrets" beside "rejects actual OpenAI-style tokens" — because a scanner nobody can write about gets switched off.
+- Maturity impression: ~16,300 lines of TypeScript over a directory of markdown, nineteen test files including a hundred-query scoring suite, and five agent surfaces over the same cards.
+- Study when: you want a Zettelkasten your coding agent can read and write, curated by hand, with a real guard against pasting a credential into it.
+- Do not copy when: memory must be governed or shared — no scope, no status, no audit, and correction that leaves no trace, all by design rather than oversight.
 
 ### [`memos`](../systems/memos/)
 - Best idea: mount textual, preference, skill, KV-cache, and parametric memory as one cube.

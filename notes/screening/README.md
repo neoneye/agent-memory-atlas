@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 329 of 444 screened at the report's current pin.**
+**Progress: 330 of 445 screened at the report's current pin.**
 
 11 further record(s) describe a revision the report has since moved
 off, and 104 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 131 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 168 |
-| Repositories with build-time execution (`EXEC`) | 244 |
+| Repositories with an auto-run surface (`RUNS`) | 132 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 169 |
+| Repositories with build-time execution (`EXEC`) | 245 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -98,6 +98,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
+| [`memex-zettel`](../../content/systems/memex-zettel.md) | `.claude-plugin/`, `.cursorrules`, `hooks/`, `hooks/hooks.json`, `server.json`, `smithery.yaml` |
 | [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
 | [`memora`](../../content/systems/memora.md) | `.claude-plugin/` |
 | [`memory-engine`](../../content/systems/memory-engine.md) | `.claude-plugin/` |
