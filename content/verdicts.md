@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 449 reports.**
+**This page covers all 450 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -986,6 +986,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: 945 test functions, a deterministic embedder in dev and CI that makes real similarity assertions possible rather than mocked ones, and four replay suites over a digest comparison whose verdict keeps *the fingerprint differs* apart from *I could not restore the inputs to check* — the assembler-version case is refused outright rather than reported, because reporting it would make the whole past look divergent every time the assembler is fixed.
 - Study when: you are building a simulation or a companion where memory should fade rather than be corrected — it is the most carefully reasoned member of the Generative Agents lineage here.
 - Do not copy when: you need factual memory. There is no correction path, no trust state and no deletion by identity — and the design rationale is in Korean-language comments, so the reasons are only partly accessible to a non-Korean-reading team.
+
+### [`lemmalog`](../systems/lemmalog/)
+- Best idea: a hypothetical that proves it left nothing behind. `what_if` asserts the assumption derived a closure, then that the store is untouched, the change feed recorded nothing, and the assembled context does not mention it — the last two being the half that catches a leak into downstream incremental views.
+- Biggest risk: the shipped agent layer sets `asserted_at` to the same value as `valid_from` on every assertion, and the one rule that reads `edge` discards the position — so the transaction-time axis the status table marks shipped is not usable through the facade.
+- Most reusable component: deriving an `alias_conflict` fact when a local has two canonicals, instead of merging two identities — a refusal to guess at the error that cannot be undone.
+- Maturity impression: ~11,700 lines of Rust, a stratified interpreter with seminaive fixpoint, magic-sets demand evaluation, proof trees with cycle protection, a status table with one honest "not yet" among twenty-seven shipped rows, and a clean screen.
+- Study when: you would rather debug a rule than a ranking function, and want "why do I believe this" answered by a derivation rather than a citation.
+- Do not copy when: memory must be scoped between principals, a wrong belief must be recorded as wrong rather than dated out, or the team cannot write Datalog — the rules are the memory.
 
 ### [`logseq`](../systems/logseq/)
 - Best idea: the user defines the schema and the agent must write inside it. Properties carry a declared type and cardinality, tags are classes that extend other tags, and `listTags`/`listProperties` let a model discover the ontology before writing in it. Everywhere else the memory model is the vendor's; here it is the user's.
