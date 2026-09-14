@@ -7,10 +7,12 @@ page_kind: system
 source_name: "zilliztech/memsearch"
 source_url: https://github.com/zilliztech/memsearch
 archive_name: "zilliztech--memsearch"
-revision: b734a142ea017657959dfe918ecfe9e1a16c6654
-revision_url: https://github.com/zilliztech/memsearch/commit/b734a142ea017657959dfe918ecfe9e1a16c6654
-analyzed_at: 2026-08-09
+revision: 15ad962364c0dc5a552af78a7ef6bf1575487ec9
+revision_url: https://github.com/zilliztech/memsearch/commit/15ad962364c0dc5a552af78a7ef6bf1575487ec9
+analyzed_at: 2026-09-14
 capabilities: "human_review"
+capability_evidence:
+  human_review: "the candidate-to-installed gate — a person lists, reviews and installs, with no path that promotes on its own | src/memsearch/skills.py:298, :316, :339, :532, src/memsearch/cli.py:1422, :1440-1456 | distillation writes a candidate rather than a live skill, and the review surface is a set of commands rather than a display: `list_candidates` and `candidate_review_summary` back a CLI that reports whether candidates need review, and the hint it prints names the next action — run the skill to review and install. Promotion is `memsearch skills install <name> --path <dir>`, a Click command that refuses with exit 2 when no `--path` is given rather than choosing a destination, so a person states both what to install and where. The candidate store is versioned separately, so the review has a diff to work from, and the background pass that produces candidates is gated by its own `memory_to_skill.enabled` flag | tests/test_skills_sync.py"
 stack_storage: "milvus, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -327,5 +329,7 @@ metrics and the primary-metric justification `:47-56`, the results table `:58-`)
 its off-by-default note), `MEMORY.md`, `AGENT.md`, `CLAUDE.md`
 
 ## History
+
+**2026-09-14** — [`15ad962364c0dc5a552af78a7ef6bf1575487ec9`](https://github.com/zilliztech/memsearch/commit/15ad962364c0dc5a552af78a7ef6bf1575487ec9) — re-read, 37 commits past the previous pin across 178 files. The mark stands and was re-tested against the approver rather than carried forward, because the same mark was withdrawn from another system in this corpus the same day for resting on a surface that only displayed. It holds here on the opposite finding: promotion is `memsearch skills install <name> --path <dir>`, a command a person runs, and it exits 2 when no destination is given rather than picking one — so both the what and the where are stated by a person, and nothing installs a candidate on its own. The review side is `list_candidates` and `candidate_review_summary` behind a CLI that reports whether candidates need review, with the candidate store versioned separately so there is a diff to read. An evidence record is written for the first time. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-09** — [`b734a142ea017657959dfe918ecfe9e1a16c6654`](https://github.com/zilliztech/memsearch/commit/b734a142ea017657959dfe918ecfe9e1a16c6654) — first reading. Screened before reading; the tree was read, never installed, and no evaluation was run.
