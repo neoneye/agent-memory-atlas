@@ -7,10 +7,13 @@ page_kind: system
 source_name: "SuanmoSuanyangTechnology/MemoryBear"
 source_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear
 archive_name: "SuanmoSuanyangTechnology--MemoryBear"
-revision: 857bb5b4022fec641b0a511b82b0968a761a0d62
-revision_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62
-analyzed_at: 2026-08-09
+revision: e5087b10666332357f0007fc8e6382e496a04b00
+revision_url: https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/e5087b10666332357f0007fc8e6382e496a04b00
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced, audit_log"
+capability_evidence:
+  scope_enforced: "graph retrieval — the full-text and embedding search templates | api/app/repositories/neo4j/cypher_queries.py:2225, api/app/repositories/neo4j/graph_search.py:369-382 | `end_user_id` is a stored property on every node and relationship, and the Cypher the retrieval path executes ANDs it into the match: `CALL db.index.fulltext.queryNodes(…) YIELD node AS s WHERE s.end_user_id = $end_user_id AND s.delete_at IS NULL`. Six of the seven templates in `FULLTEXT_QUERY_CYPHER_MAPPING` are unconditional; the live caller is `ContentSearch._keyword_search`, which takes its scope from a `MemoryContext` — a Pydantic model declaring `end_user_id: str` as required, so the value cannot be absent on that path. The seventh template, for DIALOGUE, is written permissively and is discussed in the report | no committed test pins the cross-user case; the guarantee rests on the Pydantic model and the query text"
+  audit_log: "the forgetting subsystem only — one row per cycle, not per mutation | api/app/services/memory_forget_service.py:404, api/app/repositories/forgetting_cycle_history_repository.py:51 | `trigger_forgetting_cycle` calls `history_repository.create_async`, writing a `ForgettingCycleHistory` row carrying `merged_count`, `failed_count`, `average_activation_value`, `total_nodes`, `low_activation_nodes`, `duration_seconds` and `trigger_type`, indexed on `(end_user_id, execution_time)`. The repository exposes `create`, `create_async` and three getters and no update or delete, and no `UPDATE` or `DELETE` against the table exists outside the migration that creates it. It audits the forgetting subsystem; an ordinary edit or extraction writes no row | read back at memory_forget_service.py:741 via `get_recent_by_end_user_async`"
 stack_storage: "postgres, graph"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -20,9 +23,9 @@ matrix:
   retrieval: "Graph traversal and vector search, both scoped by end_user_id, with activation as a ranking term"
   write: "Perceive, extract, associate — an LLM pipeline producing statements and entities behind a FastAPI service"
   update_delete: "Low-activation node pairs fuse into a MemorySummary with DERIVED_FROM edges; originals are deleted"
-  scoping: "end_user_id on every node and every relationship, applied in the Cypher and in the index definitions"
+  scoping: "end_user_id on every node and every relationship, ANDed into the retrieval Cypher; one of the seven search templates makes the predicate conditional on the key being non-null"
   integration: "A FastAPI service, a web console, an e2b sandbox and a Docker Compose deployment"
-  background: "A forgetting scheduler running activation-driven fusion cycles, manual or scheduled"
+  background: "Activation-driven fusion cycles, triggered on demand through the API — the Celery beat entry that ran them on a clock is commented out"
   trust: "An importance score feeding activation; no epistemic state on a statement"
   strengths: "Forgetting produces a summary that keeps typed provenance to what it replaced, not an absence"
   risks: "Every published benchmark figure is an image in the README, with no harness or result file in the tree"
@@ -134,14 +137,71 @@ deployment rather than compiled in.
 **Cycle** — `memory_forget_service.py` → `ForgettingScheduler` →
 `ForgettingStrategy.identify` → fuse → `ForgettingCycleHistoryRepository`.
 
+**Nothing starts that chain on a clock.** The entry point is
+`memory_forget_controller.py:59`, an HTTP `trigger_forgetting_cycle` calling the
+service at `:109`; the periodic trigger that would call it unattended is
+commented out in three places. `tasks.py:4539-4574` holds the whole
+`run_forgetting_cycle_task` definition behind `#`, including its
+`trigger_forgetting_cycle` call. `celery_app.py:283-285` comments out the beat
+entry that would schedule it. And `celery_app.py:153` comments out its queue
+route with the note *"已废弃，保留路由防 unregistered"* — deprecated, the route kept
+only so an unregistered-task error cannot fire.
+
+What survives is the configuration around the hole. `celery_app.py:240` still
+builds `forgetting_cycle_schedule = crontab(hour=settings.FORGETTING_CYCLE_HOUR,
+minute=settings.FORGETTING_CYCLE_MINUTE)` at import, and `config.py:414-417`
+still parses and validates both environment variables with a default of 18:00.
+The crontab is constructed on every start and referenced by nothing. An operator
+setting `FORGETTING_CYCLE_HOUR` gets no error, no warning and no cycle.
+
+`ForgettingScheduler` itself is not the dead part — `memory_forget_service.py`
+still uses it inside a triggered run to decide which users are due. The class
+that decides *when* is live; the thing that would have asked it is commented
+out. So the `trigger_type` column, which distinguishes `manual` from
+`scheduled`, can only be written with one of its two values.
+
 **Fusion** — `forgetting_strategy.py:355-395`: the Cypher `OPTIONAL MATCH` over
 inbound relationships and `MERGE (source)-[:DERIVED_FROM]->(ms)` for both the
 statement and the entity side, so edges into the originals are rerouted to the
 summary rather than orphaned.
 
-**Scope** — `neo4j_connector.py:219` and `:232`: `MATCH (n) WHERE n.end_user_id
-= $end_user_id` for nodes and the matching form for relationships;
-`create_indexes.py:348` builds indexes that require the property.
+**Scope** — the predicate lives in the search templates, not in the connector.
+`cypher_queries.py` holds one full-text and one embedding template per node type,
+and `FULLTEXT_QUERY_CYPHER_MAPPING` picks the one `search_by_fulltext` executes.
+Six of the seven AND the key in unconditionally, in the form
+
+```cypher
+CALL db.index.fulltext.queryNodes("statementsFulltext", $query) YIELD node AS s, score
+WHERE s.end_user_id = $end_user_id
+  AND s.delete_at IS NULL
+```
+
+`neo4j_connector.py:219` and `:232` carry the same predicate over nodes and
+relationships, but they are the body of `delete_group(end_user_id)` — a scoped
+*deletion*, not a read filter — and `create_indexes.py` builds indexes that
+require the property.
+
+**The seventh template is the one to watch.** `SEARCH_DIALOGUE_BY_FULLTEXT` is
+written permissively:
+
+```cypher
+WHERE ($end_user_id IS NULL OR d.end_user_id = $end_user_id)
+```
+
+A null scope key does not fail there; it matches every user's dialogue. The
+question is whether null can arrive, and today it cannot: `search_graph` declares
+`end_user_id: Optional[str] = None` and documents it as an *"Optional group
+filter"*, but the live caller is `ContentSearch._keyword_search`, which passes
+`self.ctx.end_user_id` from a `MemoryContext` — a Pydantic `BaseModel` whose
+`end_user_id: str` is required and validated at construction. `ContentSearch`
+also puts `Neo4jNodeType.DIALOGUE` in its default includes, so this template does
+run on the ordinary path; it is simply never handed a null.
+
+That is a real guarantee and it is in the wrong place. The isolation of the
+dialogue store depends on a model definition two layers up rather than on the
+query, and `search_graph`'s own optional-with-default signature is an invitation
+to call it from somewhere that has no `MemoryContext`. The other six templates
+would return nothing in that case. This one would return everything.
 
 ## 5. Memory Data Model
 
@@ -202,9 +262,13 @@ as an API concern, so an operator can see the decay model they configured.
 
 **Audit log — awarded, and scoped precisely.** `forgetting_cycle_history` is an
 append-only per-run record with counts, an average, a duration and a trigger
-type. It audits *the forgetting subsystem*, not every mutation — an edit or an
-association does not appear — so it is a background-pass ledger rather than a
-full mutation log, and it is a good one.
+type. `ForgettingCycleHistoryRepository` exposes `create`, `create_async` and
+three getters and nothing that updates or deletes, and no `UPDATE` or `DELETE`
+against the table exists anywhere outside the migration that creates it;
+`memory_forget_service.py:404` writes the row and `:741` reads it back. It audits
+*the forgetting subsystem*, not every mutation — an edit or an association does
+not appear — so it is a background-pass ledger rather than a full mutation log,
+and it is a good one.
 
 **Trust state — no.** `importance` feeds activation; nothing records belief.
 
@@ -330,5 +394,7 @@ Both are worth lifting into a system with a different decay model entirely.
 outside the repository)
 
 ## History
+
+**2026-09-14** — [`e5087b10666332357f0007fc8e6382e496a04b00`](https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/e5087b10666332357f0007fc8e6382e496a04b00) — second reading, 782 commits on. Screened again: 0 auto-run surfaces, 0 build-time exec paths, 0 dependency surfaces inside the cooldown and 6 unpinned manifests; nothing was installed and nothing was run. Both marks were re-tested at the producer and both hold, and each now carries the evidence record it had been asserted without. The `scope_enforced` citation was wrong in a way worth recording: `neo4j_connector.py` moved to `api/app/repositories/neo4j/`, and lines `:219` and `:232` are the body of `delete_group` — a scoped deletion rather than a read filter. The read-path predicate is in the per-node-type Cypher templates, where six of seven AND the key in unconditionally and the DIALOGUE template makes it conditional on the key being non-null; the null branch is unreachable today only because the live caller's `MemoryContext` is a Pydantic model requiring `end_user_id`. The scheduled forgetting cycle is gone: the Celery task, its beat entry and its queue route are all commented out, the last marked 已废弃, while the crontab built from `FORGETTING_CYCLE_HOUR` and `FORGETTING_CYCLE_MINUTE` is still constructed at import and referenced by nothing. The cycle runs on demand through `memory_forget_controller.py` instead.
 
 **2026-08-09** — [`857bb5b4022fec641b0a511b82b0968a761a0d62`](https://github.com/SuanmoSuanyangTechnology/MemoryBear/commit/857bb5b4022fec641b0a511b82b0968a761a0d62) — first reading. Screened before reading; the tree was read, never installed, and no test or benchmark was run.
