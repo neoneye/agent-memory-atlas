@@ -7,10 +7,13 @@ page_kind: system
 source_name: "Mibayy/token-savior"
 source_url: https://github.com/Mibayy/token-savior
 archive_name: "Mibayy--token-savior"
-revision: e41825f624d3513be7fdfb9146e35d265dbb1b06
-revision_url: https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06
-analyzed_at: 2026-08-09
+revision: 73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f
+revision_url: https://github.com/Mibayy/token-savior/commit/73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced, audit_log"
+capability_evidence:
+  scope_enforced: "file operations — a resolved project root bounding every path, with a fallback worth knowing about | src/token_savior/server_runtime.py:911-919 | `_resolve_project_root` takes the caller project hint, resolves it through the slot manager, and falls back to the first configured workspace root. The scope is applied rather than advertised: operations are bounded by the resolved root. State the last resort with the mark, because it is the widest possible one — when no slot resolves and no workspace root is configured, the function returns `os.path.expanduser(\"~\")`, so an unhinted call in an unconfigured session is scoped to the whole home directory rather than refused | tests in tests/"
+  audit_log: "the JSONL journal — appended per operation and re-read tolerantly | src/token_savior/compact_ops.py:25, src/token_savior/budget_diag.py:129-137 | `append_entry(file_path, status)` writes one line per operation, and `lire_journal` reads the file back line by line with a stated tolerance — an unreadable line is skipped rather than fatal, so one corrupt record cannot cost the whole history. It is an operation record in the tool own store rather than a summary rebuilt from elsewhere | tests in tests/"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -360,5 +363,7 @@ predicate `:207`), `src/token_savior/memory/embeddings.py`,
 **Not in this tree** — the `tsbench` benchmark lives at `Mibayy/tsbench`
 
 ## History
+
+**2026-09-14** — [`73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f`](https://github.com/Mibayy/token-savior/commit/73e9c7f56fd7cd40ecc72cdc4b032264018f8b4f) — re-read, 23 commits past the previous pin; upstream has not moved since 10 August. Both marks stand and both now carry evidence records. The addition worth reading is `tests/test_ts_discipline_guard_refus_unique.py`, whose docstring is a piece of measured self-criticism: on 27 July 2026 three blocking guards were removed from this hook after they blocked correct work four times in one session, two of those on a case the tool cannot handle at all — `replace_symbol_source` covers functions and classes but not a constant or a module dictionary — so the guard forbade the only remaining route. The documented escape hatch lived in the session environment rather than between calls, which in practice meant asking the user to turn the guard off. What replaced them is the contract the test pins: the first call is refused and names the better route, and an identical second call passes, because *"a refusal teaches once; twice, it prevents"* — the line the file draws between a speed bump and a wall. Recorded against `scope_enforced`: `_resolve_project_root` falls back to the home directory when no slot resolves and no workspace root is configured, so the last resort is the widest scope rather than a refusal. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-09** — [`e41825f624d3513be7fdfb9146e35d265dbb1b06`](https://github.com/Mibayy/token-savior/commit/e41825f624d3513be7fdfb9146e35d265dbb1b06) — first reading. Screened before reading: one auto-run surface (`server.json`), build-time execution in two `conftest.py` files, no dependency surface inside the cooldown, `uv.lock` present. The tree was read, never installed, and no test or benchmark was run.
