@@ -7,10 +7,13 @@ page_kind: system
 source_name: "youngbryan97/aura"
 source_url: https://github.com/youngbryan97/aura
 archive_name: "youngbryan97--aura"
-revision: e8866f43c54677d3f2877820cd74cf915af6fbb7
-revision_url: https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7
-analyzed_at: 2026-07-31
+revision: 165f29a83b47362fccf0cddca4b3322fcb597a7a
+revision_url: https://github.com/youngbryan97/aura/commit/165f29a83b47362fccf0cddca4b3322fcb597a7a
+analyzed_at: 2026-09-14
 capabilities: "trust_state, audit_log"
+capability_evidence:
+  trust_state: "the autonomous write path — a contested belief defers an intent that touches its key | core/constitution.py:262, core/executive/executive_core.py:857-866 | `BeliefMutationRecord.status` is `active`, `trusted` or `contested`, set on the record when a contradiction arrives against a belief that has not earned trust. `BeliefAuthority.summary()` partitions on it (`status == 'contested'`, `status == 'trusted'`) and exposes `fresh_contested_keys`; `_get_epistemic_state()` reads that and the gate defers any non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent whose topic matches a contested key, with `_intent_touches_contested_topic` failing closed to the global block when no keys are available. The status filters writes, not reads, and it does not survive a restart | tests/test_contested_belief_gate_is_relevant.py:82, tests/test_reliability_hardening.py:1528"
+  audit_log: "the receipt chain beside the memory store | core/runtime/receipts.py:644-646, core/runtime/audit_chain.py:276 | every receipt the runtime emits gets an append-only link in `root/_chain.jsonl` carrying `seq`, `receipt_id`, `prev_hash` and an `entry_hash` taken over the previous hash, so modification, insertion and deletion all break the chain. `MemoryWriteGateway` emits a `MemoryWriteReceipt` after the write lands (`memory_write_gateway.py:141-152`) and rolls the write back when emission fails; `verify_chain()` re-hashes the on-disk receipt bodies rather than trusting the links, and reports receipts persisted but missing from the chain. This is the system's own store, not git history | tests/test_audit_chain.py — sixteen cases including `test_detects_modified_receipt_body` and `test_exported_chain_can_be_independently_verified`"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -23,7 +26,7 @@ matrix:
   scoping: "`user_id` normalised and carried on chat-turn and episode records; no tenancy boundary and no default scope on recall"
   integration: "A self-hosted daemon with a desktop app, tools, skills, sensors and an autonomy engine — memory is internal, not an exposed service"
   background: "Consolidation, synthesis, defragmentation, scar healing and pruning, all inside the running process"
-  trust: "`active | trusted | contested` on a belief record, with a resolution API and a six-hour contest freshness window — none of it persisted"
+  trust: "`active | trusted | contested` on a belief record, gating autonomous writes that touch a contested key, with a resolution API and a six-hour freshness window — none of it persisted"
   strengths: "A tamper-evident receipt chain that detects modification, insertion and deletion, with sixteen passing tests; and a claims ledger that names what the project cannot prove"
   risks: "The belief ledger is a process-lifetime dictionary, so every trust state resets on restart, and the `contested` flag that is persisted on memory records is read by nothing"
 ---
@@ -31,10 +34,22 @@ matrix:
 ## 1. Executive Summary
 
 Aura is a self-hosted cognitive runtime: 1.1 million lines of Python across
-6,122 files, of which `core/memory/` is about 26,600 lines in eighty modules.
-The test tree holds 21,206 test functions across 1,740 files — the largest suite
-in this atlas by an order of magnitude. Development is active, at 3,966 commits
-since February 2026 with the memory package touched two days before this pin.
+8,658 files, of which `core/memory/` is about 34,800 lines in 115 modules.
+The test tree holds 44,104 test functions across 3,606 files — the largest suite
+in this atlas by an order of magnitude. Development is active, at 9,305 commits
+since February 2026 with the memory package touched the day before this pin.
+
+**Almost none of it was written by a person, and the repository says so in its
+own metadata.** Of those 9,305 commits, 3,980 are authored `Codex`, 3,623
+`Zenflow`, 1,624 `Claude` and 63 `ChatGPT`; eleven carry the owner's name. Run
+`git log --format='%an' | sort | uniq -c | sort -rn` and that is the whole
+table. This bears on how the report reads the tree rather than on whether the
+design is good: a mechanism here can be elaborate, tested and documented and
+still have had no human decide it, which is the most plausible account of the
+three unconnected trust representations described below. It is also why the
+dated incident comments quoted later matter more than usual — they are the
+places where something observed in production, rather than generated, entered
+the code.
 
 **Read the licence before anything else.** `LICENSE` is *all rights reserved*,
 granting permission to read and learn only: no copying, no derivative works, no
@@ -75,9 +90,28 @@ change and the record is stamped `allowed=False` with reason
 path, and a contest expires after six hours under a constant whose comment
 records why it exists.
 
-`self._beliefs` is a plain dictionary (`core/constitution.py:143`). There is no
+**What the status is for is deferring the agent's own writes, and the gate
+records the day it was too blunt.** `executive_core.py:857-866` defers any
+non-user `WRITE_MEMORY` or `UPDATE_BELIEF` intent below priority 0.9 while any
+fresh contest stands, with the reason string
+`epistemic_reconciliation_required:<n>`. It was a global switch, and the
+docstring on `_intent_touches_contested_topic` says what that cost:
+
+> *"The live 2026-07-25 hour deferred 71 autonomous knowledge writes on
+> `epistemic_reconciliation_required:2` — two contested claims blocking every
+> unrelated fact and concept she learned."*
+
+The gate compares the intent's goal, topic, key, namespace and content against
+`fresh_contested_keys` and defers only on a match. Two fallbacks keep it
+conservative: no keys, or nothing in the intent to judge relevance by, and the
+old global behaviour stands. The comment beside `summary()` states the general
+form of the lesson — *"A count can only gate globally … Relevance needs the
+keys"* — which is the rarer half of an epistemic status: knowing not only that
+something is disputed but what it is disputed about.
+
+`self._beliefs` is a plain dictionary (`core/constitution.py:154`). There is no
 `save`, no `load`, no snapshot of it anywhere, and `ConstitutionalCore`
-constructs a fresh `BeliefAuthority()` at line 314. Restart the process and
+constructs a fresh `BeliefAuthority()` at line 364. Restart the process and
 every belief is unknown again at confidence 0.35: what was trusted is no longer
 trusted, what was contested is no longer contested, and the contradiction that
 produced the contest is gone.
@@ -96,7 +130,7 @@ The third finding is what makes the second sting. `MemoryFacade`
 stamps a provenance envelope on **every** long-term memory write — `source`,
 `confidence`, `identity_relevant` and `contested` — with the stated purpose *"so
 downstream readers can distinguish memory from inference / fantasy"*
-(`core/memory/memory_facade.py:1349`). That envelope is persisted with the
+(`core/memory/memory_facade.py:1501`). That envelope is persisted with the
 record. Grep the whole of `core/` for a reader of that field and the only hits
 are the belief ledger's own separate `status` machinery. **The `contested` flag
 that survives a restart is read by nothing; the `contested` status that is read
@@ -621,10 +655,14 @@ the store: [Core Memory](../core-memory/) and [Daimon](../daimon/) both do.
 | `core/memory/retention_policy.py` | RAM-scaled keep-counts per tier |
 | `core/memory/scar_formation.py` | Durable failure markers that heal |
 | `core/memory/provenance.py` | The provenance envelope |
-| `tests/test_audit_chain.py` | 16 tamper-evidence tests; run and passing |
+| `tests/test_audit_chain.py` | 16 tamper-evidence tests |
+| `core/executive/executive_core.py` | The contested-belief gate on autonomous writes (`_intent_touches_contested_topic`) |
+| `tests/test_contested_belief_gate_is_relevant.py` | The relevance case for that gate |
 | `CLAIMS_MATRIX.md`, `CLAIMS_NOT_SUPPORTED.md` | Claims with falsifiers, and the disclaimers |
 | `HUMAN_OVERRIDE_POLICY.md`, `KNOWN_FAILURE_MODES.md` | Operator control and stated failure modes |
 
 ## History
+
+**2026-09-14** — [`165f29a83b47362fccf0cddca4b3322fcb597a7a`](https://github.com/youngbryan97/aura/commit/165f29a83b47362fccf0cddca4b3322fcb597a7a) — second reading, 5,339 commits on. Screened first: no auto-executing surface, nine build-time execution points, two dependency manifests inside the seven-day cooldown; nothing was installed and nothing was run, so unlike the first reading the audit-chain suite was read rather than executed. The pin is an ancestor of `HEAD` and the history was not rewritten — the drift is real, and the authorship table behind it is now in section 1. All three central findings hold at this commit and their line numbers are corrected: `self._beliefs` is still a bare dictionary with no `save` or `load`, `BeliefNode` still has no status field, and the persisted provenance `contested` flag still has no reader. Both marks were re-tested at the producer and both hold, and each now carries the evidence record it had been asserted without; `trust_state` is recorded as guarding the *write* path, which is where the gate sits. The gate itself is the addition: it defers only intents that touch a contested key, under a docstring naming the live hour when the global form deferred 71 unrelated writes.
 
 **2026-07-31** — [`e8866f43c54677d3f2877820cd74cf915af6fbb7`](https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7) — first reading.

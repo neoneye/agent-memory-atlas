@@ -111,14 +111,14 @@ is empty again after a restart.</p>
               <strong>youngbryan97/aura</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7" title="e8866f43c54677d3f2877820cd74cf915af6fbb7">
+            <a class="meta-pill revision-pill" href="https://github.com/youngbryan97/aura/commit/165f29a83b47362fccf0cddca4b3322fcb597a7a" title="165f29a83b47362fccf0cddca4b3322fcb597a7a">
               <span>Analyzed revision</span>
-              <code>e8866f43…</code>
+              <code>165f29a8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/youngbryan97--aura" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -143,11 +143,25 @@ is empty again after a restart.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Aura is a self-hosted cognitive runtime: 1.1 million lines of Python
-across 6,122 files, of which <code>core/memory/</code> is about 26,600
-lines in eighty modules. The test tree holds 21,206 test functions
-across 1,740 files — the largest suite in this atlas by an order of
-magnitude. Development is active, at 3,966 commits since February 2026
-with the memory package touched two days before this pin.</p>
+across 8,658 files, of which <code>core/memory/</code> is about 34,800
+lines in 115 modules. The test tree holds 44,104 test functions across
+3,606 files — the largest suite in this atlas by an order of magnitude.
+Development is active, at 9,305 commits since February 2026 with the
+memory package touched the day before this pin.</p>
+<p><strong>Almost none of it was written by a person, and the repository
+says so in its own metadata.</strong> Of those 9,305 commits, 3,980 are
+authored <code>Codex</code>, 3,623 <code>Zenflow</code>, 1,624
+<code>Claude</code> and 63 <code>ChatGPT</code>; eleven carry the
+owner's name. Run
+<code>git log --format='%an' | sort | uniq -c | sort -rn</code> and that
+is the whole table. This bears on how the report reads the tree rather
+than on whether the design is good: a mechanism here can be elaborate,
+tested and documented and still have had no human decide it, which is
+the most plausible account of the three unconnected trust
+representations described below. It is also why the dated incident
+comments quoted later matter more than usual — they are the places where
+something observed in production, rather than generated, entered the
+code.</p>
 <p><strong>Read the licence before anything else.</strong>
 <code>LICENSE</code> is <em>all rights reserved</em>, granting
 permission to read and learn only: no copying, no derivative works, no
@@ -196,11 +210,32 @@ record is stamped <code>allowed=False</code> with reason
 <code>reconcile(affirmed | retired)</code> is the resolution path, and a
 contest expires after six hours under a constant whose comment records
 why it exists.</p>
+<p><strong>What the status is for is deferring the agent's own writes,
+and the gate records the day it was too blunt.</strong>
+<code>executive_core.py:857-866</code> defers any non-user
+<code>WRITE_MEMORY</code> or <code>UPDATE_BELIEF</code> intent below
+priority 0.9 while any fresh contest stands, with the reason string
+<code>epistemic_reconciliation_required:&lt;n&gt;</code>. It was a
+global switch, and the docstring on
+<code>_intent_touches_contested_topic</code> says what that cost:</p>
+<blockquote>
+<p><em>"The live 2026-07-25 hour deferred 71 autonomous knowledge writes
+on <code>epistemic_reconciliation_required:2</code> — two contested
+claims blocking every unrelated fact and concept she learned."</em></p>
+</blockquote>
+<p>The gate compares the intent's goal, topic, key, namespace and
+content against <code>fresh_contested_keys</code> and defers only on a
+match. Two fallbacks keep it conservative: no keys, or nothing in the
+intent to judge relevance by, and the old global behaviour stands. The
+comment beside <code>summary()</code> states the general form of the
+lesson — <em>"A count can only gate globally … Relevance needs the
+keys"</em> — which is the rarer half of an epistemic status: knowing not
+only that something is disputed but what it is disputed about.</p>
 <p><code>self._beliefs</code> is a plain dictionary
-(<code>core/constitution.py:143</code>). There is no <code>save</code>,
+(<code>core/constitution.py:154</code>). There is no <code>save</code>,
 no <code>load</code>, no snapshot of it anywhere, and
 <code>ConstitutionalCore</code> constructs a fresh
-<code>BeliefAuthority()</code> at line 314. Restart the process and
+<code>BeliefAuthority()</code> at line 364. Restart the process and
 every belief is unknown again at confidence 0.35: what was trusted is no
 longer trusted, what was contested is no longer contested, and the
 contradiction that produced the contest is gone.</p>
@@ -223,7 +258,7 @@ nothing.</p>
 <code>confidence</code>, <code>identity_relevant</code> and
 <code>contested</code> — with the stated purpose <em>"so downstream
 readers can distinguish memory from inference / fantasy"</em>
-(<code>core/memory/memory_facade.py:1349</code>). That envelope is
+(<code>core/memory/memory_facade.py:1501</code>). That envelope is
 persisted with the record. Grep the whole of <code>core/</code> for a
 reader of that field and the only hits are the belief ledger's own
 separate <code>status</code> machinery. <strong>The
@@ -871,7 +906,16 @@ to anyone who accepts the licence's read-only terms.</li>
 </tr>
 <tr>
 <td><code>tests/test_audit_chain.py</code></td>
-<td>16 tamper-evidence tests; run and passing</td>
+<td>16 tamper-evidence tests</td>
+</tr>
+<tr>
+<td><code>core/executive/executive_core.py</code></td>
+<td>The contested-belief gate on autonomous writes
+(<code>_intent_touches_contested_topic</code>)</td>
+</tr>
+<tr>
+<td><code>tests/test_contested_belief_gate_is_relevant.py</code></td>
+<td>The relevance case for that gate</td>
 </tr>
 <tr>
 <td><code>CLAIMS_MATRIX.md</code>,
@@ -886,6 +930,25 @@ to anyone who accepts the licence's read-only terms.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/youngbryan97/aura/commit/165f29a83b47362fccf0cddca4b3322fcb597a7a"><code class="commit-id" title="165f29a83b47362fccf0cddca4b3322fcb597a7a">165f29a8…</code></a>
+— second reading, 5,339 commits on. Screened first: no auto-executing
+surface, nine build-time execution points, two dependency manifests
+inside the seven-day cooldown; nothing was installed and nothing was
+run, so unlike the first reading the audit-chain suite was read rather
+than executed. The pin is an ancestor of <code>HEAD</code> and the
+history was not rewritten — the drift is real, and the authorship table
+behind it is now in section 1. All three central findings hold at this
+commit and their line numbers are corrected: <code>self._beliefs</code>
+is still a bare dictionary with no <code>save</code> or
+<code>load</code>, <code>BeliefNode</code> still has no status field,
+and the persisted provenance <code>contested</code> flag still has no
+reader. Both marks were re-tested at the producer and both hold, and
+each now carries the evidence record it had been asserted without;
+<code>trust_state</code> is recorded as guarding the <em>write</em>
+path, which is where the gate sits. The gate itself is the addition: it
+defers only intents that touch a contested key, under a docstring naming
+the live hour when the global form deferred 71 unrelated writes.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/youngbryan97/aura/commit/e8866f43c54677d3f2877820cd74cf915af6fbb7"><code class="commit-id" title="e8866f43c54677d3f2877820cd74cf915af6fbb7">e8866f43…</code></a>
 — first reading.</p>
