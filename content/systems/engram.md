@@ -7,10 +7,12 @@ page_kind: system
 source_name: Gentleman-Programming/engram
 source_url: https://github.com/Gentleman-Programming/engram
 archive_name: "Gentleman-Programming--engram"
-revision: 509e6762fdd9417ff7a39d30f426a9566220eaf0
-revision_url: https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0
-analyzed_at: 2026-08-06
-capabilities: "scope_enforced, human_review"
+revision: fa222a060a34668048222d18011fe12c7d9140ab
+revision_url: https://github.com/Gentleman-Programming/engram/commit/fa222a060a34668048222d18011fe12c7d9140ab
+analyzed_at: 2026-09-14
+capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "candidate and recall queries — project and scope as stored columns AND-ed into the SQL | internal/store/relations.go:369-372, :1076 | an observation carries `project`, `scope`, `session_id` and `topic_key`, and the conflict-candidate query reads the saved row back specifically to build its filter, then narrows the FTS join with `ifnull(o.project,'') = ifnull(?,'')` and `AND o.scope = ?`. The keys are on the row and the predicate is in the query rather than applied to results afterwards. A separate test pins the behaviour of an unscoped call, so the widening case is described rather than assumed | internal/store/relations_bm25_test.go:19, internal/store/legacy_null_project_test.go:87"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -143,6 +145,17 @@ Context path:
 - `FormatContext()` in `store.go`.
 - Combines recent sessions, pinned observations, recent unpinned observations, and recent prompts.
 - MCP `mem_context` exposes this to agents.
+
+**The adjudicator is the agent, not a person, and that is why `human_review` is
+not earned here.** The judgment operation is real — `JudgeRelation` in the store,
+reachable as the `mem_judge` MCP tool and as `POST /conflicts/judge` — but every
+surface a person actually has is read-only. The TUI renders an observation's
+review date, pinned flag and state and offers no verdict, pin or delete action on
+it; `engram conflicts` has `list`, `show`, `stats`, `scan` and `deferred` and no
+`judge`; there is no web UI in the tree, and the only callers of the HTTP
+endpoint are its own tests. The MCP guidance is explicit about who resolves a
+conflict: *"After mem_save: if judgment_required, iterate candidates[] and call
+mem_judge."* A person can watch the queue and cannot act on it.
 
 Conflict/relation path:
 
@@ -330,6 +343,8 @@ Avoid copying if your target is consumer chat personalization or multi-tenant ho
 - Tests: `engram/internal/**/*_test.go`.
 
 ## History
+
+**2026-09-14** — [`fa222a060a34668048222d18011fe12c7d9140ab`](https://github.com/Gentleman-Programming/engram/commit/fa222a060a34668048222d18011fe12c7d9140ab) — re-read, 428 commits past the previous pin across 493 files. **`human_review` is withdrawn.** The mark had been carried through two readings on the existence of a judgment step rather than on a producer check against the approver, which is the test it asks for. `JudgeRelation` is real and reachable two ways — the `mem_judge` MCP tool and `POST /conflicts/judge` — but no shipped surface lets a person use either: the TUI renders review date, pinned flag and state with no verdict, pin or delete action on an observation; `engram conflicts` offers `list`, `show`, `stats`, `scan` and `deferred` and no `judge`; there is no web UI in the tree; and the HTTP endpoint's only callers are its own tests. The MCP instructions name the adjudicator directly — after `mem_save`, the agent iterates the candidates and calls `mem_judge`. A person can watch the queue and cannot act on it, which is the display-only case the mark excludes. `scope_enforced` stands and now carries an evidence record: project and scope are columns on the observation and predicates in the candidate query rather than filters applied to results. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-06** — [`509e6762fdd9417ff7a39d30f426a9566220eaf0`](https://github.com/Gentleman-Programming/engram/commit/509e6762fdd9417ff7a39d30f426a9566220eaf0) — 39 commits on, and retrieval moved. `#526` replaces the FTS5 default ranking with weighted BM25; `#586` escapes interior double-quotes in `sanitizeFTS` after they crashed FTS5, which is the kind of input a note containing a quoted string produces routinely; `#616` stops duplicate observations on import; `#600` materialises relation mutations on chunk-ingest. Beside them a cloud settings screen, an MCP project override for `mem_session_summary`, and a session delete confirmation in the TUI. The write and correction semantics this report describes are unchanged and no published claim is stale; the ranking function under them is not the one that was read. Both marks re-checked and neither moves. Screened again: 1 auto-run surface (`.devcontainer/devcontainer.json`), 2 build-time exec paths, nothing inside the cooldown.
 

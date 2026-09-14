@@ -9,16 +9,16 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 348 of 455 screened at the report's current pin.**
+**Progress: 349 of 455 screened at the report's current pin.**
 
-10 further record(s) describe a revision the report has since moved
+9 further record(s) describe a revision the report has since moved
 off, and 97 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 140 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 176 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 177 |
 | Repositories with build-time execution (`EXEC`) | 259 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -63,7 +63,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`ecc`](../../content/systems/ecc.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
-| [`engram`](../../content/systems/engram.md) | `.devcontainer/devcontainer.json` |
+| [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
