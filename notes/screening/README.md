@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 349 of 455 screened at the report's current pin.**
+**Progress: 350 of 455 screened at the report's current pin.**
 
 9 further record(s) describe a revision the report has since moved
-off, and 97 report(s) have no record at all.
+off, and 96 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 140 |
+| Repositories with an auto-run surface (`RUNS`) | 141 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 177 |
-| Repositories with build-time execution (`EXEC`) | 259 |
+| Repositories with build-time execution (`EXEC`) | 260 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -132,6 +132,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
+| [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
