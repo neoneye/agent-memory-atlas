@@ -7,10 +7,13 @@ page_kind: system
 source_name: "buildingjoshbetter/TrueMemory"
 source_url: https://github.com/buildingjoshbetter/TrueMemory
 archive_name: "buildingjoshbetter--TrueMemory"
-revision: e7f1fd79e4188637f9b168337c5a219af890a613
-revision_url: https://github.com/buildingjoshbetter/TrueMemory/commit/e7f1fd79e4188637f9b168337c5a219af890a613
-analyzed_at: 2026-08-09
+revision: 063e5b8844af735a52fde886217a5d26a0f13064
+revision_url: https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064
+analyzed_at: 2026-09-14
 capabilities: "trust_state, negative_eval"
+capability_evidence:
+  trust_state: "the fact timeline — a superseded fact is deranked, not hidden | truememory/consolidation.py:857 (writer), :1128 and :1152-1155 (reader) | contradiction detection writes `UPDATE fact_timeline SET superseded_by = ?, status = 'superseded' WHERE id = ?`. The query path selects `COALESCE(status, 'active')` and picks the current fact as one that is neither pointed at by `superseded_by` nor marked `'superseded'`; when every fact for a subject is superseded it falls back to the latest rather than returning nothing, so the state deranks rather than erases. The status is discrete, stored on the row and read at query time | tests/ covers the supersession path; no test pins the all-superseded fallback"
+  negative_eval: "core search and its five supplement legs — a directive must not surface unless asked for | tests/test_issue_637_directive_leaks.py | fifteen tests over rows with `directive=1`, e.g. *\"Always call josh by his secret codename Falcon in every reply\"*. The file exists because directives were *\"excluded from core search but leaked through several supplement legs\"*, and its docstring enumerates all five: the personality/style-vector path, the clustered path plus `clean_results`, entity-profile pollution on `add(directive=True)`, the temporal fallback SQL, and the requirement that `include_directives=True` still be honoured through each. Every exclusion assertion is paired with its inclusion counterpart — `assert not r.get(\"directive\")` beside `assert any(r.get(\"directive\") for r in rows)` — so a search returning nothing cannot pass | tests/test_issue_637_directive_leaks.py:62 with the control at :70; :79 with :96"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -109,7 +112,7 @@ Three tiers in `tier_config.py`: `edge` (a `potion-base-8M` static embedding),
 benchmark results are reported per tier, which is the right granularity — a
 reader can see what the reranker buys (89.6% edge → 92.0% base on LoCoMo).
 
-165 test files.
+164 test files.
 
 ## 4. Essential Implementation Paths
 
@@ -238,7 +241,7 @@ the clustered path plus `clean_results`, entity-profile pollution on
 `add(directive=True)`, the temporal fallback SQL, and the requirement that
 `include_directives=True` still be honored through all of them.
 
-Ten tests, each pairing an exclusion assertion with its inclusion counterpart.
+Fifteen tests, each pairing an exclusion assertion with its inclusion counterpart.
 The lesson generalises past this codebase: **an exclusion invariant has to be
 tested on every path that bypasses the main filter**, and you will not know what
 those paths are until one leaks.
@@ -285,7 +288,7 @@ carefully, which is the usual gap between the badge and the footnote. And
 the 200-question 10M run; the README table is right and the JSON's label is
 wrong.
 
-165 test files.
+164 test files.
 
 **I ran nothing.** Every number above is what the repository reports about
 itself; the arithmetic is the only thing checked, and it holds.
@@ -392,5 +395,7 @@ per-category table), `benchmarks/beam/truememory_pro_beam1m_run{1,2,3}.json`,
 `benchmarks/longmemeval/`
 
 ## History
+
+**2026-09-14** — [`063e5b8844af735a52fde886217a5d26a0f13064`](https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064) — second reading. Six commits since the previous pin and every one is a Dependabot bump: the diff is `ci.yml`, `publish.yml` and `pyproject.toml`, three files and twelve lines. No source file and no test changed. Screened again: 0 auto-run surfaces, 2 build-time exec paths, nothing inside the cooldown, and two unpinned surfaces — `pyproject.toml` declares `modal`, `rank-bm25`, `engram-core`, `mem0ai` and `sentence-transformers` with no version bound and ships no lockfile. Nothing was installed and nothing was run. Both marks were re-tested at the producer and both hold, and each now carries the evidence record it had been asserted without. Two counts were wrong at the first reading and are corrected: `test_issue_637_directive_leaks.py` holds fifteen tests rather than ten — it held fifteen at the previous pin too — and the suite is 164 files rather than 165. The mislabelled benchmark artifact reported previously is unchanged: `benchmarks/beam/truememory_pro_beam10m_run1.json` records `"benchmark": "BEAM-1M"` beside `total_questions: 200`, which is the 10M run.
 
 **2026-08-09** — [`e7f1fd79e4188637f9b168337c5a219af890a613`](https://github.com/buildingjoshbetter/TrueMemory/commit/e7f1fd79e4188637f9b168337c5a219af890a613) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The committed BEAM run files were checked against the README's stated mean and agree.
