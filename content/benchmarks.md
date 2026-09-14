@@ -159,12 +159,14 @@ to a gitignored directory, so the atlas can verify the *method* but not any
 
 ### Read directly, at a pinned commit
 
-Five benchmarks were checked out and read rather than described from their
+Six benchmarks were checked out and read rather than described from their
 papers, because the literature makes a specific claim about the first of them
 that the code does not support, because the third turns out to hold the nearest
 thing to a forgetting test anyone has written, because the fourth is titled
-as though it were the benchmark this page says does not exist, and because the
-fifth is cited throughout this atlas and had never been read at a commit.
+as though it were the benchmark this page says does not exist, because the
+fifth is cited throughout this atlas and had never been read at a commit, and
+because the sixth asks most of the questions this page says nobody asks —
+and is written by the author of the system it ranks first.
 
 | Benchmark | Commit read | What the code does |
 | --- | --- | --- |
@@ -173,6 +175,7 @@ fifth is cited throughout this atlas and had never been read at a commit.
 | **GoodAI LTM Benchmark** ([GoodAI/goodai-ltm-benchmark](https://github.com/GoodAI/goodai-ltm-benchmark)) | [`188e7618413775f1ce783763d5ee0b5ccd4c31c9`](https://github.com/GoodAI/goodai-ltm-benchmark/commit/188e7618413775f1ce783763d5ee0b5ccd4c31c9), 17 Dec 2024 | Twenty datasets including prospective memory and theory of mind, with committed HTML result reports. Seven declare a "forget this" reset message that is sent and never scored |
 | **PersistBench** ([ivaxi0s/PersistBench](https://github.com/ivaxi0s/PersistBench)) | [`302ea2ff2cfce97e9458a9897a10b67a2c1d479f`](https://github.com/ivaxi0s/PersistBench/commit/302ea2ff2cfce97e9458a9897a10b67a2c1d479f), 16 Feb 2026 | 500 committed items asking whether a model *applies* a memory it should not. Not a deletion test — see below |
 | **LongMemEval** ([xiaowu0162/longmemeval](https://github.com/xiaowu0162/longmemeval)) | [`9e0b455f4ef0e2ab8f2e582289761153549043fc`](https://github.com/xiaowu0162/longmemeval/commit/9e0b455f4ef0e2ab8f2e582289761153549043fc), 11 May 2026 | 500 questions over timestamped chat histories, graded by an LLM judge. Six question types, three different accuracies, and a dataset the repository does not contain — see below |
+| **KnowledgeDrift** ([techtheist/knowledgedrift](https://github.com/techtheist/knowledgedrift)) | [`402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde`](https://github.com/techtheist/knowledgedrift/commit/402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde), 14 Sept 2026 | Offline and judge-free over invented software-project knowledge: re-decision, contradiction, deletion, lineage and token cost, with committed per-seed results and a chance floor. Its top arm is its author's own system — see below |
 
 MemoryArena is the more interesting *design* — it scores whether a later session
 can be completed at all given what an earlier one stored, which is closer to
@@ -310,6 +313,73 @@ read, so a result file can be complete in every other respect and still not say
 file, and the harness gives them no field in which to do it.**
 [LongMemEval-V2](https://github.com/xiaowu0162/LongMemEval-V2), announced May
 2026, is a separate repository and a separate benchmark.
+
+#### KnowledgeDrift asks this page's questions, and ranks its own author first
+
+[KnowledgeDrift](https://github.com/techtheist/knowledgedrift)
+([`402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde`](https://github.com/techtheist/knowledgedrift/commit/402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde),
+14 September 2026, MIT, three commits old at this reading) is the closest thing
+yet published to the benchmark the rest of this section says is missing. It
+pours one seeded world of invented project knowledge through a ten-operation
+protocol, then asks the questions this page argues nobody asks: *is the note you
+found the current one or the one we re-decided; did you notice these two
+disagree; is this still here after I told you to forget it, and do you know why
+it left; why did we decide that; how much did the reader have to read.* Every
+probe has a pass/fail rule fixed before the question. **Nothing in the loop is a
+language model**, which puts it on the other side of the judge-variance problem
+described below, and it takes two rules from
+[ForgetEval](#forgeteval--the-one-benchmark-that-scores-the-control-plane)
+by name: a system declares its capabilities and a family needing a missing one is
+marked N/A with a reason rather than scored as a silent zero, and every mutation
+names its target so the harness measures the mutation rather than the resolver.
+
+The engineering controls are real and worth copying. Each result file carries a
+`script_digest`, so two arms are verifiably answering the same script; each
+carries `embeddings_are_fake`, because the harness will run with a deterministic
+fake embedder and the authors wanted a receipt saying when it did — the committed
+v1 results all read `false` against `bge-small-en-v1.5`. There is a `chance` arm
+scoring 0.043, which is the floor control most benchmarks on this page omit.
+
+**And the arm it ranks first is the author's own system.** `src/arms/mod.rs`
+calls its contents *"the product, and the baselines every claim is measured
+against"*; `src/arms/engram.rs` opens *"The product under test"* and drives
+[Engram Alpha](../systems/engram-alpha/) in-process as a linked Rust crate
+pinned to one commit — checked writes, `replaces` edges, tombstoned deletes,
+the conflict sweep at every session boundary. Mem0 and LangMem do not live
+there: they *"replay the exported script and are graded from their
+transcript"*. That is a fair thing to build and an unfair thing to read as a
+like-for-like ranking, and the atlas's standing observation applies — a
+comparison run by one of the entrants is measuring "them" against "them plus
+us".
+
+Read the composite rather than the headline, and the gap changes size. The
+committed 500-fact seeds put Engram at 0.82–0.85 success and 0.90–0.92
+composite against 0.61–0.66 and about 0.47 for vector top-k; that is a real
+lead, roughly 1.9× on the composite. The headline `score` reports 511–543
+against about 52, a tenfold gap, because `score = 100 × composite ×
+clamp(10·S, 0.1, 10)` where `S` is the share of delivered tokens belonging to
+the answering record — 0.57 for the in-process arm against 0.11 for the
+adapters. `docs/scoring.md` says so without being asked: the multiplier is
+*"a stated sketch, not a measurement of anything but token counts"*, printed
+beside the unmultiplied composite *"so a reader can take it or leave it"*.
+Take it or leave it, but do not quote the tenfold number as a memory-quality
+result; it is mostly a token-efficiency result, and the arm holding the whole
+file in context scores 0.71 success and 4.9 overall for exactly that reason.
+
+Two findings survive the caveat, because neither depends on the ranked system.
+LangMem 0.0.30's store-plus-semantic-index scores within noise of a plain
+vector top-k baseline on every seed — 0.6296 against 0.630 at seed 1 — which
+is a result about LangMem that the harness's own baseline produces. And the
+curated-3,000-token arm reaches 0.087, against 0.71 for the whole file: on this
+corpus, hand-curating a context window is worse than not curating it, and far
+worse than retrieving into it.
+
+The comparison this page cannot resist is with ForgetEval, whose author's own
+system [placed third of three](../systems/lethe/) with confidence intervals and
+an explicit refusal to declare a winner. Same structural conflict, opposite
+outcome, and the difference between them is not in the honesty of the
+documentation — KnowledgeDrift's is unusually candid — but in what the
+published headline does with it.
 
 #### The control that proves a metric can still fail
 

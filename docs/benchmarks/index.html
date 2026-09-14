@@ -369,13 +369,15 @@ scoreboard is written to a gitignored directory, so the atlas can verify
 the <em>method</em> but not any <em>number</em>.</p>
 <h3 id="read-directly-at-a-pinned-commit">Read directly, at a pinned
 commit</h3>
-<p>Five benchmarks were checked out and read rather than described from
+<p>Six benchmarks were checked out and read rather than described from
 their papers, because the literature makes a specific claim about the
 first of them that the code does not support, because the third turns
 out to hold the nearest thing to a forgetting test anyone has written,
 because the fourth is titled as though it were the benchmark this page
-says does not exist, and because the fifth is cited throughout this
-atlas and had never been read at a commit.</p>
+says does not exist, because the fifth is cited throughout this atlas
+and had never been read at a commit, and because the sixth asks most of
+the questions this page says nobody asks — and is written by the author
+of the system it ranks first.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -432,6 +434,17 @@ href="https://github.com/xiaowu0162/longmemeval/commit/9e0b455f4ef0e2ab8f2e58228
 <td>500 questions over timestamped chat histories, graded by an LLM
 judge. Six question types, three different accuracies, and a dataset the
 repository does not contain — see below</td>
+</tr>
+<tr>
+<td><strong>KnowledgeDrift</strong> (<a
+href="https://github.com/techtheist/knowledgedrift">techtheist/knowledgedrift</a>)</td>
+<td><a
+href="https://github.com/techtheist/knowledgedrift/commit/402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde"><code class="commit-id" title="402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde">402b90d9…</code></a>,
+14 Sept 2026</td>
+<td>Offline and judge-free over invented software-project knowledge:
+re-decision, contradiction, deletion, lineage and token cost, with
+committed per-seed results and a chance floor. Its top arm is its
+author's own system — see below</td>
 </tr>
 </tbody>
 </table></div>
@@ -587,6 +600,81 @@ in which to do it.</strong> <a
 href="https://github.com/xiaowu0162/LongMemEval-V2">LongMemEval-V2</a>,
 announced May 2026, is a separate repository and a separate
 benchmark.</p>
+<h4
+id="knowledgedrift-asks-this-pages-questions-and-ranks-its-own-author-first">KnowledgeDrift
+asks this page's questions, and ranks its own author first</h4>
+<p><a
+href="https://github.com/techtheist/knowledgedrift">KnowledgeDrift</a>
+(<a
+href="https://github.com/techtheist/knowledgedrift/commit/402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde"><code class="commit-id" title="402b90d98c7ced7822d8ffd1e0aa1543d6a0fcde">402b90d9…</code></a>,
+14 September 2026, MIT, three commits old at this reading) is the
+closest thing yet published to the benchmark the rest of this section
+says is missing. It pours one seeded world of invented project knowledge
+through a ten-operation protocol, then asks the questions this page
+argues nobody asks: <em>is the note you found the current one or the one
+we re-decided; did you notice these two disagree; is this still here
+after I told you to forget it, and do you know why it left; why did we
+decide that; how much did the reader have to read.</em> Every probe has
+a pass/fail rule fixed before the question. <strong>Nothing in the loop
+is a language model</strong>, which puts it on the other side of the
+judge-variance problem described below, and it takes two rules from <a
+href="#forgeteval--the-one-benchmark-that-scores-the-control-plane">ForgetEval</a>
+by name: a system declares its capabilities and a family needing a
+missing one is marked N/A with a reason rather than scored as a silent
+zero, and every mutation names its target so the harness measures the
+mutation rather than the resolver.</p>
+<p>The engineering controls are real and worth copying. Each result file
+carries a <code>script_digest</code>, so two arms are verifiably
+answering the same script; each carries
+<code>embeddings_are_fake</code>, because the harness will run with a
+deterministic fake embedder and the authors wanted a receipt saying when
+it did — the committed v1 results all read <code>false</code> against
+<code>bge-small-en-v1.5</code>. There is a <code>chance</code> arm
+scoring 0.043, which is the floor control most benchmarks on this page
+omit.</p>
+<p><strong>And the arm it ranks first is the author's own
+system.</strong> <code>src/arms/mod.rs</code> calls its contents
+<em>"the product, and the baselines every claim is measured
+against"</em>; <code>src/arms/engram.rs</code> opens <em>"The product
+under test"</em> and drives <a href="../systems/engram-alpha/">Engram
+Alpha</a> in-process as a linked Rust crate pinned to one commit —
+checked writes, <code>replaces</code> edges, tombstoned deletes, the
+conflict sweep at every session boundary. Mem0 and LangMem do not live
+there: they <em>"replay the exported script and are graded from their
+transcript"</em>. That is a fair thing to build and an unfair thing to
+read as a like-for-like ranking, and the atlas's standing observation
+applies — a comparison run by one of the entrants is measuring "them"
+against "them plus us".</p>
+<p>Read the composite rather than the headline, and the gap changes
+size. The committed 500-fact seeds put Engram at 0.82–0.85 success and
+0.90–0.92 composite against 0.61–0.66 and about 0.47 for vector top-k;
+that is a real lead, roughly 1.9× on the composite. The headline
+<code>score</code> reports 511–543 against about 52, a tenfold gap,
+because <code>score = 100 × composite × clamp(10·S, 0.1, 10)</code>
+where <code>S</code> is the share of delivered tokens belonging to the
+answering record — 0.57 for the in-process arm against 0.11 for the
+adapters. <code>docs/scoring.md</code> says so without being asked: the
+multiplier is <em>"a stated sketch, not a measurement of anything but
+token counts"</em>, printed beside the unmultiplied composite <em>"so a
+reader can take it or leave it"</em>. Take it or leave it, but do not
+quote the tenfold number as a memory-quality result; it is mostly a
+token-efficiency result, and the arm holding the whole file in context
+scores 0.71 success and 4.9 overall for exactly that reason.</p>
+<p>Two findings survive the caveat, because neither depends on the
+ranked system. LangMem 0.0.30's store-plus-semantic-index scores within
+noise of a plain vector top-k baseline on every seed — 0.6296 against
+0.630 at seed 1 — which is a result about LangMem that the harness's own
+baseline produces. And the curated-3,000-token arm reaches 0.087,
+against 0.71 for the whole file: on this corpus, hand-curating a context
+window is worse than not curating it, and far worse than retrieving into
+it.</p>
+<p>The comparison this page cannot resist is with ForgetEval, whose
+author's own system <a href="../systems/lethe/">placed third of
+three</a> with confidence intervals and an explicit refusal to declare a
+winner. Same structural conflict, opposite outcome, and the difference
+between them is not in the honesty of the documentation —
+KnowledgeDrift's is unusually candid — but in what the published
+headline does with it.</p>
 <h4 id="the-control-that-proves-a-metric-can-still-fail">The control
 that proves a metric can still fail</h4>
 <p>Every negative result on this page rests on a metric that could have
