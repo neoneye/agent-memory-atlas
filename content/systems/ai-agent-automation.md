@@ -7,12 +7,13 @@ page_kind: system
 source_name: "vmDeshpande/ai-agent-automation"
 source_url: https://github.com/vmDeshpande/ai-agent-automation
 archive_name: "vmDeshpande--ai-agent-automation"
-revision: 984893ca0645b885717157eb8815c4caaa648bee
-revision_url: https://github.com/vmDeshpande/ai-agent-automation/commit/984893ca0645b885717157eb8815c4caaa648bee
-analyzed_at: 2026-08-23
-capabilities: "scope_enforced"
+revision: 86b6072dd4c9bf6abe68c26c4265b3296a368737
+revision_url: https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737
+analyzed_at: 2026-09-14
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "the agent memory collection, both read paths | backend/src/services/memoryService.js `retrieveMemory`, backend/src/controllers/memory.controller.js `findOwnedAgent` | recall queries `AgentMemory.find({agentId: agent._id, 'metadata.type': 'conversation'})`, so the agent key is a predicate on the query rather than a tag on the row, and an agent can only ever score its own memories. The management API adds an ownership layer above it: `findOwnedAgent(agentId, userId)` resolves the agent against the caller before any listing or delete, and a listing with no agent specified falls back to `agentId: {$in: ownedAgentIds}` rather than to everything. The mark measures the read path and both read paths carry the key | none — the test directory has no memory suite, and the one test naming memory is `'should simulate an LLM execution without memory'`"
+  scope_enforced: "the agent memory collection, both read paths, with ownership asserted in the service | backend/src/services/memoryService.js:111-130 `retrieveMemory` and :28-45 `assertAgentOwnership`, backend/src/controllers/memory.controller.js `findOwnedAgent` | recall queries `AgentMemory.find({agentId: agent._id, 'metadata.type': 'conversation'})`, so the agent key is a predicate on the query rather than a tag on the row. Above it, `retrieveMemory(agent, queryText, userId, …)` calls `assertAgentOwnership(agent, userId)` before issuing any query, resolving the agent against the caller with `Agent.findOne({_id, userId})` and throwing `FORBIDDEN` when it does not match; a missing, null or empty `userId` throws `USER_CONTEXT_REQUIRED` rather than defaulting. The management API keeps its own layer, and a listing with no agent specified falls back to `agentId: {$in: ownedAgentIds}` rather than to everything | backend/src/tests/memoryService.handler.test.js — ten cases over the isolation boundary"
+  negative_eval: "the recall read path — one user's agent memory must not be reachable by another, and must not even be queried | backend/src/tests/memoryService.handler.test.js:49-70 | the suite `memoryService.retrieveMemory — cross-user isolation (H-P1-7)` pairs *'User A can retrieve memory belonging to User A agent'*, which asserts a result comes back and that the ownership lookup ran with the right pair, against *'User A CANNOT retrieve memory belonging to User B agent'*, which asserts the call rejects with `FORBIDDEN` and then that `AgentMemory.find` was never called at all — a stronger claim than an empty result, since it pins that the data was not read rather than that it was filtered afterwards. Eight further cases cover a forged agent, a non-existent one, undefined, null and empty user contexts, a stringified id, and a stale positional call. The suite mocks the Mongoose layer, so it pins the service's control flow rather than the database's behaviour | the positive control is at :50-58; the must-not assertions at :60-70"
 stack_storage: "mongo"
 stack_retrieval: "vector"
 stack_source: "reviewed"
@@ -27,7 +28,7 @@ matrix:
   background: "None for memory. Retention runs inline on every write"
   trust: "None. No status, no confidence, no provenance beyond which provider and model produced the vector"
   strengths: "The row records the embedding provider and model beside the vector, so a store cannot silently mix embeddings from two models and compare them"
-  risks: "`minScore` is a parameter with no consumer and a caller passes 0.45 to it, so every top-*k* hit reaches the prompt however badly it scored; the retention pass counts all types and deletes only one; and every retrieval logs its results, content preview included, to stdout"
+  risks: "`minScore` is a parameter with no consumer, so every top-*k* hit reaches the prompt however badly it scored; the retention pass counts all types and deletes only one; and every retrieval logs its results, content preview included, to stdout"
 ---
 
 ## 1. Executive Summary
@@ -47,13 +48,15 @@ agent memory on this atlas's terms, and it earns `scope_enforced` on a clean
 
 **Three findings, and the first is the kind this atlas exists to catch.**
 
-`retrieveMemory(agent, queryText, topK = 5, minScore = 0.45)` declares a
+`retrieveMemory(agent, queryText, userId, topK = 5, minScore = 0.45)` declares a
 similarity floor. The body scores, sorts and slices, and **never reads
 `minScore`**. A grep of the whole backend finds the identifier on exactly one
-line — the signature. Meanwhile `agent.controller.js:134` calls
-`retrieveMemory(agent, prompt, 5, 0.45)`, passing the floor explicitly. So a
-caller believes it is filtering by relevance, and the fifth-best match in a five-hundred-row cap reaches the prompt at whatever
-cosine it happened to score.
+line — the signature. The function was rewritten around it: a `userId` parameter
+was inserted before it, an ownership assertion added above it, a fail-closed
+guard added for stale callers, and 126 lines changed in the file. The dead
+parameter came through untouched, which is the ordinary way a declaration
+outlives the intent behind it. So the fifth-best match in a five-hundred-row cap
+reaches the prompt at whatever cosine it happened to score.
 
 **The retention pass counts one set and deletes from another.** It calls
 `countDocuments({agentId})` across every memory type, computes
@@ -107,7 +110,7 @@ cap.
 flowchart TD
 %% caption: two workflow handlers bracket their model call with recall and store, and the recall function declares a similarity floor its body never reads — so the caller that passes 0.45 gets every top-k hit regardless of score
     RUN["workflow run"] --> H["llm.handler<br/>agentCall.handler"]
-    H --> RET["retrieveMemory(agent, prompt, topK, minScore)"]
+    H --> RET["retrieveMemory(agent, prompt, userId, topK, minScore)"]
     DB[("AgentMemory<br/>MongoDB")] --> RET
     RET --> SCAN["find all rows for agentId<br/>type = conversation"]
     SCAN --> COS["cosineSimilarity in JS<br/>per row"]
@@ -236,16 +239,28 @@ stays on. It is three lines to remove and it is the first thing to remove.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Twenty test files under `backend/src/tests`, covering handlers — browser,
-condition, delay, document, email, file, HTTP, MCP, tool, switch, resume, run
-partial — plus the workflow API, versioning, the strategy selector and a
-retrieval manager. I did not run them.
+Test files under `backend/src/tests` cover handlers — browser, condition, delay,
+document, email, file, HTTP, MCP, tool, switch, resume, run partial — plus the
+workflow API, versioning, the strategy selector, a retrieval manager, and three
+added since the previous pin for SSRF protection, webhook payload size and
+workflow validation. I did not run them; a dependency surface was inside the
+seven-day cooldown.
 
-**None of them covers memory.** The word appears in one test title, `'should
-simulate an LLM execution without memory'`, which asserts the path that skips it.
-So the unread `minScore`, the retention arithmetic and the type filter are all
-untested, which is consistent with how they got this way — each is invisible to
-anything that does not read the function.
+**One of them covers memory, and it covers the boundary rather than the
+mechanics.** `memoryService.handler.test.js` is ten cases named
+*"cross-user isolation (H-P1-7)"*: one positive control, then a cross-user call
+that must reject with `FORBIDDEN` **and** must not issue the memory query at all
+— `expect(AgentMemory.find).not.toHaveBeenCalled()` — then a forged agent, a
+non-existent one, undefined, null and empty user contexts, a stringified id, and
+a stale positional call. It earns `negative_eval`, and it is the right shape: the
+must-not assertion is paired with a control, and it pins that the data was never
+read rather than that it was filtered after reading. The Mongoose layer is
+mocked, so what it pins is the service's control flow.
+
+What it does not cover is the arithmetic. The unread `minScore`, the retention
+count-versus-delete mismatch and the type filter remain untested, which is
+consistent with how they got this way — each is invisible to anything that does
+not read the function, and the suite that arrived reads the boundary instead.
 
 No benchmark and no retrieval-quality measurement.
 
@@ -315,5 +330,7 @@ worth copying only after the floor is applied.
 - **Tests:** `backend/src/tests/` — twenty files, none covering memory
 
 ## History
+
+**2026-09-14** — [`86b6072dd4c9bf6abe68c26c4265b3296a368737`](https://github.com/vmDeshpande/ai-agent-automation/commit/86b6072dd4c9bf6abe68c26c4265b3296a368737) — second reading, 18 commits on. Screened again: a dependency surface changed inside the seven-day cooldown, so nothing was installed and nothing was run. One memory file moved — `memoryService.js`, 126 lines changed — and the change is a hardening of the read path. `retrieveMemory` takes a `userId` and calls `assertAgentOwnership` before issuing any query, resolving the agent against the caller and throwing `FORBIDDEN` on a mismatch or `USER_CONTEXT_REQUIRED` on a missing one; a stale positional call, where the `userId` slot receives a number, is detected and fails closed rather than being coerced. `scope_enforced` is re-tested and strengthened accordingly. `negative_eval` is added: `memoryService.handler.test.js` is ten committed cases over cross-user isolation, whose must-not assertion pins that `AgentMemory.find` is never called once ownership fails, paired with a positive control in the same suite — which also fills the evidence record's `none` test field. The three published criticisms were each re-run against the new file and all three stand: `minScore` is still declared on the signature and read nowhere in the backend, the retention pass still counts every memory type and deletes only `conversation`, and every retrieval still writes scores and a sixty-character content preview to stdout.
 
 **2026-08-23** — [`984893ca0645b885717157eb8815c4caaa648bee`](https://github.com/vmDeshpande/ai-agent-automation/commit/984893ca0645b885717157eb8815c4caaa648bee) — first reading, at release v0.11.0, 517 commits since 28 December 2025, Apache 2.0. Screened before anything was read: no auto-run surface, one build-time execution point, three unpinned surfaces, two husky hook payloads that are inert until something installs them, and an `AGENTS.md` addressed to a reading agent; nothing was installed and no test was run. One mark. `scope_enforced` is earned on `agentId` as a predicate on the recall query and on `findOwnedAgent` guarding every path of the management API. The three defects recorded here — a `minScore` parameter no code reads while a caller passes `0.45` to it, a retention pass that counts every memory type and deletes only conversations, and a `console.log` of retrieved content — are each invisible to the test suite, which has no memory coverage at all.
