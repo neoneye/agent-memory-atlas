@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A dependency-free Rust memory
+organ for LLM entities that deliberately degrades what it stores — gists
+blur, scenes go latent while their affect survives, and a nightly pass
+rewrites and merges — so that two instances on one corpus stop sharing a
+past.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SelMem — Agent Memory Atlas">
+    <meta property="og:description" content="A dependency-free Rust
+memory organ for LLM entities that deliberately degrades what it stores
+— gists blur, scenes go latent while their affect survives, and a
+nightly pass rewrites and merges — so that two instances on one corpus
+stop sharing a past.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SelMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A dependency-free Rust
+memory organ for LLM entities that deliberately degrades what it stores
+— gists blur, scenes go latent while their affect survives, and a
+nightly pass rewrites and merges — so that two instances on one corpus
+stop sharing a past.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SelMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SelMem",
+      "description": "A dependency-free Rust memory organ for LLM entities that deliberately degrades what it stores \u2014 gists blur, scenes go latent while their affect survives, and a nightly pass rewrites and merges \u2014 so that two instances on one corpus stop sharing a past.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory built to drift</p>
+          <h1>SelMem</h1>
+          <p class="document-deck">A dependency-free Rust memory organ
+for LLM entities that deliberately degrades what it stores — gists blur,
+scenes go latent while their affect survives, and a nightly pass
+rewrites and merges — so that two instances on one corpus stop sharing a
+past.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jbsalles/Selmem">
+              <span>Source</span>
+              <strong>jbsalles/Selmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jbsalles/Selmem/commit/a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d" title="a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d">
+              <span>Analyzed revision</span>
+              <code>a4ace34a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jbsalles--Selmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jbsalles--Selmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SelMem is a memory organ for LLM entities, written in Rust with
+<strong>zero Cargo dependencies</strong> — 9,514 lines across
+<code>src/</code>, <code>tests/</code> and <code>examples/</code>, MIT,
+thirteen commits since 6 September 2026, and a hand-written FFI binding
+to the system <code>libsqlite3</code> rather than a crate. It is one
+week old and the version is 0.5.</p>
+<p>Almost every memory system in this atlas is trying to remember
+accurately. <strong>SelMem is trying to remember like a person, which
+means badly, and on purpose.</strong> The README states the goal as a
+design constraint rather than an apology:</p>
+<blockquote>
+<p><em>"An LLM maps context to the next token. A stack of unmodified
+facts maximises coverage, not deviation: more evidence, same average
+path. SelMem sculpts a particular past — forgotten, gilded, anchored —
+so two instances can diverge."</em></p>
+</blockquote>
+<p>The unit is a <code>MemoryTrace</code> with two texts: a
+<code>gist</code> that the narrator may rebuild and that drifts, and a
+<code>core</code> frozen at encode that grounding compares against.
+Beside it, a sealed <code>ArchiveRecord</code> holding the verbatim
+event, reachable only through <code>Engine::audit</code> and never
+handed to the narrator. A nightly <code>sleep</code> pass weathers,
+rewrites, merges and extinguishes, then promotes recurring material up a
+ladder — motif, belief, trait — into an identity the next encode is
+biased by. Two shipped profiles, <code>tender</code> and
+<code>austere</code>, differ only in coefficients, and the project's
+claim is that after a few nights on one corpus they no longer share a
+past.</p>
+<p><strong>The defect is in the one state that would opt out.</strong>
+<code>TraceStatus::Sealed</code> is the only status that exempts a trace
+from the whole machine: <code>MemoryStore::active_ids()</code> filters
+it out, and that function is the source of candidates for both recall
+and the entire sleep pass. Five call sites consume it, both persistence
+backends serialise and parse it — and <strong>nothing in the repository
+ever assigns it</strong>. In a design whose thesis is that memory must
+be allowed to deform, the single declared way to say <em>this one must
+not</em> cannot be granted by any code path, CLI command or HTTP
+route.</p>
+<p>Two things are unusually well done and worth reading regardless of
+the above. <code>tests/engine.rs</code> contains the negative assertion
+this atlas argues for and rarely finds, with its positive control in the
+same test. And <code>PARAMETERS.md</code> grades every constant in the
+system by warrant — <em>Literature (qualitative)</em>, <em>Contrast
+pair</em>, <em>Discrete convenience</em>, <em>Ad hoc</em> — and says
+plainly: <em>"We have not learned these parameters… treat every digit as
+provisional."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two texts per episode, and only one of them is allowed to change.</p>
+<pre class="text"><code>event ──gate──▶ dropped, no archive
+          │
+          └──▶ MemoryTrace                    ArchiveRecord
+                 gist   &quot;can drift&quot;    ────▶    verbatim  (sealed)
+                 core   &quot;frozen at encode&quot;      never handed to the narrator
+                 fidelity, access, anchor</code></pre>
+<p>Recall does not replay: it <em>rebuilds</em> a sentence from the
+current trace, and the rebuild can write back. Grounding is the
+counterweight — when spoken sentences drift too far from
+<code>core</code>, a <code>DriftKind::Ground</code> event pulls the
+trace back and the recall carries the disclaimer <em>"pulled back toward
+the core"</em>. So the system holds a deliberate tension: the gist is
+free to deform, the core is the thing it deforms <em>away from</em>, and
+the archive is the thing neither of them can reach.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a decayed episode becomes Latent — withdrawn from all four read paths but still colouring what is encoded next — and returns only after two such paintings, restored as the frozen core rather than the drifted gist</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a decayed episode becomes Latent — withdrawn from all four read paths but still colouring what is encoded next — and returns only after two such paintings, restored as the frozen core rather than the drifted gist
+stateDiagram-v2
+  [*] --&gt; Dropped: encode gate, score below threshold
+  [*] --&gt; Active: kept, gist + sealed archive
+
+  Active --&gt; Cold: access falls
+  Cold --&gt; Myth: access falls further
+  Active --&gt; Latent: fidelity &lt; 0.34 and access &lt; 0.26, affect remains
+  Cold --&gt; Latent: same test
+
+  state &quot;paint_latent — charge biases the next event&quot; as Paint
+  Latent --&gt; Paint: a related event arrives
+  Paint --&gt; Latent: rehearsals += 1
+  Paint --&gt; Cold: rehearsals &gt;= 2, gist becomes core, fidelity clamped to 0.40-0.55
+
+  Myth --&gt; Myth: merged away, kept and linked to the survivor
+
+  state &quot;Sealed — exempt from recall, drift, merge and decay&quot; as Sealed
+  Active --&gt; Sealed: no producer in the tree</code></pre></details></figure>
+<p><strong><code>Latent</code> is the idea worth taking.</strong> When a
+Selfhood trace falls below both thresholds but still carries affect or a
+schema, its status becomes <code>Latent</code> and the scene stops being
+tellable: <code>recall/retrieve.rs:38</code>,
+<code>recall/narrator.rs:86</code>, <code>recall/http.rs:58</code> and
+<code>encode/identity.rs:71</code> each skip it, the last excluding it
+from identity-axiom formation. What survives is the charge.
+<code>paint_latent</code> walks exactly the latent traces, and when a
+new event is related to one by schema or core it bends that event's
+valence and disgust toward the forgotten episode and may hand it the
+schema — the README's <em>"next experience is already colored"</em>,
+implemented.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Nine modules, no dependencies, and a strict rule about who may talk
+to the model.</p>
+<ul>
+<li><code>core/</code> — <code>model</code> (the trace, archive, axiom
+and mood types), <code>store</code>, <code>profile</code>,
+<code>talk</code></li>
+<li><code>encode/</code> — <code>intake</code> (the gate),
+<code>scoring</code>, <code>embed</code>, <code>affect</code>,
+<code>identity</code></li>
+<li><code>recall/</code> — <code>retrieve</code>, <code>narrator</code>,
+<code>ground</code>, <code>http</code></li>
+<li><code>dream/</code> — <code>night</code> (the sleep pass),
+<code>drift</code>, <code>singularite</code> (anchors)</li>
+<li><code>persist/</code> — <code>sqlite</code> (690 lines of
+hand-written FFI), <code>file</code> (566 lines, a <code>SELMEM1</code>
+flat format)</li>
+<li><code>net/</code> — <code>api</code>, <code>httpx</code>, a
+single-file UI</li>
+</ul>
+<p>The persistence rule is stated as a boundary: <em>"Persistence is a
+vault, not the memory: the organ lives in RAM
+(<code>MemoryStore</code>); on <code>save</code> it is dumped, on
+<code>open</code> it is reloaded. The model never talks to the
+vault."</em> Both backends round-trip the same <code>Snapshot</code> of
+profile, mood and store.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>The cost is close to zero and the dependency surface is empty:
+<code>cargo</code> with no crates, Rust 1.75, and a dynamic link against
+whatever <code>libsqlite3</code> the OS already ships.
+<code>run.sh</code> exists because that link is the only fiddly part —
+it adds Homebrew's lib path on macOS and fabricates a
+<code>libsqlite3.so</code> stub on Linux when the <code>-dev</code>
+package is missing. A vault with a non-database extension needs no
+SQLite at all.</p>
+<p>The LLM is reached through <code>SpeakOnlyHttp</code>. Encoding,
+sleep and reconstruction stay local, which is what makes the experiment
+design below possible.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="the-encode-gate">The encode gate</h3>
+<p><code>encode/intake.rs</code> scores arousal, novelty,
+self-relevance, utility and goal alignment into one 0–1 number and
+compares it with the profile's threshold (<code>tender</code> 0.40,
+<code>austere</code> 0.55). <code>Channel::World</code> — operational
+facts — gets the threshold multiplied by 0.6, so the bar for remembering
+a fact is lower than for remembering an experience. A dropped event
+returns an <code>EncodeDecision { kept: false, .. }</code> and leaves
+nothing behind: no trace, no archive record.</p>
+<h3 id="sleep">Sleep</h3>
+<p><code>dream/night.rs</code> iterates <code>store.active_ids()</code>
+and, per trace: refreshes access, weathers, then either extinguishes or
+sculpts, then re-tests status. <code>Channel::World</code> traces are
+pinned to <code>Active</code> with <code>access = 1.0</code> under the
+comment <em>"Operational facts do not cool, mythologize, or go
+latent."</em> Afterwards come <code>rewrite_pass</code>,
+<code>merge_close</code>, axiom extraction, trait promotion and
+<code>apply_anchors</code>.</p>
+<p><code>extinguish</code> is fear extinction rather than deletion: on
+an unused Selfhood trace it decays <code>disgust</code> toward zero and
+logs a <code>Fade</code>, leaving the episode intact.</p>
+<p><code>merge_close</code> does not delete the loser. It sets the
+source to <code>Myth</code>, links the two ids, and writes a
+<code>Merge</code> drift on the survivor whose note names the merged id.
+<strong>No code path in the tree removes a trace</strong> —
+<code>traces.remove</code> and <code>traces.retain</code> do not
+appear.</p>
+<h3 id="grounding-and-the-archive-it-must-not-touch">Grounding, and the
+archive it must not touch</h3>
+<p><code>recall/ground.rs</code> compares a spoken sentence against the
+trace's frozen <code>core</code>. Consecutive departures raise
+<code>detach_strikes</code>; past the profile's
+<code>ground_strikes</code> the trace is pulled back, a
+<code>DriftKind::Ground</code> event is recorded, and the recall's
+disclaimer changes from <code>"lived account (fidelity 0.62)"</code> to
+<code>"pulled back toward the core"</code>. The pull-back target is
+<code>core</code>, never <code>verbatim</code> — which is the invariant
+the test in section 10 exists to defend.</p>
+<h3 id="sealed-and-its-missing-writer"><code>Sealed</code>, and its
+missing writer</h3>
+<pre class="rust"><code>pub fn active_ids(&amp;self) -&gt; Vec&lt;String&gt; {
+    self.traces.values()
+        .filter(|t| t.status != TraceStatus::Sealed)
+        // …
+}</code></pre>
+<p>Five consumers depend on the state: <code>store.rs:48</code> above,
+<code>night.rs:50</code> (a World trace is not re-activated if sealed),
+<code>night.rs:89</code> (a sealed trace never becomes
+<code>Latent</code>), <code>night.rs:259</code> (a <code>-20</code>
+merge-weight penalty, the strongest, so a sealed trace is never chosen
+as a merge survivor), and <code>night.rs:316</code> (excluded from merge
+grouping). <code>persist/file.rs:501,510</code> and
+<code>persist/sqlite.rs:640,648</code> write and parse the string
+<code>"sealed"</code> in both directions.</p>
+<p>The assignments in the whole tree are <code>intake.rs:123</code>
+(<code>Active</code> at encode) and six lines in
+<code>dream/night.rs</code> setting <code>Active</code>,
+<code>Latent</code>, <code>Myth</code> and <code>Cold</code>.
+<code>Sealed</code> is not among them, in <code>src/</code>, in
+<code>tests/</code>, in <code>examples/</code>, or in any fixture under
+<code>data/</code>. The round-trip through persistence means a
+hand-edited vault could introduce one; nothing the program does can.</p>
+<p>The consequence is specific rather than cosmetic.
+<code>permanence &gt;= 0.8</code> already exempts a trace from the
+status transitions, so the design is not without a protection — but
+<code>permanence</code> does not remove a trace from
+<code>active_ids()</code>, so a permanent trace is still recalled, still
+weathered, still a merge candidate. <code>Sealed</code> is the only
+<em>withdrawal</em>, and withdrawal is the operation a user asking to
+have something set aside would be asking for.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryTrace</code> carries twenty-two fields, and the ones that
+matter are the pair of texts and the four scalars that govern them:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gist</code></td>
+<td>the reconstructable story; drifts</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td>a stable semantic reference frozen at encode; grounding's
+target</td>
+</tr>
+<tr>
+<td><code>fidelity</code></td>
+<td>how sharp the gist still is, 0 blur to 1 sharp</td>
+</tr>
+<tr>
+<td><code>access</code></td>
+<td>how findable it is; falls with disuse</td>
+</tr>
+<tr>
+<td><code>permanence</code></td>
+<td>how long it is meant to last; resists the gate drop</td>
+</tr>
+<tr>
+<td><code>anchor</code></td>
+<td>0–1 resistance to decay and rewrite — <em>"trauma, triumph,
+vow"</em></td>
+</tr>
+<tr>
+<td><code>drifts</code></td>
+<td>every mutation, with its deltas</td>
+</tr>
+<tr>
+<td><code>archive_id</code></td>
+<td>pointer into the sealed book; <em>"Never handed to the
+narrator"</em></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>IdentityAxiom</code> carries
+<code>superseded_by: Option&lt;String&gt;</code> and an
+<code>AxiomLayer</code> of <code>Motif</code>, <code>Belief</code> or
+<code>Trait</code> — the consolidation ladder. Supersession is a chain,
+not a rejection keyed on a value, so it does not reach
+<code>tombstone</code> under this atlas's definition.</p>
+<p>Every clock is record time: <code>created_at</code>,
+<code>last_recalled_at</code>, <code>last_consolidated_at</code>, and
+<code>DriftEvent.at</code>. Nothing records when a memory was
+<em>true</em>, so <code>bitemporal</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>recall/retrieve.rs</code> ranks <code>store.active_ids()</code>
+by <code>recall_score_emb</code> over cues, a 96-dimension embedding and
+mood congruence. The embedder is <code>HashEmbedder</code> by default —
+local, dependency-free — with <code>HttpEmbedder</code> available and
+falling back to the hash one when the endpoint is unusable, so retrieval
+never hard-fails on a missing service.</p>
+<p>Two status filters sit in the loop: <code>Latent</code> is skipped
+outright, and <code>Cold</code> is skipped below a score of 0.12. Then
+each survivor is <em>reconstructed</em> by the narrator rather than
+emitted, <code>rehearsals</code> and <code>last_recalled_at</code> are
+updated, and the result carries a <code>disclaimer</code> naming how it
+was produced.</p>
+<p>That last field is rarer than it sounds. A recalled memory arrives
+labelled with its own fidelity, so a consumer can tell a sharp account
+from a blurred one without inspecting the store.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and gated; everything expensive happens in
+<code>sleep</code>. There is no queue, no worker and no lock — the organ
+is a <code>MemoryStore</code> in process memory, and <code>save</code>
+dumps it.</p>
+<p>The lifecycle is unusual in that <strong>nothing is ever
+removed</strong>. Events are refused at the gate, episodes decay to
+<code>Latent</code>, merged episodes become <code>Myth</code> with an
+edge to their survivor, and <code>prune_orphaned_archives</code> removes
+only archive records whose trace never existed. A store therefore grows
+monotonically in traces while shrinking in what any of them can still
+tell you.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Three surfaces: the library, <code>selmemd</code> (an HTTP API with
+fifteen routes and a single-file UI), and <code>selmem-chat</code>, a
+French-language REPL whose <code>/sleep</code>, <code>/who</code>,
+<code>/mood</code>, <code>/talk</code> and <code>/forget</code> commands
+drive the organ directly. <code>/forget</code> clears the live
+conversation thread, not memory.</p>
+<p><code>GET /audit</code> is the operator's window onto the sealed
+archive: give it a trace id and it returns the verbatim event, which is
+what lets a person compare the drifted gist against what actually
+happened. It is the only surface that reads <code>verbatim</code>, and
+it is read-only — there is no route that corrects, approves or withdraws
+a trace. <code>human_review</code> is withheld on that basis: a display
+is not an adjudication.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>Every mutation is recorded with its magnitude.</strong>
+<code>drifts</code> is append-only across nine writers, persisted in
+both backends, and never cleared.</li>
+<li><strong>Nothing is destroyed</strong>, so a merged or forgotten
+episode remains inspectable even when it is no longer tellable.</li>
+<li><strong>The archive is genuinely sealed</strong> on the narrator
+path, and a test defends it rather than a comment asserting it.</li>
+<li><strong>Recalls are self-labelling</strong>, carrying fidelity and a
+disclaimer.</li>
+<li><strong>Grounding is a real counterweight to drift</strong>, keyed
+on a reference frozen at encode.</li>
+<li><strong><code>PARAMETERS.md</code> grades its own constants by
+warrant</strong> and states that none is fitted.</li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong><code>TraceStatus::Sealed</code> has no producer</strong>,
+so the only exemption from recall, drift, merge and decay cannot be
+granted.</li>
+<li><strong><code>fidelity</code> and <code>access</code> drive
+everything and are set by hand-chosen coefficients</strong> the project
+itself labels exploratory; there is no calibration against
+anything.</li>
+<li><strong>No scope key reaches any query.</strong> Isolation between
+entities is one vault per entity — a partition, not a predicate.</li>
+<li><strong>A store never shrinks.</strong> Traces accumulate for the
+life of an entity, and the only bound is the encode gate.</li>
+<li><strong>The <code>Latent</code> revival is not idempotent across
+profiles.</strong> <code>maybe_revive_latent</code> clamps fidelity into
+<code>0.40..=0.55</code> regardless of how blurred the trace had become,
+so a deeply decayed episode returns as sharp as a lightly decayed
+one.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Nothing was run.</strong> <code>Cargo.toml</code> changed the
+day before this reading and <code>Cargo.lock</code> two days before,
+both inside the seven-day cooldown, so the tree was not built.</p>
+<p>Fifty-nine tests across nine files. One of them is the reason this
+report carries <code>negative_eval</code>:</p>
+<pre class="rust"><code>#[test]
+fn grounding_never_exposes_the_archive() {
+    // … secret planted in ArchiveRecord.verbatim, gist replaced with an
+    //   unrelated sentence so grounding must fire
+    for _ in 0..6 {
+        let rec = mem.remember(&quot;la pluie&quot;);
+        for r in &amp;rec {
+            assert!(!r.narrative.contains(secret), &quot;narrative leaked the journal: {}&quot;, r.narrative);
+            assert!(!r.disclaimer.contains(secret));
+        }
+        // …
+    }
+    assert!(!t.gist.contains(secret), &quot;gist must not become the journal&quot;);
+    assert!(mem.audit(&amp;id).unwrap().contains(secret));
+}</code></pre>
+<p>The last line is what makes the test worth copying. A suite that
+asserts only <em>"the secret is absent from the output"</em> passes just
+as well when the secret was never stored, when recall returns nothing,
+and when the store is empty. Proving the material is still there, in the
+same test, is the difference between an assertion and a hope — and it is
+the strict, content-about-a-read-path form of the mark rather than the
+looser projection form.</p>
+<p><code>latent_forgets_the_scene_keeps_the_reaction</code> is the
+second negative case, asserting a latent recall does not replay the
+scene's words and then that its charge colours a new event. Its positive
+half is weaker than the first test's: it is wrapped in
+<code>if let Some(t) = painted</code>, so if the encode gate drops the
+follow-up event the assertion is skipped and the test still passes.</p>
+<p><code>experiments/REPORT.md</code> is a small, honestly-scoped study.
+Three cells — no memory, a last-k verbatim log, and SelMem — over one
+model at <code>temp=0</code> with one seed, asking whether two clones
+stay interchangeable after one marked hour. It numbers three claims and
+says which are tested: <em>"Only the first two are tested here…
+Creativity. Deferred. Three items are logged, not scored."</em> The
+matched-length control arm (an administrative notice against an unjust
+cancellation) is the right shape. One seed and one model is not a result
+that generalises, and the document does not claim it is.</p>
+<p><strong>No paper, arXiv reference, DOI or citation file exists in
+this repository.</strong> The whitepaper is a design manifest in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Two texts per memory: one that may drift and one that may
+not.</strong> <code>gist</code> and <code>core</code>, with grounding
+comparing the spoken sentence against the frozen one, is a cheap and
+general answer to "how do I let a summary evolve without letting it
+become fiction."</li>
+<li><strong>Record the delta, not the event.</strong> A mutation log
+saying <code>fidelity_delta: -0.08</code> under
+<code>DriftKind::Weather</code> answers questions an append-only "a
+write happened" log cannot.</li>
+<li><strong>Keep the verbatim, and make it unreachable from the
+generation path.</strong> One accessor, one HTTP route, and a test that
+fails if it ever leaks.</li>
+<li><strong>Pair every must-not assertion with a proof the material
+exists.</strong> The four lines at the end of
+<code>grounding_never_exposes_the_archive</code> are the pattern.</li>
+<li><strong>Grade your own constants.</strong>
+<code>PARAMETERS.md</code>'s four-level warrant scale, and its refusal
+to dress a contrast pair up as a finding, is a better artifact than most
+tuning documentation.</li>
+<li><strong>Let a forgotten thing keep acting without being
+tellable.</strong> <code>Latent</code> separates <em>can this be
+narrated</em> from <em>does this still shape me</em>, and most designs
+collapse the two.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A protective state with no way to enter it.</strong>
+<code>Sealed</code> is consumed five times, persisted twice and written
+never. If a status exempts a record from your machinery, ship the
+command that sets it in the same change, or delete the variant.</li>
+<li><strong>A revival that forgets how far the thing had
+fallen.</strong> Clamping restored fidelity into a fixed band discards
+the difference between nearly-lost and long-lost.</li>
+<li><strong>A positive control behind an <code>if let</code>.</strong>
+An assertion that is skipped when its fixture is absent is a test that
+reports success for the case it was written to catch.</li>
+<li><strong>Unbounded growth as a consequence of never
+deleting.</strong> Never destroying is defensible and here it is
+principled; it still needs an answer for the entity that has lived a
+hundred thousand hours.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if you are building a <em>character</em> rather than an
+assistant — an entity whose value is that it is particular, and whose
+past is supposed to be its own. The mechanisms are legible, the
+dependency cost is zero, and the pieces come apart: the gist/core pair,
+the drift log and the latent state are each adoptable without the
+rest.</p>
+<p>Do not take it as a factual store. The design's explicit goal is that
+recall not reproduce the input, and <code>Channel::World</code> — the
+concession that operational facts must not decay — is a flag on a trace
+rather than a separate store with its own guarantees. If you need to
+know what the user actually said, that is what the sealed archive is
+for, and reading it is an operator action rather than something the
+entity can do.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What was <code>Sealed</code> meant to be set by — an operator
+command, a <code>permanence</code> ceiling, or the entity itself? All
+five consumers agree on its meaning; only the writer is missing.</li>
+<li>Should the <code>Latent</code> revival restore fidelity proportional
+to what was lost rather than into a fixed band?</li>
+<li>Does the <code>tender</code>/<code>austere</code> divergence survive
+a second seed and a second model? The experiment is one of each and says
+so.</li>
+<li>What bounds a long-lived store, given that nothing is ever removed
+and <code>Myth</code> traces are kept for their edges?</li>
+<li>Is <code>Channel::World</code> sufficient for facts that must not
+drift, or does it need the archive's guarantees rather than an exemption
+from decay?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>The model:</strong> <code>src/core/model.rs</code>
+(<code>MemoryTrace</code>, <code>ArchiveRecord</code>,
+<code>IdentityAxiom</code>, <code>TraceStatus</code>,
+<code>DriftKind</code>, <code>DriftEvent</code>),
+<code>src/core/store.rs</code> (<code>active_ids</code>,
+<code>link</code>).</li>
+<li><strong>Encode:</strong> <code>src/encode/intake.rs</code> (the
+gate), <code>scoring.rs</code>, <code>embed.rs</code> (96-dim hash and
+HTTP embedders), <code>identity.rs</code> (<code>paint_latent</code>,
+axiom formation).</li>
+<li><strong>Recall:</strong> <code>src/recall/retrieve.rs</code>
+(ranking, the <code>Latent</code> and <code>Cold</code> filters, the
+disclaimer), <code>narrator.rs</code>, <code>ground.rs</code>,
+<code>http.rs</code>.</li>
+<li><strong>Sleep:</strong> <code>src/dream/night.rs</code>
+(<code>extinguish</code>, <code>maybe_revive_latent</code>,
+<code>merge_weight</code>, <code>merge_close</code>,
+<code>extract_axioms</code>), <code>drift.rs</code>,
+<code>singularite.rs</code>.</li>
+<li><strong>Persistence:</strong> <code>src/persist/sqlite.rs</code>,
+<code>file.rs</code>, <code>mod.rs</code>
+(<code>prune_orphaned_archives</code>).</li>
+<li><strong>Surfaces:</strong> <code>src/net/api.rs</code> (fifteen
+routes, <code>GET /audit</code>), <code>src/bin/selmemd.rs</code>,
+<code>src/bin/selmem-chat.rs</code>, <code>src/engine.rs</code>
+(<code>audit</code>).</li>
+<li><strong>Evidence:</strong> <code>tests/engine.rs</code>,
+<code>tests/scenes.rs</code>, <code>tests/bifurcation.rs</code>,
+<code>experiments/REPORT.md</code>, <code>PARAMETERS.md</code>.</li>
+</ul>
+<h3 id="searches-behind-the-absence-claims">Searches behind the absence
+claims</h3>
+<p>Run from the repository root; each returned only what is described
+beside it.</p>
+<pre class="sh"><code># Sealed is consumed in five places and assigned in none
+grep -rn &#39;Sealed\|&quot;sealed&quot;&#39; src/ tests/ examples/ --include=&#39;*.rs&#39;
+grep -rn &#39;status = TraceStatus::\|status: TraceStatus::&#39; src/ --include=&#39;*.rs&#39;
+
+# no code path removes a trace or truncates its history
+grep -rn &#39;traces.remove\|traces.retain\|drifts.clear\|drifts.truncate\|drifts.drain&#39; src/ --include=&#39;*.rs&#39;
+
+# verbatim is read by one accessor and one route
+grep -rn &#39;verbatim&#39; src/ --include=&#39;*.rs&#39; | grep -v &#39;persist/&#39;
+
+# no paper, citation file or DOI
+grep -rniE &#39;arxiv|@article|@misc|CITATION|\bdoi\b&#39; --include=&#39;*.md&#39; --include=&#39;*.toml&#39; .</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/jbsalles/Selmem/commit/a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d"><code class="commit-id" title="a4ace34a8cc4f03d681de9f7d1b43f841e6f5a4d">a4ace34a…</code></a>
+— first reading, on the <code>main</code> default branch, thirteen
+commits from a repository created 6 September 2026. Screened before
+reading: no auto-executing surface, no build-time execution point, and
+both <code>Cargo.toml</code> and <code>Cargo.lock</code> changed within
+two days, so the tree was inside the seven-day cooldown — nothing was
+installed, nothing was built and no test was run. Every finding is
+static. Two marks are earned and the five withheld ones were each tested
+at the producer: <code>tombstone</code> fails because
+<code>IdentityAxiom.superseded_by</code> is a supersession chain rather
+than a value-keyed rejection, <code>trust_state</code> because
+<code>TraceStatus</code> is a threshold projection of
+<code>access</code> and <code>fidelity</code> recomputed every sleep,
+<code>bitemporal</code> because every clock is record time,
+<code>scope_enforced</code> because entity isolation is one vault per
+entity, and <code>human_review</code> because <code>GET /audit</code>
+displays the archive without offering any action on it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

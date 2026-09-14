@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 455 reports.</strong></p>
+<p><strong>This page covers all 456 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16288,6 +16288,53 @@ than another agent runtime.</li>
 <li>Do not copy when: memory must be correct rather than present — there
 is no verification state, no correction record and no committed
 retrieval evaluation.</li>
+</ul>
+<h3 id="selmem"><a
+href="../systems/selmem/"><code>selmem</code></a></h3>
+<ul>
+<li>Best idea: two texts per memory, one allowed to drift and one frozen
+at encode for it to drift <em>away from</em>. The narrator rebuilds a
+sentence from the current <code>gist</code>; when spoken sentences leave
+the <code>core</code> often enough, grounding pulls the trace back and
+the recall's disclaimer changes from "lived account (fidelity 0.62)" to
+"pulled back toward the core". A third text, the verbatim archive, is
+reachable by one accessor and one HTTP route and never by the
+narrator.</li>
+<li>Second idea: <code>Latent</code> — a decayed episode whose scene is
+withdrawn from all four read paths while its affect keeps biasing what
+gets encoded next, revived only after two such paintings and restored as
+the frozen core at clamped fidelity rather than as the drifted gist. The
+corpus's other resurrections are bugs; this is the designed one.</li>
+<li>Biggest risk: <strong><code>TraceStatus::Sealed</code> has no
+writer.</strong> It is the only state that exempts a trace from recall,
+drift, merge and decay — <code>MemoryStore::active_ids()</code> filters
+on it and feeds both the recall path and the whole sleep pass — with
+five consumers and a round-trip through both persistence backends, and
+no line in <code>src/</code>, <code>tests/</code>,
+<code>examples/</code> or any fixture ever assigns it. In a design whose
+thesis is that memory must be allowed to deform, the one declared way to
+say "not this one" cannot be granted.</li>
+<li>Most reusable component: <code>DriftEvent</code> — a per-trace,
+append-only record of what each reconstruction changed and by how much
+(<code>fidelity_delta</code>, <code>valence_delta</code>,
+<code>disgust_delta</code>), persisted in both backends, never cleared,
+and never orphaned because no code path removes a trace.</li>
+<li>Maturity impression: MIT, 9,514 lines of Rust with <strong>zero
+Cargo dependencies</strong> and a hand-written FFI to the system
+<code>libsqlite3</code>, thirteen commits old at this pin. Fifty-nine
+tests, one of which is the negative assertion this atlas argues for with
+its positive control in the same test. <code>PARAMETERS.md</code> grades
+every constant by warrant — literature, contrast pair, discrete
+convenience, ad hoc — and says none is fitted;
+<code>experiments/REPORT.md</code> is one model and one seed and does
+not pretend otherwise.</li>
+<li>Study when: you are building an entity meant to be particular rather
+than accurate, or you want a worked separation between <em>can this be
+narrated</em> and <em>does this still shape me</em>.</li>
+<li>Do not copy when: you need to know what the user actually said.
+Recall not reproducing the input is the design's stated goal, and the
+exemption for operational facts is a flag on a trace rather than a store
+with its own guarantees.</li>
 </ul>
         </article>
       </div>

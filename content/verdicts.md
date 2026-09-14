@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 455 reports.**
+**This page covers all 456 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -3985,3 +3985,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, ~42,300 lines of Python across a gateway, a key-guarded memory service, an SDK, an MCP server and an operator portal, with quotas, encrypted workspace secrets and an internal key check that refuses to start unauthenticated outside an explicit local-dev opt-in.
 - Study when: a multi-tenant product needs a memory plane under a framework already chosen, and the team wants quotas and a portal rather than another agent runtime.
 - Do not copy when: memory must be correct rather than present — there is no verification state, no correction record and no committed retrieval evaluation.
+
+### [`selmem`](../systems/selmem/)
+- Best idea: two texts per memory, one allowed to drift and one frozen at encode for it to drift *away from*. The narrator rebuilds a sentence from the current `gist`; when spoken sentences leave the `core` often enough, grounding pulls the trace back and the recall's disclaimer changes from "lived account (fidelity 0.62)" to "pulled back toward the core". A third text, the verbatim archive, is reachable by one accessor and one HTTP route and never by the narrator.
+- Second idea: `Latent` — a decayed episode whose scene is withdrawn from all four read paths while its affect keeps biasing what gets encoded next, revived only after two such paintings and restored as the frozen core at clamped fidelity rather than as the drifted gist. The corpus's other resurrections are bugs; this is the designed one.
+- Biggest risk: **`TraceStatus::Sealed` has no writer.** It is the only state that exempts a trace from recall, drift, merge and decay — `MemoryStore::active_ids()` filters on it and feeds both the recall path and the whole sleep pass — with five consumers and a round-trip through both persistence backends, and no line in `src/`, `tests/`, `examples/` or any fixture ever assigns it. In a design whose thesis is that memory must be allowed to deform, the one declared way to say "not this one" cannot be granted.
+- Most reusable component: `DriftEvent` — a per-trace, append-only record of what each reconstruction changed and by how much (`fidelity_delta`, `valence_delta`, `disgust_delta`), persisted in both backends, never cleared, and never orphaned because no code path removes a trace.
+- Maturity impression: MIT, 9,514 lines of Rust with **zero Cargo dependencies** and a hand-written FFI to the system `libsqlite3`, thirteen commits old at this pin. Fifty-nine tests, one of which is the negative assertion this atlas argues for with its positive control in the same test. `PARAMETERS.md` grades every constant by warrant — literature, contrast pair, discrete convenience, ad hoc — and says none is fitted; `experiments/REPORT.md` is one model and one seed and does not pretend otherwise.
+- Study when: you are building an entity meant to be particular rather than accurate, or you want a worked separation between *can this be narrated* and *does this still shape me*.
+- Do not copy when: you need to know what the user actually said. Recall not reproducing the input is the design's stated goal, and the exemption for operational facts is a flag on a trace rather than a store with its own guarantees.
