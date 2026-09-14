@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 456 reports.</strong></p>
+<p><strong>This page covers all 457 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16355,6 +16355,60 @@ narrated</em> and <em>does this still shape me</em>.</li>
 Recall not reproducing the input is the design's stated goal, and the
 exemption for operational facts is a flag on a trace rather than a store
 with its own guarantees.</li>
+</ul>
+<h3 id="weknora"><a
+href="../systems/weknora/"><code>weknora</code></a></h3>
+<ul>
+<li>Best idea: <strong>an inferred memory is written
+<code>pending</code>, and no prompt can reach it until a person
+confirms.</strong> The comment states the reasoning — guessing someone's
+role from their questions is "valuable and often right, but asserting a
+wrong guess silently is how a memory feature loses trust for good" — and
+the code keeps it: both injection queries filter
+<code>status = active</code>, the manager listing selects
+<code>status IN (active, pending)</code> so the queue is visible, and
+<code>POST /memory/items/:id/confirm</code> is what moves an item
+between them. The vector search carries the same filter, so the
+exclusion does not leak on the embedding path.</li>
+<li>Second idea: <strong>rejecting a guess is durable and keyed on the
+value.</strong> <code>DeleteItem</code> records
+<code>AddTombstone(scope, topic, MemoryFingerprint(content), sourceMessageID)</code>
+before dropping the row, and every <code>Remember</code> checks it and
+returns <code>ErrPreviouslyForgotten</code>. A second, looser check
+blocks anything re-derived from the same message for an hour — and is
+gated to the background path only, because "an explicit <em>remember
+this</em> is the user asking again, and must always win." The ledger is
+capped at 500 per subject and a test creates 510 newer dead rows to
+prove eviction keeps the tombstone of a memory that was actually in
+use.</li>
+<li>Biggest risk: <strong>the validity interval is written and never
+queried.</strong> <code>invalid_at</code> has five writers, a test
+asserting it is set, and no reader anywhere in the repository;
+<code>valid_from</code> appears only in <code>ORDER BY</code>. Nothing
+takes an <code>asOf</code>. Beside it, the memory subsystem is the one
+part of the product that does not write to WeKnora's own audit log — a
+confirm, an edit, a rejection or a full clear leaves no record of who
+did it, while <code>datasource_service</code>,
+<code>system_setting</code> and <code>wiki_ingest</code> all audit.</li>
+<li>Most reusable component: the <code>scoped()</code> helper —
+<code>Where("tenant_id = ? AND subject_id = ?")</code> opening every
+statement, 46 call sites, with the invariant in a comment: "All reads
+and writes go through it so a missing scope predicate is impossible."
+One place to audit instead of a predicate to chase through each read
+path.</li>
+<li>Maturity impression: MIT, 578,241 lines of Go over 2,248 files at
+v0.8.0, of which the memory subsystem is 16,050 lines and 33 test files.
+Budgets are in runes with the reason for not using tokens written down;
+sensitive statements are refused rather than stored redacted to nothing;
+and the three tests that matter each pair a refusal with a positive
+control in the same function.</li>
+<li>Study when: your system infers things about people and you have not
+decided what an unconfirmed inference is allowed to do, or you want the
+smallest durable form of a rejected-value tombstone.</li>
+<li>Do not copy when: you want a memory you can lift. This is a
+subsystem of a framework expecting Postgres, a vector store, an object
+store, a document-reader service and a provider — what transfers is the
+pending gate and the fingerprint, both small enough to reimplement.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Tencent's enterprise RAG framework
+carries a long-term memory whose inferred items are held in a pending
+state that no prompt can reach until a person confirms them — and whose
+deletions leave a fingerprint the extractor checks before writing.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="WeKnora — Agent Memory Atlas">
+    <meta property="og:description" content="Tencent's enterprise RAG
+framework carries a long-term memory whose inferred items are held in a
+pending state that no prompt can reach until a person confirms them —
+and whose deletions leave a fingerprint the extractor checks before
+writing.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WeKnora — Agent Memory Atlas">
+    <meta name="twitter:description" content="Tencent's enterprise RAG
+framework carries a long-term memory whose inferred items are held in a
+pending state that no prompt can reach until a person confirms them —
+and whose deletions leave a fingerprint the extractor checks before
+writing.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>WeKnora — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "WeKnora",
+      "description": "Tencent's enterprise RAG framework carries a long-term memory whose inferred items are held in a pending state that no prompt can reach until a person confirms them \u2014 and whose deletions leave a fingerprint the extractor checks before writing.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A guess waits to be confirmed</p>
+          <h1>WeKnora</h1>
+          <p class="document-deck">Tencent's enterprise RAG framework
+carries a long-term memory whose inferred items are held in a pending
+state that no prompt can reach until a person confirms them — and whose
+deletions leave a fingerprint the extractor checks before writing.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Tencent/WeKnora">
+              <span>Source</span>
+              <strong>Tencent/WeKnora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Tencent/WeKnora/commit/1ef38fdb8b19347b82d3a99f6f17d75ac09ad606" title="1ef38fdb8b19347b82d3a99f6f17d75ac09ad606">
+              <span>Analyzed revision</span>
+              <code>1ef38fdb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-14</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Tencent--WeKnora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Tencent--WeKnora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>WeKnora is Tencent's open-source enterprise knowledge framework —
+MIT, version 0.8.0, 3,017 commits since 5 August 2025, 578,241 lines of
+Go across 2,248 files, plus a frontend, a docreader service, an MCP
+server, a CLI and a Helm chart. Most of it is retrieval-augmented
+generation over uploaded documents: twenty-odd LLM providers, a dozen
+vector stores, connectors for Feishu, GitLab, Notion, Yuque and more, a
+ReAct agent with sandboxed skills, and a Wiki mode that distils
+documents into an interlinked markdown knowledge base.</p>
+<p><strong>One subsystem is agent memory and that is what this report
+covers.</strong> <code>internal/**/memory*</code> is 16,050 lines of Go
+across a types package, a repository, a service, a handler, an agent
+tool and 33 test files. It arrived at v0.8.0 as <em>"cross-session
+long-term memory"</em>; a previous, unrelated Neo4j conversation-memory
+dependency was removed at v0.7.1. The rest of WeKnora is described here
+only as the surround.</p>
+<p>The design answers a question most of this corpus does not ask:
+<strong>what should happen to a memory the system inferred but was never
+told?</strong> Its answer is a status.</p>
+<blockquote>
+<p><em>"<code>MemoryStatusPending</code> is a memory the system inferred
+rather than was told. It is visible in the memory manager and waits for
+the user to confirm it; it is never injected into a prompt. Guessing
+someone's role from the questions they ask is valuable and often right,
+but asserting a wrong guess silently is how a memory feature loses trust
+for good."</em></p>
+</blockquote>
+<p>That comment is the design, and the code keeps it. The two queries
+that assemble a prompt filter <code>status = active</code>; the query
+behind the manager selects <code>status IN (active, pending)</code> so a
+person can see what is waiting.
+<code>POST /memory/items/:id/confirm</code> is what moves an item
+between those two worlds. This is the rarer form of
+<code>human_review</code>: not editing memories already in use, but an
+admission gate the memory has to pass first.</p>
+<p><strong>The second thing it gets right is what happens when the
+answer is no.</strong> Rejection routes to <code>DeleteItem</code>,
+which records a tombstone keyed on a fingerprint of the content before
+dropping the row, and every subsequent write consults it. The comment
+states the failure it exists to prevent, in the vocabulary this atlas
+has been reaching for:</p>
+<blockquote>
+<p><em>"Deleting a memory that distillation is about to re-derive from
+the same message is how a user ends up deleting the same thing twice and
+stops trusting the feature."</em></p>
+</blockquote>
+<p><strong>Two things are declared and unused.</strong>
+<code>invalid_at</code> is written at five supersession sites, asserted
+by a test — <em>"a superseded item must record when it stopped being
+true"</em> — and read by no query in the repository;
+<code>valid_from</code> appears only in <code>ORDER BY</code>. The
+validity interval is recorded faithfully and never asked a question. And
+the per-workspace audit log the rest of the product maintains does not
+cover memory: a confirm, an edit, a rejection or a clear leaves no audit
+row.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a short statement with a kind, and the kind decides how
+it reaches the model.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>How it is used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>profile</code>, <code>preference</code></td>
+<td>stable traits; rendered into a <strong>resident block</strong>
+injected on every turn</td>
+</tr>
+<tr>
+<td><code>fact</code>, <code>task</code></td>
+<td>situational; pulled in only when the current query matches</td>
+</tr>
+<tr>
+<td><code>interest</code></td>
+<td>what the person keeps asking about, derived from recurrence;
+conditions retrieval rather than being quoted back</td>
+</tr>
+</tbody>
+</table></div>
+<p>The <code>interest</code> kind carries the clearest statement of
+intent in the file: knowing someone works on medical imaging <em>"is
+what turns 'how do I tune the segmentation' into a query that finds the
+right documents."</em> It is a retrieval prior, not a fact about the
+user to be recited.</p>
+<p>Budgets are in runes rather than tokens, and the file says why — the
+block is short single-line items and <em>"an exact token count would
+need a tokenizer on the read path"</em>. The resident block gets 900,
+situational recall 600 across at most five items, and the on-demand
+<code>search_memory</code> tool 2,000 across twenty, because <em>"recall
+rides in every turn's system prompt whether or not it is needed, while a
+search happens only when the model asked for it."</em></p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an inferred statement is written pending and is invisible to both injection queries until a person confirms it; rejecting one records a fingerprint of the content that every later write consults, so distillation cannot re-derive what was declined</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an inferred statement is written pending and is invisible to both injection queries until a person confirms it; rejecting one records a fingerprint of the content that every later write consults, so distillation cannot re-derive what was declined
+flowchart TD
+    U[&quot;user turn&quot;] --&gt; EX{&quot;origin&quot;}
+    EX --&gt;|&quot;explicit: remember this&quot;| ACT[&quot;status = active&quot;]
+    EX --&gt;|&quot;background distillation&quot;| PEND[&quot;status = pending&quot;]
+
+    PEND --&gt; MGR[&quot;memory manager — ListLive&lt;br/&gt;status IN (active, pending)&quot;]
+    MGR --&gt;|&quot;POST /confirm&quot;| ACT
+    MGR --&gt;|&quot;POST /reject&quot;| DEL[&quot;DeleteItem&quot;]
+
+    ACT --&gt; INJ[&quot;ListActiveResident / ListActiveByKinds&lt;br/&gt;status = active AND not expired&quot;]
+    INJ --&gt; P([&quot;prompt&quot;])
+    PEND -.-&gt;|&quot;never reaches&quot;| P
+
+    DEL --&gt; TS[(&quot;tombstone&lt;br/&gt;fingerprint(content)&quot;)]
+    W[&quot;Remember(...)&quot;] --&gt; HAS{&quot;HasTombstone?&quot;}
+    TS --&gt; HAS
+    HAS --&gt;|&quot;yes&quot;| ERR[&quot;ErrPreviouslyForgotten&quot;]
+    HAS --&gt;|&quot;no&quot;| EX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory subsystem is a conventional Go layering —
+<code>internal/types/memory.go</code> for the model,
+<code>internal/application/repository/memory*.go</code> for persistence,
+<code>internal/application/service/memory/</code> for behaviour,
+<code>internal/handler/memory.go</code> and
+<code>internal/router/routes_memory.go</code> for the API,
+<code>internal/agent/tools/search_memory.go</code> for the model-facing
+tool.</p>
+<p>Storage is Postgres. Items live in one table; embeddings live in
+<code>MemoryItemEmbedding</code> beside them, so a content edit deletes
+the embedding row and forces re-embedding; tombstones live in a third
+table whose unique index is
+<code>(tenant_id, subject_id, fingerprint)</code>.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>Not separable. The memory is a subsystem of a framework that expects
+Postgres, a vector store, an object store, a document-reader service and
+an LLM provider, deployed by Docker Compose or Helm. Adopting the memory
+design means reading it, not importing it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<h3 id="scope-applied-once">Scope, applied once</h3>
+<pre class="go"><code>// scoped starts every query already filtered by workspace and subject. All
+// reads and writes go through it so a missing scope predicate is impossible.
+func (r *memoryRepository) scoped(ctx context.Context, scope interfaces.MemoryScope) *gorm.DB {
+    return r.db.WithContext(ctx).
+        Where(&quot;tenant_id = ? AND subject_id = ?&quot;, scope.TenantID, scope.SubjectID)
+}</code></pre>
+<p>Forty-six call sites in the repository, including the vector search
+and the tombstone lookup. This atlas usually has to trace a scope key
+through several read paths and report which one forgot it; here there is
+one place to check and the comment names the invariant.</p>
+<h3 id="the-two-injection-queries">The two injection queries</h3>
+<p><code>ListActiveResident</code> builds the resident block and
+<code>ListActiveByKinds</code> pulls situational items. Both filter
+<code>status = active</code> and both apply <code>notExpired</code>,
+which is <code>expires_at IS NULL OR expires_at &gt; now()</code>.
+<code>ExpiresAt</code> exists for statements that are true for a while —
+the comment's example is <em>"finish the migration this week"</em> — and
+the reasoning is that without it <em>"an in-flight task stays in context
+forever and slowly turns the memory into a list of things the user
+finished months ago."</em></p>
+<h3 id="the-tombstone-and-the-asymmetry-inside-it">The tombstone, and
+the asymmetry inside it</h3>
+<p><code>Remember</code> runs two checks before it will store
+anything:</p>
+<pre class="go"><code>forgotten, err := s.repo.HasTombstone(ctx, scope, types.MemoryFingerprint(content))
+// …
+if !forgotten &amp;&amp; item.SourceMessageID != &quot;&quot; &amp;&amp; item.Origin == types.MemoryOriginExtracted {
+    // Only the background path is gated this way. An explicit &quot;remember
+    // this&quot; is the user asking again, and must always win.
+    forgotten, err = s.repo.HasTombstoneForMessage(
+        ctx, scope, item.SourceMessageID, rejectedMessageWindow,
+    )
+}</code></pre>
+<p>The first is exact and permanent: the same statement, hashed, is
+refused forever. The second exists because <em>"the re-derived statement
+is usually worded slightly differently and so does not hash the
+same"</em>, so it blocks anything distilled from a message that
+previously produced a rejected memory — and it expires after an hour,
+because that window closes the debounced-rerun case and <em>"past that,
+whatever the user said is treated fresh again."</em></p>
+<p>The asymmetry is the part worth copying. A tombstone that also
+blocked an explicit <em>"remember this"</em> would make a rejection
+permanent against the user's own later instruction, which is the failure
+mode of every over-eager suppression list. Gating the loose check to
+<code>MemoryOriginExtracted</code> keeps the user's voice above the
+machine's.</p>
+<h3 id="the-ledger-is-bounded-and-the-eviction-is-tested">The ledger is
+bounded, and the eviction is tested</h3>
+<p><code>MaxMemoryTombstones = 500</code> per subject, because a
+rejection ledger that grows without limit is a different problem.
+Eviction is where it could go wrong quietly, and
+<code>service_test.go:455-472</code> is written against exactly that: it
+creates <code>MaxMemoryTombstones+10</code> newer dead rows, clears the
+memory, and asserts that re-deriving a statement whose memory had
+actually been <em>in use</em> still returns
+<code>ErrPreviouslyForgotten</code> — <em>"the memory that was in use
+must keep its tombstone, not be crowded out by dead rows."</em> A cap
+with a tested eviction preference is rarer here than a cap.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>MemoryItem</code> carries the fields the rest of this atlas
+usually has to look for separately: <code>Kind</code>,
+<code>Origin</code> (<code>explicit</code>, <code>extracted</code>,
+<code>manual</code>), <code>Status</code>, <code>Importance</code>,
+<code>NormalizedKey</code>, <code>SourceSessionID</code>,
+<code>SourceMessageID</code>, <code>ValidFrom</code>,
+<code>InvalidAt</code>, <code>ExpiresAt</code>, <code>ReplacesID</code>,
+<code>SupersededBy</code>, <code>LastUsedAt</code>,
+<code>UseCount</code>.</p>
+<p><code>NormalizedKey</code> is how contradictions resolve without a
+model on the read path: <em>"A new item with the same key as an active
+one supersedes it"</em> — the comment's example is
+<code>"I use MySQL"</code> then <code>"I moved to Postgres"</code>.</p>
+<p><strong><code>InvalidAt</code> is the field with no reader.</strong>
+Five write sites set <code>invalid_at</code> alongside
+<code>status = superseded</code>, and a test asserts it happens. Grep
+the repository for a query that reads it and there is none;
+<code>valid_from</code> appears only in
+<code>ORDER BY importance DESC, valid_from DESC</code>. So the pair that
+would make this bitemporal is present, correct and inert: nothing takes
+an <code>asOf</code>, and no read path asks what the store believed at a
+past time. The mark is withheld on that basis, and the columns remain a
+good record for a person reading the manager.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two tiers plus a tool. The resident block is assembled per turn from
+active <code>profile</code> and <code>preference</code> items;
+situational <code>fact</code> and <code>task</code> items are matched
+against the query and capped at five items and 600 runes;
+<code>search_memory</code> is an agent tool with 20 items and 2,000
+runes, on the reasoning that the model only calls it when the resident
+block was insufficient.</p>
+<p>Vector search over <code>MemoryItemEmbedding</code> also filters
+<code>status = active</code> and applies the expiry, so the pending
+exclusion holds on the embedding path too rather than only on the SQL
+one — which is the kind of detail that usually leaks.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two modes, named in the config vocabulary: <code>explicit_only</code>
+records only what the user asked to remember and makes no background
+model call; <code>auto</code> additionally distils memories in a
+background task. The distilled ones land <code>pending</code>.</p>
+<p>Content is sanitised before storage, and
+<code>ErrSensitiveContent</code> is returned when redaction leaves
+nothing — <em>"the statement was almost entirely credentials or identity
+numbers, so redacting it left nothing worth remembering."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The memory space is derived from the caller's principal rather than
+from a path parameter, which <code>routes_memory.go</code> states as a
+deliberate choice: the space belongs to a person.
+<code>search_memory</code> is the model-facing surface; the manager is
+the human one; the MCP server and CLI reach the same API.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Strengths:</p>
+<ul>
+<li><strong>An inferred memory cannot reach a prompt before a person
+confirms it</strong>, enforced by the same status filter on the SQL and
+vector read paths.</li>
+<li><strong>A rejection is keyed on the value</strong> and consulted on
+every write, with a bounded, tested ledger.</li>
+<li><strong>The user's explicit instruction outranks the
+tombstone</strong>, so a suppression cannot override a later
+request.</li>
+<li><strong>One scope chokepoint</strong>, used 46 times, with the
+invariant written down.</li>
+<li><strong>A contradiction supersedes rather than deletes</strong>,
+keeping <code>replaces_id</code> and <code>superseded_by</code> so the
+manager can explain what changed.</li>
+<li><strong>Expiry exists for statements that are only temporarily
+true.</strong></li>
+<li><strong>Sensitive statements are refused rather than stored redacted
+to nothing.</strong></li>
+</ul>
+<p>Gaps:</p>
+<ul>
+<li><strong><code>invalid_at</code> and <code>valid_from</code> are
+written and never queried</strong>, so the validity interval cannot be
+asked a question.</li>
+<li><strong>No memory mutation is audited.</strong> WeKnora keeps a
+per-workspace audit log, and
+<code>internal/router/router.go:205-210</code> scopes it to RBAC reject
+paths and the admin audit endpoint; <code>datasource_service</code>,
+<code>system_setting</code> and <code>wiki_ingest</code> write to it.
+The memory service does not. A confirm, an edit, a rejection or a
+<code>DELETE /memory/items</code> leaves no record of who did it.</li>
+<li><strong>The tombstone ledger is capped at 500 per subject</strong>,
+so a user who rejects a great many guesses will eventually have the
+oldest rejections forgotten — bounded by design, and the bound is a real
+limit on the guarantee.</li>
+<li><strong>The hour-long message window is a heuristic</strong>, and a
+re-derivation worded differently enough to miss the fingerprint,
+arriving more than an hour later, is stored again.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I ran nothing.</strong> Four dependency surfaces changed
+inside the seven-day cooldown, so the tree was not built and no test was
+executed. Every finding here is static.</p>
+<p>Thirty-three test files touch memory. The three that matter for this
+report all assert <code>ErrPreviouslyForgotten</code>, and the one in
+<code>retrieval_test.go</code> has the shape this atlas argues for:
+store an inferred guess and assert it stored, reject it, re-derive the
+identical statement, assert the refusal. The positive control is the
+first assertion in the same test, so a store that silently accepted
+nothing could not pass.</p>
+<p><code>memory_consistency_test.go</code> covers the handler, and
+<code>engine_memory_test.go</code>, <code>memory_recall_test.go</code>
+and <code>memory_retrieval_test.go</code> cover assembly and recall.</p>
+<p><strong>No paper, arXiv reference or citation file exists for the
+memory subsystem</strong>; the repository's citations are product
+documentation.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give an inferred memory a status that no prompt can
+see.</strong> <code>pending</code> plus two read paths that filter
+<code>status = active</code> is the whole mechanism, and it converts
+"the system guessed wrong about me" from a silent error into a queue
+item.</li>
+<li><strong>Record a fingerprint of the value when a memory is deleted,
+and check it before every write.</strong> This is the rejected-value
+tombstone in its simplest durable form.</li>
+<li><strong>Let an explicit instruction beat the tombstone.</strong>
+Gate the loose, heuristic half of the suppression to the background path
+only.</li>
+<li><strong>Apply scope in one helper and say so in a comment.</strong>
+Forty-six call sites, one place to audit.</li>
+<li><strong>Bound the rejection ledger, then test which rejections
+eviction keeps.</strong> The cap is the easy half; the eviction
+preference is the half that fails quietly.</li>
+<li><strong>Budget in the unit you can measure.</strong> Runes, with the
+reason for not using tokens written down.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Columns for a validity interval that no query
+reads.</strong> <code>valid_from</code> and <code>invalid_at</code> are
+written, tested and inert; either add the as-of read or drop the
+pretence that the store is temporal.</li>
+<li><strong>An audit log that stops at the subsystem boundary.</strong>
+The product has one, three services write to it, and the one holding
+personal statements about users does not.</li>
+<li><strong>A suppression window tuned to one failure.</strong> An hour
+closes the debounced rerun; it does not close a re-derivation that
+arrives tomorrow worded differently.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Read this for the memory subsystem, not as a memory system to adopt —
+it is sixteen thousand lines inside a half-million-line framework that
+expects a full deployment. What transfers is the pending/confirm gate
+and the fingerprint tombstone, both of which are small, and both of
+which answer questions most of this corpus leaves to the model's
+judgement.</p>
+<p>If you are evaluating WeKnora as a product, note the scope of this
+reading: the RAG pipeline, the wiki generation, the sandboxes and the
+RBAC are outside it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was <code>invalid_at</code> written for a temporal read that has not
+been built, or as a record for the manager UI? The column, its five
+writers and its test all exist; only a reader is missing.</li>
+<li>Should a memory mutation be audited, given the rest of the product
+audits and this subsystem holds personal statements?</li>
+<li>What happens to a user who rejects more than 500 guesses? Eviction
+keeps tombstones for memories that were used, but the policy past the
+cap is a real boundary on the guarantee.</li>
+<li>Does the <code>interest</code> kind measurably improve retrieval,
+and is that measured anywhere?</li>
+<li>How often does distillation re-derive a rejected statement in
+wording that misses both the fingerprint and the hour window?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Model:</strong> <code>internal/types/memory.go</code>
+(kinds, origins, statuses, budgets, <code>MemoryItem</code>,
+<code>MemoryTombstone</code>, <code>MemoryFingerprint</code>,
+<code>MaxMemoryTombstones</code>),
+<code>internal/types/memory_extraction.go</code>.</li>
+<li><strong>Repository:</strong>
+<code>internal/application/repository/memory.go</code>
+(<code>scoped</code>, <code>ListActiveResident</code>,
+<code>ListActiveByKinds</code>, <code>ListLive</code>,
+<code>SupersedeItem</code>, <code>AddTombstone</code>,
+<code>HasTombstone</code>), <code>memory_vector.go</code>,
+<code>memory_lifecycle.go</code>,
+<code>memory_extraction.go</code>.</li>
+<li><strong>Service:</strong>
+<code>internal/application/service/memory/service.go</code>
+(<code>Remember</code>, <code>DeleteItem</code>,
+<code>RejectItem</code>, <code>ConfirmItem</code>,
+<code>rejectedMessageWindow</code>), <code>consolidate.go</code>,
+<code>topic_resolve.go</code>, <code>vector.go</code>,
+<code>scope.go</code>.</li>
+<li><strong>Surface:</strong> <code>internal/handler/memory.go</code>,
+<code>internal/router/routes_memory.go</code>,
+<code>internal/agent/tools/search_memory.go</code>.</li>
+<li><strong>Audit, for the boundary:</strong>
+<code>internal/router/router.go:205-210</code>,
+<code>internal/types/audit_log.go</code>.</li>
+<li><strong>Tests:</strong>
+<code>internal/application/service/memory/retrieval_test.go</code>,
+<code>service_test.go</code>, <code>quality_test.go</code>,
+<code>internal/handler/memory_consistency_test.go</code>.</li>
+</ul>
+<h3 id="searches-behind-the-absence-claims">Searches behind the absence
+claims</h3>
+<p>Run from the repository root; each returned only what is described
+beside it.</p>
+<pre class="sh"><code># invalid_at is written at five sites and read by none
+grep -rn &#39;InvalidAt\|invalid_at&#39; --include=&#39;*.go&#39; internal/
+
+# valid_from appears only in ORDER BY
+grep -rn &#39;valid_from\|ValidFrom&#39; --include=&#39;*.go&#39; internal/application/
+
+# no memory mutation writes to the audit log
+grep -rniE &#39;audit&#39; --include=&#39;*.go&#39; internal/application/service/memory/ internal/handler/memory.go
+
+# the pending status is excluded from both injection queries
+grep -rn &#39;MemoryStatusPending\|MemoryStatusActive&#39; --include=&#39;*.go&#39; internal/</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/Tencent/WeKnora/commit/1ef38fdb8b19347b82d3a99f6f17d75ac09ad606"><code class="commit-id" title="1ef38fdb8b19347b82d3a99f6f17d75ac09ad606">1ef38fdb…</code></a>
+— first reading, on the <code>main</code> default branch, 3,017 commits
+from a repository created 5 August 2025, at version 0.8.0. Screened
+before reading: no auto-executing surface, six build-time execution
+points, six unpinned dependency surfaces, two uninstalled git-hook
+payloads, and four dependency surfaces changed inside the seven-day
+cooldown — so nothing was installed, nothing was built and no test was
+run. Every finding is static. The report is scoped to
+<code>internal/**/memory*</code>, 16,050 lines and 33 test files, which
+is the agent-memory subsystem added at v0.8.0; the surrounding RAG,
+wiki, sandbox and RBAC machinery is described only as context. Five
+marks are earned and two withheld after a producer test on each:
+<code>bitemporal</code> fails because <code>invalid_at</code> has five
+writers and no reader and <code>valid_from</code> appears only in
+<code>ORDER BY</code>, and <code>audit_log</code> fails because the
+product's audit log is scoped to RBAC and three other services while no
+memory mutation reaches it. An early reading of <code>RejectItem</code>
+as a plain delete was wrong — it routes to <code>DeleteItem</code>,
+which records the tombstone first.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
