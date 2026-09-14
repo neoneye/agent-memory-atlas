@@ -7,10 +7,12 @@ page_kind: system
 source_name: supermemoryai/supermemory
 source_url: https://github.com/supermemoryai/supermemory
 archive_name: "supermemoryai--supermemory"
-revision: 603d0512fd40e4575e2a075938c1851a898ceeb6
-revision_url: https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6
-analyzed_at: 2026-07-26
+revision: 2415a5c796d62c7ea9d709bc9337a6e1b6f6d837
+revision_url: https://github.com/supermemoryai/supermemory/commit/2415a5c796d62c7ea9d709bc9337a6e1b6f6d837
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the document read path in the Claude-memory tool — a client-side exact-match predicate over container tags, above whatever the hosted API does | packages/tools/src/claude-memory.ts:764-776 `isDocumentInConfiguredScope`, applied at :245, :656 and in `isDirectoryDocumentInExactScope` :778 | every call passes `containerTags: this.scopeContainerTags`, and the tool refuses to trust the result alone. `isDocumentInConfiguredScope` requires the document's tag array to equal the configured one exactly — same length, same elements, same order, after dropping `sm_project_*` — so a document carrying extra tags is rejected rather than accepted as a superset. The reason is written at :634-637: `customId values are only unique within an exact container-tag set in Mono. Resolve the matching document inside this tool's configured scope before fetching by internal ID; a direct get(customId) can pick another project/user's same-named file.` Directory listings go further and issue a full `get` per candidate, batched at eight, because `Mono strips internal project tags from every list response, so only a full get can prove that no hidden tags change this document's scope`. The server-side enforcement is not in this repository; this predicate is | no committed test pins the cross-project case"
 stack_storage: ""
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -292,12 +294,15 @@ Study Supermemory for product/API surface design and memory graph UX more than f
 - Domain schemas: `supermemory/packages/validation/schemas.ts`.
 - Public API schemas: `supermemory/packages/validation/api.ts`.
 - AI SDK tools: `supermemory/packages/ai-sdk/src/tools.ts`.
-- MCP server: `supermemory/apps/mcp/src/server.ts`.
+- MCP server: `supermemory/apps/mcp/` (the `src/server.ts` entry point of the previous pin is gone; the app is now built from `vite.config.ts` with its tests under `e2e/`).
 - MCP/API client: `supermemory/apps/mcp/src/client.ts`.
 - Prompt injection: `supermemory/packages/tools/src/shared/context.ts`.
+- Scope enforcement: `supermemory/packages/tools/src/claude-memory.ts` (`isDocumentInConfiguredScope`, `isDirectoryDocumentInExactScope`, `scopeContainerTags`), `supermemory/packages/tools/src/types.ts` (`projectId` and `containerTags` are mutually exclusive).
 - Client helper: `supermemory/packages/tools/src/shared/memory-client.ts`.
 - Graph UI: `supermemory/packages/memory-graph/src/`.
 
 ## History
+
+**2026-09-14** — [`2415a5c796d62c7ea9d709bc9337a6e1b6f6d837`](https://github.com/supermemoryai/supermemory/commit/2415a5c796d62c7ea9d709bc9337a6e1b6f6d837) — second reading, 165 commits on. Screened again: a dependency surface was inside the seven-day cooldown, so nothing was installed and nothing was run. The repository shrank by about 68,000 lines net: [`5258cb74c895c5297fbfff594935741aeb14a915`](https://github.com/supermemoryai/supermemory/commit/5258cb74c895c5297fbfff594935741aeb14a915) *"reduce the app to a redirect shell, drop the browser extension"* removed 441 files, most of `apps/web` — the integrations view, the chat UI, billing, the space selector, anonymous auth — so the console now lives in the hosted product and what remains open is the SDKs, the tools packages and the MCP app. `apps/mcp/src/server.ts`, cited in the appendix, is gone with it. `scope_enforced` was re-tested at the producer and holds, in a stronger place than the previous reading recorded: the scope key moved out of `packages/ai-sdk/src/tools.ts` into `packages/tools/src/claude-memory.ts`, which now applies its own exact-match predicate over `containerTags` before accepting any document, and issues a full `get` per candidate on directory listings because the list endpoint strips internal project tags. The mark now carries the evidence record it had been asserted without, including the boundary: the server-side half is not in this repository.
 
 **2026-07-26** — [`603d0512fd40e4575e2a075938c1851a898ceeb6`](https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6) — first reading.

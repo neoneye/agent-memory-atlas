@@ -104,14 +104,14 @@ surface around documents, chunks, spaces, profiles, SDKs, and MCP.</p>
               <strong>supermemoryai/supermemory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6" title="603d0512fd40e4575e2a075938c1851a898ceeb6">
+            <a class="meta-pill revision-pill" href="https://github.com/supermemoryai/supermemory/commit/2415a5c796d62c7ea9d709bc9337a6e1b6f6d837" title="2415a5c796d62c7ea9d709bc9337a6e1b6f6d837">
               <span>Analyzed revision</span>
-              <code>603d0512…</code>
+              <code>2415a5c7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/supermemoryai--supermemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -470,16 +470,49 @@ and memory entries?</li>
 <code>supermemory/packages/validation/api.ts</code>.</li>
 <li>AI SDK tools:
 <code>supermemory/packages/ai-sdk/src/tools.ts</code>.</li>
-<li>MCP server: <code>supermemory/apps/mcp/src/server.ts</code>.</li>
+<li>MCP server: <code>supermemory/apps/mcp/</code> (the
+<code>src/server.ts</code> entry point of the previous pin is gone; the
+app is now built from <code>vite.config.ts</code> with its tests under
+<code>e2e/</code>).</li>
 <li>MCP/API client:
 <code>supermemory/apps/mcp/src/client.ts</code>.</li>
 <li>Prompt injection:
 <code>supermemory/packages/tools/src/shared/context.ts</code>.</li>
+<li>Scope enforcement:
+<code>supermemory/packages/tools/src/claude-memory.ts</code>
+(<code>isDocumentInConfiguredScope</code>,
+<code>isDirectoryDocumentInExactScope</code>,
+<code>scopeContainerTags</code>),
+<code>supermemory/packages/tools/src/types.ts</code>
+(<code>projectId</code> and <code>containerTags</code> are mutually
+exclusive).</li>
 <li>Client helper:
 <code>supermemory/packages/tools/src/shared/memory-client.ts</code>.</li>
 <li>Graph UI: <code>supermemory/packages/memory-graph/src/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/supermemoryai/supermemory/commit/2415a5c796d62c7ea9d709bc9337a6e1b6f6d837"><code class="commit-id" title="2415a5c796d62c7ea9d709bc9337a6e1b6f6d837">2415a5c7…</code></a>
+— second reading, 165 commits on. Screened again: a dependency surface
+was inside the seven-day cooldown, so nothing was installed and nothing
+was run. The repository shrank by about 68,000 lines net: <a
+href="https://github.com/supermemoryai/supermemory/commit/5258cb74c895c5297fbfff594935741aeb14a915"><code class="commit-id" title="5258cb74c895c5297fbfff594935741aeb14a915">5258cb74…</code></a>
+<em>"reduce the app to a redirect shell, drop the browser
+extension"</em> removed 441 files, most of <code>apps/web</code> — the
+integrations view, the chat UI, billing, the space selector, anonymous
+auth — so the console now lives in the hosted product and what remains
+open is the SDKs, the tools packages and the MCP app.
+<code>apps/mcp/src/server.ts</code>, cited in the appendix, is gone with
+it. <code>scope_enforced</code> was re-tested at the producer and holds,
+in a stronger place than the previous reading recorded: the scope key
+moved out of <code>packages/ai-sdk/src/tools.ts</code> into
+<code>packages/tools/src/claude-memory.ts</code>, which now applies its
+own exact-match predicate over <code>containerTags</code> before
+accepting any document, and issues a full <code>get</code> per candidate
+on directory listings because the list endpoint strips internal project
+tags. The mark now carries the evidence record it had been asserted
+without, including the boundary: the server-side half is not in this
+repository.</p>
 <p><strong>2026-07-26</strong> — <a
 href="https://github.com/supermemoryai/supermemory/commit/603d0512fd40e4575e2a075938c1851a898ceeb6"><code class="commit-id" title="603d0512fd40e4575e2a075938c1851a898ceeb6">603d0512…</code></a>
 — first reading.</p>
