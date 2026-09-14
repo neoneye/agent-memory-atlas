@@ -7,10 +7,12 @@ page_kind: system
 source_name: akitaonrails/ai-memory
 source_url: https://github.com/akitaonrails/ai-memory
 archive_name: "akitaonrails--ai-memory"
-revision: 5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
-revision_url: https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3
-analyzed_at: 2026-07-28
+revision: 74d2d31ebd8cca656c49f31563fac53e0b61c5cf
+revision_url: https://github.com/akitaonrails/ai-memory/commit/74d2d31ebd8cca656c49f31563fac53e0b61c5cf
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the active project — a root that bounds reads and writes, repaired and defended across several fixes | crates/ai-memory-core, crates/ai-memory-wiki | the active project selects which wiki a call reads and writes, and the scope work in this range is mostly about the ways that binding used to slip: a capture-only marker no longer resets the scope to default, the active-project fallback is seeded from disk at startup instead of being inferred, the startup seed is kept out of the write path, and the OKF pending exclusion is scoped to project roots rather than applied globally. The direction of each fix is the same — narrow the ambient default rather than widen the query | tests/e2e, tests/hooks"
 stack_storage: "sqlite, files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -384,5 +386,7 @@ Do not copy:
 - Harness adapters: `hooks/` and `crates/ai-memory-hooks/`.
 
 ## History
+
+**2026-09-14** — [`74d2d31ebd8cca656c49f31563fac53e0b61c5cf`](https://github.com/akitaonrails/ai-memory/commit/74d2d31ebd8cca656c49f31563fac53e0b61c5cf) — re-read, 791 commits past the previous pin across 443 files. The mark stands and now carries an evidence record. Most of the scope work in the range is repair of the same class of slip: a capture-only marker that reset the scope to default, an active-project fallback inferred rather than seeded from disk, a startup seed reaching the write path, and an OKF pending exclusion applied globally instead of per project root — each narrowing an ambient default rather than widening a query. The wiki is now an Open Knowledge Format bundle, which is worth recording against the two other OKF implementations in this atlas for how differently it lands. In [OpenLore](../openlore/) and [MCP-Memory](../mcp-memory/) the `status`, `verified` and `stale_after` families are validated on write and read by nothing. Here `crates/ai-memory-core/src/okf.rs` derives `stale_after` from the existing `expires_at` written by the TTL machinery and carries it verbatim, and a `forget-sweep` command acts on that expiry — so the OKF frontmatter is a serialization view over state the system already maintains rather than a second vocabulary beside it. The enforcement is a sweep rather than a read-path filter, which is the honest limit on that comparison. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-28** — [`5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3`](https://github.com/akitaonrails/ai-memory/commit/5d3c08344cf40d23cbf06c47f6b6300bdb96d1e3) — first reading.

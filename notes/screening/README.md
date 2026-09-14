@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 142 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 176 |
+| Repositories with an auto-run surface (`RUNS`) | 143 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 177 |
 | Repositories with build-time execution (`EXEC`) | 261 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -36,6 +36,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
+| [`ai-memory`](../../content/systems/ai-memory.md) | `hooks/` |
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
