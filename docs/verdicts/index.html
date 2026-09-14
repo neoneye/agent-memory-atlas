@@ -11469,32 +11469,33 @@ content.</li>
 <li>Second idea: <strong>a scope that is refused rather than
 defaulted.</strong> <code>RepositoryMemoryScope</code> distinguishes
 <code>git-repository</code>, <code>local-directory</code> and
-<code>codex-projectless</code>, names its fallback reason
-(<code>git_metadata_invalid</code>), and <code>adapter.ts:456</code>
-errors with <em>"memory scope is required for MemoraX search/add"</em>
-rather than falling back to a global namespace. Beside it, a retrieval
-that reports <code>skipReason</code> when it does not fire, and an add
-that is a task with a status endpoint — the honest way to describe a
-write that is not readable yet.</li>
+<code>general</code>, names its fallback reason
+(<code>git_metadata_invalid</code>), and <code>adapter.ts</code> errors
+with <em>"memory scope is required for MemoraX search/add"</em> rather
+than falling back to a global namespace. Beside it, a retrieval that
+reports <code>skipReason</code> when it does not fire.</li>
 <li>Biggest risk: <strong>there is no delete.</strong> Not "no
 tombstone" — no removal of any kind in the client, and none among the
-three endpoints it speaks (<code>/v1/memories/search</code>,
-<code>/add</code>, <code>/add/status/{taskId}</code>). A user asking for
-a memory to be removed has nothing here to call. Beside that, the whole
-epistemic layer is on the far side of an HTTP boundary: what a
-<code>memory_type</code> means, how a search is ranked, whether scope is
-enforced server-side and whether two contradictory facts are ever
-reconciled cannot be determined from this tree, and the recalled
-<code>&lt;memories&gt;</code> block is rendered into context with no
-sentence telling the model its contents are data from an earlier
-session.</li>
+two endpoints it speaks (<code>/v1/memories/search</code> and
+<code>/add</code>). A user asking for a memory to be removed has nothing
+here to call. Beside that, the whole epistemic layer is on the far side
+of an HTTP boundary: what a <code>memory_type</code> means, how a search
+is ranked, whether scope is enforced server-side and whether two
+contradictory facts are ever reconciled cannot be determined from this
+tree, and the recalled <code>&lt;memories&gt;</code> block is rendered
+into context with no sentence telling the model its contents are data
+from an earlier session.</li>
 <li>Maturity impression: MIT (covering the client only), ~27,000 lines
-of TypeScript across six packages, ten memory test files plus per-client
-hook-runtime suites, four host integrations. One capability mark,
-<code>negative_eval</code>, earned on the outbound payload rather than
-on a read path. <code>stack_storage</code> is <code>delegated</code> and
-<code>stack_retrieval</code> is empty because neither the store nor the
-ranking is in this repository.</li>
+of TypeScript across six packages, eleven memory test files plus
+per-client hook-runtime suites, four host integrations. One capability
+mark, <code>negative_eval</code>, earned on the outbound payload rather
+than on a read path. The care in the scope resolver does not reach the
+key it sends: <code>effectiveUserId</code> is
+<code>baseUserId@repositoryName</code>, and a committed test asserts
+that two clones named <code>Shared</code> from different owners share
+one namespace while their local keys differ. <code>stack_storage</code>
+is <code>delegated</code> and <code>stack_retrieval</code> is empty
+because neither the store nor the ranking is in this repository.</li>
 <li>Study when: you are shipping session text to a store you do not own
 and want a worked redaction boundary, or you want the pattern of a
 required, kind-distinguished scope with a named fallback.</li>

@@ -15694,27 +15694,29 @@ writebacks</td>
 into a char-budgeted context block; ranking and matching are not in this
 repository</td>
 <td>Automatic per-turn writeback: buffer, chunk, redact,
-<code>POST /v1/memories/add</code>, then poll
-<code>GET /v1/memories/add/status/{taskId}</code></td>
+<code>POST /v1/memories/add</code> with <code>async_mode: true</code> —
+acceptance is the last thing the client learns</td>
 <td>No delete, no correction and no supersession anywhere in the client;
 the API surface it speaks has three endpoints and none of them removes
 anything</td>
 <td>A required <code>RepositoryMemoryScope</code> —
 <code>git-repository</code>, <code>local-directory</code> or
-<code>codex-projectless</code> — refused rather than defaulted when it
-cannot be resolved</td>
+<code>general</code> — refused rather than defaulted; the key sent to
+the service is <code>baseUserId@repositoryName</code>, so same-named
+repositories share one namespace by design</td>
 <td>Deployment adapters and hook runtimes for Codex, Claude Code,
 DeepSeek Harness and OpenCode against one local backend, plus a
 <code>memorax memory</code> CLI</td>
-<td>A writeback buffer with chunking, a reconciler, and task-status
-polling for asynchronous adds</td>
+<td>A writeback buffer with chunking, and per-client reconciliation of a
+turn interrupted before its writeback</td>
 <td>None in the client — no status, no confidence read, no provenance
 beyond the scope and the turn it came from</td>
 <td>Credential redaction before anything leaves the machine, with a
 positive control against over-redaction; scope refused rather than
 defaulted</td>
 <td>Every question this atlas asks about correction is answered on the
-other side of an HTTP boundary that is not in this repository</td>
+other side of an HTTP boundary that is not in this repository — and the
+scope key that boundary receives is a bare repository name</td>
 </tr>
 <tr>
 <td><code>memori</code></td>
@@ -31358,14 +31360,16 @@ committed tests</li>
 <li><a
 href="https://github.com/memorax-ai/memorax-code">memorax-ai/memorax-code</a>
 at <a
-href="https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b"><code class="commit-id" title="b98cb8c78956a1cd5b6b364549217fb2b6db601b">b98cb8c7…</code></a>
+href="https://github.com/memorax-ai/memorax-code/commit/1525c20fbcad8c688bfaf4bb54dc117876fd6a09"><code class="commit-id" title="1525c20fbcad8c688bfaf4bb54dc117876fd6a09">1525c20f…</code></a>
 — read only; no auto-run surface, three build-time execution points,
-seven dependency manifests inside the seven-day cooldown, and
+nine dependency manifests inside the seven-day cooldown, and
 <code>AGENTS.md</code> and <code>CLAUDE.md</code> addressed to a reading
 agent, recorded as data. Nothing was installed, no client was deployed
 and no request was made to the hosted service, so every claim is about
 the client half: the store behind <code>/v1/memories/*</code> was not
-exercised</li>
+exercised. The second reading read the scope key itself —
+<code>baseUserId@repositoryName</code>, with the collision-resistant key
+kept local — and found the task-status projection deleted</li>
 <li><a
 href="https://github.com/Lolaplex/agents-memory">Lolaplex/agents-memory</a>
 at <a

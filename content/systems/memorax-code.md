@@ -7,9 +7,9 @@ page_kind: system
 source_name: "memorax-ai/memorax-code"
 source_url: https://github.com/memorax-ai/memorax-code
 archive_name: "memorax-ai--memorax-code"
-revision: b98cb8c78956a1cd5b6b364549217fb2b6db601b
-revision_url: https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b
-analyzed_at: 2026-08-20
+revision: 1525c20fbcad8c688bfaf4bb54dc117876fd6a09
+revision_url: https://github.com/memorax-ai/memorax-code/commit/1525c20fbcad8c688bfaf4bb54dc117876fd6a09
+analyzed_at: 2026-09-14
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the outbound payload, before it reaches the hosted store | packages/ts/memorax-code-backend/test/memory/memory-payload-redaction.test.mjs, src/memory/payload-redaction.ts | committed cases assert that credential material must not appear in what is written — private-key blocks, `Authorization` headers, Bearer and Basic tokens, JWTs and sensitive key/value pairs are replaced by `[REDACTED:CATEGORY]` — with a positive control that representative non-sensitive coding text survives unchanged, an idempotence case, and a check that a payload consisting only of placeholders is not meaningful text | memory-payload-redaction.test.mjs — 'replaces each supported detector category', 'preserves representative non-sensitive coding text', 'resolves overlaps and remains idempotent'"
@@ -20,14 +20,14 @@ matrix:
   memory_unit: "A fact returned by the service, rendered into a `<memories><facts memory_type=…>` block; what is stored is decided remotely"
   storage: "None of its own — a hosted MemoraX service behind `/v1/memories/*`, with a local buffer for pending writebacks"
   retrieval: "One `POST /v1/memories/search` per turn start, rendered into a char-budgeted context block; ranking and matching are not in this repository"
-  write: "Automatic per-turn writeback: buffer, chunk, redact, `POST /v1/memories/add`, then poll `GET /v1/memories/add/status/{taskId}`"
+  write: "Automatic per-turn writeback: buffer, chunk, redact, `POST /v1/memories/add` with `async_mode: true` — acceptance is the last thing the client learns"
   update_delete: "No delete, no correction and no supersession anywhere in the client; the API surface it speaks has three endpoints and none of them removes anything"
-  scoping: "A required `RepositoryMemoryScope` — `git-repository`, `local-directory` or `codex-projectless` — refused rather than defaulted when it cannot be resolved"
+  scoping: "A required `RepositoryMemoryScope` — `git-repository`, `local-directory` or `general` — refused rather than defaulted; the key sent to the service is `baseUserId@repositoryName`, so same-named repositories share one namespace by design"
   integration: "Deployment adapters and hook runtimes for Codex, Claude Code, DeepSeek Harness and OpenCode against one local backend, plus a `memorax memory` CLI"
-  background: "A writeback buffer with chunking, a reconciler, and task-status polling for asynchronous adds"
+  background: "A writeback buffer with chunking, and per-client reconciliation of a turn interrupted before its writeback"
   trust: "None in the client — no status, no confidence read, no provenance beyond the scope and the turn it came from"
   strengths: "Credential redaction before anything leaves the machine, with a positive control against over-redaction; scope refused rather than defaulted"
-  risks: "Every question this atlas asks about correction is answered on the other side of an HTTP boundary that is not in this repository"
+  risks: "Every question this atlas asks about correction is answered on the other side of an HTTP boundary that is not in this repository — and the scope key that boundary receives is a bare repository name"
 ---
 
 ## 1. Executive Summary
@@ -117,9 +117,9 @@ flowchart TD
         HOOK["per-client hook runtimes"]
         TURN["turn coordinator"]
         RET["automatic-retrieval"]
-        WB["writeback buffer<br/>chunk · reconciler"]
+        WB["writeback buffer<br/>chunk"]
         RED["payload-redaction"]
-        SCOPE["repository/scope<br/>git-repository · local-directory · codex-projectless"]
+        SCOPE["repository/scope<br/>sends baseUserId@repositoryName"]
         OBS["observability"]
     end
 
@@ -128,8 +128,8 @@ flowchart TD
     clients --> HOOK --> TURN
     TURN --> RET -->|"POST /search"| SVC
     SVC -->|"facts"| RET -->|"&lt;memories&gt; block, char-budgeted"| clients
-    TURN --> WB --> RED -->|"POST /add"| SVC
-    SVC -->|"taskId"| WB -->|"GET /add/status/{taskId}"| SVC
+    TURN --> WB --> RED -->|"POST /add, async_mode"| SVC
+    SVC -->|"accepted — not extracted"| WB
     SCOPE -.->|"required; refused when unresolvable"| RET
     SCOPE -.-> WB
     OBS -.-> RET
@@ -144,8 +144,8 @@ each host its own turn-start and writeback runtime behind a common
 `close`).
 
 **Persistence.** None of its own that holds memories. The local state is
-operational: a writeback buffer with chunking and a reconciler, a task
-projection for in-flight adds, and a trace store. The memories live in the
+operational: a writeback buffer with chunking, a per-client reconciliation of an
+interrupted turn, and a trace store. The memories live in the
 hosted service.
 
 **Search.** Not here. `stack_retrieval` is empty for that reason — the client
@@ -181,17 +181,44 @@ rather than as loose prose — though the fence is a rendering convention, and
 nothing in the client tells the model that the content inside it is untrusted.
 
 **Scope.** `src/repository/scope.ts` resolves a `RepositoryMemoryScope` of kind
-`git-repository`, `local-directory` or `codex-projectless`, with an explicit
+`git-repository`, `local-directory` or `general`, with an explicit
 fallback reason (`git_metadata_invalid`) and result kinds `none`, `invalid`,
-`degraded` and `repository`. `adapter.ts:456` refuses outright:
+`degraded` and `repository`. `adapter.ts` refuses outright:
 *"memory scope is required for MemoraX search/add"*. A scope that cannot be
 resolved is an error, not a default — which is the opposite of the caller-
 supplied string this atlas usually finds.
 
+**Two keys come out of that resolution and only one of them is sent.**
+`scope.ts:214` builds the identity the service sees as
+``effectiveUserId: `${input.baseUserId}@${input.repositorySlug}` `` — and the
+slug is a bare repository *name*: `repositoryNameFromRemotePath` takes the last
+path segment of the origin URL and strips `.git`, falling back to the common
+directory's basename and then to the workspace folder name. Beside it sits
+`repositoryKey`, a SHA of the git common directory or the absolute workspace
+path, which does not collide — and which never leaves the machine. Its comment
+says what it is for: *"repositoryKey separately identifies the local scope used
+for session binding."*
+
+So `github.com/one/Shared` and `github.com/two/Shared` address the same remote
+memory. That is not an oversight; the tree asserts it. `repository-memory-scope.test.mjs:363`
+is named *"independent same-named clones share a namespace but remain distinct
+sticky session scopes"* and pins `firstScope.scope.effectiveUserId` to
+`"alice@Shared"`, asserts the second equals it, and asserts the two
+`repositoryKey`s differ. The private work of two employers, or a fork and its
+upstream, land under one key whatever the service does with it — and no
+enforcement on the far side can separate what the near side has already merged.
+
+The `general` kind is the same shape with the collision made total. It resolves
+to the slug `General` for every projectless session across every managed client,
+so `alice@General` is one namespace holding every default chat the user has with
+any of the four agents. The care taken elsewhere in this file is real — a
+projectless hint does not override Git authority, an unreadable `cwd` still
+fails closed, and `repositoryMemoryScopeCanBindGeneralWorkspace` gates the
+transition — but all of it governs the local key, not the one on the wire.
+
 **Writeback.** `src/memory/automatic-writeback.ts` with
-`writeback-buffer.ts`, `writeback-chunk.ts`, `writeback-reconciler.ts` and
-`writeback-task-projection.ts`: decisions are buffered (with a scope-upgrade
-path), chunked, redacted, and posted. Failures are classified —
+`writeback-buffer.ts` and `writeback-chunk.ts`: decisions are buffered (with a
+scope-upgrade path), chunked, redacted, and posted. Failures are classified —
 `automatic-writeback.ts:506-509` retries only on HTTP 408, 429 and 5xx, so a
 400 is not retried into a loop.
 
@@ -212,23 +239,29 @@ and writeback agree about what they are talking about.
 `src/app/memory-observability.ts` emit events with a source, related turns and a
 diagnostic logger; `src/memory/reminder-trace-recorder.ts` records reminders.
 
-**Tests.** Ten files under `test/memory/` covering retrieval, writeback, the
-buffer, chunking, the reconciler, the task projection, the CLI, the service, the
-turn coordinator and redaction, plus per-client hook-runtime suites.
+**Tests.** Eleven files under `test/memory/` covering retrieval, writeback, the
+buffer, chunking, the CLI, the service, the turn coordinator, the hook command,
+the harness runtime, the quota notice and redaction, plus per-client
+hook-runtime suites and `test/repository/repository-memory-scope.test.mjs`,
+which is where the scope's intended behaviour is written down.
 
 ## 5. Memory Data Model
 
 There is no schema in this repository. The client's types describe *transport*:
 a rendered item with a `memory_type` and a line, a writeback decision, a buffered
-decision with a scope upgrade, a task projection for an in-flight add. What a
+decision with a scope upgrade. What a
 stored memory contains, which fields it carries, and whether it has an id the
 client could later reference are all service-side.
 
-**Scoping** is the one identity the client owns, and it is well made: a scope is
-required, three kinds are distinguished, a degraded resolution is named rather
-than silently downgraded, and the reason for a fallback is carried
-(`git_metadata_invalid`). Whether that scope is *enforced* on the read is the
-service's business, which is why the mark is withheld below.
+**Scoping** is the one identity the client owns, and the resolution is well
+made: a scope is required, three kinds are distinguished, a degraded resolution
+is named rather than silently downgraded, and the reason for a fallback is
+carried (`git_metadata_invalid`). The *key* is the weak half. What reaches the
+service is `baseUserId@repositoryName`, so the resolution's care buys precision
+the wire format then discards, and a namespace can hold two repositories that
+share a name. Whether even that key is enforced on the read is the service's
+business, which is why the mark is withheld below — but the granularity
+question is answerable here, and the answer is a repository name.
 
 **Provenance and time.** A memory carries the turn and scope it was written
 under. There is no validity interval, no capture time visible in the client's
@@ -324,9 +357,16 @@ poisoned memory has no barrier on the way back in.
 endpoints it speaks. Whatever the service offers, this repository cannot reach
 it — so a user asking *"remove what you learned about X"* has no answer here.
 
-**Failure handling** is careful: retries bounded to 408/429/5xx, a reconciler
-for interrupted writebacks, and a task projection so an in-flight add is not
-lost on restart.
+**Failure handling** is careful up to the point where it stops. Retries are
+bounded to 408/429/5xx, and each client's `memory-hook-runtime.ts` carries a
+`reconcilePreviousInterruptedTurn` that picks up a turn whose writeback never
+ran, logging `interrupted_turn_reconciled`. Past the post there is nothing. The
+payload sets `async_mode: true` under a comment that states the consequence —
+*"Acceptance acknowledges task submission, not completed memory extraction"* —
+and the client calls exactly two endpoints, `/v1/memories/add` and
+`/v1/memories/search`. `http.ts:141` throws if the immediate envelope comes back
+`failed`, `error` or `cancelled`; an add that is accepted and then fails during
+extraction produces no local signal at all, and no code path asks.
 
 **What cannot be assessed** from this tree: multi-tenancy, retention, whether
 scope is enforced server-side, whether the service deletes on request, and what
@@ -361,10 +401,17 @@ current behaviour, and the store is neither.
   preserved" is what stops the rule set from eating the corpus.
 - **Refuse a scope you cannot resolve.** Three named kinds, a named fallback
   reason, and an outright refusal beat defaulting to a global namespace.
+- **Keep two keys and know which one you are sending.** A collision-resistant
+  local key for session binding and a human-readable one for the wire is a
+  reasonable split — provided the wire key is as precise as the isolation you
+  are claiming. Here it is not, and the tree is honest enough to assert the
+  consequence in a test rather than leave a reader to discover it.
 - **Say why a retrieval did not happen.** A `skipReason` beside `retrieved:
   false` turns "memory did nothing" into a debuggable event.
-- **Make an asynchronous add a task with a status endpoint.** It is the only
-  honest way to describe a write that is not readable yet.
+- **Name an asynchronous write as accepted rather than done.** The comment on
+  `async_mode: true` — acceptance acknowledges submission, not extraction — is
+  the honest description of a write that is not readable yet. Follow it with a
+  way to find out, which this client does not have.
 
 ### Avoid
 
@@ -395,23 +442,29 @@ answer them on the product's behalf.
   surface may be larger.
 - Is scope enforced server-side, or is the required client-side scope the whole
   boundary? This decides whether the isolation is real, and it is not visible
-  here.
-- What is the actual write-to-readable lag? The add is a task with a status
-  endpoint, which is the right shape for measuring it, and nothing in the
-  repository reports a distribution.
+  here — though the granularity is: two repositories named `Shared` address one
+  namespace however well the service enforces it.
+- Is the shared `General` namespace across four clients the intent, or a
+  consequence of collapsing `Codex-General` into a client-neutral slug?
+- What is the actual write-to-readable lag, and how would anyone know? The add
+  is accepted asynchronously and nothing in the client observes what became of
+  it, so a failure during extraction is indistinguishable from a turn that had
+  nothing worth keeping.
 - What are the retention and deletion terms for transcripts sent to the service?
 
 ## Appendix: File Index
 
 - **Provider boundary:** `packages/ts/memorax-code-backend/src/provider/memorax/adapter.ts`, `http.ts`, `config.ts`
 - **Retrieval:** `src/memory/automatic-retrieval.ts`, `src/memory/turn-coordinator.ts`
-- **Write path:** `src/memory/automatic-writeback.ts`, `writeback-buffer.ts`, `writeback-chunk.ts`, `writeback-reconciler.ts`, `writeback-task-projection.ts`
+- **Write path:** `src/memory/automatic-writeback.ts`, `writeback-buffer.ts`, `writeback-chunk.ts`; interrupted-turn recovery in `src/clients/*/memory-hook-runtime.ts` (`reconcilePreviousInterruptedTurn`)
 - **Privacy:** `src/memory/payload-redaction.ts`
-- **Scope:** `src/repository/scope.ts`, `src/memory/repository-session.ts`
+- **Scope:** `src/repository/scope.ts` (`effectiveUserId` at :214, `generalMemoryScope`, `repositoryNameFromRemotePath`), `src/memory/repository-session.ts`, `test/repository/repository-memory-scope.test.mjs:363`
 - **Client integration:** `src/clients/{codex,claude,dsh,opencode}/memory-hook-runtime.ts`, `packages/ts/memorax-code-*-adapter/`
 - **Operator surface:** `src/memory/cli.ts`, `src/memory/observability.ts`
-- **Tests:** `test/memory/memory-payload-redaction.test.mjs`, `automatic-memory-retrieval.test.mjs`, `automatic-memory-writeback.test.mjs`, `memory-writeback-reconciler.test.mjs`
+- **Tests:** `test/memory/memory-payload-redaction.test.mjs`, `automatic-memory-retrieval.test.mjs`, `automatic-memory-writeback.test.mjs`, `memory-service.test.mjs`, `test/repository/repository-memory-scope.test.mjs`
 
 ## History
+
+**2026-09-14** — [`1525c20fbcad8c688bfaf4bb54dc117876fd6a09`](https://github.com/memorax-ai/memorax-code/commit/1525c20fbcad8c688bfaf4bb54dc117876fd6a09) — second reading, 274 commits and eleven releases on. Screened first: no auto-executing surface, three build-time execution points, nine dependency manifests inside the seven-day cooldown; nothing was installed, no client was deployed and no request was made to the service. The boundary of the first reading holds — every claim is still about the client. Three corrections. `writeback-reconciler.ts` and `writeback-task-projection.ts` were deleted with the Memory Viewer at [`d6cd5335cc908d57a63227ebd4d32ae51d37ba71`](https://github.com/memorax-ai/memorax-code/commit/d6cd5335cc908d57a63227ebd4d32ae51d37ba71); reconciliation of an interrupted turn survives per client in `memory-hook-runtime.ts`, but nothing follows an accepted add, and the status endpoint the report described is not called anywhere. `codex-projectless` became `general`, shared across all four clients under one slug. And the scope key itself was read this time rather than assumed: `effectiveUserId` is `baseUserId@repositoryName`, the collision-resistant `repositoryKey` stays local, and `repository-memory-scope.test.mjs:363` asserts that two clones named `Shared` from different owners share a namespace. `negative_eval` re-tested at the producer (`automatic-writeback.ts:289-290` calling `redactMemoryPayloadText` before the post) and holds unchanged; no mark moves.
 
 **2026-08-20** — [`b98cb8c78956a1cd5b6b364549217fb2b6db601b`](https://github.com/memorax-ai/memorax-code/commit/b98cb8c78956a1cd5b6b364549217fb2b6db601b) — first reading. Screened before anything was read: no auto-executing surface, three build-time execution points, seven dependency manifests inside the seven-day cooldown, and `AGENTS.md` and `CLAUDE.md` addressed to a reading agent, recorded as data; nothing was installed, no client was deployed and no request was made to the service. Every claim here is about the client at this commit — the store behind `/v1/memories/*` was not exercised, and the report says where that boundary falls rather than inferring across it.
