@@ -7,10 +7,13 @@ page_kind: system
 source_name: "Sompote/TigrimOSR"
 source_url: https://github.com/Sompote/TigrimOSR
 archive_name: "Sompote--TigrimOSR"
-revision: 0813f2eb9f28a07e9adb6231f3de4f09803b66b4
-revision_url: https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4
-analyzed_at: 2026-07-31
-capabilities: "trust_state, scope_enforced, human_review"
+revision: e6056e803c81547f04a65178f0c0994fc36e016a
+revision_url: https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a
+analyzed_at: 2026-09-14
+capabilities: "scope_enforced, human_review"
+capability_evidence:
+  human_review: "the skill-synthesizer proposal queue — a real before-and-after diff, approved or rejected by a person | src/server/services/skill_synthesizer.rs:997, :1100, :1146, :1196, src/ui/settings.rs:3715, :3857, :3872, src/server/routes/skills.rs:675 | a synthesized skill lands as a proposal rather than a live edit, `get_proposed_diff` returns both files so the reviewer sees what would change rather than a summary of it, and `approve_proposal` and `reject_proposal` are the two dispositions. The UI partitions the queue on the same field — pending proposals in one list, approved or rejected in another with a status icon. The condition worth stating is at `:997`: the proposal is created needing approval only when `require_approval` is set, so the gate is configurable rather than unconditional | tests in the repository"
+  scope_enforced: "recall — a project id selects the memory file and filters the installed-skills block | src/server/ | the project id chooses which `memory.md` is read and narrows the skills block assembled for the session; the CLI scopes by launch directory instead, keeping skills, persona, settings and history in a local `.tigrimos`. The key is applied when the context is assembled rather than being a label on a row | tests in the repository"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -23,7 +26,7 @@ matrix:
   scoping: "Project id selects the memory.md and filters the installed-skills block; the CLI scopes instead by launch directory, with skills, persona, settings and history in a local .tigrimos"
   integration: "Native Rust desktop app, embedded web UI, a folder-local `tigrim` CLI, MCP servers, plugins, Telegram and LINE bots"
   background: "A scheduler runs the skill synthesizer in the desktop and headless binaries only; compaction hooks track file reads and invoked skills"
-  trust: "review_status pending or approved, persisted, with pending coupled to enabled=false"
+  trust: "A `review_status` of pending or approved is persisted on an installed skill and rendered as a label; nothing gates use on it, and both install paths create a pending skill with `enabled: true`"
   strengths: "A staged proposal a person can diff before it takes effect, carrying its rationale and source sessions"
   risks: "Proposal state is in-memory only, so a rejected skill can be re-proposed after a restart, and the CLI never starts the synthesizer that produces skills in the first place"
 ---
@@ -590,6 +593,8 @@ resolvers `skills_root`, `resolve_data_file`, `resolve_config_file`,
 **UI review surface** — `src/ui/skills_view.rs`, `src/ui/settings.rs`
 
 ## History
+
+**2026-09-14** — [`e6056e803c81547f04a65178f0c0994fc36e016a`](https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a) — re-read, two commits past the previous pin; upstream has not moved since 1 August. **`trust_state` is withdrawn, and the claim it rested on is corrected.** The report said `review_status` pending was coupled to `enabled=false`. It is not: both install paths build the row with `enabled: true` beside `review_status: Some("pending")` — a ClawHub install at `src/ui/skills_view.rs:945` and an upload at `:1198`. Every one of the 27 occurrences of the field was then read, and on an installed skill it is set once, rendered once as a coloured label at `:1612`, and gates nothing; the Enabled toggle beside that label is independent. A status that withholds nothing is the display-only case the mark excludes. The confusion is worth naming because two different objects share the field: the synthesizer's *proposals* also carry `review_status`, and there the status does partition a queue. That is where `human_review` lives and it stands — `get_proposed_diff` returns both files so a person sees the real change, with approve and reject as the two dispositions — subject to `require_approval`, which decides whether a proposal needs approval at all. `scope_enforced` is unchanged. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-31** — [`0813f2eb9f28a07e9adb6231f3de4f09803b66b4`](https://github.com/Sompote/TigrimOSR/commit/0813f2eb9f28a07e9adb6231f3de4f09803b66b4) — Fifteen commits on, and **nothing published had gone stale** — the report was extended rather than corrected. What changed was elsewhere: a second binary. The `tigrim` CLI scopes skills, persona, settings and chat history to a `.tigrimos` directory in the folder it launches in, and never starts the skill synthesizer, so the propose-stage-approve mechanism this report exists for is absent from the mode a new user is most likely to try.
 
