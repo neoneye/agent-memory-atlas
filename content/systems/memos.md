@@ -7,10 +7,12 @@ page_kind: system
 source_name: "MemTensor/MemOS"
 source_url: https://github.com/MemTensor/MemOS
 archive_name: "MemTensor--MemOS"
-revision: 3fd109e7cbaba291af2253f107e0a595dbf62b00
-revision_url: https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00
-analyzed_at: 2026-07-26
+revision: de8069428a9247bfa7a3d35f59a9b39fa8f231d2
+revision_url: https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "search — the accessible cube list is derived from the user per call and skipped over, not trusted from the request | src/memos/mem_os/main.py:147-148, :239, :248-249, :320-321 | `get_user_cubes(target_user_id)` returns the cubes a user may reach and `user_cube_ids` is built from them at the start of the call rather than taken from the caller. The consumer is a plain skip — `if mem_cube_id not in user_cube_ids: continue` — so a registered cube the user does not hold is passed over when a search engine is chosen, and the same lookup is repeated on the other entry point rather than cached across users. Beneath it the preference adder filters on `{\"user_id\": memory.metadata.user_id}`, so the key is on the row as well as on the cube | tests/"
 stack_storage: "delegated"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -217,5 +219,7 @@ For ordinary agent memory, choose and validate one text implementation first. Do
 - `tests/`
 
 ## History
+
+**2026-09-14** — [`de8069428a9247bfa7a3d35f59a9b39fa8f231d2`](https://github.com/MemTensor/MemOS/commit/de8069428a9247bfa7a3d35f59a9b39fa8f231d2) — re-read, 179 commits past the previous pin across 362 files. The mark stands and now carries an evidence record naming both halves: the accessible cube list is derived from the user inside the call through `get_user_cubes(target_user_id)` rather than taken from the request, and the consumer is a skip over any cube not in that list when a search engine is selected. The range is mostly scheduler, embedder and plugin work; the one scope-shaped change is a fix narrowing secret environment fallbacks in the plugin, which is configuration rather than memory. No new mark: nothing in the range adds a trust status, a rejected-value record or a second time axis. Screened again first; nothing was installed and no suite was run.
 
 **2026-07-26** — [`3fd109e7cbaba291af2253f107e0a595dbf62b00`](https://github.com/MemTensor/MemOS/commit/3fd109e7cbaba291af2253f107e0a595dbf62b00) — first reading.
