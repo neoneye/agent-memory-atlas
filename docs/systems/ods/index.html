@@ -110,14 +110,14 @@ baseline the agent may not edit.</p>
               <strong>Osmantic/ODS</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Osmantic/ODS/commit/5a4450765976e2ad2792b9ac8927f4873dac60f6" title="5a4450765976e2ad2792b9ac8927f4873dac60f6">
+            <a class="meta-pill revision-pill" href="https://github.com/Osmantic/ODS/commit/21f4b3a64dd2a2fac1163f446806091c25b6b814" title="21f4b3a64dd2a2fac1163f446806091c25b6b814">
               <span>Analyzed revision</span>
-              <code>5a445076…</code>
+              <code>21f4b3a6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-11</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Osmantic--ODS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -141,8 +141,8 @@ baseline the agent may not edit.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>ODS is the Osmantic Deployment System — Apache-2.0, 3,181 commits
-since 9 February 2026, 1,339 files, and overwhelmingly a
+<p>ODS is the Osmantic Deployment System — Apache-2.0, 3,266 commits
+since 9 February 2026, 1,356 files, and overwhelmingly a
 <em>deployment</em> project. It installs and wires a local AI stack:
 Ollama, Open WebUI, n8n, ComfyUI, Qdrant, SearXNG, Whisper, TTS,
 LiteLLM, Langfuse and twenty-odd more, including agent hosts this atlas
@@ -150,13 +150,16 @@ reports on separately (<a href="../openclaw/">OpenClaw</a>, <a
 href="../opencode/">OpenCode</a>, <a
 href="../hermes-agent/">Hermes</a>).</p>
 <p><strong>Almost none of that is memory, and the report says so up
-front.</strong> Across the tree, <code>agent memory</code>,
-<code>long-term memory</code> and <code>memory system</code> appear zero
-times in code; every occurrence of <code>forget</code> is
-<code>wifi-forget</code>, a Wi-Fi profile endpoint; every occurrence of
-<code>embedding</code> is about deploying and validating embedding
-<em>models</em> for other services. Whatever memory the deployed stack
-has belongs to Open WebUI or n8n.</p>
+front.</strong> Outside <code>ods/memory-shepherd/</code>, the phrases
+<code>agent memory</code>, <code>long-term memory</code> and
+<code>memory system</code> occur seven times in the whole tree, every
+one of them prose: two service tables, a changelog line, two model
+descriptions about GPU RAM, and one comment. Every occurrence of
+<code>forget</code> in code is <code>wifi-forget</code>, a Wi-Fi profile
+endpoint, or the idiom "fire-and-forget" in a test docstring; every
+occurrence of <code>embedding</code> is about deploying and validating
+embedding <em>models</em> for other services. Whatever memory the
+deployed stack has belongs to Open WebUI or n8n.</p>
 <p>One component is the exception, and it is why this report exists.
 <strong><code>ods/memory-shepherd/</code> is a scheduled forgetting
 daemon for persistent LLM agents</strong>, and its problem statement is
@@ -173,6 +176,17 @@ few hours the scratch is archived to a timestamped file and
 <code>MEMORY.md</code> is replaced with the baseline verbatim. The
 authority boundary is a position in a file, and the enforcement is that
 the file is overwritten.</p>
+<p><strong>On the configuration ODS actually ships, the boundary is
+never drawn.</strong> <code>memory-shepherd.conf</code> manages three
+files per agent, not one — <code>MEMORY.md</code> on a three-hour timer,
+<code>AGENTS.md</code> and <code>TOOLS.md</code> on a sixty-second one —
+and none of the three shipped baselines contains a <code>---</code>. The
+split design lives in <code>baselines/example-agent-MEMORY.md</code>
+alone. Every shipped cycle therefore takes the branch meant for an
+unexpected file shape: copy the whole file aside, log a warning,
+overwrite. Which means the only way a separator ever enters one of these
+files is for the agent to write it, and that is exactly the case the
+boundary handles worst.</p>
 <p>The design is honest with the agent about it. The shipped baseline
 template tells its own holder what is coming: <em>"Your additions will
 be periodically archived and this file reset to baseline. For anything
@@ -195,7 +209,8 @@ small, and backs up the whole file when it finds <em>no</em> separator
 at all — so the total-absence case is handled safely and the ambiguous
 case is not.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
-<p>There is one memory unit and it is a file with two halves.</p>
+<p>The memory unit is a Markdown file the operator owns and the agent
+borrows. The example baseline gives it two halves.</p>
 <pre class="text"><code>MEMORY.md
   ## Who I Am              ← baseline: operator-authored, agent may not durably change it
   ## Critical Rules
@@ -205,11 +220,18 @@ case is not.</p>
   ## Scratch Notes         ← agent-authored, ephemeral by policy
   - Found bug in auth module</code></pre>
 <p>A memory becomes durable by being in the baseline, which means a
-person put it there. A memory stops existing by being below the
-separator when the timer fires. There is no decay, no confidence, no
-supersession and no correction: the only lifecycle is <em>survive
-because an operator wrote you</em>, or <em>be archived and
-cleared</em>.</p>
+person put it there. A memory stops existing when the timer fires. There
+is no decay, no confidence, no supersession and no correction: the only
+lifecycle is <em>survive because an operator wrote you</em>, or <em>be
+archived and cleared</em>.</p>
+<p>The shipped <code>ods-agent-*</code> baselines drop the second half.
+<code>AGENTS.md</code> and <code>TOOLS.md</code> are described in the
+config as "pure overwrite, no scratch", and the shipped
+<code>MEMORY.md</code> baseline has no separator either — so for the ODS
+agent the unit is simply <em>a file the operator restores</em>, and
+everything the agent wrote is displaced wholesale into an archive copy.
+The two-halves shape is what an operator gets by following the example,
+not what an install gives them.</p>
 <p>That makes the epistemics unusually blunt and unusually clear. The
 agent's own notes are explicitly not trusted to persist, and the README
 names what that is for: role drift, context bloat, confusion between
@@ -218,16 +240,26 @@ parameters. Where most of this corpus tries to decide <em>which</em>
 agent-written memories deserve to last, this decides that none of them
 do, and pushes anything worth keeping into a different store — the
 project repository — by instruction rather than by mechanism.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — archival takes the text below the *last* separator, so an agent that writes its own `---` loses everything above it when the baseline is restored</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: archival takes the text below the *last* separator, so an agent that writes its own `---` loses everything above it when the baseline is restored
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the shipped baselines carry no separator, so every cycle takes the whole-file branch; the separator branch is reached only once the agent has written a `---` of its own, and then archival keeps only the text below it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the shipped baselines carry no separator, so every cycle takes the whole-file branch; the separator branch is reached only once the agent has written a `---` of its own, and then archival keeps only the text below it
 stateDiagram-v2
-  [*] --&gt; Baseline: operator authors MEMORY.md above the separator
-  Baseline --&gt; Working: agent appends scratch notes below it
+  [*] --&gt; Baseline: operator authors the baseline file
+  Baseline --&gt; Working: agent edits the live file
   Working --&gt; Working: agent keeps writing
-  Working --&gt; Archived: timer fires, text below the LAST separator is archived
-  Archived --&gt; Baseline: MEMORY.md overwritten with the baseline verbatim
-  Working --&gt; Lost: agent wrote its own &#39;---&#39;, text above it is never archived
+
+  state &quot;timer fires&quot; as Fire
+  Working --&gt; Fire
+
+  Fire --&gt; WholeFile: no separator in the file — the shipped case
+  WholeFile --&gt; Baseline: whole file copied aside, then overwritten
+
+  Fire --&gt; BelowLast: a separator is present
+  BelowLast --&gt; Archived: text below the LAST separator is archived
+  Archived --&gt; Baseline: file overwritten with the baseline verbatim
+  BelowLast --&gt; Lost: agent wrote that separator, text above it is never archived
   Lost --&gt; Baseline: overwritten anyway
-  Archived --&gt; Pruned: archive older than thirty days</code></pre></details></figure>
+
+  Archived --&gt; Pruned: archive older than thirty days
+  WholeFile --&gt; Pruned: archive older than thirty days</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Two things sit in one repository and only the second is memory.</p>
 <p><strong>The deployment system.</strong> 336 shell scripts, 202 Python
@@ -237,13 +269,13 @@ belief; the durable state is configuration, model inventory, GPU
 assignment, service health and token accounting
 (<code>token-spy/db.py</code> keeps a <code>usage</code> table).</p>
 <p><strong>Memory Shepherd</strong>, at
-<code>ods/memory-shepherd/</code> — 1,070 lines all told: a 338-line
+<code>ods/memory-shepherd/</code> — 1,435 lines all told: a 338-line
 shell daemon, a 264-line installer, a 100-line uninstaller, a 277-line
-README, four example baselines, and
-<code>docs/WRITING-BASELINES.md</code>. It is driven by an INI config
-with a <code>[general]</code> section and one section per agent,
-installed as systemd units, and it handles remote agents over ssh as
-well as local ones.</p>
+README, <code>docs/WRITING-BASELINES.md</code>, one example baseline and
+three shipped ODS ones. It is driven by an INI config with a
+<code>[general]</code> section and one section per agent, installed as
+systemd user units, and it handles remote agents over ssh as well as
+local ones.</p>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
 <p>For the memory component the cost is close to zero: Bash,
 <code>grep</code>, <code>sed</code>, <code>stat</code>, a config file
@@ -265,7 +297,8 @@ Paths</h2>
 <p>The sequence, in order, per agent:</p>
 <ol type="1">
 <li><strong>Refuse a bad baseline.</strong> If the baseline file is
-missing, or smaller than <code>MIN_BASELINE_SIZE</code>, the agent is
+missing, or smaller than <code>MIN_BASELINE_SIZE</code> — 500 bytes by
+default, and the shipped baselines run 944 to 2,798 — the agent is
 skipped with an error: <em>"Baseline for $agent is suspiciously small …
 skipping"</em>. This is the guard that matters most, because the failure
 it prevents — resetting an agent to an empty identity — is unrecoverable
@@ -288,6 +321,66 @@ default thirty days.</li>
 </ol>
 <p>A lockfile at <code>/tmp/memory-shepherd.lock</code> with a cleanup
 trap keeps two runs from overlapping.</p>
+<h3 id="the-shipped-schedule-and-what-the-safe-branch-costs-there">The
+shipped schedule, and what the safe branch costs there</h3>
+<p>Two installers write timers and they disagree.
+<code>memory-shepherd/install.sh</code> generates one unit pair per
+agent plus an "all" pair, and enables only the latter:
+<code>OnCalendar=*-*-* 00/3:00:00</code>, every three hours, per-agent
+timers installed but left off. The ODS install phase does something else
+— <code>installers/phases/10-amd-tuning.sh</code> copies the four
+checked-in units from <code>ods/scripts/systemd/</code> into
+<code>~/.config/systemd/user</code>, creates
+<code>data/memory-archives/ods-agent/{memory,agents,tools}</code>,
+enables both timers and turns on lingering so they survive logout. Those
+units are <code>memory-shepherd-memory.timer</code> at three hours and
+<code>memory-shepherd-workspace.timer</code> at
+<code>OnUnitActiveSec=60s</code>, <code>AccuracySec=5s</code>, covering
+<code>AGENTS.md</code> and <code>TOOLS.md</code>.</p>
+<p>Put that beside the separator-less baselines and the safe branch
+becomes an unbounded one. Every sixty seconds, for each of the two
+workspace agents, step 3 finds no separator, step 4 is replaced by
+<code>cp "$memory_file" "$archive_dir/${TIMESTAMP}-full-backup.md"</code>,
+and step 5 overwrites the file with a baseline it almost always already
+matched. <code>TIMESTAMP</code> is <code>date '+%Y-%m-%d_%H%M'</code>,
+so each run lands on its own filename: roughly 1,440 files per agent per
+day, 2,880 for the pair, each a copy of the baseline, each accompanied
+by a logged <code>WARN: No separator</code>. The pruner is
+<code>find "$ARCHIVE_DIR" -name "*.md" -mtime +30 -delete</code>, so the
+directory grows for a month and settles near 86,000 files. Nothing in
+the tree reads them.</p>
+<h3 id="the-archives-are-outside-the-backup-contract">The archives are
+outside the backup contract</h3>
+<p><code>ods/lib/backup-paths.sh</code> is the single source of truth
+for what <code>ods backup</code> captures and <code>ods restore</code>
+puts back, sourced by both so they cannot drift. Its header states the
+admission rule and names the class of state it exists to protect:</p>
+<blockquote>
+<p><em>"user state that cannot be regenerated: conversations, workflows,
+vectors, <strong>agent memory</strong>, usage history, device
+authorisations."</em></p>
+</blockquote>
+<p><code>data/memory-archives</code> is not in
+<code>ODS_USER_DATA_PATHS</code>, and not in the
+<code>ODS_BACKUP_EXCLUDED_DATA_PATHS</code> list beside it that exists
+to distinguish a deliberate skip from a forgotten one. The three backup
+types between them reach <code>ODS_USER_DATA_PATHS</code>, a
+whole-directory rsync of <code>$ODS_DIR/config</code>,
+<code>$ODS_DIR/models</code> and two named caches — so the one durable
+trace of what an agent wrote and had cleared is captured by none of
+them. The live files ride along, but incidentally: they sit at
+<code>config/openclaw/workspace/</code>, so a <code>full</code> or
+<code>config</code> backup sweeps them up as part of
+<code>config/</code> rather than by any named contract, and
+<code>ods backup -t user-data</code> misses them.</p>
+<p><code>ods/tests/test-backup-data-coverage.sh</code> was added to stop
+exactly this drift, and it cannot see it. It enumerates candidates by
+grepping <code>./data/&lt;dir&gt;</code> strings out of the compose
+files, then fails on any that appears in neither list. Memory Shepherd
+is a host systemd timer; it mounts nothing, declares nothing in a
+compose file, and its directory is created by an installer phase. A
+check whose enumeration comes from container mounts is blind to the one
+store in the repository that has no container.</p>
 <h3 id="the-boundary-and-what-it-costs">The boundary, and what it
 costs</h3>
 <pre class="bash"><code>separator_line=$(grep -n &quot;^${SEPARATOR}$&quot; &quot;$memory_file&quot; | tail -1 | cut -d: -f1 || echo &quot;&quot;)</code></pre>
@@ -345,9 +438,13 @@ provenance, no scope key and no status. A scratch note has no identity
 that could be corrected — it exists until the next cycle and then it is
 a line in an archive nobody indexes.</p>
 <p>The archives are the only durable trace of what an agent believed,
-and they are write-only in practice: nothing reads them back, nothing
-searches them, and nothing re-admits a note that turned out to matter.
-Thirty days later they are deleted.</p>
+and they are write-only in fact rather than in practice: outside
+<code>ods/memory-shepherd/</code>, the single reference to
+<code>memory-archives</code> anywhere in the tree is the
+<code>mkdir -p</code> that creates the directory. Nothing reads them
+back, nothing searches them, nothing re-admits a note that turned out to
+matter, and no backup type copies them. Thirty days later they are
+deleted.</p>
 <p>That is a coherent position rather than an oversight — the design's
 whole claim is that agent-written state should not accumulate — but it
 means the mechanism offers forgetting without any of the machinery this
@@ -368,13 +465,16 @@ goes through a gate, a validator or a model.</p>
 <li><strong>Nothing runs on the agent's turn.</strong> The daemon is a
 timer, entirely out of band.</li>
 <li><strong>The lag before a memory is usable is zero</strong> and the
-lag before it is <em>gone</em> is bounded by the cycle — default every
-three hours.</li>
+lag before it is <em>gone</em> is bounded by the cycle — three hours for
+<code>MEMORY.md</code>, sixty seconds for <code>AGENTS.md</code> and
+<code>TOOLS.md</code>.</li>
 <li><strong>The background pass rewrites the whole store</strong>, which
 is the entire mechanism rather than a side effect, and it costs one file
 copy per agent.</li>
-<li><strong>Archive growth is bounded</strong> by the retention window;
-nothing else grows.</li>
+<li><strong>Archive growth is bounded</strong> by the retention window,
+but the bound is high: on the shipped timers the two workspace agents
+alone write about 2,880 archive files a day, so the directory settles
+near 86,000 entries.</li>
 </ul>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Loose by design. Memory Shepherd knows an agent by a config section
@@ -383,7 +483,11 @@ assumption about the harness. That is what lets one daemon manage
 OpenClaw, OpenCode and a bespoke agent on another host from the same
 file, and it is also why nothing coordinates the reset with the agent's
 session: a reset that lands mid-task removes notes the agent is still
-using, and there is no lease, no quiescence check and no signal.</p>
+using, and there is no lease, no quiescence check and no signal. At
+sixty-second granularity that is not a rare collision — an agent that
+edits its own <code>AGENTS.md</code> has under a minute before the edit
+is gone, which is a deliberate property of the mechanism and an
+unpleasant one to debug from inside the agent.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -394,7 +498,8 @@ loses the edit on the next cycle.</li>
 <li><strong>A suspiciously small baseline aborts the reset</strong>,
 which is the failure that would matter most.</li>
 <li><strong>No separator means a full backup first</strong>, with a
-warning.</li>
+warning — though on the shipped baselines this is the path every cycle
+takes rather than the exception it was written for.</li>
 <li><strong>The replace is a temp-file rename</strong>, so a reader
 never sees a partial file.</li>
 <li><strong>Forgetting is recoverable</strong> for thirty days, in plain
@@ -413,8 +518,12 @@ writing a Markdown horizontal rule silently drops its own earlier notes
 — and the run logs a success.</li>
 <li><strong>Nothing coordinates with the agent's session</strong>, so a
 reset can land mid-task.</li>
-<li><strong>The archives are write-only</strong>; nothing reads,
-searches or re-admits them, and they expire.</li>
+<li><strong>The archives are write-only and unbacked-up</strong>;
+nothing reads, searches or re-admits them, no backup type captures
+<code>data/memory-archives</code>, and they expire at thirty days.</li>
+<li><strong>The whole-file branch has no rate limit or
+de-duplication</strong>, so the sixty-second workspace timer writes a
+fresh copy of an unchanged file every minute.</li>
 <li><strong>The log is stdout</strong>, so there is no durable record in
 the system's own store of what was reset or archived — only whatever the
 journal keeps.</li>
@@ -426,7 +535,7 @@ mentioning the shepherd is a BSD-compatibility bats test covering the
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><strong>I ran nothing.</strong> The screen found no auto-executing
-surfaces and lockfiles untouched for 45 days, so this tree was outside
+surfaces and lockfiles untouched for 78 days, so this tree was outside
 the cooldown — but the memory component is a shell daemon that rewrites
 files in place, and every finding above is static.</p>
 <p>ODS as a project takes testing seriously: <code>ods/tests/</code>
@@ -437,10 +546,18 @@ reset logic. Searching the tree for the shepherd returns one test file,
 <code>ods/tests/bats-tests/macos-bsd-compat.bats</code>, and it
 exercises the cross-platform <code>stat</code> helpers rather than the
 boundary, the archive or the guards.</p>
-<p>The test I would want is three lines of bats: write a
+<p>Two tests are missing and both are a few lines of bats. Write a
 <code>MEMORY.md</code> whose scratch contains a <code>---</code>, run
-one cycle, and assert the archive contains every scratch line. It fails
-today.</p>
+one cycle, and assert the archive contains every scratch line — that one
+fails. Run one cycle over an unchanged separator-less file twice and
+assert the archive did not gain two identical copies — that one fails
+too, and it is the case the shipped configuration is in every
+minute.</p>
+<p><code>tests/test-backup-data-coverage.sh</code> is worth reading as
+the near miss. It is a good test, written for this exact failure and
+pinned to the compose files so the path list cannot drift from the
+services; it is blind to <code>data/memory-archives</code> only because
+that directory has no container to be enumerated from.</p>
 <p><strong>No paper, arXiv reference or citation file exists in this
 repository.</strong></p>
 <h3 id="a-note-on-the-screen">A note on the screen</h3>
@@ -475,6 +592,12 @@ and makes the policy arguable after the fact.</li>
 <li><strong>Handle the unexpected file shape by preserving it.</strong>
 The full-file backup when no separator is found is the right instinct —
 apply it to <em>every</em> ambiguity, not just the absent one.</li>
+<li><strong>Put the backup path list in one file and pin it to a
+test.</strong> <code>lib/backup-paths.sh</code> plus
+<code>test-backup-data-coverage.sh</code> replaced a list copied into
+five places, and the pairing of a captured list with an
+explicitly-excluded list is what lets the test tell a deliberate skip
+from a forgotten one. That shape is worth copying whole.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -494,7 +617,16 @@ quiescence check or a lease costs little against a job that runs every
 three hours.</li>
 <li><strong>Write-only archives.</strong> If nothing can read back what
 was forgotten, the archive is a compliance gesture rather than a
-recovery path.</li>
+recovery path — and if no backup captures it either, the gesture does
+not survive a restore.</li>
+<li><strong>Enumerating what to protect from how it happens to be
+deployed.</strong> The coverage test derives its candidate list from
+compose bind mounts, so a store written by a host timer can never appear
+in it. Enumerate the writers, not the containers.</li>
+<li><strong>A safe fallback with no de-duplication on a fast
+timer.</strong> Copying the file aside when its shape is unexpected is
+right once; doing it every sixty seconds against a file that has not
+changed turns the safety net into the largest thing in the store.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits an operator running long-lived agents on their own
@@ -519,10 +651,16 @@ and a reader arriving here for memory should know that is what the other
 <li>Was the last-separator rule chosen deliberately to let an operator
 append a new boundary, and has an agent writing a horizontal rule been
 observed in practice?</li>
-<li>What is the default cycle in the shipped systemd units, and is it
-tuned per agent?</li>
-<li>Does anything read the archives — an operator habit, a downstream
-tool, a dashboard panel — or are they purely a safety net?</li>
+<li>Is the sixty-second workspace timer the intended cadence, or a
+debugging value that shipped? The generated units from
+<code>memory-shepherd/install.sh</code> use three hours for
+everything.</li>
+<li>Was the shipped <code>ods-agent-MEMORY.md</code> baseline meant to
+carry a separator? Dropping it moves every cycle onto the whole-file
+branch, which is the one the design treats as exceptional.</li>
+<li>Is <code>data/memory-archives</code> missing from
+<code>ODS_USER_DATA_PATHS</code> a decision or an omission? The excluded
+list exists to record the first, and it is not in that either.</li>
 <li>Are the deployed agent hosts told about the reset, or does each
 discover its cleared memory at the next session start?</li>
 </ul>
@@ -530,19 +668,68 @@ discover its cleared memory at the next session start?</li>
 <ul>
 <li>The mechanism: <code>ods/memory-shepherd/memory-shepherd.sh</code>
 (<code>reset_agent</code>, <code>reset_remote_agent</code>, the
-separator lookup, the baseline and size guards).</li>
+separator lookup, the baseline and size guards, the retention
+<code>find</code>).</li>
 <li>Configuration and lifecycle:
-<code>ods/memory-shepherd/memory-shepherd.conf.example</code>,
-<code>install.sh</code>, <code>uninstall.sh</code>,
-<code>ods/scripts/systemd/memory-shepherd-*.service</code>.</li>
+<code>ods/memory-shepherd/memory-shepherd.conf</code> (what ODS
+installs) and <code>memory-shepherd.conf.example</code> (what the docs
+describe), <code>install.sh</code>, <code>uninstall.sh</code>,
+<code>ods/scripts/systemd/memory-shepherd-{memory,workspace}.{service,timer}</code>,
+<code>ods/installers/phases/10-amd-tuning.sh</code> (the phase that
+copies and enables those units).</li>
 <li>Baselines and guidance: <code>ods/memory-shepherd/baselines/</code>,
 <code>ods/memory-shepherd/docs/WRITING-BASELINES.md</code>,
 <code>ods/memory-shepherd/README.md</code>.</li>
+<li>Durability: <code>ods/lib/backup-paths.sh</code>,
+<code>ods/ods-backup.sh</code> (<code>backup_user_data</code>,
+<code>backup_config</code>, <code>backup_cache</code>),
+<code>ods/ods-restore.sh</code>,
+<code>ods/tests/test-backup-data-coverage.sh</code>.</li>
 <li>The deployment surround, for context only:
 <code>ods/extensions/services/</code> (27 services),
 <code>ods/bin/ods-host-agent.py</code>, <code>installer/</code>.</li>
 </ul>
+<h3 id="searches-behind-the-absence-claims">Searches behind the absence
+claims</h3>
+<p>Run from the repository root; each returned nothing beyond what is
+described beside it.</p>
+<pre class="sh"><code># &quot;almost none of that is memory&quot;: 7 prose hits, no code
+grep -rniE &#39;agent memory|long-term memory|memory system&#39; .   --exclude-dir=.git --exclude-dir=memory-shepherd
+
+# every `forget` is the Wi-Fi endpoint or the fire-and-forget idiom
+grep -rniE &#39;\bforget&#39; . --exclude-dir=.git   --include=&#39;*.py&#39; --include=&#39;*.sh&#39; --include=&#39;*.ps1&#39; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39;   | grep -viE &#39;wifi.forget|forget.wifi|fire-and-forget&#39;
+
+# nothing outside the daemon touches the archives — one `mkdir -p`
+grep -rn &#39;memory-archives\|archive_dir\|ARCHIVE_DIR&#39; .   --exclude-dir=.git --exclude-dir=memory-shepherd
+
+# the archives are in neither backup list
+grep -n &#39;memory-archives&#39; ods/lib/backup-paths.sh ods/ods-backup.sh ods/ods-restore.sh
+
+# one test file mentions the shepherd, and it covers the `stat` helpers
+grep -rl &#39;memory-shepherd\|memory_shepherd&#39; ods/tests/
+
+# no paper, citation file or DOI — the one hit is a bundled service&#39;s own feature blurb
+grep -rniE &#39;arxiv|@article|@misc|CITATION|\bdoi\b&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; .</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/Osmantic/ODS/commit/21f4b3a64dd2a2fac1163f446806091c25b6b814"><code class="commit-id" title="21f4b3a64dd2a2fac1163f446806091c25b6b814">21f4b3a6…</code></a>
+— second reading, 85 commits on. Screened first: 0 auto-run surfaces, 5
+build-time exec, 9 unpinned, lockfiles unchanged for 78 days, so nothing
+was inside the cooldown; nothing installed, nothing executed.
+<code>ods/memory-shepherd/</code> and <code>ods/scripts/systemd/</code>
+are byte-identical to the previous pin — the diff is 101 files
+elsewhere, and the shepherd's own code did not move. Two findings came
+from reading the shipped configuration rather than the diff: the
+installed baselines carry no separator and the workspace timer runs at
+sixty seconds, so the whole-file branch the previous reading recorded as
+a safety net is the path every cycle takes; and
+<code>data/memory-archives</code> is in neither list in the new
+<code>ods/lib/backup-paths.sh</code>, whose coverage test enumerates
+candidates from compose mounts and so cannot see a store written by a
+host timer. Three claims were wrong at the first pin and are corrected:
+the phrase count, the component's line total, and the schedule. No
+capability mark is earned in either direction. The absence claims now
+carry the searches that ground them.</p>
 <p><strong>2026-08-11</strong> — <a
 href="https://github.com/Osmantic/ODS/commit/5a4450765976e2ad2792b9ac8927f4873dac60f6"><code class="commit-id" title="5a4450765976e2ad2792b9ac8927f4873dac60f6">5a445076…</code></a>
 — first reading, on the <code>main</code> default branch, 3,181 commits

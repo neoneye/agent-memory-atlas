@@ -2906,15 +2906,16 @@ trust levels have the same shape: a poisoning scan downgrades content to
 <code>sensitivity</code> instead, so attacker-influenced material is
 ranked down and returned.</p>
 <p><strong>ODS contributes one idea and it is about forgetting.</strong>
-The repository is a deployment system for a local AI stack — 3,181
-commits, 27 services, Apache-2.0 — and across the tree
-<code>agent memory</code> and <code>memory system</code> appear zero
-times in code, every <code>forget</code> is <code>wifi-forget</code>,
-and every <code>embedding</code> is about deploying embedding
-<em>models</em>. The exception is <code>ods/memory-shepherd/</code>, a
-scheduled reset daemon whose problem statement names the failure
-directly: <em>"agents rewrite their own instructions, subtly altering
-their operating parameters."</em> Its answer is positional. An agent's
+The repository is a deployment system for a local AI stack — 3,266
+commits, 27 services, Apache-2.0 — and outside
+<code>ods/memory-shepherd/</code> the phrases <code>agent memory</code>
+and <code>memory system</code> occur only in prose, every
+<code>forget</code> in code is <code>wifi-forget</code>, and every
+<code>embedding</code> is about deploying embedding <em>models</em>. The
+exception is <code>ods/memory-shepherd/</code>, a scheduled reset daemon
+whose problem statement names the failure directly: <em>"agents rewrite
+their own instructions, subtly altering their operating
+parameters."</em> Its answer is positional. An agent's
 <code>MEMORY.md</code> is split by a <code>---</code>: above it an
 operator-authored baseline the agent cannot durably change, below it
 whatever the agent writes, and every few hours the scratch is archived
@@ -2922,10 +2923,14 @@ to a timestamped file and the baseline is restored verbatim. The
 authority boundary is a position in a file and the enforcement is that
 the file gets overwritten — which is <a
 href="../systems/cowagent/">CowAgent</a>'s nightly overwrite with the
-operator's half carved out and protected. The baseline template even
-discloses the policy to its own holder: <em>"Your additions will be
-periodically archived and this file reset to baseline. For anything
-worth keeping long-term, write it to your project repo."</em></p>
+operator's half carved out and protected. On the configuration ODS
+installs, though, none of the three shipped baselines contains a
+<code>---</code> — so every cycle takes the branch written for an
+unexpected file shape, and the positional boundary is reached only once
+the agent has drawn it itself. The baseline template even discloses the
+policy to its own holder: <em>"Your additions will be periodically
+archived and this file reset to baseline. For anything worth keeping
+long-term, write it to your project repo."</em></p>
 <p>The defect is in the boundary. The separator is found with
 <code>grep -n "^---$" | tail -1</code> — the <em>last</em> match — so an
 agent that writes a Markdown horizontal rule in its notes moves the
@@ -17862,27 +17867,34 @@ queries it</td>
 </tr>
 <tr>
 <td><code>ods</code></td>
-<td>One <code>MEMORY.md</code> per agent, split by a <code>---</code>
-separator into an operator baseline and agent scratch notes</td>
-<td>Markdown files on disk, plus timestamped scratch archives pruned
-after thirty days</td>
+<td>Three operator-owned Markdown files per agent —
+<code>MEMORY.md</code>, <code>AGENTS.md</code>, <code>TOOLS.md</code> —
+each restored from a baseline; only the <em>example</em> baseline splits
+a file with a <code>---</code> into operator and scratch halves</td>
+<td>Markdown files on disk, plus timestamped archives under
+<code>data/memory-archives/</code>, pruned after thirty days and
+captured by no backup type</td>
 <td>None by ODS — the deployed agent reads its own file</td>
 <td>The agent appends below the separator; the operator authors
 everything above it</td>
 <td>A scheduled reset archives everything below the separator and
-restores the baseline verbatim</td>
+restores the baseline verbatim; with no separator in the file it copies
+the whole file aside first</td>
 <td>One config section and one baseline per agent; local and remote
 agents over ssh</td>
 <td>A shell daemon plus systemd units, shipped inside a deployment
 system for a local AI stack</td>
-<td>The reset cycle itself — the only memory behaviour in the
-repository</td>
+<td>Two systemd user timers — <code>MEMORY.md</code> every three hours,
+<code>AGENTS.md</code> and <code>TOOLS.md</code> every sixty
+seconds</td>
 <td>Position in a file is the authority boundary: the agent cannot
 durably edit anything above the separator</td>
 <td>Forgetting is scheduled, recoverable, and refuses to run against a
 suspiciously small baseline</td>
 <td>The boundary is the last <code>---</code> in the file, so an agent
-writing a horizontal rule silently drops its own notes</td>
+writing a horizontal rule silently drops its own notes — and on the
+shipped baselines that is the only way the separator path is ever
+reached</td>
 </tr>
 <tr>
 <td><code>ollama</code></td>
@@ -31130,7 +31142,7 @@ href="https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220
 (<code>.github/copilot-instructions.md</code>), three manifests inside
 the seven-day cooldown, nothing installed or run</li>
 <li><a href="https://github.com/Osmantic/ODS">Osmantic/ODS</a> at <a
-href="https://github.com/Osmantic/ODS/commit/5a4450765976e2ad2792b9ac8927f4873dac60f6"><code class="commit-id" title="5a4450765976e2ad2792b9ac8927f4873dac60f6">5a445076…</code></a>
+href="https://github.com/Osmantic/ODS/commit/21f4b3a64dd2a2fac1163f446806091c25b6b814"><code class="commit-id" title="21f4b3a64dd2a2fac1163f446806091c25b6b814">21f4b3a6…</code></a>
 — read only; reviewed for <code>ods/memory-shepherd/</code>, the only
 agent-memory mechanism in a tree that is otherwise a deployment system
 for a local AI stack</li>
