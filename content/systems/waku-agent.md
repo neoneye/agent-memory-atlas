@@ -7,10 +7,12 @@ page_kind: system
 source_name: ShenSeanChen/waku-agent
 source_url: https://github.com/ShenSeanChen/waku-agent
 archive_name: "ShenSeanChen--waku-agent"
-revision: 4e59ab575827081b0986ed61afde5d6f21be64f8
-revision_url: https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8
-analyzed_at: 2026-08-15
+revision: d49c260fb57ce7f63406385d4efc4ccf1a70dd67
+revision_url: https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67
+analyzed_at: 2026-09-14
 capabilities: "human_review"
+capability_evidence:
+  human_review: "dashboard memory tab — a person edits or deletes the agent's own facts and episodes | waku/ops/static/js/memory.js:15-23 | each fact row renders an edit and a delete control; `saveFact` and `delMem` post `update_fact`, `delete_fact` and `delete_episode` to `/api/memory`, which `dashboard.py:1128` routes to `memory_action`, and that calls `SqliteFactStore.update`/`.delete` and `SqliteEpisodeStore.delete` against the same SQLite file the agent reads on its next turn. The person is the adjudicator and the write is to the live store, not to a review queue the agent never sees | evals/deterministic/test_episodic_store_switch.py:155, evals/deterministic/test_skill_encoding.py:96"
 stack_storage: "sqlite, postgres, delegated"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -25,7 +27,7 @@ matrix:
   background: "Batched consolidation into facts and episodes"
   trust: "Gate decisions carry a reason string; no trust state on memories"
   strengths: "Refusing expensive work at three levels, failing open when the gate errors, and one correction path reachable by both the agent and a person"
-  risks: "Nothing is keyed on a rejected value, so a corrected fact is re-learnable on the next consolidation; no trust state or scope; gate adds a model call per turn and its accuracy is unmeasured"
+  risks: "Nothing is keyed on a rejected value, so a corrected fact is re-learnable on the next consolidation; no trust state or scope; gate adds a model call per turn, and the eval that scores its decisions is a judge-scored measurement whose only hard assertion cannot fail in the needless-retrieval direction"
 ---
 
 ## 1. Executive Summary
@@ -207,7 +209,7 @@ The Notion episodic backend is the most operationally interesting choice: episod
 
 ## 6. Retrieval Mechanics
 
-Whatever the underlying stores provide, downstream of the gate. The gate is the mechanism worth studying; the search itself is unremarkable — with one correctness caveat worth a footnote, because it reinforces the report's own thesis. The SQLite fact store searches FTS5, and `_fts_query` (`waku/memory/semantic/store.py`) previously tokenized ASCII-only, so a non-Latin or accented query was silently mangled (`"Müller" → "ller"`, `"Сергей" → ""`) and an empty result made the episodic store hand back *unrelated* memories under a "Relevant memory" heading — the over-interpretation the retrieval gate exists to prevent, arriving through the back door. It now tokenizes on Unicode word characters, pinned by `test_memory_search.py`.
+Whatever the underlying stores provide, downstream of the gate. The gate is the mechanism worth studying; the search itself is unremarkable — with one correctness caveat worth a footnote, because it reinforces the report's own thesis. The SQLite fact store searches FTS5, and until 7 August 2026 `_fts_query` (`waku/memory/semantic/store.py`) tokenized ASCII-only, so a non-Latin or accented query was silently mangled (`"Müller" → "ller"`, `"Сергей" → ""`) and an empty result made the episodic store hand back *unrelated* memories under a "Relevant memory" heading — the over-interpretation the retrieval gate exists to prevent, arriving through the back door. It tokenizes on Unicode word characters, pinned by `test_memory_search.py`.
 
 The cost model deserves stating honestly: the gate **adds** a small-model call to every turn in order to **remove** a search from some of them. Whether that trades well depends on the ratio of memory-needing turns to the rest, and on the relative latency of the gate model versus the store. Waku asserts the trade is favourable; nothing in the repository measures it.
 
@@ -250,19 +252,27 @@ Gaps:
 - **No supersession chain and no audit row**, so a corrected fact cannot be traced to what it replaced or to who replaced it — the agent and the dashboard write identically.
 - **No trust state**, and provenance is one `source` string.
 - **Single-user scope.**
-- **The gate's own accuracy is unmeasured** — a false negative silently answers without memory that would have helped, and nothing detects it. Tracked upstream as [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77), which states the asymmetry the measurement has to preserve: a false "no" loses a fact the user supplied, a false "yes" costs one search, and a single accuracy number would hide the difference.
+- **The gate's accuracy is measured but not defended.** `evals/judge/test_retrieval_gate_accuracy.py` scores its decisions against twelve labelled cases and reports both error directions separately, which is what [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77) asked for. Its own docstring then says what it is: *"This test MEASURES; it does not gate."* The suite skips without a provider key, the per-case judge scores whether a decision was defensible rather than whether it matched the label, and the one hard assertion has a floor a broken gate clears — see section 10.
 - **The gate adds a call per turn**, and the net cost is asserted rather than measured.
 - **A consolidation that fails and a week with nothing to say are indistinguishable from outside.** Both return `0` and neither logs.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Sixty deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation; `test_fact_store_conformance.py` holds every fact backend to the same contract, and `test_memory_search.py` pins the Unicode FTS fix. Nothing was run for this review — a dependency surface was inside the seven-day cooldown.
+Seventy-one deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation; `test_fact_store_conformance.py` holds every fact backend to the same contract, and `test_memory_search.py` pins the Unicode FTS fix. Beside them sit two judge-scored files under `evals/judge/`, both requiring a provider key. Nothing was run for this review — a dependency surface changed the day of the reading, inside the seven-day cooldown.
 
 The largest committed addition since the previous pin is a **memory benchmark**. `waku/ops/memory_arena.py` (896 lines) is a harness that holds the model and the probes constant and varies only `WAKU_SEMANTIC_STORE`, so "a difference in the scoreboard can only have come from where the facts live" — racing Waku's own SQLite against Supabase, mem0, Zep, LangMem and a no-memory control. It seeds a *conversation* rather than a pre-extracted fact list, so each backend's own extraction runs, then scores each probe on four outcomes: `PASS`, `MISS` (an honest failure), `STALE` (returns a superseded answer), and `INVENTED` (answers a probe that should have been refused) — the last being, in the code's words, "the number the whole exercise exists to produce." An LLM adjudicator settles only the verdicts a substring heuristic marks uncertain, and returns `None` rather than silently converting when unreachable. The **negative control** — a contestant "told nothing, then asked everything" — is the sharpest idea: any probe it passes was scoring the model's training data, not the store, and running it found 3 of 7 dinner-track probes doing exactly that. No results are committed; the harness writes to a gitignored directory, and only a deliberately dull example fixture (`evals/memory_arena.json`), a cleanup script and a methodology doc (`docs/memory-backends-playbook.md`) are in the tree. It measures other systems, so it changes none of Waku's own marks, but it is one of the more carefully-reasoned memory evals in the corpus. See the [benchmarks page](../../benchmarks/).
 
-The measurement the design most needs and does not have is **gate accuracy**: how often does `should_retrieve` return false on a turn that would have benefited from memory? Eleven tests establish that the gate parses, not that it decides correctly, so the project's whole thesis rests on an unscored judgement call.
+### The gate accuracy eval, and why it does not carry the mark
 
-`negative_eval` is withheld by a narrow margin worth naming. `test_triage_workflow.py:89` asserts `"gate" not in kinds` — that a quick turn never touches memory retrieval — which is a committed assertion that a *path* is not taken, not that particular material must not be retrieved. It is the right instinct one step away from the mark.
+`evals/judge/test_retrieval_gate_accuracy.py` is 643 lines against the question the eleven plumbing tests do not ask. Twelve hand-curated cases — three each of chitchat, direct-fact, follow-up-from-history and missing-memory — pair a message with the facts that exist at the time and a ground-truth `should_retrieve` label. The reasoning around it is better than the reasoning in most benchmark papers. The two error directions are named, costed and reported apart, because *"an average that hides which way the gate is failing is the thing this eval exists to prevent"*; the 4:1 weighting is written as `FALSE_NEGATIVE_COST` specifically so a reader can disagree with the number and change it; and a separate test scores the *query* a yes carries, on the grounds that "a correct yes carrying a useless query retrieves nothing — from the outside that is indistinguishable from a correct no."
+
+`negative_eval` is withheld, and the file makes the reason checkable rather than arguable. Three things have to hold for the mark and the third does not:
+
+- The per-case test does assert, with `assert_test(..., threshold=0.6)`, and it runs over the `should_retrieve: false` cases. But the judge never sees the label — by design it scores whether the decision was *defensible*, not whether it was correct — so nothing here says that a particular fact must stay out of a particular prompt.
+- The summary test compares against the labels and is the only place a needless retrieval is counted. It is also explicit that it does not gate: *"This test MEASURES; it does not gate. A false negative does not fail it."*
+- Its one assertion is `weighted >= 0.5`, and the arithmetic will not reach it from the negative side. With six positives, six negatives and a 4:1 cost ratio, a gate that retrieves on *every* case — the degenerate always-yes that never keeps anything out of any prompt — incurs 6 against a worst case of 30 and scores 0.8. The needless-retrieval direction cannot fail this suite at any dataset balance the file ships.
+
+That is a fair design choice for a release gate running live small models across eleven providers, and the docstring says so in as many words. It is also the difference between measuring a decision and asserting one, which is what the mark counts. The nearest thing to a must-not assertion remains `test_triage_workflow.py:89` — `"gate" not in kinds`, that a quick turn never touches retrieval — which pins a *path*, not material.
 
 ## 11. For Your Own Build
 
@@ -278,7 +288,7 @@ The measurement the design most needs and does not have is **gate accuracy**: ho
 
 ### Avoid
 
-- **An unmeasured gate.** The whole design rests on the gate being right, and nothing checks it.
+- **A quality eval whose floor a broken system clears.** The gate eval reports the right numbers and asserts a cost-weighted score of 0.5; six positives, six negatives and a 4:1 weighting put an always-retrieve gate at 0.8. If a floor is meant to catch a regression, compute what the degenerate answers score before choosing it.
 - **A correction that only reaches the row.** Update-in-place and delete are the easy half; a background pass that re-reads the source material will undo both unless something records the value as rejected.
 - **A failure path that returns the same value as a quiet success.** `return 0` for "nothing worth keeping" and `return 0` for "the model returned no text" cannot be told apart by any operator, and the second one repeats every turn.
 - **No provenance**, so a wrong fact cannot be traced to the chat that produced it.
@@ -295,11 +305,11 @@ Borrow:
 Do not copy:
 
 - The data model as a belief store. The correction verbs are here; what is missing is anything that makes a correction survive the next automatic write, and that is the part that matters once memory is more than a week old.
-- A gate without an accuracy measurement, if a missed retrieval is costly.
+- The gate eval as a regression barrier. Copy its structure — labelled cases, both directions reported, the cost ratio as a named constant — and then add an assertion that the degenerate answers fail.
 
 ## 12. Open Questions
 
-- How often does the gate wrongly decline? Nothing labels or measures it, and [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77) is open against exactly that.
+- What does the gate eval actually score in practice? It needs a provider key and live small models, and no run is committed, so the numbers the harness is built to produce are not in the tree.
 - Does the gate call cost less than the searches it avoids, in latency and tokens?
 - Should a declined retrieval be revisited if the model's answer turns out to need memory?
 - What happens when consolidation extracts a fact contradicting an existing one? Nothing in the summarizer prompt or the store compares against what is already held.
@@ -320,6 +330,8 @@ Do not copy:
 - Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`, `test_retrieval_gate.py`, `test_consolidation.py`, `test_episodic_store_switch.py`, `test_skill_encoding.py`, `test_fact_store_conformance.py`, `test_memory_arena.py`, `test_memory_search.py`.
 
 ## History
+
+**2026-09-14** — [`d49c260fb57ce7f63406385d4efc4ccf1a70dd67`](https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67) — 35 commits on. Screened first: 0 auto-run surfaces, 2 build-time exec, and `pyproject.toml` changed the day of the reading, so the tree was inside the cooldown; nothing was installed and nothing was run. `waku/memory/` did not change at all — the diff is the dashboard's design system, MCP OAuth and remote transport, and eleven new deterministic eval files. One published criticism was closed upstream and is corrected here: [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77) is answered by `evals/judge/test_retrieval_gate_accuracy.py`, so the gate's accuracy is measured, and the report asserted the opposite in six places. `negative_eval` was re-tested against it and is withheld: the per-case judge is not shown the label, and the summary's `weighted >= 0.5` floor is unreachable from the needless-retrieval side — six positives, six negatives and a 4:1 cost ratio put an always-retrieve gate at 0.8. `human_review` was re-tested by the producer path from the dashboard's fact rows through `/api/memory` to `SqliteFactStore.update`/`.delete` and holds; it now carries the evidence record it had been asserted without.
 
 **2026-08-15** — [`4e59ab575827081b0986ed61afde5d6f21be64f8`](https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8) — re-pinned at HEAD. Screened again before reading: `pyproject.toml`, `uv.lock` and an example manifest inside the seven-day cooldown, two build-time execution points (`Makefile`, `evals/conftest.py`); nothing was installed or run. None of the seven capability marks changed — `human_review` still holds on the dashboard's memory tab, and nothing was added or removed. The additions are context. Facts became a swappable backend: a `FactStore` protocol (`waku/memory/semantic/base.py`) with a conformance suite now lets Supabase, mem0, Zep or LangMem stand in for the default SQLite store via `WAKU_SEMANTIC_STORE`. [`c1ee6476dcc9374638f29ba248fd41e38dbfdddc`](https://github.com/ShenSeanChen/waku-agent/commit/c1ee6476dcc9374638f29ba248fd41e38dbfdddc) added a "memory arena" (`waku/ops/memory_arena.py`) that races those backends through one harness on four-outcome scoring with a no-memory negative control — a committed benchmark, though results are gitignored and only the harness ships. [`25b456c0d8fa2586508d97279b4373cfb510e534`](https://github.com/ShenSeanChen/waku-agent/commit/25b456c0d8fa2586508d97279b4373cfb510e534) fixed an ASCII-only FTS tokenizer that silently dropped non-Latin queries. The stack row is promoted from `seeded` to `reviewed` and corrected: the SQLite fact store runs an FTS5 **lexical** arm (the seed recorded no retrieval arm), and the delegated backends are named. Deterministic eval files went from 50 to 60.
 

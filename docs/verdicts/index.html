@@ -1042,20 +1042,26 @@ href="../systems/waku-agent/"><code>waku-agent</code></a></h3>
 <li>Best idea: a small-model gate that decides whether to retrieve at
 all, returns the query when it says yes, and fails open when it
 errors.</li>
-<li>Biggest risk: the gate's own accuracy is unmeasured, and a false
-negative is invisible — eleven committed cases establish that it parses,
-not that it decides correctly, and the project's whole thesis rests on
-the second.</li>
+<li>Biggest risk: the gate's accuracy is measured but not defended.
+<code>evals/judge/test_retrieval_gate_accuracy.py</code> scores its
+decisions against twelve labelled cases and reports both error
+directions apart — then says of itself, "This test MEASURES; it does not
+gate." Its per-case judge is never shown the label, and its one hard
+floor, <code>weighted &gt;= 0.5</code>, sits where six positives, six
+negatives and a 4:1 cost ratio put an always-retrieve gate at 0.8. A
+false negative is still the invisible failure, and nothing fails a build
+over one.</li>
 <li>Most reusable component: <code>should_retrieve()</code> — the
 fail-open branch and the recorded reason included.</li>
-<li>Maturity impression: ~800 lines of core memory code under sixty
-model-free eval files, unusually clear about why each expensive step is
-conditional, and a maintainer who files the criticism as an issue and
-states the error asymmetry a single accuracy number would hide. Facts
-became a swappable backend behind one contract, and the repo now ships a
-memory "arena" that races SQLite, Supabase, mem0, Zep and LangMem
-against a no-memory control on four-outcome scoring — a genuinely
-careful eval whose one gap is that no results are committed.</li>
+<li>Maturity impression: ~800 lines of core memory code under
+seventy-one model-free eval files, unusually clear about why each
+expensive step is conditional, and a maintainer who files the criticism
+as an issue, states the error asymmetry a single accuracy number would
+hide, and then merges a contributor's eval answering it. Facts became a
+swappable backend behind one contract, and the repo now ships a memory
+"arena" that races SQLite, Supabase, mem0, Zep and LangMem against a
+no-memory control on four-outcome scoring — a genuinely careful eval
+whose one gap is that no results are committed.</li>
 <li>Study when: retrieval runs every turn and you suspect it is hurting
 as often as helping.</li>
 <li>Do not copy when: you need a correction that survives the next

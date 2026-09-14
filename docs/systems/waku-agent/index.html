@@ -115,14 +115,14 @@ and nothing keyed on a rejected value.</p>
               <strong>ShenSeanChen/waku-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8" title="4e59ab575827081b0986ed61afde5d6f21be64f8">
+            <a class="meta-pill revision-pill" href="https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67" title="d49c260fb57ce7f63406385d4efc4ccf1a70dd67">
               <span>Analyzed revision</span>
-              <code>4e59ab57…</code>
+              <code>d49c260f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ShenSeanChen--waku-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -399,15 +399,16 @@ canonical state, arrived at by picking a familiar tool as the store.</p>
 <p>Whatever the underlying stores provide, downstream of the gate. The
 gate is the mechanism worth studying; the search itself is unremarkable
 — with one correctness caveat worth a footnote, because it reinforces
-the report's own thesis. The SQLite fact store searches FTS5, and
-<code>_fts_query</code> (<code>waku/memory/semantic/store.py</code>)
-previously tokenized ASCII-only, so a non-Latin or accented query was
-silently mangled (<code>"Müller" → "ller"</code>,
-<code>"Сергей" → ""</code>) and an empty result made the episodic store
-hand back <em>unrelated</em> memories under a "Relevant memory" heading
-— the over-interpretation the retrieval gate exists to prevent, arriving
-through the back door. It now tokenizes on Unicode word characters,
-pinned by <code>test_memory_search.py</code>.</p>
+the report's own thesis. The SQLite fact store searches FTS5, and until
+7 August 2026 <code>_fts_query</code>
+(<code>waku/memory/semantic/store.py</code>) tokenized ASCII-only, so a
+non-Latin or accented query was silently mangled
+(<code>"Müller" → "ller"</code>, <code>"Сергей" → ""</code>) and an
+empty result made the episodic store hand back <em>unrelated</em>
+memories under a "Relevant memory" heading — the over-interpretation the
+retrieval gate exists to prevent, arriving through the back door. It
+tokenizes on Unicode word characters, pinned by
+<code>test_memory_search.py</code>.</p>
 <p>The cost model deserves stating honestly: the gate
 <strong>adds</strong> a small-model call to every turn in order to
 <strong>remove</strong> a search from some of them. Whether that trades
@@ -500,13 +501,16 @@ it — the agent and the dashboard write identically.</li>
 <li><strong>No trust state</strong>, and provenance is one
 <code>source</code> string.</li>
 <li><strong>Single-user scope.</strong></li>
-<li><strong>The gate's own accuracy is unmeasured</strong> — a false
-negative silently answers without memory that would have helped, and
-nothing detects it. Tracked upstream as <a
+<li><strong>The gate's accuracy is measured but not defended.</strong>
+<code>evals/judge/test_retrieval_gate_accuracy.py</code> scores its
+decisions against twelve labelled cases and reports both error
+directions separately, which is what <a
 href="https://github.com/ShenSeanChen/waku-agent/issues/77">issue
-#77</a>, which states the asymmetry the measurement has to preserve: a
-false "no" loses a fact the user supplied, a false "yes" costs one
-search, and a single accuracy number would hide the difference.</li>
+#77</a> asked for. Its own docstring then says what it is: <em>"This
+test MEASURES; it does not gate."</em> The suite skips without a
+provider key, the per-case judge scores whether a decision was
+defensible rather than whether it matched the label, and the one hard
+assertion has a floor a broken gate clears — see section 10.</li>
 <li><strong>The gate adds a call per turn</strong>, and the net cost is
 asserted rather than measured.</li>
 <li><strong>A consolidation that fails and a week with nothing to say
@@ -515,8 +519,8 @@ and neither logs.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Sixty deterministic eval files, model-free rather than model-judged,
-which is the right shape for behavioural checks.
+<p>Seventy-one deterministic eval files, model-free rather than
+model-judged, which is the right shape for behavioural checks.
 <code>test_retrieval_gate.py</code> carries eleven cases and every one
 is about plumbing: JSON extracted from prose, survival of a thinking
 block, failing open on an API error, exactly one model call.
@@ -525,8 +529,10 @@ block, failing open on an API error, exactly one model call.
 <code>test_consolidation.py</code> pins the thinking-only truncation;
 <code>test_fact_store_conformance.py</code> holds every fact backend to
 the same contract, and <code>test_memory_search.py</code> pins the
-Unicode FTS fix. Nothing was run for this review — a dependency surface
-was inside the seven-day cooldown.</p>
+Unicode FTS fix. Beside them sit two judge-scored files under
+<code>evals/judge/</code>, both requiring a provider key. Nothing was
+run for this review — a dependency surface changed the day of the
+reading, inside the seven-day cooldown.</p>
 <p>The largest committed addition since the previous pin is a
 <strong>memory benchmark</strong>. <code>waku/ops/memory_arena.py</code>
 (896 lines) is a harness that holds the model and the probes constant
@@ -552,18 +558,52 @@ methodology doc (<code>docs/memory-backends-playbook.md</code>) are in
 the tree. It measures other systems, so it changes none of Waku's own
 marks, but it is one of the more carefully-reasoned memory evals in the
 corpus. See the <a href="../../benchmarks/">benchmarks page</a>.</p>
-<p>The measurement the design most needs and does not have is
-<strong>gate accuracy</strong>: how often does
-<code>should_retrieve</code> return false on a turn that would have
-benefited from memory? Eleven tests establish that the gate parses, not
-that it decides correctly, so the project's whole thesis rests on an
-unscored judgement call.</p>
-<p><code>negative_eval</code> is withheld by a narrow margin worth
-naming. <code>test_triage_workflow.py:89</code> asserts
-<code>"gate" not in kinds</code> — that a quick turn never touches
-memory retrieval — which is a committed assertion that a <em>path</em>
-is not taken, not that particular material must not be retrieved. It is
-the right instinct one step away from the mark.</p>
+<h3 id="the-gate-accuracy-eval-and-why-it-does-not-carry-the-mark">The
+gate accuracy eval, and why it does not carry the mark</h3>
+<p><code>evals/judge/test_retrieval_gate_accuracy.py</code> is 643 lines
+against the question the eleven plumbing tests do not ask. Twelve
+hand-curated cases — three each of chitchat, direct-fact,
+follow-up-from-history and missing-memory — pair a message with the
+facts that exist at the time and a ground-truth
+<code>should_retrieve</code> label. The reasoning around it is better
+than the reasoning in most benchmark papers. The two error directions
+are named, costed and reported apart, because <em>"an average that hides
+which way the gate is failing is the thing this eval exists to
+prevent"</em>; the 4:1 weighting is written as
+<code>FALSE_NEGATIVE_COST</code> specifically so a reader can disagree
+with the number and change it; and a separate test scores the
+<em>query</em> a yes carries, on the grounds that "a correct yes
+carrying a useless query retrieves nothing — from the outside that is
+indistinguishable from a correct no."</p>
+<p><code>negative_eval</code> is withheld, and the file makes the reason
+checkable rather than arguable. Three things have to hold for the mark
+and the third does not:</p>
+<ul>
+<li>The per-case test does assert, with
+<code>assert_test(..., threshold=0.6)</code>, and it runs over the
+<code>should_retrieve: false</code> cases. But the judge never sees the
+label — by design it scores whether the decision was
+<em>defensible</em>, not whether it was correct — so nothing here says
+that a particular fact must stay out of a particular prompt.</li>
+<li>The summary test compares against the labels and is the only place a
+needless retrieval is counted. It is also explicit that it does not
+gate: <em>"This test MEASURES; it does not gate. A false negative does
+not fail it."</em></li>
+<li>Its one assertion is <code>weighted &gt;= 0.5</code>, and the
+arithmetic will not reach it from the negative side. With six positives,
+six negatives and a 4:1 cost ratio, a gate that retrieves on
+<em>every</em> case — the degenerate always-yes that never keeps
+anything out of any prompt — incurs 6 against a worst case of 30 and
+scores 0.8. The needless-retrieval direction cannot fail this suite at
+any dataset balance the file ships.</li>
+</ul>
+<p>That is a fair design choice for a release gate running live small
+models across eleven providers, and the docstring says so in as many
+words. It is also the difference between measuring a decision and
+asserting one, which is what the mark counts. The nearest thing to a
+must-not assertion remains <code>test_triage_workflow.py:89</code> —
+<code>"gate" not in kinds</code>, that a quick turn never touches
+retrieval — which pins a <em>path</em>, not material.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -593,8 +633,11 @@ does full rewrites in the dashboard.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>An unmeasured gate.</strong> The whole design rests on the
-gate being right, and nothing checks it.</li>
+<li><strong>A quality eval whose floor a broken system clears.</strong>
+The gate eval reports the right numbers and asserts a cost-weighted
+score of 0.5; six positives, six negatives and a 4:1 weighting put an
+always-retrieve gate at 0.8. If a floor is meant to catch a regression,
+compute what the degenerate answers score before choosing it.</li>
 <li><strong>A correction that only reaches the row.</strong>
 Update-in-place and delete are the easy half; a background pass that
 re-reads the source material will undo both unless something records the
@@ -621,15 +664,15 @@ fail-open branch and the reason string.</li>
 what is missing is anything that makes a correction survive the next
 automatic write, and that is the part that matters once memory is more
 than a week old.</li>
-<li>A gate without an accuracy measurement, if a missed retrieval is
-costly.</li>
+<li>The gate eval as a regression barrier. Copy its structure — labelled
+cases, both directions reported, the cost ratio as a named constant —
+and then add an assertion that the degenerate answers fail.</li>
 </ul>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>How often does the gate wrongly decline? Nothing labels or measures
-it, and <a
-href="https://github.com/ShenSeanChen/waku-agent/issues/77">issue
-#77</a> is open against exactly that.</li>
+<li>What does the gate eval actually score in practice? It needs a
+provider key and live small models, and no run is committed, so the
+numbers the harness is built to produce are not in the tree.</li>
 <li>Does the gate call cost less than the searches it avoids, in latency
 and tokens?</li>
 <li>Should a declined retrieval be revisited if the model's answer turns
@@ -683,6 +726,28 @@ prompt over time?</li>
 <code>test_memory_search.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67"><code class="commit-id" title="d49c260fb57ce7f63406385d4efc4ccf1a70dd67">d49c260f…</code></a>
+— 35 commits on. Screened first: 0 auto-run surfaces, 2 build-time exec,
+and <code>pyproject.toml</code> changed the day of the reading, so the
+tree was inside the cooldown; nothing was installed and nothing was run.
+<code>waku/memory/</code> did not change at all — the diff is the
+dashboard's design system, MCP OAuth and remote transport, and eleven
+new deterministic eval files. One published criticism was closed
+upstream and is corrected here: <a
+href="https://github.com/ShenSeanChen/waku-agent/issues/77">issue
+#77</a> is answered by
+<code>evals/judge/test_retrieval_gate_accuracy.py</code>, so the gate's
+accuracy is measured, and the report asserted the opposite in six
+places. <code>negative_eval</code> was re-tested against it and is
+withheld: the per-case judge is not shown the label, and the summary's
+<code>weighted &gt;= 0.5</code> floor is unreachable from the
+needless-retrieval side — six positives, six negatives and a 4:1 cost
+ratio put an always-retrieve gate at 0.8. <code>human_review</code> was
+re-tested by the producer path from the dashboard's fact rows through
+<code>/api/memory</code> to
+<code>SqliteFactStore.update</code>/<code>.delete</code> and holds; it
+now carries the evidence record it had been asserted without.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/ShenSeanChen/waku-agent/commit/4e59ab575827081b0986ed61afde5d6f21be64f8"><code class="commit-id" title="4e59ab575827081b0986ed61afde5d6f21be64f8">4e59ab57…</code></a>
 — re-pinned at HEAD. Screened again before reading:
