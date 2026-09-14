@@ -7,10 +7,14 @@ page_kind: system
 source_name: "breferrari/obsidian-mind"
 source_url: https://github.com/breferrari/obsidian-mind
 archive_name: "breferrari--obsidian-mind"
-revision: b84464b983d7b25e811d52986f8b61dbcbad961d
-revision_url: https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d
-analyzed_at: 2026-08-09
-capabilities: ""
+revision: af615d100a1d04561409ab9a1e71e615efa1d87b
+revision_url: https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b
+analyzed_at: 2026-09-14
+capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "memory recall — a stored facet decides which caller may see a note, and the default is deny | .claude/scripts/lib/memory-recall.ts:236-245 `isVisibleTo`, applied at :301, :336 and :564 | each memory carries a `scope` facet — `general`, `platform` with a platform list, or a project list — defaulting to `project` when frontmatter omits it. `isVisibleTo(facets, caller)` returns true for `general`, for a project the caller names, or for a platform overlap, and **falls through to `return false`**, so an unrecognised facet hides the note rather than exposing it. A companion function returns the reason a memory was or was not shown, because *retrieval that cannot explain itself is impossible to debug* | .claude/scripts/tests/memory-recall.test.ts:156, :184, :222"
+  audit_log: "the MCP call log — an append-only JSONL beside the vault, covering refusals as well as successes | .claude/scripts/lib/mcp-caller.ts:242 (writer), :250 `auditPath` | every call appends one line with `appendFileSync(logPath, JSON.stringify(entry) + \"\\n\")` to `<vault>/.claude/om-mcp-audit.jsonl`; there is no `writeFileSync` against that path anywhere, and the read side takes a bounded tail because the log is *append-only and time-ordered*. It is the system's own store rather than git history. `mcp-refusal-audit.test.ts` extends it to failures, on the reasoning that every `audit(...)` call previously sat on a success path so the log *could not answer what it tried and failed to do* | .claude/scripts/tests/mcp-refusal-audit.test.ts"
+  negative_eval: "memory recall — one project's notes must not reach another caller | .claude/scripts/tests/memory-recall.test.ts:156, :184, :222 | `beacon (ios): SAME platform, different project — gets ios lessons, not atlas's` asserts both halves in one case: the platform-scoped lessons are served and the other project's are not. `an agent with no identity sees general only, not everything` and `project scope never leaks on a platform near-miss` pin the boundary from the other two directions. These are scope-boundary assertions on a read path rather than content ones | the positive half of :156 is the control; `memory-recall.test.ts` runs to 254 lines of additions at this pin alone"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -201,25 +205,71 @@ not attempt.
 
 ## 9. Reliability, Safety, and Trust
 
-**No marks**, and for this design that is the expected result rather than a
-shortfall: notes are notes. No trust state, no tombstone, no bitemporality, no
-audit log beyond git, no review surface, no negative eval.
+**Three marks, and they live in the hook scripts rather than in the notes.**
+The vault half is notes, and notes carry no trust state, no tombstone and no
+validity interval. The `.claude/scripts/lib/` half is a TypeScript system with
+its own contracts: `isVisibleTo` is a default-deny scope predicate on the recall
+path, `om-mcp-audit.jsonl` is an append-only call log covering refusals as well
+as successes, and the recall suite asserts that one project's notes do not reach
+another caller. `tombstone`, `trust_state` and `bitemporal` remain withheld —
+nothing records a rejected value, nothing carries a status, and no note says when
+its claim stopped being true.
 
-**The honest risk is the one section 5 names.** A vault that accumulates
-"Gotchas" and "Key Decisions" over a year contains decisions that were reversed
-and gotchas that were fixed, and nothing in the system distinguishes them from
-the live ones. The budget mechanism controls how *much* gets injected with real
-rigour; nothing controls whether what gets injected is still true.
+**The honest risk is the one section 5 names, and the vault has started on it.**
+A vault that accumulates "Gotchas" and "Key Decisions" over a year contains
+decisions that were reversed and gotchas that were fixed, and nothing in the
+notes distinguishes them from the live ones. The budget mechanism controls how
+*much* gets injected with real rigour; nothing controls whether what gets
+injected is still true.
+
+`correction-sweep.ts` is the answer being built, and its reasoning is worth more
+than its 201 lines. It exists because the vault's own rules asked for something
+it could not do — *"`signals.ts` already tells the agent to sweep on a decision
+reversal. So on the one path where the vault detects a correction happening, it
+issued an instruction and handed over nothing to act with — an instruction that
+looks like a control and cannot act."* That is this atlas's declared-but-unwired
+defect, self-diagnosed.
+
+What makes it worth copying is the predicate rather than the search. A candidate
+is classified **AUTHORITATIVE** (the single source, where the correction is
+applied), **RESTATEMENT** (a living note asserting the fact, replaced with a link
+to the source) or **HISTORICAL** (a note that correctly records what was believed
+at the time, and must not be touched):
+
+> *"A sweep that cannot tell a stale claim from a historical record is worse than
+> no sweep. It silently rewrites the vault's memory of what it used to believe,
+> and that damage is both unrecoverable and invisible, because the note still
+> reads fine afterwards."*
+
+This is the bitemporal problem stated in markdown terms — what is true now versus
+what we believed then — answered by protecting the second class from correction
+rather than by adding a validity column. Historical status is keyed on the naming
+convention *and* explicit signals, deliberately, because the convention alone
+*"silently misclassifies the moment someone names a note differently"*. The
+sweep is driven by `/om-correct` and a `correction-sweep` subagent, so a person
+starts it; nothing applies it unattended.
 
 The two safety-adjacent mechanisms are both well-judged. The exposure policy
 ships empty and explains why. The path check anticipates a separator bypass.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper, no benchmark, no test suite found.** The verification artifacts here
-are the hooks themselves — `validate-write` checks vault hygiene on every write,
-and `charcount` and the size meter make the injection cost observable at runtime
-rather than measured offline.
+**No paper and no benchmark. The test suite is substantial**: 60 files under
+`.claude/scripts/tests/`, 1,425 cases across 17,029 lines, run on `node:test`.
+Beside them the hooks are their own verification artifacts — `validate-write`
+checks vault hygiene on every write, and `charcount` and the size meter make the
+injection cost observable at runtime rather than measured offline.
+
+The cases worth naming are the ones that assert a boundary rather than a shape.
+`memory-recall.test.ts` pins scope non-leakage from three directions, each with
+its positive half in the same case. `correction-sweep.test.ts` pins the
+classification predicate in both directions — *"a living work note is NOT
+historical"* beside *"a completed work note is historical"* — and includes
+*"a malformed status is not a licence to edit"*, which is the fail-closed case
+most classifiers omit. `mcp-refusal-audit.test.ts` drives the real `tools/call`
+dispatch rather than a helper, and says why: *"A test that only checked the
+success path would have passed throughout the old behaviour, which is exactly
+how the gap survived."*
 
 That is a defensible answer for a template: the thing worth measuring is what a
 session costs, and it is measured continuously and printed, rather than
@@ -310,5 +360,7 @@ pays and most never measure.
 **Agent surfaces** — `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `Home.md`
 
 ## History
+
+**2026-09-14** — [`af615d100a1d04561409ab9a1e71e615efa1d87b`](https://github.com/breferrari/obsidian-mind/commit/af615d100a1d04561409ab9a1e71e615efa1d87b) — second reading, 31 commits on. Screened again: three auto-run findings, all in-repo — the Claude Code plugin manifest, five `.claude/settings.json` hooks running `node` over `.claude/scripts/*.ts` from the project directory, and one MCP server started from `.mcp.json`. Nothing fetches remote code, nothing was installed and nothing was run; the hooks were read rather than executed, and they are the mechanism this report is about. **Three corrections, and they share a cause.** The first reading recorded *"no test suite found"*; the suite was there, 55 files at that pin and 60 now, 1,425 cases over 17,029 lines under `.claude/scripts/tests/`. Missing it meant missing three marks that were earned at the previous pin and are added here rather than described as new: `scope_enforced` on `isVisibleTo`, a default-deny facet check applied at three points on the recall path; `audit_log` on `.claude/om-mcp-audit.jsonl`, appended with `appendFileSync` and never rewritten; and `negative_eval` on the recall suite's three scope-leak cases, each carrying its positive half. All three predate the previous pin — verified by grepping the pinned tree. The substantive addition since then is `correction-sweep.ts` with its `/om-correct` command and subagent, which classifies a correction target as authoritative, restatement or historical and refuses to rewrite the third.
 
 **2026-08-09** — [`b84464b983d7b25e811d52986f8b61dbcbad961d`](https://github.com/breferrari/obsidian-mind/commit/b84464b983d7b25e811d52986f8b61dbcbad961d) — first reading. Screened before reading; the tree was read, never installed, and no hook was run. QMD is an external dependency and was not examined.

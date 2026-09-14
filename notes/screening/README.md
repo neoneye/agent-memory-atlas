@@ -9,15 +9,15 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 362 of 457 screened at the report's current pin.**
+**Progress: 363 of 457 screened at the report's current pin.**
 
 8 further record(s) describe a revision the report has since moved
-off, and 87 report(s) have no record at all.
+off, and 86 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 146 |
+| Repositories with an auto-run surface (`RUNS`) | 147 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 188 |
 | Repositories with build-time execution (`EXEC`) | 268 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
@@ -124,6 +124,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`no-human`](../../content/systems/no-human.md) | `.claude-plugin/`, `server.json` |
 | [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
+| [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
 | [`omega-memory`](../../content/systems/omega-memory.md) | `.mcp.json`, `hooks/`, `server.json`, `smithery.yaml` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |
