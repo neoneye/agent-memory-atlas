@@ -7,24 +7,24 @@ page_kind: system
 source_name: "HKUDS/DeepCode"
 source_url: https://github.com/HKUDS/DeepCode
 archive_name: "HKUDS--DeepCode"
-revision: 69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
-revision_url: https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5
-analyzed_at: 2026-08-05
+revision: 4bb4fd9cb9e8261cba5b5575e4cefe2acfc9c9d2
+revision_url: https://github.com/HKUDS/DeepCode/commit/4bb4fd9cb9e8261cba5b5575e4cefe2acfc9c9d2
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced, audit_log, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: ""
 stack_source: "seeded"
 capability_evidence:
-  scope_enforced: "conversation store (SQLite) | core/sessions/store.py | WHERE project_id = ? on the thread read path | unknown"
-  audit_log: "conversation store (SQLite) | core/persistence/database.py | event_log, append-only with per-thread sequence heads | unknown"
-  negative_eval: "instruction-file assembly | tests/test_memory.py | test_project_instructions_no_repo_reads_only_workspace | tests/test_memory.py::test_project_instructions_no_repo_reads_only_workspace"
+  scope_enforced: "conversation store (SQLite) — the thread listing, filtered in Python rather than in SQL | core/application/thread_service.py:466-478 | `project_id` is a stored column on `threads`, and `ThreadService.list` applies it as a read-path filter: the caller cannot see another project's threads. It is not applied in the query. The repository has `ThreadRepository.list_for_project` (`core/persistence/thread_repository.py:115`) carrying `WHERE project_id = ?`, and that method has no caller anywhere in the tree; the live path calls `list_all(limit=100_000)` and then filters the rows in a comprehension before slicing for pagination. The database does push scope into SQL on the write side, where the `enforce_event_scope_insert` and `enforce_artifact_scope_insert` triggers abort any row referencing another thread | tests/test_thread_service.py — listing is covered; no test pins the cross-project case"
+  audit_log: "conversation store (SQLite) | core/persistence/migrations.py:159-196, core/persistence/event_repository.py:31 | `event_log` is insert-only — no `UPDATE event_log` or `DELETE FROM event_log` exists anywhere in the tree — with a per-thread sequence head taken as `COALESCE(MAX(sequence), 0) + 1 WHERE thread_id = ?`, a `UNIQUE(thread_id, sequence)` constraint and `CHECK (sequence > 0)`. A `BEFORE INSERT` trigger, `enforce_event_scope_insert`, aborts with `event references a different thread` when the event's `turn_id` or `item_id` belongs to another thread, so the log cannot be made to attribute an event across threads | tests/test_persistence.py; the constraints are enforced by the schema itself rather than by a test"
+  negative_eval: "instruction-file assembly — the assembled preamble, not a retrieval result | tests/test_memory.py:190-196, core/harness/memory.py `project_instructions` | `test_project_instructions_no_repo_reads_only_workspace` writes an `AGENTS.md` in a parent directory marked *must NOT be read* and one in the workspace, then asserts both halves on a single line: `assert \"workspace only\" in out and \"must NOT be read\" not in out`. The positive control sits beside the negative assertion, so an assembler that returned nothing could not pass | tests/test_memory.py:196; `test_every_injected_instruction_source_is_framed` covers the sibling property that every injected source is wrapped in a frame"
 matrix:
   memory_unit: "A markdown file in a flat per-workspace namespace, plus an event-sourced `item` inside a persisted conversation thread"
   storage: "Three stores that never meet — markdown notes under `<workspace>/.deepcode/memory/`, JSON and JSONL session transcripts, and a SQLite database at `~/.deepcode/state/deepcode.sqlite3` holding projects, threads and an append-only event log"
   retrieval: "No search. `MEMORY.md` is injected verbatim into the system prompt at session start under an 8,000-character cap, and every other note is reachable only by the agent choosing to call `memory read`"
   write: "The agent calls a five-action `memory` tool — `list`, `read`, `write`, `append`, `delete` — with no extraction pass and no dedupe; the conversation layer instead appends sequence-numbered domain events"
   update_delete: "`write` overwrites, `append` concatenates, `delete` is `Path.unlink()` with no history and no tombstone; session deletion is a separate crash-recoverable journal that quarantines to `.trash` and never touches the notes"
-  scoping: "`WHERE project_id = ?` on the thread read path; the notes namespace is a per-workspace directory, and the tool refuses any name that is not a bare filename"
+  scoping: "The thread listing filters on a stored `project_id` in Python after an unscoped fetch; the SQL predicate exists in a repository method nothing calls. The notes namespace is a per-workspace directory, and the tool refuses any name that is not a bare filename"
   integration: "One tool inside a harness with a TUI, a Tauri desktop app, a headless exec path and an app server, all assembled through one `build_agent_session`"
   background: "`autodream` — a scheduled single-turn agent pass told to merge duplicates and delete stale notes, run from `cli.schedule_cli` on an interval the user sets"
   trust: "Typed provenance on conversational input — client surface and input source, so automation is distinguishable from a person — and nothing at all on a note"
@@ -142,10 +142,56 @@ both apply with the nearer one last. `AGENTS.md` beats `DEEPCODE.md` beats
 
 Each layer is capped by `_MAX_INJECT_CHARS = 8000`. The cap is applied per layer
 rather than across the preamble — `project_instructions` decrements a running
-budget across its own directory chain, and `memory_index` starts from the full
-8,000 again — so the assembled preamble can reach roughly 24,000 characters of
-injected text before the conversation begins. Truncation appends a visible
-`…[truncated]` marker, which is better than silence.
+budget across its own directory chain via `_allocate_instruction_bodies`, and
+`memory_index` starts from the full 8,000 again — so the assembled preamble can
+reach roughly 24,000 characters of injected text before the conversation begins.
+Truncation appends a visible `…[truncated]` marker, which is better than silence.
+
+**Every injected body is framed, and the frame is escaped.** `_frame_instructions`
+wraps each instruction source in an open/close reminder pair and states the
+precedence to the model in-band:
+
+> *"The following workspace instructions may be relevant to your work. More
+> specific instructions take precedence over broader ones. They do not override
+> system, developer, or direct user instructions."*
+
+`_escape_reminder` then rewrites any occurrence of the closing token inside the
+body — *"Keep repository text from closing the instruction frame"* — so a file
+in someone else's repository cannot end the frame and continue as though it were
+the harness talking. `_frame_data_block` and `_escape_data_block` do the same for
+data. This is the discipline most systems in this atlas assert in a comment and
+do not implement, and the test that guards it,
+`test_every_injected_instruction_source_is_framed`, states the reason in its
+docstring: *"The frame is only a boundary if every side of it has one."*
+`_instruction_excluded` adds a glob-matched exclusion list, so a repository can
+keep an `AGENTS.md` out of the preamble without deleting it.
+
+### The compaction sink, and where its cap cuts
+
+`write_compaction_summary` deposits each compaction summary into
+`<workspace>/.deepcode/memory/` as a `## Compaction (session_key=…, phase=…,
+at=…)` entry. It is on unless `DEEPCODE_COMPACTION_MEMORY` is set to a falsey
+value, it is called from `core/events/session.py:518`, and it has its own suite
+in `tests/test_compaction_memory.py`. This is the piece that makes compaction
+count as memory in this atlas's sense: something survives the session with an
+anchor that could later be found.
+
+The cap is where it goes wrong. The docstring promises a bounded note with
+*"oldest entries dropped beyond the cap"* and anchors that *"keep each summary
+retrievable and attributable"*. The implementation is:
+
+```python
+combined = existing + entry
+if len(combined) > _MAX_COMPACTION_CHARS:
+    combined = combined[-_MAX_COMPACTION_CHARS:]
+```
+
+That drops the oldest *characters*, not the oldest entries. Nothing splits on
+the `## Compaction` boundary, so once a long-lived workspace crosses 32,000
+characters the note begins with whatever fell on the 32,000th byte from the end
+— a summary whose header, and therefore its session key, phase and timestamp,
+has been cut away, leaving unattributed prose above the first intact entry. The
+attribution the docstring is about is the first thing the cap removes.
 
 ## 4. Essential Implementation Paths
 
@@ -272,13 +318,43 @@ written by the same model that maintains the notes, so a fact whose index entry
 `autodream` rewrote inaccurately is not merely ranked low but unreachable, since
 nothing else enumerates the directory into the prompt.
 
-The scope key does reach the query on the conversation side:
-`SELECT * FROM threads WHERE project_id = ? ORDER BY …` and the same predicate on
-the listing paths, which is what the
+The scope key is stored and it is applied — but not where the schema puts it.
+`ThreadRepository.list_for_project` carries exactly the predicate the
 [scope as a first-class key](../../patterns/scope-as-a-first-class-key/) pattern
-asks for. On the notes side the scope is physical — a per-workspace directory,
-plus the tool's refusal of any name that is not a bare filename — which is a
-stronger boundary and not a key that could be filtered, joined or widened.
+asks for, `SELECT * FROM threads WHERE project_id = ?`, and **nothing calls it**:
+the string `list_for_project` appears once in the repository, at its own `def`.
+What the application calls is `list_all(include_archived=…, limit=100_000)`,
+and `ThreadService.list` then filters the returned rows in Python —
+
+```python
+visible = [
+    thread for thread in rows
+    if self.session_store.get_session(thread.id) is not None
+    and (project_id is None or thread.project_id == project_id)
+    and (exact_cwd is None or thread.workspace_path == exact_cwd)
+]
+return visible[offset : offset + limit]
+```
+
+— before slicing for pagination. The isolation property holds, which is why the
+mark holds: a caller asking for one project cannot see another's threads. What
+does not hold is the shape. Every listing reads up to a hundred thousand rows,
+calls `session_store.get_session` once per row, and discards the other projects'
+work afterwards, so the cost of listing a five-thread project scales with every
+thread the installation has ever had. The correct query is written, tested by
+nobody, and unreachable.
+
+The database does push scope into SQL, on the other side of the write.
+`enforce_event_scope_insert` and `enforce_artifact_scope_insert` are `BEFORE
+INSERT` triggers that `RAISE(ABORT, 'event references a different thread')` when
+a row's `turn_id` or `item_id` belongs to another thread. So the strongest scope
+enforcement in this system is declarative, lives in the schema, and guards
+writes — while the read path it was presumably meant to complement does its
+filtering in a list comprehension.
+
+On the notes side the scope is physical — a per-workspace directory, plus the
+tool's refusal of any name that is not a bare filename — which is a stronger
+boundary and not a key that could be filtered, joined or widened.
 
 ## 7. Write Mechanics
 
@@ -473,5 +549,7 @@ counting files.
 - Tests: `tests/test_memory.py`, `tests/test_autodream.py`.
 
 ## History
+
+**2026-09-14** — [`4bb4fd9cb9e8261cba5b5575e4cefe2acfc9c9d2`](https://github.com/HKUDS/DeepCode/commit/4bb4fd9cb9e8261cba5b5575e4cefe2acfc9c9d2) — second reading, 228 commits on. Screened again: 0 auto-run surfaces, 3 build-time exec paths, 4 unpinned manifests and 3 dependency surfaces inside the seven-day cooldown, so nothing was installed and nothing was run. All three marks were re-tested at the producer and all three hold; two evidence records were wrong and are rewritten. `scope_enforced` cited `WHERE project_id = ?` in `core/sessions/store.py`: that file no longer mentions `project_id`, the predicate now lives in `ThreadRepository.list_for_project`, and that method has no caller — the live listing is `list_all(limit=100_000)` followed by a Python comprehension that filters on the stored `project_id` and then slices. The mark holds on the filter; the shape is recorded as a criticism. `audit_log` cited `database.py`, where the schema no longer is; the record now names `migrations.py` and the `enforce_event_scope_insert` trigger, which aborts any event referencing another thread and is a stronger guarantee than the record claimed. Two mechanisms are new: every injected instruction body is wrapped in a stated-precedence frame whose closing token is escaped out of the body, and a compaction sink, on by default, deposits each compaction summary into the workspace notes — where its 32,000-character cap slices raw characters rather than entries, so the oldest surviving summary loses the header carrying its session key and timestamp.
 
 **2026-08-05** — [`69233821b5dbcf044eb17f91bca1b9c6b1d2fda5`](https://github.com/HKUDS/DeepCode/commit/69233821b5dbcf044eb17f91bca1b9c6b1d2fda5) — first reading. Screened before reading: 0 auto-run surfaces, 3 build-time exec paths (`setup.py`, `tests/conftest.py`, `desktop/src-tauri/build.rs`), 2 unpinned manifests, and 4 dependency surfaces changed inside the seven-day cooldown — `desktop/package-lock.json` one day before the pin, `uv.lock` two, `requirements.txt` three, `pyproject.toml` five, the most recent being the upstream commit *"fix(security): refresh audited sidecar dependencies"*. **Nothing was executed**: the cooldown rules out installing, the system needs provider credentials to run at all, and every claim here is established by reading. The two durable stores were traced separately — the SQLite event log with its sequence heads and replay, and the flat markdown notes under `<workspace>/.deepcode/memory/` reached through a five-action tool whose `delete` is a bare `Path.unlink()`. `autodream` is a single agent turn holding that tool, scheduled from `cli/schedule_cli.py`, and its only mechanical signal is a before-and-after note count, which the scheduler also treats as its terminal condition. `tests/test_autodream.py` patches in a scripted no-op provider, so its `notes_after == notes_before` assertion covers the accounting rather than the consolidation; the docstring's claim that the merging is *"verified separately with a real model"* has no committed counterpart anywhere in the tree. Marks: `scope_enforced` for `WHERE project_id = ?` on the thread read path, `audit_log` for the append-only `event_log` — both of which cover the conversation layer and neither of which reaches the notes — and `negative_eval` for `test_project_instructions_no_repo_reads_only_workspace`, which asserts a parent-directory instructions file marked *"must NOT be read"* is absent from the assembled preamble. `tombstone` is withheld and the near-miss is deliberate: `core/sessions/deletion.py` calls its deletion ticket a tombstone, and it is the record-keyed, crash-recovery kind rather than the value-keyed kind.
