@@ -7,10 +7,12 @@ page_kind: system
 source_name: "TeleAI-UAGI/telemem"
 source_url: https://github.com/TeleAI-UAGI/telemem
 archive_name: "TeleAI-UAGI--telemem"
-revision: 8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
-revision_url: https://github.com/TeleAI-UAGI/telemem/commit/8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0
-analyzed_at: 2026-08-09
+revision: 4f11e89ed65ae7c8abf979d70a0db37c4b1b3fa4
+revision_url: https://github.com/TeleAI-UAGI/telemem/commit/4f11e89ed65ae7c8abf979d70a0db37c4b1b3fa4
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "write and search — user, agent and run ids become filters on both paths, with a shared bucket every search spans | telemem/mem0.py:312-331, :70, :82, :400, :415 | `user_id`, `agent_id` and `run_id` are written into the record metadata and into the filter dict in the same block, so the key that scopes a write is the key that narrows a read rather than a label applied afterwards. State the fallback with the mark, because it widens rather than refuses: a write with no `user_id` is filed under the literal scope `events`, commented as the shared scope, and the retrieval side is described as covering every requested user profile plus `events`. An unscoped write is therefore visible to every search rather than rejected — deliberate and documented, and the same shape as the ambient defaults this atlas has recorded elsewhere | tests/"
 stack_storage: "faiss"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -366,5 +368,7 @@ character/events branch `:315-324`, `agent_id`/`run_id` `:325-332`, `search`
 `docs/MCP.md`, `docs/evaluation.md`, `docs/video.md`, `CITATION.cff`
 
 ## History
+
+**2026-09-14** — [`4f11e89ed65ae7c8abf979d70a0db37c4b1b3fa4`](https://github.com/TeleAI-UAGI/telemem/commit/4f11e89ed65ae7c8abf979d70a0db37c4b1b3fa4) — re-read, nine commits past the previous pin and the memory mechanism is unchanged: seven of the nine are README badges and star-history chart refreshes, and the v1.10.0 release touches import ordering in `utils.py` and provider tests. The mark stands and now carries an evidence record that names the fallback as well as the filter. `user_id`, `agent_id` and `run_id` are written into the metadata and the filter dict in the same block, so the key that scopes a write is the key that narrows a read. A write with no `user_id` is filed under the literal scope `events`, and retrieval is described as covering every requested user profile plus `events` — so an unscoped write is visible to every search rather than refused. It is deliberate and commented, and it is the same widening default this atlas has recorded in other systems this week. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-09** — [`8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0`](https://github.com/TeleAI-UAGI/telemem/commit/8b12b0005502b2768eebdab79b8bd1ac8c6cd0d0) — first reading. Screened before reading; the tree was read, never installed, no benchmark was run, and the tech report was not read.

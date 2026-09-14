@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 353 of 455 screened at the report's current pin.**
+**Progress: 354 of 455 screened at the report's current pin.**
 
 9 further record(s) describe a revision the report has since moved
-off, and 93 report(s) have no record at all.
+off, and 92 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 144 |
+| Repositories with an auto-run surface (`RUNS`) | 145 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 179 |
-| Repositories with build-time execution (`EXEC`) | 262 |
+| Repositories with build-time execution (`EXEC`) | 263 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -161,6 +161,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tanglies-agentos`](../../content/systems/tanglies-agentos.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`telemem`](../../content/systems/telemem.md) | `server.json` |
 | [`token-optimizer`](../../content/systems/token-optimizer.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
