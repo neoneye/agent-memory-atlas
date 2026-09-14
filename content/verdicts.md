@@ -943,7 +943,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: git *is* the memory. Turns are commits, sessions are branches, commit shas are addresses, and forking a conversation is a first-class operation because the substrate already supports it.
 - Biggest risk: it stores what was said rather than what is believed, so a correction and the mistake sit in the log in order with nothing preferring either.
 - Most reusable component: log-as-authority with the index as a projection you can rebuild, and per-branch context-cache invalidation.
-- Maturity impression: 233 test functions, no memory benchmark and no retrieval measurement — consistent with a system whose claim is durability rather than recall.
+- Maturity impression: 233 test functions across fifteen files, no memory benchmark and no retrieval measurement — consistent with a system whose claim is durability rather than recall. One capability mark, `negative_eval`, on the single test asserting that a summarized turn does not reach the assembled context; the summary machinery it guards is complete and has no caller outside `tests/`.
 - Study when: auditability and replay are the requirement — runs you must reconstruct exactly, experiments you want to fork.
 - Do not copy when: belief is the requirement, or you assume git gives you deletion. Pair it with something that has an opinion about what is true, and keep the evidence here.
 
