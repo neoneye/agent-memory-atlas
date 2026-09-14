@@ -108,14 +108,14 @@ enforced in the query and suspended on purpose for consolidation.</p>
               <strong>kitfunso/hippo-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c" title="e928179a3b35e8fe5837878aed071d6025ced45c">
+            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2" title="da122e6b07effdc1153f514438d80d028d39dda2">
               <span>Analyzed revision</span>
-              <code>e928179a…</code>
+              <code>da122e6b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-19</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kitfunso--hippo-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -574,6 +574,31 @@ intervals</li>
 <code>src/ablation.ts</code>, <code>src/compare.ts</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2"><code class="commit-id" title="da122e6b07effdc1153f514438d80d028d39dda2">da122e6b…</code></a>
+— re-read, 52 commits past the previous pin. All six marks stand and
+each mechanism was re-checked in source. Two fixes land on them
+directly. <strong>A read was undoing an invalidation.</strong>
+<code>hippo invalidate</code> marks a memory wrong by storing confidence
+<code>stale</code>, and the context path rewrote it —
+<code>confidence: e.confidence === 'stale' ? 'observed' : e.confidence</code>
+— so one recall restored the tier while the <code>invalidated</code> tag
+stayed on the row, leaving a memory that looked rejected and was treated
+as observed. The line is gone, the replacement comment states the
+principle it violated (confidence <em>"is an epistemic tier"</em>, not
+something a read derives), and
+<code>tests/invalidation-survives-recall.test.ts</code> pins it by name.
+This corpus keeps finding the same class — an archive erased by
+re-assertion, a record keyed on an id the next write reuses — and this
+is the sharpest form of it, because reading is the operation least
+expected to change what it reads. The second fix separates the stored
+confidence tier from the derived age-out, which is the same distinction
+one layer down. Beside them the schema gained two hardenings: a trigger
+rewritten so a <code>NULL</code> kind cannot bypass the check
+substitute, and <code>UNIQUE(memory_id, archived_at)</code> on
+<code>raw_archive</code> so re-archiving one id in the same instant
+cannot produce ambiguous audit rows. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-08-19</strong> — <a
 href="https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c"><code class="commit-id" title="e928179a3b35e8fe5837878aed071d6025ced45c">e928179a…</code></a>
 — re-read six commits on, prompted by hippo's own roadmap publishing a

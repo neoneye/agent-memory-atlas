@@ -7,9 +7,9 @@ page_kind: system
 source_name: "kitfunso/hippo-memory"
 source_url: https://github.com/kitfunso/hippo-memory
 archive_name: "kitfunso--hippo-memory"
-revision: e928179a3b35e8fe5837878aed071d6025ced45c
-revision_url: https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c
-analyzed_at: 2026-08-19
+revision: da122e6b07effdc1153f514438d80d028d39dda2
+revision_url: https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2
+analyzed_at: 2026-09-14
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, tombstone, negative_eval"
 capability_evidence:
   trust_state: "the memory row — a stored confidence tier, with staleness derived rather than stored | src/memory.ts | `resolveConfidence` short-circuits on `pinned` and `verified`, then returns `stale` when `last_retrieved` is older than thirty days, so `verified | observed | inferred` are stored and `stale` is computed | tests/ — committed cases exercise the tiers; no test pins the verified/pinned short-circuit itself"
@@ -407,6 +407,8 @@ design stops at hiding rows.
 - `src/eval-suite.ts`, `src/eval.ts`, `src/ablation.ts`, `src/compare.ts`
 
 ## History
+
+**2026-09-14** — [`da122e6b07effdc1153f514438d80d028d39dda2`](https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2) — re-read, 52 commits past the previous pin. All six marks stand and each mechanism was re-checked in source. Two fixes land on them directly. **A read was undoing an invalidation.** `hippo invalidate` marks a memory wrong by storing confidence `stale`, and the context path rewrote it — `confidence: e.confidence === 'stale' ? 'observed' : e.confidence` — so one recall restored the tier while the `invalidated` tag stayed on the row, leaving a memory that looked rejected and was treated as observed. The line is gone, the replacement comment states the principle it violated (confidence *"is an epistemic tier"*, not something a read derives), and `tests/invalidation-survives-recall.test.ts` pins it by name. This corpus keeps finding the same class — an archive erased by re-assertion, a record keyed on an id the next write reuses — and this is the sharpest form of it, because reading is the operation least expected to change what it reads. The second fix separates the stored confidence tier from the derived age-out, which is the same distinction one layer down. Beside them the schema gained two hardenings: a trigger rewritten so a `NULL` kind cannot bypass the check substitute, and `UNIQUE(memory_id, archived_at)` on `raw_archive` so re-archiving one id in the same instant cannot produce ambiguous audit rows. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-19** — [`e928179a3b35e8fe5837878aed071d6025ced45c`](https://github.com/kitfunso/hippo-memory/commit/e928179a3b35e8fe5837878aed071d6025ced45c) — re-read six commits on, prompted by hippo's own roadmap publishing a source-verified rebuttal of this report. Two of its three claims hold and are corrected here.
 
