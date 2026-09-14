@@ -7,10 +7,15 @@ page_kind: system
 source_name: "MemTensor/memmy-agent"
 source_url: https://github.com/MemTensor/memmy-agent
 archive_name: "MemTensor--memmy-agent"
-revision: c6cdbf9a126cc297253783c5594ac5ee8acb7c1a
-revision_url: https://github.com/MemTensor/memmy-agent/commit/c6cdbf9a126cc297253783c5594ac5ee8acb7c1a
-analyzed_at: 2026-08-15
+revision: 25acd5f29fc7df73b943713abe61f1b2f9839887
+revision_url: https://github.com/MemTensor/memmy-agent/commit/25acd5f29fc7df73b943713abe61f1b2f9839887
+analyzed_at: 2026-09-14
 capabilities: "tombstone, trust_state, audit_log, negative_eval"
+capability_evidence:
+  tombstone: "the avoidance policy — keyed on a hash of the failure signature, so the same failure finds the existing record instead of minting another | Memory/src/service/evolution/negative-experience-pipeline.ts:80-86, :161, :185-189 | the pipeline computes `negativeExperienceSignature(draft)` and derives the record key from it — `policy:avoid:` plus a stable hash of the scope identity and that signature — then calls `findExisting(draft, key)` before writing. The key is a function of what went wrong rather than of a row id, which is the clause this mark turns on: a later induction over the same failure lands on the same key and reuses the existing avoidance policy instead of re-asserting the rejected approach as new | Memory/tests/service/evolution/negative-experience.test.ts"
+  trust_state: "the memory status — four discrete values, two of which reach a prompt | Memory/src/types.ts:33, src/contracts/memory-runtime.ts:35, src/server/http.ts:1538-1539 | `MemoryStatus` is `activated`, `resolving`, `archived` or `deleted`, declared once as a type and again as a Zod enum on the runtime contract so the wire and the store agree. It decides admission rather than order: recall narrows with `AND memories.status IN ('activated', 'resolving')`, so an archived or soft-deleted memory reaches no prompt while `resolving` marks the candidate lifecycle | Memory/tests/repository/memory-retrieval-index.test.ts:358"
+  audit_log: "an `audit_logs` table written on the service path, with retention stated | Memory/src/storage/repositories.ts:3851, :3870, :3888, src/service/memory-service.ts:1305 | `insertAudit` appends a row to `audit_logs` and the memory service calls it on mutation, so the record is an event in the system own store rather than a view rebuilt from elsewhere. The limit belongs with the mark and the report already carries it as a risk: `scheduleLogTablePruneAfterInsert(\"audit_logs\", …)` runs on insert, so the log is retention-pruned rather than indefinite | Memory/tests"
+  negative_eval: "injected context — fixtures whose own names state what must not appear | Memory/tests/service/retrieval/injected-context.test.ts:112-115, tests/service/retrieval/cross-agent-skill.test.ts:47 | the cases assert the assembled markdown does not contain `SCANNED_TRANSCRIPT_MUST_NOT_BE_INJECTED`, `UNRELATED_MEMORY_MUST_NOT_BE_INJECTED` or `STALE_FIRST_REPORT`, and separately that a recall hit list does not contain the agent own skill id. Naming the fixture after the assertion is what stops the case rotting into a meaningless absence — a reader who deletes the marker breaks the test rather than silently weakening it | Memory/tests/service/retrieval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -60,7 +65,7 @@ policies from repeated traces through a candidate pool with similarity dedup,
 abstracts L3, mines skills, and — the part the atlas rewards — runs a
 **negative-experience pipeline** that synthesizes anti-pattern "avoid" policies
 keyed on a failure signature and surfaces them on read as failure-avoidance
-(`service/evolution/negative-experience-pipeline.ts:85,409`). That is a
+(`Memory/src/service/evolution/negative-experience-pipeline.ts:80-86`). That is a
 rejected-value record in the induced-policy layer, and it earns `tombstone` with
 the nuance that it applies to anti-patterns and rejected candidates rather than to
 deleted user facts.
@@ -413,5 +418,7 @@ unmeasured here, not a proven gain.
 - `Memory/tests/service/retrieval/injected-context.test.ts` — the must-not-inject assertions.
 
 ## History
+
+**2026-09-14** — [`25acd5f29fc7df73b943713abe61f1b2f9839887`](https://github.com/MemTensor/memmy-agent/commit/25acd5f29fc7df73b943713abe61f1b2f9839887) — re-read, 749 commits past the previous pin across 1,128 files, most of it desktop application, release and Windows work rather than memory. All four marks stand and each was re-verified in source rather than carried forward; the tree gained a `Memory/src/` prefix, so the cited pipeline path is corrected. The `tombstone` keying is worth restating because it is the clause most mechanisms in this corpus fail: the avoidance policy key is `policy:avoid:` plus a stable hash of the scope identity and the *failure signature*, so it is derived from what went wrong rather than from a row id, and `findExisting` consults it before writing. Evidence records were written for all four marks, which the report previously carried none of, including the retention limit on the audit log — `scheduleLogTablePruneAfterInsert` runs on every insert — and the fixture markers the negative cases are named after. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-15** — [`c6cdbf9a126cc297253783c5594ac5ee8acb7c1a`](https://github.com/MemTensor/memmy-agent/commit/c6cdbf9a126cc297253783c5594ac5ee8acb7c1a) — first reading. Screened before opening: FRESH manifests across the workspaces; nothing was installed or run. The `Memory/` package was established as the authoritative local engine (default `byok`/`local`/`sqlite`, `config/index.ts:252-255`), distinct from the MemOS Python package and from the optional hosted OpenMem backend; the layered store, the evolution pipeline, the anti-pattern/negative-experience mechanism, the injected per-agent CLI skill, and the unscoped main recall were read from `Memory/src/storage/`, `service/` and `cli/` and cross-checked against the committed tests (`injected-context.test.ts`). `tombstone` (anti-pattern and rejected-candidate records keyed on content), `trust_state` (status consumed on read), `audit_log` (audit and change logs, retention-pruned) and `negative_eval` are earned; `scope_enforced` is withheld because the primary recall deliberately pools across agents, and `bitemporal` and `human_review` are withheld. No paper is cited in the tree; "MemOS-powered" is lineage and branding.
