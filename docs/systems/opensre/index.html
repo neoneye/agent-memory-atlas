@@ -110,14 +110,14 @@ the extractor ever sees it.</p>
               <strong>Tracer-Cloud/opensre</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544" title="c81d6c36d69bd6b39c1e18b0205f28422c3d2544">
+            <a class="meta-pill revision-pill" href="https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932" title="f18c59a6eb5ac0d9eec125692bca5ba28703b932">
               <span>Analyzed revision</span>
-              <code>c81d6c36…</code>
+              <code>f18c59a6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Tracer-Cloud--opensre" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -145,8 +145,8 @@ the extractor ever sees it.</p>
 incident, call the observability tools you already run, answer in Slack
 or a terminal. It is a large repository in public alpha, and its
 long-term memory is a small, carefully-bounded corner of it: about 870
-lines under <code>core/domain/memory/</code> for the store, 387 lines of
-session-end extraction, 183 lines of agent tools, and 147 lines of slash
+lines under <code>core/domain/memory/</code> for the store, 415 lines of
+session-end extraction, 188 lines of agent tools, and 147 lines of slash
 commands.</p>
 <p>The memory is markdown files, which is not novel. What is worth the
 report is <strong>where this system decided to put its rigour</strong>,
@@ -298,7 +298,8 @@ Paths</h2>
 <tbody>
 <tr>
 <td>Grounding gate</td>
-<td><code>core/agent_harness/session/memory_extraction.py:331-380</code></td>
+<td><code>core/agent_harness/session/memory_extraction.py:359-394</code>,
+called at <code>:323</code></td>
 <td>Token-set intersection between the candidate memory and
 user-authored text, plus the sample/synthetic refusal</td>
 </tr>
@@ -332,7 +333,7 @@ replace, index rebuild</td>
 </tr>
 <tr>
 <td>Scope resolution</td>
-<td><code>config/constants/paths.py:130-170</code></td>
+<td><code>config/constants/paths.py:169, :212</code></td>
 <td><code>session_home()</code> and <code>get_memory_dir()</code></td>
 </tr>
 <tr>
@@ -481,6 +482,14 @@ shape: a <code>name</code> reads one entry in full, a <code>query</code>
 searches, and no arguments returns the index. Each result carries
 <code>total_stored</code>, so the model can tell "nothing matched" from
 "nothing is stored".</p>
+<p>A recall also leaves a citation.
+<code>tools/system/agent_memory/_evidence.py</code> maps the tool's
+output into the investigation report's evidence list — <em>"recalled
+memory 'x'"</em>, or <em>"N memory match(es) for query 'q' (of M
+stored)"</em> — so a finding that leaned on a remembered fact says so in
+the write-up. That is provenance in the <em>answer</em> rather than on
+the record: the memory file still carries no trace of where it came
+from, but the report that used it names it.</p>
 <p>The <code>/memory</code> slash commands cover list, show, forget and
 path. The list output ends by telling the user where the files are and
 that they may <em>"edit or delete the files directly"</em> — the store
@@ -554,7 +563,8 @@ Benchmarks</h2>
 <p>The memory paths are tested with a seriousness the size of the
 feature does not require.
 <code>tests/core/agent_harness/session/test_memory_extraction.py</code>
-is 351 lines over twenty cases, and the useful ones are negative:</p>
+is 431 lines over twenty-three cases, and the useful ones are
+negative:</p>
 <ul>
 <li>a secret-like extracted item is skipped;</li>
 <li>infrastructure claims appearing only in assistant output are
@@ -666,7 +676,7 @@ answer from a truncated view?</li>
 <tbody>
 <tr>
 <td><code>core/agent_harness/session/memory_extraction.py</code></td>
-<td>387</td>
+<td>415</td>
 <td>The extraction pass, the coalescing worker, and both halves of the
 grounding gate</td>
 </tr>
@@ -677,7 +687,7 @@ grounding gate</td>
 </tr>
 <tr>
 <td><code>tools/system/agent_memory/tool.py</code></td>
-<td>183</td>
+<td>188</td>
 <td><code>memory_remember</code>, <code>memory_forget</code>,
 <code>memory_recall</code></td>
 </tr>
@@ -693,7 +703,7 @@ grounding gate</td>
 </tr>
 <tr>
 <td><code>core/domain/memory/index.py</code></td>
-<td>86</td>
+<td>87</td>
 <td><code>MEMORY.md</code> and the prompt block</td>
 </tr>
 <tr>
@@ -728,9 +738,35 @@ limits</td>
 <td>161</td>
 <td>The org-scoped miss ledger behind closed-loop learning</td>
 </tr>
+<tr>
+<td><code>tools/system/agent_memory/_evidence.py</code></td>
+<td>41</td>
+<td>Maps a <code>memory_recall</code> result into the investigation
+report's citation list</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932"><code class="commit-id" title="f18c59a6eb5ac0d9eec125692bca5ba28703b932">f18c59a6…</code></a>
+— second reading, 745 commits on. Screened again; nothing was installed
+and nothing was run. The repository moved a great deal and the memory
+subsystem barely did: seven files, 99 insertions and 23 deletions across
+<code>core/domain/memory/</code>, the extraction pass and the agent
+tools. All three marks were re-tested at the producer and all three
+hold; line references and file sizes are corrected where the files grew.
+The one addition is <code>tools/system/agent_memory/_evidence.py</code>,
+which maps a <code>memory_recall</code> result into the investigation
+report's citation list, so an answer that used a memory now says which
+one — provenance in the answer rather than on the record. <strong>The
+rejected-value gap is unchanged.</strong> <code>delete_memory</code>
+still unlinks without recording anything, no tombstone,
+<code>previously_deleted</code> or equivalent exists anywhere under
+<code>core/domain/memory/</code>, <code>memory_extraction.py</code> or
+<code>tools/system/agent_memory/</code>, and the extraction pass still
+runs after every recorded turn over a thirty-turn window. The first
+reading's open question — whether a forgotten memory comes back — is
+still unanswered by any committed test.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544"><code class="commit-id" title="c81d6c36d69bd6b39c1e18b0205f28422c3d2544">c81d6c36…</code></a>
 — first reading. The screen reported two auto-running surfaces and 64

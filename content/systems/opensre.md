@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Tracer-Cloud/opensre"
 source_url: https://github.com/Tracer-Cloud/opensre
 archive_name: "Tracer-Cloud--opensre"
-revision: c81d6c36d69bd6b39c1e18b0205f28422c3d2544
-revision_url: https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544
-analyzed_at: 2026-08-09
+revision: f18c59a6eb5ac0d9eec125692bca5ba28703b932
+revision_url: https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932
+analyzed_at: 2026-09-14
 capabilities: "scope_enforced, human_review, negative_eval"
 stack_storage: ""
 stack_retrieval: "lexical"
@@ -38,7 +38,7 @@ OpenSRE is an Apache-2.0 framework for AI SRE agents — investigate an incident
 call the observability tools you already run, answer in Slack or a terminal. It
 is a large repository in public alpha, and its long-term memory is a small,
 carefully-bounded corner of it: about 870 lines under `core/domain/memory/` for
-the store, 387 lines of session-end extraction, 183 lines of agent tools, and
+the store, 415 lines of session-end extraction, 188 lines of agent tools, and
 147 lines of slash commands.
 
 The memory is markdown files, which is not novel. What is worth the report is
@@ -181,13 +181,13 @@ which the docs say in bold and the `/memory` output repeats.
 
 | Path | File | What it does |
 | --- | --- | --- |
-| Grounding gate | `core/agent_harness/session/memory_extraction.py:331-380` | Token-set intersection between the candidate memory and user-authored text, plus the sample/synthetic refusal |
+| Grounding gate | `core/agent_harness/session/memory_extraction.py:359-394`, called at `:323` | Token-set intersection between the candidate memory and user-authored text, plus the sample/synthetic refusal |
 | Safety gate | `core/domain/memory/safety.py:61-129` | Five regex families; rules are named, values never echoed |
 | Redaction | `core/domain/memory/safety.py:85-109` | Same patterns, substitution instead of rejection, applied to the transcript before the provider call |
 | Extraction | `core/agent_harness/session/memory_extraction.py:90-125, 234-255` | The prompt, the existing index passed back in, a cap of five items and thirty turns |
 | Coalescing worker | `core/agent_harness/session/memory_extraction.py:167-205` | One daemon thread, latest snapshot wins, context copied |
 | Write | `core/domain/memory/store.py:91-137` | Lock, read-modify-write preserving `created_at`, atomic replace, index rebuild |
-| Scope resolution | `config/constants/paths.py:130-170` | `session_home()` and `get_memory_dir()` |
+| Scope resolution | `config/constants/paths.py:169, :212` | `session_home()` and `get_memory_dir()` |
 | Parse cache | `core/domain/memory/store.py:150-208` | `lru_cache` keyed on directory *and* a per-file size/mtime signature |
 | Prompt index | `core/domain/memory/index.py:46-83` | Newest first, 50 entries, 600 chars of body each, 8,000 total, tail pointer to `memory_recall` |
 | Agent tools | `tools/system/agent_memory/tool.py` | `memory_remember`, `memory_forget`, `memory_recall` |
@@ -315,6 +315,13 @@ entry in full, a `query` searches, and no arguments returns the index. Each
 result carries `total_stored`, so the model can tell "nothing matched" from
 "nothing is stored".
 
+A recall also leaves a citation. `tools/system/agent_memory/_evidence.py` maps
+the tool's output into the investigation report's evidence list — *"recalled
+memory 'x'"*, or *"N memory match(es) for query 'q' (of M stored)"* — so a
+finding that leaned on a remembered fact says so in the write-up. That is
+provenance in the *answer* rather than on the record: the memory file still
+carries no trace of where it came from, but the report that used it names it.
+
 The `/memory` slash commands cover list, show, forget and path. The list output
 ends by telling the user where the files are and that they may *"edit or delete
 the files directly"* — the store is the interface, in the sense the
@@ -380,8 +387,8 @@ omission; on a Slack silo where extraction writes without asking, the question
 ## 10. Tests, Evals, and Benchmarks
 
 The memory paths are tested with a seriousness the size of the feature does not
-require. `tests/core/agent_harness/session/test_memory_extraction.py` is 351
-lines over twenty cases, and the useful ones are negative:
+require. `tests/core/agent_harness/session/test_memory_extraction.py` is 431
+lines over twenty-three cases, and the useful ones are negative:
 
 - a secret-like extracted item is skipped;
 - infrastructure claims appearing only in assistant output are skipped;
@@ -479,19 +486,22 @@ something, and to make a correction that holds.
 
 | File | Lines | Role |
 | --- | --- | --- |
-| `core/agent_harness/session/memory_extraction.py` | 387 | The extraction pass, the coalescing worker, and both halves of the grounding gate |
+| `core/agent_harness/session/memory_extraction.py` | 415 | The extraction pass, the coalescing worker, and both halves of the grounding gate |
 | `core/domain/memory/store.py` | 283 | CRUD, the directory lock, the signature-keyed parse cache |
-| `tools/system/agent_memory/tool.py` | 183 | `memory_remember`, `memory_forget`, `memory_recall` |
+| `tools/system/agent_memory/tool.py` | 188 | `memory_remember`, `memory_forget`, `memory_recall` |
 | `surfaces/interactive_shell/command_registry/memory_cmds.py` | 147 | `/memory` list, show, forget, path |
 | `core/domain/memory/safety.py` | 136 | Secret detection for rejection and for redaction |
-| `core/domain/memory/index.py` | 86 | `MEMORY.md` and the prompt block |
+| `core/domain/memory/index.py` | 87 | `MEMORY.md` and the prompt block |
 | `core/domain/memory/files.py` | 84 | Paths, permissions, atomic write |
 | `core/domain/memory/settings.py` | 59 | The three environment gates and the shared-surface rule |
 | `core/domain/memory/models.py` | 52 | `MemoryRecord`, `MemoryType`, the size limits |
 | `config/constants/paths.py` | — | `session_home()` and `get_memory_dir()`, lines 130-170 |
 | `config/scope_context.py` | 42 | The storage-scope `ContextVar` |
 | `core/domain/feedback/misses/store.py` | 161 | The org-scoped miss ledger behind closed-loop learning |
+| `tools/system/agent_memory/_evidence.py` | 41 | Maps a `memory_recall` result into the investigation report's citation list |
 
 ## History
+
+**2026-09-14** — [`f18c59a6eb5ac0d9eec125692bca5ba28703b932`](https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932) — second reading, 745 commits on. Screened again; nothing was installed and nothing was run. The repository moved a great deal and the memory subsystem barely did: seven files, 99 insertions and 23 deletions across `core/domain/memory/`, the extraction pass and the agent tools. All three marks were re-tested at the producer and all three hold; line references and file sizes are corrected where the files grew. The one addition is `tools/system/agent_memory/_evidence.py`, which maps a `memory_recall` result into the investigation report's citation list, so an answer that used a memory now says which one — provenance in the answer rather than on the record. **The rejected-value gap is unchanged.** `delete_memory` still unlinks without recording anything, no tombstone, `previously_deleted` or equivalent exists anywhere under `core/domain/memory/`, `memory_extraction.py` or `tools/system/agent_memory/`, and the extraction pass still runs after every recorded turn over a thirty-turn window. The first reading's open question — whether a forgotten memory comes back — is still unanswered by any committed test.
 
 **2026-08-09** — [`c81d6c36d69bd6b39c1e18b0205f28422c3d2544`](https://github.com/Tracer-Cloud/opensre/commit/c81d6c36d69bd6b39c1e18b0205f28422c3d2544) — first reading. The screen reported two auto-running surfaces and 64 build-time execution surfaces — all of them `conftest.py` files that execute on pytest collection — six unpinned dependency surfaces, a `uv.lock`, and **twelve files inside the seven-day cooldown**, so nothing was installed and no test was run; the analysis is static over the tree. The screen also flagged `AGENTS.md` and `CLAUDE.md` as instructions addressed to a reading agent; both were treated as data and neither was followed.
