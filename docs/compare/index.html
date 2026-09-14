@@ -16479,8 +16479,11 @@ afterwards, and a memory the agent must remember to read</td>
 <td><code>mercury-agent</code></td>
 <td><code>UserMemoryRecord</code> graded on confidence, importance, and
 durability</td>
-<td>Second-brain DB, with people and relation records</td>
-<td>Retrieval records <code>lastUsedAt</code> and
+<td>A better-sqlite3 database with an FTS5 virtual table kept current by
+insert, update and delete triggers, plus people and relation
+records</td>
+<td>FTS5 over summary and detail, with a <code>LIKE</code> fallback over
+normalized terms; retrieval records <code>lastUsedAt</code> and
 <code>lastUsedQuery</code></td>
 <td>Candidates with narrowed <code>evidenceKind</code>;
 <code>evidenceCount</code> on corroboration</td>
@@ -16488,13 +16491,18 @@ durability</td>
 tombstone</td>
 <td><code>durable</code>, <code>active</code>, <code>subconscious</code>
 tiers; single user</td>
-<td>Internal, with a <code>brain/Memory.tsx</code> review page</td>
-<td>Not traced</td>
+<td>Internal, with a <code>brain/Memory.tsx</code> page offering
+per-record edit and delete, and a <code>/memory</code> chat menu
+carrying the shared-learning toggle</td>
+<td>A cloud pull — an incremental fetch of <code>shareable=1</code>,
+non-dismissed rows newer than a cursor</td>
 <td>Four-way <code>evidenceKind</code>, corroboration counts, free-text
 provenance</td>
 <td>Durability separated from importance; a subconscious tier; a
 learning-pause switch</td>
-<td>Scores estimated once at write time; dismissal is not durable</td>
+<td>Scores estimated once at write time; dismissal is not durable; and
+<code>shareable</code> only ever ratchets upward automatically — a merge
+promotes a private record, nothing demotes one</td>
 </tr>
 <tr>
 <td><code>metaclaw</code></td>
@@ -29719,7 +29727,11 @@ href="https://github.com/moltis-org/moltis/commit/8f633cc36e5a053d6ccd0d1af22e76
 <li><a
 href="https://github.com/cosmicstack-labs/mercury-agent">cosmicstack-labs/mercury-agent</a>
 at <a
-href="https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1"><code class="commit-id" title="6e174a4b5ea77bbc753bff5f89c76db9303439d1">6e174a4b…</code></a></li>
+href="https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe"><code class="commit-id" title="31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe">31013b0d…</code></a>
+— read only at the second pin; two dependency surfaces inside the
+cooldown, so nothing was installed or run. The stack row was traced and
+promoted from seeded to reviewed, and a <code>shareable</code> flag
+gating an outward cloud fetch was read at its defaults</li>
 <li><a
 href="https://github.com/run-llama/llama_index">run-llama/llama_index</a>
 at <a

@@ -7,25 +7,27 @@ page_kind: system
 source_name: cosmicstack-labs/mercury-agent
 source_url: https://github.com/cosmicstack-labs/mercury-agent
 archive_name: "cosmicstack-labs--mercury-agent"
-revision: 6e174a4b5ea77bbc753bff5f89c76db9303439d1
-revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1
-analyzed_at: 2026-07-27
+revision: 31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe
+revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe
+analyzed_at: 2026-09-14
 capabilities: "human_review"
-stack_storage: ""
-stack_retrieval: ""
-stack_source: "seeded"
+capability_evidence:
+  human_review: "the brain memory page — a person edits or deletes a stored memory, and the write reaches the store | ui/src/pages/brain/Memory.tsx:317 and :342, src/web/api/brain.ts:156-180 | each memory row renders an edit and a delete control; `onEdit` opens the editor and `handleSave` calls `api.brain.memory.update(id, data)`, `onDelete` calls `api.brain.memory.delete(id)`, and those reach `brain.put('/api/brain/memory/:id')` and `brain.delete('/api/brain/memory/:id')` against the same better-sqlite3 database the agent reads. The person is the adjudicator and the target is the live record, not a review queue. What this is *not* is an admission gate: `UserMemoryCandidate`s are inserted, merged and conflict-resolved automatically by `insertRecord`, `mergeRecord` and `resolveConflict`, so review is post-hoc | src/memory/user-memory.test.ts"
+stack_storage: "sqlite"
+stack_retrieval: "lexical"
+stack_source: "reviewed"
 matrix:
   memory_unit: "`UserMemoryRecord` graded on confidence, importance, and durability"
-  storage: "Second-brain DB, with people and relation records"
-  retrieval: "Retrieval records `lastUsedAt` and `lastUsedQuery`"
+  storage: "A better-sqlite3 database with an FTS5 virtual table kept current by insert, update and delete triggers, plus people and relation records"
+  retrieval: "FTS5 over summary and detail, with a `LIKE` fallback over normalized terms; retrieval records `lastUsedAt` and `lastUsedQuery`"
   write: "Candidates with narrowed `evidenceKind`; `evidenceCount` on corroboration"
   update_delete: "`dismissed` boolean and `supersededBy`; no tombstone"
   scoping: "`durable`, `active`, `subconscious` tiers; single user"
-  integration: "Internal, with a `brain/Memory.tsx` review page"
-  background: "Not traced"
+  integration: "Internal, with a `brain/Memory.tsx` page offering per-record edit and delete, and a `/memory` chat menu carrying the shared-learning toggle"
+  background: "A cloud pull — an incremental fetch of `shareable=1`, non-dismissed rows newer than a cursor"
   trust: "Four-way `evidenceKind`, corroboration counts, free-text provenance"
   strengths: "Durability separated from importance; a subconscious tier; a learning-pause switch"
-  risks: "Scores estimated once at write time; dismissal is not durable"
+  risks: "Scores estimated once at write time; dismissal is not durable; and `shareable` only ever ratchets upward automatically — a merge promotes a private record, nothing demotes one"
 ---
 
 ## 1. Executive Summary
@@ -165,7 +167,7 @@ Gaps:
 
 ## 6. Retrieval Mechanics
 
-`RetrievedUserMemory` is the retrieval shape, and usage is recorded on every hit. Ranking mechanics were not traced in detail; the presence of three graded scores plus recency fields gives the necessary inputs, and `subconscious` scope provides the filter that keeps demoted memories out of ordinary recall.
+`RetrievedUserMemory` is the retrieval shape, and usage is recorded on every hit. The store is better-sqlite3 with an FTS5 virtual table, `memories_fts(summary, detail)`, kept current by insert, update and delete triggers rather than by a rebuild; a `LIKE` pass over normalized terms is the fallback when the query does not suit FTS. Ranking beyond that was not traced in detail; the three graded scores plus recency fields give the necessary inputs, and `subconscious` scope provides the filter that keeps demoted memories out of ordinary recall.
 
 ## 7. Write Mechanics
 
@@ -175,7 +177,21 @@ No verification tier was found — a candidate with high enough confidence appea
 
 ## 8. Agent Integration
 
-Memory is internal, with `brain/Memory.tsx` providing the review surface. That page is worth more than its size suggests: the atlas consistently finds that systems with an operator-facing memory view (RainBox's `/memory`, Magic Context's dashboard) develop better correction semantics, because someone can see what went wrong.
+Memory is internal, with `brain/Memory.tsx` providing the review surface. That page is worth more than its size suggests: the atlas consistently finds that systems with an operator-facing memory view (RainBox's `/memory`, Magic Context's dashboard) develop better correction semantics, because someone can see what went wrong. The surface is real rather than decorative — each row carries edit and delete controls reaching `PUT` and `DELETE /api/brain/memory/:id` — but it is post-hoc: candidates are admitted, merged and conflict-resolved without passing a person.
+
+### Memory can leave the machine, and the flag is a one-way ratchet
+
+A `shareable` column gates an outward path. `src/index.ts:2683` answers a cloud command by fetching *"shareable memories newer than a cursor (incremental) … only `shareable=1`, non-dismissed rows with `updated_at > since`"*, indexed by `idx_memories_shareable_updated`.
+
+The defaults are the careful part. The column is `INTEGER NOT NULL DEFAULT 0`, the migration that adds it backfills existing rows to `0` under the comment *"(private)"*, and the toggle behind it reads `config.memory.collaborativeKnowledge?.shareLearning ?? false`. Stamping is explicitly forward-only — *"existing memories are never retroactively flipped"* — and the chat toggle discloses both directions, telling the user on disable that *"(N memories already shareable are unchanged.)"*. A per-record `setShareable(id, boolean)` lets a person set or clear the flag by hand.
+
+One path widens without a new decision. `mergeRecord` computes
+
+```ts
+const promoteShareable = candidate.shareable && existing.shareable !== 1;
+```
+
+and the comment states the intent: *"forward-only — never demotes a shareable memory."* So a memory recorded while sharing was off becomes shareable the moment a similar candidate arrives while sharing is on, and no automatic path moves it back. That is consistent with the rest of the merge, which takes `Math.max` of confidence, importance and durability — every merged field ratchets — but confidence and importance are rankings, and this one decides whether a record is eligible to leave the machine. The disclosure on disabling covers *new* memories; it does not cover an old private one being promoted later by a merge.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -251,9 +267,12 @@ Do not copy:
 - Record model and store: `src/memory/user-memory.ts` (`UserMemoryRecord`, `UserMemoryCandidate`, `UserMemorySummary`, `RetrievedUserMemory`, `UserPersonRecord`, `UserRelationMention`, `UserMemoryStore`).
 - Persistence: `src/memory/second-brain-db.ts`, `src/memory/store.ts`.
 - Surface: `src/memory/index.ts`.
-- Review UI: `ui/src/pages/brain/Memory.tsx`.
+- Review UI: `ui/src/pages/brain/Memory.tsx` (`onEdit` :317, `onDelete` :342, `handleSave`/`handleDelete`), and its routes at `src/web/api/brain.ts:156-180`.
+- Sharing: the `shareable` column and its migration in `src/memory/second-brain-db.ts:119, 230-243`, the toggle and stamping in `src/memory/user-memory.ts:98, 290-302`, the promotion in `mergeRecord` :494-509, the cloud fetch in `src/index.ts:2683-2720`, the chat toggle in `src/core/agent.ts:6907-6957`.
 - Tests: `src/memory/user-memory.test.ts`.
 
 ## History
+
+**2026-09-14** — [`31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe`](https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe) — second reading, 55 commits on. Screened again: 0 auto-run surfaces, 2 build-time exec paths, 3 unpinned manifests and 2 dependency surfaces inside the seven-day cooldown; nothing was installed and nothing was run. Most of the diff is the website. `human_review` was re-tested at the producer — the brain page's per-row edit and delete reach `PUT` and `DELETE /api/brain/memory/:id` against the same database the agent reads — and holds; it carries the evidence record it had been asserted without, including the limit that candidates are admitted without passing a person. The stack row is promoted from seeded to reviewed and filled: better-sqlite3 with an FTS5 virtual table maintained by triggers and a `LIKE` fallback, which the seed recorded as unknown. The substantive addition since the previous pin is a `shareable` column gating an incremental cloud fetch. Its defaults are careful — column default `0`, existing rows backfilled private, the toggle `?? false`, stamping forward-only, and the chat surface disclosing that already-shareable memories are unchanged when sharing is switched off — but `mergeRecord` promotes an existing private record to shareable whenever a shareable candidate merges into it, and nothing demotes automatically.
 
 **2026-07-27** — [`6e174a4b5ea77bbc753bff5f89c76db9303439d1`](https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1) — first reading.

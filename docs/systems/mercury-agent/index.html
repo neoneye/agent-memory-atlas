@@ -112,14 +112,14 @@ entirely.</p>
               <strong>cosmicstack-labs/mercury-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1" title="6e174a4b5ea77bbc753bff5f89c76db9303439d1">
+            <a class="meta-pill revision-pill" href="https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe" title="31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe">
               <span>Analyzed revision</span>
-              <code>6e174a4b…</code>
+              <code>31013b0d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cosmicstack-labs--mercury-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -320,10 +320,14 @@ disagreeing.</li>
 </ul>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p><code>RetrievedUserMemory</code> is the retrieval shape, and usage is
-recorded on every hit. Ranking mechanics were not traced in detail; the
-presence of three graded scores plus recency fields gives the necessary
-inputs, and <code>subconscious</code> scope provides the filter that
-keeps demoted memories out of ordinary recall.</p>
+recorded on every hit. The store is better-sqlite3 with an FTS5 virtual
+table, <code>memories_fts(summary, detail)</code>, kept current by
+insert, update and delete triggers rather than by a rebuild; a
+<code>LIKE</code> pass over normalized terms is the fallback when the
+query does not suit FTS. Ranking beyond that was not traced in detail;
+the three graded scores plus recency fields give the necessary inputs,
+and <code>subconscious</code> scope provides the filter that keeps
+demoted memories out of ordinary recall.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Candidates enter with <code>confidence</code>,
 <code>importance</code>, and <code>durability</code> already estimated,
@@ -339,8 +343,45 @@ judgments earned over time.</p>
 review surface. That page is worth more than its size suggests: the
 atlas consistently finds that systems with an operator-facing memory
 view (RainBox's <code>/memory</code>, Magic Context's dashboard) develop
-better correction semantics, because someone can see what went
-wrong.</p>
+better correction semantics, because someone can see what went wrong.
+The surface is real rather than decorative — each row carries edit and
+delete controls reaching <code>PUT</code> and
+<code>DELETE /api/brain/memory/:id</code> — but it is post-hoc:
+candidates are admitted, merged and conflict-resolved without passing a
+person.</p>
+<h3
+id="memory-can-leave-the-machine-and-the-flag-is-a-one-way-ratchet">Memory
+can leave the machine, and the flag is a one-way ratchet</h3>
+<p>A <code>shareable</code> column gates an outward path.
+<code>src/index.ts:2683</code> answers a cloud command by fetching
+<em>"shareable memories newer than a cursor (incremental) … only
+<code>shareable=1</code>, non-dismissed rows with
+<code>updated_at &gt; since</code>"</em>, indexed by
+<code>idx_memories_shareable_updated</code>.</p>
+<p>The defaults are the careful part. The column is
+<code>INTEGER NOT NULL DEFAULT 0</code>, the migration that adds it
+backfills existing rows to <code>0</code> under the comment
+<em>"(private)"</em>, and the toggle behind it reads
+<code>config.memory.collaborativeKnowledge?.shareLearning ?? false</code>.
+Stamping is explicitly forward-only — <em>"existing memories are never
+retroactively flipped"</em> — and the chat toggle discloses both
+directions, telling the user on disable that <em>"(N memories already
+shareable are unchanged.)"</em>. A per-record
+<code>setShareable(id, boolean)</code> lets a person set or clear the
+flag by hand.</p>
+<p>One path widens without a new decision. <code>mergeRecord</code>
+computes</p>
+<pre class="ts"><code>const promoteShareable = candidate.shareable &amp;&amp; existing.shareable !== 1;</code></pre>
+<p>and the comment states the intent: <em>"forward-only — never demotes
+a shareable memory."</em> So a memory recorded while sharing was off
+becomes shareable the moment a similar candidate arrives while sharing
+is on, and no automatic path moves it back. That is consistent with the
+rest of the merge, which takes <code>Math.max</code> of confidence,
+importance and durability — every merged field ratchets — but confidence
+and importance are rankings, and this one decides whether a record is
+eligible to leave the machine. The disclosure on disabling covers
+<em>new</em> memories; it does not cover an old private one being
+promoted later by a merge.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -447,10 +488,41 @@ useful lifetime? The recorded usage data could answer this.</li>
 <li>Persistence: <code>src/memory/second-brain-db.ts</code>,
 <code>src/memory/store.ts</code>.</li>
 <li>Surface: <code>src/memory/index.ts</code>.</li>
-<li>Review UI: <code>ui/src/pages/brain/Memory.tsx</code>.</li>
+<li>Review UI: <code>ui/src/pages/brain/Memory.tsx</code>
+(<code>onEdit</code> :317, <code>onDelete</code> :342,
+<code>handleSave</code>/<code>handleDelete</code>), and its routes at
+<code>src/web/api/brain.ts:156-180</code>.</li>
+<li>Sharing: the <code>shareable</code> column and its migration in
+<code>src/memory/second-brain-db.ts:119, 230-243</code>, the toggle and
+stamping in <code>src/memory/user-memory.ts:98, 290-302</code>, the
+promotion in <code>mergeRecord</code> :494-509, the cloud fetch in
+<code>src/index.ts:2683-2720</code>, the chat toggle in
+<code>src/core/agent.ts:6907-6957</code>.</li>
 <li>Tests: <code>src/memory/user-memory.test.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe"><code class="commit-id" title="31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe">31013b0d…</code></a>
+— second reading, 55 commits on. Screened again: 0 auto-run surfaces, 2
+build-time exec paths, 3 unpinned manifests and 2 dependency surfaces
+inside the seven-day cooldown; nothing was installed and nothing was
+run. Most of the diff is the website. <code>human_review</code> was
+re-tested at the producer — the brain page's per-row edit and delete
+reach <code>PUT</code> and <code>DELETE /api/brain/memory/:id</code>
+against the same database the agent reads — and holds; it carries the
+evidence record it had been asserted without, including the limit that
+candidates are admitted without passing a person. The stack row is
+promoted from seeded to reviewed and filled: better-sqlite3 with an FTS5
+virtual table maintained by triggers and a <code>LIKE</code> fallback,
+which the seed recorded as unknown. The substantive addition since the
+previous pin is a <code>shareable</code> column gating an incremental
+cloud fetch. Its defaults are careful — column default <code>0</code>,
+existing rows backfilled private, the toggle <code>?? false</code>,
+stamping forward-only, and the chat surface disclosing that
+already-shareable memories are unchanged when sharing is switched off —
+but <code>mergeRecord</code> promotes an existing private record to
+shareable whenever a shareable candidate merges into it, and nothing
+demotes automatically.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/cosmicstack-labs/mercury-agent/commit/6e174a4b5ea77bbc753bff5f89c76db9303439d1"><code class="commit-id" title="6e174a4b5ea77bbc753bff5f89c76db9303439d1">6e174a4b…</code></a>
 — first reading.</p>
