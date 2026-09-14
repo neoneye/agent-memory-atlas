@@ -110,14 +110,14 @@ key applied to both retrieval arms.</p>
               <strong>tinhien11/remem-mcp</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129" title="53a8612dea423db1255817ce0cfdb13086462129">
+            <a class="meta-pill revision-pill" href="https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481" title="40c1a26de76946d3522b557aa819f272ab8f4481">
               <span>Analyzed revision</span>
-              <code>53a8612d…</code>
+              <code>40c1a26d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-16</strong>
+              <strong>2026-09-14</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tinhien11--remem-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -719,6 +719,36 @@ property asserted for <code>recall</code> and for
 backup paths</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-14</strong> — <a
+href="https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481"><code class="commit-id" title="40c1a26de76946d3522b557aa819f272ab8f4481">40c1a26d…</code></a>
+— third reading, 70 commits on, spanning versions v10 to v13. Screened
+again: one auto-run finding, <code>server.json</code> — the MCP registry
+manifest, which declares the published npm package
+<code>remem-mcp@0.7.4</code> over stdio as the launch target rather than
+executing anything in this tree — two build-time execution points, and a
+dependency surface changed four days before the reading, so nothing was
+installed and nothing was run. All four marks were re-tested at the
+producer and all four hold. The test suite moved from
+<code>src/__tests__</code> to <code>tests/</code>, so the
+<code>negative_eval</code> record is repointed and widened to the
+content cases in <code>tests/integration/correction.test.ts</code>; one
+of the new files is named <code>atlas-fixes.test.ts</code>. The v11
+addition worth recording is <code>rawFallbackSearch</code>: when a
+hybrid search returns nothing, the store re-queries FTS with
+<code>trust_state</code> dropped from the exclusion list, keeping only
+<code>deleted_at IS NULL</code> and <code>superseded_by IS NULL</code>
+alongside the scope filters. That does not resurrect a rejected capture
+today, because <code>reject()</code> writes <code>deleted_at</code> in
+the same statement as <code>trust_state = 'rejected'</code> and the
+fallback excludes on <code>deleted_at</code> — so what keeps a rejected
+memory off this path is the soft-delete, not the trust state. The
+distinction is not hypothetical: <code>setTrustState</code> is on the
+storage interface and can produce <code>rejected</code> without
+<code>deleted_at</code>,
+<code>tests/unit/v11-features.test.ts:170-205</code> uses it for exactly
+that reason under the comment <em>"without deleted_at, unlike
+reject()"</em>, and asserts the fallback then returns the rejected
+capture. No production path calls <code>setTrustState</code>.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129"><code class="commit-id" title="53a8612dea423db1255817ce0cfdb13086462129">53a8612d…</code></a>
 — <code>scope_enforced</code> resolved in favour of the mark, at the

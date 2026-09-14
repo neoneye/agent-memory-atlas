@@ -7,15 +7,15 @@ page_kind: system
 source_name: "tinhien11/remem-mcp"
 source_url: https://github.com/tinhien11/remem-mcp
 archive_name: "tinhien11--remem-mcp"
-revision: 53a8612dea423db1255817ce0cfdb13086462129
-revision_url: https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129
-analyzed_at: 2026-08-16
+revision: 40c1a26de76946d3522b557aa819f272ab8f4481
+revision_url: https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481
+analyzed_at: 2026-09-14
 capabilities: "tombstone, trust_state, scope_enforced, negative_eval"
 capability_evidence:
   tombstone: "the capture write path | src/server.ts | handleCapture hashes the redacted content, calls findRejectedByContentHash before writing, and refuses with the stored rejection_reason unless override_rejection is set; a partial index on content_hash WHERE trust_state = rejected backs the lookup | tests: forget creates a tombstone (soft delete) and prevents recapture in search"
   trust_state: "the captures table | src/storage/sqlite.ts | trust_state carries candidate and rejected, reject() sets it with a rejection_reason and drops the vector row, and every read path filters trust_state != rejected | tests: tombstoned row still exists in DB with deleted_at set, get() returns null for tombstoned entry"
   scope_enforced: "the captures read path, both arms | src/server.ts | handleRecall defaults sessionKey to defaultSessionKey() when the caller omits it, and storage.search applies session_key = ? to the BM25 and vector arms alike | tests: recall without session_key does NOT leak across projects (real handler)"
-  negative_eval: "the captures read path | src/__tests__ | recall without session_key does not leak across projects, search without session_key does not leak across projects, and the same assertion repeated against the real handler | tests: recall/search without session_key does not leak across projects"
+  negative_eval: "the captures read path — scope boundary and rejected content | tests/integration/atlas-fixes.test.ts:116 and :152, tests/integration/correction.test.ts:83-320 | `recall without session_key does not leak across projects` and `search without session_key does not leak across projects` pin the scope boundary; `correction.test.ts` adds the content cases — a rejected capture must not appear in recall, in vector search or in hybrid search, `findConflicts` must not return rejected captures, and a non-rejected capture must not be returned by `findRejectedByContentHash`. The suite moved out of `src/__tests__` into `tests/` since the previous pin | tests/integration/correction.test.ts:303 is the hybrid-search case"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -536,6 +536,8 @@ of its age, and none of it has been exercised by anyone but its author.
 - `tests/integration/db-detection.test.ts` — migration and backup paths
 
 ## History
+
+**2026-09-14** — [`40c1a26de76946d3522b557aa819f272ab8f4481`](https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481) — third reading, 70 commits on, spanning versions v10 to v13. Screened again: one auto-run finding, `server.json` — the MCP registry manifest, which declares the published npm package `remem-mcp@0.7.4` over stdio as the launch target rather than executing anything in this tree — two build-time execution points, and a dependency surface changed four days before the reading, so nothing was installed and nothing was run. All four marks were re-tested at the producer and all four hold. The test suite moved from `src/__tests__` to `tests/`, so the `negative_eval` record is repointed and widened to the content cases in `tests/integration/correction.test.ts`; one of the new files is named `atlas-fixes.test.ts`. The v11 addition worth recording is `rawFallbackSearch`: when a hybrid search returns nothing, the store re-queries FTS with `trust_state` dropped from the exclusion list, keeping only `deleted_at IS NULL` and `superseded_by IS NULL` alongside the scope filters. That does not resurrect a rejected capture today, because `reject()` writes `deleted_at` in the same statement as `trust_state = 'rejected'` and the fallback excludes on `deleted_at` — so what keeps a rejected memory off this path is the soft-delete, not the trust state. The distinction is not hypothetical: `setTrustState` is on the storage interface and can produce `rejected` without `deleted_at`, `tests/unit/v11-features.test.ts:170-205` uses it for exactly that reason under the comment *"without deleted_at, unlike reject()"*, and asserts the fallback then returns the rejected capture. No production path calls `setTrustState`.
 
 **2026-08-31** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — `scope_enforced` resolved in favour of the mark, at the same pin, and the sections arguing the other way were describing an earlier shape of the handler. `src/server.ts:1403` reads `const sessionKey = (args.session_key as string) ?? defaultSessionKey();`; `handleSearch` at `:1908` and `handleExplainRecall` at `:2236` repeat it verbatim, so `sqlite.ts`'s `if (sessionKey)` guard — which does treat `undefined` as no filter — has no shipped caller that reaches it. `tests/integration/full-flow.test.ts:325` asserts the property through `createServer` and the live `_requestHandlers` entry rather than through a helper.
 
