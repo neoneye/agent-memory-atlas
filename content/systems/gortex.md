@@ -337,7 +337,7 @@ confusion, so the next reader's tidy-up fails loudly.
 
 | Path | What it carries |
 | --- | --- |
-| `internal/graph/edge.go` | The five-tier ladder, both weight mappings, and `EffectiveOrigin` |
+| `internal/graph/edge.go` | The six-tier ladder including `speculative`, both weight mappings, `EffectiveOrigin`, `ConfidenceLabelRank` |
 | `internal/graph/store.go` | The store interface, `repoPrefix` throughout, and the resolved-target persistence note |
 | `internal/graph/empty_prefix_wildcard_test.go` | The fence around the overloaded empty prefix |
 | `internal/pathguard/pathguard.go` | Filesystem confinement at admission and at every content sink |
