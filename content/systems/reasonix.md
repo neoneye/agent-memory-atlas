@@ -1,19 +1,18 @@
 ---
 title: "Reasonix"
-eyebrow: "Memory inside the prefix cache"
-description: "A coding agent whose memory folds into the cached system prompt once at boot, so a mid-session forget cannot edit it and emits a disregard instruction instead — with the corpus's most complete memory benchmark, including a memory-off arm and a column for when memory hurt."
+eyebrow: "Memory beside the prefix cache"
+description: "A coding agent whose memory index rides a host-generated session-context snapshot beside the cached system prompt, replaced on the next user turn after a write — with a committed memory benchmark that forbids the superseded answer, runs a memory-off arm and keeps a column for when memory hurt."
 root: ../..
 page_kind: system
 source_name: "esengine/DeepSeek-Reasonix"
 source_url: https://github.com/esengine/DeepSeek-Reasonix
 archive_name: "esengine--DeepSeek-Reasonix"
-revision: d95e2510cfb3088fb51787668b61a7982b94849b
-revision_url: https://github.com/esengine/DeepSeek-Reasonix/commit/d95e2510cfb3088fb51787668b61a7982b94849b
-analyzed_at: 2026-08-16
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: e4bfeb67f9125af238aca4ff9bf69b21cb1df998
+revision_url: https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998
+analyzed_at: 2026-09-15
+capabilities: "human_review, negative_eval"
 capability_evidence:
-  scope_enforced: "the auto-memory fact store | internal/memory/store.go | reads are rooted at Store.Dir, a per-project-slug directory, merged with a global tier that deliberately loads everywhere; a project fact cannot reach a session rooted at another project | internal/memory/index_scope_test.go"
-  human_review: "the desktop Memory page | desktop/memory_suggestions.go | MemorySuggestion is a draft mined from recent local history that only becomes a saved memory through AcceptMemorySuggestion | desktop/memory_suggestions_test.go"
+  human_review: "the desktop Memory page and the tool approval gate | desktop/memory_suggestions.go; internal/control/controller.go:2245-2250 | MemorySuggestion is a draft mined from recent local history that only becomes a saved memory through AcceptMemorySuggestion; outside the workspace-write and full-access approval modes, `remember` and `forget` are ask rules, so a person approves each model write or retraction, with a low-risk project fact auto-allowed by AssessRememberWrite | desktop/memory_suggestions_test.go"
   negative_eval: "end-to-end agent behaviour, not the store | benchmarks/memorybench/tasks | each verify.sh pairs a required string with a forbidden one — mb-contradiction requires `pnpm install` and forbids `npm install`, mb-stale requires release/1.21 and forbids release/0.9 | benchmarks/memorybench/tasks/*/verify.sh"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -21,42 +20,48 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "One Markdown file per fact with frontmatter — an immutable `ID` separate from a renameable `Name`, a monotonic `Revision`, a four-value `Type`, a `SubjectKey` naming which question it answers, an `Activation`, a `Volatility`, `ExpiresAt` and `LastVerifiedAt` — beside a `MEMORY.md` index"
   storage: "Plain files, no database: a per-project directory and a global one, each with its own index, plus an archive directory for forgotten facts"
-  retrieval: "The index rides the cached system-prompt prefix so the model always knows what exists; bodies are pulled on demand by a `memory` tool, with keyword aliases used for recall and never rendered into the index, and expired facts excluded from automatic recall"
+  retrieval: "The index and pinned bodies ride a host-generated `<session-context>` snapshot, re-published on the next user turn when they change, so the model always knows what exists; other bodies are pulled on demand by a `memory` tool, with keyword aliases used for recall and never rendered into the index, and expired facts excluded from automatic recall"
   write: "The model calls `remember`; a `#` quick-add appends to an instruction doc; the desktop page mines recent history into drafts a person accepts. One active value per scope and subject, so a new fact about the same question displaces the old"
-  update_delete: "`forget` archives by name rather than deleting, and because the index is baked into the immutable prefix it also queues a transient instruction telling the model to disregard the already-loaded copy for the rest of the session"
+  update_delete: "`forget` archives by name rather than deleting, and the next user turn carries a replacement session-context without the fact; each save keeps the prior revision as an immutable snapshot under `.revisions/<id>/`, restorable as a new revision"
   scoping: "A per-project directory root plus a global tier that loads in every project; precedence is annotated in the index. One machine, one user — there is no tenant or principal boundary"
   integration: "A single Go binary reachable four ways — terminal, desktop app, browser, and editors over ACP — with the memory exposed as `remember`, `forget` and `memory` tools"
   background: "None on the memory path. Freshness is computed on read from volatility and the verification clock rather than swept by a job"
   trust: "No epistemic status. Freshness classifies a fact fresh/current/stale/expired from its age and `LastVerifiedAt`, and only `expired` withholds — a statement about age rather than about belief"
   strengths: "A committed memory benchmark whose tasks are the atlas`s own failure modes and whose verifications forbid the superseded answer; a paired memory-off arm that reports which tasks memory *hurt* and what recall cost in characters; a subject key that keeps one active value per question"
-  risks: "Forgetting mid-session is an instruction to disregard rather than a removal, because the prefix cannot be edited; deletion and supersession are both keyed on the record, so nothing prevents the same wrong value being saved again under a new name; and there is no mutation audit"
+  risks: "A forgotten fact's earlier snapshot stays in the transcript beneath the replacement that supersedes it; scope is a directory partition with no principal boundary; deletion and supersession are both keyed on the record, so nothing prevents the same wrong value being saved again under a new name; and there is no mutation audit"
 ---
 
 ## 1. Executive Summary
 
 Reasonix is a coding agent — one Go binary, reachable from a terminal, a desktop
-app, a browser, or an editor over ACP. MIT, ~696,000 lines of Go, 10,032 test
-functions. Most of that is not memory; `internal/memory` is ~7,200 lines with 156
-tests, and it is worth reading for one architectural constraint and one artifact.
+app, a browser, or an editor over ACP. MIT and mostly Go. Most of it is not memory; `internal/memory` is ~7,300 lines
+with 156 tests, and it is worth reading for one architectural constraint and one
+artifact.
 
-**The constraint is the prefix cache, and it shapes everything else.** The
-package doc states it: standing instructions and the auto-memory index fold into
-the durable system-prompt prefix *"exactly once at boot… so it rides DeepSeek's
-automatic prefix cache at zero per-turn cost. Mid-session changes never mutate
-that prefix; they take effect through the controller's transient tail-injection
-and fold into the prefix on the next session."* This is the
-[cache-preserving injection](../../patterns/cache-preserving-injection/) pattern
-taken to its conclusion — and the interesting consequence is what it does to
-correction.
+**The constraint is the prefix cache, and it shapes everything else.** Since
+[`2b7c65227775a09392cc0070907ff06ca9af0fcd`](https://github.com/esengine/DeepSeek-Reasonix/commit/2b7c65227775a09392cc0070907ff06ca9af0fcd)
+(2 September 2026) the cached system prompt carries only what is stable: a short
+memory policy and the standing instruction documents. The memory index and the
+bodies of pinned facts moved into a host-generated `<session-context version="1">`
+snapshot (`internal/sessioncontext`), whose preamble reads *"This host-generated
+snapshot supersedes every earlier session-context snapshot."* A write refreshes
+the loaded set, and *"the next real user turn observes the new
+BackgroundDataBlock and appends one complete replacement session-context"*
+(`internal/control/memory.go`); an unchanged snapshot is deduplicated by digest.
+This is the [cache-preserving injection](../../patterns/cache-preserving-injection/)
+pattern with the mutable part moved out of the prefix rather than frozen in it.
+The package doc in `internal/memory/doc.go` still describes the earlier design,
+where everything folded into the prefix once at boot.
 
-**Because the prefix is immutable, forgetting cannot remove anything from it.**
-`forget` archives the file, and then queues a transient instruction:
-*"Forgot memory `<name>` — disregard its loaded guidance and background-index
-entry for the rest of this session."* The stored fact is gone; the copy already
-in the model's context is addressed by asking the model not to use it. That is an
-honest answer to a real constraint, and it is a different kind of retraction from
-anything else in this corpus: a *prompt-level* one, whose enforcement is the
-model's compliance.
+**Correction is a replacement, and the replaced copy stays in the transcript.**
+`forget` archives the file. It still builds the sentence *"Forgot memory `<name>`
+— disregard its loaded guidance and background-index entry for the rest of this
+session"*, but the controller's `QueueMemory` now ignores the note and refreshes
+the background snapshot instead; the tool result tells the model the fact *"no
+longer applies"*, and the next user turn appends a session-context without it.
+The earlier snapshot, with the fact in it, is still earlier in the conversation,
+so the retraction rests on the model preferring the newest snapshot as its
+preamble instructs — enforcement by precedence rather than by removal.
 
 **The store is one Markdown file per fact.** A record carries an immutable `ID`
 separate from a renameable `Name`, a monotonic `Revision`, a four-value `Type`
@@ -66,34 +71,35 @@ answers (project.package_manager); one active value per scope+subject."* That
 last field is the supersession key, and it is the mechanism the benchmark below
 tests.
 
-**The artifact is `benchmarks/memorybench`, and it is the most complete memory
-benchmark in this atlas.** Fifteen committed tasks whose classes read like this
+**The artifact is `benchmarks/memorybench`.** Fifteen committed tasks whose classes read like this
 project's own risk register — `mb-contradiction`, `mb-stale`, `mb-conflict`,
 `mb-update`, `mb-history`, `mb-distractor`, `mb-pin`, `mb-paraphrase`,
 `mb-exact`, plus three `mb-v1miss-*` regression cases named for a retrieval miss
 that shipped. Each is a real workspace, a seeded memory directory, a prompt, and
 a `verify.sh`.
 
-**Three of seven marks.** `scope_enforced`, `human_review`, `negative_eval`. The
-four it misses are all near-misses worth reading rather than absences: a
-freshness classification that is about age instead of belief, a recall audit that
-is the retrieval half of the audit pattern rather than the mutation half, and a
-supersession key that keys on the record.
+**Two of seven marks.** `human_review` and `negative_eval`. The misses are
+near-misses worth reading rather than absences: a freshness classification that
+is about age instead of belief, revision snapshots and a recall audit that sit
+either side of a mutation event log without being one, a supersession key that
+keys on the record, and a project boundary that is a directory rather than a
+filter.
 
 ## 2. Mental Model
 
 A fact is written by the model, or accepted by a person from a mined draft. It
 answers exactly one question — its `SubjectKey` — and a newer answer to the same
-question in the same scope displaces the older one. Its index line is baked into
-the prefix at boot; its body is fetched on demand. It ages on a clock set by its
+question in the same scope displaces the older one. Its index line rides the
+session-context snapshot; its body is fetched on demand unless it is pinned. It ages on a clock set by its
 volatility and reset by explicit verification, and past `ExpiresAt` it stops
 reaching automatic recall.
 
-The thing the diagram has to show is the seam the cache creates: everything about
-the store is editable, and the copy the model is currently reading is not.
+The thing the diagram has to show is the seam the cache creates: the system prompt
+stays fixed, and memory reaches the model as a sequence of snapshots, each
+superseding the last without removing it.
 
 ```mermaid
-%% caption: the store is editable and the loaded copy is not, so a mid-session forget is an instruction rather than a removal
+%% caption: the cached system prompt carries only policy and standing docs, while the index travels in session-context snapshots that a write replaces on the next user turn
 flowchart TD
     W["remember tool<br/>model-written"] --> F[("one fact per file<br/>ID, Revision, SubjectKey")]
     A["accepted draft<br/>desktop suggestion"] --> F
@@ -102,19 +108,20 @@ flowchart TD
     SUB -- "yes" --> DISP["displace the old answer"]
     SUB -- "no" --> IDX
     DISP --> IDX[("MEMORY.md index")]
-    D --> BOOT
-    IDX --> BOOT["Compose at boot"]
-    BOOT --> PREFIX[["durable prompt prefix<br/>immutable for the session"]]
+    D --> BOOT["Compose at boot"]
+    BOOT --> PREFIX[["cached system prompt<br/>memory policy + standing docs"]]
     PREFIX --> MODEL["model"]
+    IDX --> SNAP[["session-context snapshot<br/>index + pinned bodies"]]
+    SNAP --> MODEL
     F -. "body on demand" .-> MODEL
     FG["forget"] --> ARCH[("archive/")]
-    FG -. "cannot edit the prefix" .-> TAIL["queued tail instruction:<br/>disregard its loaded guidance"]
-    TAIL --> MODEL
+    FG --> RELOAD["reload the loaded set"]
+    RELOAD --> NEXT["next user turn:<br/>replacement snapshot appended"]
+    NEXT -. "supersedes, does not remove" .-> SNAP
 ```
 
-The dotted arrow from `forget` is the finding. Every other correction path in
-this atlas ends at a store; this one ends at the model's willingness to comply
-for the rest of the session.
+The dotted arrow at the bottom is the finding. A correction ends at a new
+snapshot appended after the old one, and the old one stays readable above it.
 
 ## 3. Architecture
 
@@ -128,30 +135,34 @@ each labelled with its source path.
 
 ## 4. Essential Implementation Paths
 
-- **Compose.** `internal/memory.Compose` assembles instruction docs plus the
-  auto-memory index into the durable prefix, once, at boot.
+- **Compose.** `internal/memory.Compose` folds `SystemBlock` — the memory
+  policy and the standing instruction docs — into the cached system prompt at
+  boot; `BackgroundDataBlock` renders pinned bodies and the index into the
+  session-context section `internal/control/session_context.go` builds.
 - **Write.** `remember` → normalise `Type` (anything unknown becomes `project`,
   so *"a sloppy tool argument never blocks a save"*) → resolve scope → displace
   any existing answer to the same `SubjectKey` → write the file → rewrite
   `MEMORY.md`.
-- **Read.** The index is already in the prefix; `memory` fetches bodies on
-  demand; `auto_recall.go` selects by keyword with expired facts excluded.
-- **Forget.** `forget.go` → `Store.Archive(name)` → queue the disregard
-  instruction if a queue is in context.
+- **Read.** The index is already in the session-context snapshot; `memory`
+  fetches bodies on demand; `auto_recall.go` selects by keyword with expired facts excluded.
+- **Forget.** `forget.go` → `Store.Archive(name)` → `QueueMemory`, which
+  reloads the set and lets the next user turn publish a replacement snapshot.
 - **Review.** `desktop/memory_suggestions.go` mines recent local history into
   drafts; `AcceptMemorySuggestion` is what turns one into a saved memory.
 
 ## 5. Memory Data Model
 
-The `ID`/`Name` split is the right one and matches what the better systems in
-this corpus do: identity is immutable, the human-facing name can change without
-breaking references. `Revision` is monotonic.
+The `ID`/`Name` split is the right one: identity is immutable, the human-facing
+name can change without breaking references. `Revision` is monotonic, a save can
+require the expected revision, and every overwritten revision is kept as an
+immutable snapshot under `.revisions/<id>/<revision>.md`, which `Restore` and
+`RestoreArchived` bring back as a new revision (`store_v2.go`).
 
 `SubjectKey` is the field to copy. Naming *which question* a fact answers, and
 enforcing one active value per `(scope, subject)`, converts supersession from a
-similarity judgement into a lookup. Most stores in this atlas detect a
-contradiction by embedding distance and then have to decide what to do; this one
-declares the key up front.
+similarity judgement into a lookup. A store that detects a contradiction
+by embedding distance still has to decide what to do; this one declares the key
+up front.
 
 Its limit is that it keys on the record. Displacing the old answer removes it
 from active memory, and nothing records that the *value* was wrong — so the same
@@ -159,14 +170,15 @@ claim saved again under a different name, or after an archive, is a fresh fact.
 
 `Keywords` is a small good idea: search aliases including bilingual synonyms,
 used for recall and *"never rendered into the index"*, so recall breadth costs no
-prefix tokens.
+index tokens.
 
 ## 6. Retrieval Mechanics
 
-Two tiers. The index rides the prefix, so the model always knows what exists
-without a retrieval step. Bodies are lexical-matched and fetched on demand.
-`Activation` decides which tier a fact gets: `relevant` is retrieval-only —
-index plus recall — while `pinned` loads its body into the stable prefix.
+Two tiers. The index rides the session-context snapshot, so the model always
+knows what exists without a retrieval step. Bodies are lexical-matched and
+fetched on demand. `Activation` decides which tier a fact gets: `relevant` is
+retrieval-only — index plus recall — while `pinned` loads its body into the
+snapshot.
 
 Freshness gates recall. `FreshnessFor` classifies a fact `fresh`, `current`,
 `stale` or `expired` from its `Volatility` and `LastVerifiedAt`, and only
@@ -193,7 +205,10 @@ normalises rather than failing.
 
 `remember`, `forget` and `memory` as model tools; a `#` quick-add for the human;
 a desktop Memory page carrying suggestions and an accept action; and the whole
-engine reachable over ACP from an editor. Memory is one part of a much larger
+engine reachable over ACP from an editor. In the approval modes below
+workspace-write and full access, `remember` and `forget` are ask rules in the
+permission gate, so each model write or retraction waits for a person;
+`AssessRememberWrite` lets a low-risk project fact through without asking. Memory is one part of a much larger
 agent — plan mode, permissions, a workspace sandbox and per-turn checkpoints are
 the product, and the checkpoints are session state rather than memory.
 
@@ -201,30 +216,31 @@ the product, and the checkpoints are session state rather than memory.
 
 The honest summary is that this store is well-built for a single trusted user on
 one machine and has no mechanism for anything else. Scope is a directory root, so
-a project fact cannot reach another project's session — real enforcement, by
-path — but the global tier deliberately loads everywhere and there is no
-principal, tenant or authentication concept anywhere near it.
+a project fact cannot reach another project's session — a real boundary, by
+path, and a partition rather than a stored key applied on a read, so
+`scope_enforced` is not carried. The global tier deliberately loads everywhere,
+and there is no principal, tenant or authentication concept anywhere near it.
 
-There is no mutation audit. `forget` archives rather than deleting, which
-preserves the record, but nothing appends an event saying a fact was written,
-displaced or archived, so "why does it believe this" is answerable only by
-reading files and their revisions.
+There is no mutation audit. `forget` archives rather than deleting and every
+overwritten revision is snapshotted, which preserves the states, but nothing
+appends an event saying a fact was written, displaced, archived or restored, by
+whom or why, so "why does it believe this" is answerable only by reading files
+and their revision snapshots.
 
 **The recall audit is the near-miss, and it is a good mechanism aimed at the
 other half of the problem.** `TestComposeEmitsMemoryRecallAudit` asserts exactly
 one recall audit per composed user turn, and that the audit *"must explain
 itself"* — either it carries hits or it names why recall was suppressed. A
-retrieval log that cannot be silent is more than most systems here have. It is
-still the retrieval half of the [append-only memory
+retrieval log that cannot be silent is worth having. It is still the retrieval half of the [append-only memory
 audit](../../patterns/append-only-memory-audit/) pattern, and the rubric puts a
 mutation record on the other side of the line.
 
 ## 10. Tests, Evals, and Benchmarks
 
-10,032 Go test functions overall, 156 in `internal/memory`. No paper.
+156 Go test functions in `internal/memory`. No paper.
 
 **`benchmarks/memorybench` is the reason to read this repository if you care
-about evaluation.** Fifteen tasks, each a workspace plus a seeded memory
+about evaluation.** It is unchanged since the first reading. Fifteen tasks, each a workspace plus a seeded memory
 directory plus a prompt plus a `verify.sh`, and the verifications are what make
 it a negative suite rather than a recall suite. `mb-contradiction` seeds two
 memories — one saying the project uses npm, one saying it migrated to pnpm — and
@@ -232,20 +248,20 @@ requires `grep -q "pnpm install" && ! grep -q "npm install"`. `mb-stale` require
 `release/1.21` and forbids `release/0.9`. The forbidden half is the assertion:
 **the superseded value must not be what the agent answers with.**
 
-Two things make it stronger than the negative suites this atlas usually finds.
+Two things make it stronger than a store-level negative test.
 It asserts on *end-to-end agent behaviour* rather than on a store method, so it
 catches a memory that was retrieved correctly and then lost an argument with the
 context around it. And three tasks are named `mb-v1miss-*` — regression cases
 preserved from a retrieval miss that shipped, including a cross-language one and
 a symbol one.
 
-**The harness measures utility, not just recall, and that is rarer still.**
+**The harness measures utility, not just recall.**
 `taskExperimentEnv` can set `REASONIX_EXPERIMENT_NO_MEMORY=1`, and
 `memoryUtilitySection(pathA, pathB)` pairs the two runs by task id and reports
 `paired`, `onPass`, `offPass`, a **`helpful`** list, a **`harmful`** list, and
 `overheadChars` — the character cost of what recall injected. A benchmark with a
 column for the tasks memory made *worse*, beside its token cost, is the shape
-this atlas has asked for repeatedly and rarely found.
+the [benchmarks page](../../benchmarks/) asks for.
 
 What is missing is the result. No memorybench output is committed to the tree, so
 what exists here is an instrument rather than a measurement — a distinction worth
@@ -271,18 +287,18 @@ I did not run any of it.
 - **Measure memory-off.** One environment variable and a paired run gives you
   which tasks memory helped, which it *hurt*, and what it cost in characters.
 - **Keep recall aliases out of the index.** `Keywords` widens matching at zero
-  prefix cost, because it is read on the recall path and never rendered.
+  index cost, because it is read on the recall path and never rendered.
 - **Make the retrieval log unable to be silent.** One audit per composed turn
   that must either carry hits or name why it was suppressed.
 
 ### Avoid
 
-- **A retraction that is an instruction.** Forgetting mid-session queues
-  *"disregard its loaded guidance"* because the prefix cannot be edited. It is
-  the honest move under the constraint, and it means a correction's enforcement
-  is the model's compliance rather than the store's refusal. If that is not
-  acceptable, the prefix has to become invalidatable — which is the cost the
-  cache was bought to avoid.
+- **A retraction that is a newer snapshot.** Forgetting mid-session appends a
+  replacement session-context on the next user turn, and the earlier snapshot
+  with the fact in it stays in the conversation. Moving memory out of the
+  cached prefix made correction reach the model within a turn; what binds it is
+  still the model honouring *"supersedes every earlier session-context
+  snapshot"*, not the removal of the old text.
 - **Freshness standing in for belief.** Four values, one of which withholds, all
   computed from age. The two benchmark tasks that matter most — a contradiction
   and a stale branch — are cases where the old fact is *wrong*, and nothing in
@@ -295,25 +311,25 @@ I did not run any of it.
 
 Take this if you want a coding agent whose memory costs nothing per turn and is
 plain files you can read, and take the benchmark whatever you build — it is
-MIT-licensed, portable, and the closest thing to a shared memory evaluation this
-corpus has found.
+MIT-licensed, portable, and each task needs nothing but a workspace, a seeded
+memory directory and a shell verification.
 
 Walk away from the memory design if you need multi-user boundaries, an audit of
-what changed, or a correction that binds an automatic writer rather than asking a
-model to ignore something. The first is absent by scope, the second is absent,
-and the third is a consequence of the cache decision rather than an oversight.
+what changed, or a correction that removes the retracted text rather than superseding it.
+The first is absent by scope, the second is absent, and the third is a
+consequence of an append-only conversation rather than an oversight.
 
 ## 12. Open Questions
 
 - `SubjectKey` already declares which question a fact answers. What would it take
   for a displaced answer to leave a record keyed on its *value*, so the same
   wrong claim cannot be re-saved under a new name?
-- The disregard instruction is unverifiable from inside the system. Does
-  memorybench have a task where a fact is forgotten mid-run and the answer must
-  not use it — and if not, is that measurable at all without ending the session?
+- Does the model honour a replacement snapshot over an earlier one it can still
+  read? No memorybench task forgets a fact mid-run and forbids the answer that
+  used it.
 - Freshness and correctness are conflated at the point where it matters most.
   Would a separate two-value status on top of the freshness clock cost anything
-  the prefix budget cannot afford?
+  the snapshot budget cannot afford?
 - No memorybench results are committed. What does the helpful/harmful split
   actually look like, and how large is `overheadChars` in practice?
 - The global tier loads in every project by design. What is the intended
@@ -323,9 +339,12 @@ and the third is a consequence of the cache decision rather than an oversight.
 ## Appendix: File Index
 
 **Memory**
-- `internal/memory/doc.go` — the two-layer model and the prefix-cache contract
+- `internal/memory/doc.go` — the two-layer model; its prefix-cache paragraph predates the session-context move
+- `internal/memory/memory.go` — `PolicyBlock`, `BackgroundDataBlock`, `SystemBlock`, `Compose`
+- `internal/sessioncontext/session_context.go` — the snapshot envelope, digest and supersession preamble
+- `internal/control/memory.go`, `internal/control/session_context.go` — reload on write and the next-turn replacement
 - `internal/memory/store.go`, `store_v2.go` — the `Memory` record, scopes, the
-  index, `Archive`
+  index, `Archive`, `.revisions` snapshots and `Restore`
 - `internal/memory/remember.go`, `remember_policy.go`, `forget.go`,
   `quickadd.go` — the write and retract surfaces
 - `internal/memory/recall.go`, `auto_recall.go`, `recall_index.go`,
@@ -343,5 +362,7 @@ and the third is a consequence of the cache decision rather than an oversight.
 - `docs/SESSION_MEMORY_RETRIEVAL.md`, `docs/SPEC.md`, `docs/ACP.md`
 
 ## History
+
+**2026-09-15** — [`e4bfeb67f9125af238aca4ff9bf69b21cb1df998`](https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998) — 1,585 commits on, 2026-09-15. Screened on a sparse checkout of the memory, session-context, control, benchmark and desktop suggestion files plus the root manifests and `.githooks/`: one auto-run surface, one unpinned surface and four dependency surfaces inside the cooldown; nothing was installed or run. The memory package changed in ten files, and one change rewrote the report's premise: [`2b7c65227775a09392cc0070907ff06ca9af0fcd`](https://github.com/esengine/DeepSeek-Reasonix/commit/2b7c65227775a09392cc0070907ff06ca9af0fcd) (2 September) moved the memory index and pinned bodies out of the cached system prompt into a host-generated session-context snapshot that a write replaces on the next user turn, and `QueueMemory` now drops `forget`'s disregard sentence in favour of that replacement. Sections 1, 2, 4, 6, 8, 9 and 11 are rewritten for it. `scope_enforced` withdrawn: the project boundary is a directory partition, not a stored key applied on a read. `human_review` kept, with the approval gate on `remember` and `forget` added to its record; `negative_eval` kept on the unchanged memorybench. Revision snapshots under `.revisions/` are now described; they are not an event log. Two marks.
 
 **2026-08-16** — [`d95e2510cfb3088fb51787668b61a7982b94849b`](https://github.com/esengine/DeepSeek-Reasonix/commit/d95e2510cfb3088fb51787668b61a7982b94849b) — First reading, at 5,487 commits. Screened first: one auto-run surface (committed `.githooks/pre-push`, inert unless `core.hooksPath` points at it), one build-time execution path (`Makefile`), and nine manifests inside the seven-day cooldown; nothing was installed, built or run. Three marks — `scope_enforced`, `human_review`, `negative_eval` — and four near-misses stated in place: freshness classifies age rather than belief, the recall audit is the retrieval half of the audit pattern, supersession by `SubjectKey` keys on the record, and there is no principal boundary. No paper, and no memorybench results committed to the tree.

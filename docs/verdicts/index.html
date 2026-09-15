@@ -10861,38 +10861,38 @@ agent behaviour rather than on a store method. The harness also runs a
 and <code>overheadChars</code>. A benchmark with a column for the tasks
 memory made worse, beside its token cost, is what this atlas keeps
 asking for.</li>
-<li>Biggest risk: retraction is an instruction. The index folds into the
-durable prompt prefix once at boot and mid-session changes never mutate
-it, so <code>forget</code> archives the file and then queues
-<em>"disregard its loaded guidance and background-index entry for the
-rest of this session"</em>. The correction's enforcement is the model's
-compliance, not the store's refusal — the honest move under the cache
-constraint, and a real ceiling. Underneath it, supersession and deletion
-both key on the record, so the same wrong value saved again under a new
-name is a fresh fact.</li>
+<li>Biggest risk: retraction is a newer snapshot rather than a removal.
+The index and pinned bodies ride a session-context snapshot beside the
+cached system prompt; <code>forget</code> archives the file and the next
+user turn appends a replacement snapshot that <em>"supersedes every
+earlier session-context snapshot"</em>, while the earlier one, fact
+included, stays in the conversation. What binds the correction is the
+model honouring that precedence. Underneath it, supersession and
+deletion both key on the record, so the same wrong value saved again
+under a new name is a fresh fact.</li>
 <li>Most reusable component: <code>benchmarks/memorybench</code> itself.
 MIT, portable, and each task is a workspace plus a seeded memory
 directory plus a prompt plus a shell verification — no harness required
-to borrow the idea, and the closest thing to a shared memory evaluation
-this corpus has found.</li>
-<li>Maturity impression: MIT, ~696,000 lines of Go across a coding agent
-reachable four ways (terminal, desktop, browser, ACP), 10,032 test
-functions, 156 in <code>internal/memory</code>. Three marks:
-<code>scope_enforced</code> (reads rooted at a per-project directory),
-<code>human_review</code> (mined drafts that only save through an accept
-action), <code>negative_eval</code>. Four near-misses stated in the
-report: freshness classifies age rather than belief, the recall audit is
-the retrieval half of the audit pattern rather than the mutation half,
-supersession keys on the record, and there is no principal boundary. No
-paper, and no benchmark results committed — the instrument exists, the
-measurement does not.</li>
-<li>Study when: you want per-turn-free memory because your provider
-caches the prefix, or you are building any memory evaluation at all and
-want a task set and a verification style to start from.</li>
+to borrow the idea.</li>
+<li>Maturity impression: MIT, a Go coding agent reachable four ways
+(terminal, desktop, browser, ACP), 156 test functions in
+<code>internal/memory</code>. Two marks: <code>human_review</code>
+(mined drafts that only save through an accept action, and ask rules on
+<code>remember</code> and <code>forget</code>) and
+<code>negative_eval</code>. Near-misses stated in the report: freshness
+classifies age rather than belief, revision snapshots and the recall
+audit sit either side of a mutation log without being one, supersession
+keys on the record, and the project boundary is a directory with no
+principal behind it. No paper, and no benchmark results committed — the
+instrument exists, the measurement does not.</li>
+<li>Study when: your provider caches the prefix and you need memory that
+changes mid-session without breaking it, or you are building any memory
+evaluation at all and want a task set and a verification style to start
+from.</li>
 <li>Do not copy when: you need multi-user boundaries, an audit of what
-changed, or a correction that binds an automatic writer. The last is not
-an oversight but the price of the cache decision, and it is worth
-understanding before paying it.</li>
+changed, or a correction that removes the retracted text from what the
+model can read. The last is the price of an append-only conversation,
+and it is worth understanding before paying it.</li>
 </ul>
 <h3 id="cognitive-spatial-memory"><a
 href="../systems/cognitive-spatial-memory/"><code>cognitive-spatial-memory</code></a></h3>

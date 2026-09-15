@@ -150,7 +150,7 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 233 of 457 apply a scope key as a filter on the
+shallowest.</strong> 232 of 457 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 219 of
@@ -353,7 +353,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 233 of
+A scope <em>key applied as a filter on the read path</em> is what 232 of
 457 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -20422,18 +20422,20 @@ monotonic <code>Revision</code>, a four-value <code>Type</code>, a
 <td>Plain files, no database: a per-project directory and a global one,
 each with its own index, plus an archive directory for forgotten
 facts</td>
-<td>The index rides the cached system-prompt prefix so the model always
-knows what exists; bodies are pulled on demand by a <code>memory</code>
-tool, with keyword aliases used for recall and never rendered into the
-index, and expired facts excluded from automatic recall</td>
+<td>The index and pinned bodies ride a host-generated
+<code>&lt;session-context&gt;</code> snapshot, re-published on the next
+user turn when they change, so the model always knows what exists; other
+bodies are pulled on demand by a <code>memory</code> tool, with keyword
+aliases used for recall and never rendered into the index, and expired
+facts excluded from automatic recall</td>
 <td>The model calls <code>remember</code>; a <code>#</code> quick-add
 appends to an instruction doc; the desktop page mines recent history
 into drafts a person accepts. One active value per scope and subject, so
 a new fact about the same question displaces the old</td>
-<td><code>forget</code> archives by name rather than deleting, and
-because the index is baked into the immutable prefix it also queues a
-transient instruction telling the model to disregard the already-loaded
-copy for the rest of the session</td>
+<td><code>forget</code> archives by name rather than deleting, and the
+next user turn carries a replacement session-context without the fact;
+each save keeps the prior revision as an immutable snapshot under
+<code>.revisions/&lt;id&gt;/</code>, restorable as a new revision</td>
 <td>A per-project directory root plus a global tier that loads in every
 project; precedence is annotated in the index. One machine, one user —
 there is no tenant or principal boundary</td>
@@ -20452,10 +20454,11 @@ modes and whose verifications forbid the superseded answer; a paired
 memory-off arm that reports which tasks memory <em>hurt</em> and what
 recall cost in characters; a subject key that keeps one active value per
 question</td>
-<td>Forgetting mid-session is an instruction to disregard rather than a
-removal, because the prefix cannot be edited; deletion and supersession
-are both keyed on the record, so nothing prevents the same wrong value
-being saved again under a new name; and there is no mutation audit</td>
+<td>A forgotten fact's earlier snapshot stays in the transcript beneath
+the replacement that supersedes it; scope is a directory partition with
+no principal boundary; deletion and supersession are both keyed on the
+record, so nothing prevents the same wrong value being saved again under
+a new name; and there is no mutation audit</td>
 </tr>
 <tr>
 <td><code>recall-substrate</code></td>
@@ -24435,7 +24438,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>233 of 457:</em> <a
+<p><em>232 of 457:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -24629,7 +24632,6 @@ href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/pydantic-ai-harness/"><code>pydantic-ai-harness</code></a>,
 <a href="../systems/ragflow/"><code>ragflow</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
-href="../systems/reasonix/"><code>reasonix</code></a>, <a
 href="../systems/redcell/"><code>redcell</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
 href="../systems/runar-forge/"><code>runar-forge</code></a>, <a
@@ -30009,7 +30011,7 @@ href="https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d
 <li><a
 href="https://github.com/esengine/DeepSeek-Reasonix">esengine/DeepSeek-Reasonix</a>
 at <a
-href="https://github.com/esengine/DeepSeek-Reasonix/commit/d95e2510cfb3088fb51787668b61a7982b94849b"><code class="commit-id" title="d95e2510cfb3088fb51787668b61a7982b94849b">d95e2510…</code></a></li>
+href="https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998"><code class="commit-id" title="e4bfeb67f9125af238aca4ff9bf69b21cb1df998">e4bfeb67…</code></a></li>
 <li><a
 href="https://github.com/Morephine/feltstate">Morephine/feltstate</a> at
 <a
