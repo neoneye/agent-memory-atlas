@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 475 reports.**
+**This page covers all 476 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4150,3 +4150,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.5.9, 891 commits since 10 August 2026, about 33,400 lines of TypeScript and 1,000 tests across a host, a client and 17 plugin packages, nine memory providers with a conformance suite, and a Sidebar workbench; memory semantics for the third tier are the chosen provider's.
 - Study when: you compose several memory tiers inside an agent host and need a consistent view per turn with safe movement between tiers.
 - Do not copy when: scope must hold across every tier and every repository state, or you need the plugin itself to model belief or history.
+
+### [`yantrikdb-hermes-plugin`](../systems/yantrikdb-hermes-plugin/)
+- Best idea: **scope from the host, and a refusal where scope matters.** The namespace is built from the base, agent workspace and identity Hermes reports, optionally sharded per person through an identity map with legacy namespaces carried forward; every recall and maintenance call passes it, and the fleet tool refuses to list sibling namespaces under owner scoping because they are other people. Two marks: `scope_enforced`, `negative_eval`.
+- Biggest risk: **two paths cross the person boundary the fleet tool guards.** The shared-brain option mirrors every explicit remember into one namespace every session recalls and is not disabled under owner scoping, and `forget` and `resolve_conflict` act on an id with no namespace check, so an id recalled from a shared space can be deleted from any person's session.
+- Most reusable component: the semantic contract gate — public-surface cases run on the real engine, all or nothing, gated by feature probes instead of version strings — and extraction from the agent's own prose only after a bare user confirmation.
+- Maturity impression: MIT, version 0.25.0, 124 commits since 15 April 2026, about 8,700 lines of Python and 485 tests, an in-process engine by default, 23 tools, packs, skills with an outcome ledger, and two live end-to-end verification runs recorded with transcripts.
+- Study when: you wire a structured memory engine into an agent host and need per-agent or per-person namespaces derived from the session.
+- Do not copy when: several people share one gateway and a shared namespace or id-based deletion is in play.
