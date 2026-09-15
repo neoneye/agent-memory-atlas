@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 148 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 188 |
+| Repositories with an auto-run surface (`RUNS`) | 149 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 189 |
 | Repositories with build-time execution (`EXEC`) | 269 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -137,6 +137,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
+| [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/` |
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |

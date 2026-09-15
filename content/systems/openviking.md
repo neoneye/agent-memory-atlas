@@ -7,10 +7,12 @@ page_kind: system
 source_name: volcengine/OpenViking
 source_url: https://github.com/volcengine/OpenViking
 archive_name: "volcengine--OpenViking"
-revision: c67222c3d46de4874eed65af8918fc55513812ef
-revision_url: https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef
-analyzed_at: 2026-07-27
+revision: 192b813e7e3106680a5534e2d4c9bcf6d2390abd
+revision_url: https://github.com/volcengine/OpenViking/commit/192b813e7e3106680a5534e2d4c9bcf6d2390abd
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the vector index read path — an account predicate bound from the request context and ANDed onto every query | openviking/storage/viking_vector_index_backend.py:548-560 `_with_account_filter`, :986-988 `_get_backend_for_context` | a request resolves its backend with `_get_backend_for_account(ctx.account_id)`, so the account comes from the authenticated context rather than from a caller argument. Every query on that backend passes through `_with_account_filter`, which returns `And([Eq(\"account_id\", bound), filter])` — a caller-supplied `scope_dsl` can narrow the result but cannot widen past the account, and the index is shared rather than partitioned. The unfiltered backend exists: `bound_account_id=None` is documented as root privileged mode, and both of its call sites (`:1685`, `:1697`) are preceded by `_check_root_role(ctx)`, which raises `PermissionError` for any role but `ROOT` | tests/integration/test_agent_memory_e2e.py; no test was run"
 stack_storage: "delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -300,5 +302,7 @@ Do not copy:
 - Tests: `tests/session/memory/`, `tests/test_memory_lifecycle.py`, `tests/integration/test_agent_memory_e2e.py`.
 
 ## History
+
+**2026-09-15** — [`192b813e7e3106680a5534e2d4c9bcf6d2390abd`](https://github.com/volcengine/OpenViking/commit/192b813e7e3106680a5534e2d4c9bcf6d2390abd) — second reading, 549 commits on. Screened again: a dependency surface inside the seven-day cooldown, so nothing was installed and nothing was run. `scope_enforced` was re-tested at the producer and holds, and now carries the evidence record it had been asserted without. The first reading located scope in `memory_isolation_handler.py`, which grew by 248 lines since; what that file resolves is *write* targets — which user and peer spaces an extracted memory may land in — and its `get_read_scope` is called only from the extraction loop. The read-path predicate is one layer down: `_SingleAccountBackend` is bound to `ctx.account_id` and ANDs `account_id` onto every query, and the one unbound backend is reachable only after a root-role check.
 
 **2026-07-27** — [`c67222c3d46de4874eed65af8918fc55513812ef`](https://github.com/volcengine/OpenViking/commit/c67222c3d46de4874eed65af8918fc55513812ef) — first reading.
