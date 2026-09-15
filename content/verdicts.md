@@ -855,7 +855,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: supersession that is *judged* rather than inferred from a key collision — thresholded, reversible, and tested, with the superseded row kept and what replaced it named.
 - Biggest risk: `optimize_memories` defaults to `apply=True` and replaces every memory with one model-written paragraph. Decide who can reach `POST /memory/optimize` before someone finds the button.
 - Most reusable component: the framework stamping time rather than the model, and the split between guidance and data with a test on the split.
-- Maturity impression: 304 test functions across 17 files plus integration suites for the manager, agent memory, team storage and OS routes — and comments that document the corruptions that produced the code.
+- Maturity impression: 432 test functions across 22 files, including a cross-user entity isolation suite added with the v3.0 fix for a shared-row leak, plus integration suites for the manager, agent memory, team storage and OS routes — and comments that document the corruptions that produced the code.
 - Study when: your memory needs are typed and modest, correction is supersession, and you want an agent platform where the learning stores come as a good default.
 - Do not copy when: you need retrieval quality — there is no ranking to tune and relevance costs an LLM call per search — or deletion has to be provable, since there is no audit and no tombstone.
 

@@ -7,10 +7,14 @@ page_kind: system
 source_name: "agno-agi/agno"
 source_url: https://github.com/agno-agi/agno
 archive_name: "agno-agi--agno"
-revision: 7c68873c1357321a5152397c8ab4fb8b3f587bba
-revision_url: https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba
-analyzed_at: 2026-07-30
+revision: 8bf156efe7a1fe6d496e4434be73726b374ed8aa
+revision_url: https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, human_review, negative_eval"
+capability_evidence:
+  scope_enforced: "user memory recall and, since v3.0, user-namespaced entity memory | libs/agno/agno/learn/stores/user_memory.py:98-110 recall, libs/agno/agno/learn/utils.py:41-81 build_learning_id, libs/agno/agno/learn/stores/entity_memory.py | user memory is stored under an id built from user_id and recall returns None when user_id is falsy; entity memory under namespace=\"user\" embeds a digest of user_id in the row id and refuses get, delete and remember without one, while namespace=\"global\" or a custom group is shared by design | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py:56, :141-165"
+  human_review: "the AgentOS memory routes | libs/agno/agno/os/routers/memory/memory.py:143, :185 (DELETE), :447 (PATCH /memories/{memory_id}) | a person lists, reads, corrects and deletes a user's memories against a running system; PROPOSE and HITL modes contribute nothing — the first is a prompt string and the second is unsupported | libs/agno/tests/integration/os"
+  negative_eval: "cross-user entity isolation, supersession and relevance | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py, libs/agno/tests/unit/learn/test_entity_supersession.py, libs/agno/tests/unit/learn/test_relevance_recall.py | two users record the same entity name and type; each reads only their own fact, Bob's private note is asserted absent from Alice's row, recall context and search, and forget and delete are asserted not to cross users; a retired fact is asserted absent from live_facts while both rows remain; a two-letter entity is asserted not recalled for an unrelated message beside the entity that is | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py:76, :84, :106, :116, :124"
 stack_storage: "sqlite, postgres, redis, mongo, files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -20,7 +24,7 @@ matrix:
   retrieval: "No embeddings anywhere on the memory path — `last_n`, `first_n`, or an `agentic` mode that sends the memory list to a model and takes back ids; entity recall matches names on word boundaries"
   write: "`ALWAYS` extraction fired from a post-run hook, or `AGENTIC` tools the model calls; a `background_executor` if the app supplies one, otherwise inline on the response path"
   update_delete: "`retire_fact` stamps `superseded_at`/`superseded_by` and keeps the row; `forget` archives an entity; the curator prunes by age and count; `optimize_memories` clears the table"
-  scoping: "`user_id` required on every recall and returns `None` when absent; entity namespaces of `user`, `global`, or a custom group"
+  scoping: "`user_id` required on every recall and returns `None` when absent; entity namespaces of `user` — keyed by a user_id digest since v3.0 — `global`, or a custom group"
   integration: "Agent and Team runtime, ~20 model providers, an AgentOS FastAPI control plane with nine memory routes, MCP, and a `MemoryTools` toolkit"
   background: "A post-run capture hook, a `Curator` that prunes and deduplicates the user profile only, and an LLM supersession judge on the entity write path"
   trust: "A `confidence` float on decision-log entries and nothing else; facts are live until something supersedes them"
@@ -216,11 +220,21 @@ an unusually precise thing to assert about a retriever.
 
 **Scope is enforced and fails closed.** `recall()` returns `None` when `user_id`
 is falsy rather than falling back to a default or scanning
-(`agno/learn/stores/user_memory.py`). Entity memory adds a `namespace` —
-`"user"` for private, `"global"` for shared, or a custom group string — applied
-on the read path. `scope_enforced` is earned. Note the default is `"global"`:
-an entity is shared unless someone says otherwise, which is the opposite of the
-fail-closed instinct in `recall`.
+(`agno/learn/stores/user_memory.py:98-110`). Entity memory adds a `namespace` —
+`"user"` for private, `"global"` for shared, or a custom group string.
+`scope_enforced` is earned. Note the default is `"global"`: an entity is shared
+unless someone says otherwise, which is the opposite of the fail-closed instinct
+in `recall`.
+
+**The `user` namespace did not isolate users until v3.0.** At the first reading
+an entity's row id was built from its name, type and namespace with no user
+component, so two users recording the same entity under `namespace="user"` shared
+one physical row: the second writer's facts replaced the first's and leaked into
+the first writer's recall (issue #9319). The v3.0 release (24 August 2026) embeds a
+digest of `user_id` in `build_learning_id` (`learn/utils.py:41-81`), refuses
+`get`, `delete` and `remember` without a `user_id`, re-keys legacy rows in place,
+and adds a 959-line isolation suite. The mark rested on user memory then and
+rests on both now.
 
 ## 7. Write Mechanics
 
@@ -286,9 +300,9 @@ repository, for tool-call approvals, and the memory path does not use it.
 `LearningMode.HITL` is worse off: it is in the enum, and three stores respond to
 it by logging a warning and continuing without it
 (`learned_knowledge.py:81-82`, `user_profile.py:91-92`,
-`user_memory.py:81-82`). The config docstring says it is "unsupported by every
-store; removed in 3.0", which is honest, and leaves a configuration value that
-silently degrades to no gate at all.
+`user_memory.py:81-82`). The config docstring once said it would be *"removed in
+3.0"*; after 3.0 it reads *"Reserved for future use; unsupported by every store"*,
+and the value still silently degrades to no gate at all.
 
 **`human_review` is earned, and not from the mode named after it.** The AgentOS
 router exposes `PATCH /memory/{id}` and `DELETE /memory/{id}` alongside list and
@@ -323,7 +337,7 @@ the step across to blocking re-assertion.
 
 ## 10. Tests, Evals, and Benchmarks
 
-304 test functions across 17 files under `tests/unit/learn` and
+432 test functions across 22 files under `tests/unit/learn` and
 `tests/unit/memory`, plus integration suites for the manager, agent memory, team
 storage, and the OS routes. None were run here.
 
@@ -339,15 +353,15 @@ is, and *is* recalled for "ask Al about the budget".
 **`negative_eval` is earned on the same basis as [Helm](../helm/)**: the
 supersession cases assert that a corrected value no longer appears in what
 renders, and the relevance cases assert that particular stored material must not
-be retrieved for a given message. It is the weaker half of the column — nothing
-asserts that a *boundary* holds, so there is no committed test proving user A's
-memories cannot reach user B's prompt, which is the assertion the
-`scope_enforced` mark most wants behind it.
+be retrieved for a given message. Since v3.0 the boundary half is committed too:
+`test_entity_memory_user_isolation.py` has two users record the same entity and
+asserts Bob's private note is absent from Alice's row, her recall context and her
+search results, that forget and delete do not cross users, and that reads and
+writes without a `user_id` are refused.
 
 No memory benchmark exists in the repository. No LoCoMo, no LongMemEval, no
 retrieval-quality measurement of any kind, and no published numbers to check —
-which, given how many of this atlas's benchmark findings are about untraceable
-claims, is at least a claim not made.
+which is at least a claim not made.
 
 ## 11. For Your Own Build
 
@@ -447,6 +461,8 @@ reach `POST /memory/optimize` before someone finds the button.
 | `libs/agno/agno/learn/stores/protocol.py` | 127 | The six-method `LearningStore` Protocol |
 
 ## History
+
+**2026-09-15** — [`8bf156efe7a1fe6d496e4434be73726b374ed8aa`](https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa) — 138 commits on, 2026-09-15, including the v3.0 release (#8210, 24 August). Screened before reading: one auto-run surface, 57 build-time execution points, five unpinned surfaces, one dependency surface inside the cooldown and three agent-instruction files read as data; nothing was installed or run. v3.0 fixed a cross-user leak the first reading missed: entity memory under `namespace="user"` keyed rows without the user, so two users naming the same entity shared and overwrote one row (#9319); the id now embeds a user digest, user-less reads and writes are refused, legacy rows are re-keyed, and an isolation suite pins it. v3.0 also removed the `MemoriesConfig`, `MemoriesStore` and `Decision` aliases, added learning-store migrations, and `search_user_memories` now returns every memory when no limit is passed. `LearningMode.PROPOSE` is still a prompt string and `HITL` still warns and continues. The optimize default, the absent audit and the absent tombstone stand. All three marks kept with evidence records.
 
 **2026-08-31** — [`7c68873c1357321a5152397c8ab4fb8b3f587bba`](https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba) — count and citation audit at the same pin. `BaseDb.__init__` names 23 table parameters, not nineteen, and they run to line 60 rather than 57. The storage abstraction has 18 implementations, not twenty — 14 subclassing `BaseDb` and 4 subclassing `AsyncBaseDb`; §3's own list named only 15. Four line references had drifted: `capture_hook` 624→608, `MemorySearchResponse` 38→36, `_filter_store_kwargs` 43→44. The RULE 3 quote was truncated mid-sentence and is quoted whole. No finding or capability mark changed.
 

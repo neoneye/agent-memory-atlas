@@ -110,14 +110,14 @@ mode named human-in-the-loop is a prompt string.</p>
               <strong>agno-agi/agno</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba" title="7c68873c1357321a5152397c8ab4fb8b3f587bba">
+            <a class="meta-pill revision-pill" href="https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa" title="8bf156efe7a1fe6d496e4434be73726b374ed8aa">
               <span>Analyzed revision</span>
-              <code>7c68873c…</code>
+              <code>8bf156ef…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/agno-agi--agno" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -376,13 +376,25 @@ to assert about a retriever.</p>
 <p><strong>Scope is enforced and fails closed.</strong>
 <code>recall()</code> returns <code>None</code> when
 <code>user_id</code> is falsy rather than falling back to a default or
-scanning (<code>agno/learn/stores/user_memory.py</code>). Entity memory
-adds a <code>namespace</code> — <code>"user"</code> for private,
-<code>"global"</code> for shared, or a custom group string — applied on
-the read path. <code>scope_enforced</code> is earned. Note the default
-is <code>"global"</code>: an entity is shared unless someone says
+scanning (<code>agno/learn/stores/user_memory.py:98-110</code>). Entity
+memory adds a <code>namespace</code> — <code>"user"</code> for private,
+<code>"global"</code> for shared, or a custom group string.
+<code>scope_enforced</code> is earned. Note the default is
+<code>"global"</code>: an entity is shared unless someone says
 otherwise, which is the opposite of the fail-closed instinct in
 <code>recall</code>.</p>
+<p><strong>The <code>user</code> namespace did not isolate users until
+v3.0.</strong> At the first reading an entity's row id was built from
+its name, type and namespace with no user component, so two users
+recording the same entity under <code>namespace="user"</code> shared one
+physical row: the second writer's facts replaced the first's and leaked
+into the first writer's recall (issue #9319). The v3.0 release (24
+August 2026) embeds a digest of <code>user_id</code> in
+<code>build_learning_id</code> (<code>learn/utils.py:41-81</code>),
+refuses <code>get</code>, <code>delete</code> and <code>remember</code>
+without a <code>user_id</code>, re-keys legacy rows in place, and adds a
+959-line isolation suite. The mark rested on user memory then and rests
+on both now.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Two paths in.</p>
 <p><strong><code>ALWAYS</code> mode</strong> fires from a post-run hook.
@@ -454,9 +466,10 @@ does not use it.</p>
 three stores respond to it by logging a warning and continuing without
 it (<code>learned_knowledge.py:81-82</code>,
 <code>user_profile.py:91-92</code>, <code>user_memory.py:81-82</code>).
-The config docstring says it is "unsupported by every store; removed in
-3.0", which is honest, and leaves a configuration value that silently
-degrades to no gate at all.</p>
+The config docstring once said it would be <em>"removed in 3.0"</em>;
+after 3.0 it reads <em>"Reserved for future use; unsupported by every
+store"</em>, and the value still silently degrades to no gate at
+all.</p>
 <p><strong><code>human_review</code> is earned, and not from the mode
 named after it.</strong> The AgentOS router exposes
 <code>PATCH /memory/{id}</code> and <code>DELETE /memory/{id}</code>
@@ -493,7 +506,7 @@ byte-identical candidates") for a <em>duplicate</em> problem, without
 the step across to blocking re-assertion.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>304 test functions across 17 files under
+<p>432 test functions across 22 files under
 <code>tests/unit/learn</code> and <code>tests/unit/memory</code>, plus
 integration suites for the manager, agent memory, team storage, and the
 OS routes. None were run here.</p>
@@ -512,15 +525,15 @@ for "ask Al about the budget".</p>
 href="../helm/">Helm</a></strong>: the supersession cases assert that a
 corrected value no longer appears in what renders, and the relevance
 cases assert that particular stored material must not be retrieved for a
-given message. It is the weaker half of the column — nothing asserts
-that a <em>boundary</em> holds, so there is no committed test proving
-user A's memories cannot reach user B's prompt, which is the assertion
-the <code>scope_enforced</code> mark most wants behind it.</p>
+given message. Since v3.0 the boundary half is committed too:
+<code>test_entity_memory_user_isolation.py</code> has two users record
+the same entity and asserts Bob's private note is absent from Alice's
+row, her recall context and her search results, that forget and delete
+do not cross users, and that reads and writes without a
+<code>user_id</code> are refused.</p>
 <p>No memory benchmark exists in the repository. No LoCoMo, no
 LongMemEval, no retrieval-quality measurement of any kind, and no
-published numbers to check — which, given how many of this atlas's
-benchmark findings are about untraceable claims, is at least a claim not
-made.</p>
+published numbers to check — which is at least a claim not made.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -706,6 +719,24 @@ only</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa"><code class="commit-id" title="8bf156efe7a1fe6d496e4434be73726b374ed8aa">8bf156ef…</code></a>
+— 138 commits on, 2026-09-15, including the v3.0 release (#8210, 24
+August). Screened before reading: one auto-run surface, 57 build-time
+execution points, five unpinned surfaces, one dependency surface inside
+the cooldown and three agent-instruction files read as data; nothing was
+installed or run. v3.0 fixed a cross-user leak the first reading missed:
+entity memory under <code>namespace="user"</code> keyed rows without the
+user, so two users naming the same entity shared and overwrote one row
+(#9319); the id now embeds a user digest, user-less reads and writes are
+refused, legacy rows are re-keyed, and an isolation suite pins it. v3.0
+also removed the <code>MemoriesConfig</code>, <code>MemoriesStore</code>
+and <code>Decision</code> aliases, added learning-store migrations, and
+<code>search_user_memories</code> now returns every memory when no limit
+is passed. <code>LearningMode.PROPOSE</code> is still a prompt string
+and <code>HITL</code> still warns and continues. The optimize default,
+the absent audit and the absent tombstone stand. All three marks kept
+with evidence records.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/agno-agi/agno/commit/7c68873c1357321a5152397c8ab4fb8b3f587bba"><code class="commit-id" title="7c68873c1357321a5152397c8ab4fb8b3f587bba">7c68873c…</code></a>
 — count and citation audit at the same pin. <code>BaseDb.__init__</code>
