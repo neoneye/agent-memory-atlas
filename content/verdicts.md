@@ -463,7 +463,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: Personalized PageRank diffusion replaces hop planning, with IDF-penalized seeding and a weak dense prior.
 - Biggest risk: no scope, trust, provenance, or temporal model, and a wrong extracted edge has graph-wide blast radius.
 - Most reusable component: `graph_search_with_fact_entities()` plus `run_ppr()`, and synonymy-as-edges instead of entity merging.
-- Maturity impression: actively maintained research framework with a strong reproduction tree and thin unit tests.
+- Maturity impression: actively maintained research framework with a strong reproduction tree and, since August 2026, state-consistency tests that assert deletion empties every store once nothing else supports an entry.
 - Study when: recall must cross documents associatively, or entity-resolution merges have burned you.
 - Do not copy when: you need agent memory rather than corpus QA — scope, correction, and time all have to be added.
 

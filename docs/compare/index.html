@@ -153,7 +153,7 @@ layer below delete</a>.</li>
 shallowest.</strong> 235 of 457 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 214 of
+<li><strong>Negative evidence is almost never tested.</strong> 215 of
 457 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-forty-four tombstones, two hundred and fourteen negative-eval suites —
+forty-four tombstones, two hundred and fifteen negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -12875,8 +12875,8 @@ edges</td>
 <td>Chunk identity only; no actor, time, or trust state</td>
 <td>Diffusion replaces hop planning; synonymy as edges rather than
 merges</td>
-<td>Assertion instead of fallback on unlinked queries; undirected
-diffusion discards predicate direction</td>
+<td>A hard error instead of a fallback when no query phrase seeds the
+graph; undirected diffusion discards predicate direction</td>
 </tr>
 <tr>
 <td><code>hivemind-activeloop</code></td>
@@ -24972,7 +24972,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>214 of 457:</em> <a
+<p><em>215 of 457:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
 href="../systems/agent-afk/"><code>agent-afk</code></a>, <a
@@ -25046,6 +25046,7 @@ href="../systems/hestia/"><code>hestia</code></a>, <a
 href="../systems/hillock/"><code>hillock</code></a>, <a
 href="../systems/hindsight/"><code>hindsight</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
+href="../systems/hipporag/"><code>hipporag</code></a>, <a
 href="../systems/hivemind/"><code>hivemind</code></a>, <a
 href="../systems/hivemind-activeloop/"><code>hivemind-activeloop</code></a>,
 <a href="../systems/honcho/"><code>honcho</code></a>, <a
@@ -25209,7 +25210,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Two
-hundred and fourteen repositories of four hundred and fifty-seven assert
+hundred and fifteen repositories of four hundred and fifty-seven assert
 that particular material must <em>not</em> be retrieved — the assertion
 every scope, deletion and correction claim in this document ultimately
 rests on. Read together rather than one at a time, they split cleanly in
@@ -25789,42 +25790,41 @@ defensible because recall there feeds exploration rather than belief;
 asked the same question twice it may answer differently, which is the
 correct trade for a search loop and the wrong one for facts about a
 user.</p>
-<p><code>hipporag</code> is the one system here that does not rank at
-all in the usual sense: it seeds a personalization vector from
-query-linked entities plus a weak dense prior, then reads relevance off
-a Personalized PageRank diffusion across the whole graph.
-<code>generative-agents</code> established the multi-signal shape
-everything else refines — normalized recency, relevance, and importance
-combined in a weighted sum — though the specific weights
-(<code>gw = [0.5, 3, 2]</code>, with two earlier settings left commented
-out) are hand-tuned with no ablation in the repository, and its recency
-decays by chronological <em>position</em> rather than elapsed time.
-<code>voyager</code> retrieves top-5 by vector similarity over generated
-descriptions and returns executable code, with scores computed and then
-discarded so there is no relevance threshold. <code>openviking</code>
-runs directory-recursive dense plus sparse retrieval with level filters,
-per-type quotas, optional reranking, and a hotness blend.
-<code>redis-agent-memory-server</code> pairs vector search with a
-recency reranker using separate half-lives for last access and creation.
-<code>holographic</code> fuses FTS5, Jaccard, and HRR cosine, then
-multiplies by trust — and silently reweights to lexical-only when NumPy
-is absent while still reporting itself as available.
-<code>openclaw</code> runs a genuine hybrid — a <code>sqlite-vec</code>
-vector arm and an FTS keyword arm merged with a candidate multiplier and
-temporal decay — and degrades in both directions, to keyword-only when
-no embedding provider is available and to vector-only when FTS is not,
-logging each fall back rather than reporting itself healthy.
-<code>a-mem</code> is vector-only despite hybrid wording.
-<code>mastra-observational-memory</code> is the deliberate exception:
-its primary path is sequential observations plus a recent raw tail, with
-semantic observation retrieval optional. <code>daimon</code> is the
-deliberate exception in the other direction: <strong>no embeddings exist
-anywhere in the codebase</strong>, and its index is disposable by
-contract — any doubt about the SQLite file resolves to a full rebuild
-from the JSON, with no incremental upsert path, on the stated principle
-of "correctness over cleverness". The cost lands exactly where you would
-expect, and the project measures it rather than asserting it away — see
-<a href="#evalstests">Evals/Tests</a>.</p>
+<p><code>hipporag</code> does not rank at all in the usual sense: it
+seeds a personalization vector from query-linked entities plus a weak
+dense prior, then reads relevance off a Personalized PageRank diffusion
+across the whole graph. <code>generative-agents</code> established the
+multi-signal shape everything else refines — normalized recency,
+relevance, and importance combined in a weighted sum — though the
+specific weights (<code>gw = [0.5, 3, 2]</code>, with two earlier
+settings left commented out) are hand-tuned with no ablation in the
+repository, and its recency decays by chronological <em>position</em>
+rather than elapsed time. <code>voyager</code> retrieves top-5 by vector
+similarity over generated descriptions and returns executable code, with
+scores computed and then discarded so there is no relevance threshold.
+<code>openviking</code> runs directory-recursive dense plus sparse
+retrieval with level filters, per-type quotas, optional reranking, and a
+hotness blend. <code>redis-agent-memory-server</code> pairs vector
+search with a recency reranker using separate half-lives for last access
+and creation. <code>holographic</code> fuses FTS5, Jaccard, and HRR
+cosine, then multiplies by trust — and silently reweights to
+lexical-only when NumPy is absent while still reporting itself as
+available. <code>openclaw</code> runs a genuine hybrid — a
+<code>sqlite-vec</code> vector arm and an FTS keyword arm merged with a
+candidate multiplier and temporal decay — and degrades in both
+directions, to keyword-only when no embedding provider is available and
+to vector-only when FTS is not, logging each fall back rather than
+reporting itself healthy. <code>a-mem</code> is vector-only despite
+hybrid wording. <code>mastra-observational-memory</code> is the
+deliberate exception: its primary path is sequential observations plus a
+recent raw tail, with semantic observation retrieval optional.
+<code>daimon</code> is the deliberate exception in the other direction:
+<strong>no embeddings exist anywhere in the codebase</strong>, and its
+index is disposable by contract — any doubt about the SQLite file
+resolves to a full rebuild from the JSON, with no incremental upsert
+path, on the stated principle of "correctness over cleverness". The cost
+lands exactly where you would expect, and the project measures it rather
+than asserting it away — see <a href="#evalstests">Evals/Tests</a>.</p>
 <h3 id="context-injection">Context Injection</h3>
 <p><code>letta</code> and <code>mastra-observational-memory</code> have
 the deepest runtime prompt integration. Mastra removes observed raw
@@ -29811,7 +29811,7 @@ href="https://github.com/Arc-Computer/ATLAS/commit/c226386f5860cc89d422b707a99e9
 <li><a
 href="https://github.com/OSU-NLP-Group/HippoRAG">OSU-NLP-Group/HippoRAG</a>
 at <a
-href="https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a"><code class="commit-id" title="e37fba2af1a951ac340d837a7c02efb9d8c9544a">e37fba2a…</code></a></li>
+href="https://github.com/OSU-NLP-Group/HippoRAG/commit/1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff"><code class="commit-id" title="1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff">1438aba3…</code></a></li>
 <li><a href="https://github.com/MineDojo/Voyager">MineDojo/Voyager</a>
 at <a
 href="https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89"><code class="commit-id" title="55e45a880755d0c8c66ca7fb5fe7962ac8974f89">55e45a88…</code></a></li>

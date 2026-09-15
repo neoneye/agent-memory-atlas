@@ -7,10 +7,12 @@ page_kind: system
 source_name: OSU-NLP-Group/HippoRAG
 source_url: https://github.com/OSU-NLP-Group/HippoRAG
 archive_name: "OSU-NLP-Group--HippoRAG"
-revision: e37fba2af1a951ac340d837a7c02efb9d8c9544a
-revision_url: https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a
-analyzed_at: 2026-07-27
-capabilities: ""
+revision: 1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff
+revision_url: https://github.com/OSU-NLP-Group/HippoRAG/commit/1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff
+analyzed_at: 2026-09-15
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the index stores after deletion — a deleted document's chunks, facts and entities must not remain once nothing else supports them | src/hipporag/HippoRAG.py:584 (`delete`) | `test_sequential_delete_of_shared_triple_removes_entity_sources` indexes two documents that share a triple, deletes the first and asserts the shared entities remain with only the second document as their source — the control — then deletes the second and asserts the chunk, fact and entity stores, the triple-to-document map, the entity-to-chunk map and the graph are all empty. Sibling tests assert the same for a batch delete, for triples that collide after normalization, and that the persisted OpenIE state is empty after the last document goes. The assertions are on stores rather than on a retrieval result | tests/test_hipporag_state_consistency.py:109, :128, :141, :154"
 stack_storage: "chroma, qdrant, milvus, delegated"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -25,16 +27,16 @@ matrix:
   background: "Cacheable OpenIE; incremental synonymy edges"
   trust: "Chunk identity only; no actor, time, or trust state"
   strengths: "Diffusion replaces hop planning; synonymy as edges rather than merges"
-  risks: "Assertion instead of fallback on unlinked queries; undirected diffusion discards predicate direction"
+  risks: "A hard error instead of a fallback when no query phrase seeds the graph; undirected diffusion discards predicate direction"
 ---
 
 ## 1. Executive Summary
 
-HippoRAG is an MIT-licensed research framework from OSU-NLP-Group (NeurIPS'24, with HippoRAG 2 reframing the work as non-parametric continual learning). It is the only system in this atlas whose retrieval mechanism is **Personalized PageRank over a knowledge graph**, and that single choice makes it worth studying regardless of whether you adopt the rest.
+HippoRAG is an MIT-licensed research framework from OSU-NLP-Group (NeurIPS'24, with HippoRAG 2 reframing the work as non-parametric continual learning). Its retrieval mechanism is **Personalized PageRank over a knowledge graph**, and that single choice makes it worth studying regardless of whether you adopt the rest.
 
 The analogy the paper draws is explicit: the LLM is the neocortex, an encoder is the parahippocampal region, and an open knowledge graph is the hippocampus. What matters architecturally is what falls out of it.
 
-Every other graph-backed system in the atlas performs multi-hop retrieval by **traversing**: [Graphiti](../graphiti/) runs BFS across edges and nodes, [Cognee](../cognee/) exposes triplet retrievers, [agentmemory](../agentmemory/) fuses a graph arm into weighted RRF. Each has to decide how far to walk and in which direction. HippoRAG does not walk. It builds a **personalization vector** — seeding graph nodes with query-relevant weight — and lets a random-walk-with-restart diffuse relevance across the whole graph in one operation. Multi-hop association becomes a property of the diffusion, not of a traversal policy.
+Graph-backed memory more commonly performs multi-hop retrieval by **traversing**: [Graphiti](../graphiti/) runs BFS across edges and nodes, [Cognee](../cognee/) exposes triplet retrievers, [agentmemory](../agentmemory/) fuses a graph arm into weighted RRF. Each has to decide how far to walk and in which direction. HippoRAG does not walk. It builds a **personalization vector** — seeding graph nodes with query-relevant weight — and lets a random-walk-with-restart diffuse relevance across the whole graph in one operation. Multi-hop association becomes a property of the diffusion, not of a traversal policy.
 
 Two design details deserve attention beyond the headline:
 
@@ -86,14 +88,14 @@ The dense retrieval arm is deliberately weak — passage nodes are seeded at 0.0
 
 ## 3. Architecture
 
-`src/hipporag/` is about 7,500 lines, dominated by one orchestrator:
+`src/hipporag/` is about 8,900 lines, dominated by one orchestrator:
 
-- `HippoRAG.py` (1,756 lines) — indexing, graph construction, retrieval, PPR, QA, and deletion.
-- `StandardRAG.py` (429) — a baseline for comparison.
+- `HippoRAG.py` (2,207 lines) — indexing, graph construction, retrieval, PPR, QA, and deletion.
+- `StandardRAG.py` (514) — a baseline for comparison.
 - `information_extraction/openie_{openai,vllm_offline,transformers_offline}.py` — triple extraction backends.
 - `embedding_store.py`, `embedding_model/`, `vector_stores/{qdrant,chroma,milvus}_store.py` — pluggable embedding and vector storage.
 - `llm/` — OpenAI, Bedrock, vLLM, and transformers backends.
-- `rerank.py`, `utils/config_utils.py` (295), `utils/llm_utils.py` (436).
+- `rerank.py`, `utils/config_utils.py` (384), `utils/llm_utils.py`, `utils/state_utils.py`.
 - `reproduce/` — benchmark reproduction harness and dataset scaffolding.
 
 ```mermaid
@@ -122,13 +124,14 @@ For each reranked fact, both the subject and object phrase are hashed to an `ent
 
 Dense passage retrieval scores are min-max normalized and written into the same vector at `passage_node_weight = 0.05`.
 
-One line is worth flagging as a robustness issue:
+One check is worth flagging as a robustness issue:
 
 ```python
-assert sum(node_weights) > 0, f'No phrases found in the graph for the given facts: {top_k_facts}'
+if sum(node_weights) <= 0:
+    raise StateConsistencyError(f'No positive graph seeds were found for facts: {top_k_facts}')
 ```
 
-A query whose extracted phrases do not link to any graph node raises an `AssertionError` rather than degrading to dense retrieval. In a benchmark harness that is a reasonable loud failure; in an agent's recall path it is an outage.
+A query whose seed vector sums to zero raises rather than degrading to dense retrieval. The check was an `assert`, which `python -O` strips; as an explicit exception it at least fires in every mode. In a benchmark harness a loud failure is reasonable; in an agent's recall path it is an outage. The reranking step that precedes it no longer calls `eval` on the string form of the matched candidate fact: parsing goes through `json.loads` with `ast.literal_eval` as the fallback.
 
 ### Running the diffusion (`run_ppr`)
 
@@ -207,7 +210,7 @@ Strengths:
 
 Gaps:
 
-- **Assertion instead of fallback** when no query phrase links into the graph.
+- **A hard error instead of a fallback** when no query phrase seeds the graph.
 - **Undirected diffusion** silently discards predicate direction.
 - **No scope, trust state, provenance, or temporal model.**
 - **Extracted triples are permanent** and unverifiable; a wrong edge has graph-wide blast radius.
@@ -216,7 +219,9 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-This is the inverse of most systems in the atlas: benchmark reproduction is well developed and unit testing is thin. `tests/` contains `test_bedrock_mantle.py` (73 lines) plus an `integration/` directory, while `reproduce/` carries the dataset and harness scaffolding for the published evaluations.
+Benchmark reproduction is well developed, and unit testing has caught up with the parts that hold state. `tests/` holds 79 test functions across seven files plus an `integration/` directory: provider adapters, OpenIE parsing, an OpenAI SDK compatibility suite, a 664-line regression file covering index identity, graph edge bookkeeping and component lifecycle, and `test_hipporag_state_consistency.py`, which runs indexing and deletion end to end. `reproduce/` carries the dataset and harness scaffolding for the published evaluations.
+
+The deletion tests are the ones that earn `negative_eval`. One indexes two documents sharing a triple, deletes the first and asserts the shared entities survive with only the second document as their source, then deletes the second and asserts every store — chunks, facts, entities, the triple and entity maps, and the graph — is empty. They assert absence from stores rather than from a retrieval result, which is the weaker form of the mark, and they are exactly the check the reference-counted deletion below needs.
 
 The suites were not run for this review, and no numbers were reproduced. The published claims — multi-hop retrieval and sense-making gains over standard RAG — rest on the papers and the `reproduce/` tree rather than on committed result artifacts in this checkout, so the same caution the atlas applies to [OpenViking](../openviking/) applies here: a reproduction harness is not a reproduced result.
 
@@ -279,5 +284,7 @@ Do not copy:
 - Tests: `tests/test_bedrock_mantle.py`, `tests/integration/`.
 
 ## History
+
+**2026-09-15** — [`1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff`](https://github.com/OSU-NLP-Group/HippoRAG/commit/1438aba3fc44ff10573e5a5e1e7cc3c7f9794aff) — nine commits on, 2026-09-03, one of them a 3,689-line change of indexing state, providers and tests. Screened before reading: no auto-run surface, one build-time execution point and two unpinned surfaces; nothing was installed or run. `negative_eval` is added and is new: `test_hipporag_state_consistency.py` (added 2026-08-23) asserts that deleting documents empties every store once nothing else supports an entry, with a surviving document as the control. Also since the pin: the zero-seed check is an explicit `StateConsistencyError` rather than an `assert`; reranking stopped calling `eval` on the string form of a matched candidate fact; index identity covers the embedding deployment, synonym-graph settings and injected components; OpenIE JSON parsing has a fallback; and OrcaRouter and custom OpenAI embedding endpoints are providers. Two sentences ranking this system against the corpus were rewritten.
 
 **2026-07-27** — [`e37fba2af1a951ac340d837a7c02efb9d8c9544a`](https://github.com/OSU-NLP-Group/HippoRAG/commit/e37fba2af1a951ac340d837a7c02efb9d8c9544a) — first reading.
