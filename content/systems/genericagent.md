@@ -7,9 +7,9 @@ page_kind: system
 source_name: lsdefine/GenericAgent
 source_url: https://github.com/lsdefine/GenericAgent
 archive_name: "lsdefine--GenericAgent"
-revision: 7ffc95823b6e40ca4e10acf9fb285d923485cacc
-revision_url: https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc
-analyzed_at: 2026-07-27
+revision: 1b6442fe4f97d87a3d9d52d76569f69d156af853
+revision_url: https://github.com/lsdefine/GenericAgent/commit/1b6442fe4f97d87a3d9d52d76569f69d156af853
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: ""
 stack_retrieval: ""
@@ -234,7 +234,7 @@ Do not copy:
 ## Appendix: File Index
 
 - Memory policy: `memory/memory_management_sop.md` (four core axioms, layer architecture), `memory/memory_cleanup_sop.md` (existence encoding, ROI test, compression principles).
-- Layers: `global_mem_insight.txt` (L1), `global_mem.txt` (L2), `memory/` (L3), `memory/L4_raw_sessions/` (L4).
+- Layers: `memory/global_mem_insight.txt` (L1) and `memory/global_mem.txt` (L2) — **neither is a tracked file**; `agentmain.py:28-34` creates them at first run, L2 as a one-line header and L1 from `assets/global_mem_insight_template{,_en}.txt`. Then `memory/` (L3) and `memory/L4_raw_sessions/` (L4), which are tracked.
 - L4 tooling: `memory/L4_raw_sessions/compress_session.py`, `salient_mining_sop.md`.
 - Archive scheduling: `reflect/scheduler.py` (12-hour L4 archive cron).
 - Reflection and autonomy: `reflect/autonomous.py`, `goal_mode.py`, `checklist_master.py`, `agent_team_worker.py`.
@@ -242,5 +242,7 @@ Do not copy:
 - Agent loop: `agent_loop.py`, `llmcore.py`.
 
 ## History
+
+**2026-09-15** — [`1b6442fe4f97d87a3d9d52d76569f69d156af853`](https://github.com/lsdefine/GenericAgent/commit/1b6442fe4f97d87a3d9d52d76569f69d156af853) — second reading, 76 commits on. Screened again: no auto-run surface, one build-time execution point, two unpinned manifests, nothing inside the cooldown; nothing was installed and nothing was run. The memory layers moved by four files: a new `ganet_pc_setup_sop.md`, a deleted `subagent.md`, and a two-line edit to the policy that is the only substantive change. L3's rule gains an exclusion — *"不记录项目特定事实（不符合跨会话要求，应当放入项目目录中）"*, do not record project-specific facts, because they do not meet the cross-session requirement and belong in the project directory — and the cross-session qualifier in the line above it is bolded. That narrows L3 to knowledge that survives leaving a project, which is the distinction the layer existed for and did not previously state. No mark is earned in either direction. One appendix correction: `global_mem_insight.txt` and `global_mem.txt` are not tracked files and were not at the previous pin either; `agentmain.py` writes them into `memory/` at first run, L1 from a template under `assets/` and L2 as a bare header.
 
 **2026-07-27** — [`7ffc95823b6e40ca4e10acf9fb285d923485cacc`](https://github.com/lsdefine/GenericAgent/commit/7ffc95823b6e40ca4e10acf9fb285d923485cacc) — first reading.
