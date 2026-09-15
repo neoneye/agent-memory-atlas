@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The companion repository of a book
+on building agents, whose memory chapter implements four user-memory
+representations and two retrieval variants and publishes hashed,
+credential-free run evidence for all of them on one 60-case suite —
+where plain notes, not the structured cards the chapter builds toward,
+score best among the four.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AI Agents in
+Depth — Agent Memory Atlas">
+    <meta property="og:description" content="The companion repository of
+a book on building agents, whose memory chapter implements four
+user-memory representations and two retrieval variants and publishes
+hashed, credential-free run evidence for all of them on one 60-case
+suite — where plain notes, not the structured cards the chapter builds
+toward, score best among the four.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Agents in
+Depth — Agent Memory Atlas">
+    <meta name="twitter:description" content="The companion repository
+of a book on building agents, whose memory chapter implements four
+user-memory representations and two retrieval variants and publishes
+hashed, credential-free run evidence for all of them on one 60-case
+suite — where plain notes, not the structured cards the chapter builds
+toward, score best among the four.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AI Agents in Depth — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AI Agents in Depth",
+      "description": "The companion repository of a book on building agents, whose memory chapter implements four user-memory representations and two retrieval variants and publishes hashed, credential-free run evidence for all of them on one 60-case suite \u2014 where plain notes, not the structured cards the chapter builds toward, score best among the four.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A textbook that commits its receipts</p>
+          <h1>AI Agents in Depth</h1>
+          <p class="document-deck">The companion repository of a book on
+building agents, whose memory chapter implements four user-memory
+representations and two retrieval variants and publishes hashed,
+credential-free run evidence for all of them on one 60-case suite —
+where plain notes, not the structured cards the chapter builds toward,
+score best among the four.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/bojieli/ai-agent-book">
+              <span>Source</span>
+              <strong>bojieli/ai-agent-book</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/bojieli/ai-agent-book/commit/cf7f7a8e16b234ac303034e4ec8f75bf2d61ac2c" title="cf7f7a8e16b234ac303034e4ec8f75bf2d61ac2c">
+              <span>Analyzed revision</span>
+              <code>cf7f7a8e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/bojieli--ai-agent-book" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>bojieli--ai-agent-book</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the companion repository for <em>AI Agents in Depth</em>
+(《深入理解 AI Agent》), Apache-2.0, 1,752 commits since 9 September
+2025, most by the author Bojie Li, with the book text in fifteen
+language editions beside ten chapters of runnable projects. The atlas
+reads Chapter 3, "User Memory and Knowledge Bases", where the memory
+code lives: <code>user-memory</code>, its evaluation framework, and two
+variants that apply agentic RAG and contextual retrieval to conversation
+history.</p>
+<p>The memory implementation is deliberately simple and deliberately
+comparable. One interface, four representations — plain notes, enhanced
+notes, JSON cards, advanced JSON cards — written by a background LLM
+agent that reads recent turns and calls <code>add_memory</code>,
+<code>update_memory</code> or <code>delete_memory</code>, and read by
+injecting the whole memory file into the prompt. Nothing here is novel
+as a mechanism.</p>
+<p>What is unusual is the evidence.
+<code>chapter3/EXPERIMENT_LEDGER.md</code> treats the book text as an
+acceptance specification and refuses to call an experiment done without
+a canonical <code>validation/latest.json</code> whose artifact and input
+hashes can be checked, raw provider receipts with no credentials, and a
+<code>blocked</code> or <code>partial</code> status whenever a gate was
+not actually exercised. For the memory experiments those files are
+committed:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Arm (60 cases, external judge)</th>
+<th>Pass rate</th>
+<th>Mean reward</th>
+<th>Hallucination rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Notes</td>
+<td>0.800</td>
+<td>0.803</td>
+<td>0.033</td>
+</tr>
+<tr>
+<td>Enhanced notes</td>
+<td><strong>0.867</strong></td>
+<td>0.857</td>
+<td>0.033</td>
+</tr>
+<tr>
+<td>JSON cards</td>
+<td>0.850</td>
+<td>0.829</td>
+<td>0.067</td>
+</tr>
+<tr>
+<td>Advanced JSON cards</td>
+<td>0.817</td>
+<td>0.816</td>
+<td>0.033</td>
+</tr>
+<tr>
+<td>Fixed-window RAG, plain</td>
+<td>0.783</td>
+<td>0.775</td>
+<td>0.083</td>
+</tr>
+<tr>
+<td>Contextual RAG</td>
+<td>0.867</td>
+<td>0.814</td>
+<td>0.067</td>
+</tr>
+<tr>
+<td>Dual layer: contextual RAG + advanced cards</td>
+<td><strong>0.950</strong></td>
+<td>0.917</td>
+<td>0.033</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two readings follow. Among the memory representations, <strong>the
+richest structure did not win</strong>: enhanced notes beat advanced
+JSON cards by three cases in sixty while the cards used 1.4 times the
+tokens of any other mode and averaged 64.9 seconds per call against 32.2
+for enhanced notes. And the combination of a retrieval layer over raw
+conversation with a structured card layer beat either alone, most
+sharply on disambiguation, where the dual layer passed all twenty cases
+against 0.75 for contextual retrieval and 0.60 for advanced cards.</p>
+<p>The evaluation README's worked example tells a different story. Its
+table, computed from a fixture of example responses on eight cases,
+shows notes at 0.323 and cards at 1.000. The live campaign on sixty
+cases does not reproduce that gap.</p>
+<p>No capability mark. Memory is a per-user file with no status,
+history, review surface or retrieval-exclusion test.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two actors share one file.</p>
+<p>The <strong>conversational agent</strong> answers. Before each turn
+it reloads the memory file, renders it with
+<code>get_context_string()</code>, and adds the current session's raw
+turns (<code>conversational_agent.py:163-203</code>). It never writes
+memory. Earlier sessions reach it only through what the processor
+extracted — raw turns from other sessions are excluded by design, a fix
+for a cross-session leak recorded as issue #493.</p>
+<p>The <strong>background memory processor</strong> remembers. After
+<code>conversation_interval</code> rounds (default 1) it hands the last
+ten turns to a <code>UserMemoryAgent</code> whose tools add, update or
+delete entries (<code>background_memory_processor.py:35-43</code>,
+<code>agent.py</code> tools at <code>:336</code>, <code>:358</code>,
+<code>:384</code>). What the model decides is what the file holds.</p>
+<p>A memory is present or gone. There is no candidate, no confirmation
+and no retraction record. The offline <code>consolidate_memories</code>
+pass (<code>memory_manager.py:269-363</code>) merges notes with
+identical normalized text and, among notes sharing a first tag, keeps
+the most recently updated one and drops the rest — the docstring calls
+this "version-based conflict detection", and the superseded versions are
+returned in a report and not kept.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the conversational agent reads the whole file and never writes it; a background agent rewrites it by tool call after every N rounds</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the conversational agent reads the whole file and never writes it; a background agent rewrites it by tool call after every N rounds
+flowchart TB
+    U[&quot;user turn&quot;] --&gt; CA[&quot;ConversationalAgent.chat&quot;]
+    CA --&gt;|&quot;reload file&quot;| CTX[&quot;USER CONTEXT: whole memory&lt;br/&gt;+ CURRENT SESSION HISTORY only&quot;]
+    CTX --&gt; LLM[&quot;answer&quot;]
+    CA --&gt; HIST[(&quot;conversation history file&lt;br/&gt;all sessions&quot;)]
+    HIST --&gt;|&quot;every N rounds,&lt;br/&gt;last 10 turns&quot;| BP[&quot;BackgroundMemoryProcessor&quot;]
+    BP --&gt; AG[&quot;UserMemoryAgent&lt;br/&gt;tool calls&quot;]
+    AG --&gt;|&quot;add_memory&quot;| MEM[(&quot;user_memory.json&lt;br/&gt;notes or JSON cards&quot;)]
+    AG --&gt;|&quot;update_memory&quot;| MEM
+    AG --&gt;|&quot;delete_memory&quot;| MEM
+    MEM --&gt; CTX
+    MEM --&gt;|&quot;consolidate: newest per first tag&quot;| DROP[&quot;older versions dropped,&lt;br/&gt;reported, not kept&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>chapter3/</code> holds twelve experiments; five concern user
+memory.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user-memory</code></td>
+<td>The four-mode memory system: <code>memory_manager.py</code> (799
+lines), <code>background_memory_processor.py</code> (649),
+<code>agent.py</code> (969), <code>conversational_agent.py</code> (305),
+<code>run_evaluation.py</code> (557)</td>
+</tr>
+<tr>
+<td><code>user-memory-evaluation</code></td>
+<td>Sixty YAML cases in three layers, a structured rubric, metrics and a
+comparison mode</td>
+</tr>
+<tr>
+<td><code>agentic-rag-for-user-memory</code></td>
+<td>Conversation history indexed in fixed windows of eight rounds with
+two of overlap; a ReAct agent searches up to three times</td>
+</tr>
+<tr>
+<td><code>contextual-retrieval-for-user-memory</code></td>
+<td>The same with LLM-generated context prefixes per chunk, plus a dual
+layer with advanced JSON cards</td>
+</tr>
+<tr>
+<td><code>mem0</code>, <code>memobase</code></td>
+<td>Implementations of the same agent on those two frameworks, described
+as comparators for experiment 3-2</td>
+</tr>
+</tbody>
+</table></div>
+<p>Storage is JSON on disk: <code>Config.MEMORY_STORAGE_DIR</code>,
+default <code>data/memories</code>, one
+<code>&lt;user_id&gt;_memory.json</code> per user, saved through a
+temporary file and <code>os.replace</code> so a crash cannot truncate
+the only copy.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Python 3.12 with the root
+<code>ch3</code> extra (<code>uv sync --extra ch3</code>), and an API
+key for one of DashScope, Moonshot/Kimi, SiliconFlow, Doubao or
+OpenRouter.</li>
+<li><strong>Offline paths exist:</strong> <code>memory_cli.py</code>
+adds, queries, updates, consolidates and shows memory without a model;
+the RAG variants fall back to an in-process BM25 index when the external
+retrieval pipeline on port 4242 is absent.</li>
+<li><strong>Hand-repairable:</strong> yes — it is a readable JSON
+file.</li>
+<li><strong>It is teaching code.</strong> The README's code map tells a
+reader what to run first, where to start, and what to skip on a first
+pass.</li>
+</ul>
+<p>The screen of this checkout found no auto-running configuration, 27
+build-time execution points and 98 unpinned surfaces across the ten
+chapters' projects, and two manifests inside the seven-day cooldown,
+over 250 scanned files. Nothing was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Memory interface</strong> — <code>BaseMemoryManager</code>
+(<code>memory_manager.py:68</code>) with <code>add_memory</code>,
+<code>update_memory</code>, <code>delete_memory</code>,
+<code>get_context_string</code>, <code>search_memories</code>;
+<code>NotesMemoryManager</code> (<code>:120</code>),
+<code>JSONMemoryManager</code> (<code>:365</code>),
+<code>AdvancedJSONMemoryManager</code> (<code>:544</code>);
+<code>create_memory_manager</code> (<code>:737</code>).</li>
+<li><strong>Advanced card write</strong> —
+<code>AdvancedJSONMemoryManager.add_memory</code> (<code>:589</code>)
+stores a card under <code>category.card_key</code> and stamps
+<code>_metadata</code> with created and updated times and the source
+session, filling <code>backstory</code>, <code>person</code> and
+<code>relationship</code> when absent.</li>
+<li><strong>Consolidation</strong> —
+<code>NotesMemoryManager.consolidate_memories</code>
+(<code>:269</code>).</li>
+<li><strong>Background extraction</strong> —
+<code>BackgroundMemoryProcessor.process_recent_conversations</code>
+(<code>background_memory_processor.py:364</code>),
+<code>should_process</code> (<code>:476</code>).</li>
+<li><strong>Read</strong> —
+<code>ConversationalAgent._get_memory_context</code>
+(<code>conversational_agent.py:163</code>).</li>
+<li><strong>Evaluation</strong> — <code>run_evaluation.py</code>:
+sequential per-session memory updates, a fresh answer, and a judge; pass
+requires no hallucination veto and precision, recall and reasoning each
+at least 3 of 4, and the reward is the mean of four scores over 4,
+zeroed by a hallucination (<code>:186-188</code>).</li>
+<li><strong>Evidence</strong> — <code>validation/latest.json</code> and
+<code>validation/runs/&lt;id&gt;/{evidence,receipts,manifest}.json</code>
+in each project.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <strong>note</strong> is <code>content</code>, <code>tags</code>,
+<code>created_at</code>, <code>updated_at</code> and a source session.
+An <strong>advanced JSON card</strong> is arbitrary JSON under a
+category and key, with a <code>_metadata</code> block and required
+<code>backstory</code>, <code>person</code> and
+<code>relationship</code>; the committed memory states show the writer
+model adding its own fields such as <code>status: "active"</code> and a
+<code>facts</code> object, which nothing in the manager reads.</p>
+<p>The design argument for cards is disambiguation. A layer-2 case gives
+the user a Honda Accord with a confirmed service appointment and a Tesla
+with none, then asks to "schedule service for my car"; a card keyed by
+person and relationship can hold both without collapsing them. The
+committed results do not show the cards winning that layer: notes 0.65,
+enhanced notes 0.80, JSON cards 0.70, advanced cards 0.60.</p>
+<p><strong>Scope</strong> is one file per user id — a physical partition
+— and the prompt's raw history is limited to the current session. There
+is no scope key on a record, so <code>scope_enforced</code> is
+withheld.</p>
+<p><strong>Time</strong> is record time only.
+<strong>Provenance</strong> is a session id.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>In <code>user-memory</code>, retrieval is inclusion: every turn
+renders the entire memory into the system context. A
+<code>search_memories</code> tool exists for the extraction agent.</p>
+<p>The RAG variants retrieve instead.
+<code>agentic-rag-for-user-memory</code> chunks each conversation into
+windows of eight rounds overlapping by two, indexes them in BM25 or the
+external pipeline, and lets a ReAct planner search up to three times
+with a top-k of four. <code>contextual-retrieval-for-user-memory</code>
+prepends an LLM-written context prefix to each chunk, replays the
+planner's exact queries against the plain and contextual indexes so the
+arms differ only in the index, and adds a dual arm that combines
+contextual retrieval with advanced cards.</p>
+<p>The replay design has a consequence for the evidence. Experiment
+3-9's sixty results are identical — the same search queries and the same
+judged answers — to the plain arm of experiment 3-11 in the run captured
+the same second. Its row in the table above is the control arm of 3-11,
+not an independent run.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are an LLM agent's tool calls, run after every conversation
+round by default, on the last ten turns, at temperature 0.3. In the
+interactive loop the processor can run in a background thread; in the
+evaluation it runs after each session, and the campaign asserts that
+later calls see only the memory state, not prior raw history
+(<code>sequential_memory_only: true</code>).</p>
+<p>The cost is visible in the receipts. Across 60 cases the four modes
+made about 260 calls each; advanced JSON cards used 1.55 million tokens
+against 0.99 to 1.13 million for the others, and the per-call latency is
+dominated by the writer model (<code>doubao-seed-1-6-250615</code>
+through Volcano Engine Ark).</p>
+<p>Conflict handling is the model's judgement at write time and the tag
+rule at consolidation. A superseded fact is deleted; nothing prevents
+the extractor from writing it again from a later mention.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no integration surface in the sense this atlas usually
+means: no MCP server, no framework adapter. The agent and the memory are
+in one process, driven by <code>main.py</code> in
+<code>interactive</code>, <code>demo</code> or <code>evaluation</code>
+mode, or by <code>memory_cli.py</code>. The <code>mem0</code> and
+<code>memobase</code> directories rebuild the agent on those frameworks
+for comparison; no validation evidence is committed for either, and the
+ledger's 3-2 row names only <code>user-memory</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The evidence discipline is the reliability story.</strong>
+Each campaign records the git revision, platform, which provider
+credentials were present (as booleans), the exact writer, answerer and
+judge models and endpoints, a seed, token counts, per-call latency and
+every raw request and response, and hashes the lot into a manifest. The
+judge (<code>moonshot-v1-32k</code>) is a different provider from the
+writer, and a hallucination vetoes a pass regardless of the other
+scores.</p>
+<p><strong>What the evidence cannot tell you.</strong> Every arm ran
+once with one seed and one judge. The largest difference among the four
+memory modes is three cases in sixty; nothing here distinguishes that
+from noise, and the book's ranking of representations should not be read
+out of it.</p>
+<p><strong>Safety.</strong> Memory extraction sees raw conversation,
+including account numbers and policy numbers in the synthetic cases.
+Experiment 3-3 builds a PII sanitizer with a local model, but the memory
+path does not use it.</p>
+<p>No trust state, tombstone, audit history, review surface or validity
+time.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>Evaluation.</strong> Sixty synthetic cases in three layers of
+twenty — basic recall, contextual reasoning and disambiguation,
+cross-session synthesis and proactive assistance — each with
+multi-session customer-service transcripts, a fresh question, written
+evaluation criteria and an expected behaviour. Results are in section 1
+and the committed evidence files.</p>
+<p><strong>The README table and the campaign disagree.</strong>
+<code>user-memory-evaluation/README.md</code> shows a keyword-recall
+comparison computed from
+<code>fixtures/system_responses.example.json</code> over eight annotated
+cases: full context and JSON cards at 1.000, simple notes at 0.323. The
+sentence under it concludes that notes "drop on L2/L3" while cards hold.
+On the live sixty-case campaign notes score 0.65 and 0.85 on layers 2
+and 3 and advanced cards 0.60 and 0.95.</p>
+<p><strong>Unit tests.</strong> 69 <code>test_*.py</code> files across
+Chapter 3. In <code>user-memory</code> they are regression tests for
+specific fixes — consolidation keeping the earliest
+<code>created_at</code>, zero limits, empty streaming choices, bare
+filenames. <code>test_session_scoped_history.py</code> asserts that a
+detail from an earlier session's raw turns is absent from the prompt
+while the current session's turns and the memory context are present.
+That is a test of the assembled context window rather than of retrieval
+from the memory store, so <code>negative_eval</code> is withheld.</p>
+<p><strong>Benchmarks.</strong> <code>locomo_benchmark.py</code> exists
+in <code>user-memory</code> and <code>memobase</code>; no LoCoMo result
+is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Treat the spec as an acceptance gate and commit
+receipts.</strong> A ledger row per experiment, a manifest of hashes,
+raw credential-free calls, and a status that must say
+<code>blocked</code> or <code>partial</code> when a gate was not
+exercised is a standard any memory project could adopt.</li>
+<li><strong>Replay identical queries across retrieval arms.</strong>
+Holding the planner's queries fixed isolates the index as the only
+variable.</li>
+<li><strong>Separate the answering agent from the remembering
+agent.</strong> The reader never writes, so a bad extraction is a
+background problem rather than a turn-level one.</li>
+<li><strong>Keep other sessions' raw turns out of the prompt</strong>
+and let them arrive only through extracted memory.</li>
+<li><strong>Veto a pass on hallucination</strong> instead of averaging
+it away.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Illustrating a comparison with a fixture that disagrees with
+your own live numbers.</strong> Readers remember the table.</li>
+<li><strong>Calling newest-wins deletion "versioning".</strong> Keep the
+superseded value or name the operation for what it does.</li>
+<li><strong>Reading a ranking into single-seed differences of a few
+cases.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a reader learning how to build and, more usefully, how to
+<em>measure</em> a user-memory system: the four modes are small enough
+to read in an afternoon, and the evidence shows how to make a comparison
+checkable. It is not a memory library to adopt — a JSON file per user,
+whole-file injection and model-decided writes do not scale past the
+conversation lengths the cases use. Take the evaluation discipline and
+the dual-layer result; build the store elsewhere.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Would the ranking of the four modes survive more seeds or a
+second judge?</strong></li>
+<li><strong>Why does the dual layer lift disambiguation to 1.0 when
+cards alone score 0.60 there?</strong> Per-case receipts are committed
+and would answer it.</li>
+<li><strong>Do the <code>mem0</code> and <code>memobase</code>
+comparators have results anywhere?</strong></li>
+<li><strong>What does Chapter 10's <code>generative-agents</code>
+campaign measure about memory?</strong> It was not read for this
+report.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Memory</strong></p>
+<ul>
+<li><code>chapter3/user-memory/memory_manager.py</code>,
+<code>background_memory_processor.py</code>, <code>agent.py</code>,
+<code>conversational_agent.py</code>,
+<code>conversation_history.py</code>, <code>config.py</code>,
+<code>memory_cli.py</code></li>
+</ul>
+<p><strong>Evaluation and evidence</strong></p>
+<ul>
+<li><code>chapter3/EXPERIMENT_LEDGER.md</code></li>
+<li><code>chapter3/user-memory/run_evaluation.py</code>,
+<code>validation/latest.json</code>,
+<code>validation/runs/20260730T043652Z-3_1_and_3_2-16200e94/</code></li>
+<li><code>chapter3/user-memory-evaluation/</code> —
+<code>test_cases/layer{1,2,3}/</code>, <code>README.md</code>,
+<code>fixtures/</code></li>
+<li><code>chapter3/agentic-rag-for-user-memory/validation/runs/20260729T214519Z-3_9-1bbf4623/</code></li>
+<li><code>chapter3/contextual-retrieval-for-user-memory/validation/runs/20260729T214519Z-3_11-9b99feb4/</code></li>
+</ul>
+<p><strong>Retrieval variants</strong></p>
+<ul>
+<li><code>chapter3/agentic-rag-for-user-memory/indexer.py</code>,
+<code>agent.py</code>, <code>campaign.py</code></li>
+<li><code>chapter3/contextual-retrieval-for-user-memory/contextual_chunking.py</code>,
+<code>contextual_agent.py</code>, <code>campaign.py</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>chapter3/user-memory/test_session_scoped_history.py</code>,
+<code>test_consolidate_created_at.py</code></li>
+</ul>
+<p><strong>Checks behind the claims</strong></p>
+<ul>
+<li>Arm identity: compare <code>results[i].agent_search_queries</code>
+and <code>results[i].arms.plain</code> between the 3-9 and 3-11
+<code>evidence.json</code> files — identical in every one of the sixty
+cases.</li>
+<li><code>ls chapter3/mem0/validation chapter3/memobase/validation</code>
+— neither exists.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/bojieli/ai-agent-book/commit/cf7f7a8e16b234ac303034e4ec8f75bf2d61ac2c"><code class="commit-id" title="cf7f7a8e16b234ac303034e4ec8f75bf2d61ac2c">cf7f7a8e…</code></a>
+— first reading, at a commit dated 15 September 2026, scoped to the
+Chapter 3 user-memory projects. Screened before opening: no auto-running
+configuration, 27 build-time execution points, 98 unpinned surfaces and
+two manifests inside the cooldown across the whole repository. Nothing
+was installed or run; every number above was read from the committed
+evidence files.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

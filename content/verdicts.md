@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 459 reports.**
+**This page covers all 460 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4022,3 +4022,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 9,128 commits since 22 February 2026, about 470,000 lines of non-test TypeScript and 1,569 test files, a devnet of multi-node scenarios, and setup commands for OpenClaw, Hermes and MCP clients; the lifecycle's PROV event history can be switched off by a lite-mode flag.
 - Study when: knowledge has to cross node or organization boundaries with provenance another party can verify, and a private-to-shared-to-anchored progression is the right shape.
 - Do not copy when: you want good recall on one machine — the default agent search is substring matching over a local triple store — or an audit trail that cannot be configured away.
+
+### [`ai-agent-book`](../systems/ai-agent-book/)
+- Best idea: **an experiment ledger that makes the book's claims checkable.** Each Chapter 3 experiment has an acceptance gate, and a run counts only with a canonical `validation/latest.json` hashing its artifacts and inputs, raw credential-free provider receipts, and a `blocked` or `partial` status whenever a gate was not exercised. For user memory the evidence is committed: four representations and three retrieval arms on sixty cases, with an external judge and a hallucination veto.
+- Biggest risk: **the numbers are one run each, and the repository's own illustration contradicts them.** Enhanced notes (0.867) edge out advanced JSON cards (0.817) at roughly half the per-call latency, a three-case gap nothing here can separate from noise, while the evaluation README's fixture table shows notes at 0.323 and cards at 1.000. Experiment 3-9's evidence is, case for case, the plain arm of 3-11's run. No capability mark: memory is a JSON file per user, rewritten by a model, with newest-wins consolidation that deletes the older value.
+- Most reusable component: the dual-arm replay — a live planner's exact queries replayed against a plain and a contextual index, with a third arm adding structured cards — which isolates the index as the only variable and is where the 0.95 dual-layer result comes from.
+- Maturity impression: Apache-2.0, 1,752 commits since 9 September 2025, fifteen language editions of the book beside ten chapters of runnable projects; the memory code is a few thousand lines of readable teaching Python with regression tests for specific fixes.
+- Study when: you want to learn how to compare memory representations honestly, with receipts, before choosing one.
+- Do not copy when: you need a memory store — whole-file prompt injection and model-decided writes are sized for the synthetic cases, not for real histories.
