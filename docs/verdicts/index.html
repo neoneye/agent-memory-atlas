@@ -10171,49 +10171,48 @@ records is whichever human's git config is configured.</li>
 <h3 id="redcell"><a
 href="../systems/redcell/"><code>redcell</code></a></h3>
 <ul>
-<li>Best idea: the memory unit is a claim that can be false, and its
-status is set by a human. A finding is
-<code>[severity] title @ location</code>, recorded by the agent as
-<code>candidate</code> — the only status the agent may write — and moved
-to <code>verified</code>, <code>dismissed</code> or
+<li>Best idea: the memory unit is a claim that can be false, and a human
+can reject it. A finding is <code>[severity] title @ location</code>,
+recorded by the agent as <code>candidate</code> by default and moved to
+<code>verified</code>, <code>dismissed</code> or
 <code>inconclusive</code> by a person. A dismissed finding is a false
-positive removed from the record and the report, which makes it the
-cleanest example of a corrected memory in the atlas: not a superseded or
-decayed value, but a stored claim a reviewer judged wrong.</li>
-<li>Biggest risk: recall is a wholesale paste capped by recency.
-<code>assistant.py</code> lists the session's findings, truncates to
-forty newest-first, unranked, and prepends them to the system prompt —
-so a long engagement silently drops its earliest findings from the
-agent's context with no signal, and there is no cross-engagement memory
-at all, everything keyed to one <code>session_id</code>. Also: tool
-output from an adversarial target becomes a finding becomes agent
-context, unfenced, in a system pointed at hostile machines by
-definition.</li>
-<li>Most reusable component: the three-way split of memory authority.
-The agent writes (only <code>candidate</code>), a human triages
-(verify/dismiss/merge, with a merge that refuses to touch a duplicate in
-another session), and a chat assistant reads the record back on reopen.
-Letting the writer also confirm its own output is the failure most
-memory systems have; here a verified memory carries the mark of a review
-that actually happened.</li>
-<li>Maturity impression: MIT, ~9,100 lines of Python across a FastAPI
-API, an <code>arq</code> worker and a LangGraph/LiteLLM engine,
-<strong>77 tests</strong> including a triage suite that asserts an
-unknown status raises and that dismissed findings leave the report. A
-full server platform — Postgres, Redis, MinIO, a Kali container — not a
-library. Durable across restarts via a LangGraph SQLite checkpointer
-that is itself out of scope; the findings record is the memory.</li>
+positive kept in the table and removed from the report and from the
+recap a new run starts from, which makes it one of the clearest examples
+of a corrected memory in the atlas: not a superseded or decayed value,
+but a stored claim a reviewer judged wrong.</li>
+<li>Biggest risk: confirmation is not human-only. The
+<code>record_finding</code> tool schema offers <code>status</code> with
+<code>["candidate", "verified"]</code> and the create path stores it
+unvalidated, so a finding that reads as verified in the console and the
+PDF may have been verified by the agent that found it, and the row
+cannot say which. Recall is a wholesale paste capped by recency — forty
+findings newest-first in both the chat context and the run recap — and
+tool output from an adversarial target becomes a finding becomes agent
+context, unfenced.</li>
+<li>Most reusable component: the run recap that excludes rejected
+material. <code>summarize_progress</code> rebuilds a new run's opening
+context from the durable engagement record, drops dismissed findings,
+and is tested both ways — a lone dismissed critical yields nothing, a
+verified finding appears. Together with a merge that refuses to touch a
+duplicate in another session, it is the part to lift.</li>
+<li>Maturity impression: MIT, ~12,000 lines of Python across a FastAPI
+API, an <code>arq</code> worker and a LangGraph/LiteLLM engine, 158 test
+functions including a triage suite that asserts an unknown status
+raises. A full server platform — Postgres, Redis, MinIO, a Kali
+container — not a library, with a LangGraph Postgres checkpointer that
+is itself out of scope.</li>
 <li>Study when: your agent produces reviewable claims a person must
-approve within a bounded engagement. The finding-as-memory model,
-agent-proposes/human-confirms, and repository-enforced session scoping
-transfer whole, independent of the pentest domain.</li>
+approve within a bounded engagement. The finding-as-memory model and
+repository-enforced session scoping transfer whole, independent of the
+pentest domain — with the create path restricted to
+<code>candidate</code>, which this one states and does not enforce.</li>
 <li>Do not copy when: you need ranked recall, cross-engagement learning,
 or a triage audit trail. The read path is a truncated paste, the
 <code>session_id</code> key is load-bearing everywhere, and a finding
-records that a human ruled but not which human — a gap for a deliverable
-someone signs. Dismissal is status-only, so a reworded re-derivation of
-a dismissed finding would be recorded fresh: the dedup key (title,
-location) and the dismissal key do not intersect.</li>
+records neither which human ruled nor whether a human did. Dismissal is
+status-only, so a reworded re-derivation of a dismissed finding would be
+recorded fresh: the dedup key (title, location) and the dismissal key do
+not intersect.</li>
 </ul>
 <h3 id="neuron"><a
 href="../systems/neuron/"><code>neuron</code></a></h3>
