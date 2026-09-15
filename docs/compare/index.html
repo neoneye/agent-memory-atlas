@@ -39197,6 +39197,47 @@ three auto-run surfaces (a Claude plugin directory,
 build-time execution point, one unpinned surface and five dependency
 files inside the cooldown, and read <code>AGENTS.md</code> and
 <code>CLAUDE.md</code> as data; nothing was installed or run.</li>
+<li><strong><code>mnemoverse/mcp-memory-server</code> was examined and
+has no report: it is the client of a hosted memory engine, and the
+store, the ranking and the consolidation all run behind the Mnemoverse
+API.</strong> At <a
+href="https://github.com/mnemoverse/mcp-memory-server/commit/08781cba802bdef8871b5ac584912ecf5079d902"><code class="commit-id" title="08781cba802bdef8871b5ac584912ecf5079d902">08781cba…</code></a>
+(MIT, version 0.10.0, 87 commits since 10 April 2026, 4,558 lines of
+TypeScript against 8,197 lines of tests) it is an MCP server exposing
+nine tools — <code>memory_write</code>, <code>memory_read</code>,
+<code>memory_list_recent</code>, <code>memory_feedback</code>,
+<code>memory_stats</code> and four room tools — over a hosted service
+the README calls <em>"hosted by design"</em>. Nothing durable is written
+locally: <code>src/requests.ts</code> builds request bodies,
+<code>src/render.ts</code> formats replies, and the outcome-driven
+re-ranking the README describes (a Rescorla-Wagner update on the
+prediction error) and the consolidation stage (HDBSCAN with Von Restorff
+protection, which the README says is designed in and currently switched
+off) are both properties of a service this repository does not contain.
+Two things in it are worth recording anyway. <code>src/scope.ts</code>
+exists because a read <em>never covers rooms</em> — a room is a separate
+org bucket and the search runs against the caller's own org — so rather
+than return a silent partial answer the client emits a scope disclosure
+naming which rooms went unsearched and how to read them, and treats
+silence as correct in exactly one case, when the caller has no rooms.
+And <code>src/requests.ts</code> carries a dated postmortem of two scope
+bugs in one patch release: a <code>trim()</code> on the way out
+normalised past a deliberate 400-guard in core, so a padded room address
+<em>"would have written into a shared room visible to other
+accounts"</em>, and the revert dropped a <code>|| undefined</code> on
+the read path so <code>domain: ""</code> became
+<code>WHERE domain = ''</code>, turning a search of every domain into a
+guaranteed miss. Sixty tests were green with the divergence in place
+because the guard test grepped the source for the absence of a
+<code>trim()</code>; the conclusion written into the file is the one
+this atlas asks for everywhere — <em>"A denylist over source text is not
+a contract; a function whose output you can compare is."</em> The paper
+it cites is <a
+href="https://arxiv.org/abs/2603.08965">arXiv:2603.08965</a>. Screened
+before reading, from a shallow clone: five files, one auto-run surface,
+one build-time execution point, one unpinned surface and two dependency
+files inside the cooldown; nothing was installed and nothing was
+run</li>
 <li><strong><a
 href="https://arxiv.org/abs/2609.11060">arXiv:2609.11060</a> was
 analysed and has no report: the mechanism is two prompt blocks and a
