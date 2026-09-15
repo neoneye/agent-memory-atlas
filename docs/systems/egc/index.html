@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local runtime that installs
+shared memory, a command guard, an output filter and a session bus into
+twenty AI coding tools; its memory server keeps encrypted per-project,
+per-branch state files beside a plaintext SQLite store of decisions and
+lessons that records each row's project and returns every project's
+rows.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="EGC — Agent Memory Atlas">
+    <meta property="og:description" content="A local runtime that
+installs shared memory, a command guard, an output filter and a session
+bus into twenty AI coding tools; its memory server keeps encrypted
+per-project, per-branch state files beside a plaintext SQLite store of
+decisions and lessons that records each row's project and returns every
+project's rows.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EGC — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local runtime that
+installs shared memory, a command guard, an output filter and a session
+bus into twenty AI coding tools; its memory server keeps encrypted
+per-project, per-branch state files beside a plaintext SQLite store of
+decisions and lessons that records each row's project and returns every
+project's rows.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>EGC — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "EGC",
+      "description": "A local runtime that installs shared memory, a command guard, an output filter and a session bus into twenty AI coding tools; its memory server keeps encrypted per-project, per-branch state files beside a plaintext SQLite store of decisions and lessons that records each row's project and returns every project's rows.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One brain, stored in two places</p>
+          <h1>EGC</h1>
+          <p class="document-deck">A local runtime that installs shared
+memory, a command guard, an output filter and a session bus into twenty
+AI coding tools; its memory server keeps encrypted per-project,
+per-branch state files beside a plaintext SQLite store of decisions and
+lessons that records each row's project and returns every project's
+rows.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Fmarzochi/EGC">
+              <span>Source</span>
+              <strong>Fmarzochi/EGC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Fmarzochi/EGC/commit/f24f53c2ca1ce2bb1f5120f20dff2b98780f90ee" title="f24f53c2ca1ce2bb1f5120f20dff2b98780f90ee">
+              <span>Analyzed revision</span>
+              <code>f24f53c2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Fmarzochi--EGC" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Fmarzochi--EGC</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>EGC (Extended Global Context) is a local runtime for AI coding tools,
+published as <code>@egchq/egc</code> version 1.1.21, Apache-2.0, with
+1,124 commits since 6 May 2026 and 272 test files.
+<code>egc install</code> detects the coding tools on a machine (the
+README lists twenty, Cursor, Claude Code, Codex, Copilot and Aider among
+them) and registers two MCP servers in each. It writes a memory protocol
+into their instruction files and installs four faculties:</p>
+<ul>
+<li><strong>Memory</strong> — the <code>egc-memory</code> MCP server,
+about 5,500 lines of TypeScript</li>
+<li><strong>Guardian</strong> — a command and write guard</li>
+<li><strong>Token Crusher</strong> — an output filter</li>
+<li><strong>Session Mesh</strong> — a bus that lets open sessions see
+and message each other</li>
+</ul>
+<p>The repository also ships a large library of skills, agents and
+commands.</p>
+<p>The README promises that memory "lives in <code>~/.egc</code>,
+encrypted with AES-256-GCM, kept per project and branch". That is true
+of one of the memory server's stores. <strong>State documents</strong> —
+a project's context, decisions, things to avoid, preferences and next
+steps — are Markdown files per project and per git branch, encrypted,
+with an HMAC sidecar for tamper warnings and a read that falls back to
+the default branch. They are well built.</p>
+<p><strong>Decisions and lessons</strong> live elsewhere: one plaintext
+SQLite database for the whole machine. Each row records the project it
+was written from, through migrations whose comments say "for per-project
+scoping", and no read uses it. <code>query_history</code>,
+<code>search_history</code> and <code>lesson_recall</code> return rows
+from every project. Lessons are also the one free-text write path the
+injection scanner does not cover.</p>
+<p>No marks.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An agent in any installed tool sees one memory server with three
+kinds of memory:</p>
+<ul>
+<li><strong>Project state</strong> — the document <code>get_state</code>
+returns at session start and <code>update_state</code> merges into at
+the end, per branch.</li>
+<li><strong>History</strong> — decisions stored one at a time and
+searched with BM25, and lessons with a confidence that rises when
+reinforced and decays when unused.</li>
+<li><strong>Working memory</strong> — short-lived keys per project with
+a TTL, 24 hours by default.</li>
+</ul>
+<p>Beside memory sits the <strong>session bus</strong>: sessions
+announce themselves, claim paths, send events and wait for replies,
+stored in the same SQLite file.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — project state is split per branch and encrypted; decisions and lessons carry a project path that no read applies</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: project state is split per branch and encrypted; decisions and lessons carry a project path that no read applies
+flowchart TB
+    AGENT[&quot;agent in any of twenty tools&quot;] --&gt; GS[&quot;get_state(project)&quot;]
+    AGENT --&gt; US[&quot;update_state(project, scope)&quot;]
+    US --&gt; SAN[&quot;injection scanner&quot;]
+    SAN --&gt; DOC[(&quot;state document&lt;br/&gt;per project, per branch&lt;br/&gt;AES-256-GCM + HMAC sidecar&quot;)]
+    GS --&gt; DOC
+    DOC -.-&gt;|&quot;missing branch file&quot;| MAIN[&quot;default-branch document&quot;]
+    AGENT --&gt; SD[&quot;store_decision&quot;]
+    SD --&gt; SAN2[&quot;injection scanner&quot;] --&gt; DEC[(&quot;decisions&lt;br/&gt;plaintext SQLite&lt;br/&gt;project_path written&quot;)]
+    AGENT --&gt; LS[&quot;lesson_save&quot;] --&gt; LES[(&quot;lessons&lt;br/&gt;confidence, archived&lt;br/&gt;project_path written&quot;)]
+    AGENT --&gt; WM[&quot;working_memory_set / get&quot;] --&gt; WMT[(&quot;working_memory&lt;br/&gt;filtered by project_path&quot;)]
+    SH[&quot;search_history / query_history&quot;] --&gt; DEC
+    LR[&quot;lesson_recall&quot;] --&gt; LES
+    DEC --&gt;|&quot;no project filter&quot;| ALL[&quot;rows from every project&quot;]
+    LES --&gt;|&quot;no project filter&quot;| ALL
+    SWEEP[&quot;decay sweep&quot;] --&gt; LES</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory server</td>
+<td><code>mcp/servers/egc-memory/src/index.ts</code> (tools, migrations,
+handlers), <code>search.ts</code> (FTS5), <code>branch-state.ts</code>,
+<code>encryption.ts</code>, <code>integrity.ts</code>,
+<code>sanitize.ts</code>, <code>working-memory.ts</code>,
+<code>compress.ts</code>, <code>patterns.ts</code>,
+<code>propagate.ts</code>, <code>session-bus.ts</code>,
+<code>mesh-transport.ts</code>, <code>sync/</code></td>
+</tr>
+<tr>
+<td>Guardian</td>
+<td><code>mcp/servers/egc-guardian/</code> with a prompt-injection
+scanner the memory sanitizer mirrors</td>
+</tr>
+<tr>
+<td>CLI and installer</td>
+<td><code>scripts/egc.js</code>, <code>scripts/install-*.js</code>,
+per-tool hook writers in <code>scripts/lib/</code></td>
+</tr>
+<tr>
+<td>CLI state store</td>
+<td><code>scripts/lib/state-store/</code> at
+<code>~/.egc/egc/state.db</code>, holding telemetry and its own lesson
+queries</td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td><code>dashboard/</code>, a local server for replay and cost
+summaries</td>
+</tr>
+<tr>
+<td>Content</td>
+<td><code>skills/</code>, <code>agents/</code>, <code>commands/</code>,
+<code>rules/</code>, <code>translations/</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong>
+<code>npm install -g @egchq/egc &amp;&amp; egc install</code>; the
+installer writes MCP configuration, hooks and instruction files into
+each detected tool.</li>
+<li><strong>Storage:</strong> everything under <code>~/.egc</code>, with
+an encryption key and an integrity key at mode 0600.</li>
+<li><strong>Two databases.</strong> The memory server opens
+<code>~/.egc/memory/state.db</code> and the CLI opens
+<code>~/.egc/egc/state.db</code>; a comment calls this a known
+divergence (<code>index.ts:459-463</code>) and <code>doctor</code> warns
+when they differ.</li>
+<li><strong>Hand-repairable:</strong> the SQLite store yes; the state
+documents only through the server, since they are encrypted.</li>
+</ul>
+<p>The screen of this checkout found seven auto-run surfaces (Cursor
+rules, <code>.githooks/</code>, Copilot instructions,
+<code>.mcp.json</code>, <code>.opencode/</code>, <code>hooks/</code> and
+its manifest), three build-time execution points, six unpinned surfaces
+and sixteen dependency files inside the seven-day cooldown, and read
+<code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code> as data. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Database</strong> — <code>index.ts:466-500</code>: one file
+under <code>~/.egc/memory</code>, WAL, migrations under a PID-checked
+lock (<code>:328-430</code>).</li>
+<li><strong>State read</strong> — <code>handleGetState</code>
+(<code>index.ts:1335-1370</code>): detect the branch, resolve the branch
+file or the default-branch fallback, decrypt, verify the HMAC and warn
+on mismatch.</li>
+<li><strong>State write</strong> — <code>handleUpdateState</code> with
+<code>withStateMergeLock</code> (<code>index.ts:310-326</code>): read,
+merge, encrypt, write; an undecryptable file aborts the write unless
+<code>force</code> quarantines it.</li>
+<li><strong>Decisions</strong> — <code>index.ts:1874-1898</code>:
+sanitize, insert with <code>resolveProjectPath()</code>, then
+<code>SELECT * FROM decisions ORDER BY timestamp DESC</code> for
+<code>query_history</code> and <code>searchDecisions</code>
+(<code>search.ts:166-192</code>) for <code>search_history</code>.</li>
+<li><strong>Lessons</strong> — <code>handleLessonSave</code>
+(<code>index.ts:1196-1223</code>), <code>handleLessonRecall</code>
+(<code>:1225-1263</code>, through <code>searchLessons</code>,
+<code>search.ts:128-164</code>), <code>handleLessonReinforce</code>
+(<code>:1265-1282</code>), <code>runLessonDecaySweep</code>
+(<code>:771-785</code>).</li>
+<li><strong>Working memory</strong> — <code>working-memory.ts:73</code>
+and <code>:85</code>, both filtered by <code>project_path</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>State documents</strong> are Markdown with a header naming
+the project, stored at a path derived from a project slug and a hashed
+branch name, encrypted with a random IV and an <code>EGC1:</code> magic
+prefix, and paired with an HMAC-SHA256 sidecar.
+<code>update_state</code> accepts <code>scope: global</code> for a
+machine-wide document.</p>
+<p><strong>Decisions</strong> (<code>index.ts:339</code>,
+<code>:407</code>): <code>id</code>, <code>context</code>,
+<code>decision</code>, <code>timestamp</code>,
+<code>project_path</code>. Nothing updates or deletes them.</p>
+<p><strong>Lessons</strong> (<code>index.ts:366-376</code>,
+<code>:400</code>, <code>:429</code>): <code>id</code>,
+<code>content</code>, <code>context</code>, <code>confidence</code> (0.7
+by default), <code>last_reinforced</code>, <code>last_recalled</code>,
+<code>created_at</code>, <code>tags</code>, <code>archived</code>,
+<code>project_path</code>, <code>author</code>. Reinforcing adds 0.15
+and unarchives. The sweep removes 0.05 per week after 30 days without
+recall and archives below 0.2. Confidence is a weight and
+<code>archived</code> a lifecycle flag, so <code>trust_state</code> is
+withheld.</p>
+<p><strong>The producer test on <code>project_path</code>.</strong> Both
+tables gained the column in migrations 6 and 7.
+<code>store_decision</code> and <code>lesson_save</code> write it
+(<code>index.ts:1884</code>, <code>:1216-1218</code>). Across the
+server, the column is read only by the working-memory and session-bus
+queries. No decision or lesson read has a
+<code>WHERE project_path</code>, so <code>scope_enforced</code> is
+withheld. State documents are separate files per project, a partition
+rather than a predicate.</p>
+<p>There is no validity axis, no rejection record and no mutation log in
+the memory server, so <code>bitemporal</code>, <code>tombstone</code>
+and <code>audit_log</code> are withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Session start</strong> reads the state document for the
+current branch. A branch without its own file reads the default
+branch's, so a feature branch starts from main's context.</p>
+<p><strong>Decision search</strong> sanitises the query into an FTS5
+match, ranks by BM25 and normalises scores to [0, 1] against the best
+hit (<code>search.ts:166-192</code>). <code>query_history</code> pages
+through all decisions by time.</p>
+<p><strong>Lesson recall</strong> matches FTS5 over content, context and
+tags, keeps rows with <code>archived = 0</code> and confidence above the
+minimum, and stamps <code>last_recalled</code>. The substring fallback
+does the same over the top rows by confidence
+(<code>index.ts:1238-1249</code>).</p>
+<p><strong>Every project, every time.</strong> None of these three reads
+is given the project. An agent in one repository asking what was decided
+about authentication receives decisions from every repository on the
+machine, in BM25 order, and the search result carries no field naming
+the project (<code>searchDecisions</code> selects id, content, context,
+date and score); <code>query_history</code> returns the column but does
+not filter on it. Lessons are the same. The README's promise that "what
+one agent learns, every agent knows" holds across tools. It also holds
+across projects, which the migrations meant to prevent.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Sanitisation.</strong> <code>sanitize.ts</code> scans free
+text for prompt-override and command-injection patterns, mirroring the
+Guardian scanner, because what passes "is later written into the
+instruction files every AI tool loads as trusted context". It is applied
+to <code>update_state</code>, <code>store_decision</code> and
+<code>working_memory_set</code>. <code>handleLessonSave</code> parses
+the schema and inserts without calling it
+(<code>index.ts:1196-1219</code>). A lesson is returned verbatim by
+<code>lesson_recall</code>, so an injection phrase refused as a decision
+is accepted as a lesson.</p>
+<p><strong>Dedup.</strong> A lesson identical in content and context to
+a live one reinforces it instead of inserting.</p>
+<p><strong>Arbitration.</strong> SQLite writes go through a single
+in-process queue; state merges take a file lock so two server processes
+cannot drop each other's merge.</p>
+<p><strong>Observations and patterns.</strong> Hooks record runtime
+events; <code>compress_observations</code> turns recent raw observations
+into typed summaries by rule without deleting them, and
+<code>detect_patterns</code> counts repeated commands and error
+signatures.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>24 memory tools:</strong> project state, decisions, the
+session bus (announce, claim and release paths, peers, send, events,
+wait), working memory, lessons, patterns, compression, and team init,
+sync and status.</li>
+<li><strong>Instruction files</strong> in each tool carry a memory
+protocol telling the agent when to read and update state.</li>
+<li><strong>Team sync</strong> pushes and pulls through a git remote
+with a shared team key, merging only files that verify as team envelopes
+for their path.</li>
+<li><strong>Session mesh</strong> lets parallel sessions claim files and
+hand work over.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The encrypted path is careful.</strong> Keys are read fresh
+per call because a frozen <code>$HOME</code> once encrypted a file under
+one key and read it under another; an undecryptable file aborts a write
+rather than being overwritten; <code>force</code> renames it to a
+timestamped backup; HMAC mismatches warn without blocking.</p>
+<p><strong>The plaintext path undercuts the promise.</strong> Decisions
+and lessons are the parts of memory most likely to hold a project's
+specifics, and they sit unencrypted in one file that every project
+reads.</p>
+<p><strong>Isolation between projects</strong> exists for state
+documents and working memory and is missing for history, as above. On a
+machine with client and personal work in separate repositories, recall
+mixes them.</p>
+<p><strong>Human review.</strong> The dashboard shows counts of
+decisions, lessons and patterns, replays and costs, and has no view that
+edits or removes memory; there is no CLI command for memory rows.
+<code>human_review</code> is withheld.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>272 test files cover the installer across tools, encryption and
+integrity, branch resolution, the session bus under chaos, mesh
+transport, team sync, hooks and the Guardian. None was run for this
+report.</p>
+<p><code>tests/lib/lessons-decay.test.js:160</code> asserts that
+<code>listLessons</code> excludes an archived lesson while returning an
+active one. <code>listLessons</code> belongs to the CLI state store in
+<code>scripts/lib/state-store/queries/lessons.js</code>, and nothing in
+the tree calls it outside the store's own export; the MCP
+<code>lesson_recall</code> path has no equivalent test. No test asserts
+that one project's decisions or lessons stay out of another's recall.
+<code>negative_eval</code> is withheld.</p>
+<p>No retrieval benchmark is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Branch-aware project state</strong> with a default-branch
+fallback, so a new branch inherits context and diverges from there.</li>
+<li><strong>Encryption with explicit failure modes:</strong> abort on
+undecryptable, quarantine only when asked, warn on HMAC mismatch.</li>
+<li><strong>One injection scanner shared by the command guard and the
+memory writer.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope column written and never read.</strong> Add the
+predicate in the same change as the migration, with a test from a second
+project.</li>
+<li><strong>Two storage tiers with different privacy properties behind
+one promise.</strong></li>
+<li><strong>A sanitizer applied per handler</strong> instead of at the
+write layer, where a new tool cannot skip it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>EGC suits a developer who works in several AI coding tools at once
+and wants them to share project state and coordinate edits, and who
+values the guard and output filter as much as memory. For decisions and
+lessons that must stay within their project, or stay encrypted, the
+history tables need scoping and the same at-rest protection as the state
+documents first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>search_history</code>,
+<code>query_history</code> and <code>lesson_recall</code> filter on
+<code>project_path</code> by default,</strong> with an explicit
+cross-project option?</li>
+<li><strong>Will the SQLite store move under the same
+encryption</strong> as the state documents?</li>
+<li><strong>Will the two state databases be merged,</strong> as the
+divergence note suggests?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>mcp/servers/egc-memory/src/index.ts</code>,
+<code>search.ts</code>, <code>working-memory.ts</code>,
+<code>sanitize.ts</code>, <code>encryption.ts</code>,
+<code>integrity.ts</code>, <code>branch-state.ts</code>,
+<code>sync/TeamSync.ts</code></li>
+<li><code>scripts/lib/state-store/</code>, <code>scripts/egc.js</code>,
+<code>dashboard/server.js</code></li>
+<li><code>tests/egc-memory-*.test.js</code>,
+<code>tests/lib/lessons-decay.test.js</code></li>
+<li><code>README.md</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "project_path" mcp/servers/egc-memory/src</code> —
+written for decisions and lessons, read only in
+<code>working-memory.ts</code> and <code>session-bus.ts</code></li>
+<li><code>grep -n "sanitize" mcp/servers/egc-memory/src/index.ts</code>
+— <code>update_state</code>, <code>store_decision</code>,
+<code>working_memory_set</code>; not <code>handleLessonSave</code></li>
+<li><code>grep -rn "listLessons" scripts</code> — exported by the state
+store, no caller</li>
+<li><code>grep -n "DELETE\|UPDATE" dashboard/ops.js</code> — none</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/Fmarzochi/EGC/commit/f24f53c2ca1ce2bb1f5120f20dff2b98780f90ee"><code class="commit-id" title="f24f53c2ca1ce2bb1f5120f20dff2b98780f90ee">f24f53c2…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: seven auto-run surfaces, three build-time execution points, six
+unpinned surfaces, sixteen dependency files inside the cooldown, and
+three agent-instruction files read as data. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

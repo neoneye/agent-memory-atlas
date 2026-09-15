@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 408 of 469 screened at the report's current pin.**
+**Progress: 409 of 470 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 166 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 223 |
-| Repositories with build-time execution (`EXEC`) | 294 |
+| Repositories with an auto-run surface (`RUNS`) | 167 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 224 |
+| Repositories with build-time execution (`EXEC`) | 295 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -68,6 +68,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
+| [`egc`](../../content/systems/egc.md) | `.cursor/rules/`, `.githooks/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `hooks/`, `hooks/hooks.json` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |

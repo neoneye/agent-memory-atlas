@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 469 reports.**
+**This page covers all 470 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4102,3 +4102,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 6.9.1, 1,288 commits since 8 February 2026, about 52,000 lines of JavaScript and 5,725 test cases named for the audit rounds that produced them; a 30-query retrieval benchmark gating CI against a committed baseline, and LongMemEval figures reported with the stricter metric beside the any-hit one, results not committed.
 - Study when: you build memory for one coding agent's hook lifecycle and want strong lexical recall with no services, and a model of how to retract memories and keep claims honest.
 - Do not copy when: projects must not see each other's memories, or you need a history of changes to each memory.
+
+### [`egc`](../systems/egc/)
+- Best idea: **branch-aware project state with explicit failure modes.** Each project's context, decisions, things to avoid and next steps live in a Markdown document per git branch, falling back to the default branch, encrypted with AES-256-GCM, with an HMAC sidecar that warns on tampering and a write that aborts on an undecryptable file instead of overwriting it. No marks.
+- Biggest risk: **the history tier is neither scoped nor encrypted.** Decisions and lessons sit in one plaintext SQLite database for the machine; both tables record the project each row came from, and `search_history`, `query_history` and `lesson_recall` never filter on it, so every repository's decisions and lessons answer every other's queries. `lesson_save` is the one free-text write path that skips the injection scanner.
+- Most reusable component: the injection scanner shared by the command guard and the memory writer, applied to state, decisions and working memory because what passes is later loaded as trusted instructions.
+- Maturity impression: Apache-2.0, version 1.1.21, 1,124 commits since 6 May 2026, 272 test files, an installer that registers two MCP servers into twenty coding tools, a session mesh and team sync over git; the memory server is about 5,500 lines of TypeScript inside a much larger runtime.
+- Study when: several AI coding tools on one machine should share project state per branch and coordinate edits.
+- Do not copy when: decisions and lessons must stay within their project, or history must be encrypted at rest like the state it sits beside.

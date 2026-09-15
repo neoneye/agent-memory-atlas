@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 469 reports.</strong></p>
+<p><strong>This page covers all 470 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16943,6 +16943,36 @@ and want strong lexical recall with no services, and a model of how to
 retract memories and keep claims honest.</li>
 <li>Do not copy when: projects must not see each other's memories, or
 you need a history of changes to each memory.</li>
+</ul>
+<h3 id="egc"><a href="../systems/egc/"><code>egc</code></a></h3>
+<ul>
+<li>Best idea: <strong>branch-aware project state with explicit failure
+modes.</strong> Each project's context, decisions, things to avoid and
+next steps live in a Markdown document per git branch, falling back to
+the default branch, encrypted with AES-256-GCM, with an HMAC sidecar
+that warns on tampering and a write that aborts on an undecryptable file
+instead of overwriting it. No marks.</li>
+<li>Biggest risk: <strong>the history tier is neither scoped nor
+encrypted.</strong> Decisions and lessons sit in one plaintext SQLite
+database for the machine; both tables record the project each row came
+from, and <code>search_history</code>, <code>query_history</code> and
+<code>lesson_recall</code> never filter on it, so every repository's
+decisions and lessons answer every other's queries.
+<code>lesson_save</code> is the one free-text write path that skips the
+injection scanner.</li>
+<li>Most reusable component: the injection scanner shared by the command
+guard and the memory writer, applied to state, decisions and working
+memory because what passes is later loaded as trusted instructions.</li>
+<li>Maturity impression: Apache-2.0, version 1.1.21, 1,124 commits since
+6 May 2026, 272 test files, an installer that registers two MCP servers
+into twenty coding tools, a session mesh and team sync over git; the
+memory server is about 5,500 lines of TypeScript inside a much larger
+runtime.</li>
+<li>Study when: several AI coding tools on one machine should share
+project state per branch and coordinate edits.</li>
+<li>Do not copy when: decisions and lessons must stay within their
+project, or history must be encrypted at rest like the state it sits
+beside.</li>
 </ul>
         </article>
       </div>
