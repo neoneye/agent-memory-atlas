@@ -7988,18 +7988,23 @@ write into it.</li>
 never the claim inside it. Nothing here can mark a memory wrong, and no
 file ever moves between levels, so a poisoned note written by one
 unapproved run is simply what every later unapproved run knows.
-Concurrency is documented as last-writer-wins.</li>
+Concurrency is documented as last-writer-wins, with a union merge for
+<code>.jsonl</code> files only.</li>
 <li>Most reusable component: the pre-agent sanitisation gate. Before the
 agent touches a restored tree the script deletes every non-sample file
-under <code>.git/hooks</code>, sets <code>core.hooksPath</code> to
-<code>/dev/null</code>, deletes every symlink, strips the execute bit
+under <code>.git/hooks</code>, unsets the <code>credential</code>,
+<code>alias</code>, <code>filter</code>, <code>merge</code> and
+<code>include</code> config sections, sets <code>core.hooksPath</code>
+to <code>/dev/null</code>, deletes every symlink, strips the execute bit
 from every file, and drops any extension not on the allow-list —
 because, per ADR-26587, <em>"a compromised prior run could … plant
 executable scripts"</em>. The move is to strip the capability rather
-than detect the attack, and it transfers to any store a session
-reloads.</li>
-<li>Maturity impression: MIT, GitHub, Inc., 2,766 Go files. Fourteen
-memory-named test files in <code>pkg/workflow/</code> holding 94
+than detect the attack, and it transfers to any store a session reloads.
+The shell tests assert it both ways: a disallowed <code>helper.sh</code>
+and a planted symlink are gone after restore, while the allowed files
+stay.</li>
+<li>Maturity impression: MIT, GitHub, Inc., 3,176 Go files. Seventeen
+memory-named test files in <code>pkg/workflow/</code> holding 130
 <code>func Test</code> entries, plus shell tests for the restore and
 integrity scripts, and a <code>docs/adr/</code> tree that records
 rejected alternatives and negative consequences rather than only

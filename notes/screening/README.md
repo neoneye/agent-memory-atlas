@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 376 of 457 screened at the report's current pin.**
+**Progress: 377 of 457 screened at the report's current pin.**
 
 6 further record(s) describe a revision the report has since moved
-off, and 75 report(s) have no record at all.
+off, and 74 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 155 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 200 |
-| Repositories with build-time execution (`EXEC`) | 280 |
+| Repositories with an auto-run surface (`RUNS`) | 156 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 201 |
+| Repositories with build-time execution (`EXEC`) | 281 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -73,6 +73,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
 | [`gbrain`](../../content/systems/gbrain.md) | `.claude-plugin/` |
 | [`genome`](../../content/systems/genome.md) | `mcp.json`, `server.json` |
+| [`gh-aw`](../../content/systems/gh-aw.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.vscode/settings.json` |
 | [`gitmem`](../../content/systems/gitmem.md) | `hooks/`, `server.json` |
 | [`gobii`](../../content/systems/gobii.md) | `server.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |

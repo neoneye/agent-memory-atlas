@@ -1,26 +1,27 @@
 ---
 title: "gh-aw"
 eyebrow: "Memory in CI, on an integrity lattice"
-description: "GitHub's agentic-workflows compiler gives a workflow three cross-run memory backends — Actions cache, a git branch, and an issue comment — and treats every one of them as a hostile artifact written by a previous run of itself."
+description: "GitHub's agentic-workflows compiler gives a workflow three cross-run memory backends — Actions cache, a git branch, and an issue comment — plus an experimental GitHub Drive, and treats every one of them as a hostile artifact written by a previous run of itself."
 root: ../..
 page_kind: system
 source_name: "github/gh-aw"
 source_url: https://github.com/github/gh-aw
 archive_name: "github--gh-aw"
-revision: c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d
-revision_url: https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d
-analyzed_at: 2026-08-09
-capabilities: "scope_enforced"
+revision: 9259aea14a8d0d6f423fb5813b2675b3e81c8398
+revision_url: https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "cache-memory store | actions/setup/sh/setup_cache_memory_git.sh | the run checks out the branch named for its own integrity level, then merges only strictly-higher levels down into it | pkg/workflow/cache_integrity_test.go, the env-var emission contract for GH_AW_MIN_INTEGRITY"
+  scope_enforced: "cache-memory store, and drive memory through the same script | actions/setup/sh/setup_cache_memory_git.sh:258-282 | the run checks out the branch named for its own integrity level, then the merge loop walks `LEVELS` from `merged` down and breaks at the run's own level, so only strictly-higher branches are merged in, under the comment `lower-integrity runs see higher-integrity data via merge, but higher-integrity runs never see lower-integrity data`. `generateDriveMemoryGitSetupStep` in pkg/workflow/drive_memory.go runs the same script with the same `GH_AW_MIN_INTEGRITY`. The read-down property itself is asserted by no test | pkg/workflow/cache_integrity_test.go, the env-var emission contract for GH_AW_MIN_INTEGRITY"
+  negative_eval: "the pre-agent restore — named material must not reach the directory the agent reads | actions/setup/sh/setup_cache_memory_git.sh:286-296 and the extension loop after it | after the lattice merge the script deletes every working-tree symlink, strips execute bits, and removes any file whose extension is not in `GH_AW_ALLOWED_EXTENSIONS`. Test 4 restores `data.json`, `notes.md`, `helper.sh` and `archive.zip` under `.json:.md` and asserts `helper.sh removed` and `archive.zip removed` beside `data.json kept` and `notes.md kept`; Test 3 is the unfiltered control in which all four survive; Test 10 plants `evil-link -> /etc/passwd` and asserts it is gone while `real.json` stays. These predate the 2026-08-09 pin. Tests 2b and 2c, added since, assert that planted `credential`, `alias`, `filter`, `merge` and `include` config sections and symlinked `.git` metadata do not survive the restore | actions/setup/sh/setup_cache_memory_git_test.sh:103, :181, :200, :211, :274"
 matrix:
   memory_unit: "A file the agent wrote in a previous run — JSON, JSONL, Markdown, CSV — with no schema the system imposes or reads"
-  storage: "Three file-backed surfaces: a GitHub Actions cache holding a git repo, an orphan git branch, and a managed issue comment materialised as Markdown"
+  storage: "Three file-backed surfaces — a GitHub Actions cache holding a git repo, an orphan git branch, and a managed issue comment materialised as Markdown — plus an experimental FUSE-mounted GitHub Drive that reuses the cache-memory git layout"
   retrieval: "None. The whole store is mounted as a directory and the agent reads it with its own file tools; a generated prompt section names the path"
-  write: "The agent edits files in place during the run; a post-agent step commits and pushes or upserts, gated by size, count, glob and extension limits"
+  write: "The agent edits files in place during the run; a post-agent step commits and pushes or upserts, gated by size, count, glob and extension limits and an optional author-supplied validation script"
   update_delete: "Overwrite in place. Cache memory expires at 7 days and by LRU; repo memory is unbounded and versioned in git; nothing is ever marked wrong"
   scoping: "Integrity level (merged/approved/unapproved/none) as a git branch, plus branch-scoped cache keys and per-id directories; the level is enforced on the read path"
   integration: "A YAML frontmatter key in a Markdown workflow file that a Go compiler expands into GitHub Actions steps; no MCP tool and no API"
@@ -40,19 +41,21 @@ is not why it is in this atlas.
 
 It is here because a workflow run is a session with unusually hard edges — a
 fresh container, no filesystem, nothing carried forward — and `gh-aw` gives that
-session three ways to remember things anyway. `cache-memory` puts a directory in
-the GitHub Actions cache. `repo-memory` puts it on an orphan git branch.
-`comment-memory` puts it in a managed issue or pull-request comment. All three
-materialise as ordinary files under `/tmp/gh-aw/`, all three are edited by the
-agent with the file tools it already has, and all three are synced back by a
-post-agent step the agent never calls.
+session three ways to remember things anyway, and a fourth in private preview.
+`cache-memory` puts a directory in the GitHub Actions cache. `repo-memory` puts it
+on an orphan git branch. `comment-memory` puts it in a managed issue or
+pull-request comment. `drive-memory`, marked experimental and gated on enrolment
+in the GitHub Drives preview, mounts a named drive over FUSE. All of them
+materialise as ordinary files under `/tmp/gh-aw/`, all are edited by the agent
+with the file tools it already has, and all are synced back by a post-agent step
+the agent never calls.
 
 The genuinely interesting part is what happens at restore. `cache-memory` is not
 a directory of files; it is a **git repository with one branch per trust level** —
 `merged`, `approved`, `unapproved`, `none` — and a run checks out the branch
 matching its own integrity level and then merges *down* from strictly higher
 levels only. The comment in
-[`setup_cache_memory_git.sh`](https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/actions/setup/sh/setup_cache_memory_git.sh)
+[`setup_cache_memory_git.sh`](https://github.com/github/gh-aw/blob/9259aea14a8d0d6f423fb5813b2675b3e81c8398/actions/setup/sh/setup_cache_memory_git.sh)
 states the rule directly: *"lower-integrity runs see higher-integrity data via
 merge, but higher-integrity runs never see lower-integrity data."* A run
 triggered by an unapproved fork PR can read what a merged run remembered and
@@ -61,11 +64,14 @@ memory, and this atlas has very little of it.
 
 The second interesting part follows from the first. Before the agent is allowed
 near the restored tree, the same script deletes every non-sample file under
-`.git/hooks`, points `core.hooksPath` at `/dev/null`, deletes every symlink,
-strips the execute bit from every file, and — when `allowed-extensions` is
-configured — deletes every file whose extension is not on the list. The threat
+`.git/hooks`, rebuilds the git metadata if `.git`, its config, `info` or `hooks`
+is a symlink, deletes the `.git/info` overrides, unsets every `include`,
+`includeIf`, `credential`, `alias`, `filter` and `merge` config section, points
+`core.hooksPath` at `/dev/null`, deletes every working-tree symlink, strips the
+execute bit from every file, and — when `allowed-extensions` is configured —
+deletes every file whose extension is not on the list. The threat
 model is written down in
-[ADR-26587](https://github.com/github/gh-aw/blob/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d/docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md):
+[ADR-26587](https://github.com/github/gh-aw/blob/9259aea14a8d0d6f423fb5813b2675b3e81c8398/docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md):
 *"A compromised prior run could therefore plant executable scripts … which the
 next agent would encounter without any validation."* Memory is modelled as an
 artifact written by an attacker who was you.
@@ -84,7 +90,11 @@ A memory in `gh-aw` is **a file a previous run of this workflow left behind**.
 Not a fact, not an embedding, not a summary — a byte sequence at a path, whose
 meaning is entirely a convention between the workflow's Markdown prompt and
 whatever the agent decides to write. The compiler validates size, count,
-extension and glob. It never parses content.
+extension and glob, and never parses content itself. What it offers instead is
+`validation.script`: a JavaScript body the workflow author writes, run under
+Node.js over the whole memory directory before persistence, which rejects the
+save by throwing, returning `false`, exiting nonzero, timing out or modifying a
+file. Content policy is the author's code or nothing.
 
 So there is no belief lifecycle in the usual sense, and it is worth being precise
 about what replaces it. A file's status is **where it lives**, and it has three
@@ -93,7 +103,9 @@ independent coordinates:
 - **Which backend.** Cache memory is ephemeral by design (7-day Actions cache
   retention, 10GB per repository, LRU eviction). Repo memory is permanent and
   versioned. Comment memory is a single rendered document with one current value.
-- **Which integrity branch**, for cache memory only: `merged` > `approved` >
+  Drive memory is durable without git-branch commits, one active writer per
+  drive, and its ADR-54662 is a `Draft` written by an ADR-writer agent.
+- **Which integrity branch**, for cache memory and drive memory: `merged` > `approved` >
   `unapproved` > `none`. This is assigned by the trigger, not by the content, and
   **nothing ever moves a file between branches**. There is no promotion path and
   no adjudication. The lattice governs who may *read* what, and that is all it
@@ -142,14 +154,17 @@ The memory subsystem is therefore **compile-time code that emits run-time steps*
 
 | Component | Where |
 | --- | --- |
-| Cache-memory config, key derivation, integrity-aware keys | `pkg/workflow/cache.go`, `pkg/workflow/cache_integrity.go` |
+| Cache-memory config, key derivation, integrity-aware keys | `pkg/workflow/cache_memory.go`, `pkg/workflow/cache_integrity.go` |
+| Drive-memory config, mounts and commit steps (experimental) | `pkg/workflow/drive_memory.go`, `pkg/workflow/drive_memory_config.go` |
+| Author-supplied validation and persistence eligibility | `pkg/workflow/memory_validation_config.go`, `actions/setup/js/memory_custom_validation.cjs`, `actions/setup/js/memory_file_eligibility.cjs` |
 | Repo-memory config, validation, branch naming | `pkg/workflow/repo_memory.go`, `pkg/workflow/repo_memory_validation.go` |
 | Repo-memory prompt section | `pkg/workflow/repo_memory_prompt.go` |
 | Comment-memory safe-output config | `pkg/workflow/comment_memory.go` |
 | Pre-agent restore, lattice and sanitisation | `actions/setup/sh/setup_cache_memory_git.sh` |
 | Post-agent commit | `actions/setup/sh/commit_cache_memory_git.sh` |
 | Store repair | `actions/setup/sh/check_cache_memory_git_integrity.sh` |
-| Repo-memory clone and filename hygiene | `actions/setup/sh/clone_repo_memory_branch.sh`, `sanitize_repo_memory_filenames.sh` |
+| Repo-memory clone, git-state hardening and filename hygiene | `actions/setup/sh/clone_repo_memory_branch.sh`, `sanitize_repo_memory_filenames.sh` |
+| Repo-memory push and concurrent-merge policy | `actions/setup/js/push_repo_memory.cjs` |
 
 Persistence is entirely GitHub's: the Actions cache service, the git object
 store, and the issues API. There is no database, no vector index and no search
@@ -176,13 +191,15 @@ by hand is a `git push`.
 ## 4. Essential Implementation Paths
 
 **Restore and read.** `generateCacheMemoryGitSetupStep` in
-`pkg/workflow/cache.go` emits a step running
+`pkg/workflow/cache_memory.go` emits a step running
 `actions/setup/sh/setup_cache_memory_git.sh` with `GH_AW_CACHE_DIR`,
 `GH_AW_MIN_INTEGRITY` and — only when configured — `GH_AW_ALLOWED_EXTENSIONS` as
 a colon-separated list. The script detects a cache hit by the presence of `.git`,
-flattens a legacy nested layout, deletes hook files, runs `git fsck
---connectivity-only` and reinitialises on corruption while preserving the working
-tree, checks out the integrity branch, merges down, then sanitises.
+flattens a legacy nested layout, reinitialises if the git metadata is symlinked,
+deletes hook files, runs `git fsck --connectivity-only` and reinitialises on
+corruption while preserving the working tree, scrubs the git config and
+`.git/info`, checks out the integrity branch, merges down, then sanitises. Drive
+memory emits the same script against its mount.
 
 **Context assembly.** `buildRepoMemoryPromptSection` in
 `pkg/workflow/repo_memory_prompt.go` returns a `PromptSection` pointing at a
@@ -198,8 +215,11 @@ whatever editing tools its engine has. Afterwards
 `commit_cache_memory_git.sh` stages everything with `git add -A` and commits
 `run-${GITHUB_RUN_ID}` on the current integrity branch with `--allow-empty`, so
 the log has a row per run whether or not anything changed, then `git gc --auto`.
-Repo memory instead validates against `file-glob`, `max-file-size`,
-`max-file-count` and `max-patch-size`, and pushes only if threat detection passes;
+Repo memory instead filters by `file-glob` and `allowed-extensions` — a file that
+fails either is ignored, never uploaded, counted or pushed, rather than failing
+the run — then validates `max-file-size`, `max-file-count` and `max-patch-size`,
+runs the author's `validation.script` if there is one (in the agent job and again
+in the push job), and pushes only if threat detection passes;
 a `push_repo_memory` safe-output tool exists so a workflow can fail on the limits
 early rather than at the end.
 
@@ -275,9 +295,11 @@ no consolidation. Whatever the agent leaves in the directory is what gets stored
 
 Filtering is structural and happens at two moments. On restore: symlinks deleted,
 execute bits stripped, disallowed extensions removed. On push, for repo memory:
-`file-glob` (with a documented and genuinely surprising depth rule — a slashless
-pattern like `*.json` matches only at depth 1 inside a memory subfolder, not at
-the artifact root and not deeper), `max-file-size` (100KB default),
+`file-glob`, where a slashless pattern like `*.json` matches only files at the
+artifact root (depth 0) and `**/*.json` is needed for subfolders; the reference
+page gives that rule, while `globPatternToRegex` documents a
+`matchSubfolderRoot` option with the opposite, depth-1-only meaning that no
+caller passes. Then `max-file-size` (100KB default),
 `max-file-count` (100 default), `max-patch-size` (10KB default, 1MB ceiling), then
 threat detection. `format-json: true` pretty-prints `.json` before commit, which
 is a diff-quality decision rather than a memory one and reads as a sign the
@@ -286,7 +308,14 @@ maintainers expect humans to review these branches.
 Conflict handling is stated plainly and is the weakest link in the write path:
 concurrent pushes are replayed onto the latest remote state and **your file
 changes win**. Two workflows writing the same memory file concurrently do not
-merge; the later one erases the earlier.
+merge; the later one erases the earlier. The one exception is `.jsonl`: the push
+step sets a checkout-local `*.jsonl merge=union` attribute and pulls with
+`-X ours`, so conflicting JSONL regions keep rows from both sides. A union merge
+produces a merge commit, which the signed `createCommitOnBranch` path cannot
+express, so on a branch whose ruleset requires signed commits that retry falls
+back to a push the ruleset rejects. Drive memory takes the opposite position:
+one writer lease per drive, and a digest check that fails the save rather than
+overwrite a drive that changed during threat detection.
 
 ### Operational cost
 
@@ -351,7 +380,17 @@ What is defended:
   sets `core.hooksPath` to `/dev/null` twice, before and after the format check.
 - **Symlink escape.** All working-tree symlinks are deleted, with the reason
   written in the script: a link out of the cache directory would bypass the
-  regular-file checks that follow.
+  regular-file checks that follow. A symlinked `.git`, `.git/config`, `.git/info`
+  or `.git/hooks` causes the metadata to be rebuilt before any git command runs.
+- **Git configuration planted in the store.** `include`, `includeIf`,
+  `credential`, `alias`, `filter` and `merge` sections and `core.fsmonitor`,
+  `core.sshCommand` and `core.attributesFile` are unset on restore for cache and
+  drive memory and on clone for repo memory, so a prior run cannot turn the next
+  run's `git merge` into command execution.
+- **Credentials in the store.** The repo-memory clone authenticates with a
+  transient `http.extraheader` passed through `GIT_CONFIG_*` environment
+  variables and sets `origin` to a token-free URL, so the job token is not
+  written into the memory directory's `.git/config`.
 - **Unexpected file types and executables**, per ADR-26587, unconditionally and at
   every integrity level including `none`.
 - **Trust escalation.** Legacy flat files from an older `gh-aw` are committed to
@@ -378,14 +417,27 @@ What is not defended, and this is where the shape of the thing shows:
 ## 10. Tests, Evals, and Benchmarks
 
 Test coverage of the memory subsystem is substantial by this atlas's standards
-and entirely **compiler-shaped**. Fourteen files in `pkg/workflow/` carry
-`memory` in the name, holding 94 `func Test` entries, and they assert what the
+and mostly **compiler-shaped**. Seventeen test files in `pkg/workflow/` carry
+`memory` in the name, holding 130 `func Test` entries, and they assert what the
 compiler *emits*: that restore precedes execution, that restore keys strip the run
 ID so a run can fall back to an earlier one, that `GH_AW_ALLOWED_EXTENSIONS` is
 emitted only when configured, that multiple named caches produce distinct
 directories, that import merge rules resolve local-wins, that repo-memory paths
-stay consistent between the prompt and the steps. `setup_cache_memory_git_test.sh`
-and `check_cache_memory_git_integrity_test.sh` exercise the shell directly.
+stay consistent between the prompt and the steps. `setup_cache_memory_git_test.sh`,
+`check_cache_memory_git_integrity_test.sh`, `commit_cache_memory_git_test.sh` and
+`clone_repo_memory_branch_test.sh` exercise the shell directly.
+
+The shell suite is where the negative cases are, and they earn `negative_eval`.
+Test 4 restores `data.json`, `notes.md`, `helper.sh` and `archive.zip` under an
+allow-list of `.json:.md` and asserts the two scripts and archives are gone and
+the two data files remain; Test 3 is the unfiltered control in which all four
+survive; Test 10 plants a symlink to `/etc/passwd` and asserts it is removed
+while the real file stays. Test 2b writes an attacker's `.git/config` — an
+`fsmonitor` hook, a credential helper, an alias, a smudge filter, a merge driver
+— and asserts every section is gone after restore. These are assertions that
+specific material does not reach what the agent reads, and they are about the
+store's capabilities, not its claims: nothing asserts that any *content* is kept
+from a run.
 
 What is not tested, as far as the tree shows, is the property the design is built
 on. There is no test in which a file written on the `none` branch is shown to be
@@ -402,7 +454,7 @@ carrying rejected alternatives and negative consequences rather than only the
 decision.
 
 I ran nothing. Every claim here comes from reading the tree at
-`c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d`.
+`9259aea14a8d0d6f423fb5813b2675b3e81c8398`.
 
 ## 11. For Your Own Build
 
@@ -473,11 +525,17 @@ for memory that happens to ship with a filesystem attached.
 - Does threat detection inspect memory content on the way *out*, and what does it
   reject? The wiring is asserted in tests; the detector's own criteria were not
   traced in this read.
+- Does the lattice mean the same thing on drive memory? The drive reuses the
+  cache-memory script and its integrity branches, but a drive is a single named
+  mount with one writer lease that the ADR calls repository-wide and
+  branch-aware, rather than an Actions cache keyed per branch and policy.
 
 ## Appendix: File Index
 
 **Compile-time configuration**
-`pkg/workflow/cache.go` · `pkg/workflow/cache_integrity.go` ·
+`pkg/workflow/cache_memory.go` · `pkg/workflow/cache_integrity.go` ·
+`pkg/workflow/drive_memory.go` · `pkg/workflow/drive_memory_config.go` ·
+`pkg/workflow/memory_validation_config.go` ·
 `pkg/workflow/cache_validation.go` · `pkg/workflow/repo_memory.go` ·
 `pkg/workflow/repo_memory_validation.go` · `pkg/workflow/comment_memory.go` ·
 `pkg/workflow/compiler_custom_job_memory.go`
@@ -491,13 +549,17 @@ for memory that happens to ship with a filesystem attached.
 `actions/setup/sh/check_cache_memory_git_integrity.sh` ·
 `actions/setup/sh/clone_repo_memory_branch.sh` ·
 `actions/setup/sh/create_cache_memory_dir.sh` ·
-`actions/setup/sh/sanitize_repo_memory_filenames.sh`
+`actions/setup/sh/sanitize_repo_memory_filenames.sh` ·
+`actions/setup/js/push_repo_memory.cjs` ·
+`actions/setup/js/memory_custom_validation.cjs` ·
+`actions/setup/js/memory_file_eligibility.cjs`
 
 **Design record**
 `docs/adr/26587-pre-agent-cache-memory-working-tree-sanitization.md` ·
 `docs/adr/27479-comment-memory-file-based-agent-memory-with-github-persistence.md` ·
 `docs/adr/44037-restore-memory-read-only-access-custom-jobs.md` ·
 `docs/adr/44015-expose-memory-stores-to-on-steps-pre-activation.md` ·
+`docs/adr/54662-add-drive-backed-workflow-memory.md` ·
 `docs/src/content/docs/reference/cache-memory.md` ·
 `docs/src/content/docs/reference/repo-memory.md`
 
@@ -507,9 +569,12 @@ for memory that happens to ship with a filesystem attached.
 `pkg/workflow/cache_memory_threat_detection_test.go` ·
 `pkg/workflow/cache_integrity_test.go` ·
 `pkg/workflow/repo_memory_path_consistency_test.go` ·
-`actions/setup/sh/setup_cache_memory_git_test.sh`
+`actions/setup/sh/setup_cache_memory_git_test.sh` ·
+`actions/setup/sh/clone_repo_memory_branch_test.sh`
 
 ## History
+
+**2026-09-15** — [`9259aea14a8d0d6f423fb5813b2675b3e81c8398`](https://github.com/github/gh-aw/commit/9259aea14a8d0d6f423fb5813b2675b3e81c8398) — 1,565 commits on, 2026-09-14, read from a depth-1 clone of each commit. Screened before reading: 3 auto-run surfaces, 1 build-time execution point, 6 unpinned surfaces and 13 dependency surfaces inside the seven-day cooldown; nothing was executed or installed. `negative_eval` is added, and it was missed rather than new: `setup_cache_memory_git_test.sh` at the previous pin already asserted that a disallowed `helper.sh` and a planted symlink are removed from the restored tree beside kept files and an unfiltered control. Since the pin: an experimental `drive-memory` backend on the GitHub Drives preview that reuses the cache-memory git script and integrity branches; an author-supplied `validation.script` that can reject a save on content; git-config and `.git/info` scrubbing and symlinked-metadata rejection on restore and clone; a repo-memory clone that no longer writes `x-access-token:${GH_TOKEN}@` into the memory directory's `.git/config`, which it did at the previous pin; a JSONL union merge on concurrent repo-memory conflicts; and a reversal of the slashless `file-glob` rule from depth 1 to depth 0, with non-matching files ignored instead of failing the run. `cache.go` became `cache_memory.go`. The read-down property of the lattice is still asserted by no test, and `scope_enforced` stands on the merge loop as before.
 
 **2026-08-09** — [`c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d`](https://github.com/github/gh-aw/commit/c9dca3e29f33bfdc6f9e38ead9b66d0d6a89993d) —
 first reading, from the
