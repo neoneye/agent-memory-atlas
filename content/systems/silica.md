@@ -1,39 +1,52 @@
 ---
 title: "Silica"
-eyebrow: "A control that proves the metric can move"
+eyebrow: "A governed vault it cut to a search tool"
 description: "A transactional write path over a markdown vault whose contradictions stay visible until a person resolves them, whose per-claim clock is a comment rather than frontmatter, and whose eval harness refuses to run a gate whose metric cannot fail."
 root: ../..
 page_kind: system
 source_name: "kiycoh/silica-core"
 source_url: https://github.com/kiycoh/silica-core
 archive_name: "kiycoh--silica-core"
-revision: 300fab2e1686e6401a059ec62161ba5a46fce356
-revision_url: https://github.com/kiycoh/silica-core/commit/300fab2e1686e6401a059ec62161ba5a46fce356
-analyzed_at: 2026-08-23
-capabilities: "bitemporal, audit_log, human_review, negative_eval"
-capability_evidence:
-  bitemporal: "the per-claim stamp | silica/kernel/write/contested.py (`stamp`, `note_clock`), kernel/write/bulk.py, kernel/write/timeline.py, capabilities/dedup.py, silica/cli.py:2526 | a claim carries `<!-- silica: valid_from=2023-05-08 run=b07f1268 -->` — when the claim held, taken from the source's own date via `--seen`, beside the run that wrote it. The stamp is per *claim* rather than per note, and the reasoning is stated: frontmatter is per-note *\\\"while a note accumulates claims from many sources on different dates\\\"*, and an HTML comment is invisible in preview, greppable, and survives every write path byte-for-byte with no YAML round-trip. `note_clock` reads the freshest `valid_from` (or an OKF `verified.at`, a person recording the day they read the note) and `suppress_contest` consults it; `timeline.py` builds a chronology from it and `dedup.py` carries `valid_from`/`valid_to`. The `--seen` parse is guarded at the CLI with the reason written down: *\\\"this string becomes the valid_from on every claim of the run — a typo'd date would poison note_clock vault-wide\\\"* | tests/test_bitemporal_invariants.py, including an assertion that no stamp leaks onto a clockless path"
-  audit_log: "the undo journal | silica/kernel/write/undo_journal.py, kernel/write/ledger.py | a SQLite journal of two tables — `runs(run_id, source, vault, started_at, reverted_at, ledger_run_id)` and `inverses(id AUTOINCREMENT, run_id, path, kind, version, prior_content, post_hash, to_path)` — one inverse row per mutated path per run, carrying the prior content and the post-write hash, which is what makes `/revert` an operation rather than a hope. WAL with per-thread connections; a corrupt journal is quarantined and recreated rather than bricking startup, with git named as the durable backstop. Beside it a separate `ledger.db` records per-op outcomes with `status ∈ {committed, failed, rolled_back}` — so a refusal is recorded, though the UPSERT on `(source_canonical, path)` means a later success overwrites the record of an earlier failure | tests/ covers atomic write and revert; the journal's corruption path is handled rather than asserted"
-  human_review: "the contested layer | silica/kernel/write/contested.py, kernel/contested_register.py, kernel/write/contested.py `resolve_contested` and `suppress_contest` | a contradiction is *\\\"neither a duplicate nor a new concept: it is recorded on the existing note (frontmatter flag + warning callout) and kept visible until a human resolves it,\\\"* with an `Unresolved.` tail and one contradiction resolvable while others stay open. `contested_register.json` is a rebuildable worklist the run digest reads so a person is shown what needs deciding without a full-vault scan, with truth staying in each note's frontmatter. The auto-resolution rule is the part worth the mark: `suppress_contest` acts only when the target *strictly* outranks the incoming claim and nothing suggests the loser is fresher, because *\\\"declining to auto-resolve leaves a visible contest, while resolving wrongly buries a live claim under `## Superseded`\\\"* | evals/golden/probe_supersede.py measures resolution inversions over the 796-note golden vault; the veto's own precision is measured in the docstring — 4 acted on and 2 wrong without it, 2 acted on and 2 right with it"
-  negative_eval: "the search and context suites | tests/test_embed_search_topk.py:88, tests/test_context_builder.py:78, tests/test_cohesion.py:181-194 | committed cases asserting that a named item is absent from a result set that is otherwise populated — `assert \\\"n_high\\\" not in paths` after a top-k search over a seeded vault, `assert \\\"Run Context\\\" not in result` on the assembled context, and two cases asserting specific notes are not among a note's `related`. 387 test files sit behind them | the tests are the mechanism"
+revision: 3fd11a00ddb81cf3317922596017cfaefa0e5ddb
+revision_url: https://github.com/kiycoh/silica-core/commit/3fd11a00ddb81cf3317922596017cfaefa0e5ddb
+analyzed_at: 2026-09-15
+capabilities: ""
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A markdown note in a vault, with OKF-shaped frontmatter, a reliability tier derived from whether its verbatim source is on disk, and per-claim `valid_from` stamps in HTML comments"
+  memory_unit: "None at this commit; Silica Core indexes files for retrieval. Until 8 September 2026, a markdown note in a vault, with OKF-shaped frontmatter, a reliability tier derived from whether its verbatim source is on disk, and per-claim `valid_from` stamps in HTML comments"
   storage: "The vault is a folder of markdown the user owns; SQLite beside it holds the op ledger, the undo journal and the indices, and `sources/` keeps verbatim originals that are retrieval-invisible by construction"
   retrieval: "A hand-rolled BM25 with optional embeddings (~6% accuracy difference from the CPU-only fallback, per the README), a graph layer, and a context builder that assembles what reaches the model"
   write: "The harness guides, the LLM proposes, a parser and a finite-state machine verify and execute; every write is checked against its source and reverted if corrupted"
   update_delete: "Atomic write with an inverse recorded per path per run, `/revert` from the undo journal, merge with `mark_superseded_by` pointing the loser at the winner, and a contested flag that neither deletes nor overwrites"
   scoping: "Per vault. An index directory and a ledger per vault, and `sources/` excluded from search by construction; no principal key inside a vault"
-  integration: "A CLI, a Claude Code plugin with SessionStart/PreCompact/Stop hooks, an MCP server, and a web UI — four interfaces over one vault"
+  integration: "At this commit, five MCP tools and a CLI — files, search, read, code_pack, write_note. Until the cut, a CLI, a Claude Code plugin with SessionStart/PreCompact/Stop hooks, an MCP server, and a web UI — four interfaces over one vault"
   background: "A run digest that surfaces contested notes, a work queue, checkpoints, and residue/ROI passes; nothing on a timer in the write path"
   trust: "A reliability tier read from whether the verbatim source is retained, a human-verified marker, and a contested flag carrying its reason — the flag labels a claim at the point of use rather than withholding it"
   strengths: "Contradictions are kept visible rather than resolved away, the auto-resolver refuses in the direction it would get wrong and measures its own precision, and the eval harness refuses to run a gate whose metric cannot discriminate"
-  risks: "A contested note is still retrieved — the flag rides along as a rendered reason rather than gating admissibility; the op ledger's UPSERT overwrites the record of a failure with a later success; and the numbers in the README are one run each"
+  risks: "The governed-memory layer — contested flags, per-claim clocks, the undo journal and the eval harness — was removed on 8 September 2026. Before that, a contested note was still retrieved — the flag rides along as a rendered reason rather than gating admissibility; the op ledger's UPSERT overwrites the record of a failure with a later success; and the numbers in the README are one run each"
 ---
 
 ## 1. Executive Summary
+
+**At this commit Silica is an evidence-retrieval tool, not a memory system.** On 8
+September 2026 commit
+[`3ee7a53ced625e033a5ca2b5befbc6945bb6999a`](https://github.com/kiycoh/silica-core/commit/3ee7a53ced625e033a5ca2b5befbc6945bb6999a),
+titled *"the potato cut — five tools, no model on any path"*, deleted the state
+machine, the agent loop and model client, the curation capabilities, the web UI,
+the memory tools, the recall lanes that needed a model or a vault convention, and
+*"the write journal/undo/templates/provenance"*, the report lanes and the evals
+tree — 79,000 lines down to 25,000 — and later commits renamed the package
+`silica_core`. What ships is five functions over one root, `files`, `search`,
+`read`, `code_pack` and `write_note`, served as MCP tools and CLI commands that
+locate a passage, a symbol or a page and return it with its path and line. That
+is a corpus index, which this atlas keeps outside its boundary. What follows is
+the governed vault as it stood at
+[`300fab2e1686e6401a059ec62161ba5a46fce356`](https://github.com/kiycoh/silica-core/tree/300fab2e1686e6401a059ec62161ba5a46fce356), and every path
+below refers to that tree. It stays because the contested layer, the per-claim
+clock and the metric-discrimination harness are reusable designs whatever
+happened to the product.
 
 Silica is an AGPL-3.0 harness that governs a folder of markdown — an Obsidian
 vault, a codebase's docs, research material — as agent-writable memory. About
@@ -46,8 +59,9 @@ proposes, a parser and an FSM verify and execute, and every write is verified
 against a source, reverted if corrupted."* The model never writes; it proposes
 into a state machine that does.
 
-Four marks, and three of the mechanisms behind them are among the better
-instances this atlas has read.
+No marks at this commit. At the earlier pin the design carried four —
+`bitemporal`, `audit_log`, `human_review` and `negative_eval` — on the mechanisms
+described below, all of which the cut removed.
 
 **A contradiction is kept, not settled.** `contested.py` records it on the
 existing note as a frontmatter flag and a warning callout and leaves it *"until
@@ -456,6 +470,8 @@ that can refuse to serve a disputed claim rather than annotate it.
   assertions, `test_bitemporal_invariants.py` the stamp invariants
 
 ## History
+
+**2026-09-15** — [`3fd11a00ddb81cf3317922596017cfaefa0e5ddb`](https://github.com/kiycoh/silica-core/commit/3fd11a00ddb81cf3317922596017cfaefa0e5ddb) — 139 commits on, 2026-09-15. Screened before reading: five auto-run surfaces (plugin manifests and hooks), one build-time execution point, two unpinned surfaces and four dependency surfaces inside the cooldown; nothing was installed or run. The subject of this report is gone: [`3ee7a53ced625e033a5ca2b5befbc6945bb6999a`](https://github.com/kiycoh/silica-core/commit/3ee7a53ced625e033a5ca2b5befbc6945bb6999a) (2026-09-08) cut Silica to a five-tool evidence-retrieval core, deleting the write journal and undo, the contested layer, the claim stamping, the curation and memory tools and the `evals/` tree, and the package became `silica_core`. The three test files the `negative_eval` record cited no longer exist. All four marks are withdrawn at this pin — `bitemporal`, `audit_log`, `human_review`, `negative_eval` — and the body keeps the design as it was at the previous pin, framed as removed.
 
 **2026-09-13** — the repository was renamed from `kiycoh/silica-harness` to `kiycoh/silica-core`, upstream of the pinned commit and after the reading below. The rename reaches the code rather than the README alone: `pyproject.toml` declares `name = "silica-core"`, and the old spelling survives nowhere in the tree — at `300fab2e1686e6401a059ec62161ba5a46fce356` it appeared in the banner URLs, the DeepWiki and licence badges, both plugin-marketplace commands and the `uvx --from 'silica-harness[mcp]'` invocation. The distribution `silica-harness` resolves on PyPI beside `silica-core`. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug stays `silica`, so no published URL moved and no redirect stub was needed. The archive fork was renamed to `agent-memory-atlas-archive/kiycoh--silica-core` to match, after the owner wrote in to report the stale name.
 

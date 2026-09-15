@@ -387,8 +387,8 @@ Every negative result on this page rests on a metric that could have come out
 the other way, and this atlas has repeatedly caught cases where it could not: a
 suite whose assertion passes because the result set was empty, a threshold no
 code reads, a gate that scored the wrong artifact. Those are found one at a time,
-by reading. [Silica](../systems/silica/) is the one project in the corpus that
-turned the class into a harness.
+by reading. [Silica](../systems/silica/) turned the class into a harness, until its
+8 September 2026 cut to a retrieval core removed the `evals/` tree.
 
 `evals/negative_controls.py` states the problem in its first line — *"A metric
 that cannot fail reports PASS regardless of the arm, and the gate reads as a
@@ -1206,7 +1206,7 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Two hundred and twenty-one of four hundred and fifty-seven. [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/), [EverOS](../systems/everos/) and [open-cowork](../systems/open-cowork/) assert it about a *scope boundary*, which is a different question |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Two hundred and twenty of four hundred and fifty-seven. [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/), [EverOS](../systems/everos/) and [open-cowork](../systems/open-cowork/) assert it about a *scope boundary*, which is a different question |
 | Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/)'s harness scores against the prefix; no committed case runs it |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |

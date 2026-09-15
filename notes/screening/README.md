@@ -169,7 +169,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`serena`](../../content/systems/serena.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json` |
 | [`shodh-memory`](../../content/systems/shodh-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, `hooks/` |
 | [`signetai`](../../content/systems/signetai.md) | `.githooks/` |
-| [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json` |
+| [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
 | [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes` |
