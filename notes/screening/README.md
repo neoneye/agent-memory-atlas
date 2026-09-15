@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 379 of 457 screened at the report's current pin.**
+**Progress: 380 of 457 screened at the report's current pin.**
 
 6 further record(s) describe a revision the report has since moved
-off, and 72 report(s) have no record at all.
+off, and 71 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 157 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 202 |
-| Repositories with build-time execution (`EXEC`) | 282 |
+| Repositories with an auto-run surface (`RUNS`) | 158 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 203 |
+| Repositories with build-time execution (`EXEC`) | 283 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -164,6 +164,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`rushdb`](../../content/systems/rushdb.md) | `.claude/settings.json` |
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`second-brain-cloudflare`](../../content/systems/second-brain-cloudflare.md) | `.cursor/rules/` |
+| [`serena`](../../content/systems/serena.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json` |
 | [`shodh-memory`](../../content/systems/shodh-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, `hooks/` |
 | [`signetai`](../../content/systems/signetai.md) | `.githooks/` |
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json` |

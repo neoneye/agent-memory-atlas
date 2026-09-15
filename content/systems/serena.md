@@ -7,15 +7,15 @@ page_kind: system
 source_name: "oraios/serena"
 source_url: https://github.com/oraios/serena
 archive_name: "oraios--serena"
-revision: 946ad9817875cbf46b308423296c33eb65e3e728
-revision_url: https://github.com/oraios/serena/commit/946ad9817875cbf46b308423296c33eb65e3e728
-analyzed_at: 2026-08-09
+revision: 18fa47bfccd9c27d05910a0ea12918276f1a6521
+revision_url: https://github.com/oraios/serena/commit/18fa47bfccd9c27d05910a0ea12918276f1a6521
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "memory store | src/serena/memories/memory_manager.py | get_memory_file_path routes a global/ name to the shared root and everything else to the project root, and _resolve_memory_path rejects any name whose normalised path leaves that root before creating a directory | test/serena/test_memories_manager.py, five sandbox-escape cases covering absolute names, system paths and .. segments"
+  scope_enforced: "memory store | src/serena/memories/memory_manager.py (`get_memory_file_path`, `_resolve_memory_path`) | get_memory_file_path routes a global/ name to the shared root and everything else to the project root, and _resolve_memory_path rejects any name whose normalised path leaves that root before creating a directory | test/serena/test_memories_manager.py, five sandbox-escape cases covering absolute names, system paths and .. segments"
 matrix:
   memory_unit: "A named Markdown file — a topic path like frontend/debugging — whose body may cite other memories as mem:name"
   storage: "Files on disk: .serena/memories/ per project plus one shared global root; no database and no index"
@@ -32,7 +32,8 @@ matrix:
 
 ## 1. Executive Summary
 
-Serena is an MIT-licensed MCP toolkit that gives a coding agent IDE-grade code
+Serena is an MCP toolkit — the Serena application under GPL-3.0-or-later, its
+SolidLSP language-server layer under MIT — that gives a coding agent IDE-grade code
 navigation — symbol search, references, symbol-level edits — over a language
 server. That is the product, and it is not why this report exists.
 
@@ -140,7 +141,7 @@ modules with no external dependency beyond the standard library and a text helpe
 
 | File | Lines | Concern |
 | --- | --- | --- |
-| `src/serena/memories/memory_manager.py` | 438 | paths, sandbox, CRUD, rename-with-propagation, read-only and ignore filters |
+| `src/serena/memories/memory_manager.py` | 439 | paths, sandbox, CRUD, rename-with-propagation, read-only and ignore filters |
 | `src/serena/memories/memory_reference_analysis.py` | 780 | reference detection, similarity scoring, integrity reporting, autofix |
 | `src/serena/tools/memory_tools.py` | — | the six agent-facing tools |
 | `src/serena/cli.py` | — | the `serena memories` command group |
@@ -175,7 +176,13 @@ deliberately does not resolve them.
 **Write.** `WriteMemoryTool.apply` bounds content at
 `default_max_tool_answer_chars` and raises rather than truncating —
 *"Please make the content shorter"* — then calls `MemoryManager.save_memory`,
-which sanitizes the name, refuses an ignored one, checks read-only, and writes.
+which sanitizes the name, refuses an ignored one, checks read-only, and writes
+through `write_file_atomic`: the content goes to a `mkstemp` file in the same
+directory, the original file's mode is copied onto it, and `os.replace` swaps it
+in. `edit_memory` writes the same way. An interrupted write leaves the previous
+content in place rather than a truncated file; there is no `fsync`, so the
+guarantee covers a crashed or killed process, not a power loss before the page
+cache is flushed.
 
 **Name resolution and sandbox.** `get_memory_file_path` sanitizes (strips a
 stray `mem:` prefix, a `.md` suffix, and normalises OS separators — the docstring
@@ -315,7 +322,11 @@ which is a policy, not a limit.
 
 Six MCP tools: `write_memory`, `read_memory`, `list_memories`, `delete_memory`,
 `rename_memory`, `edit_memory`. Four are marked `ToolMarkerCanEdit`, so a
-read-only Serena configuration drops them and keeps reading.
+read-only Serena configuration drops them and keeps reading. A project marked
+`read_only` in its own `project.yml` gets the same treatment when Serena runs in
+single-project context, where the base tool set is built before a project is
+active: `SerenaAgent` applies `without_editing_tools()` to that set when the
+project's flag is on.
 
 The agency allocation is unusually complete on the model's side. It may create,
 read, edit, rename and delete, and the shipped maintenance memory is addressed to
@@ -399,12 +410,18 @@ evaluation and the one that would catch the ignore filter regressing. The
 read-only tests exercise the *reporting* of read-only status in the integrity
 report rather than the `PermissionError` on write.
 
+What the suite does pin about writes is durability. `TestSaveAndEditMemoryAreAtomic`
+replaces `os.fdopen` with a writer that flushes a quarter of the content and
+raises, then asserts that after a failed `save_memory` or `edit_memory` the
+memory still reads back as its original content, and two more cases assert that
+an existing file's `0644` mode survives the temp-file swap.
+
 There is no evaluation of whether the graph model works — whether an agent
 following `mem:core` reaches what it needs — and no benchmark. There is no paper;
 the README carries no citation block and no arXiv reference.
 
 I ran nothing. Every claim here comes from reading the tree at
-`946ad9817875cbf46b308423296c33eb65e3e728`.
+`18fa47bfccd9c27d05910a0ea12918276f1a6521`.
 
 ## 11. For Your Own Build
 
@@ -497,6 +514,8 @@ navigate, and a store big enough that navigation fails has no fallback.
 `test/serena/test_memories_manager.py`
 
 ## History
+
+**2026-09-15** — [`18fa47bfccd9c27d05910a0ea12918276f1a6521`](https://github.com/oraios/serena/commit/18fa47bfccd9c27d05910a0ea12918276f1a6521) — 52 commits on, 2026-09-14, almost all in the language-server layer. Screened before reading: four auto-run surfaces (`.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json`), seven build-time execution points, four unpinned manifests and one dependency file inside the seven-day cooldown; nothing was installed or run. The memory subsystem changed in two places. `save_memory` and `edit_memory` write atomically through a temp file and `os.replace` (#1969), with a regression test that crashes a write mid-stream and asserts the prior content survives. And a project's own `read_only` flag was not removing the editing tools, memory tools included, from the base tool set in single-project context at the previous pin; `SerenaAgent` applies it (#1938). The repository moved to component licensing on 6 September: the Serena application, memory code included, is GPL-3.0-or-later and SolidLSP stays MIT. The capability assessment is unchanged — `scope_enforced` on the project/global root resolution — and the ignored-pattern listing filter is still asserted by no test.
 
 **2026-08-09** — [`946ad9817875cbf46b308423296c33eb65e3e728`](https://github.com/oraios/serena/commit/946ad9817875cbf46b308423296c33eb65e3e728) —
 first reading, from the
