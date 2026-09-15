@@ -7,10 +7,13 @@ page_kind: system
 source_name: "NirDiamant/Agent_Memory_Techniques"
 source_url: https://github.com/NirDiamant/Agent_Memory_Techniques
 archive_name: "NirDiamant--Agent_Memory_Techniques"
-revision: b4b277097cf83ae56021c14eab6f7a3d63dc905f
-revision_url: https://github.com/NirDiamant/Agent_Memory_Techniques/commit/b4b277097cf83ae56021c14eab6f7a3d63dc905f
-analyzed_at: 2026-08-14
+revision: dacb760a2b7fb773eb995ddfbd6356c830f376c1
+revision_url: https://github.com/NirDiamant/Agent_Memory_Techniques/commit/dacb760a2b7fb773eb995ddfbd6356c830f376c1
+analyzed_at: 2026-09-15
 capabilities: "audit_log, scope_enforced"
+capability_evidence:
+  audit_log: "notebook 30's tiered memory system — every right-to-forget erasure appends one record per tier | all_techniques/30_production_memory_patterns/production_memory_patterns.ipynb, cell 25 (`PIIHandler.log_deletion`) and cell 43 (`TieredMemorySystem.delete_user`) | `delete_user` erases the user from the hot, warm, cold and graph tiers and then calls `log_deletion(user_id, tier, count)` for each, which appends an action, the user id, the tier, the count and an ISO timestamp to `audit_log`; nothing removes or rewrites an entry. It records deletions only, and the list lives in the process like the tiers it audits | none — cell 51 prints the log in the notebook's demo, and no test covers it"
+  scope_enforced: "notebook 30's warm tier — semantic search runs over one user's records only | all_techniques/30_production_memory_patterns/production_memory_patterns.ipynb, cell 9 (`user_index`) and cell 15 (`WarmTierStore.search`) | every record carries `user_id`, the store maintains `user_index: dict[str, set[str]]`, and `search(user_id, query_embedding, k)` takes the scope as a required argument and scores only the ids in that user's set, returning nothing for an unknown user. Notebook 21 keys its cross-session state by `user_id` in SQL; most other notebooks have no scope | none — `tests/` holds smoke tests and no memory-behaviour test"
 stack_storage: "sqlite, files, chroma"
 stack_retrieval: "vector, graph"
 stack_source: "reviewed"
@@ -421,8 +424,8 @@ measure are in the same repository and are not connected.
 `temporal_accuracy_score` deserves specific credit and a specific withholding.
 It takes eval cases carrying a `temporal_preferred` id and checks that the
 superseding fact outranks the fact it supersedes — a committed assertion about
-what retrieval must *not* put first, which is closer to a negative evaluation
-than almost anything in this atlas. It is not the `negative_eval` mark, because
+what retrieval must *not* put first, and the shape of a negative evaluation. It
+is not the `negative_eval` mark, because
 it asserts a relative rank rather than an absence: a superseded fact may still
 be retrieved, just not ahead of its replacement. That is a weaker and arguably
 more useful test, and it is withheld from the mark and named here instead.
@@ -574,5 +577,7 @@ either warns you which one you picked.
 - `tests/` — smoke tests; no memory-behaviour assertions.
 
 ## History
+
+**2026-09-15** — [`dacb760a2b7fb773eb995ddfbd6356c830f376c1`](https://github.com/NirDiamant/Agent_Memory_Techniques/commit/dacb760a2b7fb773eb995ddfbd6356c830f376c1) — five commits on, 2026-09-15, all README changes about the author's book and course plus a Dependabot configuration; no notebook, helper or test changed. Screened before reading: no auto-run surface, one build-time execution point and one unpinned requirements file, none inside the cooldown; nothing was installed and no notebook was executed. The two marks stand and carry evidence records, written from the notebook 30 cells: the audit list is an in-process append of deletions only, and the warm tier's search is scoped by a required `user_id`. One sentence ranking this repository's temporal-accuracy check against the corpus was removed.
 
 **2026-08-14** — [`b4b277097cf83ae56021c14eab6f7a3d63dc905f`](https://github.com/NirDiamant/Agent_Memory_Techniques/commit/b4b277097cf83ae56021c14eab6f7a3d63dc905f) — first reading. Screened before opening: no auto-run surfaces, one build-time execution point (`tests/conftest.py`), nineteen unpinned requirements. Nothing was installed and no notebook was executed; the code was read by extracting the cells as source.
