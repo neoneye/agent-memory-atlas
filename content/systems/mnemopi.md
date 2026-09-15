@@ -7,14 +7,13 @@ page_kind: system
 source_name: "can1357/oh-my-pi"
 source_url: https://github.com/can1357/oh-my-pi
 archive_name: "can1357--oh-my-pi"
-revision: b8e8c213c1ce970f0f008edfe471bf7858fd747a
-revision_url: https://github.com/can1357/oh-my-pi/commit/b8e8c213c1ce970f0f008edfe471bf7858fd747a
-analyzed_at: 2026-08-23
-capabilities: "bitemporal, scope_enforced, negative_eval"
+revision: c5a8e0e09296290c2fd3ef053391081acc691ded
+revision_url: https://github.com/can1357/oh-my-pi/commit/c5a8e0e09296290c2fd3ef053391081acc691ded
+analyzed_at: 2026-09-15
+capabilities: "bitemporal, negative_eval"
 capability_evidence:
   bitemporal: "the triple store | packages/mnemopi/src/core/triples.ts, packages/mnemopi/src/mcp-tools.ts:178,:667 | `triples` carries `valid_from` and `valid_until` — when the assertion held — beside a `created_at` for when the row was written, and the read filters the validity axis: `query` appends `valid_from <= ?` and `(valid_until IS NULL OR valid_until > ?)` against an `asOf` that defaults to today, ordering by `valid_from DESC`. `TripleStore.add` supersedes by closing the predecessor's interval — `UPDATE triples SET valid_until = ? WHERE subject = ? AND predicate = ? AND valid_until IS NULL` — rather than overwriting, and the MCP surface exposes `valid_from` as an ISO-date argument so a caller can assert a fact as of a time that is not now. The caveat belongs with the mark: the engine's own extraction path writes triples by raw SQL with `valid_from = isoNow()` and never reaches `TripleStore.add`, so internally-derived facts carry validity equal to record time and no predecessor is ever closed — see section 7 | packages/mnemopi/test/triples-data-dir.test.ts, migrate-triplestore-split.test.ts"
-  scope_enforced: "the beam recall path | packages/mnemopi/src/core/beam/recall.ts `buildWhere` | every beam recall query is built with a visibility clause over stored columns — `(session_id = ? OR scope = 'global' OR channel_id = ?)` when a channel is supplied, `(session_id = ? OR scope = 'global')` otherwise — alongside `superseded_by IS NULL` and a `valid_until` check, and `working_memory` and `episodic_memory` both carry `session_id`, `scope`, `channel_id` and `author_id` columns. Two widenings are in the same function and are worth knowing: `ignoreSessionScope` pushes `1=1`, and so does supplying `authorId` or `authorType` without a `channelId`, so a by-author query silently searches every session | packages/mnemopi/test/beam-recall-unit.test.ts asserts a global row stays recallable under a channel filter while other-channel rows do not"
-  negative_eval: "the recall regression suite | packages/mnemopi/test/ | 456 cases across 75 files, of which 158 carry an assertion that a result set does *not* contain something — `not.toContain`, an empty array, a zero count — including `beam-recall-unit.test.ts` pinning that a non-global row from another channel fails all three visibility disjuncts, and precision regressions asserting that a memory which exists is absent from a query's results | the tests are the mechanism"
+  negative_eval: "the recall regression suite | packages/mnemopi/test/ | 476 cases across 77 files at this pin; at the previous reading 456 across 75, of which 158 carry an assertion that a result set does *not* contain something — `not.toContain`, an empty array, a zero count — including `beam-recall-unit.test.ts` pinning that a non-global row from another channel fails all three visibility disjuncts, and precision regressions asserting that a memory which exists is absent from a query's results | the tests are the mechanism"
 stack_storage: "sqlite"
 stack_retrieval: "vector, graph"
 stack_source: "seeded"
@@ -24,7 +23,7 @@ matrix:
   retrieval: "Polyphonic — four scored voices (vector, graph, fact, temporal) combined per memory, with MMR and an episodic graph beside them"
   write: "Regex type patterns assign a type, a base confidence and one of nine priority classes with no model call; an LLM path is optional"
   update_delete: "`forget(memoryId)`, `update(...)`, and a `sleep(dryRun)` consolidation pass that can be run without applying anything"
-  scoping: "Two layers. A bank is a separate database file selected by `setBank`, and inside one, beam recall filters on stored `session_id`, `scope` and `channel_id` columns — with two documented widenings that drop the predicate entirely"
+  scoping: "Two layers. A bank is a separate database file selected by `setBank`, and inside one, beam recall filters on stored `session_id`, `scope` and `channel_id` columns — unless the caller passes `ignoreSessionScope`, or an author filter without a channel, which the MCP recall tool accepts from the model"
   integration: "The memory engine behind the oh-my-pi coding agent, with retain, reflect, render and edit tools and a `memory://` protocol"
   background: "`sleep` and `sleepAllSessions` consolidation, plus SHMR clustering with similarity and harmony thresholds"
   trust: "Veracity as a provenance class — stated, inferred, tool, imported, unknown — mapped to a fixed weight"
@@ -190,8 +189,7 @@ composes a visibility clause over stored columns on every query:
 supplied, `(session_id = ? OR scope = 'global')` otherwise, alongside
 `superseded_by IS NULL` and a `valid_until` freshness check. `working_memory`
 and `episodic_memory` each carry `session_id`, `scope`, `channel_id` and
-`author_id`. That is a stored key reaching the query, which is what the mark
-measures.
+`author_id`. That is a stored key reaching the query.
 
 **Two widenings live in the same function, and the second is the one to know
 about.** `ignoreSessionScope: true` pushes `1=1`, which is an explicit,
@@ -200,6 +198,14 @@ named escape hatch. But supplying `authorId` or `authorType` *without* a
 silently drops the session and channel boundary and searches the whole bank.
 A filter that reads as a narrowing and behaves as a widening is the shape most
 likely to be wrong in a caller's head, and nothing in the signature says so.
+
+The widening reaches the model. The MCP `recall` handler (`src/mcp-tools.ts:526-544`)
+passes `author_id`, `author_type` and `channel_id` straight from the tool
+arguments into the recall options, so a call naming an author and no channel
+searches every session in the bank, and a call naming a channel reads that
+channel. Because the boundary inside a bank is lifted by an argument the caller
+supplies, `scope_enforced` is not carried; the bank file is a partition, which the
+mark does not count either.
 
 **The disjunction itself has a subtlety worth recording**, because it was got
 wrong and fixed. `buildWhere` also appended a hard `channel_id = ?` on top of
@@ -404,6 +410,8 @@ model grades where a memory came from rather than whether it holds.
 | `test/` | 456 cases, 75 files | Precision regressions, concurrency, voices, visibility |
 
 ## History
+
+**2026-09-15** — [`c5a8e0e09296290c2fd3ef053391081acc691ded`](https://github.com/can1357/oh-my-pi/commit/c5a8e0e09296290c2fd3ef053391081acc691ded) — 4,363 monorepo commits on, 2026-09-15, package at 18.2.0; four merged changes touch `packages/mnemopi`. Screened on a sparse checkout of the package and the root manifests: one auto-run surface, five build-time execution points, five unpinned surfaces, 28 dependency surfaces inside the cooldown and an agent-instruction file read as data; nothing was installed or run. Lexical recall no longer lets superseded or validity-retired rows occupy FTS `LIMIT` slots — the candidate queries now join the live table with a correlated `EXISTS` — with `fts-superseded.test.ts` pinning that a live row is returned at `k=1` beside a better-matching superseded one; the recall cache is invalidated when a memory is retired and when embeddings commit; and the metric-fact key's lookbehind stops at the nearest line, cell or sentence boundary. `scope_enforced` is withdrawn: the MCP recall tool lets the model pass an author filter without a channel, which drops the session predicate, or name any channel. `bitemporal` and `negative_eval` kept. Two marks.
 
 **2026-08-23** — [`b8e8c213c1ce970f0f008edfe471bf7858fd747a`](https://github.com/can1357/oh-my-pi/commit/b8e8c213c1ce970f0f008edfe471bf7858fd747a) — second reading, 81 commits touching `packages/mnemopi` out of 2,951 in the monorepo. Screened again first: one auto-run surface, five build-time execution points, four unpinned surfaces and thirty files inside the seven-day cooldown; nothing was installed and no test was run. **Two marks are added and both were earned at the previous pin.** The first reading covered the `Mnemopi` facade and polyphonic recall and did not reach `src/core/beam/`, which is the larger half of the engine at 5,354 lines and holds the SQL every recall is built from — `buildWhere`'s visibility clause over `session_id`, `scope` and `channel_id` is present verbatim at `4df68d60`. Nor did it reach `src/core/triples.ts`, whose `valid_from`/`valid_until` interval is filtered by an `asOf` query and closed rather than overwritten on supersession. The 81 commits are hardening — SQLite page-size alignment made opt-in, one-shot prepared statements released, embed-worker IPC bounded and reaped on timeout, lifecycle-hook and auto-recall failures contained, episodic participant extraction made Unicode-aware — plus one visibility fix: a redundant hard `channel_id = ?` beside the OR-clause had been nullifying its `scope = 'global'` branch, silently dropping every global row whose channel differed, including everything imported with a NULL channel. Three findings are new and none of them moved in those commits: the extraction path writes triples with raw SQL and never reaches the only code that closes a predecessor's interval, because `beam.triples` is never supplied at any of the four construction sites; `memoria_facts` declares six fact-versioning columns that nothing in the repository writes or reads; and `buildWhere` drops its scope predicate entirely when an author filter is supplied without a channel.
 
