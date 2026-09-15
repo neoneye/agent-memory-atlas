@@ -138,6 +138,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need a small embeddable library, raw transcript recall as the primary memory layer, or `epistemic_confidence`/`retrieval_strength` driving ranking (these columns are schema groundwork only; Tier-1 ranking still uses `confidence`).
 
 ### [`letta`](../systems/letta/)
+- Status: the V1 server was archived from the main branch on 15 August 2026 and development moved to `letta-ai/letta-code`; the entries below describe the server as it stands on the `archive` branch.
 - Best idea: core vs archival vs conversation memory inside the runtime.
 - Biggest risk: agent-editable core memory without a strong truth model.
 - Most reusable component: memory block compile/mutation and patch-style edits.

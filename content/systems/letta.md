@@ -1,16 +1,19 @@
 ---
 title: Letta
-eyebrow: Agent-runtime memory
-description: Deeply integrated agent memory spanning editable core blocks, archival passages, and conversation recall.
+eyebrow: An agent runtime it archived
+description: "The MemGPT-lineage V1 server — editable core blocks, archival passages and conversation recall inside the agent loop — whose source left the main branch on 15 August 2026 for an archive branch, with current development in letta-code."
 root: ../..
 page_kind: system
 source_name: letta-ai/letta
 source_url: https://github.com/letta-ai/letta
 archive_name: "letta-ai--letta"
-revision: ff19ffeafeb54bd2a7dc5d4a552f10191732a235
-revision_url: https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235
-analyzed_at: 2026-08-06
-capabilities: "scope_enforced"
+revision: 5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a
+revision_url: https://github.com/letta-ai/letta/commit/5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "every ORM read that takes an actor, at the archive branch 56ba9c25552605eec89de8ed3dc6394b625c1993 | letta/orm/sqlalchemy_base.py:872 apply_access_predicate, applied at :267, :528, :728 and :814 | blocks, passages and agents carry organization_id through OrganizationMixin, and a read with an actor adds WHERE organization_id equals the actor's, raising when the actor has none; managers take the actor as a parameter. A list without an actor logs a SECURITY warning and runs unfiltered, so the predicate depends on internal callers passing it | tests/managers/test_block_manager.py:303"
+  negative_eval: "cross-organization block reads, at the archive branch 56ba9c25552605eec89de8ed3dc6394b625c1993 | tests/managers/test_block_manager.py:303 test_get_blocks_comprehensive | ten blocks for one organization and three for another; each actor retrieves exactly its own set and every label, then each actor's label lookup for the other organization's blocks is asserted `== []` | tests/managers/test_block_manager.py:350-355"
 stack_storage: "delegated"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -29,6 +32,18 @@ matrix:
 ---
 
 ## 1. Executive Summary
+
+**At this commit the `letta-ai/letta` main branch holds no source.** On 15 August
+2026 [`87fd37aab68c7bdd0d66fe63751553756f6af3e5`](https://github.com/letta-ai/letta/commit/87fd37aab68c7bdd0d66fe63751553756f6af3e5)
+(#3430) removed the V1 API server — about 367,000 lines — leaving the README,
+policies and a citation file. The README points to
+[`letta-ai/letta-code`](https://github.com/letta-ai/letta-code) as the current
+source, covering the agent harness, terminal UI, App Server and channels, and
+keeps the retired server on the
+[`archive`](https://github.com/letta-ai/letta/tree/56ba9c25552605eec89de8ed3dc6394b625c1993) branch, two
+non-source commits after the previous pin. What follows is the V1 server as it
+stands there, and every path below refers to that tree. `letta-code` has no
+report here.
 
 `letta` is an agent runtime with memory as part of agent state. Its memory model is older and deeper than most repos here: core in-context memory blocks, archival semantic memory, recall over conversation history, file/source memory, and newer git-backed memory projection support.
 
@@ -253,9 +268,26 @@ Risks:
 - Archival memory insertion trusts agent-provided content.
 - Git-backed memory projection adds another synchronization surface.
 
+Two mechanisms that look like marks and are not. `BlockHistory`
+(`letta/orm/block_history.py`) stores block snapshots with an actor type and id
+and a per-block sequence number, but it is an undo/redo stack: a checkpoint
+taken after an undo deletes the rows ahead of the current position
+(`block_manager.py:877-880`), and the rows cascade away with the block, so it is
+not an append-only mutation record and `audit_log` is withheld.
+`RequiresApprovalToolRule` (`letta/schemas/tool_rule.py:348`) can hold any tool,
+memory tools included, for a person's approval, but it is a per-agent tool rule
+with no memory-specific surface, so `human_review` is withheld.
+
+The organization scope is real and sits in one place: `apply_access_predicate`
+in the ORM base adds `organization_id = actor.organization_id` to every read
+that is given an actor. A list called without one logs
+*"SECURITY: Listing org-scoped model … without actor. This bypasses organization
+filtering"* and proceeds, so the boundary holds because the managers pass the
+actor, not because the base refuses.
+
 ## 10. Tests, Evals, and Benchmarks
 
-Relevant tests exist for memory, block, passage, message, summarizer, and archival-memory performance. I did not run them.
+Relevant tests exist for memory, block, passage, message, summarizer, and archival-memory performance. I did not run them. `tests/managers/test_block_manager.py::test_get_blocks_comprehensive` is the exclusion case: two organizations' blocks, each actor seeing exactly its own, and each actor's lookup of the other's labels asserted empty.
 
 Missing tests I would want:
 
@@ -309,6 +341,8 @@ Letta is worth studying if you are building a full agent runtime. It is heavier 
 
 ## Appendix: File Index
 
+Paths are at the [`archive`](https://github.com/letta-ai/letta/tree/56ba9c25552605eec89de8ed3dc6394b625c1993) branch; the main branch no longer has them.
+
 - Core memory schema/rendering: `letta/letta/schemas/memory.py`.
 - Tool docs/stubs: `letta/letta/functions/function_sets/base.py`.
 - Tool runtime: `letta/letta/services/tool_executor/core_tool_executor.py`.
@@ -316,9 +350,13 @@ Letta is worth studying if you are building a full agent runtime. It is heavier 
 - Passages: `letta/letta/services/passage_manager.py`, `letta/letta/orm/passage.py`.
 - Conversation search: `letta/letta/services/message_manager.py`.
 - Git memory: `letta/letta/services/memory_repo/`.
-- Tests: `letta/tests/`.
+- Tests: `letta/tests/`, with the cross-organization case in `tests/managers/test_block_manager.py`.
+- Scope predicate: `letta/orm/sqlalchemy_base.py` (`apply_access_predicate`).
+- Block history: `letta/orm/block_history.py`, `letta/services/block_manager.py` (`checkpoint_block_async`).
 
 ## History
+
+**2026-09-15** — [`5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a`](https://github.com/letta-ai/letta/commit/5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a) — 5 commits on, 2026-09-10. Screened before reading: the main branch is Markdown and a citation file with no manifests, and its `AGENTS.md` addresses a reading agent, read as data; nothing was installed or run. The subject of this report left the branch: [`87fd37aab68c7bdd0d66fe63751553756f6af3e5`](https://github.com/letta-ai/letta/commit/87fd37aab68c7bdd0d66fe63751553756f6af3e5) (#3430, 2026-08-15) archived the V1 server, and the README names `letta-ai/letta-code` as the current source. The `archive` branch at [`56ba9c25552605eec89de8ed3dc6394b625c1993`](https://github.com/letta-ai/letta/commit/56ba9c25552605eec89de8ed3dc6394b625c1993) differs from the previous pin only in an issue-guard workflow and `AGENTS.md`, so the body stands for that tree and is framed as archived. Read against it for evidence records: `scope_enforced` kept on the ORM organization predicate, with the actor-optional list noted; `negative_eval` added on the cross-organization block test, present at both earlier readings; `audit_log` withheld on `BlockHistory`, an undo stack that deletes forward rows; `human_review` withheld on a generic tool-approval rule. Two marks.
 
 **2026-08-06** — [`ff19ffeafeb54bd2a7dc5d4a552f10191732a235`](https://github.com/letta-ai/letta/commit/ff19ffeafeb54bd2a7dc5d4a552f10191732a235) — 3 commits on, none of them source. The diff is `.github/` issue templates and a workflow, `.gitignore`, `AGENTS.md`, `AI_POLICY.md` and the README; `git diff --name-only` filtered to `*.py` is empty. The memory mechanism is unchanged and no published claim is stale. Screened again: 0 auto-run surfaces, 4 build-time exec paths, and an `AGENTS.md` addressed to a reading agent, read as data. Nothing was installed or run.
 
