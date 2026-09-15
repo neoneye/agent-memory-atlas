@@ -7,10 +7,13 @@ page_kind: system
 source_name: "FlowElement-xinliuyuansu/m_flow"
 source_url: https://github.com/FlowElement-xinliuyuansu/m_flow
 archive_name: "FlowElement-xinliuyuansu--m_flow"
-revision: da2766c5ebf45ff10440b419465c8ec0df674022
-revision_url: https://github.com/FlowElement-xinliuyuansu/m_flow/commit/da2766c5ebf45ff10440b419465c8ec0df674022
-analyzed_at: 2026-08-02
-capabilities: ""
+revision: 0d585cda2f588af69fb872ae6914caba0c217816
+revision_url: https://github.com/FlowElement-xinliuyuansu/m_flow/commit/0d585cda2f588af69fb872ae6914caba0c217816
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "authorized search — dataset permissions resolved before retrieval | m_flow/search/methods/search.py:145-146 and :293-335, m_flow/data/methods/get_authorized_existing_datasets.py, m_flow/context_global_variables.py:115 | when backend_access_control_enabled() holds, search calls get_authorized_existing_datasets(permission_type=read, user) and runs each retriever only inside an authorized dataset; with ENABLE_BACKEND_ACCESS_CONTROL unset it auto-enables when the configured handlers support dataset isolation — the kuzu graph and lancedb vector defaults do — and raises when set true without support; any other value disables it and search runs without a dataset context | m_flow/tests/test_permissions.py:126-136"
+  negative_eval: "cross-user dataset search, and procedural injection on queries that must not trigger it | m_flow/tests/test_permissions.py, m_flow/eval/datasets/procedural_eval_v1.jsonl | two users each ingest a dataset, and each user's search is asserted to return exactly one result from their own dataset; writes, memorize and grants into the other user's dataset raise PermissionDeniedError; after a read grant the same search returns both, the positive control; the test runs in e2e_tests.yml. The procedural eval carries six negative cases asserting no procedural trigger or injection beside fourteen that must trigger | m_flow/tests/test_permissions.py:126-136, :208-210; m_flow/eval/metrics.py fp_inject"
 stack_storage: "graph"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -20,18 +23,18 @@ matrix:
   retrieval: "Anchor on the most precise node, then path-cost propagation over typed edges: each hop widens the field and adds cost, so only coherent low-cost paths compete"
   write: "Episodic capture, then a worth-storing screen and a classifier before a procedure is built and indexed"
   update_delete: "Procedures are versioned with conflict detection and a generated version diff; `reconcile_active` decides which version is live"
-  scoping: "Not established. No scope key was found applied as a filter on the retrieval path"
+  scoping: "Datasets, by stored read permission: with backend access control on — the default whenever the graph and vector handlers support per-dataset databases, which the defaults do — search resolves the datasets the user holds `read` on before any retriever runs"
   integration: "An MCP server, a frontend, worker queues, an OpenClaw skill and a starter kit"
   background: "Worker tasks that queue memory-node writes and save them out of band"
   trust: "A sensitivity screen on procedural content and usage statistics; no status field withholding a memory from use"
   strengths: "Every expensive step is fronted by a cheap deterministic one — worth-storing, conflict detection and procedural triggering are each two-level"
-  risks: "149,000 lines across four packages with no committed retrieval result, so the path-cost claim that distinguishes it is unmeasured in the repository"
+  risks: "Per-edge path costs are uncalibrated in the repository; the LoCoMo and LongMemEval figures in the README are reproduced in a separate repository, and the in-repo procedural eval is twenty cases with a committed baseline"
 ---
 
 ## 1. Executive Summary
 
-M-flow is a graph memory engine: 149,142 lines of Python, Apache-2.0, 204 commits
-since 4 April 2026, HEAD 2 June 2026. It ships a server, an MCP interface, a
+M-flow is a graph memory engine: about 149,000 lines of Python, Apache-2.0, 206
+commits since 4 April 2026. It ships a server, an MCP interface, a
 frontend, worker queues, a starter kit and an OpenClaw skill.
 
 The retrieval model is the reason to read it. A query lands on **the most precise
@@ -64,22 +67,29 @@ of an expensive model call, and say so in the docstring each time:
   decides *"whether Procedure is worth storing and indexing"* before anything
   builds one.
 
-This atlas has a pattern page for exactly this
-([gate the expensive path](../../patterns/gate-the-expensive-path/)) and most
-implementations of it gate once. Doing it three times, at trigger, at conflict
+This is the [gate the expensive path](../../patterns/gate-the-expensive-path/)
+pattern applied at three points rather than one. Doing it three times, at trigger, at conflict
 and at capture, with the cost tier named in the comment, is the thing to copy.
 
 The trigger module makes a second distinction worth naming. It separates *should
 we retrieve* from *should we inject*: **"Triggers procedural retrieval if any
 condition is met (but whether injection is used is decided later)."** Retrieval
 being cheap and injection being expensive — in tokens, and in the risk of
-polluting a prompt — is a real asymmetry, and almost nothing else here models it
-as two decisions.
+polluting a prompt — is a real asymmetry, and it is modelled here as two
+decisions.
 
-**What is missing is a number.** For a system whose distinguishing claim is that
-path-cost propagation retrieves better than layered retrieval, no committed
-benchmark result was found. The claim is architectural, plausible, and unmeasured
-in its own repository.
+**The numbers live mostly outside the repository.** The README reports LoCoMo-10
+at 81.8% and LongMemEval at 89% LLM-judged, against Cognee, Zep, Mem0 and
+Supermemory under one answer and judge model, and points to a separate
+`mflow-benchmarks` repository for scripts and raw data; nothing here was run to
+check them. Inside the tree, `m_flow/eval` scores the procedural trigger on twenty
+cases — including six that must not trigger — against a committed baseline.
+
+**Search is scoped by dataset permission.** Like the Cognee code it shares
+lineage with, M-flow resolves the datasets a user may read before any retriever
+runs, and turns that on by default when the storage handlers support per-dataset
+databases. A committed test shows each user seeing only their own dataset until a
+grant.
 
 ## 2. Mental Model
 
@@ -172,17 +182,14 @@ The procedural side is the one with lifecycle. `ProcedureState` holds
 `ExistingKeyPoint` and `ExistingContextPoint` records; drafts are built as
 `ContextPackDraft` and `KeyPointsPackDraft` before becoming a version. Versioning
 gives a procedure a history, a diff against its predecessor, and an active
-pointer — which is more correction machinery than most procedural memories in
-this atlas have, [TigrimOSR](../tigrimosr/) being the closest with its staged
-proposal and human approval.
+pointer — correction machinery comparable to
+[TigrimOSR](../tigrimosr/)'s staged proposal, without its human approval.
 
-No capability marks are claimed. There is no status field that withholds a
-memory from use, no record of a rejected value, no validity time separate from
-record time, and no scope key found applied as a filter on the retrieval path.
-`sensitivity.py` screens procedural content and is a safety filter rather than an
-epistemic state. A reader should treat the empty capability row as *assessed and
-none found at this commit* — this is a large system and the retrieval subsystem
-in particular has more surface than a static read fully covers.
+Two marks, `scope_enforced` and `negative_eval`, both on the permission layer
+and its test (section 9). There is no status field that withholds a memory from
+use, no record of a rejected value, and no validity time separate from record
+time. `sensitivity.py` screens procedural content and is a safety filter rather
+than an epistemic state.
 
 ## 6. Retrieval Mechanics
 
@@ -233,6 +240,32 @@ not established, so `human_review` is withheld rather than denied.
 
 ## 9. Reliability, Safety, and Trust
 
+**`scope_enforced` — earned, on datasets.** Every dataset carries stored
+permissions (`m_flow/auth/models/ACL.py`, `Permission.py`, tenant and role
+defaults). `search` checks `backend_access_control_enabled()`; when it holds,
+`_authorized_search_impl` resolves `get_authorized_existing_datasets(datasets,
+permission_type="read", user)` — every readable dataset when none is named, only
+the permitted subset otherwise — and each retriever then runs inside one
+authorized dataset's database context. The switch is on when
+`ENABLE_BACKEND_ACCESS_CONTROL` is unset and the graph and vector handlers support
+dataset isolation, which the `kuzu` and `lancedb` defaults do; set to `true`
+without support it raises; any other value disables it and search runs through
+`no_access_control_search` with no dataset context at all.
+
+**`negative_eval` — earned.** `m_flow/tests/test_permissions.py`, run by
+`e2e_tests.yml`, has two users ingest separate datasets and asserts each user's
+search returns exactly one result from their own; writing, memorizing or granting
+into the other user's dataset raises `PermissionDeniedError`; after a `read`
+grant the same search returns both. The procedural eval adds six negative cases
+that must neither trigger nor inject a procedure.
+
+**`audit_log` — withheld.** `GraphRelationshipLedger` describes itself as an
+*"append-only ledger that records every graph-edge lifecycle event"*, and a
+decorator on the graph interface inserts a row per added node and edge with the
+calling function. It is not append-only in use: a deletion runs an `UPDATE`
+setting `deleted_at` on the existing rows (`api/v1/delete/delete.py:144-152`),
+and a failed insert is logged at debug and rolled back.
+
 `safety/sensitivity.py` screening procedural content before storage is the one
 explicit safety mechanism found, and screening *procedures* specifically is a
 sensible target: a stored procedure is an instruction the agent will follow
@@ -248,19 +281,26 @@ system is confident in from one extracted once from an ambiguous episode, and
 
 ## 10. Tests, Evals, and Benchmarks
 
-There is a `conftest.py` at the root and integration tests under
-`m_flow/tests/integration/`. I did not run them — the system expects a graph
-database and a worker queue, which is beyond a proportional smoke test.
+There is a `conftest.py` at the root, unit tests under `m_flow/tests/unit/`, and
+end-to-end scripts such as `test_permissions.py` run by `e2e_tests.yml`. Nothing
+was run for this review — the system expects a graph database and a worker queue.
 
-No committed benchmark result, no eval fixture and no retrieval-quality artifact
-were found. That is the report's main reservation and it is specific: the
-architectural claim that distinguishes M-flow from a layered store is a
-*retrieval-quality* claim, and retrieval quality is the one thing a reader cannot
-check from the code. A committed comparison against the layered baseline the
-README argues with would be the most valuable thing this project could publish.
+**`m_flow/eval` is a procedural-retrieval harness.** `python -m m_flow.eval
+--dataset procedural_eval_v1.jsonl --compare-baseline` runs twenty cases —
+seven explicit procedures, four implicit tasks, three micro-actions and six
+negatives such as small talk and arithmetic — and reports recall@1-3, active-hit,
+false-positive injection, context completeness, step presence, trigger accuracy
+and an overshadow rate for procedures crowding out episodic context. The
+committed baseline, dated January 2026, records trigger accuracy 0.85, recall@1
+0.6 and a false-positive injection rate of 0.1; it is a stored file, not a run
+here.
 
-`negative_eval` is withheld; no committed case asserting that particular material
-must not be retrieved was found.
+**The headline benchmarks are elsewhere.** The README's LoCoMo-10 and
+LongMemEval tables — M-flow at 81.8% and 89% LLM-judged, with Cognee, Zep, Mem0
+and Supermemory under the same answer and judge models — cite a separate
+`mflow-benchmarks` repository for reproduction scripts and raw data, which was
+not read. What remains uncalibrated in this repository is the per-edge cost that
+makes paths compete.
 
 ## 11. For Your Own Build
 
@@ -274,12 +314,12 @@ immediately which path costs a model call.
 
 **Separate "should we retrieve" from "should we inject".** Retrieval is cheap and
 reversible; injection spends tokens and changes what the model believes. Deciding
-them at different moments with different information is a distinction almost
-nothing else in this atlas draws.
+them at different moments with different information is a distinction worth
+drawing explicitly.
 
 **Screen before you index, not after.** `worth_storing` runs before a procedure
 is built and indexed, so the cost of a bad memory is avoided rather than cleaned
-up. Most systems here extract everything and prune later.
+up, instead of extracting everything and pruning later.
 
 **Version a procedure and generate the diff.** A stored procedure is an
 instruction the agent will follow; being able to see what changed between
@@ -292,9 +332,9 @@ facts.** A single low-cost chain is a good reason to look somewhere and a weak
 reason to believe something. If retrieved material is going to be stated as
 fact, the corroboration requirement has to live somewhere.
 
-**Do not ship a retrieval thesis without a retrieval number.** The argument
-against layered stores is the reason to choose this system, and the repository
-does not contain a measurement of it.
+**Do not keep the retrieval evidence out of the tree it describes.** The argument
+against layered stores is the reason to choose this system, and its measurement
+lives in a separate repository while the per-edge costs stay uncalibrated here.
 
 ### Fit
 
@@ -304,14 +344,16 @@ worth-storing screen and the tiered gates are the parts that transfer, and the
 first two are small enough to lift.
 
 Do not take it if you need to evaluate before adopting: 149,000 lines across four
-packages, several coexisting retrieval strategies, and no committed result means
-the only way to know whether the path-cost model works for your corpus is to run
-it on your corpus.
+packages, several coexisting retrieval strategies, and benchmarks published outside the
+tree mean the way to know whether the path-cost model works for your corpus is to
+run it on your corpus.
 
 ## 12. Antipatterns / Risks
 
-- **No committed retrieval result** for a system whose thesis is retrieval
-  quality.
+- **Retrieval results published outside the repository** for a system whose
+  thesis is retrieval quality.
+- **Access control can be switched off by one environment value**, and search
+  then runs with no dataset context.
 - **Edge costs are the ranking signal and are uncalibrated** against any labelled
   set in the repository.
 - **Several retrieval strategies coexist**, and which runs when is an
@@ -330,7 +372,7 @@ often make.
 
 Build the evaluation. M-flow is arguing a specific, testable claim — anchor plus
 path cost beats layer selection — against a baseline it names. The experiment is
-well defined and the repository does not run it.
+well defined and its scripts sit in a separate repository.
 
 ## 14. Open Questions
 
@@ -352,10 +394,18 @@ well defined and the repository does not run it.
 | `m_flow/memory/procedural/versioning/` | Conflict detection and version diffs |
 | `m_flow/memory/procedural/safety/sensitivity.py` | Screening on procedural content |
 | `m_flow/memory/episodic/` | Episodic capture and state |
+| `m_flow/search/methods/search.py`, `m_flow/data/methods/get_authorized_existing_datasets.py` | Authorized search over readable datasets |
+| `m_flow/context_global_variables.py` | `backend_access_control_enabled` and the handler-support check |
+| `m_flow/auth/` | ACL, permission, tenant and role models |
+| `m_flow/tests/test_permissions.py` | Cross-user dataset isolation and grants |
+| `m_flow/eval/` | Twenty-case procedural eval with a committed baseline |
+| `m_flow/data/models/graph_relationship_ledger.py` | Node and edge ledger, updated on delete |
 | `mflow_workers/` | Queued node writes and the saving worker |
 | `m_flow-mcp/`, `m_flow-frontend/`, `openclaw-skill/` | Interfaces |
 
 ## History
+
+**2026-09-15** — [`0d585cda2f588af69fb872ae6914caba0c217816`](https://github.com/FlowElement-xinliuyuansu/m_flow/commit/0d585cda2f588af69fb872ae6914caba0c217816) — one commit on, 2026-08-03, updating repository references after the move to `FlowElement-xinliuyuansu`; no code changed. Screened before reading: no auto-run surface, five build-time execution points, five unpinned surfaces and an agent-instruction file read as data; nothing was installed or run. Read again against that tree, three findings of the first reading were wrong at the earlier pin and are corrected. The retrieval path applies dataset read permissions by default, so `scope_enforced` is added; `test_permissions.py` asserts each user sees only their own dataset until a grant, so `negative_eval` is added; and the claim that no eval fixture or benchmark result existed is replaced by the in-repo procedural eval with its committed baseline and the README's externally reproduced LoCoMo and LongMemEval figures. `audit_log` is withheld on `GraphRelationshipLedger`, which is updated rather than appended on delete. Two marks.
 
 **2026-09-13** — the repository was renamed from `FlowElement-ai/m_flow` to `FlowElement-xinliuyuansu/m_flow`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/FlowElement-xinliuyuansu--m_flow` to match.
 
