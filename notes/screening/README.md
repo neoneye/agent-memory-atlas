@@ -135,7 +135,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
 | [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
 | [`omega-memory`](../../content/systems/omega-memory.md) | `.mcp.json`, `hooks/`, `server.json`, `smithery.yaml` |
-| [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/` |
+| [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.githooks/` |
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |

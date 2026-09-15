@@ -177,7 +177,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Append-only mutation audit | 159 of 457 |
 | Human review surface | 135 of 457 |
 | Explicit trust state | 104 of 457 |
-| Bi-temporal validity | 73 of 457 |
+| Bi-temporal validity | 72 of 457 |
 | Rejected-value tombstone | 44 of 457 |
 <!-- END GENERATED SPREAD -->
 

@@ -1491,10 +1491,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need to explain why the agent believed something. Trust is a float and two labels, one scored backwards and one inert, with no discrete epistemic state anywhere.
 
 ### [`omi`](../systems/omi/)
-- Best idea: `ACTION_POLICY` maps each epistemic status to a set of permitted *uses*, and `can_use_for_action` requires an `accepted` fact before an irreversible action — so an unreviewed memory may answer a question with a disclaimer and may not send, buy or delete anything. Trust gating capability, graded by reversibility.
+- Best idea: `ACTION_POLICY` maps each epistemic status to a set of permitted *uses*, and `can_use_for_action` would require an `accepted` fact before an irreversible action — trust gating capability, graded by reversibility. At the current pin nothing outside its module calls it, so the idea is written and not yet enforced.
 - Biggest risk: every refusal is keyed on a row while the transcript that produced it is retained by design, so a rejected fact can be re-derived from the same audio and re-enter as a fresh candidate. Ambient capture is where record-keyed correction fails fastest.
 - Most reusable component: two confidence fields with different jobs — `capture_confidence` for whether the source was heard correctly, `veracity` for whether the claim is true — beside `subject_attribution` recording whether the fact is even about the user.
-- Maturity impression: 540,721 lines of backend Python under 259,452 lines of tests across 843 unit files, a hash-chained per-user commit ledger with optimistic concurrency, an outbox that reloads canonical state before every external write, and per-user encryption at rest — six of seven capability marks.
+- Maturity impression: over a thousand backend unit test files, a hash-chained per-user commit ledger with optimistic concurrency, an outbox that reloads canonical state before every external write, uid-and-status filters on every memory vector search, and per-user encryption at rest — five of seven capability marks.
 - Study when: you are building memory for anything that captures continuously and can then act — a wearable, a meeting recorder, a screen agent. The problems it solves arrive with ambient capture and not with a chat box.
 - Do not copy when: you need an inspectable store or a memory layer separable from its product. This is Firestore, Pinecone, a worker fleet and a device; the value transplants as design decisions, not as code.
 

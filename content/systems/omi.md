@@ -1,23 +1,22 @@
 ---
 title: "Omi"
-eyebrow: "Status decides what a memory may do"
-description: "A wearable's memory backend whose epistemic status maps to a set of permitted uses, so an unreviewed fact may answer with a disclaimer and only an accepted one may drive an irreversible action."
+eyebrow: "Status names what a memory may do"
+description: "A wearable's memory backend over a per-user commit ledger, with two confidence axes, subject attribution, a budgeted review queue and a policy table mapping epistemic status to permitted uses — a table the retrieval and action paths do not consult."
 root: ../..
 page_kind: system
 source_name: "BasedHardware/omi"
 source_url: https://github.com/BasedHardware/omi
 archive_name: "BasedHardware--omi"
-revision: bacd4cf2985bdab6098994345bd52ed91bcf3332
-revision_url: https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52ed91bcf3332
-analyzed_at: 2026-08-20
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a
+revision_url: https://github.com/BasedHardware/omi/commit/f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a
+analyzed_at: 2026-09-15
+capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  trust_state: "the fact's qualifier block, set on every write path | backend/models/memories.py, backend/database/review_queue.py, backend/database/projection_repair.py | `epistemic_status` is a discrete qualifier beside two separate floats — `capture_confidence` (*\"Fixed confidence that the source was captured correctly\"*) and `veracity` (*\"Current belief that the fact is true\"*) — and it is written rather than defaulted: `review_queue.py:564` sets `qualifiers['epistemic_status'] = 'accepted'` on an accepted review, and `projection_repair.py:159` resolves it from the fact's own status when rebuilding | backend/tests/unit/test_memories_user_review.py"
-  bitemporal: "the ledger fold, replaying commits as of a valid time | backend/database/memory_ledger.py | `normalize_fact_for_ledger` lifts `valid_at` into `qualifiers['valid_from']` (`:102-103`), `_fact_valid_at` (`:513-519`) compares a requested instant against `valid_from` and `valid_to`, and `fold_commits(commits, valid_time=...)` (`:406-416`) returns only the facts valid at that instant — validity tracked separately from commit order, and queryable as-of | none located at this pin"
-  scope_enforced: "every read of the memory collection | backend/database/memories.py | the collection is addressed as `database.collection(users_collection).document(uid).collection(memories_collection)` at `:114`, `:130`, `:289` and `:311`, so a read is rooted at the user document rather than filtered after the fact and a query cannot be written that spans users | backend/tests/unit/memory_import_isolation.py"
-  audit_log: "the append-only commit ledger beside the state head | backend/database/memory_ledger.py | `mutation()`, `add_fact()` and `supersede_fact()` build typed commit payloads applied under `_typed_transactional`, with `HeadConflict` raised when the state head moved beneath a writer, so the mutation record is the store's own and not git history | none located at this pin"
-  human_review: "the conflict review queue, and the boundary its resolution may not cross | backend/database/review_queue.py | `create_review_conflict` files a conflict when `should_escalate_conflict` clears an `impact_score` threshold, a person resolves it as accept, correct or drop, and `permitted_uses`/`can_use_for_action` gate what an unresolved status may be used for; the resolution routes through `MemoryService` under the stated rule that historical rows *\"remain readable, but their resolution may not mutate the protected historical memory collection\"* | backend/tests/unit/test_memories_user_review.py"
-  negative_eval: "the review-visibility read path, as committed cases | backend/tests/unit/test_memories_user_review.py | a mixed set is built and the test asserts an excluded id is absent from the result — `assert '4' not in result_ids` (`:166`) — and separately that `user_review` and `invalid_at` do not appear among the filter fields (`:225-226`), which asserts about a read path rather than a projection | backend/tests/unit/test_memories_user_review.py"
+  trust_state: "the item status and review state, read on list and vector reads | backend/database/memory_vector_metadata.py:209-232 _active_memory_vector_filter_clauses, backend/database/memories.py:244-256 _memory_passes_list_visibility, backend/models/product_memory.py:91 MemoryItemStatus, backend/database/review_queue.py:610 | canonical items carry a status of active, superseded, hidden or tombstoned and every memory vector search adds status = active and source_state = active to its filter; list reads drop a row whose user_review is False and, unless history is asked for, one whose invalid_at is set; an accepted review writes qualifiers['epistemic_status'] = 'accepted' beside capture_confidence and veracity | backend/tests/unit/test_memories_user_review.py:166"
+  scope_enforced: "every memory read, by user id | backend/database/memory_vector_metadata.py:218-232 _base_memory_vector_filter, backend/database/vector_db.py:385 build_legacy_memory_vector_filter and :605-635 query_memory_vector_candidates, backend/database/memories.py:370-384 get_memories | Pinecone memory search always sends uid $eq on the stored uid metadata and raises when uid is empty, legacy namespace searches carry the same clause, and Firestore reads are rooted at users/{uid}/memories, so no read path spans users | backend/tests/unit/memory_import_isolation.py"
+  audit_log: "the per-user commit ledger beside the state head | backend/database/memory_ledger.py:522 commit_id_for, :572 append_commit, :604 append_commit_with_builder, :635 and :690 the typed transactions; backend/database/memories.py:713-715 and review_queue.py:652-662 as writers | every add, supersede, refine and retract is a typed mutation appended as a commit whose id hashes the parent and mutations, under a head check that raises HeadConflict; privacy erasure deletes the commits that reference an erased memory (purge_legacy_memory_commits_for_memories :215, purge_canonical_privacy_history_for_memories :269) | backend/tests/unit/test_memory_ledger.py"
+  human_review: "the review queue and its routes | backend/database/review_queue.py:81 create_review_conflict, :74 should_escalate_conflict, :737 resolve_review_conflict, :1056 resolve_expired_review_conflicts; backend/routers/memories.py:887, :905, :1022 | a conflict is filed when an ambiguous new fact clears the impact threshold, listed at GET /v3/memories/review-queue, and resolved by a person through POST /v3/memories/{memory_id}/review as accept, correct or drop, routed through MemoryService so historical rows are not mutated; expired conflicts resolve by timeout | backend/tests/unit/test_memories_user_review.py, test_memories_review_item_endpoint.py"
+  negative_eval: "the review-visibility read path, as committed cases | backend/tests/unit/test_memories_user_review.py | a mixed set is built and the memory a user reviewed away is asserted absent from the result while the other three are present (`assert '4' not in result_ids`, :166), and user_review and invalid_at are asserted absent from the Firestore filter fields (:225-226) | backend/tests/unit/test_memories_user_review.py:166, :225-226"
 stack_storage: "pinecone"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -39,15 +38,15 @@ matrix:
 
 Omi is a wearable and desktop capture product — it records conversations and
 screen activity, transcribes, summarizes, and answers questions over what it
-heard. MIT, 32,092 commits since 22 March 2024, 540,721 lines of Python in
-`backend/` of which 259,452 are tests across 843 unit files. The memory
+heard. MIT, 36,370 commits since 22 March 2024, with a Python `backend/` whose unit
+suite runs to well over a thousand files. The memory
 subsystem proper is about 7,200 lines under `backend/database/memor*.py` and
 `backend/config/memor*.py`, over Firestore with Pinecone for vectors.
 
-Most of that is product. The memory core is not, and it carries six of this
-atlas's seven marks.
+Most of that is product. The memory core is not, and it carries five of the
+seven marks.
 
-**Its distinguishing mechanism is that epistemic status decides what a memory
+**Its most ambitious idea is that epistemic status should decide what a memory
 may be *used for*, not merely whether it is returned.** `backend/database/review_queue.py`:
 
 ```python
@@ -63,7 +62,7 @@ ACTION_POLICY: Dict[str, Set[str]] = {
 }
 ```
 
-and the gate that reads it:
+and the gate written for it:
 
 ```python
 def can_use_for_action(status: str, action_kind: str) -> bool:
@@ -72,14 +71,17 @@ def can_use_for_action(status: str, action_kind: str) -> bool:
     return bool(permitted_uses(status))
 ```
 
-**An irreversible action requires an `accepted` fact.** An unreviewed one may
-answer a question, with a disclaimer. A contradicted one may only contribute to
-uncertainty history. A rejected one is audit-only. Plenty of systems in this
-atlas carry a status and use it to filter recall; this is the one that asks a
-second question — *given how sure we are, what is this memory licensed to do* —
-and answers it differently for a sentence and for an action that cannot be
-undone. It is the right shape for a device that hears everything and can act on
-what it heard.
+**As written, an irreversible action would require an `accepted` fact.** An
+unreviewed one could answer with a disclaimer, a contradicted one only feed
+uncertainty history, a rejected one only audit. The question it asks — *given how
+sure we are, what is this memory licensed to do* — is the right one for a device
+that hears everything and can act on what it heard. **At this pin nothing outside
+`review_queue.py` calls `can_use_for_action` or `permitted_uses`.** The policy
+survives as data: tombstoned and privacy-purged payloads are written with
+`permitted_uses: []`, and the review model defaults to
+`["answers_with_disclaimer"]`, but no retrieval, chat or tool path reads that
+field. What actually withholds a memory is the item status and the review state
+on the read path (section 6).
 
 **The store is a projection over a hash-chained ledger.**
 `backend/database/memory_ledger.py` builds commits whose id is a SHA-256 over the
@@ -134,7 +136,7 @@ Belief has three independent dials rather than one score: `capture_confidence`
 (did we hear it correctly), `veracity` (is it true), and `epistemic_status` (what
 has been decided about it). The first two are floats banded by
 `CONFIDENCE_BANDS` — low 0.0, medium 0.5, high 0.75, certain 0.9 — and the third
-is the discrete state that gates use.
+is the discrete state the policy table maps to uses.
 
 How a thing becomes a belief: capture, extract into a candidate, and either land
 as `accepted` or, when it conflicts with something already held strongly enough
@@ -144,7 +146,7 @@ retracted, invalidated, or rejected in review — each of which is a typed mutat
 in the ledger and a status change on the projection.
 
 ```mermaid
-%% caption: each state carries what it is permitted to do — answer, answer with a disclaimer, audit only, or nothing — and an unanswered review times out into accepted rather than staying pending
+%% caption: each state is mapped to what it would be permitted to do — answer, answer with a disclaimer, audit only, or nothing — though no action path reads that map, and an unanswered review times out into accepted rather than staying pending
 stateDiagram-v2
     [*] --> Candidate: extraction from a transcript
     Candidate --> Accepted: no conflict, or review accepts
@@ -261,21 +263,22 @@ meaningful verbs rather than string surgery.
 `redaction_status`, and a fact holds a list of them. So a claim supported by
 three separate overheard mentions is a different object from one supported by
 one, and `tombstone_evidence` can remove a single supporting source — with a
-reason, defaulting to `source_tombstoned` — without discarding the claim. That
-distinction, between retracting a fact and withdrawing one of its supports, is
-absent from most of this corpus.
+reason, defaulting to `source_tombstoned` — without discarding the claim, which
+keeps retracting a fact and withdrawing one of its supports distinct.
 
-**Temporal fields are genuinely bitemporal.** `normalize_fact_for_ledger` lifts
+**Temporal fields carry two clocks.** `normalize_fact_for_ledger` lifts
 `valid_at` / `invalid_at` into `qualifiers.valid_from` / `valid_to`, so validity
 time travels with the fact, while the ledger stamps `commit_time` and the
 projection stamps `updated_at` — record time, separately. `invalidate_memory`
 *"keeps the document (history) but stamps invalid_at"* and writes a
 `supersede_fact` mutation carrying `valid_interval={'valid_to': invalid_at}`, so
 closing a fact's validity and recording when that decision was made are two
-different timestamps.
+different timestamps. The reader that would answer "what held at an instant",
+`replay_to`, has no caller (section 9).
 
-**Scoping** is the strict form: a subcollection under the user document, plus
-per-user encryption. There is no cross-user query to forget a predicate on.
+**Scoping** is applied twice: Firestore reads are rooted at the user document,
+and every memory vector search carries `uid $eq` on stored metadata, with
+per-user encryption beneath both.
 
 `ShortTermMemory` is a separate class with `status: "pending_consolidation"` and
 its own `scope`, so material that has not yet earned a place in the canonical
@@ -296,11 +299,24 @@ everything the user heard, feeding an agent with tools, needs an explicit
 boundary between *what a tool returned* and *what the user said*, and it is
 unusual to find that named as its own module rather than assumed.
 
-The read path is where the epistemic work lands. `get_memories` filters
-`memory.get('user_review') is not False` and, unless `include_invalidated` is
-passed, `memory.get('invalid_at') is None` — so a memory the user reviewed away
-and a memory whose validity has closed are both gone by default, and asking for
-history is an explicit parameter rather than an accident.
+The read path is where the epistemic work lands. `get_memories` applies
+`_memory_passes_list_visibility` (`memories.py:244-256`): a row whose
+`user_review` is `False` is dropped and, unless `include_invalidated` is passed,
+so is one whose `invalid_at` is set. The filter runs in Python on purpose, because
+a Firestore predicate would drop legacy documents missing the field. Vector search
+is stricter: `_base_memory_vector_filter` requires the `uid`, the current memory
+schema version, `status = active`, `source_state = active`, a permitted visibility
+and `restricted_sensitivity = false` on every query, and raises when the `uid` is
+empty (`memory_vector_metadata.py:209-232`).
+
+**The agent's retrieval surface grew.** Knowledge-ledger read and write tools
+(`tools/knowledge_ledger_tools.py`, `knowledge_ledger_write_tools.py`), an
+entity timeline over canonical memory items that lists current facts and, on
+request, their history within a date range (`tools/entity_timeline_tools.py`),
+and just-in-time conversation reads behind a gate (`tools/conversation_jit.py`)
+sit beside the original paths. A canonical-to-ledger migration planner
+(`utils/memory/knowledge_ledger_migration.py`) is side-effect free and applies
+through the canonical apply store with revision and control-head fences.
 
 Failure modes visible in the code: retrieval quality depends on the extractor
 that produced the proposition, and `extractor_version` on the evidence is the
@@ -351,10 +367,10 @@ over a personal memory store has to have.
 
 The model's agency is mediated rather than direct. It does not write memories by
 calling a tool; extraction runs over captured material and the review policy
-decides what becomes usable. What the model *can* do is bounded by
-`can_use_for_action`, and the sharpest expression of the design is that the same
-memory is available for an answer and unavailable for an irreversible action
-until a person has accepted it.
+decides what becomes usable. What the model *can* do was meant to be
+bounded by `can_use_for_action` — the same memory available for an answer and
+unavailable for an irreversible action until a person has accepted it — and that
+gate has no caller at this pin.
 
 The human surface is the review queue, exposed through the app: conflicts listed,
 accepted or rejected, with the rejection stamping `invalid_at` and
@@ -363,21 +379,31 @@ accepted or rejected, with the rejection stamping `invalid_at` and
 
 ## 9. Reliability, Safety, and Trust
 
-**`trust_state` — earned, in the strongest form here.** Eight discrete statuses,
-persisted as `epistemic_status` in a fact's qualifiers and as `review_status` on
-the row, and — unlike every other holder of this mark — mapped to a set of
-permitted *uses* rather than only to visibility.
+**`trust_state` — earned, on the status the read path uses.** Canonical items
+carry `active`, `superseded`, `hidden` or `tombstoned`, every memory vector search
+filters on `status = active`, and list reads drop user-rejected and invalidated
+rows. `epistemic_status` is persisted in a fact's qualifiers as well, and its
+eight values are mapped to permitted uses in `ACTION_POLICY`, but that mapping is
+not consulted outside its own module.
 
-**`audit_log` — earned.** A per-user append-only commit chain whose ids are
-SHA-256 over `{parent_commit_id, mutations}`, with the document store as its
-projection, idempotent replay, and a head check that raises rather than
-last-writer-wins.
+**`audit_log` — earned.** A per-user commit chain whose ids are SHA-256 over
+`{parent_commit_id, mutations}`, with the document store as its projection,
+idempotent replay, and a head check that raises rather than last-writer-wins.
+Privacy erasure is the one deletion: `purge_legacy_memory_commits_for_memories`
+and `purge_canonical_privacy_history_for_memories` remove commits that reference
+an erased memory.
 
-**`bitemporal` — earned.** `qualifiers.valid_from` / `valid_to` fed from
-`valid_at` / `invalid_at`, against `commit_time` and `updated_at` as record time.
+**`bitemporal` — withdrawn.** Facts carry `valid_from` and `valid_to` beside
+commit time, and `memory_ledger.replay_to(uid, commit_time, valid_time)` folds the
+commit history as of both clocks, with `test_fold_commits_replays_head_and_valid_time`
+asserting a fact present in January and absent in February. Nothing in the backend
+calls `replay_to` or passes `valid_time` to `fold_commits`; the entity timeline
+filters by when a fact began, not by what held at an instant. The mark needs an
+as-of read a caller can reach.
 
-**`scope_enforced` — earned, structurally.** A subcollection under the user
-document, not a predicate, plus per-user encryption at rest.
+**`scope_enforced` — earned.** Pinecone memory search always carries
+`uid $eq` on the stored `uid` metadata and refuses an empty `uid`; Firestore reads
+are rooted at the user document; data is encrypted per user at rest.
 
 **`human_review` — earned.** A review queue a person works, with accept and
 reject writing real state, and escalation bounded by impact so the queue stays
@@ -400,8 +426,7 @@ admitted, it would be the missing mechanism.
 
 Other observations:
 
-- **Two confidence axes** that mean different things, which is a recurring
-  recommendation of this atlas and rarely implemented.
+- **Two confidence axes** that mean different things.
 - **`subject_attribution`** records whether a fact is about the user or a third
   party. For a device that records other people talking, a store that cannot say
   whose fact this is has a privacy problem, and this one can.
@@ -415,13 +440,14 @@ Other observations:
 
 ## 10. Tests, Evals, and Benchmarks
 
-843 unit test files and 259,452 lines of test code against 540,721 lines of
-backend Python — a ratio near one to one, which is rare at this size. 76 of the
-unit files are memory-named, and the names track the risky logic:
+The unit suite under `backend/tests/unit/` has grown past a thousand files, and
+over a hundred are memory-named, and the names track the risky logic:
 `test_memory_ledger.py`, `test_memories_stale_updates.py`,
 `test_memory_apply_null_evidence_ids.py`, `test_memories_delete_batch_chunk.py`,
 `test_memory_contracts.py`, `test_short_term_memory.py`,
-`test_memory_rollout.py`, `test_review_queue_non_active_routes.py`.
+`test_memory_rollout.py`, `test_review_queue_non_active_routes.py`, and the
+newer `test_knowledge_ledger*.py`, `test_memory_import_isolation_order_independence.py`
+and `test_canonical_memory_vectors.py`.
 
 `contract_tests/` sits at the repository root as its own tree, and
 `backend/tests/eval/` exists beside the unit suite.
@@ -442,11 +468,11 @@ is how often the extractor is right, and it is not in the repository. The
 
 ### Steal
 
-- **Map trust state to permitted uses, and discriminate on reversibility.**
-  `ACTION_POLICY` plus `can_use_for_action(status, 'irreversible')` is about
-  twenty lines and it answers a question most systems never ask: not *may I
-  retrieve this*, but *given how sure I am, may I act on it*. Any agent that can
-  send, buy, delete or schedule needs this and almost none have it.
+- **Map trust state to permitted uses, and discriminate on reversibility — then
+  call it.** `ACTION_POLICY` plus `can_use_for_action(status, 'irreversible')` is
+  about twenty lines and asks *given how sure I am, may I act on this*. Any agent
+  that can send, buy, delete or schedule needs the question asked at the point of
+  action; here the function exists and no action path calls it.
 - **Two confidence numbers.** "Did we capture it correctly" and "is it true" fail
   independently and a single float cannot express a perfectly-heard lie or a
   misheard truth.
@@ -470,9 +496,9 @@ is how often the extractor is right, and it is not in the repository. The
   the transcript — and a capture product must — then rejecting a fact by id is a
   statement about one row that the next extraction pass over the same audio is
   free to contradict.
-- **Deriving a status vocabulary without deriving the read paths from it.** Eight
-  statuses only pay off because `permitted_uses` is consulted; a status set with
-  no policy attached is a taxonomy.
+- **A policy table with no consumer.** Eight statuses mapped to permitted uses
+  pay off only where an answer or an action path consults the map; unconsulted,
+  the table documents an intention.
 - **Assuming your extractor is right because everything downstream is careful.**
   The ledger, the fences, the review queue and the encryption are all downstream
   of one LLM extraction step whose accuracy is unmeasured here.
@@ -500,6 +526,8 @@ design decisions, and those transplant.
 
 - **How accurate is the extractor?** Every mechanism in this report is downstream
   of it and nothing measures it. This is the number the design most needs.
+- **Will `can_use_for_action` be wired into the tool and action paths?** The
+  policy is written and tested nowhere outside its module.
 - **Does `delete_memories_for_conversation` reach the vectors and the ledger, or
   only the projection?** For a deletion request the answer decides whether the
   content is gone or merely unindexed.
@@ -555,6 +583,8 @@ design decisions, and those transplant.
   `test_memory_contracts.py`; `contract_tests/`; `backend/tests/eval/`
 
 ## History
+
+**2026-09-15** — [`f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a`](https://github.com/BasedHardware/omi/commit/f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a) — 2,353 commits on, 2026-09-15. Read from a blobless checkout of the tree. Screened before reading: three auto-run surfaces, twelve build-time execution points, thirty unpinned surfaces, five dependency surfaces inside the cooldown, and `AGENTS.md` and `CLAUDE.md` read as data; nothing was installed or run. The memory subsystem moved about 7,500 lines: the canonical apply store nearly doubled, knowledge-ledger read and write tools, an entity timeline tool and just-in-time conversation reads joined the agent's retrieval surface, vector search gained a uid-and-status filter builder, and review resolution gained timeout expiry and privacy purges of ledger history. Two findings of the earlier readings were wrong and are corrected. `can_use_for_action` and `permitted_uses` have no caller outside `review_queue.py`, so the report's headline — status decides what a memory may do — is restated as a policy the read and action paths do not consult. `bitemporal` is withdrawn: the as-of replay `replay_to` and `fold_commits(valid_time=…)` have no production caller. `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` are kept with re-anchored records. Five marks.
 
 **2026-08-20** — [`bacd4cf2985bdab6098994345bd52ed91bcf3332`](https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52ed91bcf3332) — re-pinned 1,925 commits on. The repository moved 3,318 files and +393,125 lines in that span, and **the memory subsystem moved 435 lines across five files**: the rest is apps, SDKs, desktop and firmware. Screened again: two auto-run surfaces (`.cursor/mcp.json` and `.cursor/rules/`), twelve build-time execution points, two manifests inside the cooldown across thirty-three unpinned surfaces; nothing was installed and nothing was run. Marks unchanged at six of seven — still no rejected-value tombstone. Four changes are worth recording.
 
