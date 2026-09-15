@@ -7,9 +7,9 @@ page_kind: system
 source_name: NVIDIA/NemoClaw
 source_url: https://github.com/NVIDIA/NemoClaw
 archive_name: "NVIDIA--NemoClaw"
-revision: 02b59e5dc1c995cd47574af5eafb23395959ea03
-revision_url: https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03
-analyzed_at: 2026-07-28
+revision: be46805b51b0d626466538e9f8fe56c8ad157549
+revision_url: https://github.com/NVIDIA/NemoClaw/commit/be46805b51b0d626466538e9f8fe56c8ad157549
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: ""
 stack_retrieval: ""
@@ -20,25 +20,25 @@ matrix:
   retrieval: "None; the wrapped agent retrieves from its own store"
   write: "None; NemoClaw governs the container, not the contents"
   update_delete: "`destroy` wipes declared state dirs; restore reinstates snapshotted ones verbatim"
-  scoping: "Per-agent state directories under one config dir, with locks and permission repair"
-  integration: "Sandboxes Hermes, OpenClaw and LangChain Deep Agents in OpenShell"
-  background: "State-dir guard, config locks, permission repair, audit"
-  trust: "Credential sanitization on backup; audit surface; nothing epistemic"
-  strengths: "The only explicit, inspectable backup-and-destroy contract over agent memory in the atlas"
+  scoping: "Per-agent state directories under one config dir, each marked for backup or kept machine-local"
+  integration: "Sandboxes Hermes, OpenClaw, LangChain Deep Agents Code, Pi and the experimental NemoCUA in OpenShell"
+  background: "Backup, restore and destroy over declared state; SQLite databases captured with the online backup API"
+  trust: "Credential sanitization on backup; typed key allowlists on config restore; nothing epistemic"
+  strengths: "An explicit, inspectable backup-and-destroy contract over agent memory, declared per agent and validated when a manifest loads"
   risks: "Memory is snapshotted and restored verbatim, so a restore can reinstate deleted memories"
 ---
 
 ## 1. Executive Summary
 
 NemoClaw is NVIDIA's Apache-2.0 "Reference Stack for Sandboxed AI Agents in
-OpenShell". It stores no memories of its own — the 865 occurrences of "memory"
-in its TypeScript are RAM: Docker limits, `nvidia-smi --query-gpu=memory.total`,
-Kubernetes allocatable bytes.
+OpenShell". It stores no memories of its own — nearly every occurrence of
+"memory" in its TypeScript is RAM: Docker limits, `nvidia-smi
+--query-gpu=memory.total`, Kubernetes allocatable bytes.
 
 It is here because of what it does to *other* systems' memory. NemoClaw wraps
-three agents — [Hermes](../hermes-agent/), [OpenClaw](../openclaw/), and
-LangChain Deep Agents — two of which are already in this atlas, and its
-per-agent manifests declare the durable state each one owns:
+[Hermes](../hermes-agent/), [OpenClaw](../openclaw/), LangChain Deep Agents Code,
+[Pi](../pi/) and an experimental computer-use agent, NemoCUA, and its per-agent
+manifests declare the durable state each one owns:
 
 ```yaml
 # agents/openclaw/manifest.yaml          # agents/hermes/manifest.yaml
@@ -51,9 +51,9 @@ state_dirs:                              state_dirs:
   - credentials                            - cache
 ```
 
-That makes it the only system in this atlas with an **explicit, inspectable
-contract for backing up, restoring and destroying agent memory** — the
-operational layer every other report assumes and none describes.
+That makes it an **explicit, inspectable contract for backing up, restoring and
+destroying agent memory** — the operational layer memory systems usually assume
+and rarely describe.
 
 And the contract has a hole worth naming, because the atlas's own
 [deletion test](../../benchmarks/#the-procedure) puts backups at the step
@@ -65,10 +65,12 @@ almost nothing survives. NemoClaw sanitizes credentials on backup:
 and it excludes machine-local auth state from snapshots entirely, with a stated
 reason and an issue number:
 
-> "Backup sanitization scrubs their key/token fields, so a restored copy can
-> never authenticate… These dirs stay in `state_dirs` so `destroy` still wipes
-> them from the durable volume, but they are **never captured into or restored
-> from snapshots**."
+> "Machine-local gateway auth state is wiped on destroy but never captured.
+> Sanitization removes the identity key and paired-device tokens, so a
+> restored copy cannot authenticate (#6852)."
+
+— expressed in the manifest as `identity` and `devices` entries with
+`backup: false`.
 
 **Memory gets neither treatment.** It is a plain state directory: snapshotted
 whole, restored whole. Nothing in the contract knows what a deleted memory is,
@@ -86,8 +88,9 @@ NemoClaw has no epistemic model. Its state machine is about *containers*:
 
 ```text
 declare    state_dirs                    durable, snapshotted, wiped by destroy
-           runtime_auth_state_dirs       wiped by destroy, NEVER snapshotted
-           state_files (+ restore rule)  e.g. merge: openclaw-config
+             … with backup: false        wiped by destroy, NEVER snapshotted
+           state_files (+ strategy)      merge: openclaw-config, merge: key-allowlist,
+                                         strategy: sqlite_backup
            user_managed_files            .env, .mcp.json — left alone
 
 backup     nemoclaw backup-all → snapshot, credentials scrubbed
@@ -116,17 +119,19 @@ flowchart TB
 
 ## 3. Architecture
 
-TypeScript under `src/`, with `src/lib/shields/` as the security surface —
-`audit.ts`, `state-dir-lock.ts`, `mutable-config-perms.ts`,
-`mutable-config-repair.ts`, `openclaw-config-lock.ts`, `deferred-exit.ts`, plus
-legacy-Hermes compatibility and transition modules. `agents/` holds one directory
-per wrapped agent with a `manifest.yaml`, a Dockerfile, a config generator and
-guards. `nemoclaw-blueprint/`, `skills/`, `schemas/`, `tools/`, `fern/` docs.
+TypeScript under `src/`, with the manifest loader and the state-directory
+contract in `src/lib/agent/`. `agents/` holds one directory per wrapped agent with
+a `manifest.yaml`, a Dockerfile and a config generator. `nemoclaw-blueprint/`,
+`skills/`, `schemas/`, `tools/`, `fern/` docs.
 
-The state-dir guard runs as a helper (`/usr/local/lib/nemoclaw/state-dir-guard.py`)
-and returns structured records the caller validates, accumulating
-`contractIssues` when the output is not what the contract promised — a small,
-good habit for a component whose failure would be silent.
+The post-provisioning immutability layer called Shields — state-directory locks,
+mutable-config permission repair, a config lock, an audit format and the
+`state-dir-guard.py` helper — was removed from core on 2 September 2026 (#10722),
+on the stated grounds that NemoClaw *"should not own post-provisioning
+immutability as an inherent product concept"*. The state contract survives it:
+the manifest loader derives portable and machine-local state from one
+`state_dirs` declaration and rejects the retired `runtime_auth_state_dirs` key
+with a message pointing at `backup: false`.
 
 ### Deployment and ergonomics
 
@@ -145,33 +150,43 @@ durable-but-never-snapshotted, files with a named restore strategy
 (`merge: openclaw-config`), and files the user manages that the stack will not
 touch.
 
-Most systems in this atlas have all of this implicitly — a directory, and
+Most memory systems have all of this implicitly — a directory, and
 whatever the operator's backup tool does. Writing it down per agent means
 "what happens to memory on restore" has an answer you can read rather than
 discover.
 
 ### Auth state excluded because restoring it is worse than losing it
 
-`runtime_auth_state_dirs` — `identity`, `devices` — stay in `state_dirs` so
-`destroy` wipes them, but are never snapshotted, "because OpenClaw regenerates
-the identity on demand and NemoClaw auto-pair re-pairs on connect", and because
-a sanitized copy would restore "corrupt files" that fail with a named error
-(issue #6852).
+`identity` and `devices` stay in `state_dirs` so `destroy` wipes them, but carry
+`backup: false`, because a sanitized copy would restore an identity without its
+key and paired devices without their tokens (issue #6852). The same flag keeps
+Hermes' machine-local `hooks` and OpenClaw's legacy `plugins` and profile state
+out of snapshots, each with a comment saying why.
 
 The reasoning generalizes past auth: **some state is cheaper to regenerate than
 to restore, and restoring a partially-scrubbed copy of it is worse than having
-none.** The atlas has never asked which memories that applies to. Derived
+none.** Memory systems rarely ask which memories that applies to. Derived
 memory — summaries, profiles, embeddings — is exactly the category that is
 regenerable from evidence, and snapshotting it may be buying nothing while
 guaranteeing that a stale derivation returns.
 
 ### Scar tissue with issue numbers
 
-Two comments cite the bug that produced them: #6852 for the auth-restore
-corruption, and #5027 for `backup-all` snapshotting the data directories while
-dropping `openclaw.json`, "so they were lost on rebuild". The atlas has learned
-to read these as the most reliable signal in a repository — a comment naming an
-issue is a decision that survived contact with production.
+Comments cite the bug that produced them: #6852 for the auth-restore
+corruption, #5027 for `backup-all` snapshotting the data directories while
+dropping `openclaw.json`, "so they were lost on rebuild", and #7200 for a legacy
+Hermes dashboard location kept in snapshots while startup migrates it. A comment naming an issue is a decision that survived contact with production, and the most reliable signal a repository offers about why a line is the way it is.
+
+### Restore strategies that refuse unknown keys
+
+Two strategies arrived with the newer agents. Deep Agents Code and Pi restore
+their settings files with `merge: key-allowlist`: the manifest lists the keys a
+user owns with a type, a length or an enum, and *"unknown, privileged, and
+security-sensitive backup keys are not restorable and are dropped"*. And Hermes'
+SQLite databases — `runtime/state.db`, the cron execution ledger, the Discord
+recovery ledger — are captured with `strategy: sqlite_backup`, SQLite's online
+backup API, so a snapshot is a consistent database rather than a copied file with
+its WAL left behind. Neither applies to memory directories, which are copied whole.
 
 ### What it does not do
 
@@ -207,8 +222,10 @@ grown to — with no visibility into it from this layer.
 
 ## 8. Agent Integration
 
-Hermes, OpenClaw and LangChain Deep Agents, each with a manifest, a Dockerfile,
-config generation and per-agent guards, sandboxed in OpenShell.
+Hermes, OpenClaw, LangChain Deep Agents Code, Pi and NemoCUA, each with a
+manifest, a Dockerfile and config generation, sandboxed in OpenShell. Pi's
+manifest declares `sessions`, `prompts` and `themes` as portable state; NemoCUA
+declares none.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -220,8 +237,9 @@ Strengths:
 - **Auth state excluded from snapshots on purpose**, with the failure it
   prevents named.
 - **Named restore strategies** for config files rather than blind overwrite.
-- **A guard that validates its own helper's output** and accumulates contract
-  issues.
+- **A manifest loader that validates the state contract**, rejecting overlapping
+  paths and the retired auth-state key.
+- **Typed key allowlists and consistent SQLite captures** for restore.
 - **Issue numbers in comments** for the two decisions most likely to look
   arbitrary later.
 - **No overclaiming** — the product page credits memory to the wrapped agents.
@@ -238,10 +256,11 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-A `test/` tree and per-module tests across the shields, including
-`audit-format`, `mutable-config-perms`, `mutable-config-repair`,
-`openclaw-config-lock` and `state-dir-lock`. Nothing was run for this review, and
-no memory-related test exists because there is no memory.
+A `test/` tree and per-module tests; the Shields tests went with Shields.
+`src/lib/agent/state-directory-contract.test.ts` asserts that portable and
+machine-local state derive from one declaration and that OpenClaw's
+authentication state and Hermes' hooks stay out of snapshots. Nothing was run for
+this review, and no memory-related test exists because there is no memory.
 
 The test this atlas would want is one the repository is well placed to write:
 snapshot an agent, delete a memory, restore, and assert something. Today the
@@ -259,8 +278,8 @@ assertion would have to be that the memory came back.
 - **Sanitize by field on backup**, not by hoping the backup is private.
 - **Give restore a named strategy** per file — merge, replace, skip — rather than
   a default overwrite.
-- **Validate the output of your own guards** and accumulate contract issues; a
-  guard that silently returns the wrong shape is worse than no guard.
+- **Restore settings through a typed key allowlist** and drop what is not on it,
+  rather than merging a backup's unknown keys back in.
 - **Cite the issue number** in the comment for any decision that will look
   arbitrary in a year.
 
@@ -272,8 +291,8 @@ assertion would have to be that the memory came back.
 
 ### Fit
 
-Read this if you operate agents rather than build memory for them: it is the
-clearest statement in the atlas of what memory looks like from underneath, and
+Read this if you operate agents rather than build memory for them: it is a
+clear statement of what memory looks like from underneath, and
 the state-contract idea is worth copying whatever your agent stores. Do not read
 it as a memory system — it has none, and its own product page correctly credits
 memory to the agents it wraps.
@@ -292,11 +311,14 @@ memory to the agents it wraps.
 - State contracts: `agents/openclaw/manifest.yaml` (`state_dirs`,
   `runtime_auth_state_dirs`, `state_files`, `user_managed_files`),
   `agents/hermes/manifest.yaml` (`state_dirs` including `memories`).
-- Guards: `src/lib/shields/state-dir-lock.ts`, `mutable-config-perms.ts`,
-  `mutable-config-repair.ts`, `openclaw-config-lock.ts`, `audit.ts`.
+- Manifest loading and the state contract: `src/lib/agent/defs.ts`,
+  `src/lib/agent/state-directory-contract.test.ts`; `agents/pi/manifest.yaml`,
+  `agents/langchain-deepagents-code/manifest.yaml` (`merge: key-allowlist`).
 - Hardware inventory, where "memory" means RAM: `src/lib/onboard.ts`.
 - Product page: <https://www.nvidia.com/en-us/ai/nemoclaw/>.
 
 ## History
+
+**2026-09-15** — [`be46805b51b0d626466538e9f8fe56c8ad157549`](https://github.com/NVIDIA/NemoClaw/commit/be46805b51b0d626466538e9f8fe56c8ad157549) — 2,121 commits on, 2026-09-15. Screened before reading: one auto-run surface (`.gitmodules`), three build-time execution points, three unpinned surfaces and six dependency surfaces inside the cooldown; nothing was installed or run. Still no memory of its own, and the finding stands: `memory` in OpenClaw's manifest and `memories` in Hermes' are ordinary backed-up state directories, restored whole. What changed around it: Shields — the state-directory locks, config-permission repair, config lock, audit format and `state-dir-guard.py` the first reading described — was removed from core (#10722); `runtime_auth_state_dirs` became per-directory `backup: false`, and the loader rejects the old key; Pi and NemoCUA joined the wrapped agents; settings restore through typed key allowlists; and Hermes' SQLite state is captured with the online backup API. Corpus-ranking sentences were rewritten. No mark changes.
 
 **2026-07-28** — [`02b59e5dc1c995cd47574af5eafb23395959ea03`](https://github.com/NVIDIA/NemoClaw/commit/02b59e5dc1c995cd47574af5eafb23395959ea03) — first reading.

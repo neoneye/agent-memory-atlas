@@ -683,7 +683,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: a per-agent state contract that says which directories are snapshotted, which are wiped, which are regenerated and which the user owns — written down rather than left to whoever wrote the backup script.
 - Biggest risk: memory is snapshotted and restored verbatim, so a restore reinstates deleted memories and nothing above is told.
 - Most reusable component: excluding state that is cheaper to regenerate than to restore, with the failure it prevents named — an argument that may apply to derived memory too.
-- Maturity impression: infrastructure with guards that validate their own helpers, and issue numbers cited in the comments for the two decisions that would otherwise look arbitrary.
+- Maturity impression: infrastructure that removed its own immutability layer (Shields) in September 2026 and kept the state contract, now validated when a manifest loads, with typed key allowlists on restore and issue numbers cited for the decisions that would otherwise look arbitrary.
 - Study when: you operate agents rather than build memory for them, and want to know what memory looks like from underneath.
 - Do not copy when: you want a memory system — it has none, and its product page correctly credits memory to the agents it wraps.
 
