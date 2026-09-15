@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 482 reports.</strong></p>
+<p><strong>This page covers all 483 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17427,6 +17427,49 @@ and a committed paper.</li>
 consolidation cycle and intend to model belief and scope yourself.</li>
 <li>Do not copy when: you need current-only reads, per-user scoping, or
 corrections that are not about numbers.</li>
+</ul>
+<h3 id="memtomem"><a
+href="../systems/memtomem/"><code>memtomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a scope fragment that cannot be dropped, and a
+test that fails when a new surface forgets it.</strong>
+<code>scope_context_sql</code> composes into every chunk query and is
+documented as non-empty "in every case — never returns
+<code>("", [])</code> — so callers cannot accidentally drop the context
+rule by treating an empty fragment as 'no filter'"; with no project
+context it pins <code>scope = 'user'</code>, with one it unions user and
+that project's tiers, and the caller's filter can only narrow or opt
+explicitly into a cross-project read. A registry test asserts every
+declared scope surface calls the vocabulary gate, and
+<code>test_no_unclassified_scope_sinks</code> fails when a new sink
+appears in neither set. Three marks: <code>scope_enforced</code>,
+<code>bitemporal</code>, <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the store models no belief, by
+design.</strong> A chunk has a namespace, a scope, a validity window and
+provenance, and no status — so a stale memory is corrected by editing or
+deleting the markdown file, and everything this atlas asks about
+supersession, tombstones and correction is answered by the user's
+version control rather than by the store. Separately, the consent that
+clears a write into a git-tracked directory is a boolean parameter the
+calling agent can set for itself, which the audit emitter says out loud:
+the line means "a human (or an agent acting for one) authorised a
+git-tracked write".</li>
+<li>Most reusable component:
+<code>test_recall_by_chunk_ids_still_honors_the_project_boundary</code>
+— three chunks across two projects, an id-restricted recall naming all
+three from inside one of them, an exact-set assertion and an explicit
+absence, with the rule in the docstring: <em>"'I know its id' is not
+authorization."</em></li>
+<li>Maturity impression: Apache-2.0, core package 0.6.2 with the README
+labelling the 0.x line alpha; 1,996 commits since 28 March 2026, 157,951
+lines of Python against 297,851 lines across 520 test files, markdown
+files as the authority with SQLite as an index, an MCP server, a CLI, an
+HTTP API with a dashboard, and packaged plugins for Claude Code, Kimi
+and OpenCode.</li>
+<li>Study when: you want memory that stays in your own markdown with
+real per-project separation and a write path that refuses secrets.</li>
+<li>Do not copy when: the store itself must model belief, supersession
+or forgetting rather than delegating them to repository history.</li>
 </ul>
         </article>
       </div>

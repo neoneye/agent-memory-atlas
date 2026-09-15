@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 482 reports.**
+**This page covers all 483 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4206,3 +4206,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: dual-licensed AGPL-3.0 or PolyForm Noncommercial 1.0.0 with commercial use outside either requiring a separate licence; 17,511 lines of Python and 5,387 of C++ and headers across 15 commits since 9 April 2026, a C++ core with Hopfield, VSA, LSTM and kNN over SIMD, seven Python test files, a benchmarks directory and a committed paper.
 - Study when: you want a local associative-memory engine with a real consolidation cycle and intend to model belief and scope yourself.
 - Do not copy when: you need current-only reads, per-user scoping, or corrections that are not about numbers.
+
+### [`memtomem`](../systems/memtomem/)
+- Best idea: **a scope fragment that cannot be dropped, and a test that fails when a new surface forgets it.** `scope_context_sql` composes into every chunk query and is documented as non-empty "in every case — never returns `("", [])` — so callers cannot accidentally drop the context rule by treating an empty fragment as 'no filter'"; with no project context it pins `scope = 'user'`, with one it unions user and that project's tiers, and the caller's filter can only narrow or opt explicitly into a cross-project read. A registry test asserts every declared scope surface calls the vocabulary gate, and `test_no_unclassified_scope_sinks` fails when a new sink appears in neither set. Three marks: `scope_enforced`, `bitemporal`, `negative_eval`.
+- Biggest risk: **the store models no belief, by design.** A chunk has a namespace, a scope, a validity window and provenance, and no status — so a stale memory is corrected by editing or deleting the markdown file, and everything this atlas asks about supersession, tombstones and correction is answered by the user's version control rather than by the store. Separately, the consent that clears a write into a git-tracked directory is a boolean parameter the calling agent can set for itself, which the audit emitter says out loud: the line means "a human (or an agent acting for one) authorised a git-tracked write".
+- Most reusable component: `test_recall_by_chunk_ids_still_honors_the_project_boundary` — three chunks across two projects, an id-restricted recall naming all three from inside one of them, an exact-set assertion and an explicit absence, with the rule in the docstring: *"'I know its id' is not authorization."*
+- Maturity impression: Apache-2.0, core package 0.6.2 with the README labelling the 0.x line alpha; 1,996 commits since 28 March 2026, 157,951 lines of Python against 297,851 lines across 520 test files, markdown files as the authority with SQLite as an index, an MCP server, a CLI, an HTTP API with a dashboard, and packaged plugins for Claude Code, Kimi and OpenCode.
+- Study when: you want memory that stays in your own markdown with real per-project separation and a write path that refuses secrets.
+- Do not copy when: the store itself must model belief, supersession or forgetting rather than delegating them to repository history.
