@@ -267,8 +267,13 @@ rather than the obvious query. It carries four levels — `organization_id`,
 `user_id`, `client_id`, and a `filter_tags.scope` — and passes `user_id` and
 `organization_id` into every Redis search call as arguments
 (`search_recent`, `search_vector`, `search_text`), so the cache path cannot be
-looser than the database path. That is the failure this pattern's cost section
-warns about, closed. MIRIX also separates `read_scopes` (a list) from
+looser than the database path. It is also the cautionary instance: the SQLite
+in-memory BM25 fallback and fuzzy-match candidate loads in all five of its
+document-memory managers filtered on `user_id` alone, and Redis searches given
+scopes without `filter_tags` dropped the scope clause, until commit `6ae9271`
+brought every fallback onto the scoped base query and added a test per manager.
+The obvious query and the cache held; the degraded paths are where the predicate
+had not been copied. MIRIX also separates `read_scopes` (a list) from
 `write_scope` (one value) on the client, which makes "may read everything, may
 write only here" a single field rather than a policy document.
 

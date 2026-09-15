@@ -389,11 +389,18 @@ four levels — <code>organization_id</code>, <code>user_id</code>,
 passes <code>user_id</code> and <code>organization_id</code> into every
 Redis search call as arguments (<code>search_recent</code>,
 <code>search_vector</code>, <code>search_text</code>), so the cache path
-cannot be looser than the database path. That is the failure this
-pattern's cost section warns about, closed. MIRIX also separates
-<code>read_scopes</code> (a list) from <code>write_scope</code> (one
-value) on the client, which makes "may read everything, may write only
-here" a single field rather than a policy document.</p>
+cannot be looser than the database path. It is also the cautionary
+instance: the SQLite in-memory BM25 fallback and fuzzy-match candidate
+loads in all five of its document-memory managers filtered on
+<code>user_id</code> alone, and Redis searches given scopes without
+<code>filter_tags</code> dropped the scope clause, until commit
+<code>6ae9271</code> brought every fallback onto the scoped base query
+and added a test per manager. The obvious query and the cache held; the
+degraded paths are where the predicate had not been copied. MIRIX also
+separates <code>read_scopes</code> (a list) from
+<code>write_scope</code> (one value) on the client, which makes "may
+read everything, may write only here" a single field rather than a
+policy document.</p>
 <p>MIRIX also <strong>tests</strong> the boundary the way this pattern's
 first required test asks, and does it twice:
 <code>tests/test_filter_tags_db.py</code> creates a memory under one

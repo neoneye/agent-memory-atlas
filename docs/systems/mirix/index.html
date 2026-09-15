@@ -6,22 +6,22 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="Six typed memory tables, each with
 a dedicated writer agent, behind a scope key enforced in the schema, the
-queries and the Redis cache — and a periodic pass that hard-deletes what
-it rewrites.">
+queries and the Redis cache — and a consolidation pass that hard-deletes
+what it rewrites.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="MIRIX — Agent Memory Atlas">
     <meta property="og:description" content="Six typed memory tables,
 each with a dedicated writer agent, behind a scope key enforced in the
-schema, the queries and the Redis cache — and a periodic pass that
+schema, the queries and the Redis cache — and a consolidation pass that
 hard-deletes what it rewrites.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="MIRIX — Agent Memory Atlas">
     <meta name="twitter:description" content="Six typed memory tables,
 each with a dedicated writer agent, behind a scope key enforced in the
-schema, the queries and the Redis cache — and a periodic pass that
+schema, the queries and the Redis cache — and a consolidation pass that
 hard-deletes what it rewrites.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>MIRIX — Agent Memory Atlas</title>
@@ -44,7 +44,7 @@ hard-deletes what it rewrites.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "MIRIX",
-      "description": "Six typed memory tables, each with a dedicated writer agent, behind a scope key enforced in the schema, the queries and the Redis cache \u2014 and a periodic pass that hard-deletes what it rewrites.",
+      "description": "Six typed memory tables, each with a dedicated writer agent, behind a scope key enforced in the schema, the queries and the Redis cache \u2014 and a consolidation pass that hard-deletes what it rewrites.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,22 +102,22 @@ hard-deletes what it rewrites.">
           <h1>MIRIX</h1>
           <p class="document-deck">Six typed memory tables, each with a
 dedicated writer agent, behind a scope key enforced in the schema, the
-queries and the Redis cache — and a periodic pass that hard-deletes what
-it rewrites.</p>
+queries and the Redis cache — and a consolidation pass that hard-deletes
+what it rewrites.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/Mirix-AI/MIRIX">
               <span>Source</span>
               <strong>Mirix-AI/MIRIX</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af" title="51f3342d5366b0e215439581f92e0323227146af">
+            <a class="meta-pill revision-pill" href="https://github.com/Mirix-AI/MIRIX/commit/8cb06a62bbb7c478beb33dd4f2815696a72df482" title="8cb06a62bbb7c478beb33dd4f2815696a72df482">
               <span>Analyzed revision</span>
-              <code>51f3342d…</code>
+              <code>8cb06a62…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Mirix-AI--MIRIX" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -154,34 +154,50 @@ rather than for a chat turn.</p>
 <a href="../letta/">Letta</a>'s shape. What MIRIX adds is the typing —
 one table, one manager, one agent, one prompt per memory kind — and a
 multi-tenant scope model that is materially stronger than Letta's.</p>
-<p><strong>What is genuinely good here is the scope discipline.</strong>
-Most of the atlas stores a scope key and filters on it in the obvious
-query. MIRIX filters on it in the obvious query <em>and</em> in the
-Redis cache lookups
-(<code>mirix/services/episodic_memory_manager.py:705</code>), and has 33
-test files, several of which assert that a memory created under one
-scope is <strong>not</strong> returned by a search under another. That
-last property is carried by two other repositories in the whole atlas,
-and MIRIX is the first to reach it from access-control testing rather
-than from memory-correctness work — see section 10.</p>
+<p><strong>What is genuinely good here is the scope discipline, and its
+history shows what it costs.</strong> MIRIX filters on its scope key in
+the obvious query <em>and</em> in the Redis index lookups
+(<code>mirix/services/episodic_memory_manager.py:715-781</code>), and
+its tests assert that a memory created under one scope is
+<strong>not</strong> returned by a search under another. The same
+discipline had drifted in two places: until commit <code>6ae9271</code>
+the SQLite in-memory BM25 fallback and the fuzzy-match candidate loads
+in all five document-memory managers filtered on <code>user_id</code>
+alone, and the Redis paths dropped the scope clause when scopes arrived
+without <code>filter_tags</code>. The bug surfaced because skills
+written by the evolution pipeline carried no scope tag and were
+invisible on Postgres while visible on SQLite. The fix brought every
+fallback onto the scoped base query and added a test per manager — see
+section 10.</p>
+<p><strong>A second gap sat outside the read path.</strong>
+<code>DELETE /users/{user_id}/memories</code> and
+<code>DELETE /clients/{client_id}/memories</code> — irreversible
+cross-table hard deletes — took no authentication and no tenant check
+until commit <code>b115588</code>, so anyone who knew a user or client
+id could erase that tenant's memory. Both resolve the caller from a JWT
+or client API key and answer a cross-organization target with the same
+404 as a missing one.</p>
 <p><strong>What is weakest is that nothing above the row can be trusted
 or repaired.</strong> There is no trust state, no confidence, no
-supersession chain, and no tombstone — a case-insensitive search over
-<code>mirix/orm</code>, <code>mirix/schemas</code> and
-<code>mirix/services</code> returns zero hits for <code>rejected</code>,
-<code>verified</code>, <code>confidence</code>, <code>provenance</code>
-or <code>tombstone</code>. Correction is
-<code>episodic_memory_replace</code>, which is a loop of
+supersession chain, and no tombstone on the six memory types. The one
+table with a lifecycle is <code>skill_experience</code> — a lesson
+distilled from a session, with <code>importance</code>,
+<code>credibility</code>, an <code>evidence</code> quote and
+<code>status</code> <code>pending | consumed | superseded</code> — and
+that status is a work queue: <code>consumed</code> means an evolution
+run used it, <code>superseded</code> means it fell past the per-run cap.
+Correction is <code>episodic_memory_replace</code>, which is a loop of
 <code>hard_delete</code> followed by a loop of <code>insert</code>. And
-a background pass called <code>auto_dream</code> periodically loads the
-whole store and lets an agent rewrite it under a prompt that says to
-resolve conflicts "conservatively". A user's deletion survives exactly
-until that pass disagrees.</p>
+a consolidation pass called <code>auto_dream</code>, run through
+<code>POST /memory/auto_dream</code>, loads the whole store and lets an
+agent rewrite it under a prompt that says to resolve conflicts
+"conservatively". A user's deletion survives exactly until that pass
+disagrees.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory in MIRIX is a <strong>typed row that an agent decided to
 write</strong>, and its type is a routing decision made once, at write
 time, by a classifier agent.</p>
-<p>The six types are not interchangeable:</p>
+<p>The six types are not interchangeable, and one has changed shape:</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -206,7 +222,11 @@ time, by a classifier agent.</p>
 </tr>
 <tr>
 <td><code>procedural</code></td>
-<td>An ordered how-to</td>
+<td>A skill — <code>name</code>, <code>entry_type</code>
+(<code>workflow</code>, <code>guide</code>, <code>script</code>),
+<code>description</code>, <code>instructions</code>,
+<code>triggers</code>, <code>examples</code>, a semver
+<code>version</code></td>
 </tr>
 <tr>
 <td><code>resource</code></td>
@@ -219,24 +239,40 @@ time, by a classifier agent.</p>
 </tr>
 </tbody>
 </table></div>
-<p>A seventh table sits beside them rather than among them.
+<p>Three tables sit beside them rather than among them.
 <code>raw_memory</code> holds the unprocessed task-context string, and
 it is evidence rather than belief — which is why the six above are what
-the classifier routes to and this one is not a routing destination.</p>
+the classifier routes to and this one is not a routing destination.
+<code>conversation_message</code> holds verbatim session turns,
+including tool calls and results, with a <code>distilled_at</code> stamp
+and a <code>session_tag</code>. And <code>skill_experience</code> holds
+the lessons a distiller extracts from those turns.</p>
+<p><strong>Sessions are routed by tag.</strong> A caller declares
+<code>session_tag</code> on ingest. A <code>conversation</code> session
+is extracted into episodic and semantic memory as before; a
+<code>task</code> session skips inline extraction and feeds skill
+distillation instead — <code>session_experience_distiller.py</code>
+turns sealed, undistilled sessions into <code>skill_experience</code>
+rows, and <code>skill_experience_curator.py</code> hands the highest
+<code>importance × credibility</code> batch to a procedural agent that
+creates or edits skills under an edit budget, stamping
+<code>consumed_by</code> and the influenced skill ids on each
+experience. An untagged session is treated as <code>conversation</code>,
+while the distiller's gate excludes only sessions explicitly tagged
+<code>conversation</code>.</p>
 <p><code>raw_memory</code> is the interesting one, and the atlas has a
 pattern for it: <a
 href="../../patterns/evidence-before-belief/">evidence before
 belief</a>. The raw context string is stored, embedded, and searchable
 in its own right, so a bad extraction into <code>semantic_memory</code>
-does not destroy the material it came from. Little else in the
-typed-memory family keeps this.</p>
+does not destroy the material it came from.</p>
 <p>The state machine is short, which is the point:</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — two states and no vocabulary for a third — an update is a hard delete and an insert, so nothing can be candidate, disputed, rejected or superseded</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two states and no vocabulary for a third — an update is a hard delete and an insert, so nothing can be candidate, disputed, rejected or superseded
 stateDiagram-v2
     direction TB
     [*] --&gt; Exists: message → accumulator → meta agent&lt;br/&gt;→ specialist agent → typed row
     Exists --&gt; Gone: per-type update / replace&lt;br/&gt;(&lt;code&gt;semantic_memory_update&lt;/code&gt;,&lt;br/&gt;&lt;code&gt;episodic_memory_replace&lt;/code&gt;, …)&lt;br/&gt;hard delete + insert
-    Exists --&gt; Gone: &lt;code&gt;auto_dream&lt;/code&gt;&lt;br/&gt;merge, rewrite, hard delete
+    Exists --&gt; Gone: &lt;code&gt;auto_dream&lt;/code&gt; pass&lt;br/&gt;merge, rewrite, hard delete
     Gone --&gt; [*]
     note right of Exists
         Two states, and no vocabulary for a third.
@@ -281,16 +317,17 @@ searchable index per memory type (<code>EPISODIC_INDEX</code> and
 siblings) and serves vector, text and recency queries directly, with
 Postgres as the fallback path.</li>
 <li><strong>Background</strong> is
-<code>mirix/services/auto_dream_manager.py</code>, plus the
-accumulator's own absorb loop.</li>
+<code>mirix/services/auto_dream_manager.py</code>, invoked through
+<code>POST /memory/auto_dream</code> or, in procedural mode, scheduled
+from an agent once a session-count threshold is reached; plus the
+accumulator's own absorb loop and the session distiller.</li>
 </ul>
 <h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
-<p>This is the expensive end of the atlas.
-<code>docker compose up</code> brings up Postgres, Redis Stack, the API
-server and the dashboard; you then create an API key in the dashboard
-and set <code>MIRIX_API_KEY</code>. An LLM API key is required to store
-anything at all — every write goes through a meta agent and a specialist
-agent, so there is no <a
+<p>Deployment is expensive. <code>docker compose up</code> brings up
+Postgres, Redis Stack, the API server and the dashboard; you then create
+an API key in the dashboard and set <code>MIRIX_API_KEY</code>. An LLM
+API key is required to store anything at all — every write goes through
+a meta agent and a specialist agent, so there is no <a
 href="../../patterns/zero-llm-capture/">zero-LLM capture</a> path, and a
 provider outage during ingestion means the buffer holds and nothing is
 written.</p>
@@ -325,15 +362,17 @@ specialist has its own system prompt under
 <code>mirix/prompts/system/base/</code>.</p>
 <p><strong>Write</strong> — the specialist tools in
 <code>mirix/functions/function_sets/memory_tools.py</code>:
-<code>episodic_memory_insert</code> (112),
-<code>episodic_memory_merge</code> (168),
-<code>episodic_memory_replace</code> (216),
-<code>semantic_memory_insert</code> (603),
-<code>semantic_memory_update</code> (685),
-<code>procedural_memory_insert</code> (440),
-<code>resource_memory_insert</code> (321),
-<code>knowledge_vault_insert</code> (754), and
-<code>finish_memory_update</code> (1197) as the terminator.</p>
+<code>episodic_memory_insert</code> (114),
+<code>episodic_memory_merge</code> (177),
+<code>episodic_memory_replace</code> (225),
+<code>resource_memory_insert</code> (348), <code>skill_create</code>
+(790), <code>skill_edit</code> (877),
+<code>semantic_memory_insert</code> (1123),
+<code>semantic_memory_update</code> (1209),
+<code>knowledge_vault_insert</code> (1282), and
+<code>finish_memory_update</code> (2015) as the terminator.
+<code>skill_edit</code> bumps the skill's patch version and overwrites
+it in place; no prior version is kept.</p>
 <p><strong>Retrieval</strong> —
 <code>mirix/services/*_manager.py</code>.
 <code>list_episodic_memory()</code>
@@ -342,8 +381,10 @@ takes <code>search_method</code> (<code>embedding</code>,
 <code>bm25</code>, <code>string_match</code>), <code>filter_tags</code>,
 <code>scopes</code>, a date range and an optional
 <code>similarity_threshold</code>, tries Redis first, and falls through
-to <code>_postgresql_fulltext_search()</code> (line 1015) or the vector
-path. The agent-facing entry point is <code>search_in_memory</code> in
+to <code>_postgresql_fulltext_search()</code> (line 1036), the vector
+path, or — on SQLite — an in-memory BM25 over candidates loaded with the
+same scoped base query. The agent-facing entry point is
+<code>search_in_memory</code> in
 <code>mirix/functions/function_sets/base.py:84</code>.</p>
 <p><strong>Correction/delete</strong> —
 <code>episodic_memory_replace</code> resolves every id first (so a bad
@@ -361,7 +402,7 @@ checkpoint, fetches memories per type, formats them, steps the
 <code>AutoDreamAgent</code>, and writes a new checkpoint as an episodic
 event tagged
 <code>filter_tags={"type": "system", "source": "auto_dream"}</code>.
-Note <code>_fetch_episodic()</code> at line 113:
+Note <code>_fetch_episodic()</code> at line 234:
 <code>start_date=None, end_date=None, limit=500</code>, with a comment
 saying outright that it "fetches ALL current memories regardless of
 date; the passed window is only recorded in the response for
@@ -458,12 +499,12 @@ place. The <code>auto_dream</code> prompt for experience memory
 (<code>mirix/prompts/system/base/auto_dream_agent/experience.txt</code>)
 says: "Resolve conflicts conservatively, preferring the more recent or
 more detailed item. If uncertain, keep both and record the discrepancy
-in the merged details/caption." That is close to the best correction
-policy in this atlas — <a href="../memanto/">Memanto</a>'s
-<code>keep_both</code> is the same idea — except Memanto's is an enum a
-validator enforces and MIRIX's is a sentence in a prompt. When the model
-does not follow it, the tool it calls is
-<code>episodic_memory_replace</code>, and the row is hard-deleted.</p>
+in the merged details/caption." That is a sound correction policy — <a
+href="../memanto/">Memanto</a>'s <code>keep_both</code> is the same idea
+— except Memanto's is an enum a validator enforces and MIRIX's is a
+sentence in a prompt. When the model does not follow it, the tool it
+calls is <code>episodic_memory_replace</code>, and the row is
+hard-deleted.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <ul>
 <li><strong>Synchronous?</strong> No. The agent does not block on
@@ -471,11 +512,11 @@ extraction; the accumulator absorbs on its own schedule.</li>
 <li><strong>Lag?</strong> Unmeasured, and load-bearing. At minimum a
 batch boundary; with image uploads, as long as the slowest pending
 upload.</li>
-<li><strong>Whole-store passes?</strong> Yes — <code>auto_dream</code>
-fetches up to 500 items <em>per memory type</em> and feeds them to an
-agent, so its token bill scales with the size of the store rather than
-with the day's activity, and it re-reads material it has already
-processed on every run.</li>
+<li><strong>Whole-store passes?</strong> Yes, when invoked —
+<code>auto_dream</code> fetches up to 500 items <em>per memory type</em>
+and feeds them to an agent, so its token bill scales with the size of
+the store rather than with the day's activity, and it re-reads material
+it has already processed on every run.</li>
 <li><strong>Read path?</strong> Bounded by <code>limit</code> (default
 50) per type, but the agent may search several types per turn, and core
 memory blocks are always in context.</li>
@@ -517,53 +558,60 @@ agents holding <code>episodic_memory_replace</code> and
 treats captured screen content as lower-trust than user speech.</p>
 <p>Multi-tenancy is the strong part, and is the reason to read this
 report if you are building a service. Four scope levels, applied in the
-SQL, in the Redis index queries, and in the tests, with
+SQL, in the Redis index queries, in the SQLite fallbacks since
+<code>6ae9271</code>, and in the tests, with
 <code>read_scopes</code>/<code>write_scope</code> distinguished on the
 client — <code>tests/test_multi_scope_access.py</code> asserts that a
 read-only client cannot create memory and cannot modify shared
 memory.</p>
-<p>Data-loss risk is concentrated in one place: <code>auto_dream</code>
-plus <code>hard_delete</code>. There is no soft delete on the
-memory-replace path, no tombstone, no audit row, and the raw context for
-an episodic event is not the same object as the event. If the pass
-merges two events badly, the originals are gone —
-<code>raw_memory</code> may still hold the source context, but nothing
-links the deleted event back to it.</p>
+<p>Data-loss risk was concentrated in two places, and one is closed. The
+bulk erasure endpoints hard-deleted a whole user's or client's memory
+for any caller until <code>b115588</code> added authentication and a
+tenant check. The other remains: <code>auto_dream</code> plus
+<code>hard_delete</code>. There is no soft delete on the memory-replace
+path, no tombstone, no audit row, and the raw context for an episodic
+event is not the same object as the event. If the pass merges two events
+badly, the originals are gone — <code>raw_memory</code> may still hold
+the source context, but nothing links the deleted event back to it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>33 test files under <code>tests/</code>, which is above the atlas
-median, and the emphasis is on boundaries rather than on recall quality:
+<p>54 entries under <code>tests/</code>, and the emphasis is on
+boundaries rather than on recall quality:
 <code>test_client_agent_isolation.py</code>,
 <code>test_multi_scope_access.py</code>,
 <code>test_scoped_blocks.py</code>, <code>test_filter_tags_db.py</code>,
 <code>test_search_all_users.py</code>,
 <code>test_deletion_apis.py</code>, <code>test_raw_memory.py</code>,
-<code>test_temporal_queries.py</code>, plus Redis-cache equivalents.</p>
-<p><strong>This is where MIRIX earns <code>negative_eval</code>, and it
-earns it twice over.</strong>
-<code>tests/test_filter_tags_db.py:300</code> creates a raw memory under
-scope <code>test-ft</code>, searches under
+<code>test_temporal_queries.py</code>,
+<code>test_scope_read_consistency.py</code>, plus Redis-cache
+equivalents, and a large new block around skills —
+<code>test_skill_experience.py</code>,
+<code>test_session_experience_distillation.py</code>,
+<code>test_skill_edit_budget.py</code>,
+<code>test_experience_to_skill_evolution.py</code>.</p>
+<p><strong>This is where MIRIX earns <code>negative_eval</code>, several
+times over.</strong> <code>tests/test_filter_tags_db.py:332</code>
+creates a raw memory under scope <code>test-ft</code>, searches under
 <code>scopes=["other-scope"]</code>, and asserts
 <code>mem.id not in result_ids</code> — named material, reachable by the
 same query under a different key, asserted absent.
-<code>tests/test_search_all_users.py:405</code> does the larger version:
+<code>tests/test_search_all_users.py:408</code> does the larger version:
 four users, a cross-user search, and explicit assertions that user3
 (different scope) and user4 (different organization) do not appear in
 the results.</p>
+<p><code>tests/test_scope_read_consistency.py</code> adds the version
+that would have caught the drift: per manager, a scoped row and an
+unscoped row, a BM25 and a fuzzy search, and an assertion that the
+scoped id is present and the unscoped id absent.</p>
 <p>That is a <strong>negative retrieval assertion</strong> under the <a
-href="../../methodology/atlas-rubric/">rubric</a>'s definition, and the
-route is new. <a href="../open-cowork/">open-cowork</a> arrived via
-<code>forbiddenHits</code> in a relevance harness and <a
-href="../verel/">Verel</a> via a red-team regression; MIRIX arrived by
-testing multi-tenant access control, which is a discipline with its own
-literature and no connection to memory research. That is mildly
-encouraging for the atlas's argument: the assertion shape is reachable
-from ordinary engineering practice, not only from thinking hard about
-memory.</p>
-<p>It is also narrower than the other two. Every negative assertion here
-is about a <em>boundary</em>. None asserts that a deleted value stays
-deleted, or that a corrected value does not return — which is the
-assertion <code>auto_dream</code> most needs and does not have.</p>
+href="../../methodology/atlas-rubric/">rubric</a>'s definition, reached
+by testing multi-tenant access control rather than by memory-correctness
+work — the assertion shape is available from ordinary engineering
+practice.</p>
+<p>It is also narrow. Every negative assertion here is about a
+<em>boundary</em>. None asserts that a deleted value stays deleted, or
+that a corrected value does not return — which is the assertion
+<code>auto_dream</code> most needs and does not have.</p>
 <p>The eval tree (<code>evals/</code>) runs LongMemEval, RULER, an LRU
 eval and MAB (MemoryAgentBench) through <code>evals/mab/</code>, with an
 LLM judge (<code>evals/llm_judge.py</code>,
@@ -627,7 +675,8 @@ last time.</li>
 <p>MIRIX suits a team building a <em>hosted, multi-tenant</em> assistant
 that has already decided to run Postgres and Redis and wants the tenancy
 model to be right from the start. That is a real and underserved
-position, and MIRIX is better at it than most of this atlas.</p>
+position, and MIRIX's tenancy model — with the erasure endpoints and the
+fallbacks fixed — is the part worth taking.</p>
 <p>It does not suit anyone who needs memory to be repairable. No trust
 state, no tombstone, hard delete on the correction path, and an
 unsupervised whole-store rewriting pass together mean the store's
@@ -642,10 +691,14 @@ capture plus a whole-store <code>auto_dream</code> pass is a bill that
 grows with the store rather than with the user's activity.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li><strong>How often does <code>auto_dream</code> actually
-run?</strong> <code>AutoDreamManager</code> resolves a window from the
-last checkpoint, but the scheduler that invokes it was not traced from
-the API layer. The blast radius depends entirely on the answer.</li>
+<li><strong>Who calls <code>POST /memory/auto_dream</code> in the hosted
+product, and how often?</strong> In the tree it is an API call, plus a
+procedural-mode run an agent schedules after a session-count threshold;
+the blast radius of the experience mode depends on the caller.</li>
+<li><strong>Should a skill edit keep its previous version?</strong>
+<code>skill_edit</code> bumps a semver and overwrites the instructions,
+so the lineage on <code>skill_experience</code> points at a skill whose
+earlier text is gone.</li>
 <li><strong>Is <code>raw_memory</code> retained indefinitely?</strong>
 No TTL or pruning path was found, though <code>delete_by_user_id</code>
 and <code>soft_delete_by_client_id</code> exist across managers and a
@@ -668,6 +721,13 @@ a deployment not represented here?</li>
 <code>resource_memory.py</code>, <code>knowledge_vault.py</code>,
 <code>raw_memory.py</code>, <code>base.py</code>,
 <code>mixins.py</code>, <code>sqlalchemy_base.py</code></p>
+<p><strong>Skills and sessions</strong> —
+<code>mirix/services/session_experience_distiller.py</code>,
+<code>mirix/services/skill_experience_curator.py</code>,
+<code>mirix/services/skill_experience_manager.py</code>,
+<code>mirix/services/conversation_message_manager.py</code>,
+<code>mirix/orm/skill_experience.py</code>,
+<code>mirix/orm/conversation_message.py</code></p>
 <p><strong>Write path</strong> —
 <code>mirix/agent/temporary_message_accumulator.py</code>,
 <code>mirix/agent/meta_memory_agent.py</code>,
@@ -692,9 +752,36 @@ a deployment not represented here?</li>
 <code>tests/test_multi_scope_access.py</code>,
 <code>tests/test_client_agent_isolation.py</code>,
 <code>tests/test_deletion_apis.py</code>,
-<code>tests/test_raw_memory.py</code>, <code>evals/mab/</code>,
+<code>tests/test_raw_memory.py</code>,
+<code>tests/test_scope_read_consistency.py</code>,
+<code>tests/test_memory_api_surface.py</code>, <code>evals/mab/</code>,
 <code>evals/llm_judge.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/Mirix-AI/MIRIX/commit/8cb06a62bbb7c478beb33dd4f2815696a72df482"><code class="commit-id" title="8cb06a62bbb7c478beb33dd4f2815696a72df482">8cb06a62…</code></a>
+— ten commits on, the last merged 2026-08-20, adding about 18,000 lines.
+Screened before reading: two auto-run surfaces
+(<code>.cursorrules</code>, <code>.vscode/settings.json</code>), three
+build-time execution points and three unpinned surfaces, none inside the
+cooldown; nothing was installed or run. Two defects present at the
+previous pin were fixed after it, and the first reading missed both.
+<code>DELETE /users/{user_id}/memories</code> and
+<code>DELETE /clients/{client_id}/memories</code> performed cross-table
+hard deletes with no authentication or tenant check (fixed in
+<code>b115588</code>, with a 404 anti-probing follow-up in
+<code>9f7f8b4</code>). And the scope predicate the report praised as
+reaching the cache had not reached the SQLite in-memory BM25 fallback or
+the fuzzy-match candidate loads, which filtered on <code>user_id</code>
+alone, nor Redis searches given scopes without <code>filter_tags</code>
+(fixed in <code>6ae9271</code>, with a per-manager test). Both marks
+stand, now with evidence records. Added since the pin: procedural memory
+as versioned skills, verbatim <code>conversation_message</code> storage,
+a session distiller producing <code>skill_experience</code> rows with
+evidence and credibility, a curator that evolves skills under an edit
+budget, and <code>session_tag</code> routing between conversation and
+task memory. <code>auto_dream</code> is corrected from a periodic pass
+to one run through its endpoint or a procedural-mode trigger.
+Corpus-ranking sentences were removed.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a>
 — first reading.</p>

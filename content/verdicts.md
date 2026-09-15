@@ -1062,9 +1062,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mirix`](../systems/mirix/)
 - Best idea: the scope key is in the *cache* query as well as the database query, and the boundary is tested by asserting exclusion rather than inclusion — a memory written under one scope, searched under another, asserted absent.
-- Biggest risk: `auto_dream` loads up to 500 items per type and lets an agent merge and rewrite them, with hard delete available — so a correction can be undone by an unsupervised pass.
+- Biggest risk: `auto_dream` loads up to 500 items per type and lets an agent merge and rewrite them, with hard delete available — so a correction can be undone by an unsupervised pass. Until July 2026 the bulk erasure endpoints hard-deleted any tenant's memory without authentication.
 - Most reusable component: a raw-context table kept beside the typed ones, and read scope separated from write scope on the client.
-- Maturity impression: 33 test files with the emphasis on boundaries rather than recall — agent isolation, multi-scope access, scoped blocks, filter tags — above the atlas median for a tenancy-first design.
+- Maturity impression: a boundary-first test suite — agent isolation, multi-scope access, scoped blocks, filter tags, and a per-manager scope test added after the SQLite fallbacks were found filtering on user alone — plus a skill-distillation pipeline with its own large test block.
 - Study when: you are building a hosted, multi-tenant assistant on Postgres and Redis and want the tenancy model right from the start.
 - Do not copy when: memory must be repairable. No trust state, no tombstone, hard delete on the correction path, and a whole-store rewriting pass — a user's "no, that's wrong" does not outlive it.
 

@@ -906,12 +906,12 @@ segments and returns the files they belong to, scoring each file by the
 max of its segments — the search unit and the return unit are
 deliberately different sizes. <strong>MIRIX</strong> gives each of six
 memory types its own table, manager, writer agent and prompt, and
-carries the most thoroughly <em>enforced</em> scope model here — four
-levels, applied in the SQL and in the Redis index queries alike.
-<strong>Memobase</strong> goes further on the same axis by making scope
-structural: every primary key is <code>(id, project_id)</code> and every
-foreign key is composite, so a cross-tenant query is a schema error
-rather than a review failure. <strong>AgentSwarms</strong> is the
+enforces a four-level scope in the SQL, the Redis index queries and —
+since a July 2026 fix — the SQLite fallbacks that had filtered on user
+alone. <strong>Memobase</strong> goes further on the same axis by making
+scope structural: every primary key is <code>(id, project_id)</code> and
+every foreign key is composite, so a cross-tenant query is a schema
+error rather than a review failure. <strong>AgentSwarms</strong> is the
 family's minimalist and the one that shows how far a platform can get
 without a vector on the memory path: a Postgres trigger derives a
 keyword array from each item's content, a GIN <code>&amp;&amp;</code>
@@ -16705,29 +16705,34 @@ capture and nothing reviews them</td>
 </tr>
 <tr>
 <td><code>mirix</code></td>
-<td>Six typed rows — episodic event, semantic concept, procedural step,
-resource, knowledge-vault secret, core block — plus a raw_memory
-evidence table</td>
+<td>Six typed rows — episodic event, semantic concept, procedural skill,
+resource, knowledge-vault secret, core block — plus raw_memory evidence,
+verbatim conversation messages, and distilled skill experiences</td>
 <td>Postgres with pgvector, or SQLite with FTS5; Redis Stack as a
 search-capable cache</td>
 <td>Per-type search by embedding, BM25/full-text or string match,
 selected by the caller</td>
-<td>Deferred — messages accumulate in a buffer, then a meta agent routes
-them to six specialist writer agents</td>
+<td>Deferred — messages accumulate, a meta agent routes them to
+specialist writer agents; sessions tagged task feed a skill-distillation
+pipeline instead</td>
 <td>Tool-driven replace, implemented as hard delete followed by insert;
 no supersession record</td>
 <td>organization_id, user_id, client_id and a filter_tags scope, applied
 on every read path including the cache</td>
 <td>REST API, Python client, outbound MCP client, read-only React
 dashboard</td>
-<td>auto_dream — a periodic pass that loads up to 500 items per memory
-type and lets an agent merge and rewrite them</td>
+<td>auto_dream — a consolidation pass run through POST
+/memory/auto_dream, and in procedural mode on a session-count trigger —
+that loads up to 500 items per memory type and lets an agent merge and
+rewrite them</td>
 <td>None represented; no status field, no confidence, no provenance
 beyond a free-text source string</td>
-<td>Scope enforced across schema, queries, cache and tests; a raw
-evidence table; negative retrieval assertions in the test suite</td>
+<td>Scope enforced across schema, queries, cache and the SQLite
+fallbacks, with tests on each; a raw evidence table; skill experiences
+carrying evidence, credibility and lineage</td>
 <td>auto_dream can hard-delete a correction; credentials stored as
-plaintext in knowledge_vault; last_modify is last-write-only</td>
+plaintext in knowledge_vault; bulk erasure endpoints were
+unauthenticated until July 2026; last_modify is last-write-only</td>
 </tr>
 <tr>
 <td><code>mnemo-cortex</code></td>
@@ -29995,7 +30000,7 @@ href="https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7
 one unpinned surface and three files inside the seven-day cooldown.
 Nothing was built and nothing was run. Apache-2.0</li>
 <li><a href="https://github.com/Mirix-AI/MIRIX">Mirix-AI/MIRIX</a> at <a
-href="https://github.com/Mirix-AI/MIRIX/commit/51f3342d5366b0e215439581f92e0323227146af"><code class="commit-id" title="51f3342d5366b0e215439581f92e0323227146af">51f3342d…</code></a></li>
+href="https://github.com/Mirix-AI/MIRIX/commit/8cb06a62bbb7c478beb33dd4f2815696a72df482"><code class="commit-id" title="8cb06a62bbb7c478beb33dd4f2815696a72df482">8cb06a62…</code></a></li>
 <li><a
 href="https://github.com/memodb-io/memobase">memodb-io/memobase</a> at
 <a
