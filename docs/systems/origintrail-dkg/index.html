@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A decentralized knowledge-graph
+node whose agent memory is RDF in three layers — a private per-agent
+working graph, a gossip-replicated shared graph, and chain-anchored
+verifiable Knowledge Assets with protocol-stamped trust levels —
+recalled by agents through a keyword scan that ranks by layer and never
+asks for a trust level.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OriginTrail DKG
+V10 — Agent Memory Atlas">
+    <meta property="og:description" content="A decentralized
+knowledge-graph node whose agent memory is RDF in three layers — a
+private per-agent working graph, a gossip-replicated shared graph, and
+chain-anchored verifiable Knowledge Assets with protocol-stamped trust
+levels — recalled by agents through a keyword scan that ranks by layer
+and never asks for a trust level.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OriginTrail DKG
+V10 — Agent Memory Atlas">
+    <meta name="twitter:description" content="A decentralized
+knowledge-graph node whose agent memory is RDF in three layers — a
+private per-agent working graph, a gossip-replicated shared graph, and
+chain-anchored verifiable Knowledge Assets with protocol-stamped trust
+levels — recalled by agents through a keyword scan that ranks by layer
+and never asks for a trust level.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OriginTrail DKG V10 — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OriginTrail DKG V10",
+      "description": "A decentralized knowledge-graph node whose agent memory is RDF in three layers \u2014 a private per-agent working graph, a gossip-replicated shared graph, and chain-anchored verifiable Knowledge Assets with protocol-stamped trust levels \u2014 recalled by agents through a keyword scan that ranks by layer and never asks for a trust level.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Draft, share, anchor</p>
+          <h1>OriginTrail DKG V10</h1>
+          <p class="document-deck">A decentralized knowledge-graph node
+whose agent memory is RDF in three layers — a private per-agent working
+graph, a gossip-replicated shared graph, and chain-anchored verifiable
+Knowledge Assets with protocol-stamped trust levels — recalled by agents
+through a keyword scan that ranks by layer and never asks for a trust
+level.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/OriginTrail/dkg">
+              <span>Source</span>
+              <strong>OriginTrail/dkg</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21" title="d499fb2d5bce5b4717c62c2dd1fda93dc7495f21">
+              <span>Analyzed revision</span>
+              <code>d499fb2d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/OriginTrail--dkg" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>OriginTrail--dkg</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OriginTrail's DKG V10 is the node software for a decentralized
+knowledge graph, repositioned as "the shared, verifiable memory layer
+for multi-agent AI systems". This monorepo — Apache-2.0, 9,128 commits
+since 22 February 2026, about 470,000 lines of non-test TypeScript and
+1,569 test files across its packages — holds the node daemon, the CLI, a
+web UI, protocol packages, chain modules, and adapters that plug the
+node into OpenClaw, Hermes, ElizaOS and MCP clients. Most of that volume
+is network, chain, publishing and synchronization machinery; this report
+reads the parts that decide what an agent remembers and recalls.</p>
+<p>The memory model is three layers of RDF, and it is the part worth
+studying:</p>
+<ul>
+<li><strong>Working Memory</strong> is a private draft graph per agent
+in a context graph — free, local, and invisible to peers.</li>
+<li><strong>Shared Working Memory</strong> is gossip-replicated to the
+context graph's permitted peers, TTL-bounded, still free.</li>
+<li><strong>Verifiable Memory</strong> is a Knowledge Asset whose Merkle
+root is anchored on chain for gas and TRAC, with a trust level that only
+the protocol writes: <code>SelfAttested</code>, then
+<code>Endorsed</code>, <code>PartiallyVerified</code> or
+<code>ConsensusVerified</code> as endorsements and M-of-N verifications
+confirm.</li>
+</ul>
+<p>Every step between layers is an explicit operation — finalize (seal
+with an EIP-712 author signature), share, publish — and each writes a
+lifecycle state and, by default, a PROV event into the context graph's
+<code>_meta</code> graph.
+<code>assertNoUserAuthoredTrustLevelQuads</code> refuses a write that
+tries to set a trust level itself
+(<code>packages/core/src/trust.ts:79-90</code>). A person can drive the
+same progression from the node UI.</p>
+<p>The weakness is on the recall side. The OpenClaw memory slot — the
+path an agent takes when it searches memory or gets auto-recall before a
+prompt — issues six SPARQL queries matching any literal of at least
+twenty characters that contains a query keyword, ranks by that overlap
+times a per-layer weight (Verifiable 1.3, Shared 1.15, Working 1.0), and
+never passes the minimum-trust filter the query engine supports. A
+self-attested verifiable asset and a consensus-verified one rank the
+same. The trust levels are real, protocol-written and filterable on
+request; the default agent recall does not ask.</p>
+<p>Three marks: <code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A unit of memory is a <strong>Knowledge Asset</strong>: a named set
+of RDF quads inside a <strong>context graph</strong> (the UI calls these
+projects), optionally inside a named <strong>sub-graph</strong>. Its
+lifecycle subject lives in
+<code>did:dkg:context-graph:&lt;id&gt;/_meta</code> at
+<code>urn:dkg:assertion:&lt;cg&gt;:&lt;agent&gt;:&lt;name&gt;</code>
+(<code>packages/core/src/constants.ts:558</code>) and carries
+<code>dkg:state</code> and <code>dkg:memoryLayer</code>.</p>
+<p>The states are <code>created</code>, <code>promoted</code>,
+<code>published</code>, <code>finalized</code> and
+<code>discarded</code>. The layers are Working, Shared and Verifiable.
+Trust is a separate axis on verifiable content.</p>
+<p>How a claim becomes more believed is how far it travels and who signs
+it:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a Knowledge Asset moves outward, what records each step, and what the agent's recall path reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a Knowledge Asset moves outward, what records each step, and what the agent&#39;s recall path reads
+flowchart TB
+    CREATE[&quot;create KA in Working Memory&lt;br/&gt;state created, layer WM&quot;] --&gt; WRITE[&quot;write quads&lt;br/&gt;additive&quot;]
+    WRITE --&gt; SEAL[&quot;finalize: Merkle root +&lt;br/&gt;EIP-712 author attestation&quot;]
+    SEAL --&gt; SHARE[&quot;share to Shared Working Memory&lt;br/&gt;gossip to permitted peers, TTL-bounded&quot;]
+    SHARE --&gt; PUB[&quot;publish to Verifiable Memory&lt;br/&gt;root anchored on chain, gas + TRAC&quot;]
+    PUB --&gt; T0[&quot;trust SelfAttested&quot;]
+    T0 --&gt;|&quot;endorse confirmed&quot;| T1[&quot;Endorsed&quot;]
+    T1 --&gt;|&quot;M-of-N verify&quot;| T2[&quot;PartiallyVerified / ConsensusVerified&quot;]
+    WRITE --&gt;|&quot;discard&quot;| DISC[&quot;state discarded&quot;]
+    PUB --&gt;|&quot;new version&quot;| REV[&quot;new root, prov:wasRevisionOf&quot;]
+    META[(&quot;_meta: state row +&lt;br/&gt;PROV event per transition&quot;)] -.- CREATE
+    META -.- SHARE
+    META -.- PUB
+    RECALL[&quot;OpenClaw memory_search /&lt;br/&gt;auto-recall&quot;] --&gt;|&quot;CONTAINS keyword, 6 queries&quot;| LAYERS[&quot;WM x1.0, SWM x1.15, VM x1.3&quot;]
+    LAYERS -.-&gt;|&quot;minTrust never passed&quot;| T2</code></pre></details></figure>
+<p>Nothing marks a claim wrong. A draft is discarded and recreated; a
+published asset gets a new committed version linked to the prior one;
+shared memory ages out. Nothing records a rejected value, so
+<code>tombstone</code> is withheld. No read takes a time and returns
+what was believed then, so <code>bitemporal</code> is withheld.</p>
+<p><code>trust_state</code> is withheld on the read side. The trust
+levels are discrete, stored, and written only by the protocol —
+<code>dkg-agent-endorse.ts:422</code> stamps <code>Endorsed</code>,
+<code>:678-679</code> chooses <code>PartiallyVerified</code> or
+<code>SelfAttested</code>, <code>:749</code>
+<code>ConsensusVerified</code>. The query engine can filter verifiable
+memory to a minimum level
+(<code>packages/query/src/sparql-min-trust.ts</code>), and the daemon
+validates <code>minTrust</code> only for
+<code>view: 'verifiable-memory'</code>
+(<code>packages/cli/src/daemon/routes/query.ts:508-527</code>). But no
+default read excludes a lower level: the filter applies only when a
+caller passes it, the Hermes plugin passes it only when the model
+supplies <code>min_trust</code>, and the OpenClaw memory slot never
+does.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Non-test role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/agent</code></td>
+<td><code>DKGAgent</code>: context graphs, queries, endorsement,
+publishing orchestration, shared-memory hosting and recovery</td>
+</tr>
+<tr>
+<td><code>packages/publisher</code></td>
+<td>Lifecycle metadata, share, publish and update, storage
+acknowledgements</td>
+</tr>
+<tr>
+<td><code>packages/query</code></td>
+<td>The query engine: view resolution, read-only guard, graph-scope
+rewriting, min-trust injection</td>
+</tr>
+<tr>
+<td><code>packages/storage</code></td>
+<td>Triple store adapters — managed Oxigraph, Blazegraph, a SPARQL HTTP
+adapter — and graph management</td>
+</tr>
+<tr>
+<td><code>packages/core</code></td>
+<td>Memory model, URI constants, trust predicates, P2P primitives</td>
+</tr>
+<tr>
+<td><code>packages/chain</code>, <code>packages/evm-module</code></td>
+<td>Chain client and contracts</td>
+</tr>
+<tr>
+<td><code>packages/cli</code></td>
+<td>The <code>dkg</code> command and the daemon with its HTTP
+routes</td>
+</tr>
+<tr>
+<td><code>packages/node-ui</code></td>
+<td>The dashboard</td>
+</tr>
+<tr>
+<td><code>packages/adapter-openclaw</code>, <code>adapter-hermes</code>,
+<code>adapter-elizaos</code>, <code>adapter-prime-agent</code>,
+<code>mcp-dkg</code></td>
+<td>Agent integrations</td>
+</tr>
+</tbody>
+</table></div>
+<p>A node is a long-running daemon on <code>127.0.0.1:9200</code> with a
+local triple store. Named graphs carry the layering: a context graph's
+data graph, its <code>_shared_memory</code> graph, per-agent Working
+Memory graphs, per-asset verifiable graphs, <code>_meta</code>, and
+private partitions.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> Node.js 22 and the daemon,
+installed from npm as <code>@origintrail-official/dkg</code>.
+<code>dkg openclaw setup</code>, <code>dkg hermes setup</code> and
+<code>dkg mcp setup</code> configure the node, start it, optionally fund
+wallets from a testnet faucet, and register the adapter.</li>
+<li><strong>Local memory needs no chain.</strong> Working and Shared
+Working Memory work without funds; only publishing to Verifiable Memory
+costs gas and TRAC. Setup defaults to <code>mainnet-gnosis</code>, where
+there is no faucet.</li>
+<li><strong>Storage</strong> is a daemon-managed Oxigraph server on
+local RocksDB by default
+(<code>packages/cli/src/store-wizard.ts:158</code>), and a node operator
+can point at Blazegraph or a SPARQL endpoint. A file-backed
+shared-memory snapshot store garbage-collects by file age and free-space
+watermarks and does not inspect RDF references.</li>
+<li><strong>Hand-repairable:</strong> the store is standard RDF with
+SPARQL, but the lifecycle rows, Merkle seals and chain commitments that
+must agree with it are not something to edit by hand.</li>
+</ul>
+<p>The screen of this checkout found two auto-running surfaces —
+<code>.cursor/mcp.json</code> and three Cursor rules files, read as data
+— two build-time execution points (a pytest <code>conftest.py</code> and
+a CLI <code>postinstall</code> that bundles binaries), no manifests
+inside the seven-day cooldown, and 58 unpinned surfaces across 139
+scanned files. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Lifecycle metadata</strong> —
+<code>packages/publisher/src/metadata.ts</code>:
+<code>generateAssertionCreatedMetadata</code> (<code>:2123</code>),
+<code>…PromotedMetadata</code> (<code>:2210</code>),
+<code>…UpdatedMetadata</code> (<code>:2321</code>, with
+<code>prov:wasRevisionOf</code> to the prior root),
+<code>…DiscardedMetadata</code> (<code>:2380</code>). Each sets the
+state row and, unless <code>provenanceEvents</code> is
+<code>false</code>, appends a <code>prov:Activity</code> event
+node.</li>
+<li><strong>Query</strong> — <code>DKGAgent.query</code> in
+<code>packages/agent/src/dkg-agent-query.ts</code>: read-only guard
+first, then context-graph read authority, Working Memory isolation
+(<code>:425-434</code> states the invariant), private-graph denial, then
+the engine. <code>packages/query/src/dkg-query-engine.ts</code> resolves
+a view to exact graphs and graph prefixes and rewrites the SPARQL to the
+allowed set.</li>
+<li><strong>HTTP query gate</strong> —
+<code>packages/cli/src/daemon/routes/query.ts:551-586</code>: caller
+identity from the token; node-operator tokens pass; unauthenticated
+Working Memory reads are limited to the node-default agent's
+aliases.</li>
+<li><strong>Trust</strong> — <code>packages/core/src/trust.ts</code>
+(predicate, literal builder, user-authored refusal);
+<code>packages/agent/src/dkg-agent-endorse.ts</code> (the writers);
+<code>packages/query/src/sparql-min-trust.ts</code> (the filter).</li>
+<li><strong>OpenClaw memory slot</strong> —
+<code>packages/adapter-openclaw/src/DkgMemoryPlugin.ts</code>:
+<code>search</code> and <code>searchNarrow</code>
+(<code>:158-167</code>) share <code>runSearch</code>, which builds the
+keyword SPARQL, the layer plans with weights (<code>:291</code>,
+<code>:299</code>, <code>:307</code>), runs them with the resolved agent
+address, and deduplicates by context graph and subject URI keeping the
+highest layer (<code>:387-435</code>).</li>
+<li><strong>Chat persistence</strong> —
+<code>ChatTurnWriter.ts:3961</code> posts each user and assistant pair
+to <code>/api/openclaw-channel/persist-turn</code>; recall reaches those
+turns through the agent-context graph's Working Memory.</li>
+<li><strong>UI promotion</strong> — <code>VerifyOnDkgButton</code> in
+<code>packages/node-ui/src/ui/views/project/components/ka.tsx:55-70</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Content is RDF quads, so the shape is whatever the writer chooses.
+The memory slot's recall is deliberately schema-free for that reason:
+any subject, any predicate, any literal.</p>
+<p>The lifecycle subject in <code>_meta</code> carries
+<code>prov:wasAttributedTo</code> the author's agent DID,
+<code>dkg:assertionName</code>, <code>dkg:assertionGraph</code>,
+<code>dkg:state</code>, <code>dkg:memoryLayer</code>, and once identity
+is reserved a KA number and UAL. Event nodes at
+<code>&lt;subject&gt;/event/&lt;id&gt;</code> carry a type
+(<code>AssertionCreated</code>, <code>AssertionPromoted</code>,
+<code>AssertionUpdated</code>, <code>AssertionDiscarded</code>) and
+<code>prov:startedAtTime</code>.</p>
+<p><strong>The lifecycle history is not an append-only audit
+log.</strong> It records transitions, not the quad writes inside a
+draft; <code>provenanceEvents: false</code> ("lite mode",
+<code>dkg-publisher.ts:528-534</code>) drops the event nodes entirely;
+and the legacy-migration classifier notes that orphan event rows
+surviving a cleared draft are swept away by the next create
+(<code>legacy-wm-migration.ts:398-410</code>). Verifiable versions are
+anchored on chain, which is a different mechanism. So
+<code>audit_log</code> is withheld.</p>
+<p><strong>Scope</strong> has three levels. A context graph has an
+access policy and allow-list (<code>DKG_ALLOWED_AGENT</code>,
+<code>DKG_PARTICIPANT_AGENT</code>); shared-memory gossip for a gated
+graph must carry a signed envelope from one of those agents. Sub-graphs
+partition a context graph. Working Memory is a graph whose URI encodes
+the agent address, and the query path checks an agent-scoped caller
+against it — tested in both directions. The exception is deliberate and
+documented at the route: a node-operator token can read any local
+agent's Working Memory, and the OpenClaw adapter authenticates that
+way.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two surfaces.</p>
+<p><strong>SPARQL through <code>/api/query</code></strong> with a
+<code>view</code>, a context graph, optional sub-graph and assertion
+name, and for verifiable memory an optional <code>minTrust</code>. Only
+read-only queries pass; caller dataset clauses are refused and graph
+variables are constrained to the view's allowed set. This is precise and
+powerful, and it assumes the caller knows the shape of the graph.</p>
+<p><strong>The OpenClaw memory slot</strong>, used by the
+<code>memory_search</code> tool and by <code>before_prompt_build</code>
+auto-recall. It splits the query into lowercase keywords of at least two
+characters and issues</p>
+<pre class="sparql"><code>SELECT ?uri ?pred ?text WHERE {
+  ?uri ?pred ?text .
+  FILTER(isLiteral(?text))
+  FILTER(STRLEN(STR(?text)) &gt;= 20)
+  FILTER(CONTAINS(LCASE(STR(?text)), &quot;k1&quot;) || …)
+} LIMIT n</code></pre>
+<p>against Working, Shared and Verifiable views of the agent-context
+graph and, when a project is selected, of the project graph — three or
+six queries per call. Hits are ranked by keyword overlap times the layer
+weight and deduplicated so the same subject surfaces once at its highest
+layer. Auto-recall caps at five hits, HTML-escapes every snippet and
+wraps the block in untrusted-data framing with a sentinel that strips it
+from persisted assistant text.</p>
+<p>There is no vector arm and no graph traversal in that path. A query's
+recall is bounded by literal substring matching over every literal in
+six graphs; an entity known only by an IRI or a short label is not
+found, and a verbose chat turn that mentions a keyword in passing
+competes with a curated fact. The adapter's prompt guidance tells the
+model to retry Working Memory reads under alternate identity forms
+before concluding a project is empty, which says how easy it is for a
+read to miss.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes to Working Memory are additive quad inserts to a named draft
+and are visible to the author's next query. Finalize computes the
+canonical Merkle root and signs an EIP-712 author attestation; a draft
+edited after finalize fails a later promote with a stale-seal error
+rather than publishing a mismatch
+(<code>e2e-memory-layers.test.ts:782</code>). Share moves the finalized
+draft to Shared Working Memory and gossips it; publish commits selected
+shared content to chain. Share and publish have async job variants with
+recovery.</p>
+<p>Chat turns from OpenClaw and Hermes channels are persisted by the
+adapters on agent end, with markers and watermarks so replays after
+reset or compaction do not duplicate a turn. Document import
+(<code>dkg ka import-file</code>) extracts files into Working Memory,
+with MarkItDown binaries bundled by the CLI's
+<code>postinstall</code>.</p>
+<p>No write blocks on a model. There is no extraction of facts from chat
+turns into structured memory in the recall path read here — turns are
+stored as literals and found by substring. Conflict handling is
+structural: drafts are private, versions are linked, and nothing
+compares two claims for contradiction.</p>
+<p>Background work is network work: gossip catch-up, chain
+reconciliation, async share and publish queues, random-sampling proofs,
+and snapshot garbage collection. None rewrites memory content.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>OpenClaw:</strong> a memory-slot capability for
+<code>memory_search</code> and auto-recall, node tools for context
+graphs, Knowledge Assets, sub-graphs, file import and semantic
+enrichment, a channel plugin for chat, and a synced
+<code>dkg-node</code> skill.</li>
+<li><strong>Hermes:</strong> a Python plugin whose tools include a query
+accepting <code>min_trust</code>.</li>
+<li><strong>MCP:</strong> <code>mcp-dkg</code> registers tools into
+Cursor, Claude Code, Claude Desktop, Windsurf, VS Code, Cline and Codex
+CLI.</li>
+<li><strong>ElizaOS and Prime Agent</strong> adapters.</li>
+</ul>
+<p>Agency is high and explicit. The model decides what to write, when to
+share, and — where funds exist — when to publish; the adapter's system
+prompt carries rules for inviting peers to private projects. The node UI
+gives a person the same promotion controls per entity.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust metadata cannot be forged by the author.</strong> A
+quad with the trust-level predicate in an author's payload is refused,
+trust quads are excluded from the Merkle recompute so publisher and
+responder agree (the comment records a July 2026 mismatch incident that
+motivated the single source of truth), and levels above self-attested
+come only from confirmations.</p>
+<p><strong>Isolation fails closed on the read path.</strong> A
+cross-agent Working Memory read by an agent-scoped token returns nothing
+rather than an error, an omitted address defaults to the caller, and a
+mutation smuggled into a denied read is rejected by the read-only guard
+before the denial short-circuits.</p>
+<p><strong>The recall path treats memory as untrusted input.</strong>
+Escaping, framing and a sentinel strip are applied to every
+auto-recalled snippet, including content from peers' shared memory,
+which is exactly the content an injection would use.</p>
+<p><strong>But the trust model does not reach the model.</strong> The
+layer weight is the only signal the slot passes on, and a peer's
+gossip-replicated Shared Working Memory ranks above the agent's own
+Working Memory by design.</p>
+<p><strong>Shared memory is bounded by operations, not meaning.</strong>
+Snapshot garbage collection frees disk by file age and watermarks; what
+is lost is whatever is oldest.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,569 test files across the packages, 412 of them in
+<code>packages/agent</code>, plus <code>devnet/</code> scenario packages
+that exercise multi-node flows. None was run for this report.</p>
+<p>The memory-layer suite is the relevant one.
+<code>e2e-memory-layers.test.ts:432</code> writes a draft, asserts it is
+readable in Working Memory, and asserts it is absent from Shared Working
+Memory and the data graph; <code>:461</code> and <code>:539</code>
+assert the analogous boundaries for shared and published data;
+<code>:782</code> asserts a draft edited after sealing cannot be
+promoted. <code>wm-multi-agent-isolation-extra.test.ts</code> asserts
+that B cannot read A's Working Memory by naming A (<code>:151</code>)
+while A reading its own returns the fact (<code>:188</code>), and that
+the graph URI encodes the agent address (<code>:452</code>). That earns
+<code>negative_eval</code>.</p>
+<p>Not tested in what was read: that auto-recall excludes anything by
+trust level, and any retrieval-quality measure for the memory slot. No
+memory benchmark result is committed; <code>docs/reports</code> holds
+two network scale and release test reports, not retrieval
+evaluations.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the private-to-shared-to-anchored path
+explicit.</strong> Three layers with a named operation between each one
+keeps drafts private by default and makes sharing a decision.</li>
+<li><strong>Let only the protocol write trust.</strong> Refuse
+author-supplied trust predicates, and exclude protocol bookkeeping from
+content hashes.</li>
+<li><strong>Encode the owner in the graph name, then check the caller
+anyway.</strong> A per-agent graph URI plus a caller-matches-target
+check, with the omitted address defaulting to the caller, closes both
+the naming and the omission holes.</li>
+<li><strong>Frame recalled memory as untrusted data</strong> and strip
+the framing from what gets persisted.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A trust signal the recall path ignores.</strong> If
+verification costs money and signatures, the agent's default search
+should be able to prefer — or require — what was verified.</li>
+<li><strong>Substring recall over every literal.</strong> It is
+schema-free, and it confuses a passing mention with a fact.</li>
+<li><strong>Optional history.</strong> A lifecycle event log that a
+performance flag can turn off and a re-create can sweep is not an audit
+trail.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits teams that genuinely need knowledge to cross
+organizational or node boundaries with provenance someone else can
+verify — multi-party research, supply-chain data, shared agent findings
+between companies — and are prepared to run a node, hold keys, and pay
+for anchoring.</p>
+<p>For a single agent or a single team on one machine, it is a great
+deal of infrastructure for what the default recall delivers: a keyword
+scan over a local triple store. Adopt it for the layering and the
+verifiability, and plan to replace the recall.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Is semantic enrichment wired into recall anywhere?</strong>
+The OpenClaw node plugin writes semantic enrichment; the memory slot
+read here does not consult it.</li>
+<li><strong>What does an operator token's cross-agent read mean on a
+multi-user node?</strong> The route treats it as the node owner's
+prerogative.</li>
+<li><strong>How do shared-memory TTL expiry and snapshot garbage
+collection interact with a draft a peer has not yet
+published?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Model and trust</strong></p>
+<ul>
+<li><code>packages/core/src/constants.ts</code> — graph and lifecycle
+URIs</li>
+<li><code>packages/core/src/memory-model.ts</code> —
+<code>MemoryLayer</code>, <code>TrustLevel</code></li>
+<li><code>packages/core/src/trust.ts</code> — trust predicate and
+refusal</li>
+<li><code>packages/agent/src/dkg-agent-endorse.ts</code> — trust
+writers</li>
+</ul>
+<p><strong>Lifecycle</strong></p>
+<ul>
+<li><code>packages/publisher/src/metadata.ts</code> — lifecycle quads
+and events</li>
+<li><code>packages/publisher/src/dkg-publisher.ts</code> — share,
+publish, discard, <code>provenanceEvents</code></li>
+<li><code>packages/publisher/src/legacy-wm-migration.ts</code></li>
+</ul>
+<p><strong>Read path</strong></p>
+<ul>
+<li><code>packages/agent/src/dkg-agent-query.ts</code></li>
+<li><code>packages/query/src/dkg-query-engine.ts</code>,
+<code>sparql-graph-scope.ts</code>, <code>sparql-min-trust.ts</code>,
+<code>sparql-guard.ts</code></li>
+<li><code>packages/cli/src/daemon/routes/query.ts</code></li>
+</ul>
+<p><strong>Agent integration</strong></p>
+<ul>
+<li><code>packages/adapter-openclaw/src/DkgMemoryPlugin.ts</code>,
+<code>ChatTurnWriter.ts</code>, <code>tools/memory-tools.ts</code></li>
+<li><code>packages/adapter-hermes/hermes-plugin/</code></li>
+<li><code>packages/mcp-dkg/src/</code></li>
+</ul>
+<p><strong>UI</strong></p>
+<ul>
+<li><code>packages/node-ui/src/ui/views/project/components/ka.tsx</code>,
+<code>entities.tsx</code></li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>docs/how-dkg-works/memory-layers.md</code>,
+<code>docs/use-dkg/knowledge-asset-lifecycle.md</code>,
+<code>docs/use-dkg/swm-public-snapshot-gc.md</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>packages/agent/test/e2e-memory-layers.test.ts</code>,
+<code>wm-multi-agent-isolation-extra.test.ts</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>rg -n "minTrust|min_trust" packages/adapter-openclaw/src packages/adapter-hermes packages/mcp-dkg/src</code></li>
+<li><code>rg -n "/event/" packages/publisher/src packages/agent/src packages/storage/src</code></li>
+<li><code>rg -n "TRUST_LEVEL_PREDICATE" packages/core/src packages/agent/src packages/publisher/src</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21"><code class="commit-id" title="d499fb2d5bce5b4717c62c2dd1fda93dc7495f21">d499fb2d…</code></a>
+— first reading, at a commit dated 10 September 2026. Screened before
+opening: two auto-running editor surfaces read as data, two build-time
+execution points, no manifests inside the seven-day cooldown, 58
+unpinned surfaces. Nothing was installed, built or run. The reading
+covered the memory model, the query and trust paths, lifecycle metadata,
+the OpenClaw memory slot and the memory-layer tests, not the chain,
+economics or synchronization packages.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

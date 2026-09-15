@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 458 reports.**
+**This page covers all 459 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4014,3 +4014,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later with an Apache-2.0 driver interface, about 96,000 lines of TypeScript and 2,563 test cases over 208 files, hermetic on embedded PGlite with a stub model and a hash embedder; published as twelve commits from 22 to 24 August 2026 with a written scope document naming what stays commercial.
 - Study when: several agents share an organization's context under per-team isolation, and erasure and audit have to stand up to someone else's review.
 - Do not copy when: you need contradictions withheld at write time, a point-in-time read over the validity intervals it stores, or something smaller than a platform with roles, policies, a console and a signing key to custody.
+
+### [`origintrail-dkg`](../systems/origintrail-dkg/)
+- Best idea: **three layers with a named step between each.** A Knowledge Asset starts as a private per-agent Working Memory draft, is sealed with an author signature, shared by gossip to a context graph's permitted peers, and published to chain only on request; each transition writes a lifecycle state, and trust above self-attested is written only by endorse and verify confirmations, with an author's own trust quads refused. Three marks: `scope_enforced`, `human_review`, `negative_eval`.
+- Biggest risk: **the agent's recall does not use the trust it pays for.** The OpenClaw memory slot scans every literal of twenty characters or more for a keyword across three layers in two graphs, ranks by layer weight, and never passes the minimum-trust filter the engine supports, so a self-attested and a consensus-verified asset rank alike and a verbose chat turn competes with a curated fact.
+- Most reusable component: the Working Memory isolation rule — a graph URI that encodes the agent, a caller-matches-target check for agent-scoped tokens, and an omitted address that defaults to the caller — tested both as a denial and as a same-agent read.
+- Maturity impression: Apache-2.0, 9,128 commits since 22 February 2026, about 470,000 lines of non-test TypeScript and 1,569 test files, a devnet of multi-node scenarios, and setup commands for OpenClaw, Hermes and MCP clients; the lifecycle's PROV event history can be switched off by a lite-mode flag.
+- Study when: knowledge has to cross node or organization boundaries with provenance another party can verify, and a private-to-shared-to-anchored progression is the right shape.
+- Do not copy when: you want good recall on one machine — the default agent search is substring matching over a local triple store — or an audit trail that cannot be configured away.
