@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 468 reports.**
+**This page covers all 469 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4094,3 +4094,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.6.1, 374 commits since 5 September 2025, about 46,000 lines of Go with 537 test functions, REST, MCP, Go library and RAG proxy modes, and vector benchmarks against Qdrant and ChromaDB from version 0.5; no agent-memory benchmark is committed.
 - Study when: you want an embeddable Go vector store with graph edges, decay and versioned memories, and will own the retrieval policy.
 - Do not copy when: every retrieval path must hide superseded or consolidated memories, or several users share one index.
+
+### [`claude-mem-lite`](../systems/claude-mem-lite/)
+- Best idea: **one live predicate and the discipline to hold it.** A save can name the observations it retracts, which stay as linked tombstones; every injection, search and export path excludes superseded and compressed rows through one SQL fragment; a test pins each read site that carries only half of it; and supersession reports every requested id it did not apply. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **the two save paths disagree about tombstones.** The manual save deduplicates against live rows so a correction is never refused, while the automatic save hooks use runs three dedup tiers with no live predicate, so for seven days an automatically captured observation resembling a retracted lesson is dropped without a log line. Recall spans projects by default at 0.4 weight, and a managed block is re-applied to the project's committed `CLAUDE.md` on every session start.
+- Most reusable component: capture that saves a degraded observation first and enriches it in a background model call, with a citation loop that adjusts ranking from whether injected memories were actually cited, never their pool membership.
+- Maturity impression: MIT, version 6.9.1, 1,288 commits since 8 February 2026, about 52,000 lines of JavaScript and 5,725 test cases named for the audit rounds that produced them; a 30-query retrieval benchmark gating CI against a committed baseline, and LongMemEval figures reported with the stricter metric beside the any-hit one, results not committed.
+- Study when: you build memory for one coding agent's hook lifecycle and want strong lexical recall with no services, and a model of how to retract memories and keep claims honest.
+- Do not copy when: projects must not see each other's memories, or you need a history of changes to each memory.

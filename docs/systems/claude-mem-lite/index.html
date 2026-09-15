@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Claude Code memory plugin on one
+SQLite database: hooks batch tool calls into episodes that a small model
+turns into typed observations, FTS5 with query expansion recalls them,
+retracted and deduplicated rows are kept as tombstones every injection
+path excludes, and injected memories the agent never cites lose
+ranking.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="claude-mem-lite — Agent Memory Atlas">
+    <meta property="og:description" content="A Claude Code memory plugin
+on one SQLite database: hooks batch tool calls into episodes that a
+small model turns into typed observations, FTS5 with query expansion
+recalls them, retracted and deduplicated rows are kept as tombstones
+every injection path excludes, and injected memories the agent never
+cites lose ranking.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="claude-mem-lite — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Claude Code memory
+plugin on one SQLite database: hooks batch tool calls into episodes that
+a small model turns into typed observations, FTS5 with query expansion
+recalls them, retracted and deduplicated rows are kept as tombstones
+every injection path excludes, and injected memories the agent never
+cites lose ranking.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>claude-mem-lite — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "claude-mem-lite",
+      "description": "A Claude Code memory plugin on one SQLite database: hooks batch tool calls into episodes that a small model turns into typed observations, FTS5 with query expansion recalls them, retracted and deduplicated rows are kept as tombstones every injection path excludes, and injected memories the agent never cites lose ranking.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Retrieval measured against itself</p>
+          <h1>claude-mem-lite</h1>
+          <p class="document-deck">A Claude Code memory plugin on one
+SQLite database: hooks batch tool calls into episodes that a small model
+turns into typed observations, FTS5 with query expansion recalls them,
+retracted and deduplicated rows are kept as tombstones every injection
+path excludes, and injected memories the agent never cites lose
+ranking.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sdsrss/claude-mem-lite">
+              <span>Source</span>
+              <strong>sdsrss/claude-mem-lite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sdsrss/claude-mem-lite/commit/0e31b3db7684fcbc063bdd89d5d04cdef004dfc8" title="0e31b3db7684fcbc063bdd89d5d04cdef004dfc8">
+              <span>Analyzed revision</span>
+              <code>0e31b3db…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sdsrss--claude-mem-lite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sdsrss--claude-mem-lite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>claude-mem-lite is a persistent memory plugin for Claude Code. It
+started as a redesign of claude-mem that batches tool calls before
+calling a model. It is MIT, version 6.9.1, with 1,288 commits since 8
+February 2026, about 52,000 lines of JavaScript modules and 5,725 test
+cases in 412 files. It runs on Node 22 with <code>better-sqlite3</code>
+and nothing else: no vector store and no embeddings.</p>
+<p>Capture is automatic:</p>
+<ol type="1">
+<li>Seven lifecycle hooks record tool use, prompts, failures and session
+boundaries.</li>
+<li>Deterministic filters drop low-signal tool calls.</li>
+<li>Related operations are grouped into an episode, which is saved at
+once with inferred metadata.</li>
+<li>A background worker asks Haiku (or an OpenRouter model, or
+<code>claude -p</code>) to classify it, title it and extract a
+lesson.</li>
+</ol>
+<p>Recall is lexical and heavily tuned, with FTS5 BM25 over weighted
+columns, synonym and CJK expansion, pseudo-relevance feedback and
+scoring for recency, importance and file overlap. Memory is injected at
+session start, on each prompt, before an edit and after a Bash
+error.</p>
+<p>Two things set it apart:</p>
+<ul>
+<li><strong>Correction is explicit.</strong> A save can name the
+observations it retracts. They are kept as tombstones with a link to the
+correction, and one predicate — not compressed, not superseded — keeps
+them out of every injection, search and export path. A test pins every
+read site that carries only half of it, and why.</li>
+<li><strong>Claims are measured and withdrawn in public.</strong> A
+30-query retrieval benchmark gates CI against a committed baseline. The
+README records LongMemEval results with the stricter metric beside the
+flattering one, and it retracts an earlier explanation of its own
+precision figure as wrong.</li>
+</ul>
+<p>The predicate has one gap. The two save paths disagree about
+tombstones. A manual save deduplicates against live rows only, so a
+correction is never refused as a copy of what it corrects. The automatic
+save that hooks use deduplicates against every row in the window,
+superseded ones included. Within seven days, an automatically captured
+observation whose title and narrative resemble a retracted one is
+dropped without a trace. The remaining costs are policy: recall spans
+projects by default at a reduced weight, the plugin rewrites a managed
+block in the project's committed <code>CLAUDE.md</code> on every session
+start, and nothing records who changed an observation beyond pre-delete
+snapshots.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is a set of <strong>observations</strong> per project. Each is
+typed, graded 1 to 3 for importance, tied to the files it touched, and
+optionally carries a <em>lesson learned</em> that ranks above its
+narrative.</p>
+<p>Four processes shape which observations reach the agent:</p>
+<ul>
+<li><strong>Supersession</strong> retires a row by stamping
+<code>superseded_at</code> and <code>superseded_by</code>: explicitly
+from a save that names it, or automatically when dedup keeps the
+higher-importance twin.</li>
+<li><strong>Compression</strong> folds old low-value rows into weekly
+summaries through <code>compressed_into</code>.</li>
+<li><strong>Decay</strong> lowers ranking by type-specific half-lives:
+decisions 90 days, discoveries 60, bugfixes 14, changes 7.</li>
+<li><strong>Citation feedback</strong> counts whether the agent cites an
+injected observation by id. Each citation raises its score and each
+uncited injection lowers it through a streak; at three the streak resets
+and <code>demoted_at</code> is stamped. No branch changes importance, so
+a missed citation cannot evict a row.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — tool calls become episodes, episodes become observations, and a single live predicate decides what any injection can see</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: tool calls become episodes, episodes become observations, and a single live predicate decides what any injection can see
+flowchart TB
+    HOOKS[&quot;Claude Code hooks&lt;br/&gt;PostToolUse, UserPromptSubmit, Stop, …&quot;] --&gt; FILTER[&quot;code-level filter&lt;br/&gt;skip low-signal tools&quot;]
+    FILTER --&gt; EP[&quot;episode buffer&lt;br/&gt;5-10 related operations&quot;]
+    EP --&gt; IMM[&quot;saved immediately&lt;br/&gt;degraded title and type&quot;]
+    IMM --&gt; LLM[&quot;background worker&lt;br/&gt;Haiku / OpenRouter / claude -p&quot;]
+    LLM --&gt; OBS[(&quot;observation&lt;br/&gt;type, lesson, files, importance&quot;)]
+    MAN[&quot;mem_save --supersedes #A&quot;] --&gt; OBS
+    MAN --&gt; TOMB[&quot;#A: superseded_at, superseded_by&lt;br/&gt;kept as tombstone&quot;]
+    MAINT[&quot;24h auto-maintain&lt;br/&gt;dedup, compress, decay&quot;] --&gt; TOMB
+    OBS --&gt; LIVE{&quot;live predicate&lt;br/&gt;not compressed and not superseded&quot;}
+    TOMB -.-&gt;|&quot;excluded&quot;| LIVE
+    LIVE --&gt; INJ[&quot;injection: session start, prompt,&lt;br/&gt;pre-edit file history, Bash error&quot;]
+    LIVE --&gt; SEARCH[&quot;mem_search / mem_recall&quot;]
+    INJ --&gt; CITE[&quot;citation tracker&lt;br/&gt;cited → rank up, 3 uncited → demoted_at&quot;]
+    CITE --&gt; OBS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hooks</td>
+<td><code>hook.mjs</code> (dispatch), <code>hook-episode.mjs</code>,
+<code>hook-llm.mjs</code>, <code>hook-memory.mjs</code> (prompt
+injection), <code>hook-context.mjs</code> (session start),
+<code>hook-handoff.mjs</code>, <code>hook-precompact.mjs</code>,
+<code>hook-optimize.mjs</code>, shell hooks in <code>hooks/</code></td>
+</tr>
+<tr>
+<td>Store</td>
+<td><code>schema.mjs</code> (tables, FTS5 triggers, migrations),
+<code>lib/save-observation.mjs</code>,
+<code>lib/observation-write.mjs</code>,
+<code>lib/delete-core.mjs</code>, <code>lib/maintain-core.mjs</code>,
+<code>lib/compress-core.mjs</code></td>
+</tr>
+<tr>
+<td>Retrieval</td>
+<td><code>search-engine.mjs</code>, <code>scoring-sql.mjs</code>,
+<code>nlp.mjs</code>, <code>synonyms.mjs</code>,
+<code>stop-words.mjs</code>, <code>deep-search.mjs</code>,
+<code>rerank.mjs</code>, <code>lib/inject-search-core.mjs</code>,
+<code>lib/recall-core.mjs</code>,
+<code>lib/error-recall-core.mjs</code></td>
+</tr>
+<tr>
+<td>Feedback</td>
+<td><code>lib/citation-tracker.mjs</code>,
+<code>lib/cite-back-hint.mjs</code></td>
+</tr>
+<tr>
+<td>Surfaces</td>
+<td><code>server.mjs</code> and <code>tool-schemas.mjs</code> (MCP),
+<code>mem-cli.mjs</code> and <code>cli/</code>,
+<code>commands/*.md</code>, <code>install.mjs</code>,
+<code>adopt-*.mjs</code></td>
+</tr>
+<tr>
+<td>Evaluation</td>
+<td><code>benchmark/</code> (fixtures, CI gate, LongMemEval runners),
+<code>experiment/</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong>
+<code>/plugin install claude-mem-lite</code>, <code>npx</code>, or
+<code>node install.mjs install</code> from a clone. It registers hooks
+and the <code>mem-lite</code> MCP server and creates
+<code>~/.claude-mem-lite/</code>.</li>
+<li><strong>Model:</strong> Haiku through <code>ANTHROPIC_API_KEY</code>
+by default, OpenRouter if that key is set, else the local
+<code>claude -p</code>. With no model the degraded observation
+stands.</li>
+<li><strong>Hand-repairable:</strong> yes. One SQLite file,
+<code>claude-mem-lite doctor</code>, <code>fts-check</code> to rebuild
+indexes, <code>export</code> and <code>restore</code>, and snapshots
+before hard deletes.</li>
+<li><strong>Writes outside its directory:</strong> a managed block in
+<code>&lt;cwd&gt;/CLAUDE.md</code> and a detail file under
+<code>&lt;cwd&gt;/.claude/</code>, re-applied on every session start
+unless opted out.</li>
+</ul>
+<p>The screen of this checkout found five auto-run surfaces (the plugin
+manifest directory, <code>.githooks/</code>, <code>.mcp.json</code>,
+<code>hooks/</code> and <code>hooks/hooks.json</code>), no build-time
+execution, one unpinned surface and <code>package.json</code> with its
+lockfile inside the seven-day cooldown, and read <code>CLAUDE.md</code>
+as data. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Save</strong> — <code>lib/save-observation.mjs</code>:
+resolve project, recent live rows for Jaccard dedup
+(<code>:230-240</code>), parse supersede tokens for observations and
+events (<code>:256-262</code>), short-circuit on a duplicate while
+reporting the swallowed supersession (<code>:274-292</code>), scrub,
+MinHash, CJK bigrams, insert rows and file links and stamp superseded
+ids in one transaction (<code>:353</code>).</li>
+<li><strong>Live predicate</strong> —
+<code>lib/inject-search-core.mjs:50-53</code>,
+<code>COALESCE(compressed_into, 0) = 0 AND superseded_at IS NULL</code>.</li>
+<li><strong>Search</strong> — <code>search-engine.mjs:64-86</code>: FTS5
+match, live predicate, optional project, type, date, importance and
+branch filters, low-signal title filter, a score combining BM25, decay,
+importance, lesson presence, noise penalty and citation factor.</li>
+<li><strong>Prompt injection</strong> — <code>hook-memory.mjs</code>:
+coverage threshold over weighted columns, cross-project multiplier
+(<code>:155-168</code>), stale-lesson hint (<code>:202</code>),
+delimiter neutralisation.</li>
+<li><strong>Dedup supersession</strong> —
+<code>lib/maintain-core.mjs:126-185</code>, guarded so a row already
+superseded by an explicit correction keeps its numeric link.</li>
+<li><strong>Delete</strong> — <code>lib/delete-core.mjs:13-60</code>:
+snapshot, strip related ids, recover children compressed into the doomed
+rows, delete.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>observations</code> (<code>schema.mjs:226-244</code> plus
+migrations <code>:336-422</code>) holds the content fields above and
+bookkeeping: <code>minhash_sig</code>, <code>access_count</code>,
+<code>injection_count</code>, <code>cited_count</code>,
+<code>uncited_streak</code>, <code>demoted_at</code>,
+<code>decay_seen_count</code>, <code>optimized_at</code>,
+<code>search_aliases</code>, <code>branch</code>, <code>scope</code>
+(<code>file</code>, <code>module</code>, <code>project</code> or
+<code>environment</code>), <code>compressed_into</code>,
+<code>superseded_at</code> and <code>superseded_by</code>.
+<code>observation_files</code> normalises file paths.
+<code>events</code> holds auto-captured activity with its own FTS table
+and supersession column; <code>session_summaries</code>,
+<code>user_prompts</code>, <code>session_handoffs</code> (with the git
+SHA at handoff), <code>citation_log</code> and
+<code>deferred_work</code> complete it.</p>
+<p><strong>Tombstones are id-keyed.</strong> A superseded row remains so
+its correction chain and timeline stay navigable, and
+<code>mem_get</code> prints a retraction notice. On the manual path the
+dedup window reads only live rows, so re-saving the retracted text is
+not refused (<code>save-observation.mjs:229-240</code>). The automatic
+path reads superseded rows too (section 7), but as a side effect of
+generic dedup over a seven-day window, not as a record of rejected
+values. <code>tombstone</code> is withheld.</p>
+<p><strong>Statuses.</strong> Supersession and compression are
+lifecycle, <code>demoted_at</code> is a citation bookkeeping stamp, and
+<code>scope</code> is an applicability label used only behind an opt-in
+flag. None records belief in a claim, so <code>trust_state</code> is
+withheld. There is one time axis, <code>created_at_epoch</code>, so
+<code>bitemporal</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Query building</strong> tokenises, drops stop words, expands
+abbreviations and domain synonyms (more than 100 pairs, including
+Chinese to English), scans unsegmented Chinese for known words, and
+joins terms with AND, relaxing to OR when nothing matches.</p>
+<p><strong>Expansion.</strong> Pseudo-relevance feedback takes
+discriminative terms from the top hits, bucketed by Porter stem but
+emitted in the surface form stored, since the FTS index is unstemmed.
+Concept co-occurrence adds related concepts. <code>--deep</code> issues
+several model-rewritten queries fused by reciprocal rank, and a weak
+result auto-escalates to deep unless disabled.</p>
+<p><strong>Scoring</strong> multiplies BM25 over title (10), lesson (8),
+subtitle and narrative (5) by a clamped recency factor with per-type
+half-life, importance, a lesson bonus, a noise penalty from repeated
+uncited injection, and a citation factor. Results from sessions, prompts
+and events are normalised before merging.</p>
+<p><strong>Injection surfaces</strong> use the same predicate:</p>
+<ul>
+<li>session start fills a 2,000-token knapsack by recency and
+importance, sized to recent activity;</li>
+<li>each prompt injects matches above a coverage threshold, skipping a
+result set that overlaps the last one by more than 80%;</li>
+<li>editing a file shows its history;</li>
+<li>a failed Bash command searches for past fixes.</li>
+</ul>
+<p><strong>Scope</strong> is the current project by boost, not by
+filter. Other projects' observations are admitted at 0.4 of their score
+(<code>hook-memory.mjs:155-168</code>), lowered from 0.7 after off-topic
+cross-project decisions were found winning slots. A search without
+<code>project</code> covers every project. <code>scope_enforced</code>
+is withheld.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Episodes.</strong> Tool calls pass a code-level filter
+(<code>skip-tools.mjs</code>, <code>lib/low-signal-patterns.mjs</code>),
+accumulate under a PID-aware lock into an episode file, and flush after
+a batch of related operations. The flush saves an observation
+immediately with a degraded title and inferred type, then a worker
+enriches it. A failed enrichment leaves the degraded row; a successful
+one can retract the pre-saved row in favour of the enriched one
+(<code>hook-llm.mjs:74</code>).</p>
+<p><strong>Dedup differs by path.</strong> A manual save
+(<code>lib/save-observation.mjs</code>) compares title and content
+Jaccard above 0.7 against <em>live</em> rows from the last five minutes,
+and <code>force</code> overrides it. The automatic save that episodes
+and summaries go through (<code>hook-llm.mjs:220</code>, called from
+<code>persistHaikuSummary</code> and <code>saveEpisodeImmediate</code>)
+runs three tiers, none with the live predicate:</p>
+<ul>
+<li>five-minute title Jaccard (<code>:275-289</code>);</li>
+<li>for low-signal titles, an exact match over seven days and Jaccard
+over three (<code>:291-322</code>);</li>
+<li>MinHash over title and narrative above 0.8 against the project's
+last 200 signatures from seven days (<code>:325-341</code>).</li>
+</ul>
+<p>A hit returns <code>null</code> and nothing is logged. A lesson
+retracted by <code>save --supersedes</code> therefore still suppresses
+an automatically captured observation that resembles it for up to seven
+days — useful when the capture repeats the retracted claim, silent when
+it restates the corrected one in similar words. The liveness invariant
+test covers sites that carry half the predicate, not queries that carry
+none, so these three are outside it.</p>
+<p><strong>Supersession by a save</strong> reports every requested id it
+did not apply, with a reason — malformed, missing, other project,
+already superseded, or swallowed by a duplicate short-circuit — so a
+failed correction is not read as success
+(<code>tests/save-observation-supersedes.test.mjs:164-259</code>).</p>
+<p><strong>Maintenance</strong> runs at most every 24 hours under a
+process lock: decay, exact and fuzzy dedup, marking compressible rows,
+purging stale ones after a backup, and vocabulary normalisation.</p>
+<p><strong>No mutation record.</strong> Updates, supersessions,
+compressions and deletes change rows in place. Snapshots before
+destructive operations give pre-images, and <code>citation_log</code>
+records citations, not changes. <code>audit_log</code> is withheld.</p>
+<p><strong>Secrets</strong> are scrubbed before storage for more than 15
+credential patterns.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>MCP</strong> — 18 tools, 9 listed (<code>mem_search</code>,
+<code>mem_recent</code>, <code>mem_timeline</code>,
+<code>mem_get</code>, <code>mem_save</code>, <code>mem_recall</code> and
+three for deferred work) and the rest callable when named, including
+<code>mem_browse</code>, <code>mem_delete</code>,
+<code>mem_update</code>, <code>mem_maintain</code> and
+<code>mem_export</code>. Each description says when not to use it.</li>
+<li><strong>Slash commands</strong> — <code>/mem</code>,
+<code>/lesson</code>, <code>/bug</code>, <code>/adopt</code>,
+<code>/unadopt</code>, running the bundled CLI by absolute path.</li>
+<li><strong>Auto-adopt</strong> writes a system-authority block into the
+project's <code>CLAUDE.md</code> pointing the agent at
+<code>mem_recall</code> and <code>mem_save</code>. The README states
+that this touches a normally committed file on every session start, and
+documents per-project and global opt-outs.</li>
+<li><strong>Handoff</strong> records request, completed work, next steps
+and key files on exit, clear or compact, and injects them when the next
+session looks like a continuation, including any handoff at the current
+git <code>HEAD</code>.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The live predicate is guarded as an invariant.</strong>
+Eleven sites read rows with only the compression half, each adjudicated
+in <code>CLAUDE.md</code> and pinned by
+<code>tests/live-predicate-adjudication.test.mjs</code>, which fails
+when a new bare site appears and when a writer that must carry the full
+predicate loses it.</p>
+<p><strong>Retracted content stays out of derived text.</strong>
+Compression, handoff decisions and error recall were each found
+admitting superseded rows and fixed, with tests named for the audit
+rounds that found them.</p>
+<p><strong>Old lessons are flagged, not trusted.</strong> An injected
+observation older than 30 days that names files carries
+<code>[verify-before-use]</code>.</p>
+<p><strong>Context injection is defended</strong> against memory text
+closing the injection block early.</p>
+<p><strong>Agent authority over deletion.</strong>
+<code>mem_delete</code> and <code>mem_maintain</code> are callable by
+the agent. Their descriptions tell it to preview first and to delete
+only on the user's request; the tools require <code>confirm=true</code>
+to act, which the agent can supply.</p>
+<p><strong>Injection of recorded content.</strong> Observations come
+from tool output summarised by a model. Scrubbing covers secrets, not
+instructions.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>5,725 test cases in 412 Vitest files, many named for the audit round
+that produced them, covering schema migrations, every injection path,
+supersession, dedup, compression, citation feedback, handoff, install
+shapes and platform gates. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/user-prompt-search.test.mjs:65</code> asserts a superseded
+row is excluded while its live counterpart is returned, and
+<code>tests/error-recall-core.test.mjs:171-262</code> plants superseded,
+compressed and low-signal decoys beside a live match on the error-recall
+path. That earns <code>negative_eval</code>.</p>
+<p><strong>Benchmarks.</strong></p>
+<ul>
+<li><strong>In-repo retrieval benchmark:</strong> 200 observations and
+30 queries including hard negatives, run on the production search path.
+<code>benchmark/baseline.json</code> commits Recall@10 0.90,
+Precision@10 0.85, nDCG@10 0.97 and MRR@10 0.96, and
+<code>npm run benchmark:gate</code> fails CI on more than 5% drift.</li>
+<li><strong>LongMemEval:</strong> the README reports 95.2% recall_any@5
+for the lexical stack, 96.8% with a rerank, and 87.8% under fractional
+recall@5. The runners are committed; the result files are not.</li>
+<li><strong>Retracted claims.</strong> The README withdraws its earlier
+attribution of lower precision to a TF-IDF arm the gate never executed,
+and records that the arm was A/B tested, found net-negative and
+removed.</li>
+</ul>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>One named live predicate, and a test that pins every
+departure from it.</strong></li>
+<li><strong>Supersession that reports what it did not do,</strong> id by
+id with a reason.</li>
+<li><strong>Save degraded first, enrich later,</strong> so a model
+outage loses metadata rather than memory.</li>
+<li><strong>Citation feedback on injected memory,</strong> scoped to
+ranking so a missed citation cannot evict a row from the candidate
+pool.</li>
+<li><strong>A retrieval benchmark in CI</strong> with hard negatives and
+a committed baseline, on the path production runs.</li>
+<li><strong>Surface-form PRF</strong> over an unstemmed index.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two save paths with different dedup rules.</strong> Decide
+once whether a tombstone takes part in dedup, and log what dedup
+drops.</li>
+<li><strong>Cross-project recall as the default</strong> for a tool
+installed across unrelated repositories, unless the penalty is tuned per
+install.</li>
+<li><strong>Rewriting a committed project file on every session
+start</strong> without a per-repository opt-in.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer using Claude Code across many projects
+who wants automatic, cheap capture and strong lexical recall with no
+services, and values a memory that can retract its own mistakes. It is
+Claude Code-specific, local and single-user by construction, and it
+keeps no history of changes to an observation beyond snapshots.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should the automatic save's dedup tiers carry the live
+predicate,</strong> or is suppressing close re-captures of a retracted
+lesson intended?</li>
+<li><strong>Should cross-project recall become opt-in per
+project</strong> now that the penalty had to be steepened once?</li>
+<li><strong>Would a change log on observations</strong> — who
+superseded, updated or deleted what, and why — be worth its weight next
+to the snapshots?</li>
+<li><strong>Will the LongMemEval result files be committed</strong>
+beside the in-repo baseline?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>schema.mjs</code>, <code>lib/save-observation.mjs</code>,
+<code>lib/inject-search-core.mjs</code>,
+<code>lib/maintain-core.mjs</code>, <code>lib/delete-core.mjs</code>,
+<code>lib/citation-tracker.mjs</code></li>
+<li><code>search-engine.mjs</code>, <code>scoring-sql.mjs</code>,
+<code>hook-memory.mjs</code>, <code>hook-context.mjs</code>,
+<code>hook-llm.mjs</code>, <code>hook-episode.mjs</code></li>
+<li><code>server.mjs</code>, <code>tool-schemas.mjs</code>,
+<code>mem-cli.mjs</code>, <code>commands/mem.md</code></li>
+<li><code>tests/live-predicate-adjudication.test.mjs</code>,
+<code>tests/user-prompt-search.test.mjs</code>,
+<code>tests/error-recall-core.test.mjs</code>,
+<code>tests/save-observation-supersedes.test.mjs</code></li>
+<li><code>benchmark/benchmark.mjs</code>,
+<code>benchmark/baseline.json</code>,
+<code>benchmark/longmemeval.mjs</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -n "superseded_at IS NULL\|liveObsFilterSql" lib/save-observation.mjs</code>
+— the manual dedup window reads live rows only</li>
+<li><code>sed -n 272,342p hook-llm.mjs | grep -c liveObsFilterSql</code>
+— zero on the automatic path's three dedup queries</li>
+<li><code>grep -n "project = " search-engine.mjs</code> —
+<code>(? IS NULL OR o.project = ?)</code> on every observation
+query</li>
+<li><code>grep -rn "CREATE TABLE" schema.mjs</code> — no table records
+changes to observations</li>
+<li><code>ls benchmark | grep -i longmem</code> — runners only, no
+results</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/sdsrss/claude-mem-lite/commit/0e31b3db7684fcbc063bdd89d5d04cdef004dfc8"><code class="commit-id" title="0e31b3db7684fcbc063bdd89d5d04cdef004dfc8">0e31b3db…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: five auto-run surfaces (plugin, hook and MCP manifests), no
+build-time execution, one unpinned surface, two dependency files inside
+the cooldown, and <code>CLAUDE.md</code> read as data. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
