@@ -268,7 +268,7 @@ edits.
 
 On the read side there is no injection to bound. Whatever the agent opens, it
 opens; the vault is a directory and the cost is whatever the model chooses to read
-— which is the same arrangement [Ollama](../../systems/ollama/) and
+— which is the same arrangement [Ollama](../../systems/ollama/)'s since-removed agent and
 [Serena](../../systems/serena/) arrive at, without the index those two put in the
 prompt.
 

@@ -131,9 +131,7 @@ four times has learned nothing if nothing wrote the failures down. Outcomes carr
 an indexable error kind, and a retrieved step arrives with its parent trace's
 outcome attached, so a step from a failed attempt cannot be read as precedent.
 
-**[Ollama](../../systems/ollama/) is the smallest complete instance, and the only
-one that treats loading a skill as a privileged act.** Its whole procedural memory
-is four files: discovery across four roots, a 1 MiB ceiling and front-matter
+**[Ollama](../../systems/ollama/)'s built-in agent was the smallest complete instance, and it treated loading a skill as a privileged act** — until the agent was removed from Ollama in September 2026. Its whole procedural memory was four files: discovery across four roots, a 1 MiB ceiling and front-matter
 validation, an `<available_skills>` block of names and descriptions in the prompt,
 and a `skill` tool that loads a body by exact name. Two decisions transfer.
 

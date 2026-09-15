@@ -120,8 +120,8 @@ That is a write path, a correction path and a capacity policy all derived from a
 caching constraint. It is why this belongs in a memory pattern library rather
 than in a prompt-engineering note.
 
-**[Ollama](../../systems/ollama/) is the third shape, and it is the cheapest of
-the three.** Rather than choosing where to put the memory, it splits the memory
+**[Ollama](../../systems/ollama/)'s built-in agent was the third shape, and the cheapest of
+the three, until Ollama removed the agent in September 2026.** Rather than choosing where to put the memory, it split the memory
 itself: `SkillCatalog.SystemContext()` renders one `- name: description` line per
 skill into the system prompt, and the body of a skill loads only when something
 calls the `skill` tool, arriving as a tool result in the message history. The
@@ -174,7 +174,8 @@ on how to write one.
 - **[Graphify](../../systems/graphify/)** — assembles context in a way the report
   contrasts explicitly with "invalidating a prefix cache on every request".
 - **[Ollama](../../systems/ollama/)** — the index/body split, with a sorted
-  catalog line in the prefix and the instruction body arriving as a tool result.
+  catalog line in the prefix and the instruction body arriving as a tool result;
+  removed with the built-in agent in September 2026.
 - **[Context Mode](../../systems/context-mode/)** — the boundary shape by
   accident of lifecycle: its `<session_knowledge>` block is emitted once at
   `SessionStart` and once at `PreCompact` and never re-rendered mid-session, so
@@ -275,7 +276,7 @@ end-to-end."* It is a dereference table rather than a memory, and it is not
 reported here for that reason, but the shape is the one a memory system reaches
 for when a recalled item is too big to inject — put the handle in the prefix and
 let the model ask for the body, which is what
-[Ollama](../../systems/ollama/) does above with a name instead of a hash.
+[Ollama](../../systems/ollama/)'s agent did above with a name instead of a hash.
 
 ## Tests before relying on it
 

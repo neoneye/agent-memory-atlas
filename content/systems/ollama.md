@@ -1,37 +1,48 @@
 ---
 title: "Ollama"
-eyebrow: "Procedural memory, and nothing else"
-description: "A local inference runtime that grew an agent mode whose only durable memory is a skill catalog on disk — advertised by name in the prefix, loaded on demand, and gated by approval when the model asks for it."
+eyebrow: "A procedural memory it removed"
+description: "A local inference runtime whose built-in agent kept one kind of durable memory — a skill catalog on disk, advertised by name in the prefix, loaded on demand and gated by approval — until the agent was removed on 11 September 2026."
 root: ../..
 page_kind: system
 source_name: "ollama/ollama"
 source_url: https://github.com/ollama/ollama
 archive_name: "ollama--ollama"
-revision: acdf81510d58d993de6175f8565b504d9777940a
-revision_url: https://github.com/ollama/ollama/commit/acdf81510d58d993de6175f8565b504d9777940a
-analyzed_at: 2026-08-09
+revision: 38fdb5dd58c761f850cddd6ba1e78a7954646b4f
+revision_url: https://github.com/ollama/ollama/commit/38fdb5dd58c761f850cddd6ba1e78a7954646b4f
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A skill: a directory containing SKILL.md with YAML front matter naming it and describing when to use it"
+  memory_unit: "None at this commit. Until the agent was removed, a skill: a directory containing SKILL.md with YAML front matter naming it and describing when to use it"
   storage: "Markdown files on disk across four roots — two under the home directory, two under the project"
   retrieval: "No search. Name and description are listed in the system prompt; the full body loads only when something asks for it by exact name"
   write: "A person writes the file. The model can only draft one by following the bundled skill-creator, and the tree says a new skill is not seen until the next session"
   update_delete: "Edit or delete the file. Name collisions across roots resolve by precedence, project over user, with no diagnostic"
   scoping: "Four roots in precedence order, later wins; the cross-client .agents/skills convention sits beside Ollama's own .ollama/skills at both levels"
-  integration: "A skill tool in the agent registry, a synthetic tool call for explicit activation, and slash-command completion in the TUI"
+  integration: "None at this commit; `ollama launch` starts external agents. Until the removal, a skill tool in the agent registry, a synthetic tool call for explicit activation, and slash-command completion in the TUI"
   background: "None"
   trust: "A skill never grants permission — the comment says so and the prompt repeats it to the model; a model-initiated load needs human approval, an explicit one does not"
   strengths: "Two-stage retrieval that keeps the catalog in the cached prefix and the body out of it, and approval on the recall rather than only on the write"
-  risks: "No episodic or semantic memory at all; nothing the agent learns in a run survives it, and compaction discards rather than saves"
+  risks: "The whole memory surface was removed with the built-in agent; while it existed, nothing the agent learned in a run survived it, and compaction discarded rather than saved"
 ---
 
 ## 1. Executive Summary
 
+**At this commit Ollama has no memory subsystem.** On 11 September 2026 commit
+[`c16bf9892a560a11c208618968966246e485540c`](https://github.com/ollama/ollama/commit/c16bf9892a560a11c208618968966246e485540c) (#18393) removed the
+built-in agent — the `agent/` package and the `cmd/tui/chat` interface, about
+24,900 lines — and with it everything this report describes. `ollama launch`
+remains, and starts external agents and apps instead. What follows is the design
+as it stood at [`acdf81510d58d993de6175f8565b504d9777940a`](https://github.com/ollama/ollama/tree/acdf81510d58d993de6175f8565b504d9777940a), the
+previous reading, and every file path below refers to that tree. It stays here
+because the two decisions in it — a catalog in the cached prefix with bodies loaded
+on demand, and approval on recall — are the parts worth reusing, and they are
+equally reusable from a design that no longer ships.
+
 Ollama is on a token-cost list as a way to run open-weight models on hardware you
-already own. Since it grew an `agent/` package that is no longer all it is: there
+already own. When it grew an `agent/` package that was no longer all it was: there
 is a session loop, a tool registry, an approval gate, a compactor, and a **skill
 catalog** — and the skill catalog is durable, cross-session state that shapes how
 the agent behaves. That makes it a memory system of exactly one kind.
@@ -403,6 +414,8 @@ this atlas that mention Ollama are doing.
 
 ## Appendix: File Index
 
+Paths refer to [`acdf81510d58d993de6175f8565b504d9777940a`](https://github.com/ollama/ollama/tree/acdf81510d58d993de6175f8565b504d9777940a); none of them exists at the current pin.
+
 **Storage, discovery and validation**
 `agent/skills.go`
 
@@ -421,6 +434,8 @@ this atlas that mention Ollama are doing.
 `agent/tools/skill_test.go` · `agent/testdata/`
 
 ## History
+
+**2026-09-15** — [`38fdb5dd58c761f850cddd6ba1e78a7954646b4f`](https://github.com/ollama/ollama/commit/38fdb5dd58c761f850cddd6ba1e78a7954646b4f) — 139 commits on, 2026-09-14. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface and two dependency surfaces inside the cooldown; nothing was installed or run. The subject of this report is gone: [`c16bf9892a560a11c208618968966246e485540c`](https://github.com/ollama/ollama/commit/c16bf9892a560a11c208618968966246e485540c) (#18393, 2026-09-11) removed the built-in agent, deleting `agent/` — the skill catalog, the skill tool with its approval gate, the session, the compactor — and the `cmd/tui/chat` interface. Before that, one change touched the agent: multiple edits per edit-tool call (#17711). The body keeps the design as it was at the previous pin, framed as removed, and the pattern pages that cite it say so. No mark changes.
 
 **2026-08-09** — [`acdf81510d58d993de6175f8565b504d9777940a`](https://github.com/ollama/ollama/commit/acdf81510d58d993de6175f8565b504d9777940a) —
 first reading, from the

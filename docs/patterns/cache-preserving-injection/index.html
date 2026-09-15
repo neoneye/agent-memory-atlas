@@ -228,9 +228,10 @@ overflow.</p>
 <p>That is a write path, a correction path and a capacity policy all
 derived from a caching constraint. It is why this belongs in a memory
 pattern library rather than in a prompt-engineering note.</p>
-<p><strong><a href="../../systems/ollama/">Ollama</a> is the third
-shape, and it is the cheapest of the three.</strong> Rather than
-choosing where to put the memory, it splits the memory itself:
+<p><strong><a href="../../systems/ollama/">Ollama</a>'s built-in agent
+was the third shape, and the cheapest of the three, until Ollama removed
+the agent in September 2026.</strong> Rather than choosing where to put
+the memory, it split the memory itself:
 <code>SkillCatalog.SystemContext()</code> renders one
 <code>- name: description</code> line per skill into the system prompt,
 and the body of a skill loads only when something calls the
@@ -293,7 +294,8 @@ assembles context in a way the report contrasts explicitly with
 "invalidating a prefix cache on every request".</li>
 <li><strong><a href="../../systems/ollama/">Ollama</a></strong> — the
 index/body split, with a sorted catalog line in the prefix and the
-instruction body arriving as a tool result.</li>
+instruction body arriving as a tool result; removed with the built-in
+agent in September 2026.</li>
 <li><strong><a href="../../systems/context-mode/">Context
 Mode</a></strong> — the boundary shape by accident of lifecycle: its
 <code>&lt;session_knowledge&gt;</code> block is emitted once at
@@ -415,8 +417,8 @@ table rather than a memory, and it is not reported here for that reason,
 but the shape is the one a memory system reaches for when a recalled
 item is too big to inject — put the handle in the prefix and let the
 model ask for the body, which is what <a
-href="../../systems/ollama/">Ollama</a> does above with a name instead
-of a hash.</p>
+href="../../systems/ollama/">Ollama</a>'s agent did above with a name
+instead of a hash.</p>
 <h2 id="tests-before-relying-on-it">Tests before relying on it</h2>
 <ul>
 <li>Capture the exact bytes of two consecutive requests and diff them.
