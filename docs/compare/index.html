@@ -38911,6 +38911,37 @@ auto-running surface (<code>.vscode/settings.json</code>), no manifests
 inside the seven-day cooldown, three build-time execution points and
 three unpinned surfaces, plus two agent-instruction files read as data;
 nothing was installed or run.</li>
+<li><strong><code>sageox/ox</code> was examined and has no report: it is
+the client of a hosted team memory, and the parts that turn sessions
+into memory run behind the SageOx API.</strong> At <a
+href="https://github.com/sageox/ox/commit/02f4f406a4b973fa4adda9df62725904cc1859d9"><code class="commit-id" title="02f4f406a4b973fa4adda9df62725904cc1859d9">02f4f406…</code></a>
+(MIT, release 0.15.0, 1,001 commits since 12 February 2026, about
+280,000 lines of non-test Go) the CLI records every AI coding session by
+default through agent hooks, strips secrets locally with the patterns in
+<code>internal/session/secrets.go</code> before upload, and syncs
+sessions to a team ledger — a git repository hosted on sageox.ai with
+content in LFS blobs, which the README says cannot be self-hosted. What
+runs locally is capture, sync, <code>ox agent prime</code> context
+loading, and <code>internal/ledgersearch</code>, an in-memory grep over
+the sparse-checked-out ledger bounded to 90 days of sessions and plans
+and 7 days of team messages. The memory-forming steps are remote:
+<code>ox memory distill</code> sends accumulated observations to the API
+as an <code>api.DistillRequest</code>
+(<code>cmd/ox/memory_distill.go:141-150</code>), and team-context
+queries go out as an <code>api.QueryRequest</code> scoped by team and
+repository ids (<code>cmd/ox/agent_query.go:305-330</code>); fact
+records in <code>internal/facts/types.go</code> arrive already
+extracted, and the only local writer,
+<code>cmd/ox/memory_put.go:145-155</code>, writes raw observations. The
+client-side design worth noting is <code>internal/knowledgeflow</code>,
+which renders how team knowledge reached a turn at the grade of its
+evidence — a retrieval or injection event is written as "you consulted
+X", a self-reported influence is labelled as inferred. The screen found
+three auto-run surfaces (a Claude plugin directory,
+<code>.claude/settings.json</code>, <code>.opencode/</code>), one
+build-time execution point, one unpinned surface and five dependency
+files inside the cooldown, and read <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> as data; nothing was installed or run.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
