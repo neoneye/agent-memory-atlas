@@ -7,10 +7,13 @@ page_kind: system
 source_name: "EverMind-AI/EverOS"
 source_url: https://github.com/EverMind-AI/EverOS
 archive_name: "EverMind-AI--EverOS"
-revision: 4256419595f63fe307147dc19e379477cecdc44f
-revision_url: https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f
-analyzed_at: 2026-07-29
+revision: 5076683ab88d714390573d8f88ff3c470e51129a
+revision_url: https://github.com/EverMind-AI/EverOS/commit/5076683ab88d714390573d8f88ff3c470e51129a
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "search and get — one compile function pins four owner keys into a backend-neutral predicate for every read | src/everos/memory/search/filters.py:47-65 `compile_filters`, src/everos/infra/persistence/milvus/predicate.py `render_predicate` | `compile_filters` requires `owner_id` and `owner_type` and builds `eq(\"owner_id\")`, `eq(\"owner_type\")`, `eq(\"app_id\")` and `eq(\"project_id\")` into the base of the predicate tree, adds `is_null(\"deprecated_by\")` for user memory, and refuses a caller filter on any of the four through `RESERVED_FIELDS`. The tree is rendered per backend, so the optional Milvus index added since the previous pin inherits the same base without a separate implementation | tests/e2e/test_search_endpoint_e2e.py:656, :677"
+  negative_eval: "search — one owner's episodes must not appear in another's results for the same query | tests/e2e/test_search_endpoint_e2e.py:656-676 `test_search_owner_isolation`, :677 `test_search_owner_isolation_two_agents` | seeds episodes for two owners and runs the same keyword query as each, including the second owner searching for the first owner's name; asserts both result sets are non-empty before asserting they are disjoint and that every returned episode belongs to the requesting owner. The non-empty assertion is the vacuity guard: an endpoint that returned nothing could not pass. The second test repeats the boundary for two agents | tests/e2e/test_search_endpoint_e2e.py:671 is the non-empty control"
 stack_storage: "sqlite, lancedb, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -157,15 +160,20 @@ and `worker.py`; `reconciler.py` and `_backfill.py` handle catch-up;
 compile function shared by `/search` and `/get`, whose base list is
 
 ```python
-base = [
-    f"owner_id = '{_escape_str(owner_id)}'",
-    f"owner_type = '{owner_type}'",
-    f"app_id = '{_escape_str(app_id)}'",
-    f"project_id = '{_escape_str(project_id)}'",
+base: list[Predicate] = [
+    eq("owner_id", owner_id),
+    eq("owner_type", owner_type),
+    eq("app_id", app_id),
+    eq("project_id", project_id),
 ]
 if owner_type == "user":
-    base.append("deprecated_by IS NULL")
+    base.append(is_null("deprecated_by"))
 ```
+
+The base is a backend-neutral predicate tree rather than SQL text, rendered by
+each storage backend — which is how an optional Milvus index gets the same four
+keys without its own copy of the rule — and `RESERVED_FIELDS` refuses a caller
+filter that names any of them.
 
 with the comment that pinning app and project "is what isolates one space's rows
 from another — omitting it would let a query bleed across spaces".
@@ -217,11 +225,13 @@ scope leaks in this atlas come from a second read path that forgot a predicate;
 funnelling every query through one function that always appends the base filter
 makes that class of bug hard to write.
 
-Failure modes: the scope filter is string-interpolated with an `_escape_str`
-helper rather than parameterised, which puts the correctness of the isolation on
-that escaper; and `deprecated_by IS NULL` is applied only when
-`owner_type == "user"`, so an agent-owned row has no supersession semantics at
-all.
+Failure modes: the scope filter still ends as a string — LanceDB and Milvus both
+take filter expressions as text — so isolation rests on encoding, but the encoding
+is in one place per backend rather than at each call site: `_literal` doubles
+single quotes for LanceDB and uses `json.dumps` for Milvus, and `_field` rejects
+any field name outside `^[A-Za-z_][A-Za-z0-9_]*$`. And `deprecated_by IS NULL` is
+applied only when `owner_type == "user"`, so an agent-owned row has no
+supersession semantics at all.
 
 ## 7. Write Mechanics
 
@@ -328,8 +338,10 @@ invites and the one the current suite does not probe.
   `deprecated_by IS NULL` guarded by `owner_type == "user"` means agent-owned
   memory has no correction path at all, which is a surprising asymmetry to
   discover from a filter.
-- **String-interpolated scope predicates.** An escaper is one review away from a
-  gap; a parameterised query is not.
+- **Scope predicates rendered to text.** A typed predicate tree with one literal
+  encoder per backend is far better than escaping at each call site, and it is
+  still encoding rather than parameterisation; where a store offers bound
+  parameters, use them for the scope keys.
 
 ### Fit
 
@@ -352,8 +364,9 @@ reaching into the Markdown tree, and the memory layer will not do it for you.
 - **Why is `deprecated_by IS NULL` scoped to `owner_type == "user"`?** The
   comment says agent tables lack the column; whether agent memory is intended to
   be uncorrectable is not stated.
-- **Is `_escape_str` sufficient for the filter path**, and is there a
-  parameterised alternative in LanceDB the project chose not to use?
+- **Are the per-backend literal encoders sufficient** — quote doubling for LanceDB,
+  `json.dumps` for Milvus — and is either store able to bind the scope keys as
+  parameters instead?
 - **What do the shipped benchmarks measure**, and are results published
   anywhere? The directory exists; scored artifacts were not found.
 - **How does the case-to-skill distillation decide a skill exists?** The handler
@@ -391,5 +404,7 @@ reaching into the Markdown tree, and the memory layer will not do it for you.
 - `tests/e2e/test_search_endpoint_e2e.py` — owner isolation, case→skill bridge
 
 ## History
+
+**2026-09-15** — [`5076683ab88d714390573d8f88ff3c470e51129a`](https://github.com/EverMind-AI/EverOS/commit/5076683ab88d714390573d8f88ff3c470e51129a) — second reading, 34 commits on, through releases 1.3.0 and 1.3.1. Screened again; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The quoted base filter is replaced: at the previous pin `compile_filters` built the four owner keys as interpolated SQL strings through `_escape_str`, and it builds them as a backend-neutral predicate tree that each backend renders. That change is what made the optional Milvus derived index added in this range safe to add — it renders the same four-key base rather than re-implementing it. The benchmarks were unified behind one runner, and the README records the project's former name, EverMemOS.
 
 **2026-07-29** — [`4256419595f63fe307147dc19e379477cecdc44f`](https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f) — first reading.

@@ -108,14 +108,14 @@ watcher-driven cascade, with four scope keys pinned on every read.</p>
               <strong>EverMind-AI/EverOS</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f" title="4256419595f63fe307147dc19e379477cecdc44f">
+            <a class="meta-pill revision-pill" href="https://github.com/EverMind-AI/EverOS/commit/5076683ab88d714390573d8f88ff3c470e51129a" title="5076683ab88d714390573d8f88ff3c470e51129a">
               <span>Analyzed revision</span>
-              <code>42564195…</code>
+              <code>5076683a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/EverMind-AI--EverOS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -262,14 +262,19 @@ a type to a handler.</p>
 <p><strong>The read path, and the report's headline.</strong>
 <code>memory/search/filters.py</code> — one compile function shared by
 <code>/search</code> and <code>/get</code>, whose base list is</p>
-<pre class="python"><code>base = [
-    f&quot;owner_id = &#39;{_escape_str(owner_id)}&#39;&quot;,
-    f&quot;owner_type = &#39;{owner_type}&#39;&quot;,
-    f&quot;app_id = &#39;{_escape_str(app_id)}&#39;&quot;,
-    f&quot;project_id = &#39;{_escape_str(project_id)}&#39;&quot;,
+<pre class="python"><code>base: list[Predicate] = [
+    eq(&quot;owner_id&quot;, owner_id),
+    eq(&quot;owner_type&quot;, owner_type),
+    eq(&quot;app_id&quot;, app_id),
+    eq(&quot;project_id&quot;, project_id),
 ]
 if owner_type == &quot;user&quot;:
-    base.append(&quot;deprecated_by IS NULL&quot;)</code></pre>
+    base.append(is_null(&quot;deprecated_by&quot;))</code></pre>
+<p>The base is a backend-neutral predicate tree rather than SQL text,
+rendered by each storage backend — which is how an optional Milvus index
+gets the same four keys without its own copy of the rule — and
+<code>RESERVED_FIELDS</code> refuses a caller filter that names any of
+them.</p>
 <p>with the comment that pinning app and project "is what isolates one
 space's rows from another — omitting it would let a query bleed across
 spaces".</p>
@@ -318,10 +323,13 @@ itself. Most scope leaks in this atlas come from a second read path that
 forgot a predicate; funnelling every query through one function that
 always appends the base filter makes that class of bug hard to
 write.</p>
-<p>Failure modes: the scope filter is string-interpolated with an
-<code>_escape_str</code> helper rather than parameterised, which puts
-the correctness of the isolation on that escaper; and
-<code>deprecated_by IS NULL</code> is applied only when
+<p>Failure modes: the scope filter still ends as a string — LanceDB and
+Milvus both take filter expressions as text — so isolation rests on
+encoding, but the encoding is in one place per backend rather than at
+each call site: <code>_literal</code> doubles single quotes for LanceDB
+and uses <code>json.dumps</code> for Milvus, and <code>_field</code>
+rejects any field name outside <code>^[A-Za-z_][A-Za-z0-9_]*$</code>.
+And <code>deprecated_by IS NULL</code> is applied only when
 <code>owner_type == "user"</code>, so an agent-owned row has no
 supersession semantics at all.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
@@ -431,8 +439,11 @@ types.</strong> <code>deprecated_by IS NULL</code> guarded by
 <code>owner_type == "user"</code> means agent-owned memory has no
 correction path at all, which is a surprising asymmetry to discover from
 a filter.</li>
-<li><strong>String-interpolated scope predicates.</strong> An escaper is
-one review away from a gap; a parameterised query is not.</li>
+<li><strong>Scope predicates rendered to text.</strong> A typed
+predicate tree with one literal encoder per backend is far better than
+escaping at each call site, and it is still encoding rather than
+parameterisation; where a store offers bound parameters, use them for
+the scope keys.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits someone building a personal or small-team assistant who
@@ -455,9 +466,9 @@ the write side.</li>
 <code>owner_type == "user"</code>?</strong> The comment says agent
 tables lack the column; whether agent memory is intended to be
 uncorrectable is not stated.</li>
-<li><strong>Is <code>_escape_str</code> sufficient for the filter
-path</strong>, and is there a parameterised alternative in LanceDB the
-project chose not to use?</li>
+<li><strong>Are the per-backend literal encoders sufficient</strong> —
+quote doubling for LanceDB, <code>json.dumps</code> for Milvus — and is
+either store able to bind the scope keys as parameters instead?</li>
 <li><strong>What do the shipped benchmarks measure</strong>, and are
 results published anywhere? The directory exists; scored artifacts were
 not found.</li>
@@ -505,6 +516,20 @@ compile path</li>
 isolation, case→skill bridge</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/EverMind-AI/EverOS/commit/5076683ab88d714390573d8f88ff3c470e51129a"><code class="commit-id" title="5076683ab88d714390573d8f88ff3c470e51129a">5076683a…</code></a>
+— second reading, 34 commits on, through releases 1.3.0 and 1.3.1.
+Screened again; nothing was installed and nothing was run. Both marks
+were re-tested at the producer and hold, and each now carries the
+evidence record it had been asserted without. The quoted base filter is
+replaced: at the previous pin <code>compile_filters</code> built the
+four owner keys as interpolated SQL strings through
+<code>_escape_str</code>, and it builds them as a backend-neutral
+predicate tree that each backend renders. That change is what made the
+optional Milvus derived index added in this range safe to add — it
+renders the same four-key base rather than re-implementing it. The
+benchmarks were unified behind one runner, and the README records the
+project's former name, EverMemOS.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/EverMind-AI/EverOS/commit/4256419595f63fe307147dc19e379477cecdc44f"><code class="commit-id" title="4256419595f63fe307147dc19e379477cecdc44f">42564195…</code></a>
 — first reading.</p>
