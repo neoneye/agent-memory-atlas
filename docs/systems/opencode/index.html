@@ -110,14 +110,14 @@ the session database directly instead.</p>
               <strong>anomalyco/opencode</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d" title="3cc70160deb0eda7f67fbf5b0c0780000f5c342d">
+            <a class="meta-pill revision-pill" href="https://github.com/anomalyco/opencode/commit/e03db9bc6908f75c9334d8aa997deeaac81c0298" title="e03db9bc6908f75c9334d8aa997deeaac81c0298">
               <span>Analyzed revision</span>
-              <code>3cc70160…</code>
+              <code>e03db9bc…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/anomalyco--opencode" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -245,6 +245,23 @@ one. Its documentation is precise about what it offers:
 or <code>prompt</code> to replace it entirely. A memory system's best
 opportunity is exactly here — the host is about to summarize and
 discard, and a plugin can steer what survives.</p>
+<p>What the summarizer receives is worth knowing precisely, because it
+is what a plugin's context lands beside.
+<code>session/compaction.ts</code> serializes the messages being
+compacted into one text transcript — <code>[User]:</code>,
+<code>[Assistant]:</code>, <code>[Assistant reasoning]:</code>,
+<code>[Assistant tool call]:</code> with its JSON input, and
+<code>[Tool result]:</code> truncated to 2,000 characters, or
+<code>[Old tool result content cleared]</code> for output already pruned
+— and builds the default prompt around it, with any plugin
+<code>context</code> strings appended after. A plugin that sets
+<code>prompt</code> replaces the instructions, and the transcript is
+appended beneath it under <em>"The following is the conversation
+history:"</em>, so a replacement prompt cannot drop the history it
+summarizes. Unless <code>compaction.tail_turns</code> is configured, the
+recent turns kept out of the summary are chosen by a token budget of a
+quarter of the usable context, clamped between 2,000 and 15,000
+tokens.</p>
 <p>Marking both <code>experimental</code> is honest and consequential.
 Every memory plugin built on this host depends on an interface the host
 reserves the right to change, which is a reasonable position for the
@@ -392,6 +409,20 @@ does the project consider that supported?</li>
 <li>Skills: <code>packages/opencode/src/skill/discovery.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/anomalyco/opencode/commit/e03db9bc6908f75c9334d8aa997deeaac81c0298"><code class="commit-id" title="e03db9bc6908f75c9334d8aa997deeaac81c0298">e03db9bc…</code></a>
+— about 525 commits on, 2026-09-14, read from depth-1 clones of both
+commits. Screened before reading: one auto-run surface
+(<code>.opencode/</code>), two build-time execution points, twelve
+unpinned surfaces and forty dependency surfaces inside the seven-day
+cooldown; nothing was installed or run. Still no memory subsystem, and
+the three hooks keep their <code>experimental.</code> names and
+signatures. The compaction path changed underneath them: history is
+serialized into a single text transcript with tool output truncated to
+2,000 characters, plugin context is appended after the default prompt, a
+replacement prompt gets the transcript appended beneath it, and the
+preserved tail defaults to a token budget instead of two turns. No mark
+changes.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d"><code class="commit-id" title="3cc70160deb0eda7f67fbf5b0c0780000f5c342d">3cc70160…</code></a>
 — first reading.</p>

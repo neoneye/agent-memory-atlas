@@ -7,9 +7,9 @@ page_kind: system
 source_name: anomalyco/opencode
 source_url: https://github.com/anomalyco/opencode
 archive_name: "anomalyco--opencode"
-revision: 3cc70160deb0eda7f67fbf5b0c0780000f5c342d
-revision_url: https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d
-analyzed_at: 2026-07-28
+revision: e03db9bc6908f75c9334d8aa997deeaac81c0298
+revision_url: https://github.com/anomalyco/opencode/commit/e03db9bc6908f75c9334d8aa997deeaac81c0298
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: ""
@@ -145,6 +145,19 @@ is precise about what it offers: `context` strings appended to the default
 compaction prompt, or `prompt` to replace it entirely. A memory system's best
 opportunity is exactly here — the host is about to summarize and discard, and a
 plugin can steer what survives.
+
+What the summarizer receives is worth knowing precisely, because it is what a
+plugin's context lands beside. `session/compaction.ts` serializes the messages
+being compacted into one text transcript — `[User]:`, `[Assistant]:`,
+`[Assistant reasoning]:`, `[Assistant tool call]:` with its JSON input, and
+`[Tool result]:` truncated to 2,000 characters, or `[Old tool result content
+cleared]` for output already pruned — and builds the default prompt around it,
+with any plugin `context` strings appended after. A plugin that sets `prompt`
+replaces the instructions, and the transcript is appended beneath it under *"The
+following is the conversation history:"*, so a replacement prompt cannot drop the
+history it summarizes. Unless `compaction.tail_turns` is configured, the recent
+turns kept out of the summary are chosen by a token budget of a quarter of the
+usable context, clamped between 2,000 and 15,000 tokens.
 
 Marking both `experimental` is honest and consequential. Every memory plugin
 built on this host depends on an interface the host reserves the right to change,
@@ -287,5 +300,7 @@ incompatible forms.
 - Skills: `packages/opencode/src/skill/discovery.ts`.
 
 ## History
+
+**2026-09-15** — [`e03db9bc6908f75c9334d8aa997deeaac81c0298`](https://github.com/anomalyco/opencode/commit/e03db9bc6908f75c9334d8aa997deeaac81c0298) — about 525 commits on, 2026-09-14, read from depth-1 clones of both commits. Screened before reading: one auto-run surface (`.opencode/`), two build-time execution points, twelve unpinned surfaces and forty dependency surfaces inside the seven-day cooldown; nothing was installed or run. Still no memory subsystem, and the three hooks keep their `experimental.` names and signatures. The compaction path changed underneath them: history is serialized into a single text transcript with tool output truncated to 2,000 characters, plugin context is appended after the default prompt, a replacement prompt gets the transcript appended beneath it, and the preserved tail defaults to a token budget instead of two turns. No mark changes.
 
 **2026-07-28** — [`3cc70160deb0eda7f67fbf5b0c0780000f5c342d`](https://github.com/anomalyco/opencode/commit/3cc70160deb0eda7f67fbf5b0c0780000f5c342d) — first reading.
