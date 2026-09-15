@@ -7,10 +7,12 @@ page_kind: system
 source_name: "ruvnet/ruflo"
 source_url: https://github.com/ruvnet/ruflo
 archive_name: "ruvnet--ruflo"
-revision: 913f9eaedee92627950544424e50339feaf98271
-revision_url: https://github.com/ruvnet/ruflo/commit/913f9eaedee92627950544424e50339feaf98271
-analyzed_at: 2026-08-09
-capabilities: ""
+revision: 2602b642d92234c710ffbe96bfb33007d481ceab
+revision_url: https://github.com/ruvnet/ruflo/commit/2602b642d92234c710ffbe96bfb33007d481ceab
+analyzed_at: 2026-09-15
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "tiered memory recall — a superseded fact must not appear in a default recall | v3/@claude-flow/memory/src/tiered-memory.test.ts `invalidates (not deletes) the superseded entry and links supersededBy`, v3/@claude-flow/memory/src/tiered-memory.ts:379-387 | the test stores *The CEO is Alice*, then *The CEO is Bob* with `supersedes` pointing at it, and asserts a default `recall('CEO')` returns exactly one entry whose key is the new fact. The control is in the same test: `recall('CEO', 10, { includeExpired: true })` returns both, and the old entry carries `supersededBy` and a `validUntil` no later than now — so the exclusion is shown to be a filter over material that exists, not an absence. The recall under test drops any entry failing `isTemporallyValid(entry, now)` unless `includeExpired` is set. This is the corrected-value form rather than a scope boundary. The CLI bridge documents `TieredMemoryStore` as the live `agentdb_hierarchical-*` path since agentdb removed `HierarchicalMemory` at 3.0.0-alpha.17 | tiered-memory.test.ts — the `includeExpired` assertions are the control"
 stack_storage: "sqlite, files, delegated"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -208,9 +210,16 @@ a directory or a namespace — and no committed test in the memory package was
 found asserting that one agent's namespace cannot surface in another's results,
 which is why the scope mark is withheld here.
 
-There is no validity interval separate from record time, no supersession pointer,
-no discrete trust state and no tombstone. Confidence is a number used once, at
-transfer time.
+The main backends carry no validity interval, no supersession pointer, no discrete
+trust state and no tombstone, and confidence is a number used once, at transfer
+time. The tiered store is the exception, and it is the one the CLI's hierarchical
+memory runs on. `TieredMemoryStore` gives an entry `validFrom` and `validUntil`,
+and storing a fact with `supersedes` stamps the old entry `validUntil = now` and
+`supersededBy = <new id>` rather than deleting it. `recall()` drops any entry that
+fails `isTemporallyValid(entry, now)` unless `includeExpired` is set, so a
+corrected fact stops being recalled while staying inspectable. Validity is only
+ever evaluated at the present moment — no read takes an as-of time — which is why
+it is correction by invalidation rather than bitemporality.
 
 The one structural field the atlas rarely sees is `references`, because it makes
 the store a graph without a graph database — and it is populated by whoever writes
@@ -440,6 +449,8 @@ Claude-Flow, publishes as `claude-flow`, and the repository is `ruflo`.
 `graceful-retrieval.test.ts` · `benchmarks/memory-write.bench.ts`
 
 ## History
+
+**2026-09-15** — [`2602b642d92234c710ffbe96bfb33007d481ceab`](https://github.com/ruvnet/ruflo/commit/2602b642d92234c710ffbe96bfb33007d481ceab) — second reading, 183 commits on. Screened again: three auto-run findings — a Claude Code plugin manifest, `.claude/settings.json` and a `.githooks/` payload inert until installed — 25 build-time execution points, and ten dependency surfaces inside the cooldown; nothing was installed and nothing was run. The memory package grew by 2,784 lines, much of it tests. **`negative_eval` is added, and it was earned at the previous pin**: `tiered-memory.test.ts` already asserted that a superseded fact is absent from a default recall and present under `includeExpired`, and `tiered-memory.ts` already stamped `validUntil` and `supersededBy` rather than deleting — both confirmed in the pinned tree. What changed around it makes the mark matter more: the CLI bridge records that agentdb removed its `HierarchicalMemory` export at 3.0.0-alpha.17, so this store is the live path for hierarchical memory, and `TieredMemoryDb` with `isDurable()` was added so a write is reported as durable only when it reached SQLite (#2887). `bitemporal` is withheld: validity is recorded separately, but recall only asks whether an entry is valid *now*, and no read takes an as-of time. `agentdb-retrieval-guard.ts`, which screens retrieved chunks for injection patterns, is unchanged and remains off unless `CLAUDE_FLOW_RETRIEVAL_GUARD=true`.
 
 **2026-08-09** — [`913f9eaedee92627950544424e50339feaf98271`](https://github.com/ruvnet/ruflo/commit/913f9eaedee92627950544424e50339feaf98271) —
 first reading, from the

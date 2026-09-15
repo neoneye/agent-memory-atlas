@@ -2392,7 +2392,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: the entity arm. `entity-tagger.ts` adds a regex proper-noun match as a third RRF signal beside dense and BM25, with the clearest justification for it in this atlas: BM25 weights by overall token frequency, so querying "Alice OAuth tokens" can rank a generic OAuth document above the one that names Alice, and an exact per-entity match surfaces it independently.
 - Maturity impression: MIT, a 24,166-line memory package inside a 5,491-file monorepo, 19 test files holding 452 `it()` cases, a committed write benchmark, and ADR numbers in nearly every file header. What no committed test covers is namespace isolation between agents, which is why this report withholds the scope mark despite a three-scope directory layout.
 - Study when: you already run a swarm orchestrator over Claude Code, or you want one file — the guard, or the entity tagger — that lifts cleanly out of it.
-- Do not copy when: you need correction. Entries leave by expiry or content-hash dedup; nothing can mark one wrong, and confidence is consulted once, at transfer time between agents.
+- Do not copy when: you need correction on the main backends. There, entries leave by expiry or content-hash dedup and confidence is consulted once, at transfer time between agents. The tiered store is different and is the live hierarchical path — superseding a fact stamps `validUntil` and `supersededBy` and removes it from default recall while `includeExpired` still returns it, with a test pinning both halves.
 
 ### [`token-optimizer`](../systems/token-optimizer/)
 
