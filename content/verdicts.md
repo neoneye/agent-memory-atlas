@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 461 reports.**
+**This page covers all 462 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4038,3 +4038,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.8.1, 372 commits since 13 August 2026, about 15,000 lines of JavaScript and about 1,000 test cases across 72 files, including replay, compare-and-set, mirror generation fences and a verified local embedding runtime.
 - Study when: your memory runs a background consolidation and you need to be able to say afterwards exactly what it changed and why.
 - Do not copy when: you need isolation or human adjudication by default — enable `scopeEnabled`, `strictScope` and `conflictFreezeEnabled` first, and declare scopes explicitly.
+
+### [`widemem-ai`](../systems/widemem-ai/)
+- Best idea: **claims held by tests, and corrections kept in public.** A test walks the source and fails if any method mutates the vector store without a history entry, `test_readme_claims.py` checks the README against code, and `docs/HISTORY.md` records what was wrong — an audit trail that missed `delete()`, LoCoMo categories published transposed — with the fix. Two marks: `audit_log`, `negative_eval`.
+- Biggest risk: **the read boundary is optional where the write boundary is not.** The write pipeline checks every candidate's user and agent id in code, even against a store that ignores filters, but `search()` without a `user_id` applies no filter and returns every user's memories, and the MCP tools take `user_id` from the model. Contradictions are resolved by deleting the old fact.
+- Most reusable component: YMYL handling — health, legal and financial facts classified by regex then LLM, given an importance floor, exempt from decay and from retention purges unless the caller opts in — with a test that a stale YMYL fact survives the TTL filter while a stale trivial one does not.
+- Maturity impression: Apache-2.0, version 1.6.0, 167 commits since 8 March 2026, about 6,900 lines with 584 test functions over three vector backends; a LoCoMo harness with an independent judge, the adversarial category scored as abstention and a held-out split, though the 55.15% headline's result files are not committed.
+- Study when: you want a Mem0-shaped library with priorities about what must not be forgotten and a model of how to keep a project's claims honest.
+- Do not copy when: callers might omit the user id, or you need to know what was believed before a correction.

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 461 reports.</strong></p>
+<p><strong>This page covers all 462 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16677,6 +16677,40 @@ to be able to say afterwards exactly what it changed and why.</li>
 default — enable <code>scopeEnabled</code>, <code>strictScope</code> and
 <code>conflictFreezeEnabled</code> first, and declare scopes
 explicitly.</li>
+</ul>
+<h3 id="widemem-ai"><a
+href="../systems/widemem-ai/"><code>widemem-ai</code></a></h3>
+<ul>
+<li>Best idea: <strong>claims held by tests, and corrections kept in
+public.</strong> A test walks the source and fails if any method mutates
+the vector store without a history entry,
+<code>test_readme_claims.py</code> checks the README against code, and
+<code>docs/HISTORY.md</code> records what was wrong — an audit trail
+that missed <code>delete()</code>, LoCoMo categories published
+transposed — with the fix. Two marks: <code>audit_log</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the read boundary is optional where the write
+boundary is not.</strong> The write pipeline checks every candidate's
+user and agent id in code, even against a store that ignores filters,
+but <code>search()</code> without a <code>user_id</code> applies no
+filter and returns every user's memories, and the MCP tools take
+<code>user_id</code> from the model. Contradictions are resolved by
+deleting the old fact.</li>
+<li>Most reusable component: YMYL handling — health, legal and financial
+facts classified by regex then LLM, given an importance floor, exempt
+from decay and from retention purges unless the caller opts in — with a
+test that a stale YMYL fact survives the TTL filter while a stale
+trivial one does not.</li>
+<li>Maturity impression: Apache-2.0, version 1.6.0, 167 commits since 8
+March 2026, about 6,900 lines with 584 test functions over three vector
+backends; a LoCoMo harness with an independent judge, the adversarial
+category scored as abstention and a held-out split, though the 55.15%
+headline's result files are not committed.</li>
+<li>Study when: you want a Mem0-shaped library with priorities about
+what must not be forgotten and a model of how to keep a project's claims
+honest.</li>
+<li>Do not copy when: callers might omit the user id, or you need to
+know what was believed before a correction.</li>
 </ul>
         </article>
       </div>
