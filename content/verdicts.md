@@ -918,9 +918,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`crewai`](../systems/crewai/)
 - Best idea: scope as a hierarchical path with subscope views, proved by a committed test that a rooted view cannot recall a sibling's records — and recall that reports what it looked for and did not find.
-- Biggest risk: an LLM on the write path is authorised to delete existing records, with no tombstone, no audit and no human in the loop.
+- Biggest risk: an LLM on the write path is authorised to delete existing records, with no tombstone, no audit and no human in the loop. Beside it, the default LanceDB backend matches a root scope with `LIKE '<prefix>%'`, so a view rooted at `/crew/research` also sees `/crew/research-archive`.
 - Most reusable component: the rooted-view boundary test, and `match_reasons` on a result so a rank can say why it happened.
-- Maturity impression: 147 test functions across five files, 63 of them in `test_memory_root_scope.py` alone, driving scoping through recall, listing, nesting and path normalisation — beside a `test_concurrent_storage.py` that is twelve lines of module-level skip with no test function in it.
+- Maturity impression: 153 test functions across six files, 63 of them in `test_memory_root_scope.py` alone, driving scoping through recall, listing, nesting and path normalisation — beside a `test_concurrent_storage.py` that is twelve lines of module-level skip with no test function in it.
 - Study when: your problem is organisational — several agents, several teams, one store, and a need for one agent's memories not to reach another's prompt.
 - Do not copy when: a wrong deletion is expensive. If you adopt it there, the first thing to build is a wrapper that logs `ConsolidationPlan` actions before they execute.
 

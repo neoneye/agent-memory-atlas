@@ -7328,7 +7328,7 @@ Privacy/deletion:
 - [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221`](https://github.com/pydantic/pydantic-ai-harness/commit/5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221)
 - [camel-ai/camel](https://github.com/camel-ai/camel) at [`8c791b7b9cf7deab56cb5a92818c34499af9097f`](https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f)
 - [microsoft/agent-framework](https://github.com/microsoft/agent-framework) at [`6d532cf77e26988fe2d822f13ddea021faa9d735`](https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735)
-- [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) at [`ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2`](https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2)
+- [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) at [`7b796623723474a10d7b9e91516df70801dd679d`](https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d)
 - [gobii-ai/gobii-platform](https://github.com/gobii-ai/gobii-platform) at [`c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb`](https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb)
 - [reescalder/agent-memory-supabase](https://github.com/reescalder/agent-memory-supabase) at [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53)
 - [showjihyun/livingfeed](https://github.com/showjihyun/livingfeed) at [`732d8bed74abb17b3079f2841911227c91468002`](https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002)

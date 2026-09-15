@@ -110,14 +110,14 @@ records it decides are superseded.</p>
               <strong>crewAIInc/crewAI</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">
+            <a class="meta-pill revision-pill" href="https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d" title="7b796623723474a10d7b9e91516df70801dd679d">
               <span>Analyzed revision</span>
-              <code>ceed4a3f…</code>
+              <code>7b796623…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/crewAIInc--crewAI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -141,11 +141,10 @@ records it decides are superseded.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>CrewAI is the most-cited framework-native memory omission in this
-atlas, and the memory module at this commit is not the
-entity/short-term/long-term arrangement its documentation history
-suggests. It is a <strong>unified memory</strong> of roughly 5,300 lines
-built around one idea: memory is a filesystem.</p>
+<p>CrewAI's memory module is not the entity/short-term/long-term
+arrangement its documentation history suggests. It is a <strong>unified
+memory</strong> of roughly 5,300 lines built around one idea: memory is
+a filesystem.</p>
 <p>A <code>MemoryRecord</code> carries a <code>scope</code> —
 <em>"Hierarchical path organizing the memory (e.g.
 /company/team/user)"</em> — and everything else follows from that.
@@ -155,9 +154,9 @@ built around one idea: memory is a filesystem.</p>
 <code>tree()</code>, <code>info()</code> and <code>list_scopes()</code>
 for navigation. <code>MemorySlice</code> is a view over several scopes
 at once. Recall takes a <code>scope_prefix</code>; <code>forget()</code>
-takes one too. Nothing else in the corpus models scope as a path with
-views over it, and it is the right shape for the problem CrewAI has,
-which is many agents in one crew in one organisation.</p>
+takes one too. Modelling scope as a path with views over it is the right
+shape for the problem CrewAI has, which is many agents in one crew in
+one organisation.</p>
 <p><strong>The scoping is enforced and proven.</strong>
 <code>test_recall_with_root_scope_only_returns_scoped_records</code>
 writes three records under <code>/other/scope</code>,
@@ -168,6 +167,18 @@ scope. A sibling test asserts <code>"/crew/b" not in scopes</code> for
 <code>list_scopes()</code>. That is the boundary form of the negative
 assertion, with a positive control in the same test, and it earns the
 mark.</p>
+<p><strong>The default backend matches the prefix by characters, not by
+path segment.</strong> <code>LanceDBStorage.search</code> applies the
+scope as <code>scope LIKE '&lt;prefix&gt;%'</code>
+(<code>lancedb_storage.py:389-392</code>), so a view rooted at
+<code>/crew/research</code> also recalls records under
+<code>/crew/research-archive</code>, and an underscore in a scope is a
+LIKE wildcard. The value is interpolated into the filter string. The
+Qdrant Edge backend does it correctly, matching a stored list of scope
+ancestors exactly (<code>qdrant_edge_storage.py:244-252</code>). The
+committed boundary tests use <code>/crew/a</code> and
+<code>/crew/b</code>, which do not share a prefix, so they cannot see
+the difference.</p>
 <p>There is a second scope axis on top of the path. Every record carries
 a <code>source</code> — <em>"Origin of this memory (e.g. user ID,
 session ID). Used for provenance tracking and privacy filtering."</em>
@@ -185,9 +196,8 @@ plus <code>insert_new</code> and an <code>insert_reason</code>. So on
 every save, a model looks at what is already stored and decides which
 existing records to rewrite and which to remove. There is no tombstone,
 no audit record, no trust state, no confirmation, and no human in the
-loop. The best-scoped memory system in this atlas is also the one that
-most readily authorises a language model to destroy what it already
-believed.</p>
+loop. A carefully scoped memory authorises a language model to destroy
+what it already believed.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Truth is a location and a score. A memory is true because it is
 stored, it is <em>relevant</em> because of a composite of semantic
@@ -205,12 +215,12 @@ that the resolution is unlogged and irreversible.</p>
 <p>Recall carries one unusual honesty mechanism.
 <code>MemoryMatch.evidence_gaps</code> is <em>"Information the system
 looked for but could not find"</em>, populated during the recall flow
-and attached to the results. Almost nothing else in this atlas reports
-its own misses; a retriever that can say "I looked for X and there was
-none" gives the model something to reason with instead of silent
-absence. It is attached only to <code>final_results[0]</code>, so a
-per-match field is carrying a per-query fact — a small structural oddity
-in an otherwise good idea.</p>
+and attached to the results. Reporting its own misses is rare; a
+retriever that can say "I looked for X and there was none" gives the
+model something to reason with instead of silent absence. It is attached
+only to <code>final_results[0]</code>, so a per-match field is carrying
+a per-query fact — a small structural oddity in an otherwise good
+idea.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — scope is a path and the caller holds a view rooted at a subtree rather than passing a key, while the consolidation plan's delete branch destroys a row with no tombstone, audit or review</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: scope is a path and the caller holds a view rooted at a subtree rather than passing a key, while the consolidation plan&#39;s delete branch destroys a row with no tombstone, audit or review
 flowchart TB
     subgraph Tree[&quot;Scope as a path&quot;]
@@ -304,7 +314,11 @@ decay term does not clear its threshold — the reasons are tested, not
 just produced.</p>
 <p>Both boundaries apply here: <code>scope_prefix</code> on every
 storage search, and the <code>private</code>/<code>source</code> filter
-after.</p>
+after. The second is the caller's to lift —
+<code>recall(include_private=True)</code> skips it, and
+<code>source</code> is whatever the caller passes — so the path root is
+the boundary that carries the mark. A read-only <code>Memory</code> now
+leaves <code>last_accessed</code> untouched on recall.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes block and do a lot. The encoding flow is five steps and its
 docstring names them: one batched embedder call for all items,
@@ -364,7 +378,7 @@ scope prefix, category, age, metadata filter or explicit ids — and it is
 a hard delete with nothing left behind.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>147 test functions across five files, none run here.
+<p>153 test functions across six files, none run here.
 <code>test_memory_root_scope.py</code> alone holds 63 of them and is the
 reason two marks are earned: it drives root scoping through recall,
 listing, nesting, path normalisation
@@ -414,8 +428,9 @@ holds rather than a parameter they must remember to pass. Prefix
 matching gives you hierarchy for free.</li>
 <li><strong>Prove the boundary with a rooted-view test.</strong> Three
 records in three scopes, a view rooted at one, assert exactly one comes
-back. It is ten lines and it is the assertion every scope claim in this
-atlas ultimately rests on.</li>
+back. It is ten lines and it is the assertion a scope claim rests on —
+and add a sibling whose name shares the root's prefix, which is the case
+a <code>LIKE</code> filter gets wrong.</li>
 <li><strong>Report what you looked for and did not find.</strong>
 <code>evidence_gaps</code> gives the model an explicit "no evidence"
 instead of silent absence, which is the difference between the model
@@ -451,8 +466,11 @@ the harness cannot run the case, delete the file and record the gap
 somewhere a reader will not mistake for a test — daimon's
 <code>known-gap</code> surface declaration is one shape for that.</li>
 <li><strong>A memory browser with no edit.</strong> The TUI is one
-keystroke away from being a review surface and stops short of it, which
-is the most common near-miss in this atlas.</li>
+keystroke away from being a review surface and stops short of it.</li>
+<li><strong>A path prefix matched as a string.</strong>
+<code>LIKE '/crew/a%'</code> treats <code>/crew/ab</code> as a child of
+<code>/crew/a</code>; match a stored ancestor list, as the Qdrant
+backend does.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Take CrewAI's memory if you are running crews and your problem is
@@ -544,13 +562,32 @@ navigation</td>
 </tr>
 <tr>
 <td><code>lib/crewai/tests/memory/</code></td>
-<td>147 tests in 5 files</td>
+<td>153 tests in 6 files</td>
 <td>63 on root scoping; <code>test_concurrent_storage.py</code> is a
 12-line skip with no test in it</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d"><code class="commit-id" title="7b796623723474a10d7b9e91516df70801dd679d">7b796623…</code></a>
+— 175 commits on, 2026-09-15; four touched <code>memory/</code>.
+Screened before reading: no auto-run surface, three build-time execution
+points, eleven unpinned surfaces, six dependency surfaces inside the
+cooldown and an agent-instruction file read as data; nothing was
+installed or run. The changes: <code>read_only</code> now also stops
+<code>update()</code> and the <code>last_accessed</code> refresh on
+<code>recall()</code> (#7369); reusable scope configurations are
+preserved (#7068); a model-call hook that denies now propagates through
+the consolidation and recall model calls instead of being swallowed
+(#7111). The consolidation delete, the missing audit and the empty
+concurrency test stand. Read again against the storage code, the default
+LanceDB backend applies a root scope as
+<code>scope LIKE '&lt;prefix&gt;%'</code>, so a view rooted at
+<code>/crew/research</code> also recalls
+<code>/crew/research-archive</code>; this was already true at the
+earlier pin, and section 1 now says it. Both marks kept, with evidence
+records naming the defect.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2"><code class="commit-id" title="ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2">ceed4a3f…</code></a>
 — audited at the same pin; no mark moved and no matrix field changed.

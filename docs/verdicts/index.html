@@ -2769,14 +2769,17 @@ href="../systems/crewai/"><code>crewai</code></a></h3>
 by a committed test that a rooted view cannot recall a sibling's records
 — and recall that reports what it looked for and did not find.</li>
 <li>Biggest risk: an LLM on the write path is authorised to delete
-existing records, with no tombstone, no audit and no human in the
-loop.</li>
+existing records, with no tombstone, no audit and no human in the loop.
+Beside it, the default LanceDB backend matches a root scope with
+<code>LIKE '&lt;prefix&gt;%'</code>, so a view rooted at
+<code>/crew/research</code> also sees
+<code>/crew/research-archive</code>.</li>
 <li>Most reusable component: the rooted-view boundary test, and
 <code>match_reasons</code> on a result so a rank can say why it
 happened.</li>
-<li>Maturity impression: 147 test functions across five files, 63 of
-them in <code>test_memory_root_scope.py</code> alone, driving scoping
-through recall, listing, nesting and path normalisation — beside a
+<li>Maturity impression: 153 test functions across six files, 63 of them
+in <code>test_memory_root_scope.py</code> alone, driving scoping through
+recall, listing, nesting and path normalisation — beside a
 <code>test_concurrent_storage.py</code> that is twelve lines of
 module-level skip with no test function in it.</li>
 <li>Study when: your problem is organisational — several agents, several

@@ -7,10 +7,13 @@ page_kind: system
 source_name: "crewAIInc/crewAI"
 source_url: https://github.com/crewAIInc/crewAI
 archive_name: "crewAIInc--crewAI"
-revision: ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
-revision_url: https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2
-analyzed_at: 2026-07-30
+revision: 7b796623723474a10d7b9e91516df70801dd679d
+revision_url: https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the rooted memory view on every search | lib/crewai/src/crewai/memory/unified_memory.py:686-724 recall, lib/crewai/src/crewai/memory/utils.py:67 join_scope_paths, lib/crewai/src/crewai/memory/storage/lancedb_storage.py:389-392, qdrant_edge_storage.py:244-252 | a Memory constructed with root_scope nests every recall, forget and remember scope under it and passes the result to the backend as scope_prefix; the Qdrant backend matches it exactly against a stored scope_ancestors list, and the default LanceDB backend applies it as `scope LIKE '<prefix>%'`, which also matches a sibling whose name begins with the same characters. The private/source filter is caller-liftable with include_private and does not carry the mark | lib/crewai/tests/memory/test_memory_root_scope.py:844"
+  negative_eval: "rooted-view recall and listing | lib/crewai/tests/memory/test_memory_root_scope.py:844 test_recall_with_root_scope_only_returns_scoped_records, test_list_scopes_defaults_to_root_scope | records are written under /other/scope, /crew/crew-a/inner and /crew/crew-b/inner, a Memory rooted at /crew/crew-a recalls, and exactly one result from the rooted scope is asserted; list_scopes on a view rooted at /crew/a asserts a child is present and /crew/b is absent | test_memory_root_scope.py:884, :994"
 stack_storage: "sqlite, qdrant, lancedb"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -30,9 +33,8 @@ matrix:
 
 ## 1. Executive Summary
 
-CrewAI is the most-cited framework-native memory omission in this atlas, and the
-memory module at this commit is not the entity/short-term/long-term arrangement
-its documentation history suggests. It is a **unified memory** of roughly 5,300
+CrewAI's memory module is not the entity/short-term/long-term arrangement its
+documentation history suggests. It is a **unified memory** of roughly 5,300
 lines built around one idea: memory is a filesystem.
 
 A `MemoryRecord` carries a `scope` — *"Hierarchical path organizing the memory
@@ -40,9 +42,8 @@ A `MemoryRecord` carries a `scope` — *"Hierarchical path organizing the memory
 holds the whole tree. `MemoryScope` is *"View of Memory restricted to a root
 path."*, with `subscope()` to descend, a `read_only` flag, and `tree()`, `info()`
 and `list_scopes()` for navigation. `MemorySlice` is a view over several scopes
-at once. Recall takes a `scope_prefix`; `forget()` takes one too. Nothing else
-in the corpus models scope as a path with views over it, and it is the right
-shape for the problem CrewAI has, which is many agents in one crew in one
+at once. Recall takes a `scope_prefix`; `forget()` takes one too. Modelling scope as a
+path with views over it is the right shape for the problem CrewAI has, which is many agents in one crew in one
 organisation.
 
 **The scoping is enforced and proven.**
@@ -52,6 +53,15 @@ under `/other/scope`, `/crew/crew-a/inner` and `/crew/crew-b/inner`, opens a
 back from the rooted scope. A sibling test asserts `"/crew/b" not in scopes` for
 `list_scopes()`. That is the boundary form of the negative assertion, with a
 positive control in the same test, and it earns the mark.
+
+**The default backend matches the prefix by characters, not by path segment.**
+`LanceDBStorage.search` applies the scope as `scope LIKE '<prefix>%'`
+(`lancedb_storage.py:389-392`), so a view rooted at `/crew/research` also
+recalls records under `/crew/research-archive`, and an underscore in a scope is a
+LIKE wildcard. The value is interpolated into the filter string. The Qdrant Edge
+backend does it correctly, matching a stored list of scope ancestors exactly
+(`qdrant_edge_storage.py:244-252`). The committed boundary tests use `/crew/a` and
+`/crew/b`, which do not share a prefix, so they cannot see the difference.
 
 There is a second scope axis on top of the path. Every record carries a `source`
 — *"Origin of this memory (e.g. user ID, session ID). Used for provenance
@@ -65,9 +75,8 @@ returns a `ConsolidationPlan` whose `actions` are *"Actions to take on existing
 records (keep/update/delete)"*, plus `insert_new` and an `insert_reason`. So on
 every save, a model looks at what is already stored and decides which existing
 records to rewrite and which to remove. There is no tombstone, no audit record,
-no trust state, no confirmation, and no human in the loop. The best-scoped
-memory system in this atlas is also the one that most readily authorises a
-language model to destroy what it already believed.
+no trust state, no confirmation, and no human in the loop. A carefully scoped memory authorises
+a language model to destroy what it already believed.
 
 ## 2. Mental Model
 
@@ -85,8 +94,7 @@ store clean — and its cost is that the resolution is unlogged and irreversible
 
 Recall carries one unusual honesty mechanism. `MemoryMatch.evidence_gaps` is
 *"Information the system looked for but could not find"*, populated during the
-recall flow and attached to the results. Almost nothing else in this atlas
-reports its own misses; a retriever that can say "I looked for X and there was
+recall flow and attached to the results. Reporting its own misses is rare; a retriever that can say "I looked for X and there was
 none" gives the model something to reason with instead of silent absence. It is
 attached only to `final_results[0]`, so a per-match field is carrying a
 per-query fact — a small structural oddity in an otherwise good idea.
@@ -171,7 +179,10 @@ with the contributing factors listed in `match_reasons`, so a caller can see
 term does not clear its threshold — the reasons are tested, not just produced.
 
 Both boundaries apply here: `scope_prefix` on every storage search, and the
-`private`/`source` filter after.
+`private`/`source` filter after. The second is the caller's to lift —
+`recall(include_private=True)` skips it, and `source` is whatever the caller
+passes — so the path root is the boundary that carries the mark. A read-only
+`Memory` now leaves `last_accessed` untouched on recall.
 
 ## 7. Write Mechanics
 
@@ -233,7 +244,7 @@ nothing left behind.
 
 ## 10. Tests, Evals, and Benchmarks
 
-147 test functions across five files, none run here. `test_memory_root_scope.py`
+153 test functions across six files, none run here. `test_memory_root_scope.py`
 alone holds 63 of them and is the reason two marks are earned: it drives root
 scoping through recall, listing, nesting, path normalisation (`assert "//" not
 in record.scope`), and the global case.
@@ -279,7 +290,8 @@ keep/update/delete decision is right, which is the number the design rests on.
   matching gives you hierarchy for free.
 - **Prove the boundary with a rooted-view test.** Three records in three scopes,
   a view rooted at one, assert exactly one comes back. It is ten lines and it is
-  the assertion every scope claim in this atlas ultimately rests on.
+  the assertion a scope claim rests on — and add a sibling whose name shares the
+  root's prefix, which is the case a `LIKE` filter gets wrong.
 - **Report what you looked for and did not find.** `evidence_gaps` gives the
   model an explicit "no evidence" instead of silent absence, which is the
   difference between the model reasoning about a gap and hallucinating into it.
@@ -309,8 +321,9 @@ keep/update/delete decision is right, which is the number the design rests on.
   file and record the gap somewhere a reader will not mistake for a test —
   daimon's `known-gap` surface declaration is one shape for that.
 - **A memory browser with no edit.** The TUI is one keystroke away from being a
-  review surface and stops short of it, which is the most common near-miss in
-  this atlas.
+  review surface and stops short of it.
+- **A path prefix matched as a string.** `LIKE '/crew/a%'` treats `/crew/ab` as
+  a child of `/crew/a`; match a stored ancestor list, as the Qdrant backend does.
 
 ### Fit
 
@@ -350,9 +363,11 @@ execute.
 | `memory/analyze.py` | 375 | `ConsolidationPlan` — keep, update, delete |
 | `memory/storage/kickoff_task_outputs_storage.py` | 222 | SQLite task-output store |
 | `events/types/memory_events.py` | 103 | Nine bus events over one base class; not an audit log |
-| `lib/crewai/tests/memory/` | 147 tests in 5 files | 63 on root scoping; `test_concurrent_storage.py` is a 12-line skip with no test in it |
+| `lib/crewai/tests/memory/` | 153 tests in 6 files | 63 on root scoping; `test_concurrent_storage.py` is a 12-line skip with no test in it |
 
 ## History
+
+**2026-09-15** — [`7b796623723474a10d7b9e91516df70801dd679d`](https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d) — 175 commits on, 2026-09-15; four touched `memory/`. Screened before reading: no auto-run surface, three build-time execution points, eleven unpinned surfaces, six dependency surfaces inside the cooldown and an agent-instruction file read as data; nothing was installed or run. The changes: `read_only` now also stops `update()` and the `last_accessed` refresh on `recall()` (#7369); reusable scope configurations are preserved (#7068); a model-call hook that denies now propagates through the consolidation and recall model calls instead of being swallowed (#7111). The consolidation delete, the missing audit and the empty concurrency test stand. Read again against the storage code, the default LanceDB backend applies a root scope as `scope LIKE '<prefix>%'`, so a view rooted at `/crew/research` also recalls `/crew/research-archive`; this was already true at the earlier pin, and section 1 now says it. Both marks kept, with evidence records naming the defect.
 
 **2026-08-31** — [`ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2`](https://github.com/crewAIInc/crewAI/commit/ceed4a3ff71b5b4cb0ca316b4178ffcce74a53b2) — audited at the same pin; no mark moved and no matrix field changed. Five claims were wrong at this commit.
 
