@@ -7,16 +7,19 @@ page_kind: system
 source_name: "deepseek-ai/deepseek-harness"
 source_url: https://github.com/deepseek-ai/deepseek-harness
 archive_name: "deepseek-ai--deepseek-harness"
-revision: 47f943859bef60e4160492346772ded9b24f765a
-revision_url: https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a
-analyzed_at: 2026-08-14
+revision: 0d1f50007f9bca3f52b06e1c3074fa14d5fb0720
+revision_url: https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the model-facing history tools, in the opt-in tool-session-query package | packages/session-query/tool-session-query/src/operations.ts:61-101, src/workspace-access.ts | cross-session search takes the caller session's stored cwd, refuses when it has none, adds a cwd filter to the provider request, authorizes each requested parent session, and drops any returned hit that is the caller or fails recordAuthorized; reads and traces authorize the target session against the caller first. No shipped bundle mounts the package | packages/session-query/tool-session-query/tests/tool-session-query.spec.ts:587, :602"
+  negative_eval: "authorization failure directions, as committed cases | packages/session-query/tool-session-query/tests/tool-session-query.spec.ts | a direct read of a session in another workspace is asserted unauthorized without naming it; a null-cwd caller reads only itself; and a search naming a hidden parent and one naming a nonexistent parent are asserted to return identical results, neither containing the visible child whose fixture text is `must not be discoverable`, with the provider asserted never called | tool-session-query.spec.ts:587-600, :614-640"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A `SessionEvent` in one session's append-only log, carrying a sequence number and a surface classification of `current`, `shadowed` or `log-only`"
-  storage: "One append-only log per session behind a `SessionPersistence` seam with two interchangeable backends — JSONL files under a project directory, or one shared SQLite database — plus a separate FTS5 index and session-scoped spill files at 0600"
+  storage: "One append-only JSONL log per session behind a `SessionPersistence` seam, migrated forward through versioned session formats on open — plus a separate FTS5 index and session-scoped spill files at 0600"
   retrieval: "Exact reads, filters and lineage traces on `ctx.sessionQuery` by default; SQLite FTS5 over `persisted_docs` and a `temp.live_docs`, unioned live-preferred, exists but every shipped bundle sets `openAt: never` so search calls fail closed"
   write: "Synchronous in-memory append, then a batched durable write — the first pending event opens a fixed window that later events join without resetting it, and `session/flush` is the ordering checkpoint the loop waits on before claiming the next turn"
   update_delete: "Nothing is overwritten. Compaction issues `{ op: 'replace', start, end }`, which shadows the surface entries in that range and inserts the new event in their place; the shadowed events stay in the log and stay searchable as `shadowed`"
@@ -25,7 +28,7 @@ matrix:
   background: "None over memory. Persistence batches on a bounded timer and the FTS index is maintained on write; nothing re-reads or rewrites the corpus on a schedule"
   trust: "No epistemic state. `surface` says whether the model currently sees an event, not whether it is true, and nothing carries confidence, verification or provenance beyond who emitted it"
   strengths: "Cross-session search whose authorization is tested against a probing caller — a hidden parent session and a nonexistent one are asserted indistinguishable, without the provider being called"
-  risks: "The searchable-history story is opt-in twice over and off in every shipped bundle; the preview's public history is hours old, with 244 dependency surfaces inside the cooldown and 97 unpinned manifests, and no delete a user can reach"
+  risks: "The searchable-history story is opt-in twice over and off in every shipped bundle; a developer preview with a very large dependency surface, and no delete a user can reach"
 ---
 
 ## 1. Executive Summary
@@ -34,8 +37,8 @@ DeepSeek Harness (`dsh`) is an agent harness from DeepSeek AI — 564,122 lines 
 TypeScript across 2,578 files, MIT, built on the [Cordis](https://github.com/cordiverse/cordis)
 plugin runtime under a stated thesis that **everything is a plugin**. The
 repository appeared on GitHub on 13 August 2026 carrying 12,293 commits of prior
-history from 10 June, so its public life is hours old and its own README says so
-plainly: *"currently in developer preview and is iterating rapidly. THERE WILL BE
+history from 10 June, and has moved nearly 4,900 commits since; its own README
+says plainly: *"currently in developer preview and is iterating rapidly. THERE WILL BE
 COMPATIBILITY-BREAKING CHANGES."* Read this report as a snapshot of a fast-moving
 tree, which is what the pin is for.
 
@@ -76,9 +79,9 @@ the search path is one config key away, the tool package is one mount away, and
 both defaults are pinned by a test (`apps/cli/tests/lazy-search-startup.compat.spec.ts`
 asserts `openAt` is `never` on both layers). A harness that builds a carefully
 authorized cross-session search and then ships it disabled has decided that
-history recall is a deployment's choice rather than a product default — which is
-the opposite of nearly every system in this atlas, and worth more attention than
-the mechanism it withholds.
+history recall is a deployment's choice rather than a product default — the
+opposite of the usual default, and worth more attention than the mechanism it
+withholds.
 
 **Nothing is overwritten, and what was replaced stays searchable.** Compaction
 does not delete; it issues `{ op: 'replace', start, end }`, which shadows the
@@ -105,8 +108,7 @@ Where it is weakest is the ordinary place. There is no epistemic state anywhere:
 confidence, verification, or a provenance beyond which component emitted it.
 There is no user-facing forgetting — the model cannot delete, and the delete
 statements that exist serve index maintenance rather than a person's request. And
-the dependency surface is enormous and new: 97 unpinned manifests, 244 of them
-touched inside the seven-day cooldown, because the whole tree is.
+the dependency surface is enormous and moves daily.
 
 ## 2. Mental Model
 
@@ -181,11 +183,13 @@ implement it, and a **Consumer** package exposes it to the model or the human.
 Durable state lands in three places:
 
 - **The session log.** `SessionPersistence` (`ctx.sessionPersistence`) defines
-  locate/create/append with two interchangeable backends —
-  `session-persistence-jsonl`, which writes a transcript per session inside a
-  project directory and returns its absolute path from `locate()`, and
-  `session-persistence-sqlite`, which shares one database and returns
-  `undefined` because there is no per-session artifact.
+  locate/create/append, and `session-persistence-jsonl` writes a transcript per
+  session inside a project directory and returns its absolute path from
+  `locate()`. The SQLite persistence backend present at the first reading has
+  been removed. Historical v0, v1 and v2 logs are migrated to the current format
+  on open through `session-format-v0-to-v1`, `-v1-to-v2` and `-v2-to-v3`, which
+  prepare the migration in memory, leave the source bytes untouched, and publish
+  the new generation only under the single-writer claim.
 - **The query index.** `session-query-sqlite` owns a separate FTS5 lifecycle:
   `persisted_sessions` and `persisted_docs` on disk, `live_sessions` and
   `temp.live_docs` in the connection's temp schema. Session rows carry `cwd`,
@@ -206,13 +210,11 @@ uses the kernel's Landlock LSM rather than a wrapper convention.
 
 `npx @deepseek-ai/dsh web` starts a web UI on `127.0.0.1:3080`; from source it is
 `pnpm install && pnpm run build && pnpm dsh web`. No daemon to operate, no
-database to provision — SQLite is embedded and the JSONL backend needs only a
-directory. It runs local; what degrades offline is the model call, not the store.
+database to provision — the JSONL backend needs only a directory, and SQLite is
+embedded for the optional search index. It runs local; what degrades offline is the model call, not the store.
 
-Two costs an operator should weigh. The dependency surface is large and, at this
-commit, entirely new: the screen counts 97 unpinned manifests and 244 files
-inside the seven-day cooldown, which is unavoidable for a tree whose public
-history began the same day and is exactly the window the cooldown exists for. And
+Two costs an operator should weigh. The dependency surface is large and moves
+daily: at this pin the screen counts 151 unpinned surfaces and 303 files inside the seven-day cooldown, which is what a tree committing hundreds of times a week looks like and exactly the window the cooldown exists for. And
 the JSONL backend is human-readable and repairable by hand while the SQLite one
 is not — a real choice, not a default, and the seam is built so it is one.
 
@@ -418,9 +420,9 @@ The sharpest is *"makes hidden and nonexistent parent guesses indistinguishable
 without calling search"*. A caller who guesses a parent session id must not be
 able to tell "exists but you may not see it" from "does not exist", and the
 assertion is that search is not even called — so the answer cannot leak through
-timing or through the provider. Almost every memory system in this atlas would
-fail that test, because almost none of them treats record existence as
-confidential.
+timing or through the provider. A store that answers *not found* only for
+records that are missing fails that test, because it treats record existence as
+public.
 
 **Uncertainty cannot be represented at all.** There is no confidence, no
 verification, no trust state; `surface` is context membership. That is correct
@@ -436,14 +438,12 @@ so reading history never commits recovery.
 
 Three gaps. **No secret scanning** on the write or index path. **No user-facing
 delete**, so correcting or removing a memory is a filesystem operation against
-the JSONL backend and not available at all against SQLite. And **format version
-rejection without migration** — a backend *"rejects any other version on load (no
-migration)"*, which is the safe direction and means an upgrade can strand a
-corpus.
+the JSONL log. The third gap from the first reading has closed: released session
+formats now migrate forward on open, and a future format still refuses.
 
 ## 10. Tests, Evals, and Benchmarks
 
-692 spec files. The memory-relevant ones are concentrated where the risk is:
+1,221 spec files. The memory-relevant ones are concentrated where the risk is:
 `packages/session/session-persistence/tests/persistence.spec.ts`,
 `packages/session/session-projection-cache/tests/cache.spec.ts`, and the two
 under `packages/session-query/tool-session-query/tests/`.
@@ -484,7 +484,7 @@ need to debug the summary.
 
 **Protect the existence of a record, not only its contents.** The test that a
 hidden session and a nonexistent one are indistinguishable *without the search
-being called* is the strongest access-control assertion in this atlas. If your
+being called* is an access-control assertion worth copying. If your
 memory is multi-tenant or multi-workspace, an id-guessing caller learning which
 ids are real is a leak your read filter does not close.
 
@@ -569,7 +569,7 @@ the two or three mechanisms above, rather than the dependency.
 
 **Durability** — `packages/session/session-persistence/` (`src/coordinator.ts`),
 `packages/session/session-persistence-jsonl/`,
-`packages/session/session-persistence-sqlite/`, `docs/subsystems/persistence.md`.
+`packages/session/session-format*/`, `docs/subsystems/persistence.md`.
 
 **Retrieval** — `packages/session-query/session-query/src/types.ts`,
 `packages/session-query/session-query-sqlite/src/schema.ts` (FTS5 tables),
@@ -594,6 +594,8 @@ the two or three mechanisms above, rather than the dependency.
 `packages/session/session-persistence/tests/persistence.spec.ts`.
 
 ## History
+
+**2026-09-15** — [`0d1f50007f9bca3f52b06e1c3074fa14d5fb0720`](https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720) — 4,884 commits on, 2026-09-15. Screened before reading: no auto-run surface, two build-time execution points, 151 unpinned surfaces and 303 dependency surfaces inside the seven-day cooldown, with `AGENTS.md` and `CLAUDE.md` read as data; nothing was installed or run. The framing stands: both shipped layers still set the search index to `openAt: never`, pinned by `apps/cli/tests/lazy-search-startup.compat.spec.ts`, and no bundle mounts `tool-session-query`, whose authorization cases are unchanged. What moved in the memory packages: the SQLite session-persistence backend was removed, leaving JSONL; released session formats v0 to v2 now migrate forward on open, closing the no-migration gap section 9 named; spill cleanup, a session turn outline projection and log export were added. Both marks kept with evidence records.
 
 **2026-08-14** — [`47f943859bef60e4160492346772ded9b24f765a`](https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a)
 — re-read at the same commit. The mechanism did not move; the framing was wrong.

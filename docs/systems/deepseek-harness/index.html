@@ -116,14 +116,14 @@ composition.</p>
               <strong>deepseek-ai/deepseek-harness</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a" title="47f943859bef60e4160492346772ded9b24f765a">
+            <a class="meta-pill revision-pill" href="https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720" title="0d1f50007f9bca3f52b06e1c3074fa14d5fb0720">
               <span>Analyzed revision</span>
-              <code>47f94385…</code>
+              <code>0d1f5000…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/deepseek-ai--deepseek-harness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -152,8 +152,8 @@ AI — 564,122 lines of TypeScript across 2,578 files, MIT, built on the
 <a href="https://github.com/cordiverse/cordis">Cordis</a> plugin runtime
 under a stated thesis that <strong>everything is a plugin</strong>. The
 repository appeared on GitHub on 13 August 2026 carrying 12,293 commits
-of prior history from 10 June, so its public life is hours old and its
-own README says so plainly: <em>"currently in developer preview and is
+of prior history from 10 June, and has moved nearly 4,900 commits since;
+its own README says plainly: <em>"currently in developer preview and is
 iterating rapidly. THERE WILL BE COMPATIBILITY-BREAKING CHANGES."</em>
 Read this report as a snapshot of a fast-moving tree, which is what the
 pin is for.</p>
@@ -201,9 +201,8 @@ is one mount away, and both defaults are pinned by a test
 <code>openAt</code> is <code>never</code> on both layers). A harness
 that builds a carefully authorized cross-session search and then ships
 it disabled has decided that history recall is a deployment's choice
-rather than a product default — which is the opposite of nearly every
-system in this atlas, and worth more attention than the mechanism it
-withholds.</p>
+rather than a product default — the opposite of the usual default, and
+worth more attention than the mechanism it withholds.</p>
 <p><strong>Nothing is overwritten, and what was replaced stays
 searchable.</strong> Compaction does not delete; it issues
 <code>{ op: 'replace', start, end }</code>, which shadows the surface
@@ -234,9 +233,7 @@ truth, and nothing stored carries confidence, verification, or a
 provenance beyond which component emitted it. There is no user-facing
 forgetting — the model cannot delete, and the delete statements that
 exist serve index maintenance rather than a person's request. And the
-dependency surface is enormous and new: 97 unpinned manifests, 244 of
-them touched inside the seven-day cooldown, because the whole tree
-is.</p>
+dependency surface is enormous and moves daily.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory here is a <strong><code>SessionEvent</code></strong>: one
 entry in one session's append-only log, with a sequence number, a type
@@ -314,13 +311,16 @@ model or the human.</p>
 <p>Durable state lands in three places:</p>
 <ul>
 <li><strong>The session log.</strong> <code>SessionPersistence</code>
-(<code>ctx.sessionPersistence</code>) defines locate/create/append with
-two interchangeable backends — <code>session-persistence-jsonl</code>,
-which writes a transcript per session inside a project directory and
-returns its absolute path from <code>locate()</code>, and
-<code>session-persistence-sqlite</code>, which shares one database and
-returns <code>undefined</code> because there is no per-session
-artifact.</li>
+(<code>ctx.sessionPersistence</code>) defines locate/create/append, and
+<code>session-persistence-jsonl</code> writes a transcript per session
+inside a project directory and returns its absolute path from
+<code>locate()</code>. The SQLite persistence backend present at the
+first reading has been removed. Historical v0, v1 and v2 logs are
+migrated to the current format on open through
+<code>session-format-v0-to-v1</code>, <code>-v1-to-v2</code> and
+<code>-v2-to-v3</code>, which prepare the migration in memory, leave the
+source bytes untouched, and publish the new generation only under the
+single-writer claim.</li>
 <li><strong>The query index.</strong> <code>session-query-sqlite</code>
 owns a separate FTS5 lifecycle: <code>persisted_sessions</code> and
 <code>persisted_docs</code> on disk, <code>live_sessions</code> and
@@ -348,16 +348,17 @@ a wrapper convention.</p>
 <p><code>npx @deepseek-ai/dsh web</code> starts a web UI on
 <code>127.0.0.1:3080</code>; from source it is
 <code>pnpm install &amp;&amp; pnpm run build &amp;&amp; pnpm dsh web</code>.
-No daemon to operate, no database to provision — SQLite is embedded and
-the JSONL backend needs only a directory. It runs local; what degrades
-offline is the model call, not the store.</p>
+No daemon to operate, no database to provision — the JSONL backend needs
+only a directory, and SQLite is embedded for the optional search index.
+It runs local; what degrades offline is the model call, not the
+store.</p>
 <p>Two costs an operator should weigh. The dependency surface is large
-and, at this commit, entirely new: the screen counts 97 unpinned
-manifests and 244 files inside the seven-day cooldown, which is
-unavoidable for a tree whose public history began the same day and is
-exactly the window the cooldown exists for. And the JSONL backend is
-human-readable and repairable by hand while the SQLite one is not — a
-real choice, not a default, and the seam is built so it is one.</p>
+and moves daily: at this pin the screen counts 151 unpinned surfaces and
+303 files inside the seven-day cooldown, which is what a tree committing
+hundreds of times a week looks like and exactly the window the cooldown
+exists for. And the JSONL backend is human-readable and repairable by
+hand while the SQLite one is not — a real choice, not a default, and the
+seam is built so it is one.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Write.</strong> <code>session/event</code> is a
@@ -580,8 +581,9 @@ indistinguishable without calling search"</em>. A caller who guesses a
 parent session id must not be able to tell "exists but you may not see
 it" from "does not exist", and the assertion is that search is not even
 called — so the answer cannot leak through timing or through the
-provider. Almost every memory system in this atlas would fail that test,
-because almost none of them treats record existence as confidential.</p>
+provider. A store that answers <em>not found</em> only for records that
+are missing fails that test, because it treats record existence as
+public.</p>
 <p><strong>Uncertainty cannot be represented at all.</strong> There is
 no confidence, no verification, no trust state; <code>surface</code> is
 context membership. That is correct for a transcript and it is the
@@ -597,14 +599,12 @@ distinguished from <code>load()</code> so reading history never commits
 recovery.</p>
 <p>Three gaps. <strong>No secret scanning</strong> on the write or index
 path. <strong>No user-facing delete</strong>, so correcting or removing
-a memory is a filesystem operation against the JSONL backend and not
-available at all against SQLite. And <strong>format version rejection
-without migration</strong> — a backend <em>"rejects any other version on
-load (no migration)"</em>, which is the safe direction and means an
-upgrade can strand a corpus.</p>
+a memory is a filesystem operation against the JSONL log. The third gap
+from the first reading has closed: released session formats now migrate
+forward on open, and a future format still refuses.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>692 spec files. The memory-relevant ones are concentrated where the
+<p>1,221 spec files. The memory-relevant ones are concentrated where the
 risk is:
 <code>packages/session/session-persistence/tests/persistence.spec.ts</code>,
 <code>packages/session/session-projection-cache/tests/cache.spec.ts</code>,
@@ -646,10 +646,10 @@ alternative, editing the history in place, loses the thing you would
 need to debug the summary.</p>
 <p><strong>Protect the existence of a record, not only its
 contents.</strong> The test that a hidden session and a nonexistent one
-are indistinguishable <em>without the search being called</em> is the
-strongest access-control assertion in this atlas. If your memory is
-multi-tenant or multi-workspace, an id-guessing caller learning which
-ids are real is a leak your read filter does not close.</p>
+are indistinguishable <em>without the search being called</em> is an
+access-control assertion worth copying. If your memory is multi-tenant
+or multi-workspace, an id-guessing caller learning which ids are real is
+a leak your read filter does not close.</p>
 <p><strong>Distrust your own provider's return values.</strong>
 Rejecting records that came back unrequested or unauthorized costs a
 filter and closes the case where the authorization lives in one layer
@@ -735,7 +735,7 @@ mechanism but changes what a reader can audit.</li>
 <code>packages/session/session-persistence/</code>
 (<code>src/coordinator.ts</code>),
 <code>packages/session/session-persistence-jsonl/</code>,
-<code>packages/session/session-persistence-sqlite/</code>,
+<code>packages/session/session-format*/</code>,
 <code>docs/subsystems/persistence.md</code>.</p>
 <p><strong>Retrieval</strong> —
 <code>packages/session-query/session-query/src/types.ts</code>,
@@ -763,6 +763,21 @@ mechanism but changes what a reader can audit.</li>
 <code>packages/session-query/tool-session-query/tests/sqlite-integration.spec.ts</code>,
 <code>packages/session/session-persistence/tests/persistence.spec.ts</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720"><code class="commit-id" title="0d1f50007f9bca3f52b06e1c3074fa14d5fb0720">0d1f5000…</code></a>
+— 4,884 commits on, 2026-09-15. Screened before reading: no auto-run
+surface, two build-time execution points, 151 unpinned surfaces and 303
+dependency surfaces inside the seven-day cooldown, with
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> read as data; nothing
+was installed or run. The framing stands: both shipped layers still set
+the search index to <code>openAt: never</code>, pinned by
+<code>apps/cli/tests/lazy-search-startup.compat.spec.ts</code>, and no
+bundle mounts <code>tool-session-query</code>, whose authorization cases
+are unchanged. What moved in the memory packages: the SQLite
+session-persistence backend was removed, leaving JSONL; released session
+formats v0 to v2 now migrate forward on open, closing the no-migration
+gap section 9 named; spill cleanup, a session turn outline projection
+and log export were added. Both marks kept with evidence records.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a"><code class="commit-id" title="47f943859bef60e4160492346772ded9b24f765a">47f94385…</code></a>
 — re-read at the same commit. The mechanism did not move; the framing
