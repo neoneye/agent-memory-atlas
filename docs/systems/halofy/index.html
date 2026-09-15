@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hostable memory kernel for
+an organization's agents in which identity comes only from the API key,
+every read compiles to an enumerated list of ancestor namespaces, every
+outcome is hash-chained into the audit log inside the same transaction,
+and retrieval is a read-only cartridge — while the trust-ranked dispute
+quarantine its documents describe has a schema, a review service and
+tests, and no producer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Halofy — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hostable memory
+kernel for an organization's agents in which identity comes only from
+the API key, every read compiles to an enumerated list of ancestor
+namespaces, every outcome is hash-chained into the audit log inside the
+same transaction, and retrieval is a read-only cartridge — while the
+trust-ranked dispute quarantine its documents describe has a schema, a
+review service and tests, and no producer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Halofy — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hostable memory
+kernel for an organization's agents in which identity comes only from
+the API key, every read compiles to an enumerated list of ancestor
+namespaces, every outcome is hash-chained into the audit log inside the
+same transaction, and retrieval is a read-only cartridge — while the
+trust-ranked dispute quarantine its documents describe has a schema, a
+review service and tests, and no producer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Halofy — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Halofy",
+      "description": "A self-hostable memory kernel for an organization's agents in which identity comes only from the API key, every read compiles to an enumerated list of ancestor namespaces, every outcome is hash-chained into the audit log inside the same transaction, and retrieval is a read-only cartridge \u2014 while the trust-ranked dispute quarantine its documents describe has a schema, a review service and tests, and no producer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Governed custody, delegated recall</p>
+          <h1>Halofy</h1>
+          <p class="document-deck">A self-hostable memory kernel for an
+organization's agents in which identity comes only from the API key,
+every read compiles to an enumerated list of ancestor namespaces, every
+outcome is hash-chained into the audit log inside the same transaction,
+and retrieval is a read-only cartridge — while the trust-ranked dispute
+quarantine its documents describe has a schema, a review service and
+tests, and no producer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/halofyai/halofy">
+              <span>Source</span>
+              <strong>halofyai/halofy</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/halofyai/halofy/commit/3763e64f521df8dc58d00d4632e732e702dd76ef" title="3763e64f521df8dc58d00d4632e732e702dd76ef">
+              <span>Analyzed revision</span>
+              <code>3763e64f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/halofyai--halofy" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>halofyai--halofy</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Halofy is a memory kernel for an organization's agents, published
+under AGPL-3.0-or-later with the retriever driver interface under
+Apache-2.0. It is about 96,000 lines of TypeScript in
+<code>kernel/src</code> with 208 test files, released as twelve commits
+between 22 and 24 August 2026; the initial commit's message calls it the
+"public release of the Halofy memory kernel", and
+<code>OPEN-SOURCE-SCOPE.md</code> names what stays in a commercial
+product — an AI gateway, billing, managed channels, a hosted connector
+catalogue and the tuned extraction prompts.</p>
+<p>The design is a governance boundary with memory behind it, and the
+boundary is built with unusual care:</p>
+<ul>
+<li><strong>Identity is server-owned.</strong> The namespace, actor and
+role come from the API key, and no MCP tool schema accepts an identity
+field.</li>
+<li><strong>Every read is an enumerated ancestor list.</strong> A caller
+in <code>acme/eng/platform</code> sees rows in exactly
+<code>acme</code>, <code>acme/eng</code> and
+<code>acme/eng/platform</code>, compiled as a bound <code>IN</code>
+list; subtree operations use escaped <code>LIKE … ESCAPE '\'</code>
+anchored on <code>/</code>, with regression tests for <code>_</code> and
+<code>%</code> in namespace names.</li>
+<li><strong>Every outcome audits, in the same transaction.</strong>
+Writes, faults, allocations, denials, misses and errors append to
+<code>audit_log</code>, and each row carries a sha256 hash chained to
+the previous one.</li>
+<li><strong>Retrieval is delegated and read-only.</strong> A driver
+receives a <code>ScopedView</code> and returns references; a Mem0
+sidecar driver may only reorder the candidates it was sent. A six-check
+conformance kit tests any driver against that contract.</li>
+<li><strong>Corrections never overwrite.</strong> Supersedence closes
+the prior row's <code>t_valid_to</code> and links it; the one delete is
+<code>mem_forget</code>, which writes tombstones and an ed25519-signed
+deletion certificate.</li>
+</ul>
+<p>The finding that matters most is a documented mechanism with no
+producer. The architecture guide and the write path's own comment
+describe a trust-ranked quarantine: a lower-trust write that contradicts
+a higher-trust fact lands as <code>status = 'disputed'</code>, invisible
+to reads, with an open <code>fact_disputes</code> row for a reviewer.
+The migration adds the status, <code>disputes/index.ts</code> implements
+the review state machine, and read paths filter on it. Nothing in
+<code>kernel/src</code> inserts a <code>fact_disputes</code> row or sets
+a memory row to <code>disputed</code>; the only inserts are in
+<code>test/disputes.test.ts:107</code> and
+<code>test/feedback.test.ts:82</code>. The constant
+<code>SUPERSEDE_MIN_COSINE = 0.75</code> that names the write path's
+"synchronous band" is declared at <code>write/index.ts:134</code> and
+read nowhere. What does run is an out-of-band conflict autopilot that
+asks a model whether neighbouring facts contradict, settles the result
+by the same trust lattice, and queues what it may not settle for a
+person — and it runs only when an Azure OpenAI conflict deployment is
+configured.</p>
+<p>Four marks: <code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a <code>memory_objects</code> row in L2, the warm tier,
+or a concept document in L3, the cold tier. An L2 row carries four
+times: <code>event_time</code> (when the described thing happened),
+<code>assertion_time</code> (when the system was told),
+<code>t_valid_from</code> and <code>t_valid_to</code> (the interval over
+which the row is believed). "Current" means
+<code>t_valid_to IS NULL</code>.</p>
+<p>A row becomes memory through the write path and stops being current
+in one of four ways:</p>
+<ul>
+<li><strong>Exact dedupe</strong> keeps the existing row and bumps its
+access telemetry.</li>
+<li><strong>Deterministic refresh</strong> — a pointer fact or a
+cache-refresh write from the same source document — supersedes its stale
+predecessor: the old row's validity closes and the new row's
+<code>supersedes</code> points at it, in one transaction guarded against
+a concurrent writer closing the same victim.</li>
+<li><strong>A model-judged contradiction</strong> is settled by the
+conflict autopilot using the provenance lattice
+<code>manual 50 &gt; document 40 = live-fetch 40 &gt; consolidation 30 &gt; swap-import 20 &gt; conversation 10</code>,
+or queued for a person, depending on the namespace's
+<code>conflictReview</code> dial.</li>
+<li><strong>Compliance erasure</strong> hard-deletes the row and leaves
+a tombstone keyed on its id.</li>
+</ul>
+<p>Nothing in that list records a rejected <em>value</em>. Tombstones
+name erased ids; an erased fact asserted again is a new row. So
+<code>tombstone</code> is withheld.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a fact stops being current, with the documented dispute quarantine that no code path reaches</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a fact stops being current, with the documented dispute quarantine that no code path reaches
+flowchart TB
+    W[&quot;mem_write&quot;] --&gt; X[&quot;extract, verify,&lt;br/&gt;resolve entities, classify&quot;]
+    X --&gt; D{&quot;normalized text equals&lt;br/&gt;a current row in own namespace?&quot;}
+    D --&gt;|&quot;yes&quot;| DUP[&quot;dedupe: bump access,&lt;br/&gt;audit deduplicated=1&quot;]
+    D --&gt;|&quot;no&quot;| P{&quot;pointer or cache refresh&lt;br/&gt;of the same source?&quot;}
+    P --&gt;|&quot;yes&quot;| SUP[&quot;close prior t_valid_to,&lt;br/&gt;insert with supersedes&quot;]
+    P --&gt;|&quot;no&quot;| INS[&quot;insert current row&lt;br/&gt;+ audit row, one transaction&quot;]
+    INS --&gt; AP[&quot;conflict autopilot&lt;br/&gt;after the write&quot;]
+    AP --&gt;|&quot;no Azure OpenAI judge&quot;| DEF[&quot;deferred: judge_unavailable&quot;]
+    AP --&gt;|&quot;judge confirms contradiction&quot;| DIAL{&quot;conflictReview dial&lt;br/&gt;and trust ranks&quot;}
+    DIAL --&gt;|&quot;settled&quot;| CLOSE[&quot;close loser&#39;s validity,&lt;br/&gt;link, audit&quot;]
+    DIAL --&gt;|&quot;needs a person&quot;| FIND[&quot;conflict finding queue&quot;]
+    FIND --&gt;|&quot;reviewer keeps one side&quot;| CLOSE
+    GHOST[&quot;status disputed +&lt;br/&gt;fact_disputes row&quot;] -.-&gt;|&quot;no producer in kernel/src&quot;| REVIEW[&quot;dispute review service&quot;]
+    CURRENT[(&quot;current rows&quot;)] --&gt; FORGET[&quot;mem_forget&quot;]
+    FORGET --&gt; TOMB[&quot;hard delete, tombstone per id,&lt;br/&gt;signed certificate&quot;]
+
+    style GHOST fill:#f4e2bd,stroke:#b8860b
+    style REVIEW fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>The validity interval is kept honestly: supersedence never mutates
+content, and <code>mem_search</code> with <code>validOnly: false</code>
+opens a lane that includes superseded rows. But no read takes a time and
+returns what was believed then — the reads filter on
+<code>t_valid_to IS NULL</code> or drop the filter — so
+<code>bitemporal</code> is withheld. The <code>t_valid_from &lt;=</code>
+comparisons in <code>skills/store.ts:485</code> and
+<code>skills/vetting.ts:697</code> version skill records, not
+memory.</p>
+<p><code>trust_state</code> is withheld for the unwired reason above:
+the one status that judges a memory contestable, <code>disputed</code>,
+is never written. <code>archived</code> is written when a source
+document is removed, together with a closed <code>t_valid_to</code>
+(<code>ingest/kernel-store.ts:483-617</code>,
+<code>knowledge-bases/sources.ts:208</code>), and by an admin's
+<code>archive_warm</code> placement action
+(<code>movement/index.ts:453</code>), so it records what happened to a
+source or where a row lives rather than a judgement about whether the
+fact holds.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>kernel/</code> is one Node 22 package: the kernel library, an
+HTTP server, an MCP server over stdio and <code>/mcp</code>, a CLI, and
+a frameworkless console served by the HTTP server.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Where</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Syscalls</td>
+<td><code>src/syscalls/index.ts</code>, <code>src/kernel.ts</code></td>
+<td>Role check, effective policy, tenant gate, token-bucket rate limit,
+op body, audit</td>
+</tr>
+<tr>
+<td>Index</td>
+<td><code>src/index/index.ts</code></td>
+<td>Every read and write of <code>memory_objects</code>; the ACL
+predicate</td>
+</tr>
+<tr>
+<td>Write path</td>
+<td><code>src/write/</code></td>
+<td>Extraction, verification, entities, classification, dedupe,
+insert</td>
+</tr>
+<tr>
+<td>Retrieval</td>
+<td><code>src/driver/</code>, <code>src/retrieval/</code></td>
+<td><code>ScopedView</code>, baseline, graph and Mem0 drivers, BM25 and
+hybrid merge</td>
+</tr>
+<tr>
+<td>Allocator</td>
+<td><code>src/allocator/</code></td>
+<td>Token-budgeted working sets</td>
+</tr>
+<tr>
+<td>Fault</td>
+<td><code>src/fault/</code></td>
+<td>L2 then L3 on absolute scores</td>
+</tr>
+<tr>
+<td>Cold tier</td>
+<td><code>src/cold/</code></td>
+<td>Concepts from markdown with YAML frontmatter, encrypted private
+bodies</td>
+</tr>
+<tr>
+<td>Conflicts</td>
+<td><code>src/conflict-autopilot/</code>,
+<code>src/conflict-scans/</code></td>
+<td>Model-judged contradictions, trust-ranked settlement, findings
+queue</td>
+</tr>
+<tr>
+<td>Consolidation</td>
+<td><code>src/consolidation/</code></td>
+<td>Knowledge proposals and their review</td>
+</tr>
+<tr>
+<td>Erasure</td>
+<td><code>src/erasure/</code>, <code>src/erasure-fence.ts</code></td>
+<td><code>mem_forget</code>, tombstones, certificates, a generation
+fence against concurrent writes</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td><code>src/audit/</code></td>
+<td>Hash-chained append-only log</td>
+</tr>
+<tr>
+<td>Schema</td>
+<td><code>src/db/migrations.ts</code></td>
+<td>4,632 lines of numbered migrations</td>
+</tr>
+</tbody>
+</table></div>
+<p>The database is the authority. Without <code>DATABASE_URL</code> the
+kernel embeds PGlite with pgvector — the same schema and SQL — so the
+demo and the test suite need no server, no key and no network: a
+<code>StubLlm</code> and a 256-dimension <code>HashEmbedder</code> stand
+in for models. Warm-store mirrors and retriever sidecars are caches; an
+unreachable mirror writes to a durable outbox and the syscall still
+succeeds.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Nothing external to start:</strong>
+<code>npm ci &amp;&amp; npm run demo</code> boots the real kernel on
+embedded PGlite. Durable deployments use Postgres with pgvector, Docker
+Compose or the Kubernetes manifests in <code>kernel/deploy/</code>.</li>
+<li><strong>Keys:</strong>
+<code>cli.ts keygen &lt;namespace&gt; &lt;actor&gt; &lt;role&gt;</code>
+mints an API key; MCP and HTTP resolve everything from it.</li>
+<li><strong>Models are optional and degrade loudly.</strong> Without an
+LLM, writes store content verbatim and classification still runs;
+without an embedder, search falls back to BM25 and audits
+<code>driver=bm25-degraded</code>; a dead driver sidecar falls back to
+baseline and audits <code>driver_fallback</code>.</li>
+<li><strong>Two capabilities need specific configuration:</strong> the
+conflict judge needs an Azure OpenAI conflict deployment
+(<code>kernel.ts:1414-1427</code>), and certificates stay verifiable
+across restarts only with <code>HALOMEM_SIGNING_KEY</code> set;
+otherwise an ephemeral key is generated at boot with a warning.</li>
+<li><strong>Hand-repairable:</strong> it is plain Postgres with a
+readable schema, but a hand-edited <code>memory_objects</code> row
+bypasses the audit chain the system exists to keep.</li>
+</ul>
+<p>The screen of this checkout found no auto-running configuration, no
+build-time execution path, no manifests inside the seven-day cooldown
+and two unpinned surfaces across seven scanned files, plus
+<code>AGENTS.md</code> read as data. Nothing was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Identity</strong> — API keys resolve to an
+<code>Identity</code> in <code>src/auth/</code>; the MCP tools in
+<code>src/mcp/tools.ts</code> take the identity from context, never from
+arguments.</li>
+<li><strong>ACL</strong> — <code>namespaceAncestors</code> at
+<code>src/index/index.ts:75</code>; every read method binds the list
+into <code>namespace IN (…)</code> with <code>status = 'active'</code>
+and, by default, <code>t_valid_to IS NULL</code> (e.g.
+<code>:459-462</code>). <code>readScopeSql</code> (<code>:96</code>)
+adds governed subtree grants as escaped prefix predicates and returns
+<code>FALSE</code> when a scope grants nothing.</li>
+<li><strong>Write</strong> — <code>WritePath.write</code> in
+<code>src/write/index.ts</code>: extraction unless
+<code>hints.verbatim</code> (<code>:330</code>), exact dedupe against
+the caller's own namespace (<code>:560-597</code>), deterministic
+pointer or cache refresh as the only in-path supersedence
+(<code>:600-611</code>), insert plus <code>closeValidity</code> in one
+transaction with the audit row (<code>:714</code>).
+<code>TRUST_RANK</code> is at <code>:156</code>; the comment above it
+(<code>:150-155</code>) describes a quarantine to <code>disputed</code>
+that the file does not implement.</li>
+<li><strong>Conflict autopilot</strong> —
+<code>src/conflict-autopilot/index.ts</code>: each committed fact judged
+once against eight nearest neighbours above cosine 0.6;
+<code>autoDecision</code> (<code>:228-248</code>) settles by rank under
+<code>auto</code>, only for an outranking write under
+<code>lower-trust</code> (the default,
+<code>policy/store.ts:231</code>), and never under <code>all</code>.
+Kicked after writes (<code>kernel.ts:1798</code>).</li>
+<li><strong>Conflict findings</strong> —
+<code>src/conflict-scans/index.ts</code>: manual scans and autopilot
+findings in <code>conflict_scan_findings</code>; resolution
+(<code>:1160-1215</code>) claims the finding, closes the retired fact's
+validity with a guard, links it, dismisses other findings citing it, and
+audits in one transaction.</li>
+<li><strong>Disputes</strong> — <code>src/disputes/index.ts</code>
+resolves <code>fact_disputes</code> rows with <code>uphold-new</code>,
+<code>keep-old</code>, <code>edit</code> or <code>both-valid</code>; no
+source file creates one.</li>
+<li><strong>Consolidation</strong> —
+<code>src/consolidation/index.ts</code>: <code>prepare</code>
+(<code>:312</code>) drafts proposals, inserted as
+<code>pending_review</code> (<code>:394</code>); <code>reject</code>
+(<code>:440</code>), <code>edit</code> (<code>:471</code>) and
+<code>approve</code> (<code>:545</code>) record
+<code>proposal_decisions</code> and publish a new immutable knowledge
+version on approval.</li>
+<li><strong>Search</strong> — <code>kernel.memSearch</code>
+(<code>kernel.ts:8148</code>) → policy-selected driver over
+<code>buildScopedView</code> (<code>src/driver/view.ts</code>).</li>
+<li><strong>Fault</strong> — <code>src/fault/index.ts</code>: L2
+accepted at an absolute <code>0.6 · cosine + 0.4 · BM25</code> of at
+least 0.35 (<code>:50</code>, <code>:401</code>), else L3 concepts at
+0.15 (<code>:58</code>), else a miss.</li>
+<li><strong>Erasure</strong> — <code>src/erasure/index.ts</code>, called
+from <code>memForget</code> (<code>syscalls/index.ts:1677</code>).</li>
+<li><strong>Audit</strong> — <code>appendAuditEventTx</code> at
+<code>src/audit/index.ts:110</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_objects</code> (<code>db/migrations.ts:210-231</code>,
+widened later): <code>id</code>, <code>namespace</code>,
+<code>scope</code> (<code>user</code>, <code>assistant</code>,
+<code>team</code>, <code>org</code>), <code>tier</code>,
+<code>backend_ref</code>, <code>content</code>, <code>type</code>,
+<code>confidence</code>, <code>event_time</code>,
+<code>assertion_time</code>, <code>t_valid_from</code>,
+<code>t_valid_to</code>, <code>supersedes</code> (a foreign key into the
+same table), <code>provenance</code> JSONB, <code>ttl_seconds</code>,
+<code>last_accessed</code>, <code>access_count</code>,
+<code>fault_count</code>, <code>status</code> (<code>active</code>,
+<code>archived</code>, <code>tombstoned</code>, and
+<code>disputed</code> since migration 24), and an inline
+<code>vector(dim)</code> embedding. Later migrations add
+<code>classification</code> and <code>source_access</code> JSONB
+(<code>:997</code>, <code>:999</code>), a generated
+<code>search_document</code> tsvector, derived entities and
+model-generated display titles.</p>
+<p>Beside it: <code>concepts</code> and
+<code>knowledge_concepts</code>/<code>knowledge_versions</code> for L3,
+<code>entity_registry</code>, <code>policies</code> and policy
+documents, <code>tombstones</code> (<code>:366</code>:
+<code>memory_id</code>, <code>namespace</code>, <code>reason</code>,
+<code>erased_at</code>, <code>certificate_id</code>),
+<code>deletion_certificates</code>, <code>knowledge_proposals</code>
+with <code>proposal_decisions</code>, <code>fact_disputes</code>,
+<code>conflict_scan_findings</code>, <code>memory_pins</code>, segments
+and forks for sharing, and the audit tables.</p>
+<p><strong>Provenance</strong> is a list of entries naming a source
+(<code>manual</code>, <code>document</code>, <code>live-fetch</code>,
+<code>consolidation</code>, <code>swap-import</code>,
+<code>conversation</code>), an actor, and for connector content the
+source id, document key and content hash. It is what the trust lattice
+ranks.</p>
+<p><strong>Scope.</strong> The namespace hierarchy is the tenancy model.
+A child namespace reads its parents' facts but a dedupe or supersedence
+only ever targets rows in the caller's own namespace, so a team write
+can never close an organization fact it can see. The <code>scope</code>
+column records who a fact is about and is not the access predicate.
+Sharing works through explicit mounts, which add
+<code>OR id IN (&lt;mounted ids&gt;)</code> to the predicate
+(<code>index/index.ts:494</code>).</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three read surfaces, all through the same scoped index.</p>
+<p><strong><code>mem_search</code></strong> routes to the driver the
+namespace's policy selects. The baseline driver over-fetches each lane
+at <code>max(2k, 10)</code>, runs pgvector cosine and in-memory BM25
+over the scoped candidates, min-max normalizes each lane, merges
+<code>0.5 · vector + 0.5 · BM25</code>, deduplicates by ref, and trims
+greedily to the token budget while keeping the top hit. The graph driver
+adds entity-fact lanes. The Mem0 driver posts candidates to a Python
+sidecar and drops any ref the sidecar returns that it was not sent
+(<code>src/driver/mem0.ts</code>). When a search finds nothing locally,
+<code>live: "auto"</code> may start a live confirmation against the
+source, whose verified results land in a write-back cache.</p>
+<p><strong><code>mem_assemble</code></strong> returns ranked blocks,
+never a prompt: policy directives first, capped at 35% of the budget but
+not reserving it; governed pins; recently accessed current rows that
+have been accessed at least once; then a hybrid search on the task hint.
+A block that does not fit is skipped rather than truncated, and blocks
+sort by a stable key so the same working set serializes identically —
+which keeps an upstream prompt cache warm.</p>
+<p><strong><code>mem_fault</code></strong> answers a question the
+working set could not. Because driver scores are min-max normalized per
+query, the top hit is always near 1.0; the fault handler recomputes an
+absolute score so the L2 floor means something and L3 is reachable. The
+tier that answered is returned and audited, and an L3 hit or miss bumps
+the best L2 candidate's <code>fault_count</code> as a consolidation
+signal.</p>
+<p>The driver boundary is enforced mechanically.
+<code>conformance/index.ts</code> runs <code>finds-planted-fact</code>,
+<code>respects-scoped-view</code>, <code>latency-envelope</code>,
+<code>budget-discipline</code>, <code>read-only</code> and
+<code>deterministic-k</code> against any cartridge.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>mem_write</code> is synchronous by default and runs extraction
+inside the call when a model is configured, so an agent writing a
+transcript waits on a model round trip; <code>{"async": true}</code>
+returns a ticket and <code>mem_write_status</code> polls it. The row is
+retrievable when the transaction commits.</p>
+<p>Imports get no shortcut. Connectors — filesystem, Postgres, Obsidian,
+CSV — and <code>swap-import</code> feed the same path, so imported
+content is extracted, verified, classified and audited like
+conversation.</p>
+<p>Verification rejects candidates with a reason in
+<code>result.rejected</code>, and a non-verbatim write carrying
+provenance whose candidate is a low-information fact is rejected and
+audited as <code>denied</code> before insert
+(<code>write/index.ts:433-437</code>). Classification runs on every
+persisted fact, including the verbatim brownout path, so no fact loses
+its sensitivity label by taking a degraded route.</p>
+<p>Semantic conflicts are deliberately kept out of the write
+transaction. After commit, the autopilot compares the new fact with its
+nearest neighbours by embedding — not by entity annotation, which a
+batch scan would need — and asks the judge. Under the default
+<code>lower-trust</code> dial a write that outranks the incumbent
+supersedes it unattended; everything else becomes a finding. With no
+judge configured the pass records <code>judge_unavailable</code> and
+conflicting facts coexist as current rows, which the architecture guide
+says outright for the stub lane.</p>
+<p>Background work is bounded and leased: the autopilot is single-flight
+and lease-fenced across replicas, consolidation runs produce proposals
+rather than publishing, and no pass rewrites the whole store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fifteen MCP tools: <code>mem_write</code>,
+<code>mem_write_status</code>, <code>mem_read</code>,
+<code>mem_search</code>, <code>mem_assemble</code>,
+<code>mem_fault</code>, <code>mem_live_result</code>,
+<code>mem_pin</code>, <code>mem_unpin</code>, <code>mem_stats</code>,
+<code>mem_forget</code>, <code>mem_policy</code>,
+<code>mem_policy_ack</code>, <code>mem_share</code> and
+<code>mem_manifest</code>. The same syscalls are
+<code>POST /v1/mem/&lt;name&gt;</code> over HTTP and commands in the
+CLI. Roles gate them: <code>agent</code> and <code>member</code> get
+syscalls, an <code>auditor</code> reads but cannot write,
+<code>admin</code> and <code>owner</code> manage their subtree.</p>
+<p>Agency is bounded by the key rather than the prompt. A model can
+write and search as much as its rate limit allows, but it cannot name a
+namespace, cannot reach a sibling, and cannot erase outside its subtree.
+<code>kernel/integrations/</code> carries a Claude Code integration and
+a <code>halomem-sync</code> package.</p>
+<p>The console is the human surface: access and teams, sources,
+policies, knowledge proposals, conflicts, audit, alerts, skills,
+connected apps and export, backed by <code>/v1/admin/*</code>
+routes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The access boundary is the strongest part.</strong> Identity
+from the key, an enumerated ancestor list rather than a pattern for the
+base rule, escaped and slash-anchored patterns where a subtree is
+genuinely needed, and a <code>FALSE</code> default when a governed scope
+grants nothing. The architecture guide says this class of bug "has been
+found twice in this codebase by adversarial review" and asks for a
+<code>_</code>, <code>%</code> and <code>\</code> regression test on
+every namespace predicate; the suite has them
+(<code>access-grants.test.ts:253</code>,
+<code>access-projection.test.ts:501</code>,
+<code>auth.test.ts:210</code>,
+<code>company-file-store.test.ts:288</code>).</p>
+<p><strong>The audit trail is complete by construction and
+tamper-evident.</strong> A committed fact with no audit row is not a
+reachable state where a transaction handle exists, and
+<code>m7-audit-chain.test.ts</code> asserts that mutating a row,
+deleting the newest hashed row, or deleting all of them is detected. The
+<code>purpose</code> column holds query text truncated to 200 characters
+and is suppressed for turns marked sensitive.</p>
+<p><strong>Erasure is provable, within limits.</strong> A certificate
+enumerates the erased ids and derived usage rows and is signed with
+ed25519; tampering with the erased count fails verification in
+<code>erasure.test.ts</code>. The audit rows about erased content
+survive it by design. Without <code>HALOMEM_SIGNING_KEY</code> a restart
+makes old certificates unverifiable.</p>
+<p><strong>Brownouts never become permits.</strong> Model, embedder,
+driver and mirror failures degrade and are audited; an ACL evaluation,
+policy denial or classification failure is an error.</p>
+<p><strong>The documented quarantine is not there.</strong> A reader of
+<code>docs/architecture.md</code> or of the <code>TRUST_RANK</code>
+comment would expect a lower-trust contradicting write to be withheld
+from reads pending review. Searched with
+<code>rg -n "INSERT INTO fact_disputes" kernel/src kernel/test</code>
+and <code>rg -n "'disputed'" kernel/src</code>: the inserts are test
+fixtures, and every source hit reads or resolves the status. The live
+mechanism is the autopilot, which under <code>lower-trust</code> leaves
+both facts current and queues a finding — so an underranking
+contradiction stays readable until a person decides. That is a weaker
+guarantee than the document states, and it is the one that ships.</p>
+<p><strong>Injection.</strong> Content from connectors is classified for
+sensitivity and secrets and ranked low only when its provenance is
+<code>conversation</code>. Nothing separates an instruction embedded in
+a synced document from a fact; the trust lattice ranks sources, not
+content.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>2,563 <code>it</code>/<code>test</code> cases across 208 test
+files</strong> in <code>kernel/test</code>, hermetic on PGlite,
+<code>StubLlm</code> and <code>HashEmbedder</code>. The README claims
+2,678 tests across 205 files and six of six conformance checks; neither
+was run for this report.</p>
+<p>The negative assertions are the kind the atlas counts, with controls.
+<code>cross-tenant.test.ts</code> plants facts in <code>acme</code> and
+<code>globex</code>, then asserts through every read path the file names
+— read by id, candidates, vector search, top-accessed, three drivers,
+stats, audit listing, fault, scorecards, import and fragmentation — that
+a <code>globex</code> caller sees none of the <code>acme</code> facts —
+and, at <code>:183</code>, that its own candidate set is non-empty, so
+an empty result cannot pass. <code>erasure.test.ts:135</code> asserts
+each erased id is absent from a vector search on its own content while
+another actor's fact in the same namespace survives, and
+<code>:384</code> that an out-of-subtree target erases nothing.</p>
+<p>The dispute tests are the caveat. <code>test/disputes.test.ts</code>
+seeds <code>fact_disputes</code> and <code>disputed</code> rows by SQL
+and exercises the resolution state machine thoroughly; nothing tests
+that the write path creates one, because it does not.</p>
+<p><strong>Benchmarks:</strong>
+<code>kernel/scripts/bench-retrieval.mjs</code> ingests a LoCoMo,
+LongMemEval or ConvoMem JSONL through the real write path and scores
+evidence-turn recall over <code>mem_search</code>. No result files are
+committed (<code>git ls-files | grep -i 'bench\|result\|score'</code>
+returns only the script). No paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve identity from the credential, and refuse it in the
+body.</strong> An MCP schema with no namespace field cannot be talked
+into another tenant.</li>
+<li><strong>Compile the base ACL to an enumerated list, not a
+pattern.</strong> Keep <code>LIKE</code> for subtree operations only,
+escape it, anchor it on the separator, and test it with <code>_</code>,
+<code>%</code> and <code>\</code>.</li>
+<li><strong>Put the audit row in the transaction, and chain it.</strong>
+Completeness by construction plus a hash chain makes the log evidence
+rather than a log.</li>
+<li><strong>Hand retrievers a view, not a database.</strong> A read-only
+cartridge interface with a conformance kit lets the ranking change
+without touching the boundary.</li>
+<li><strong>Recompute absolute scores before a tier decision.</strong>
+Min-max normalized scores make every floor meaningless.</li>
+<li><strong>Pack policy first, but cap it rather than reserve
+it.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Documenting a gate the write path does not run.</strong> The
+quarantine, its status, its review service and its tests all exist; the
+insert does not. Delete the comment or wire the producer, and test the
+write, not the fixture.</li>
+<li><strong>Named thresholds nothing reads.</strong>
+<code>SUPERSEDE_MIN_COSINE</code> looks like policy and is dead
+code.</li>
+<li><strong>Making contradiction handling depend on one vendor's
+deployment.</strong> Without an Azure OpenAI conflict deployment,
+contradictory facts coexist indefinitely and nothing says so outside an
+audit detail line.</li>
+<li><strong>A validity interval with no as-of read.</strong> The data to
+answer "what did we believe on 1 March" is stored and no query asks
+it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an organization putting several agents on shared context
+that needs per-team isolation, compliance erasure with evidence, and an
+audit trail its security function can read — and that can run Postgres.
+The retrieval is replaceable by design, so a team that already has a
+retriever can mount it behind the boundary.</p>
+<p>It is a platform to operate, not a library: fifteen syscalls, a
+console, roles, policies, key management, a signing key to custody, and
+an AGPL licence on the kernel. A single agent wanting a personal memory
+will find most of it overhead.</p>
+<p>Walk away, or plan to finish it, if you need contradictions
+quarantined at write time rather than queued after the fact.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Was the dispute producer left in the commercial
+tree?</strong> The public history begins at the release commit, and the
+producer is absent there too.</li>
+<li><strong>Does consolidation produce proposals on the stub
+model?</strong> The engine wraps the configured LLM; what the stub
+drafts was not traced.</li>
+<li><strong>What does <code>live: "auto"</code> do on a self-hosted
+build</strong> without the commercial federation lane the scope document
+names?</li>
+<li><strong>Will the validity interval get an as-of read?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<p><strong>Boundary</strong></p>
+<ul>
+<li><code>kernel/src/auth/</code>, <code>kernel/src/iam/</code>,
+<code>kernel/src/tenancy/</code> — keys, roles, tenants</li>
+<li><code>kernel/src/index/index.ts</code> —
+<code>namespaceAncestors</code>, <code>readScopeSql</code>, every
+<code>memory_objects</code> query</li>
+<li><code>kernel/src/driver/view.ts</code> —
+<code>buildScopedView</code></li>
+<li><code>kernel/src/syscalls/index.ts</code> — the syscall prologue and
+<code>memForget</code></li>
+<li><code>kernel/src/mcp/tools.ts</code> — MCP tool definitions</li>
+</ul>
+<p><strong>Write and conflicts</strong></p>
+<ul>
+<li><code>kernel/src/write/index.ts</code> — <code>WritePath</code>,
+<code>TRUST_RANK</code>, <code>SUPERSEDE_MIN_COSINE</code></li>
+<li><code>kernel/src/conflict-autopilot/index.ts</code> —
+<code>autoDecision</code>, <code>ConflictAutopilot</code></li>
+<li><code>kernel/src/conflict-scans/index.ts</code>,
+<code>classifier.ts</code> — findings and the judge</li>
+<li><code>kernel/src/disputes/index.ts</code> — the unreached dispute
+review service</li>
+<li><code>kernel/src/consolidation/index.ts</code> — knowledge
+proposals</li>
+</ul>
+<p><strong>Read</strong></p>
+<ul>
+<li><code>kernel/src/driver/baseline.ts</code>, <code>graph.ts</code>,
+<code>mem0.ts</code></li>
+<li><code>kernel/src/allocator/</code>,
+<code>kernel/src/fault/index.ts</code>,
+<code>kernel/src/fault/scoring.ts</code></li>
+<li><code>kernel/src/cold/index.ts</code></li>
+<li><code>kernel/src/conformance/index.ts</code></li>
+</ul>
+<p><strong>Erasure and audit</strong></p>
+<ul>
+<li><code>kernel/src/erasure/index.ts</code>,
+<code>certificate.ts</code>, <code>keys.ts</code>;
+<code>kernel/src/erasure-fence.ts</code></li>
+<li><code>kernel/src/audit/index.ts</code></li>
+</ul>
+<p><strong>Schema and docs</strong></p>
+<ul>
+<li><code>kernel/src/db/migrations.ts</code></li>
+<li><code>docs/architecture.md</code>, <code>docs/driver-kit.md</code>,
+<code>OPEN-SOURCE-SCOPE.md</code></li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>kernel/test/cross-tenant.test.ts</code>,
+<code>erasure.test.ts</code>, <code>access-grants.test.ts</code>,
+<code>m7-audit-chain.test.ts</code>, <code>consolidation.test.ts</code>,
+<code>disputes.test.ts</code>,
+<code>conflict-autopilot.test.ts</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>rg -n "INSERT INTO fact_disputes" kernel/src kernel/test</code></li>
+<li><code>rg -n "'disputed'" kernel/src</code></li>
+<li><code>rg -n "SUPERSEDE_MIN_COSINE" kernel</code></li>
+<li><code>rg -n -i "asOf|as_of|validAt|t_valid_from &lt;=" kernel/src</code></li>
+<li><code>rg -n "DELETE FROM audit_log|UPDATE audit_log" kernel/src</code></li>
+<li><code>git ls-files | grep -i 'bench\|result\|score'</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/halofyai/halofy/commit/3763e64f521df8dc58d00d4632e732e702dd76ef"><code class="commit-id" title="3763e64f521df8dc58d00d4632e732e702dd76ef">3763e64f…</code></a>
+— first reading, at a commit dated 24 August 2026. Screened before
+opening: no auto-running configuration, no build-time execution path, no
+manifests inside the seven-day cooldown, two unpinned surfaces, and
+<code>AGENTS.md</code> read as data. Nothing was installed or run; test
+counts were counted from the files, not from a run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

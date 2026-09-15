@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 457 reports.</strong></p>
+<p><strong>This page covers all 458 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16532,6 +16532,50 @@ smallest durable form of a rejected-value tombstone.</li>
 subsystem of a framework expecting Postgres, a vector store, an object
 store, a document-reader service and a provider — what transfers is the
 pending gate and the fingerprint, both small enough to reimplement.</li>
+</ul>
+<h3 id="halofy"><a
+href="../systems/halofy/"><code>halofy</code></a></h3>
+<ul>
+<li>Best idea: <strong>identity from the key, and the ACL as an
+enumerated list.</strong> Namespace, actor and role are resolved from
+the API key and no MCP schema accepts them; every read binds the key's
+namespace and its <code>/</code>-split ancestors into
+<code>namespace IN (…)</code>, keeping escaped, slash-anchored
+<code>LIKE</code> for subtree operations only, with <code>_</code> and
+<code>%</code> regression tests. Four marks:
+<code>scope_enforced</code>, <code>audit_log</code>,
+<code>human_review</code>, <code>negative_eval</code>.</li>
+<li>Second idea: <strong>the audit row commits with the change, and is
+chained.</strong> Writes, faults, allocations, denials, misses and
+errors each append a row carrying a sha256 hash of the previous one,
+inside the transaction that did the work, and tests assert that a
+mutated or deleted row is detected.</li>
+<li>Biggest risk: <strong>the documented dispute quarantine has no
+producer.</strong> The architecture guide and the write path's comment
+describe a lower-trust contradicting write landing as
+<code>disputed</code>, hidden from reads until reviewed; the status, the
+<code>fact_disputes</code> table, the review service and its tests
+exist, and only test fixtures insert one. What runs is an out-of-band
+autopilot that needs an Azure OpenAI conflict deployment, leaves an
+underranking contradiction readable, and queues it for a person.
+<code>SUPERSEDE_MIN_COSINE</code> is declared and read nowhere.</li>
+<li>Most reusable component: the retriever boundary — a
+<code>ScopedView</code> built only from ACL-scoped index methods,
+drivers that return references and may only reorder what they were sent,
+and a six-check conformance kit that includes
+<code>respects-scoped-view</code> and <code>read-only</code>.</li>
+<li>Maturity impression: AGPL-3.0-or-later with an Apache-2.0 driver
+interface, about 96,000 lines of TypeScript and 2,563 test cases over
+208 files, hermetic on embedded PGlite with a stub model and a hash
+embedder; published as twelve commits from 22 to 24 August 2026 with a
+written scope document naming what stays commercial.</li>
+<li>Study when: several agents share an organization's context under
+per-team isolation, and erasure and audit have to stand up to someone
+else's review.</li>
+<li>Do not copy when: you need contradictions withheld at write time, a
+point-in-time read over the validity intervals it stores, or something
+smaller than a platform with roles, policies, a console and a signing
+key to custody.</li>
 </ul>
         </article>
       </div>

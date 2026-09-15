@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 457 reports.**
+**This page covers all 458 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4005,3 +4005,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 578,241 lines of Go over 2,248 files at v0.8.0, of which the memory subsystem is 16,050 lines and 33 test files. Budgets are in runes with the reason for not using tokens written down; sensitive statements are refused rather than stored redacted to nothing; and the three tests that matter each pair a refusal with a positive control in the same function.
 - Study when: your system infers things about people and you have not decided what an unconfirmed inference is allowed to do, or you want the smallest durable form of a rejected-value tombstone.
 - Do not copy when: you want a memory you can lift. This is a subsystem of a framework expecting Postgres, a vector store, an object store, a document-reader service and a provider — what transfers is the pending gate and the fingerprint, both small enough to reimplement.
+
+### [`halofy`](../systems/halofy/)
+- Best idea: **identity from the key, and the ACL as an enumerated list.** Namespace, actor and role are resolved from the API key and no MCP schema accepts them; every read binds the key's namespace and its `/`-split ancestors into `namespace IN (…)`, keeping escaped, slash-anchored `LIKE` for subtree operations only, with `_` and `%` regression tests. Four marks: `scope_enforced`, `audit_log`, `human_review`, `negative_eval`.
+- Second idea: **the audit row commits with the change, and is chained.** Writes, faults, allocations, denials, misses and errors each append a row carrying a sha256 hash of the previous one, inside the transaction that did the work, and tests assert that a mutated or deleted row is detected.
+- Biggest risk: **the documented dispute quarantine has no producer.** The architecture guide and the write path's comment describe a lower-trust contradicting write landing as `disputed`, hidden from reads until reviewed; the status, the `fact_disputes` table, the review service and its tests exist, and only test fixtures insert one. What runs is an out-of-band autopilot that needs an Azure OpenAI conflict deployment, leaves an underranking contradiction readable, and queues it for a person. `SUPERSEDE_MIN_COSINE` is declared and read nowhere.
+- Most reusable component: the retriever boundary — a `ScopedView` built only from ACL-scoped index methods, drivers that return references and may only reorder what they were sent, and a six-check conformance kit that includes `respects-scoped-view` and `read-only`.
+- Maturity impression: AGPL-3.0-or-later with an Apache-2.0 driver interface, about 96,000 lines of TypeScript and 2,563 test cases over 208 files, hermetic on embedded PGlite with a stub model and a hash embedder; published as twelve commits from 22 to 24 August 2026 with a written scope document naming what stays commercial.
+- Study when: several agents share an organization's context under per-team isolation, and erasure and audit have to stand up to someone else's review.
+- Do not copy when: you need contradictions withheld at write time, a point-in-time read over the validity intervals it stores, or something smaller than a platform with roles, policies, a console and a signing key to custody.
