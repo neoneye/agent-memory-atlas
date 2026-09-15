@@ -7,10 +7,12 @@ page_kind: system
 source_name: "getzep/graphiti"
 source_url: https://github.com/getzep/graphiti
 archive_name: "getzep--graphiti"
-revision: 425bf2481b51437e43455e09d241c5f46e3d95f3
-revision_url: https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3
-analyzed_at: 2026-08-06
-capabilities: "bitemporal, scope_enforced"
+revision: c035afb7990b6077331a81e98b04efcfd9bf8184
+revision_url: https://github.com/getzep/graphiti/commit/c035afb7990b6077331a81e98b04efcfd9bf8184
+analyzed_at: 2026-09-15
+capabilities: "bitemporal"
+capability_evidence:
+  bitemporal: "entity edges carry world time and record time, and search filters on each | graphiti_core/edges.py (EntityEdge valid_at, invalid_at, created_at, expired_at), graphiti_core/utils/maintenance/edge_operations.py:538-570 resolve_edge_contradictions, graphiti_core/search/search_filters.py:55-67 SearchFilters and :120-161 edge_search_filter_query_constructor | extraction assigns valid_at and invalid_at from the episode; a contradicting fact sets the older edge's invalid_at to the new edge's valid_at and stamps expired_at with the time the graph learned it, keeping the edge; search accepts DateFilter groups on valid_at, invalid_at, created_at and expired_at, so a caller can ask which edges held at an instant and which the graph believed then | tests/utils/maintenance/test_edge_operations.py"
 stack_storage: "graph"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -20,7 +22,7 @@ matrix:
   retrieval: "BM25 + cosine + BFS across edges/nodes/episodes/communities; RRF/MMR/cross-encoder"
   write: "Episode ingestion, entity/edge extraction, resolution, temporal invalidation"
   update_delete: "Close `valid_at` intervals, expire edges, remove episodes"
-  scoping: "`group_id`, entity/edge types"
+  scoping: "`group_id` on every node and edge; search filters by `group_ids` only when the caller passes them, and FalkorDB maps a group to its own database"
   integration: "Python library, MCP, server"
   background: "Ingestion maintenance; saga summaries"
   trust: "Source episode UUIDs and bi-temporal history; no verified state"
@@ -66,7 +68,7 @@ flowchart TB
     New["A contradicting fact arrives"] --> Inv["Close the old interval:<br/>set invalid_at, keep the edge"]
     Inv --> Edge
     Edge --> Q["BM25 + cosine + BFS over<br/>edges, nodes, episodes, communities<br/>→ RRF / MMR / cross-encoder"]
-    Edge -.->|"history retained, so 'what did we<br/>believe last March' is answerable"| Hist["the strongest temporal<br/>correction model in the atlas"]
+    Edge -.->|"history retained, so 'what did we<br/>believe last March' is answerable"| Hist["closed intervals<br/>queryable by date filter"]
     Edge -.->|"and no claim is marked<br/>verified or rejected"| Gap["no trust state"]
 ```
 
@@ -138,7 +140,7 @@ Bulk ingestion reduces calls through combined extraction but documents a tradeof
 
 ## 8. Agent Integration
 
-The Python library is the primary surface. MCP and server packages expose graph operations to agents and applications. `group_id` is the main namespace and must be supplied consistently.
+The Python library is the primary surface. MCP and server packages expose graph operations to agents and applications. `group_id` is the main namespace and must be supplied consistently; the MCP server supplies a configured default.
 
 Search returns structured graph objects rather than a prebuilt prompt block. That is flexible for applications that want facts, entity summaries, or source episodes separately, but safe formatting, token budgeting, and injection fencing remain application responsibilities.
 
@@ -149,14 +151,16 @@ Strong safeguards:
 - source episode UUIDs on extracted facts;
 - retention of invalidated history;
 - explicit event-time and ingestion-time fields;
-- group-scoped reads and writes;
+- `group_id` stamped on every node and edge, with FalkorDB placing each group in its own database;
 - constraints and indexes per graph backend;
 - bounded concurrency helpers and retry-capable model clients;
 - validation of LLM-returned entity names against resolved nodes;
 - dropping self-edges;
 - extensive driver, search, extraction, dedupe, and temporal tests.
 
-Trust remains evidence-oriented rather than verification-oriented. A fact can be well sourced and still false. LLM entity resolution can merge distinct real-world entities; a bad merge then contaminates many neighboring facts. Group IDs are a filter boundary, but authorization must be enforced by the service around the library.
+Trust remains evidence-oriented rather than verification-oriented. A fact can be well sourced and still false. LLM entity resolution can merge distinct real-world entities; a bad merge then contaminates many neighboring facts. Group IDs are a filter the caller chooses: `Graphiti.search(group_ids=None)` and the underlying queries apply no group predicate when none is passed, so the library searches every group. That is why `scope_enforced` is not carried; authorization, and the decision to scope, belong to the service around the library.
+
+**Concurrent writes could cross groups until September.** `add_episode` and `add_episode_bulk` reassigned the shared `self.driver` whenever a group mapped to a different database, and a concurrent call for another group could swap it mid-ingestion, so episodes were persisted to the wrong FalkorDB graph with no error (#1676). Since `0.30.2` a request-scoped driver and client bundle is threaded through both paths (`_resolve_request_scope`, `graphiti.py:1013`), `clear_data` by group also removes Saga nodes, and Neo4j queries are routed to the configured database.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -220,6 +224,8 @@ For simpler personal memory, a graph may be needless complexity. Preserve source
 - `tests/`
 
 ## History
+
+**2026-09-15** — [`c035afb7990b6077331a81e98b04efcfd9bf8184`](https://github.com/getzep/graphiti/commit/c035afb7990b6077331a81e98b04efcfd9bf8184) — 45 commits on, 2026-09-11, graphiti-core 0.30.2. Screened before reading: no auto-run surface, four build-time execution points, one unpinned surface, three dependency surfaces inside the cooldown and two agent-instruction files read as data; nothing was installed or run. The temporal edge model is unchanged. The memory-relevant fixes: a request-scoped driver stops concurrent `add_episode` calls for different groups from writing into each other's FalkorDB graph (#1676); group-scoped `clear_data` now removes Saga nodes; Neo4j queries honour the configured database; prior node attributes survive when no entity type applies; `FactResult` returns source and target node ids and episodes; and the edge cross-encoder shortlist merges balanced. `scope_enforced` is withdrawn: search applies `group_ids` only when a caller passes them, and none is required. `bitemporal` kept with an evidence record. One mark.
 
 **2026-08-31** — [`425bf2481b51437e43455e09d241c5f46e3d95f3`](https://github.com/getzep/graphiti/commit/425bf2481b51437e43455e09d241c5f46e3d95f3) — citation audit at the same pin. The 2026-08-06 entry named only the FalkorDB driver as the source diff, understating a 44-file range that also reaches `graphiti.py`, `edge_db_queries.py`, `search_utils.py`, `community_operations.py`, three other drivers, the MCP server and three new test files; that entry is corrected. The load-bearing part of it holds — `edge_operations.py` and `node_operations.py` are untouched, and "24 commits on" is exact. No body text or mark changed.
 

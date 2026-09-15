@@ -182,7 +182,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`graphiti`](../systems/graphiti/)
 - Best idea: bi-temporal relationship edges that close validity intervals without erasing history.
-- Biggest risk: entity-resolution or invalidation mistakes reshape a large portion of the graph.
+- Biggest risk: entity-resolution or invalidation mistakes reshape a large portion of the graph; and `group_id` scopes a search only when the caller passes it.
 - Most reusable component: episode/evidence model plus temporal edge maintenance.
 - Maturity impression: substantial graph library with multiple drivers and deep search configuration.
 - Study when: facts, relationships, and their validity change over time.
