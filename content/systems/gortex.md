@@ -7,12 +7,12 @@ page_kind: system
 source_name: "zzet/gortex"
 source_url: https://github.com/zzet/gortex
 archive_name: "zzet--gortex"
-revision: 1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36
-revision_url: https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36
-analyzed_at: 2026-08-19
+revision: a4b5c4df50ff3256243990f5fe571eb190d05b22
+revision_url: https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22
+analyzed_at: 2026-09-15
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "the graph edge — a five-tier provenance label recording how the edge was resolved, distinct from its numeric confidence | internal/graph/edge.go | `Origin` is one of `lsp_resolved`, `lsp_dispatch`, `ast_resolved`, `ast_inferred` or `text_matched`; `EdgeTierScore` is the single shared tier→confidence mapping so a path score means the same thing across `flow_between`, `taint_paths` and `trace_path`, `MeetsMinTier` lets a caller refuse anything below a floor, and `ResolvedBy` collapses the five to lsp / ast / heuristic for display | internal/graph/extraction_gap_provenance_test.go"
+  trust_state: "the graph edge — a six-tier provenance label recording how the edge was resolved, distinct from its numeric confidence, whose lowest tier is withheld from queries by default | internal/graph/edge.go:695-712 | `Origin` is one of `lsp_resolved`, `lsp_dispatch`, `ast_resolved`, `ast_inferred`, `text_matched` or `speculative`. The last *ranks strictly below text_matched*, always carries `Meta[MetaSpeculative]=true`, and `MetaSpeculative` is documented as *the single source of truth for default-exclusion: any edge-returning surface drops these unless the caller opts in* — a discrete status used as a read filter; `EdgeTierScore` is the single shared tier→confidence mapping so a path score means the same thing across `flow_between`, `taint_paths` and `trace_path`, `MeetsMinTier` lets a caller refuse anything below a floor, and `ResolvedBy` collapses the tiers to lsp / ast / heuristic for display | internal/graph/extraction_gap_provenance_test.go"
   scope_enforced: "the knowledge graph — a repository prefix threaded through the store API and applied in the query | internal/graph/store.go | `repoPrefix` appears in 78 places in the store interface and reaches the read path in the node, edge, churn, coverage and blame projections; separately `internal/pathguard` confines file reads to the one root that owns the file, re-checked at every content sink rather than only at indexing | internal/graph/empty_prefix_wildcard_test.go"
   negative_eval: "file admission and content serving — committed cases that out-of-repository bytes must not be returned | internal/pathguard/pathguard.go | `TestSymlinkEscapes` builds a symlink pointing at a file outside the root and asserts it is refused, at admission and again at read time, on the stated reasoning that a link committed as `pwn.go -> /home/user/.ssh/id_rsa` would otherwise be indexed like ordinary source and served verbatim; `TestEmptyPrefixIsExactForContentNodes` asserts the empty scope returns one node rather than every node | internal/pathguard/pathguard_test.go, internal/graph/empty_prefix_wildcard_test.go"
 stack_storage: "sqlite"
@@ -27,7 +27,7 @@ matrix:
   scoping: "A `repoPrefix` string threaded through the store API, plus filesystem confinement to the one root owning each file, re-checked at every content sink. Multi-repository by default; the empty prefix means every repository in one family of calls and exactly the unprefixed repository in another"
   integration: "An MCP server with 175 configurable tools, a CLI, and a web UI; installation configures every one of 19 supported coding agents detected on the machine"
   background: "A watcher and a daemon; incremental reindex on change, with published p50/p95/p99 latencies through the production dispatch path"
-  trust: "Provenance as a five-tier ladder from compiler-grade to text-matched, mapped to confidence by one shared function — and mapped a *second* way, deliberately differently, for graph centrality"
+  trust: "Provenance as a six-tier ladder from compiler-grade through text-matched to speculative, the last hidden by default, mapped to confidence by one shared function — and mapped a *second* way, deliberately differently, for graph centrality"
   strengths: "A provenance model that survives being read: `EffectiveOrigin` backfills unstamped edges rather than letting them sort below the weakest tier, and the same backfill is what the agent is shown, so a gating decision matches the displayed evidence"
   risks: "The populated benchmarks are self-curated — ten queries whose ground truth is hand-written against Gortex's own repository, timed on one operator's machine — and the externally graded surface, SWE-bench, ships as a template whose result table is still `TBD`"
 ---
@@ -93,7 +93,7 @@ resolution *together with the reason it was possible*.
 
 The key move is that resolution quality is **first-class and persisted**, not a
 transient property of the parse. The store comment makes the comparison
-explicit: Gortex persists the resolved target *and* its five-tier provenance,
+explicit: Gortex persists the resolved target *and* its six-tier provenance,
 where a competitor persists only the target. Once the tier is on the row, three
 different consumers can each decide what to do with it — a ranker can score it, a
 query can refuse anything below a floor via `MeetsMinTier`, and a UI can collapse
@@ -319,7 +319,7 @@ confusion, so the next reader's tidy-up fails loudly.
 
 - What is the real distribution of `Origin` tiers in a large index? The 3.4M-edge
   figure in the `EffectiveOrigin` comment is the only population number in the
-  tree, and the value of a five-tier ladder depends entirely on whether the
+  tree, and the value of a six-tier ladder depends entirely on whether the
   bottom tiers are rare or dominant.
 - Were the centrality attenuation weights derived or chosen? 0.6 for the LSP
   tiers against a 1.0 AST baseline is a strong claim about how much framework
@@ -348,6 +348,8 @@ confusion, so the next reader's tidy-up fails loudly.
 | `BENCHMARK-SWE.md` | The SWE-bench template; results still `TBD` |
 
 ## History
+
+**2026-09-15** — [`a4b5c4df50ff3256243990f5fe571eb190d05b22`](https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22) — second reading, 813 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. All three marks were re-tested against the paths their records cite, all present, and all hold. The scope files moved by 51 lines. The empty-prefix overloading the report describes is unchanged and deliberate: `empty_prefix_wildcard_test.go`, present at the previous pin, names the two meanings — wildcard as an argument convention, exact as a node property — and exists so that collapsing one into the other fails a test instead of silently emptying a global pass. Additions: `ConfidenceLabelRank`, which orders exactly the three labels `ConfidenceLabelFor` produces and sits beside it so a renamed label cannot silently rank low; a `LowWaterID` bounding a pass to its own graph generation; and eviction split into a current-generation interface and an all-generations one reserved *only when the repository is being forgotten*. The `trust_state` record is corrected from five tiers to six: `speculative`, below `text_matched`, was present at the previous pin and is the tier excluded from every edge-returning surface unless a caller opts in, which is the strongest part of the mark and was missing from its record.
 
 **2026-08-19** — [`1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36`](https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36)
 — first reading. Screened before reading: no auto-run surface, a build-time
