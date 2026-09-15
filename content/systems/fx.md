@@ -1,15 +1,15 @@
 ---
 title: "fx"
-eyebrow: "A read failure and an empty store are the same value"
-description: "A coding agent in Zig whose durable memory is a flat JSON array of strings — with a tool description that forbids writing anything the user did not ask to persist, and a loader that answers every read error with 'no memories' just before the next save overwrites the file."
+eyebrow: "A memory tool it removed"
+description: "A coding agent in Zig whose durable memory was a flat JSON array of strings, with a tool description that forbade writing anything the user did not ask to persist — until the tool was removed on 31 August 2026, ten days after its loader was changed to fail closed on a corrupt store."
 root: ../..
 page_kind: system
 source_name: "vercel-labs/fx"
 source_url: https://github.com/vercel-labs/fx
 archive_name: "vercel-labs--fx"
-revision: a0f73b4db3b367662728639263f4c7983725e8f9
-revision_url: https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9
-analyzed_at: 2026-08-19
+revision: e45d780933bfb42ae376aee54a49bd3ebe81f04d
+revision_url: https://github.com/vercel-labs/fx/commit/e45d780933bfb42ae376aee54a49bd3ebe81f04d
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -25,10 +25,26 @@ matrix:
   background: "None over memory. The session log has its own compaction that replaces prior frames with a snapshot"
   trust: "No epistemic state. A memory is a string that is present or absent"
   strengths: "A write policy stated where the model will read it — the tool description rules out task notes, secrets, project facts and anything the user did not ask to persist"
-  risks: "Every read failure — a missing file, an unparseable file, a non-array root, or one over the 1 MiB cap — returns an empty list, and the next `save` writes a one-element array over whatever was there"
+  risks: "At the first reading every read failure returned an empty list and the next `save` wrote a one-element array over the file; fixed to fail closed on 21 August 2026, and the tool was removed on 31 August"
 ---
 
 ## 1. Executive Summary
+
+**At this commit fx has no memory tool.** On 31 August 2026 commit
+[`ae38593df870b75c40ce4ab49155390e7728b1f2`](https://github.com/vercel-labs/fx/commit/ae38593df870b75c40ce4ab49155390e7728b1f2)
+removed `src/tools/memory/memory.zig` and the `~/.fx/memories.json` path, leaving
+existing files untouched and rejecting stale `memory` calls through generic
+dispatch; a registry test asserts `lookup("memory") == null`. Ten days earlier,
+[`715ced4448a9f0b2c2fc6194c18c90c1c88212b2`](https://github.com/vercel-labs/fx/commit/715ced4448a9f0b2c2fc6194c18c90c1c88212b2)
+had fixed the data-loss path this report was written about: `loadMemories`
+returned named errors for a malformed, oversized or unreadable store, `save` and
+`clear` refused with a message saying the file was not modified, the
+truncate-and-rewrite fallback was dropped, and a unit test and an end-to-end test
+asserted a corrupt store's bytes survive a `save`. No lock was added. The session
+layer described below remains. What follows is the memory tool as it stood at
+[`a0f73b4db3b367662728639263f4c7983725e8f9`](https://github.com/vercel-labs/fx/tree/a0f73b4db3b367662728639263f4c7983725e8f9), and
+every memory path refers to that tree. It stays because the write policy in its
+description is reusable whatever store it guards.
 
 fx is a coding agent harness and CLI in Zig from vercel-labs — Apache-2.0,
 roughly 677,000 lines under `src/`, 394 commits and 6 contributors since 11
@@ -66,16 +82,15 @@ there used to be many. The tool's own error message for a failed `clear` names
 the path and invites the user to look at it, which is the most likely way a file
 becomes unparseable in the first place.
 
-Against that, the thing fx gets right is the part most systems in this atlas
-leave to chance. The description the model reads says what must **not** be
+Against that, fx got one thing right that is usually left to chance. The description the model reads says what must **not** be
 written:
 
 > When NOT to use: store task notes, secrets, project facts, temporary context,
 > or anything the user did not ask to persist.
 
 That is a consent rule for memory writes, placed where the writer will see it,
-and it is the direct answer to the self-reinforcement problem this atlas keeps
-naming — a model that decides on its own what is worth remembering.
+and it is the direct answer to the self-reinforcement problem — a model that
+decides on its own what is worth remembering.
 
 ## 2. Mental Model
 
@@ -228,7 +243,10 @@ None of them covers a `memories.json` that exists and cannot be read. There is n
 test for malformed JSON, for a root that is not an array, or for a file past the
 1 MiB cap — which is to say the four conditions that share an answer are the four
 the suite does not distinguish either. A test that writes `{"oops":1}` to the
-path, calls `save`, and asserts the prior facts survive would fail today.
+path, calls `save`, and asserts the prior facts survive would have failed at that
+commit; [`715ced4448a9f0b2c2fc6194c18c90c1c88212b2`](https://github.com/vercel-labs/fx/commit/715ced4448a9f0b2c2fc6194c18c90c1c88212b2) added that test, as *"memory corrupt store fails closed
+and preserves original bytes"*, beside one that distinguishes missing, oversized
+and unreadable stores.
 
 ## 11. Patterns Worth Stealing
 
@@ -260,17 +278,13 @@ the user explicitly asked to keep forever.
 
 ## 12. Open Questions
 
-- Is the corrupt-file path reachable in practice? It needs a `memories.json`
-  that exists and does not parse, and the likeliest source is a person editing
-  the file the failed-`clear` message points them at.
 - Was the 1 MiB cap chosen for memories or inherited? It is a general
   `readFileToEnd` argument, and at roughly a hundred bytes a preference it allows
   about ten thousand of them — plausibly beyond any intended use, which would
   make it a latent limit rather than a live one.
-- Does the session log's discipline reflect a plan for the memory store? The
-  session layer already has the locking, the generations and the atomic
-  replacement this tool lacks, so the question is whether the memory tool is
-  deliberately scoped small or simply earlier.
+- What replaces durable user preferences now that the tool is gone? The removal
+  commit names no successor, and nothing at this pin persists a fact across
+  sessions outside the session log.
 
 ## Appendix: File Index
 
@@ -285,6 +299,8 @@ the user explicitly asked to keep forever.
 | `src/core/tooling/tool_runtime.zig` | The memory tool's happy-path tests |
 
 ## History
+
+**2026-09-15** — [`e45d780933bfb42ae376aee54a49bd3ebe81f04d`](https://github.com/vercel-labs/fx/commit/e45d780933bfb42ae376aee54a49bd3ebe81f04d) — 1,692 commits on, 2026-09-15. Screened before reading: no auto-run surface, two unpinned surfaces, nine dependency surfaces inside the cooldown, and an `AGENTS.md` addressed to reading agents, recorded as data; nothing was installed or run. The memory tool is gone: [`ae38593df870b75c40ce4ab49155390e7728b1f2`](https://github.com/vercel-labs/fx/commit/ae38593df870b75c40ce4ab49155390e7728b1f2) (2026-08-31) removed `memory.zig`, its profile path and its tool registration, and left existing `memories.json` files in place. Before that, [`715ced4448a9f0b2c2fc6194c18c90c1c88212b2`](https://github.com/vercel-labs/fx/commit/715ced4448a9f0b2c2fc6194c18c90c1c88212b2) (2026-08-21) made the loader fail closed on a malformed, oversized or unreadable store and added the test this report said was missing; `save` stayed lock-free. The session layer's authority protocol, `commit.pending.json` intent and `ImmutableSessionIdentity` guard are still present. The body keeps the design as it was at the previous pin, framed as removed. No marks, before or after.
 
 **2026-08-19** — [`a0f73b4db3b367662728639263f4c7983725e8f9`](https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9)
 — first reading, at an experimental stage the README labels as such. Screened

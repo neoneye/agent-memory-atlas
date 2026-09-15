@@ -229,9 +229,10 @@ idempotent blobs and one append-only event file per writer remove the
 contention rather than guarding it; and <a href="../systems/fx/">fx</a>
 contains both answers at once — lock files with a two-second deadline
 and a two-phase commit for its session log, and read-modify-write over a
-whole file with no lock for the memories a user asked it to keep. Three
-designs, three different theories of who owns a write, and no column in
-the matrix that would let a reader find them. That belongs in <a
+whole file with no lock for the memories a user asked it to keep, until
+that tool was removed on 31 August 2026. Three designs, three different
+theories of who owns a write, and no column in the matrix that would let
+a reader find them. That belongs in <a
 href="../methodology/atlas-rubric/#open-work-on-this-rubric">the
 rubric's open work</a> beside authority and recoverability.</p>
 <p><strong>Start here:</strong> <a href="#2-comparative-matrix">find a
@@ -11764,10 +11765,10 @@ absent</td>
 <td>A write policy stated where the model will read it — the tool
 description rules out task notes, secrets, project facts and anything
 the user did not ask to persist</td>
-<td>Every read failure — a missing file, an unparseable file, a
-non-array root, or one over the 1 MiB cap — returns an empty list, and
-the next <code>save</code> writes a one-element array over whatever was
-there</td>
+<td>At the first reading every read failure returned an empty list and
+the next <code>save</code> wrote a one-element array over the file;
+fixed to fail closed on 21 August 2026, and the tool was removed on 31
+August</td>
 </tr>
 <tr>
 <td><code>gbrain</code></td>
@@ -31350,7 +31351,7 @@ seven-day cooldown, one unpinned range, and a
 <code>tests/conftest.py</code> that executes on collection; nothing was
 installed and no test was run</li>
 <li><a href="https://github.com/vercel-labs/fx">vercel-labs/fx</a> at <a
-href="https://github.com/vercel-labs/fx/commit/a0f73b4db3b367662728639263f4c7983725e8f9"><code class="commit-id" title="a0f73b4db3b367662728639263f4c7983725e8f9">a0f73b4d…</code></a>
+href="https://github.com/vercel-labs/fx/commit/e45d780933bfb42ae376aee54a49bd3ebe81f04d"><code class="commit-id" title="e45d780933bfb42ae376aee54a49bd3ebe81f04d">e45d7809…</code></a>
 — read only; no auto-run surface, one dependency manifest inside the
 seven-day cooldown, two unpinned ranges in test packages, and an
 <code>AGENTS.md</code> addressed to a reading agent, recorded as data;
