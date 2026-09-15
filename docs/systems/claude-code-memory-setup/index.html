@@ -4,24 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="A 638-line guide and a 387-line
-importer that turn exported Claude Code transcripts into a tagged
-Obsidian vault, inserting wikilinks to existing notes as it writes.">
+    <meta name="description" content="A 733-line guide, a 387-line
+importer and a zero-LLM SessionEnd hook that file Claude Code sessions
+into a tagged Obsidian vault, inserting wikilinks to existing notes on
+import.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="claude-code-memory-setup — Agent Memory Atlas">
-    <meta property="og:description" content="A 638-line guide and a
-387-line importer that turn exported Claude Code transcripts into a
-tagged Obsidian vault, inserting wikilinks to existing notes as it
-writes.">
+    <meta property="og:description" content="A 733-line guide, a
+387-line importer and a zero-LLM SessionEnd hook that file Claude Code
+sessions into a tagged Obsidian vault, inserting wikilinks to existing
+notes on import.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="claude-code-memory-setup — Agent Memory Atlas">
-    <meta name="twitter:description" content="A 638-line guide and a
-387-line importer that turn exported Claude Code transcripts into a
-tagged Obsidian vault, inserting wikilinks to existing notes as it
-writes.">
+    <meta name="twitter:description" content="A 733-line guide, a
+387-line importer and a zero-LLM SessionEnd hook that file Claude Code
+sessions into a tagged Obsidian vault, inserting wikilinks to existing
+notes on import.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>claude-code-memory-setup — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -43,7 +44,7 @@ writes.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "claude-code-memory-setup",
-      "description": "A 638-line guide and a 387-line importer that turn exported Claude Code transcripts into a tagged Obsidian vault, inserting wikilinks to existing notes as it writes.",
+      "description": "A 733-line guide, a 387-line importer and a zero-LLM SessionEnd hook that file Claude Code sessions into a tagged Obsidian vault, inserting wikilinks to existing notes on import.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -99,23 +100,24 @@ writes.">
         <div class="document-hero-inner">
           <p class="eyebrow">A recipe that links notes on the way in</p>
           <h1>claude-code-memory-setup</h1>
-          <p class="document-deck">A 638-line guide and a 387-line
-importer that turn exported Claude Code transcripts into a tagged
-Obsidian vault, inserting wikilinks to existing notes as it writes.</p>
+          <p class="document-deck">A 733-line guide, a 387-line importer
+and a zero-LLM SessionEnd hook that file Claude Code sessions into a
+tagged Obsidian vault, inserting wikilinks to existing notes on
+import.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/lucasrosati/claude-code-memory-setup">
               <span>Source</span>
               <strong>lucasrosati/claude-code-memory-setup</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">
+            <a class="meta-pill revision-pill" href="https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7" title="a89c275e139d25deb01529e6c7f1954844164ff7">
               <span>Analyzed revision</span>
-              <code>c5f2e0b5…</code>
+              <code>a89c275e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lucasrosati--claude-code-memory-setup" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -139,13 +141,13 @@ Obsidian vault, inserting wikilinks to existing notes as it writes.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>This is a <strong>recipe</strong>, not a library: a README of 638
-lines, a 387-line Python importer, and a 46-line shell wrapper. It
-exists to solve the two problems its first section names — <em>"Amnesia
-between sessions"</em> and codebase re-reading — by pairing an Obsidian
-Zettelkasten vault as durable memory with <a
-href="../../systems/graphify/">Graphify</a>, which the atlas already
-covers, as the code index.</p>
+<p>This is a <strong>recipe</strong>, not a library: a README of 733
+lines, a 387-line Python importer, a 46-line shell wrapper, and a
+261-line <code>SessionEnd</code> hook. It exists to solve the two
+problems its first section names — <em>"Amnesia between sessions"</em>
+and codebase re-reading — by pairing an Obsidian Zettelkasten vault as
+durable memory with <a href="../../systems/graphify/">Graphify</a>,
+which the atlas already covers, as the code index.</p>
 <p>The part worth reading is <code>scripts/claude_to_obsidian.py</code>.
 It takes exported Claude Code chats, strips any existing frontmatter,
 infers an origin (<code>code</code> or <code>web</code>), derives tags
@@ -200,8 +202,16 @@ over the same export overwrites the destination and re-derives the links
 from whatever the vault contains at that moment, so the link set is a
 function of import order rather than of content — the same chat imported
 before and after a note exists gets different links.</p>
-<p>Control is entirely the user's. The model never writes here; it reads
-a vault that a person populated by running a script.</p>
+<p>Chat notes are the importer's, and the importer is run by a person.
+Session logs have two other writers. The guide's <code>CLAUDE.md</code>
+template defines <code>/save</code> as an instruction to the model —
+write <code>logs/YYYY-MM-DD-description.md</code> with what was done,
+the decisions made and the pending items, add wikilinks, commit and push
+— and <code>/resume</code> as the read: <em>"Read the 3 most recent
+session logs in logs/"</em> and the project's
+<code>architecture/decisions.md</code>. The <code>SessionEnd</code> hook
+in <code>scripts/session_autosave.py</code> is the third writer, and the
+only one in code.</p>
 <p>The interesting epistemic position is that this design
 <strong>refuses to decide what matters</strong>. Everything is kept, and
 the finding is delegated to Obsidian's search, its graph view, and the
@@ -278,8 +288,10 @@ set so it is not linked twice in the same note.</p>
 <code>build_frontmatter(title, tags, origin, created)</code> with the
 rewritten body, creates <code>vault/chats/&lt;origin&gt;/</code>,
 writes, and unlinks the source when <code>--move</code> was given.</p>
-<p>There are no tests. There is no test directory, no CI configuration,
-and no assertion anywhere in the tree.</p>
+<p>There are no tests. A CI workflow checks Python syntax, ruff's
+error-only rules, shellcheck, links, heading parity between the English
+and Portuguese READMEs and the JSON examples in the guide; nothing
+asserts what either script does.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>The unit is a Markdown file. Its metadata is the frontmatter the
 importer builds:</p>
@@ -372,9 +384,11 @@ whole pipeline is the code-fence skip.</p>
 <p>Zero on both paths, in the sense the rest of this atlas measures: no
 model call is made by anything in this repository, at write or at
 read.</p>
-<p>The lag before a memory is retrievable is however long it takes the
-user to remember to run the script — this is a manual sync, and the
-guide's workflow section is the only thing that makes it periodic.</p>
+<p>The lag before an imported chat is retrievable is however long it
+takes the user to remember to run the script — this is a manual sync,
+and the guide's workflow section is the only thing that makes it
+periodic. Session logs have no lag: the hook writes when the session
+closes, and <code>/save</code> writes when it is typed.</p>
 <p>Nothing runs in the background and no pass rewrites the store, with
 one qualification: because links are derived from the vault's current
 contents at import time, the <em>effective</em> link graph is only as
@@ -387,17 +401,45 @@ href="../../systems/ollama/">Ollama</a> and <a
 href="../../systems/serena/">Serena</a> arrive at, without the index
 those two put in the prompt.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>There is no programmatic integration. No MCP server, no hook, no
-plugin, no tool. The agent sees the vault because the vault is on disk
-in a place the guide told the user to put it, and Part 4 of the README
+<p>There is one programmatic integration, a Claude Code
+<code>SessionEnd</code> hook, and no MCP server, plugin or tool. The
+agent sees the vault because the vault is on disk in a place the guide
+told the user to put it; <code>/save</code> and <code>/resume</code> are
+prompt instructions in <code>CLAUDE.md</code>, and Part 4 of the README
 is a workflow a person follows.</p>
+<p>The hook, <code>session_autosave.py</code>, reads the transcript
+JSONL Claude Code hands it and, with no model call, writes a note
+holding the first user prompt (up to 300 characters), up to twenty
+edited file paths, the first line of up to ten Bash commands, the turn
+count and the start and end times. Sessions with fewer than two user
+messages are skipped. The note lands in
+<code>&lt;vault&gt;/&lt;cwd basename&gt;/logs/</code> when that folder
+exists and <code>&lt;vault&gt;/logs/</code> otherwise, named
+<code>YYYY-MM-DD-HHMM-auto-session.md</code>, tagged
+<code>auto-log</code>, with <code>status: imported</code>. Every failure
+is logged to <code>~/scripts/autosave.log</code> and swallowed.</p>
+<p><strong>The safety net lands on the read path it was meant to back
+up.</strong> The vault layout the guide creates has a <code>logs/</code>
+folder per project, <code>/resume</code> reads the three most recent
+session logs there, and the hook writes into the same folder whenever
+the vault folder matches the repository's name — which the README tells
+you to arrange with a symlink when it does not. The hook fires on every
+non-trivial session close, including the close of a session in which
+<code>/save</code> wrote the rich log minutes earlier. After two
+sessions that each ended with <code>/save</code>, the three newest logs
+are two auto-logs and one <code>/save</code> log, and the decisions and
+pending items <code>/resume</code> exists to recover are the part most
+likely to have been pushed out. The guide separates the two only as an
+Obsidian search filter, <code>-tag:auto-log</code>, which a person
+applies; the <code>/resume</code> instruction does not.</p>
 <p>That is worth stating plainly rather than treating as a defect,
 because it is what "recipe" means here and it is a genuine position: the
 composition is Obsidian for memory, Graphify for code, Claude Code for
 work, and a person for glue. Nothing has to agree on an interface.</p>
-<p>The consequence is that every guarantee in this design is a habit. If
-the user stops running the importer, memory stops accumulating, and
-nothing notices.</p>
+<p>The consequence is that almost every guarantee in this design is a
+habit. If the user stops running the importer or typing
+<code>/save</code>, memory stops accumulating, and the hook's thin log
+is all that notices.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>The provenance model is one field: <code>origin: code | web</code>.
@@ -414,6 +456,14 @@ sense — nothing extracts claims — but the vault is
 instructions-adjacent: an agent pointed at a Zettelkasten will read
 whatever is in it, and every word of every past conversation is in it
 verbatim.</p>
+<p>The hook adds a narrower exposure of its own. It copies the first
+line of Bash commands and the opening prompt into a Markdown file with
+no redaction, so a token exported on a command line or pasted into a
+first message is written to the vault, which the guide's
+<code>/save</code> then commits and pushes. Routing by the working
+directory's basename means two repositories with the same folder name
+share one <code>logs/</code> folder, and the README's advice for a
+mismatch is a symlink inside the vault.</p>
 <p>Multi-tenancy, auth, races and replication are all out of frame. This
 is one person's laptop.</p>
 <p>The gap that matters most is the same one the whole recipe shape has:
@@ -426,8 +476,8 @@ rather than for recall will find nothing that can mark a decision
 superseded.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>There are none. No test file, no CI workflow, no assertion in the
-tree.</p>
+<p>There are none. The CI workflow is lint and documentation checks;
+there is no test file and no assertion about behaviour.</p>
 <p>The README's <em>Real Results</em> section is where the claims live,
 and the headline figure — <strong>71.5x fewer tokens per
 session</strong> — is not produced by anything in this repository. The
@@ -443,8 +493,8 @@ asserting that <code>[[already-linked]]</code> is not double-wrapped,
 and one asserting that a longer name wins over a shorter one it
 contains. All three behaviours are implemented and none is pinned.</p>
 <p>I ran nothing. Every claim here comes from reading the tree at
-<code class="commit-id" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">c5f2e0b5…</code>, the only commit
-in the repository's recent history and dated 1 June 2026.</p>
+<code class="commit-id" title="a89c275e139d25deb01529e6c7f1954844164ff7">a89c275e…</code>, dated 11
+September 2026.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -495,8 +545,9 @@ honest strength of the recipe genre.</p>
 kept, verbatim, and the vault grows with every session — the design has
 no opinion about what matters and no mechanism that could acquire one.
 Walk away too if more than one person is involved, or if you need the
-agent to write memory rather than read it: neither is in scope here, and
-neither has a seam to add.</p>
+agent's writes to be anything more than an instruction it may follow:
+<code>/save</code> is a paragraph in <code>CLAUDE.md</code>, and the
+only write that happens without it is the hook's mechanical log.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
 <li>What does the Claude Code export step actually produce at the
@@ -516,12 +567,36 @@ thousands.</li>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Write path and link insertion</strong>
 <code>scripts/claude_to_obsidian.py</code></p>
+<p><strong>Session capture</strong>
+<code>scripts/session_autosave.py</code> (the <code>SessionEnd</code>
+hook)</p>
 <p><strong>Operator surface</strong>
 <code>scripts/sync_claude_obsidian.sh</code> ·
-<code>scripts/README.md</code></p>
+<code>scripts/README.md</code> ·
+<code>.github/workflows/ci.yml</code></p>
 <p><strong>Design record and claims</strong> <code>README.md</code> ·
-<code>README.pt-BR.md</code></p>
+<code>README.pt-BR.md</code> · <code>CHANGELOG.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7"><code class="commit-id" title="a89c275e139d25deb01529e6c7f1954844164ff7">a89c275e…</code></a>
+— five commits on, 9–11 September 2026, tagged 1.0.0 in a new
+<code>CHANGELOG.md</code>. Screened before reading: the screen found no
+manifest, hook or agent file it can parse, so the two Python scripts,
+the shell wrapper and the CI workflow were read by hand; nothing was
+installed or run. The importer is byte-identical. Added:
+<code>scripts/session_autosave.py</code>, a zero-LLM
+<code>SessionEnd</code> hook that writes a mechanical session log into
+the vault's <code>logs/</code>, where <code>/resume</code> reads the
+three most recent logs, so the hook's notes displace <code>/save</code>
+logs from that read; and a CI workflow of lint and documentation checks
+with no behavioural tests. A claim present since the first reading was
+wrong and is corrected: the model did write to the vault at the previous
+pin, because the guide's <code>CLAUDE.md</code> template already defined
+<code>/save</code> as an instruction to write, link and commit a session
+log and <code>/resume</code> as an instruction to read the three newest.
+No capability mark is earned; <code>status: imported</code> and the
+<code>auto-log</code> tag are fixed at write time and filtered only by a
+person in Obsidian.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b"><code class="commit-id" title="c5f2e0b5465b66699f4ffcb108afee70d2cdf87b">c5f2e0b5…</code></a>
 — first reading, from the <a

@@ -1,28 +1,28 @@
 ---
 title: "claude-code-memory-setup"
 eyebrow: "A recipe that links notes on the way in"
-description: "A 638-line guide and a 387-line importer that turn exported Claude Code transcripts into a tagged Obsidian vault, inserting wikilinks to existing notes as it writes."
+description: "A 733-line guide, a 387-line importer and a zero-LLM SessionEnd hook that file Claude Code sessions into a tagged Obsidian vault, inserting wikilinks to existing notes on import."
 root: ../..
 page_kind: system
 source_name: "lucasrosati/claude-code-memory-setup"
 source_url: https://github.com/lucasrosati/claude-code-memory-setup
 archive_name: "lucasrosati--claude-code-memory-setup"
-revision: c5f2e0b5465b66699f4ffcb108afee70d2cdf87b
-revision_url: https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b
-analyzed_at: 2026-08-09
+revision: a89c275e139d25deb01529e6c7f1954844164ff7
+revision_url: https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 matrix:
-  memory_unit: "One Markdown note per exported chat, with YAML frontmatter carrying a title, keyword tags, an origin and a created date"
+  memory_unit: "One Markdown note per exported chat, with YAML frontmatter carrying a title, keyword tags, an origin and a created date; session logs written by the model on /save and by a SessionEnd hook"
   storage: "An Obsidian vault on disk, notes filed under chats/code or chats/web; no database, no index of its own"
   retrieval: "None in this repository. Obsidian's own search and graph view, or the agent reading vault files, do the finding"
-  write: "A person runs a script after exporting; tags come from a 66-entry keyword map, never from a model"
+  write: "A person runs the importer after exporting, with tags from a 66-entry keyword map; the model writes a session log when told /save; a SessionEnd hook writes a mechanical log on every non-trivial session close"
   update_delete: "Editing or deleting a note in the vault. Re-importing the same export writes the file again and re-links it from scratch"
   scoping: "An origin folder — code or web — inferred per file. No user, project or agent scope"
-  integration: "None programmatic: the agent sees the vault because the vault is on disk and the guide tells you to point it there"
-  background: "None. A shell wrapper runs the importer when a person invokes it"
+  integration: "One Claude Code SessionEnd hook, and /save and /resume defined as instructions in the vault CLAUDE.md; the agent otherwise sees the vault because it is on disk"
+  background: "A SessionEnd hook on session close; otherwise none, and a shell wrapper runs the importer when a person invokes it"
   trust: "Nothing is verified. The importer's only safety behaviours are --dry-run and skipping code fences when inserting links"
   strengths: "Wikilinks inserted at import time, longest-name-first and once per note, so a new note joins the existing graph without anyone maintaining it"
   risks: "Silent, irreversible rewriting of note bodies with a four-character name floor as the only false-positive guard, and a token-savings headline the repository cannot support"
@@ -30,8 +30,8 @@ matrix:
 
 ## 1. Executive Summary
 
-This is a **recipe**, not a library: a README of 638 lines, a 387-line Python
-importer, and a 46-line shell wrapper. It exists to solve the two problems its
+This is a **recipe**, not a library: a README of 733 lines, a 387-line Python
+importer, a 46-line shell wrapper, and a 261-line `SessionEnd` hook. It exists to solve the two problems its
 first section names — *"Amnesia between sessions"* and codebase re-reading — by
 pairing an Obsidian Zettelkasten vault as durable memory with
 [Graphify](../../systems/graphify/), which the atlas already covers, as the code
@@ -88,8 +88,13 @@ contains at that moment, so the link set is a function of import order rather
 than of content — the same chat imported before and after a note exists gets
 different links.
 
-Control is entirely the user's. The model never writes here; it reads a vault
-that a person populated by running a script.
+Chat notes are the importer's, and the importer is run by a person. Session logs
+have two other writers. The guide's `CLAUDE.md` template defines `/save` as an
+instruction to the model — write `logs/YYYY-MM-DD-description.md` with what was
+done, the decisions made and the pending items, add wikilinks, commit and push —
+and `/resume` as the read: *"Read the 3 most recent session logs in logs/"* and
+the project's `architecture/decisions.md`. The `SessionEnd` hook in
+`scripts/session_autosave.py` is the third writer, and the only one in code.
 
 The interesting epistemic position is that this design **refuses to decide what
 matters**. Everything is kept, and the finding is delegated to Obsidian's search,
@@ -168,8 +173,9 @@ so it is not linked twice in the same note.
 created)` with the rewritten body, creates `vault/chats/<origin>/`, writes, and
 unlinks the source when `--move` was given.
 
-There are no tests. There is no test directory, no CI configuration, and no
-assertion anywhere in the tree.
+There are no tests. A CI workflow checks Python syntax, ruff's error-only rules,
+shellcheck, links, heading parity between the English and Portuguese READMEs and
+the JSON examples in the guide; nothing asserts what either script does.
 
 ## 5. Memory Data Model
 
@@ -249,9 +255,10 @@ code-fence skip.
 Zero on both paths, in the sense the rest of this atlas measures: no model call
 is made by anything in this repository, at write or at read.
 
-The lag before a memory is retrievable is however long it takes the user to
-remember to run the script — this is a manual sync, and the guide's workflow
-section is the only thing that makes it periodic.
+The lag before an imported chat is retrievable is however long it takes the user
+to remember to run the script — this is a manual sync, and the guide's workflow
+section is the only thing that makes it periodic. Session logs have no lag: the
+hook writes when the session closes, and `/save` writes when it is typed.
 
 Nothing runs in the background and no pass rewrites the store, with one
 qualification: because links are derived from the vault's current contents at
@@ -267,17 +274,42 @@ prompt.
 
 ## 8. Agent Integration
 
-There is no programmatic integration. No MCP server, no hook, no plugin, no tool.
-The agent sees the vault because the vault is on disk in a place the guide told
-the user to put it, and Part 4 of the README is a workflow a person follows.
+There is one programmatic integration, a Claude Code `SessionEnd` hook, and no
+MCP server, plugin or tool. The agent sees the vault because the vault is on disk
+in a place the guide told the user to put it; `/save` and `/resume` are prompt
+instructions in `CLAUDE.md`, and Part 4 of the README is a workflow a person
+follows.
+
+The hook, `session_autosave.py`, reads the transcript JSONL Claude Code hands it
+and, with no model call, writes a note holding the first user prompt (up to 300
+characters), up to twenty edited file paths, the first line of up to ten Bash
+commands, the turn count and the start and end times. Sessions with fewer than two
+user messages are skipped. The note lands in `<vault>/<cwd basename>/logs/` when
+that folder exists and `<vault>/logs/` otherwise, named
+`YYYY-MM-DD-HHMM-auto-session.md`, tagged `auto-log`, with `status: imported`.
+Every failure is logged to `~/scripts/autosave.log` and swallowed.
+
+**The safety net lands on the read path it was meant to back up.** The vault
+layout the guide creates has a `logs/` folder per project, `/resume` reads the
+three most recent session logs there, and the hook writes into the same folder
+whenever the vault folder matches the repository's name — which the README tells
+you to arrange with a symlink when it does not. The hook fires on every
+non-trivial session close, including the close of a session in which `/save`
+wrote the rich log minutes earlier. After two sessions that each ended with
+`/save`, the three newest logs are two auto-logs and one `/save` log, and the
+decisions and pending items `/resume` exists to recover are the part most likely
+to have been pushed out. The guide separates the two only as an Obsidian
+search filter, `-tag:auto-log`, which a person applies; the `/resume` instruction
+does not.
 
 That is worth stating plainly rather than treating as a defect, because it is what
 "recipe" means here and it is a genuine position: the composition is Obsidian for
 memory, Graphify for code, Claude Code for work, and a person for glue. Nothing
 has to agree on an interface.
 
-The consequence is that every guarantee in this design is a habit. If the user
-stops running the importer, memory stops accumulating, and nothing notices.
+The consequence is that almost every guarantee in this design is a habit. If the
+user stops running the importer or typing `/save`, memory stops accumulating, and
+the hook's thin log is all that notices.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -295,6 +327,14 @@ nothing extracts claims — but the vault is instructions-adjacent: an agent poi
 at a Zettelkasten will read whatever is in it, and every word of every past
 conversation is in it verbatim.
 
+The hook adds a narrower exposure of its own. It copies the first line of Bash
+commands and the opening prompt into a Markdown file with no redaction, so a token
+exported on a command line or pasted into a first message is written to the vault,
+which the guide's `/save` then commits and pushes. Routing by the working
+directory's basename means two repositories with the same folder name share one
+`logs/` folder, and the README's advice for a mismatch is a symlink inside the
+vault.
+
 Multi-tenancy, auth, races and replication are all out of frame. This is one
 person's laptop.
 
@@ -307,7 +347,8 @@ for recall will find nothing that can mark a decision superseded.
 
 ## 10. Tests, Evals, and Benchmarks
 
-There are none. No test file, no CI workflow, no assertion in the tree.
+There are none. The CI workflow is lint and documentation checks; there is no test
+file and no assertion about behaviour.
 
 The README's *Real Results* section is where the claims live, and the headline
 figure — **71.5x fewer tokens per session** — is not produced by anything in this
@@ -326,8 +367,7 @@ wins over a shorter one it contains. All three behaviours are implemented and no
 is pinned.
 
 I ran nothing. Every claim here comes from reading the tree at
-`c5f2e0b5465b66699f4ffcb108afee70d2cdf87b`, the only commit in the repository's
-recent history and dated 1 June 2026.
+`a89c275e139d25deb01529e6c7f1954844164ff7`, dated 11 September 2026.
 
 ## 11. For Your Own Build
 
@@ -373,8 +413,9 @@ change to fit your own stack, which is the honest strength of the recipe genre.
 Walk away if you want memory to be *selective*. Everything is kept, verbatim, and
 the vault grows with every session — the design has no opinion about what matters
 and no mechanism that could acquire one. Walk away too if more than one person is
-involved, or if you need the agent to write memory rather than read it: neither is
-in scope here, and neither has a seam to add.
+involved, or if you need the agent's writes to be anything more than an
+instruction it may follow: `/save` is a paragraph in `CLAUDE.md`, and the only
+write that happens without it is the hook's mechanical log.
 
 ## 12. Open Questions
 
@@ -394,13 +435,18 @@ in scope here, and neither has a seam to add.
 **Write path and link insertion**
 `scripts/claude_to_obsidian.py`
 
+**Session capture**
+`scripts/session_autosave.py` (the `SessionEnd` hook)
+
 **Operator surface**
-`scripts/sync_claude_obsidian.sh` · `scripts/README.md`
+`scripts/sync_claude_obsidian.sh` · `scripts/README.md` · `.github/workflows/ci.yml`
 
 **Design record and claims**
-`README.md` · `README.pt-BR.md`
+`README.md` · `README.pt-BR.md` · `CHANGELOG.md`
 
 ## History
+
+**2026-09-15** — [`a89c275e139d25deb01529e6c7f1954844164ff7`](https://github.com/lucasrosati/claude-code-memory-setup/commit/a89c275e139d25deb01529e6c7f1954844164ff7) — five commits on, 9–11 September 2026, tagged 1.0.0 in a new `CHANGELOG.md`. Screened before reading: the screen found no manifest, hook or agent file it can parse, so the two Python scripts, the shell wrapper and the CI workflow were read by hand; nothing was installed or run. The importer is byte-identical. Added: `scripts/session_autosave.py`, a zero-LLM `SessionEnd` hook that writes a mechanical session log into the vault's `logs/`, where `/resume` reads the three most recent logs, so the hook's notes displace `/save` logs from that read; and a CI workflow of lint and documentation checks with no behavioural tests. A claim present since the first reading was wrong and is corrected: the model did write to the vault at the previous pin, because the guide's `CLAUDE.md` template already defined `/save` as an instruction to write, link and commit a session log and `/resume` as an instruction to read the three newest. No capability mark is earned; `status: imported` and the `auto-log` tag are fixed at write time and filtered only by a person in Obsidian.
 
 **2026-08-09** — [`c5f2e0b5465b66699f4ffcb108afee70d2cdf87b`](https://github.com/lucasrosati/claude-code-memory-setup/commit/c5f2e0b5465b66699f4ffcb108afee70d2cdf87b) —
 first reading, from the
