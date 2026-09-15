@@ -463,7 +463,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## Q
 
 <ul class="az">
-<li><a class="az-row" href="../systems/qwen-code/"><span class="az-id">Qwen Code</span><span class="az-what">Team memory in git</span><code class="az-repo">QwenLM/qwen-code</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/qwen-code/"><span class="az-id">Qwen Code</span><span class="az-what">Team memory in git</span><code class="az-repo">QwenLM/qwen-code</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/qwen-mm-plugins/"><span class="az-id">Qwen MM Plugins</span><span class="az-what">Memory of what was seen</span><code class="az-repo">QwenLM/Qwen-MM-Plugins</code><span class="az-caps"></span></a></li>
 </ul>
 

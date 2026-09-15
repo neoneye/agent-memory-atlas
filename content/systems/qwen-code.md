@@ -7,10 +7,13 @@ page_kind: system
 source_name: QwenLM/qwen-code
 source_url: https://github.com/QwenLM/qwen-code
 archive_name: "QwenLM--qwen-code"
-revision: 8c90697aced835c8fa027861febcce7de02a9bc2
-revision_url: https://github.com/QwenLM/qwen-code/commit/8c90697aced835c8fa027861febcce7de02a9bc2
-analyzed_at: 2026-08-10
-capabilities: "scope_enforced, human_review"
+revision: d313505fdb7e31e795bab00f76ab8488ff72f90f
+revision_url: https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f
+analyzed_at: 2026-09-15
+capabilities: "human_review, negative_eval"
+capability_evidence:
+  human_review: "auto-learned skills — a newly created skill is staged and not loaded until the user accepts it | packages/core/src/memory/pending-skills.ts:124 (`acceptPendingSkill`), :154 (`rejectPendingSkill`), packages/core/src/skills/skill-paths.ts:25-32, packages/cli/src/ui/AppContainer.tsx:1986-2004 | the skill-review agent writes into the skills root, and every directory it newly created is moved to `.qwen/pending-skills/`, where skill discovery does not load it; the CLI dialog accepts, which moves it back, or discards it. An in-place edit to a skill the user already accepted takes effect without re-entering the flow, by design, so a later discard cannot delete an accepted skill | packages/core/src/memory/pending-skills.test.ts:37, :52, :65; skillReviewNudge.integration.test.ts"
+  negative_eval: "auto-memory recall — memories already surfaced this session and memories that restate an active tool's schema must not be selected again | packages/core/src/memory/recall.ts:357-393 (`excludedFilePaths`), packages/core/src/core/client.ts:1312 and :1472 | `falls back to heuristic selection when model-driven selection fails` passes `/tmp/user.md` as already surfaced and asserts it is absent from the selection while `/tmp/reference.md` is present; `keeps active tool schemas out of heuristic fallback` asserts the doc describing a tool in the recent-tools list is excluded from the model's candidates and from the selection while two related docs are selected. Both predate the 2026-08-10 pin. The recall evaluation harness added since asserts no-result queries stay silent under both delivery designs | packages/core/src/memory/recall.test.ts:630-653 and :655-690, recall-delivery-eval.test.ts:426"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -20,7 +23,7 @@ matrix:
   retrieval: "Indexed scan with a relevance selector; async recall on demand"
   write: "Background extraction from sessions, cursor-tracked; `dream` consolidation; skills reviewed before use"
   update_delete: "`forget` by candidate selection, by match, or by entry; no value-level tombstone found"
-  scoping: "User, project and team tiers with separate paths; project memory partitions by git root or by workspace; team writes guarded unconditionally"
+  scoping: "Directory per tier — user, project and team roots — with the project root keyed by git root or exact workspace; recall unions the roots, and no stored scope key is filtered on a read"
   integration: "Built into the CLI; memory channels for intent and recall"
   background: "Extraction with a resumable offset cursor, dream consolidation, skill review nudges"
   trust: "Source session and message ids; extraction and dream record `updated` or `noop`"
@@ -35,10 +38,9 @@ headers show it: some memory modules carry "Copyright 2025 Google LLC" and
 others "Copyright 2026 Qwen Team", so a reader tracing provenance should expect
 part of this subsystem to have an upstream.
 
-The memory package is about 9,000 lines across roughly thirty modules under
-`packages/core/src/memory/`, with a test file beside nearly every one. It is one
-of the more complete memory subsystems in this atlas, and the part worth the
-review is the **third tier**.
+The memory package is about 10,500 lines across 33 modules under
+`packages/core/src/memory/`, with a test file beside nearly every one and about
+18,000 lines of tests. The part worth the review is the **third tier**.
 
 Memory is split across user, project and **team** scopes; the team tier is
 committed to the repository, and a `pinned/` subdirectory inside the managed
@@ -52,8 +54,7 @@ addresses directly:
 > since the directory is source-controlled regardless."
 
 Two things about that are worth copying. The guard is **fail-closed** on the
-shared path, where every other system in this atlas that supports shared memory
-either confirms or simply writes. And it ignores the feature flag: disabling the
+shared path, where shared memory more commonly either confirms or simply writes. And it ignores the feature flag: disabling the
 team tier does not disable the guard, because the directory is still under
 version control and a write landing there is still a commit away from being
 public. Most feature flags in this position would gate the check along with the
@@ -63,8 +64,8 @@ The rest of the design is careful in the same register. Extraction runs against
 a **resumable cursor** (`sessionId`, `processedOffset`), so an interrupted pass
 does not restart or skip. Extraction and consolidation both record whether they
 `updated` or were a `noop`, so "the pass ran and changed nothing" is
-distinguishable from "the pass did not run" — a distinction the atlas has asked
-for repeatedly and found almost nowhere. Memories carry `messageIds` back to the
+distinguishable from "the pass did not run" — a distinction memory systems rarely
+record. Memories carry `messageIds` back to the
 exchange that produced them.
 
 Reservations: correction is `forget`, keyed on entries and matches, with no
@@ -248,7 +249,7 @@ with `lastExtractionTouchedTopics`, `lastDreamTouchedTopics`, and
 `recentSessionIdsSinceDream`.
 
 Distinguishing "ran and found nothing" from "did not run" is a small schema
-decision with a large operational return. Every system in this atlas with a
+decision with a large operational return. Any memory with a
 background pass has the failure where memory silently stops updating, and
 without this field the two causes — the pass is broken, or there was genuinely
 nothing to learn — look identical from the outside. Recording which *topics*
@@ -257,8 +258,11 @@ were touched narrows it further.
 ### Three forget paths
 
 `selectManagedAutoMemoryForgetCandidates`, `forgetManagedAutoMemoryMatches` and
-`forgetManagedAutoMemoryEntries` — 529 lines, which is more than most systems in
-this atlas spend on deletion and more than several spend on retrieval.
+`forgetManagedAutoMemoryEntries` — a module that has grown to over 700 lines, with
+a test file of more than 1,200. Forget selection is scoped per requested memory
+scope, splits deletion seats evenly when both scopes overflow the quota, bounds
+how much the unconfirmed path can delete at once, and wraps the user's forget
+query as data in the selector prompt.
 
 Selecting candidates separately from acting on them is the shape
 [Memora](../memora/) gets right with its dry-run default: a selection function
@@ -333,6 +337,21 @@ two is not recorded anywhere.
 to surface; `recall.ts` and the channel modules provide sync and async paths, and
 `docs/design/2026-05-15-async-memory-recall-design.md` documents the latter. The
 selected memories are rendered by `writeContextFile.ts`.
+
+Recall reads three roots — the project's managed auto-memory directory, the
+user-level directory and the in-repo team directory — and unions them; the
+candidate scan is uncapped. Two exclusions apply before selection: documents
+already surfaced in this session (`excludedFilePaths`, fed from the client's
+`surfacedRelevantAutoMemoryPaths`) and documents that restate the schema of a tool
+in the recent-tools list. The model selector is the precision gate, with a
+deterministic scorer as the fallback, and that scorer is now multilingual.
+
+**Scope is the directory, not a filter.** The project root is chosen by git root
+or exact workspace, and nothing on a stored entry names a scope that a read then
+filters on — recall's boundary is which directories it scans. The permission
+layer that refuses the memory agents writes outside their roots is a write
+boundary. Together they are real isolation for a single-user CLI, and they are a
+partition rather than the read-path predicate `scope_enforced` counts.
 
 `memoryAge.ts` exists, so age participates in selection.
 
@@ -417,8 +436,18 @@ Roughly half the files in the memory package are tests, including
 `team-memory-secret-guard.test.ts` and `team-memory-sync.test.ts`. There is also
 `integration-tests/cli/save_memory.test.ts`.
 
-`memory-scoped-agent-config.test.ts` is the densest of them and it is almost
-entirely written in the negative. Among its cases: *"denies memory-root symlinks
+Recall has an evaluation harness now. `recall-eval.test.ts` scores the
+deterministic selector over a labeled corpus in English, Chinese, Japanese and
+other categories (`__fixtures__/auto-memory-recall-eval.json`), holds a
+multilingual quality floor, and keeps a frozen copy of the previous scorer so it
+can assert English Recall@5 and no-result handling do not regress — the gate RFC
+#7040 set for the multilingual change. `recall-delivery-eval.test.ts` compares a
+single-path and a fast-path delivery design on the same corpus, including that
+no-result queries stay silent under both. Scores are asserted in the tests rather
+than committed as a results file.
+
+`memory-scoped-agent-config.test.ts` is the densest of the older tests and it is
+almost entirely written in the negative. Among its cases: *"denies memory-root symlinks
 that resolve outside memory"*, *"denies dangling symlink leaves inside memory
 roots"*, *"denies a write via a `.qwen` symlink escaping the project when the
 target is absent"* and again *"when the target already exists"*, *"protects
@@ -430,20 +459,19 @@ links and reports a dangling one as missing, which is the decoy the shared
 `realpathNearestExisting` helper in `packages/core/src/utils/paths.ts` was
 written to defeat.
 
-**These are write-authorization tests, and the distinction decides a mark.** The
-[negative retrieval assertion](../../methodology/atlas-rubric/) is withheld here,
-and it is the closest miss in this report: the suite proves at length that
-material cannot be *written* across a boundary, and asserts nothing about
-material not being *returned* across one. The nearest read-side case,
-*"restricts reads to memory paths only when requested"*, checks that the memory
-maintenance agent's `read_file` tool is denied on a transcript path — a sandbox
-around an internal agent, not a claim about what recall hands the model. A
-project-A-writes, project-B-recalls assertion would earn the mark, and the
-partitioning machinery it would test is the part that just grew a second mode.
+**Those are write-authorization tests.** The
+[negative retrieval assertion](../../methodology/atlas-rubric/) rests on
+`recall.test.ts` instead, where two cases assert what recall must not hand the
+model and carry their own controls: a document already surfaced this session is
+absent from the selection while a relevant one is present, and a document
+restating an active tool's schema is kept out of both the model's candidates and
+the fallback selection while two related documents are selected. Neither is a
+boundary test — a project-A-writes, project-B-recalls assertion is still absent,
+and the partitioning machinery it would test has two modes.
 
-Nothing was run for this review and no retrieval-quality benchmark was found. The
-test coverage tracks the risky logic closely, which is the pattern the atlas sees
-in its better-engineered entries.
+Nothing was run for this review, and apart from the recall harness above no
+retrieval-quality benchmark was found. The test coverage tracks the risky logic
+closely.
 
 The measurement this design invites is the secret guard's recall: of secrets that
 reach a team-memory write, what fraction does `secret-scanner.ts` catch? An
@@ -494,8 +522,8 @@ about the *detector*.
 ### Fit
 
 Right for a team that already shares a repository and wants shared agent memory
-without standing anything up — the git tier is the cheapest credible answer to
-that problem in the atlas. Right also as a study in operational care: the cursor,
+without standing anything up — the git tier is a cheap, credible answer to
+that problem. Right also as a study in operational care: the cursor,
 the `noop` status and the signal handling are all things learned the hard way.
 Wrong if you need memory that stays corrected: forget is thorough about removing
 entries and silent about preventing their return, and in a system that
@@ -547,6 +575,8 @@ re-extracts continuously that is the gap that will find you.
   `docs/design/2026-07-11-managed-memory-microcompaction.md`.
 
 ## History
+
+**2026-09-15** — [`d313505fdb7e31e795bab00f76ab8488ff72f90f`](https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f) — 1,349 commits on, 2026-09-15, with the memory package at +7,732/-453 across 41 files, most of it tests. Screened before reading: two auto-run surfaces (`.vscode/settings.json`, `.vscode/tasks.json`), nineteen build-time execution points, forty-five unpinned surfaces and thirty-four dependency surfaces inside the cooldown; nothing was installed or run. Marks changed in both directions on code that predates the previous pin. `negative_eval` is added: `recall.test.ts` already asserted that already-surfaced and active-tool-schema documents are excluded from recall, each with a control, and the reading that withheld the mark looked only at write-authorization tests. `scope_enforced` is withdrawn: project, user and team memory are separate directories that recall unions, the project root is chosen by git root or workspace, and no stored scope key is filtered on a read, so the isolation is a partition plus a write sandbox. Since the pin: a recall evaluation harness with a labeled multilingual corpus and a frozen previous scorer as the regression gate, a delivery-design evaluation, forget selection scoped and quota-split per scope, uncapped candidate scans, workspace-scoped memory tasks in the daemon, and git helper programs guarded on internal git calls. Corpus-ranking sentences were rewritten.
 
 **2026-08-10** — [`8c90697aced835c8fa027861febcce7de02a9bc2`](https://github.com/QwenLM/qwen-code/commit/8c90697aced835c8fa027861febcce7de02a9bc2) — 515 commits on, with the memory package at +3,153/-140 across 38 files and one module added. No published claim was stale and no mark moved. Two mechanisms arrived: a `pinned/` directory enforced by the agents' permission layer as well as by their planner prompts, and a `QWEN_CODE_MEMORY_PROJECT_SCOPE` flag partitioning project memory by git root or by workspace. The central criticism holds — a grep of the whole memory package for a rejected-value record still returns nothing but unrelated uses of `suppress`. Module line counts were re-verified and three had drifted. `stack_source` promoted from `seeded` to `reviewed`. Screened before reading: 2 auto-run surfaces (`.vscode/settings.json`, `.vscode/tasks.json`), 18 build-time exec, 50 dependency surfaces inside the seven-day cooldown; nothing installed and nothing executed.
 
