@@ -3546,24 +3546,25 @@ the first half and not to the second — Postgres, pgvector and a local
 embedding server to stand up, and still exactly one scope axis.</p>
 <p><strong>OpenWolf splits the family's usual arrangement in half, and
 the half it leaves unguarded is the one that can be wrong.</strong>
-Seven lifecycle hooks maintain everything mechanical — the file map, the
-per-turn action log, the bug index — with atomic writes, a lock around
-the anatomy store and a secrets denylist that keeps <code>.env</code>
-and key material out of the generated files.
-<code>.wolf/cerebrum.md</code>, which holds User Preferences, Key
-Learnings, Do-Not-Repeat and a Decision Log, has no hook at all: it is
-written by the model when it obeys a generated Markdown instruction, and
-replaced <em>in full</em> by a weekly cron that pipes the file through
-<code>claude -p</code> and accepts the reply if it contains one of three
-heading strings (<code>src/daemon/cron-engine.ts:403-413</code>). No
-merge, no diff, no floor, and the sink chosen by a substring test. The
-repository then ships a <code>cerebrum_stale</code> detector advising
-the operator to <em>"check if cerebrum is being updated by hooks."</em>
-Its read path is the opposite story and worth copying:
+Twelve hook registrations maintain everything mechanical — the file map,
+the per-turn action log, the bug index — with atomic writes, one
+read-modify-write lock around every JSON store and a secrets denylist
+that keeps <code>.env</code> and key material out of the generated
+files. <code>.wolf/cerebrum.md</code>, which holds User Preferences, Key
+Learnings, Do-Not-Repeat and a Decision Log, has no hook that writes it:
+it is written by the model when it obeys a generated Markdown
+instruction, nudged by a Stop hook, and re-surfaced — its three newest
+Do-Not-Repeat rules — at session start and every 25 tool batches. Until
+release 2.5 a weekly cron also replaced the file in full with a
+<code>claude -p</code> rewrite; that job was removed, and OpenWolf makes
+no model calls. The repository still ships a <code>cerebrum_stale</code>
+detector advising the operator to <em>"check if cerebrum is being
+updated by hooks."</em> Its read path is the part worth copying:
 <code>pre-read.ts</code> returns <code>permissionDecision: "deny"</code>
-for a file already read this session and unchanged on disk, with
-deny-eligibility cleared after a compaction because the eviction makes a
-re-read legitimate. See <a href="../systems/openwolf/">OpenWolf</a>.</p>
+for a full re-read of a file already read this session and unchanged on
+disk, once, with the denial disarmed after a compaction because the
+eviction makes a re-read legitimate. See <a
+href="../systems/openwolf/">OpenWolf</a>.</p>
 <p><strong>agents-memory is the family's argument that a taxonomy can do
 the work ranking usually does.</strong> Its store is markdown under
 <code>~/.agents/memory/</code> and
@@ -19087,18 +19088,17 @@ index), bug record (<code>buglog.json</code>)</td>
 atomic writes, an anatomy lock</td>
 <td>Section extraction into a token-budgeted session digest; grep over
 <code>anatomy.md</code> and <code>buglog.json</code> by instruction</td>
-<td>Seven lifecycle hooks write the mechanical stores; cerebrum entries
-come from the model following <code>OPENWOLF.md</code>, or from a weekly
-<code>claude -p</code> rewrite</td>
-<td>Whole-file replacement of <code>cerebrum.md</code> by the reflection
-cron; destructive daily consolidation of <code>memory.md</code>; no
-delete surface for a single memory</td>
+<td>Twelve hook registrations write the mechanical stores under a
+read-modify-write lock; cerebrum entries come only from the model
+following OPENWOLF.md, nudged by the Stop hook</td>
+<td>Destructive daily consolidation of memory.md; no scheduled rewrite
+of cerebrum.md since 2.5; no delete surface for a single memory</td>
 <td>One <code>.wolf/</code> per project directory; no scope key on any
 read</td>
 <td>Hooks for Claude Code, Codex, OpenCode, Cursor, Antigravity and
 Gemini; an OpenCode plugin; a local daemon and read-only dashboard</td>
-<td>node-cron daemon: anatomy rescan every 6h, memory consolidation
-daily, token audit and cerebrum reflection weekly</td>
+<td>node-cron daemon: stale-gated anatomy rescan, daily memory
+consolidation, weekly token audit; no model calls</td>
 <td>None — no status field, no provenance, no confidence anywhere in the
 store</td>
 <td>A read-path hook that can deny a duplicate file read; a derived-copy
@@ -31568,7 +31568,7 @@ build-time execution points, nothing installed or run</li>
 <li><a
 href="https://github.com/cytostack/openwolf">cytostack/openwolf</a> at
 <a
-href="https://github.com/cytostack/openwolf/commit/7defd81b9faacea0134965e539118efb2a890cba"><code class="commit-id" title="7defd81b9faacea0134965e539118efb2a890cba">7defd81b…</code></a>
+href="https://github.com/cytostack/openwolf/commit/521fbc4721e8a6c375617ebd0f91fba15a1d29e0"><code class="commit-id" title="521fbc4721e8a6c375617ebd0f91fba15a1d29e0">521fbc47…</code></a>
 — read only, at release 2.1.0; no auto-run surface, one build-time
 <code>prepublishOnly</code>, and both <code>package.json</code> and
 <code>pnpm-lock.yaml</code> changed the same day, inside the seven-day

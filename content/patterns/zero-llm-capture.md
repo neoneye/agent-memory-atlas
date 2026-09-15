@@ -96,15 +96,14 @@ buys resilience, and resilience you do not need is complexity.
 
 [OpenWolf](../../systems/openwolf/) is the pattern applied per tool call rather
 than per session, and it is worth reading beside what the same repository does
-*without* it. Its seven lifecycle hooks write the file map, the action log and
-the bug index synchronously, in-process, with no model call anywhere on the
-path — so a memory is durable the instant a tool returns and nothing is lost
-when a provider is down. The store it leaves out of that arrangement is the one
-holding beliefs, which has no hook and is rewritten wholesale by a weekly model
-call. The contrast is the argument for this pattern in one repository: the
-mechanically captured half never fails, and the half that depends on a model
-obeying an instruction is the half that goes stale and gets replaced by
-something nobody diffed.
+*without* it. Its hooks write the file map, the action log and the bug index
+synchronously, with no model call anywhere on the path — so a memory is durable
+the instant a tool returns and nothing is lost when a provider is down. The store
+it leaves out of that arrangement is the one holding beliefs, which no hook
+writes; until release 2.5 it was also rewritten wholesale by a weekly model call,
+since removed. The contrast is the argument for this pattern in one repository:
+the mechanically captured half never fails, and the half that depends on a model
+obeying an instruction is the half that goes stale.
 
 [OpenClaw](../../systems/openclaw/) captures with no model call at all, and
 spends its effort on a problem model-based capture never has to face: 567 lines in
