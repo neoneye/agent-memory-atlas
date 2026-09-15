@@ -7,10 +7,13 @@ page_kind: system
 source_name: "Graphify-Labs/graphify"
 source_url: https://github.com/Graphify-Labs/graphify
 archive_name: "Graphify-Labs--graphify"
-revision: 4fe11092ccbe9f543608f140c790f68d5d83cae4
-revision_url: https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4
-analyzed_at: 2026-07-31
+revision: fe66389083369c3159aa391117185c8f58b4d07c
+revision_url: https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c
+analyzed_at: 2026-09-15
 capabilities: "trust_state, negative_eval"
+capability_evidence:
+  trust_state: "lesson aggregation — a node is preferred, tentative or contested, and the status is rendered beside it in query output | graphify/reflect.py:16, :347, :445-447, :799 | `aggregate_lessons` sorts nodes into `preferred`, `tentative` and `contested` buckets from the outcome documents saved against them: a node is promoted to `preferred` only once corroborated by enough distinct results, one seen useful once stays `tentative` (*seen useful only once (not yet corroborated)*), and conflicting outcomes make it `contested`. The rendered block carries the status and a staleness flag next to each node, so the reader is told how far to trust it | tests/test_reflect.py `test_corroboration_threshold_promotes_only_repeated_nodes`"
+  negative_eval: "lesson aggregation — a node seen only in dead ends must not be offered as a source | tests/test_reflect.py:271-277 `test_negative_only_node_absent_from_sources` | aggregates a single `dead_end` document naming node `Bad`, asserts `Bad` appears in none of the `preferred`, `tentative` or `contested` buckets, and then asserts `agg[\"dead_ends\"][0][\"nodes\"] == [\"Bad\"]` — the node is present in the aggregate, so its absence from the source buckets is a filter rather than a lost input. `test_header_is_cautious` pins the register of the rendered prose from the other side | tests/test_reflect.py:277 is the control"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -572,5 +575,7 @@ yet had to answer what happens when two people disagree.
 **Tests** — `tests/test_reflect.py` (58 tests, 958 lines).
 
 ## History
+
+**2026-09-15** — [`fe66389083369c3159aa391117185c8f58b4d07c`](https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c) — second reading, 412 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The files the report is built on barely moved — `reflect.py` by two lines and `ingest.py` by seven. The 49,000 added lines went into extraction: `graphify/extractors/` and `extract.py` together gained about 7,800 lines, with new language and watch-mode test suites, which widens what the graph is built from without changing how lessons are graded or served.
 
 **2026-07-31** — [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4) — first reading.

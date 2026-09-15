@@ -7337,7 +7337,7 @@ Privacy/deletion:
 - [gi-dellav/zerostack](https://github.com/gi-dellav/zerostack) at [`efd142b3ac46c9db79b1c318cad25bfd309acc5f`](https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f)
 - [deeplethe/lethe](https://github.com/deeplethe/lethe) at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495)
 - [NovasPlace/CSM](https://github.com/NovasPlace/CSM) at [`4361d38de8672cffe06086e32b91ed41e73e100b`](https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b)
-- [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4)
+- [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`fe66389083369c3159aa391117185c8f58b4d07c`](https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c)
 - [mthines/lorekit](https://github.com/mthines/lorekit) at [`f50830a2a9470c3736cbcde2d963768efde9bc49`](https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49)
 - [SyntheticAutonomicMind/CLIO](https://github.com/SyntheticAutonomicMind/CLIO) at [`00d4381155b8f95bfa928e510d671602e9551c8c`](https://github.com/SyntheticAutonomicMind/CLIO/commit/00d4381155b8f95bfa928e510d671602e9551c8c)
 - [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`6705e292da0cb97df62d46a4d1ea00821ccfbfc8`](https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8)
