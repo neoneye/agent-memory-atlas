@@ -10017,11 +10017,14 @@ href="../systems/langgraph/"><code>langgraph</code></a></h3>
 <ul>
 <li>Best idea: the scope is half the primary key.
 <code>PRIMARY KEY (prefix, key)</code>, with the namespace tuple a
-required positional argument on <code>get</code>, <code>put</code>,
-<code>delete</code> and <code>search</code>, and validated on the way in
-— labels cannot be empty, contain a period, or start with the reserved
-<code>langgraph</code> root. Cross-tenant leakage stops being a filter
-someone forgot and becomes a call that does not compile.</li>
+required positional argument on <code>get</code>, <code>put</code> and
+<code>delete</code>, and validated on <code>put</code> — labels cannot
+be empty, contain a period, or start with the reserved
+<code>langgraph</code> root. On a point read, cross-tenant leakage stops
+being a filter someone forgot and becomes a call that does not compile;
+<code>search</code> and <code>list_namespaces</code> still accept an
+empty prefix that spans every namespace, and the SQL suites test it as
+intended.</li>
 <li>Biggest risk: the conformance suite covers the other half.
 <code>langgraph-checkpoint-conformance</code> is a published,
 capability-aware, installable suite for third-party checkpointers;

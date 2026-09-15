@@ -7,10 +7,12 @@ page_kind: system
 source_name: "langchain-ai/langgraph"
 source_url: https://github.com/langchain-ai/langgraph
 archive_name: "langchain-ai--langgraph"
-revision: 644815f9e5bc52ad8f7a5227a456227e9c3e639b
-revision_url: https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b
-analyzed_at: 2026-08-14
-capabilities: "scope_enforced"
+revision: 230927fb3a9ac9b2893a30322b4dfea7cdea9a8f
+revision_url: https://github.com/langchain-ai/langgraph/commit/230927fb3a9ac9b2893a30322b4dfea7cdea9a8f
+analyzed_at: 2026-09-15
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the backend store suites | libs/checkpoint-postgres/tests/test_store.py:356, :1019 | `test_search_namespace_segment_boundary` writes `foo`, `foo.child`, `foobar` and `foo2` and asserts a `('foo',)` search returns the `foo` subtree and neither sibling, with `('fo',)` returning nothing; `test_omit_expired_filters_read_paths` expires a row that is still physically present and asserts `get`, `search` and `list_namespaces` all omit it while an unexpired control in the neighbouring namespace is returned | libs/checkpoint-sqlite/tests/test_store.py:1254 repeats the segment-boundary case against SQLite's GLOB condition"
 stack_storage: "postgres, sqlite, memory"
 stack_retrieval: "vector"
 stack_source: "reviewed"
@@ -20,11 +22,11 @@ matrix:
   retrieval: "Namespace-prefix scan with dict-path filters, optionally reranked by cosine over per-field embeddings; no lexical arm"
   write: "Synchronous put through a batched op queue; embeddings computed in the same call"
   update_delete: "Upsert by (namespace, key); delete is a put of None and is a hard delete with no tombstone"
-  scoping: "The namespace tuple is half the primary key, required on every read, and validated — labels cannot be empty, contain a period, or start with 'langgraph'"
+  scoping: "The namespace tuple is half the primary key and a required argument on get, put and delete, validated on put; search and list_namespaces take a prefix, and an empty prefix is documented and tested to match every namespace"
   integration: "store= on compile(), get_store() from a node, and InjectedStore to hand it to a tool; no memory tools are prebuilt"
   background: "An optional TTL sweeper thread deletes expired items on an interval"
   trust: "None. An Item is an opaque dict with two timestamps and no status, confidence or provenance"
-  strengths: "A published conformance suite third-party persistence implementations can run, and namespace scoping enforced in the key rather than by convention"
+  strengths: "A published conformance suite third-party persistence implementations can run, and a namespace that is part of the primary key on every point read and write"
   risks: "The conformance suite covers the checkpointer, not the store, and the three store backends disagree on created_at, on whether deletion removes the embeddings, and on how many candidates vector search fetches before deduplicating"
 ---
 
@@ -49,7 +51,8 @@ consolidation, no scoring, no forgetting policy and no notion of what a memory
 similarity. Everything this atlas usually analyses as memory semantics is left
 to the application. What LangGraph provides is the substrate, and the substrate
 gets two things right that most do not: **the scope is half the primary key**,
-so a read cannot omit it, and **TTL refreshes on read**, so a last-touched
+so a point read or write cannot omit it — a search can, with an empty prefix —
+and **TTL refreshes on read**, so a last-touched
 expiry falls out of ordinary use rather than needing a job.
 
 The finding worth the report is a mismatch. LangGraph ships
@@ -131,7 +134,7 @@ The store is defined in `langgraph-checkpoint` and implemented three times.
   `PutOp`, `ListNamespacesOp`, `MatchCondition`), `TTLConfig`, `IndexConfig`,
   and `BaseStore` with `get`/`search`/`put`/`delete`/`list_namespaces` layered
   over one abstract `batch(ops)`.
-- **`store/base/embed.py`** (433 lines) — `get_text_at_path`, a small JSON-path
+- **`store/base/embed.py`** (436 lines) — `get_text_at_path`, a small JSON-path
   evaluator supporting `field`, `parent.child`, `array[*].field` and
   `context[0].text`, plus `ensure_embeddings` which resolves a provider string
   like `"openai:text-embedding-3-small"`.
@@ -181,7 +184,7 @@ application writes its own.
 - Install is `pip install langgraph-checkpoint-postgres` or `-sqlite`; first run
   is `store.setup()`.
 
-The screen of this checkout found no auto-run surfaces, 41 dependency surfaces
+The screen of this checkout found no auto-run surfaces, 8 dependency surfaces
 inside the seven-day cooldown, 15 build-time execution points and 17 unpinned
 surfaces across 86 files, plus `AGENTS.md` and `CLAUDE.md` — agent-directed
 instruction files, read here as data. Nothing was installed and nothing was run.
@@ -197,12 +200,15 @@ instruction files, read here as data. Nothing was installed and nothing was run.
 - **Read by key** — `get()` at `:756`, one `GetOp` carrying the resolved
   `refresh_ttl`.
 - **Search** — `search()` at `:779`. `namespace_prefix` is positional-only and
-  required; `query`, `filter`, `limit`, `offset` and `refresh_ttl` are keyword.
+  required, and `()` is a valid value that matches every namespace; `query`,
+  `filter`, `limit`, `offset` and `refresh_ttl` are keyword.
 - **Namespace listing** — `list_namespaces()` at `:946`, with prefix and suffix
   `MatchCondition`s and a `max_depth` truncation.
 - **Namespace validation** — `_validate_namespace()` at `:1263`: rejects empty
   tuples, non-string labels, empty labels, labels containing `.`, and any
-  namespace whose first label is `langgraph` — a reserved root.
+  namespace whose first label is `langgraph` — a reserved root. It is called
+  from `put` and `aput` only (`:919`, `:1180`); `get`, `delete`, `search` and
+  `list_namespaces` never run it.
 - **Text extraction for embedding** — `get_text_at_path()` in
   `store/base/embed.py`, driven by `IndexConfig.fields` (default `["$"]`, the
   whole document) and overridable per put with `index=[…]` or disabled with
@@ -247,13 +253,27 @@ CREATE TABLE store_vectors (
 );
 ```
 
-**Scoping is structural, and this is the design's best decision.** The namespace
-is not a column you may remember to filter on — it is the left half of the
-primary key, it is a required argument on `get`, `put`, `delete` and `search`,
-and it is validated on the way in. A read that omits the scope does not compile.
-That is what earns `scope_enforced`, and the reserved `langgraph` root is a nice
-extra: the framework keeps a private namespace and refuses to let applications
-write into it.
+**Scoping is structural on point reads and writes, and this is the design's best
+decision.** The namespace is not a column you may remember to filter on — it is
+the left half of the primary key, it is a required argument on `get`, `put` and
+`delete`, and `put` validates it. A `get` that omits the scope does not compile.
+The reserved `langgraph` root is a nice extra: the framework keeps a private
+namespace and refuses to let applications write into it.
+
+**Search is where the scope can be lifted.** `namespace_prefix` is required, but
+`()` is a legal value and every backend reads it as no predicate. Postgres starts
+from `ns_condition = "TRUE"` and replaces it only `if op.namespace_prefix`
+(`store/postgres/base.py:464-466`); SQLite's `_namespace_prefix_condition`
+returns `"TRUE"` under a docstring that says an empty prefix "matches every
+namespace" (`store/sqlite/base.py:132-135`); the in-memory store's tuple-slice
+comparison is true for every namespace. `test_search_empty_prefix_is_unconstrained`
+(`checkpoint-postgres/tests/test_store.py:388`, `checkpoint-sqlite/tests/test_store.py:1354`)
+pins the behaviour as the contract, and `list_namespaces()` with no prefix
+enumerates the whole tree the same way. The retrieval path therefore carries a
+scope the caller can drop with one argument, so `scope_enforced` is not carried.
+Non-empty prefixes are matched carefully: both SQL backends stop at segment
+boundaries, so `("foo",)` does not reach `("foobar",)`, and escape `LIKE` and
+`GLOB` metacharacters in labels.
 
 The hierarchy is a tuple, so `("memories", "user_123", "preferences")` is a real
 tree, and `list_namespaces` can enumerate it with prefix and suffix matching and
@@ -272,7 +292,10 @@ following worth stating precisely.
 survives. SQLite uses `INSERT OR REPLACE` — which deletes the row and inserts a
 new one — with `CURRENT_TIMESTAMP` in the `created_at` position, so it resets.
 `InMemoryStore._apply_put_ops` constructs a fresh `Item` with
-`created_at=datetime.now(timezone.utc)`, so it resets too. The base class
+`created_at=datetime.now(timezone.utc)`, so it resets too — and since the value
+type widened to `Mapping` it stores `dict(op.value)`
+(`store/memory/__init__.py:411`), a copy, where it once kept the caller's own
+dict. The base class
 documents the field as "Timestamp of item creation". An application that ages
 memories by `created_at` gets true ages on Postgres and false ones on the two
 backends people develop against.
@@ -420,13 +443,18 @@ any other. Nothing in the framework mitigates this; the `InjectedStore` pattern
 limits the *scope* an attacker can reach, not the *content* they can write into
 the scope they have.
 
-The scoping guarantees are structural and good, with one gap. Namespace is part
-of the key, required on reads, validated for shape, and the `langgraph` root is
-reserved. But namespaces are caller-supplied strings, and nothing binds a
+The scoping guarantees are structural and good on point operations, with two
+gaps. Namespace is part of the key, required on `get`, `put` and `delete`,
+validated for shape on `put`, and the `langgraph` root is reserved. The first gap
+is the empty search prefix in section 5. The second is that namespaces are caller-supplied strings, and nothing binds a
 namespace to an authenticated identity — a node that computes
 `("memories", user_id)` from state will read whatever `user_id` the state
-contains. The framework makes it impossible to *forget* the scope and does not
-make it hard to *forge* one.
+contains. The framework makes it hard to *forget* the scope on a point read and
+does not make it hard to *forge* one. The binding lives a layer up: the SDK's
+`Auth` docstring tells a deployment to register an `@auth.on.store` handler that
+rewrites `value["namespace"]` to start with the caller's identity
+(`libs/sdk-py/langgraph_sdk/auth/__init__.py:190-200`), and the LangGraph server
+applies the rewritten value — enforcement that runs outside this tree.
 
 Concurrency is handled at the SQL level by upsert, so two writers to one key
 produce last-write-wins with no detection. The batching layer deduplicates
@@ -446,12 +474,22 @@ Backup and replication are the database's. Data-loss risk is ordinary.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Test coverage of the store is substantial and backend-parallel: 24 tests in
+Test coverage of the store is substantial and backend-parallel: 25 tests in
 `libs/checkpoint/tests/test_store.py`, 31 plus 22 async in
 `libs/checkpoint-postgres/tests/`, 37 plus 18 async in
 `libs/checkpoint-sqlite/tests/`, and 4 SDK integration tests. These cover
 round-trips, namespace listing with prefix and suffix matching, filter
 operators, TTL refresh, vector search and batching.
+
+Several are must-not assertions with a positive control beside them.
+`test_search_namespace_segment_boundary` (`checkpoint-postgres/tests/test_store.py:356`,
+`checkpoint-sqlite/tests/test_store.py:1254`) asserts a `("foo",)` search returns
+the `foo` subtree and not `foobar` or `foo2`, and that `("fo",)` returns nothing;
+`test_basic_store_ops` asserts a `get` under a neighbouring namespace is `None`
+after the same key was read back under its own; and
+`test_omit_expired_filters_read_paths` (`:1019`) expires a row that is still
+physically present and asserts `get`, `search` and `list_namespaces` all omit it
+while an unexpired control is returned. That earns `negative_eval`.
 
 **The conformance suite is the artifact worth studying, and it is pointed at the
 checkpointer.** `langgraph-checkpoint-conformance` is a separately published
@@ -477,9 +515,8 @@ update while the third preserves it, and how one of them came to leave orphaned
 embeddings behind a foreign key it declares and does not enforce. Both are
 one-line assertions in a shared suite; neither has a place to live.
 
-No benchmarks. No retrieval-quality evaluation of any kind — no dataset, no
-recall measurement, no negative case asserting that a deleted or scoped-out item
-must not be returned. That is defensible for a substrate whose ranking is
+No benchmarks. No retrieval-quality evaluation of any kind — no dataset and no
+recall measurement. That is defensible for a substrate whose ranking is
 "cosine over what you told us to embed", but it means the framework makes no
 measured claim about retrieval and a reader should not infer one.
 
@@ -488,10 +525,11 @@ measured claim about retrieval and a reader should not infer one.
 ### Steal
 
 **Put the scope in the primary key.** `PRIMARY KEY (prefix, key)`, with the
-namespace as a required positional argument on every read, converts
+namespace as a required positional argument on every point read, converts
 cross-tenant leakage from a filter someone forgot into an argument the
-call site cannot omit. It costs nothing and it is the single highest-value
-line in this design.
+call site cannot omit. Then carry the rule to search: LangGraph accepts `()` as
+a prefix and matches everything, so the one read that spans tenants is an empty
+tuple away. Refuse it, or name the unscoped scan as its own method.
 
 **Refresh TTL on read, and make it configurable per operation.** Last-touched
 expiry gives you a forgetting policy driven by real usage, with no scorer, no
@@ -551,7 +589,7 @@ agent framework, this is not that, and building them on top is most of the work
 the systems in this atlas exist to do.
 
 It fits worst where scope must be trustworthy rather than merely mandatory —
-namespaces are strings a node computes, so a genuine multi-tenant boundary needs
+namespaces are strings a node computes, a search prefix may be empty, so a genuine multi-tenant boundary needs
 a layer above this one. And a reader deploying on SQLite specifically should
 plan for the divergences in sections 5, 6 and 7 rather than assume the backends
 are interchangeable, which is what a substrate with three implementations
@@ -605,6 +643,10 @@ otherwise invites you to assume.
 - `libs/checkpoint/tests/test_store.py`, `libs/checkpoint-postgres/tests/test_store.py` and `test_async_store.py`, `libs/checkpoint-sqlite/tests/test_store.py` and `test_async_store.py`.
 
 ## History
+
+**2026-09-15** — [`230927fb3a9ac9b2893a30322b4dfea7cdea9a8f`](https://github.com/langchain-ai/langgraph/commit/230927fb3a9ac9b2893a30322b4dfea7cdea9a8f) — 34 commits on, to 2026-09-14, most of them dependency bumps. Screened at the new pin before reading: no auto-run surfaces, 8 dependency surfaces inside the cooldown, 15 build-time execution points and 17 unpinned surfaces across 86 files, and two agent-instruction files read as data; nothing was installed or run. Two touch the store. #8617 widens the `put` value type from `dict` to `Mapping` across the base class, the batched store and both SQL backends, which now serialize `dict(value)`; the in-memory store stores a copy rather than the caller's dict, and `get_text_at_path` converts a non-dict mapping before extracting text, with a parametrized test over `UserDict` and `MappingProxyType`. A security fix in the SDK's custom-auth decorators (5a77be5) stops resource-specific handlers ignoring their `actions=` and `resources=` arguments and registering on every action; the store handlers use a separate registration path and were not affected. The `created_at` divergence, the unenforced SQLite cascade and the flat `limit * 2` fetch all stand, and every cited line still holds.
+
+The marks move both ways. `scope_enforced` is withdrawn: `search` and `list_namespaces` accept an empty prefix, which the Postgres, SQLite and in-memory backends all read as no predicate, and `test_search_empty_prefix_is_unconstrained` in both SQL suites pins that as the contract — the namespace is mandatory on `get`, `put` and `delete`, not on retrieval. Section 10 said there was no negative case asserting a scoped-out or expired item must not be returned; the segment-boundary, neighbouring-namespace and omit-expired tests all do, each beside a positive control, and all were present at the previous pin, so `negative_eval` is carried. One mark.
 
 **2026-08-31** — [`644815f9e5bc52ad8f7a5227a456227e9c3e639b`](https://github.com/langchain-ai/langgraph/commit/644815f9e5bc52ad8f7a5227a456227e9c3e639b) — audited at the same pin; no mark moved. One matrix field changed, and both headline findings — the `created_at` divergence across the three backends, and `ON DELETE CASCADE` declared in checkpoint-sqlite with `PRAGMA foreign_keys` appearing nowhere in the package — hold as written.
 
