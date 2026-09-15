@@ -7,10 +7,14 @@ page_kind: system
 source_name: "vectorize-io/hindsight"
 source_url: https://github.com/vectorize-io/hindsight
 archive_name: "vectorize-io--hindsight"
-revision: f9fb3e934a459f814ac00fefb1819e675d2b5bce
-revision_url: https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce
-analyzed_at: 2026-08-06
-capabilities: "scope_enforced, audit_log"
+revision: 16d4025f882ba232a2d4c72abd1eb47420e68e17
+revision_url: https://github.com/vectorize-io/hindsight/commit/16d4025f882ba232a2d4c72abd1eb47420e68e17
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "every retrieval arm, in both SQL dialects — the memory bank composed into the WHERE unconditionally | hindsight-api-slim/hindsight_api/engine/sql/postgresql.py:274-305 `build_semantic_arm` and `build_bm25_arm`, engine/search/retrieval.py:127, :570, :723 | the retrieval entry point takes `bank_id: str` with no default, the semantic and BM25 arm builders take a required `bank_id_param` and emit `WHERE bank_id = {bank_id_param}` with no conditional, and the temporal and link-spreading queries repeat `WHERE bank_id = $2` and `WHERE mu.bank_id = $6`. The Oracle dialect is built through the same interface, and `tests/test_db_abstraction.py` pins the emitted SQL | tests/test_db_abstraction.py, tests/test_chunk_ids.py"
+  audit_log: "all mutating and core operations across HTTP, MCP and system transports — opt-in, off by default | hindsight-api-slim/hindsight_api/engine/audit.py:213 (the only write, an `INSERT`), api/http.py:4603 `_make_audited_http`, config.py:1873 | `audit.py` records retain, recall, reflect and bank CRUD with `action`, `transport`, `bank_id` and timings into its own table, and the module issues no `UPDATE` or `DELETE` against it. Two limits belong in the record. It is disabled unless `HINDSIGHT_API_AUDIT_LOG_ENABLED=true` or a bank opts in — `DEFAULT_AUDIT_LOG_ENABLED = False  # Disabled by default`. And the maintenance sweep purges it when `audit_log_retention_days` is positive; the default is `-1`, keep forever. It is described as fire-and-forget, so a failed write does not fail the operation | tests/ covers the audited decorator"
+  negative_eval: "chunk resolution and upsert — one bank must not read or overwrite another bank's chunk | hindsight-api-slim/tests/test_chunk_ids.py `test_resolve_rejects_another_banks_id`, tests/test_chunk_storage_upsert.py:215 | *\"bank `a_b` must not read bank `a`'s chunk id as its own\"* — `assert resolve_chunk_id_in(chunk_id, \"a_b\") is None`, with the positive control in the same test: the owning bank resolves it to its own `ChunkRef`. The upsert test is the write half, asserting a conflicting row owned by a different bank is refused rather than overwritten. Both arrived with the fix for issue #4244 | tests/test_chunk_ids.py — the positive assertion follows the negative one"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -164,6 +168,12 @@ The largest correctness gap is that provenance is not an epistemic state machine
 
 The test surface is broad: retain/recall/reflect integration, temporal ranges, graph fan-out caps, causal relationships, observation consolidation and recovery, source-fact budgeting, memory defense, audit logs, migrations, cancellation, provider behavior, and multi-tenant maintenance. Deterministic mechanics use ordinary assertions; LLM-behavior tests use real models plus an independent judge.
 
+### The predicate was right and the identifier was not
+
+A scope predicate on every retrieval arm does not protect a path that looks a row up by id, and until 9 September 2026 chunk ids could name the wrong bank. `build_chunk_id` concatenated bank, document and index with underscores, so bank `a` with document `b_c` and bank `a_b` with document `c` produced the same id — and a bank resolving that id could read the other's chunk as its own. Issue #4244 reported it and [`179938a655822cd590373a1e725f00941b8f50cd`](https://github.com/vectorize-io/hindsight/commit/179938a655822cd590373a1e725f00941b8f50cd) fixed it by escaping `_` and `~` in each component, with a docstring that states the property being restored — *"Injective: distinct triples give distinct ids"* — and keeps the common case byte-identical so existing rows still resolve.
+
+The fix is worth studying for what it adds beside the escaping. `test_resolve_rejects_another_banks_id` asserts that bank `a_b` gets `None` for bank `a`'s chunk and, in the same test, that bank `a` gets its own `ChunkRef`. And because rows written before the fix can still collide, `test_upsert_refuses_a_chunk_id_owned_by_another_bank` asserts the upsert refuses a conflicting row owned by a different bank rather than overwriting it — a write-path guard for the ids the read-path fix cannot rename retroactively. This is the scope case this atlas has no mark for directly: the `WHERE` was correct throughout, and the leak ran through a string format.
+
 The repository also ships LongMemEval and LoCoMo scripts plus performance and consolidation benchmarks. That is better evidence than a demo-only test suite, although published quality still depends on model/provider configuration and benchmark settings.
 
 ## 11. For Your Own Build
@@ -220,6 +230,8 @@ Do not copy the full architecture for a small local agent. Start with two retrie
 - `hindsight-api-slim/tests/`
 
 ## History
+
+**2026-09-15** — [`16d4025f882ba232a2d4c72abd1eb47420e68e17`](https://github.com/vectorize-io/hindsight/commit/16d4025f882ba232a2d4c72abd1eb47420e68e17) — second reading, 624 commits on. Screened again: two auto-run findings — a Claude Code plugin marketplace manifest and a `.githooks/` payload inert until installed — 34 build-time execution points and 51 dependency surfaces inside the seven-day cooldown, so nothing was installed and nothing was run. Both marks were re-tested at the producer and both hold; each now carries the evidence record it had been asserted without. `scope_enforced` is recorded against the SQL arm builders, which emit `WHERE bank_id = …` unconditionally in both dialects. `audit_log` is recorded with its two limits: it is disabled by default and enabled per deployment or per bank, and a maintenance sweep can purge it, though the default retention is to keep forever. `negative_eval` is added, on tests that arrived with the fix for a real cross-bank collision: chunk ids built by joining bank and document with underscores could name another bank's chunk, which was true at the previous pin while the retrieval predicates were correct, and the fix escapes the separators and adds a resolve test with its positive control and an upsert test that refuses to overwrite another bank's row.
 
 **2026-08-06** — [`f9fb3e934a459f814ac00fefb1819e675d2b5bce`](https://github.com/vectorize-io/hindsight/commit/f9fb3e934a459f814ac00fefb1819e675d2b5bce) — 141 commits on, and one mark was earned at the previous pin and not claimed.
 

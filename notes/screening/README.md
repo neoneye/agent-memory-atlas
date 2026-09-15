@@ -9,16 +9,16 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 365 of 457 screened at the report's current pin.**
+**Progress: 366 of 457 screened at the report's current pin.**
 
-8 further record(s) describe a revision the report has since moved
+7 further record(s) describe a revision the report has since moved
 off, and 84 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 149 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 190 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 191 |
 | Repositories with build-time execution (`EXEC`) | 270 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
@@ -78,7 +78,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`graymatter`](../../content/systems/graymatter.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |
 | [`hermes-agent`](../../content/systems/hermes-agent.md) | `.envrc` |
-| [`hindsight`](../../content/systems/hindsight.md) | `.githooks/` |
+| [`hindsight`](../../content/systems/hindsight.md) | `.claude-plugin/`, `.githooks/` |
 | [`hipocampus`](../../content/systems/hipocampus.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`hivemind-activeloop`](../../content/systems/hivemind-activeloop.md) | `.claude-plugin/` |
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
