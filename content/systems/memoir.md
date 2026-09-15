@@ -7,10 +7,14 @@ page_kind: system
 source_name: "zhangfengcdt/memoir"
 source_url: https://github.com/zhangfengcdt/memoir
 archive_name: "zhangfengcdt--memoir"
-revision: 868703a96fae8c9e058db3b04790229addeb7e93
-revision_url: https://github.com/zhangfengcdt/memoir/commit/868703a96fae8c9e058db3b04790229addeb7e93
-analyzed_at: 2026-08-09
+revision: b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392
+revision_url: https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, audit_log, human_review"
+capability_evidence:
+  scope_enforced: "search — the namespace is an argument to the index query, defaulting to a named namespace rather than to all of them | src/memoir/services/search_service.py:25-48, src/memoir/services/vector_service.py:133-144 | `search(query, namespace=\"default\", k)` converts the namespace to its key tuple and passes it to `vector_service.search(namespace, …)`, which calls `ns_store.text_index_search(namespace, idx_name, query, k)`; keys are prefixed by namespace in the ProllyTree, so a search reads one namespace's index. Omitting the argument reads the `default` namespace, not every namespace | tests/test_services/"
+  audit_log: "the versioned store's own commit history, exposed per key with authorship | src/memoir/services/crypto_service.py:187-200 `get_blame`, src/memoir/cli/commands/crypto.py:176, src/memoir/ui/handlers/crypto_handler.py:155 | memory is a ProllyTree over a git object store, so every mutation is a commit in the memory store itself — not the project's source history — and `get_blame(key, namespace)` reads that store's native commit log to return, per change, the commit, author, date and message. It is reachable from the CLI as `memoir crypto blame` and from the UI | tests/test_ui_commit_snapshot.py"
+  human_review: "branch merge — a conflicting merge is refused until a person resolves it | src/memoir/ui/handlers/branch_handler.py:283-285 | a merge that conflicts returns HTTP 409, *Merge conflict detected. Please resolve manually.*, so conflicting memory content does not take effect until someone adjudicates it. The basis is narrow and stated as such in the report: the `REJECT`/`ConflictInfo` path serves an automated read-merge-write caller as well as a person | tests/test_services/test_branch_service.py"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -409,5 +413,7 @@ accident.
 `judge.py`, `memoir_runner.py`
 
 ## History
+
+**2026-09-15** — [`b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392`](https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392) — second reading, five commits on, spanning release 0.2.5. Screened again: one auto-run finding, the Claude Code plugin manifest; nothing inside the cooldown; nothing installed or run. All three marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The additions are a visual time-travel History view over the store's commits, a toggle that auto-matches a branch, support for the MCP Python SDK 2, and new tests for the branch service and UI commit snapshots — the second of which gives `audit_log` a committed test it did not have. None changes a mark.
 
 **2026-08-09** — [`868703a96fae8c9e058db3b04790229addeb7e93`](https://github.com/zhangfengcdt/memoir/commit/868703a96fae8c9e058db3b04790229addeb7e93) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run.
