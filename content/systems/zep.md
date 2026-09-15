@@ -7,10 +7,13 @@ page_kind: system
 source_name: "getzep/zep"
 source_url: https://github.com/getzep/zep
 archive_name: "getzep--zep"
-revision: be263ee23085410185835e0d8508b47fd35e9abb
-revision_url: https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb
-analyzed_at: 2026-08-13
+revision: 495bf72880d13f0b81696ec4f88a9817ed85ca73
+revision_url: https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73
+analyzed_at: 2026-09-15
 capabilities: "bitemporal, scope_enforced"
+capability_evidence:
+  bitemporal: "the fact-triple contract and its readers | ingestion/src/zep_ingest/triples.py:63-64, :108-109; benchmarks/longmemeval/zep_longmem_eval.py:319-320 | `FactTriple` carries `valid_at` and `invalid_at` for when a claim held beside `created_at` for when the graph learned it, each validated as RFC3339 and set independently; the LongMemEval harness and `examples/python/agent-memory-full-example/agents.py:201-203` read both back and render an invalidated fact as a closed date range rather than dropping it. No as-of filter is issued anywhere in this tree, and invalidation itself runs in the hosted service | no committed test reads validity back"
+  scope_enforced: "`Destination` in zep-ingest | ingestion/src/zep_ingest/types.py:66-73; ingestion/src/zep_ingest/verify.py:45-54 | `Destination.__post_init__` raises unless exactly one of `graph_id` or `user_id` is set, and `search_when_ready` builds one before every `graph.search` and passes only that key, so this library cannot issue an unscoped read; the filter itself is applied by the hosted service, and the MCP server's five UUID-addressed getters take no scope key | ingestion/tests/test_types.py:193, :197"
 stack_storage: "graph, postgres"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -18,11 +21,11 @@ matrix:
   memory_unit: "An episode submitted to a hosted graph, and the typed fact edge it later becomes — carrying valid_at, invalid_at and created_at"
   storage: "Zep Cloud's hosted graph; nothing local. The deprecated Community Edition in legacy/ is a Go server on Postgres"
   retrieval: "graph.search over edges, nodes or episodes, limit 50, reranked by rrf, mmr, node_distance, episode_mentions or cross_encoder"
-  write: "Asynchronous end to end — submit returns a task id, wait() returns before the fact is searchable, and a poll helper absorbs the rest"
+  write: "Asynchronous end to end — submit returns batch, episode, message or task handles, wait() polls the tail of each and returns before the fact is searchable, and a poll helper absorbs the rest"
   update_delete: "invalid_at closes a fact's validity interval; the ingestion library has no delete path at all"
   scoping: "Destination requires exactly one of graph_id or user_id, and every read carries it"
   integration: "Nine Python framework packages, three TypeScript, one Go, plus a Go MCP server registering thirteen tools, every one of them a read"
-  background: "All extraction is the vendor's; the client sees only task ids and an indexing lag it polls through"
+  background: "All extraction is the vendor's; the client sees only processing handles and an indexing lag it polls through"
   trust: "min_fact_rating is a hosted score on a fact, not a state; nothing is candidate, verified or rejected"
   strengths: "A committed retrieval-budget ablation with ten runs per point that isolates memory failure from answering failure"
   risks: "The mechanism is a closed hosted service, and an episode submitted without created_at is silently dated to ingestion time"
@@ -87,8 +90,9 @@ belief:
 
 ```text
 episode constructed   -> validated locally against documented API limits
-submitted             -> task_id returned, or untracked_items incremented
-result.wait()         -> the task reports done
+submitted             -> batch id, episode or message UUID, or task id kept;
+                         untracked_items incremented when none comes back
+result.wait()         -> the tail of the queue reports processed
                       -> but the fact is still not searchable
 search_when_ready()   -> polls every 5s up to 120s until something comes back
 retrieved             -> a fact edge with valid_at / invalid_at / created_at
@@ -127,7 +131,7 @@ corrections land backwards.
 %% caption: what a client can see of a hosted graph: two lags, three timestamps, and no way to say never again
 flowchart TB
     Ep["Episode<br/>data, data_type, created_at?"] --> Guard["LimitGuard splits at 9,500 chars<br/>Alias canonicalizer rewrites names"]
-    Guard --> Sub["Submit: batch or sequential<br/>returns task_id"]
+    Guard --> Sub["Submit: batch or sequential<br/>returns batch, episode or task handles"]
     Sub --> Opaque
 
     subgraph Opaque["Zep Cloud — not in this tree"]
@@ -149,10 +153,11 @@ flowchart TB
 
 Six code trees share the repository, developed and released independently.
 
-- **`ingestion/`** — `zep-ingest`, about 4,900 lines of Python. A
+- **`ingestion/`** — `zep-ingest`, about 5,200 lines of Python. A
   `Loader → Transform* → LimitGuard → Submitter` pipeline with loaders for Slack
   exports, `.eml` mail, WebVTT and speaker-labelled transcripts, text/Markdown
-  files, and JSONL/CSV/JSON records. This is the only substantial
+  files, and JSONL/CSV/JSON records, plus a `ConcatLoader` that chains loaders
+  into one submit stream. This is the only substantial
   memory-adjacent implementation in the repository.
 - **`benchmarks/`** — a LoCoMo harness (about 1,800 lines plus tests) with five
   committed experiments, and a LongMemEval harness with no committed results.
@@ -214,9 +219,9 @@ appeal or a disqualification depending on the reader.
   the tree an operator runs: `make build` or `docker compose up`, a `ZEP_API_KEY`
   in the environment, and a stateless proxy holding nothing.
 
-The screen of this checkout on 13 August 2026 found one auto-run surface, 47
-dependency surfaces inside the seven-day cooldown, 14 build-time execution
-points and 29 unpinned surfaces across 93 files. Nothing here was installed or
+The screen of this checkout found one auto-run surface, 23 dependency surfaces
+inside the seven-day cooldown, 14 build-time execution points and 33 unpinned
+surfaces across 100 files. Nothing here was installed or
 run; the analysis is a read of the tree.
 
 ## 4. Essential Implementation Paths
@@ -228,7 +233,8 @@ run; the analysis is a read of the tree.
   resumable handles), then calls `submit_episodes()`.
 - **Submitters** — `ingestion/src/zep_ingest/submitters/batch.py` and
   `sequential.py`, selected by `method="auto"`. Documented limits in
-  `types.py`: 350 items per add, 50,000 per batch, 30 messages per
+  `types.py`: 350 items per add, a 50,000-item batch cap that the submitters
+  roll over at 10,000 by default (`DEFAULT_ITEMS_PER_BATCH`), 30 messages per
   `thread.add_messages` call.
 - **Chunking and limits** — `transforms/chunker.py` and `transforms/limits.py`.
   `LimitGuard` targets `SAFE_EPISODE_CHARS = 9_500` against a documented
@@ -342,10 +348,20 @@ handles survive a timeout:
 
 ```python
 result = pipeline.run(client, graph_id="company_kb")
-result.wait(timeout=600)
+result.wait()
 ```
 
-That is lag one: the extraction task is queued and `wait()` blocks on it. Lag
+That is lag one: the extraction work is queued and `wait()` blocks on it. It polls
+one handle per submission path — `batch.get` on the last batch, the `processed`
+flag of the last-submitted `graph.add` episode, the last message UUID of each
+thread, and every task id for nodes and triples — and when a single queue's tail
+reports processed it marks everything submitted before it processed too
+(`ingestion/src/zep_ingest/result.py:210-218`), on the documented premise that
+plain `graph.add` episodes are processed in submission order. The default
+deadline is 60 seconds per submitted item with a 120-second floor (`:82-94`).
+Until 0.3.0 the sequential thread path looked for a `task_id` that
+`thread.add_messages` does not return, so every such backfill was counted as
+untracked and `wait()` refused to wait on it. Lag
 two is the one that matters and is almost never documented anywhere in this
 atlas — from `verify.py`:
 
@@ -457,7 +473,7 @@ Provenance is a genuine strength: structured `source_type` plus source-specific
 keys on every episode, and `IngestResult` collects `node_uuids`, `edge_uuids`
 and `task_ids` so a run's outputs can be tied back to its inputs. Errors are
 collected per item as `AddError(index, item_count, error)` rather than aborting
-the run, and `untracked_items` counts submissions that came back without a task
+the run, and `untracked_items` counts submissions that came back without a completion
 id — a small, honest counter for "we sent this and cannot prove what happened
 to it".
 
@@ -704,6 +720,8 @@ Zep at all, and takes `benchmarks/locomo/` to point at their own system instead.
 - `legacy/docker-compose.ce.yaml`, `Dockerfile.ce` — the deprecated self-host path.
 
 ## History
+
+**2026-09-15** — [`495bf72880d13f0b81696ec4f88a9817ed85ca73`](https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73) — five commits on, to 2026-09-11. Screened at the new pin before reading: one auto-run surface, 23 dependency surfaces inside the cooldown, 14 build-time execution points and 33 unpinned surfaces across 100 files; nothing was installed or run. `zep-ingest` went to 0.3.0. Batches now roll over at 10,000 items by default instead of filling to the 50,000 cap. Every file or loader bound for one graph is submitted before anything waits, and `wait()` polls the tail of each submission path, inferring that the queue in front of a processed tail has drained, with a deadline of 60 seconds per item and a 120-second floor. Sequential thread backfills now poll the last message UUID per thread: at the previous pin that path looked for a `task_id` which `thread.add_messages` never returns, so those backfills were all counted untracked and `wait()` refused them. A `ConcatLoader`, multi-path sources and `IngestResult.combine()` were added, along with a production smoke script that needs a live key. The other two commits repair the Python, TypeScript and Go examples for SDK v3. Nothing in `benchmarks/`, `mcp/`, `integrations/` or `legacy/` changed. Both marks were re-checked and stand, now with evidence records. `bitemporal` rests on the triple contract and on readers that render the closed interval; no as-of filter is issued in this tree. `scope_enforced` rests on `Destination`, which `search_when_ready` builds before every read.
 
 **2026-08-31** — [`be263ee23085410185835e0d8508b47fd35e9abb`](https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb) — same pin, two absence claims corrected, both wrong in the direction of asserting something missing that is committed. The MCP server was described as documented here and implemented elsewhere; `mcp/zep-mcp-server/` is a complete Go module — `cmd/server/main.go`, `internal/server/{server,tools}.go`, thirteen handler files, `pkg/zep/client.go`, `go.mod`, `Makefile`, `Dockerfile` — and `registerTools()` registers exactly the thirteen tool names the report listed. The read-only finding survives on code rather than on `docs/TOOLS.md`; the scope asymmetry across the five UUID-addressed getters, the twelve Go tests and the nanosecond shutdown timeout at `server.go:160` were not previously reported, and the open question asking where the server is implemented is answered from the tree. `zep-eval-harness/runs/` was described as holding only a `.gitkeep`; it holds one committed chain — chunk set, user and document manifests, and a four-question evaluation under `gemini-2.5-flash-lite` — thin but present, and section 10 describes it instead. `DEFAULT_RISKY_WORDS` holds 146 words, not 150. No capability mark moved; `scope_enforced` was re-checked in both directions and stands on `Destination` in `zep-ingest`, which section 5 states explicitly.
 

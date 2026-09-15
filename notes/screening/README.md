@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 395 of 457 screened at the report's current pin.**
+**Progress: 396 of 457 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
-off, and 60 report(s) have no record at all.
+off, and 59 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 160 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 215 |
-| Repositories with build-time execution (`EXEC`) | 285 |
+| Repositories with an auto-run surface (`RUNS`) | 161 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 216 |
+| Repositories with build-time execution (`EXEC`) | 286 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -188,5 +188,6 @@ These execute without a command being typed. Read before opening the tree.
 | [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
+| [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
 

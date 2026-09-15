@@ -114,14 +114,14 @@ in retrieved tokens.</p>
               <strong>getzep/zep</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb" title="be263ee23085410185835e0d8508b47fd35e9abb">
+            <a class="meta-pill revision-pill" href="https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73" title="495bf72880d13f0b81696ec4f88a9817ed85ca73">
               <span>Analyzed revision</span>
-              <code>be263ee2…</code>
+              <code>495bf728…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-13</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/getzep--zep" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -205,8 +205,9 @@ the vendor's extraction, which the client never observes.</p>
 <p>The states a client can distinguish are therefore states of
 <em>submission</em>, not of belief:</p>
 <pre class="text"><code>episode constructed   -&gt; validated locally against documented API limits
-submitted             -&gt; task_id returned, or untracked_items incremented
-result.wait()         -&gt; the task reports done
+submitted             -&gt; batch id, episode or message UUID, or task id kept;
+                         untracked_items incremented when none comes back
+result.wait()         -&gt; the tail of the queue reports processed
                       -&gt; but the fact is still not searchable
 search_when_ready()   -&gt; polls every 5s up to 120s until something comes back
 retrieved             -&gt; a fact edge with valid_at / invalid_at / created_at</code></pre>
@@ -245,7 +246,7 @@ by that same clock, the corrections land backwards.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — what a client can see of a hosted graph: two lags, three timestamps, and no way to say never again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: what a client can see of a hosted graph: two lags, three timestamps, and no way to say never again
 flowchart TB
     Ep[&quot;Episode&lt;br/&gt;data, data_type, created_at?&quot;] --&gt; Guard[&quot;LimitGuard splits at 9,500 chars&lt;br/&gt;Alias canonicalizer rewrites names&quot;]
-    Guard --&gt; Sub[&quot;Submit: batch or sequential&lt;br/&gt;returns task_id&quot;]
+    Guard --&gt; Sub[&quot;Submit: batch or sequential&lt;br/&gt;returns batch, episode or task handles&quot;]
     Sub --&gt; Opaque
 
     subgraph Opaque[&quot;Zep Cloud — not in this tree&quot;]
@@ -266,12 +267,13 @@ flowchart TB
 independently.</p>
 <ul>
 <li><strong><code>ingestion/</code></strong> — <code>zep-ingest</code>,
-about 4,900 lines of Python. A
+about 5,200 lines of Python. A
 <code>Loader → Transform* → LimitGuard → Submitter</code> pipeline with
 loaders for Slack exports, <code>.eml</code> mail, WebVTT and
 speaker-labelled transcripts, text/Markdown files, and JSONL/CSV/JSON
-records. This is the only substantial memory-adjacent implementation in
-the repository.</li>
+records, plus a <code>ConcatLoader</code> that chains loaders into one
+submit stream. This is the only substantial memory-adjacent
+implementation in the repository.</li>
 <li><strong><code>benchmarks/</code></strong> — a LoCoMo harness (about
 1,800 lines plus tests) with five committed experiments, and a
 LongMemEval harness with no committed results.</li>
@@ -348,11 +350,10 @@ installs. The MCP server is the one thing in the tree an operator runs:
 <code>ZEP_API_KEY</code> in the environment, and a stateless proxy
 holding nothing.</li>
 </ul>
-<p>The screen of this checkout on 13 August 2026 found one auto-run
-surface, 47 dependency surfaces inside the seven-day cooldown, 14
-build-time execution points and 29 unpinned surfaces across 93 files.
-Nothing here was installed or run; the analysis is a read of the
-tree.</p>
+<p>The screen of this checkout found one auto-run surface, 23 dependency
+surfaces inside the seven-day cooldown, 14 build-time execution points
+and 33 unpinned surfaces across 100 files. Nothing here was installed or
+run; the analysis is a read of the tree.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
@@ -366,8 +367,10 @@ calls <code>submit_episodes()</code>.</li>
 <li><strong>Submitters</strong> —
 <code>ingestion/src/zep_ingest/submitters/batch.py</code> and
 <code>sequential.py</code>, selected by <code>method="auto"</code>.
-Documented limits in <code>types.py</code>: 350 items per add, 50,000
-per batch, 30 messages per <code>thread.add_messages</code> call.</li>
+Documented limits in <code>types.py</code>: 350 items per add, a
+50,000-item batch cap that the submitters roll over at 10,000 by default
+(<code>DEFAULT_ITEMS_PER_BATCH</code>), 30 messages per
+<code>thread.add_messages</code> call.</li>
 <li><strong>Chunking and limits</strong> —
 <code>transforms/chunker.py</code> and
 <code>transforms/limits.py</code>. <code>LimitGuard</code> targets
@@ -528,11 +531,23 @@ creates.</strong></p>
 returns immediately". The docstring instructs the caller to bind the
 result before waiting, so the resume handles survive a timeout:</p>
 <pre class="python"><code>result = pipeline.run(client, graph_id=&quot;company_kb&quot;)
-result.wait(timeout=600)</code></pre>
-<p>That is lag one: the extraction task is queued and
-<code>wait()</code> blocks on it. Lag two is the one that matters and is
-almost never documented anywhere in this atlas — from
-<code>verify.py</code>:</p>
+result.wait()</code></pre>
+<p>That is lag one: the extraction work is queued and
+<code>wait()</code> blocks on it. It polls one handle per submission
+path — <code>batch.get</code> on the last batch, the
+<code>processed</code> flag of the last-submitted <code>graph.add</code>
+episode, the last message UUID of each thread, and every task id for
+nodes and triples — and when a single queue's tail reports processed it
+marks everything submitted before it processed too
+(<code>ingestion/src/zep_ingest/result.py:210-218</code>), on the
+documented premise that plain <code>graph.add</code> episodes are
+processed in submission order. The default deadline is 60 seconds per
+submitted item with a 120-second floor (<code>:82-94</code>). Until
+0.3.0 the sequential thread path looked for a <code>task_id</code> that
+<code>thread.add_messages</code> does not return, so every such backfill
+was counted as untracked and <code>wait()</code> refused to wait on it.
+Lag two is the one that matters and is almost never documented anywhere
+in this atlas — from <code>verify.py</code>:</p>
 <blockquote>
 <p>Ingestion is asynchronous end to end: even after
 <code>IngestResult.wait()</code> reports success, just-written facts
@@ -657,8 +672,8 @@ plus source-specific keys on every episode, and
 be tied back to its inputs. Errors are collected per item as
 <code>AddError(index, item_count, error)</code> rather than aborting the
 run, and <code>untracked_items</code> counts submissions that came back
-without a task id — a small, honest counter for "we sent this and cannot
-prove what happened to it".</p>
+without a completion id — a small, honest counter for "we sent this and
+cannot prove what happened to it".</p>
 <p>The multi-tenancy boundary is the vendor's. <code>Destination</code>
 enforces the client side of it and nothing more.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
@@ -999,6 +1014,32 @@ Postgres store.</li>
 <code>Dockerfile.ce</code> — the deprecated self-host path.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/getzep/zep/commit/495bf72880d13f0b81696ec4f88a9817ed85ca73"><code class="commit-id" title="495bf72880d13f0b81696ec4f88a9817ed85ca73">495bf728…</code></a>
+— five commits on, to 2026-09-11. Screened at the new pin before
+reading: one auto-run surface, 23 dependency surfaces inside the
+cooldown, 14 build-time execution points and 33 unpinned surfaces across
+100 files; nothing was installed or run. <code>zep-ingest</code> went to
+0.3.0. Batches now roll over at 10,000 items by default instead of
+filling to the 50,000 cap. Every file or loader bound for one graph is
+submitted before anything waits, and <code>wait()</code> polls the tail
+of each submission path, inferring that the queue in front of a
+processed tail has drained, with a deadline of 60 seconds per item and a
+120-second floor. Sequential thread backfills now poll the last message
+UUID per thread: at the previous pin that path looked for a
+<code>task_id</code> which <code>thread.add_messages</code> never
+returns, so those backfills were all counted untracked and
+<code>wait()</code> refused them. A <code>ConcatLoader</code>,
+multi-path sources and <code>IngestResult.combine()</code> were added,
+along with a production smoke script that needs a live key. The other
+two commits repair the Python, TypeScript and Go examples for SDK v3.
+Nothing in <code>benchmarks/</code>, <code>mcp/</code>,
+<code>integrations/</code> or <code>legacy/</code> changed. Both marks
+were re-checked and stand, now with evidence records.
+<code>bitemporal</code> rests on the triple contract and on readers that
+render the closed interval; no as-of filter is issued in this tree.
+<code>scope_enforced</code> rests on <code>Destination</code>, which
+<code>search_when_ready</code> builds before every read.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/getzep/zep/commit/be263ee23085410185835e0d8508b47fd35e9abb"><code class="commit-id" title="be263ee23085410185835e0d8508b47fd35e9abb">be263ee2…</code></a>
 — same pin, two absence claims corrected, both wrong in the direction of
