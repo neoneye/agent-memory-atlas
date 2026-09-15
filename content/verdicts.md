@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 471 reports.**
+**This page covers all 472 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4118,3 +4118,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.3.3, 74 commits since 9 May 2026, about 15,100 lines of Python and 241 tests, one MCP server for every registered project, git-hook capture, HTML dashboards, and a paper ([arXiv:2606.12329](https://arxiv.org/abs/2606.12329)) reporting a dogfooding study whose events are not in the tree.
 - Study when: coding agents keep repeating failed approaches in a repository and you want warnings at commit time from memory you can read as text.
 - Do not copy when: lessons shared across projects must follow their corrections, or every change to shared memory needs a record.
+
+### [`stratagate`](../systems/stratagate/)
+- Best idea: **no derived memory without its source.** Each conversation block is sealed verbatim before any model call, summaries decay toward shallower layers but can expand back to the messages, event cards cite their source messages and separate when something was mentioned from when it happened, and memory gains weight only from receipts naming the evidence an answer used. Three marks: `trust_state`, `scope_enforced`, `negative_eval`.
+- Biggest risk: **retired events still reach the injected context.** A superseded event keeps its place in event search with a capped weight, pinned and safety-critical events are admitted regardless, and the memory injected before every turn renders events without their status or successor, while the graph facts beside them are filtered to active. The as-of read exists only on legacy element cards the plugin no longer creates.
+- Most reusable component: the evidence batch — every tool result carries a batch id the agent must assess, and only a recorded use receipt reinforces what it cited, so retrieval never strengthens itself.
+- Maturity impression: MIT, plugin version 0.2.71, 126 commits since 10 August 2026, about 12,300 lines of TypeScript and 196 tests, a DeepSeek Harness plugin with a read-only Memory UI, and a committed LoCoMo conversation-26 comparison with per-question results and artifact hashes, scoped in its own documentation as one conversation and not an ablation.
+- Study when: long-running agents must answer temporal questions and every memory must be traceable to what was said.
+- Do not copy when: a superseded decision must never be injected as context, or a person needs to edit or delete memory through the interface.

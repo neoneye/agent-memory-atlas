@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A TypeScript memory for
+long-running agents, shipped as a DeepSeek Harness plugin over SQLite,
+that seals each conversation block verbatim before any model call,
+derives decaying summary layers, event cards with mention and occurrence
+times, and a current-state graph from it, and asks the agent to judge
+whether retrieved evidence suffices before relying on it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="StrataGate — Agent Memory Atlas">
+    <meta property="og:description" content="A TypeScript memory for
+long-running agents, shipped as a DeepSeek Harness plugin over SQLite,
+that seals each conversation block verbatim before any model call,
+derives decaying summary layers, event cards with mention and occurrence
+times, and a current-state graph from it, and asks the agent to judge
+whether retrieved evidence suffices before relying on it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="StrataGate — Agent Memory Atlas">
+    <meta name="twitter:description" content="A TypeScript memory for
+long-running agents, shipped as a DeepSeek Harness plugin over SQLite,
+that seals each conversation block verbatim before any model call,
+derives decaying summary layers, event cards with mention and occurrence
+times, and a current-state graph from it, and asks the agent to judge
+whether retrieved evidence suffices before relying on it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>StrataGate — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "StrataGate",
+      "description": "A TypeScript memory for long-running agents, shipped as a DeepSeek Harness plugin over SQLite, that seals each conversation block verbatim before any model call, derives decaying summary layers, event cards with mention and occurrence times, and a current-state graph from it, and asks the agent to judge whether retrieved evidence suffices before relying on it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every summary keeps its source</p>
+          <h1>StrataGate</h1>
+          <p class="document-deck">A TypeScript memory for long-running
+agents, shipped as a DeepSeek Harness plugin over SQLite, that seals
+each conversation block verbatim before any model call, derives decaying
+summary layers, event cards with mention and occurrence times, and a
+current-state graph from it, and asks the agent to judge whether
+retrieved evidence suffices before relying on it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/diqierjia/StrataGate-AgentMemory">
+              <span>Source</span>
+              <strong>diqierjia/StrataGate-AgentMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7" title="a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7">
+              <span>Analyzed revision</span>
+              <code>a30ffedd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/diqierjia--StrataGate-AgentMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>diqierjia--StrataGate-AgentMemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>StrataGate is a memory for long-running agents, written in TypeScript
+and shipped as the <code>stratagate-dsh</code> plugin for DeepSeek
+Harness, version 0.2.71, MIT, 126 commits since 10 August 2026. About
+12,300 lines of TypeScript sit across the plugin runtime and
+<code>@stratagate/core</code>, with 196 test cases. A WorkBuddy
+integration and an embeddable core library are included.</p>
+<p>Its organising rule is that every derived memory can be traced to
+words that were actually said. Conversation is cut into blocks. At each
+boundary the complete messages (L5), a near-verbatim view (L4) and a
+deterministically pruned view (L3) are sealed before any model runs. A
+model then writes the title (L0), summary (L1) and key facts (L2). Older
+blocks decay toward shallower layers and can be expanded back to their
+source.</p>
+<p>On top of the blocks:</p>
+<ul>
+<li><strong>Event cards</strong> each cite the source messages of one
+block and record when something was mentioned apart from when it
+happened, with precision and basis.</li>
+<li><strong>A knowledge graph</strong> projected from the events holds
+the current state of people, projects, tools and places, with facts that
+carry a status and a validity window.</li>
+<li><strong>An evidence gate</strong> asks the agent to assess each
+retrieved batch before relying on it. Only memories cited by a recorded
+use receipt gain weight, so retrieval alone never reinforces
+itself.</li>
+</ul>
+<p>The graph's <code>disputed</code> and <code>superseded</code> facts
+are kept out of the current state and out of the memory injected each
+turn, and every read is confined to a namespace derived from the project
+directory.</p>
+<p>Events are handled less carefully. A superseded event stays a
+candidate for the memory injected on every turn. Its weight is capped
+rather than excluded, and pinned or safety-critical events are added
+regardless. The injected rendering omits both its status and its
+successor, so the retired version reads as background evidence like any
+other. The tools an agent calls do show <code>status</code>.</p>
+<p>Three marks: <code>trust_state</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>namespace</strong> is one memory space: by default a
+project, keyed by the session's working directory. Inside it,
+<strong>threads</strong> are sessions.</p>
+<p>A <strong>block</strong> is a run of turns with six layers
+(<code>README.md:136-147</code>):</p>
+<ul>
+<li>L5 — the complete messages and tool records, the final source;</li>
+<li>L4 — near-verbatim readable conversation;</li>
+<li>L3 — deterministically pruned conversation;</li>
+<li>L2, L1, L0 — model-written key facts, summary, and title with
+tags.</li>
+</ul>
+<p>A block stays pending — unable to replace native history or decay —
+until its model layers validate.</p>
+<p>An <strong>event</strong> is a durable memory extracted from one
+block. Its <code>temporal</code> record separates
+<code>mentionedAt</code> from <code>happenedStart</code> and
+<code>happenedEnd</code>, with the original wording, precision, basis
+and a status such as planned or cancelled.</p>
+<p>The <strong>graph</strong> is a projection: nodes and edges whose
+facts cite events. It is the view of what is true now.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — sources are sealed before any model runs; the graph's current state drops disputed facts, while superseded events still reach the injected context</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: sources are sealed before any model runs; the graph&#39;s current state drops disputed facts, while superseded events still reach the injected context
+flowchart TB
+    TURN[&quot;completed main-agent turn&quot;] --&gt; BLOCK[&quot;block boundary&quot;]
+    BLOCK --&gt; SEAL[(&quot;L5 verbatim + L4 + L3&lt;br/&gt;sealed before any model call&quot;)]
+    SEAL --&gt; SUM[&quot;model: L0 title, L1 summary, L2 key facts&quot;]
+    SEAL --&gt; EXTRACT[&quot;model: events citing this block&#39;s messages&quot;]
+    EXTRACT --&gt; EVENT[(&quot;event card&lt;br/&gt;mentionedAt vs happenedStart/End&lt;br/&gt;status, weight&quot;)]
+    EVENT --&gt;|&quot;supersedesEventIds&quot;| OLD[&quot;older event: status superseded&lt;br/&gt;weight capped at 0.1&quot;]
+    EVENT --&gt; PROJECT[&quot;graph projection (batched)&quot;]
+    PROJECT --&gt; NODE[(&quot;node / edge facts&lt;br/&gt;active, superseded, disputed, archived&lt;br/&gt;validFrom, validTo&quot;)]
+    NODE --&gt; CURRENT[&quot;currentState: active facts only&quot;]
+    Q[&quot;each turn: activation query&quot;] --&gt; SEARCH[&quot;searchEvents: active + superseded&lt;br/&gt;searchGraphNodes: active + disputed&quot;]
+    OLD --&gt; SEARCH
+    SEARCH --&gt; INJECT[&quot;[Activated long-term memory]&lt;br/&gt;events without status; graph facts active only&quot;]
+    TOOLS[&quot;agent tools: search, expand&quot;] --&gt; ASSESS[&quot;memory_assess batch&quot;]
+    ASSESS --&gt; USE[&quot;memory_record_use receipt&quot;]
+    USE --&gt;|&quot;only used evidence&quot;| WEIGHT[&quot;reinforce weight&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core store</td>
+<td><code>packages/core/src/store.ts</code> (in-memory state, mutations,
+search, derivation jobs), <code>sqlite.ts</code> (schema and
+persistence), <code>blocks.ts</code>, <code>graph.ts</code>,
+<code>elements.ts</code>, <code>retrieval.ts</code>,
+<code>weights.ts</code>, <code>external-memory.ts</code>,
+<code>types.ts</code></td>
+</tr>
+<tr>
+<td>Plugin runtime</td>
+<td><code>src/runtime.ts</code> (capture, activation, namespaces, tool
+handlers), <code>src/tools.ts</code> (tool definitions),
+<code>src/llm.ts</code> (model schemas for summaries, events and graph
+projection)</td>
+</tr>
+<tr>
+<td>Admin UI</td>
+<td><code>src/web.ts</code> (routes), <code>src/client.js</code> (the
+Memory UI)</td>
+</tr>
+<tr>
+<td>Other</td>
+<td><code>src/legacy-session.ts</code>, <code>src/fold.ts</code>,
+<code>src/graph-clustering.ts</code>,
+<code>integrations/deepseek-harness</code>,
+<code>integrations/workbuddy</code></td>
+</tr>
+<tr>
+<td>Evaluation</td>
+<td><code>benchmarks/*.json</code>, <code>docs/EVALUATION.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong>
+<code>dsh plugin --profile web add stratagate-dsh</code>; the database
+lives at <code>DSH_HOME/stratagate/memory.db</code> and survives
+removing the plugin.</li>
+<li><strong>Models:</strong> the harness's configured models write
+summaries, events and graph projections; nothing runs a separate
+server.</li>
+<li><strong>Hand-repairable:</strong> partly. SQLite is inspectable, and
+the Memory UI shows blocks, events, sources, graph and use receipts, but
+its memory routes are read-only.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, four
+build-time execution points (package lifecycle scripts), four unpinned
+surfaces and five dependency files inside the seven-day cooldown.
+Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Namespace</strong> — <code>runtime.ts</code>
+<code>namespaceFor</code>: <code>prefix:project:&lt;cwd key&gt;</code>
+by default, <code>:session:&lt;id&gt;</code> or
+<code>:global:&lt;name&gt;</code> by configuration; <code>space()</code>
+opens one StrataGate per namespace, and <code>sqlite.ts</code> loads
+every table <code>WHERE namespace = ?</code>.</li>
+<li><strong>Event creation and supersession</strong> —
+<code>store.ts:1735-1756</code>: push the event, then for each id in
+<code>temporal.supersedesEventIds</code> set <code>superseded</code>,
+<code>supersededBy</code> and <code>forcedCap = 0.1</code>.</li>
+<li><strong>Event search</strong> — <code>store.ts:1212-1290</code>:
+candidates <code>active</code> or <code>superseded</code>, BM25 over
+weighted fields, participant, type and time rankings, RRF,
+<code>lastRetrievedAt</code> stamped.</li>
+<li><strong>Activation</strong> — <code>runtime.ts:700-738</code>:
+search events and graph nodes with the current message and last two
+turns, add pinned and safety events (<code>activatedEvents</code>,
+<code>:2049-2063</code>), drop those from the current block, render
+within 900 tokens (<code>renderActivatedMemory</code>,
+<code>:2103-2148</code>).</li>
+<li><strong>Graph projection</strong> — <code>graph.ts:60-135</code>:
+status from the proposal, validity from the proposal or the source
+events' chronology, supersede the active fact for the same key and close
+its <code>validTo</code>.</li>
+<li><strong>Use receipts</strong> — <code>store.ts:1583</code>
+<code>recordMemoryUse</code>: idempotent by receipt id; only cited ids
+gain mention count.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>events</code> (<code>sqlite.ts:286-313</code>): namespace, id,
+position, title, summary, narrative, tags, quotes, source block, formed
+turn, <code>temporal_json</code>, scope (user, project or session),
+criticality (routine, preference, identity, safety), confidence, status
+(active, superseded, forgotten, archived), <code>superseded_by</code>,
+mention count, last adopted turn and weight fields, with
+<code>event_sources</code> linking to message ids.</p>
+<p><strong>Time.</strong> An event's <code>temporal</code> separates
+mention from occurrence, and graph facts carry <code>validFrom</code>
+and <code>validTo</code>. <code>validFrom</code> comes from the
+projection or the source events' occurrence time, beside
+<code>createdAt</code>. An as-of read exists only as
+<code>memory_expand_element(id, at)</code> over <strong>element
+cards</strong> (<code>elements.ts:172-182</code>). Element cards are the
+legacy projection: the plugin runtime configures no element projector,
+and its comment says new spaces never create them
+(<code>runtime.ts:712-715</code>). <code>memory_expand_graph_node</code>
+has no <code>at</code>, so on the live graph valid time is recorded and
+never queried as of a date, and <code>bitemporal</code> is withheld.</p>
+<p><strong>Status as trust.</strong> The graph projector may mark a node
+or edge <code>disputed</code>. Disputed and superseded facts remain in
+the node and are returned by <code>memory_expand_graph_node</code> with
+their status. <code>currentState</code> and the injected memory show
+only active facts. That earns <code>trust_state</code>.</p>
+<p><strong>No tombstone, no mutation log.</strong> A forgotten event is
+a status that search excludes; nothing checks new extractions against
+it, so <code>tombstone</code> is withheld. <code>usage_receipts</code>,
+which the UI calls its audit view, record which memories an answer used,
+not changes to memory, and <code>model_response_history</code> records
+model output. <code>audit_log</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Event search</strong> fuses BM25 over title, summary, tags,
+quotes, narrative, participants, event type, original time wording and
+occurrence dates with structured rankings. A <code>temporalIntent</code>
+of first or latest orders by occurrence. A query with tokens and no BM25
+hit returns nothing rather than falling back to recency.</p>
+<p><strong>Graph search</strong> covers active and disputed nodes over
+name, aliases, tags, current state, facts and relations.</p>
+<p><strong>The evidence gate.</strong> Every tool result is a batch with
+an id. <code>memory_assess</code> records whether the batch is
+sufficient, and <code>memory_record_use</code> writes a receipt naming
+what the answer relied on. Weight grows only from receipts, so retrieval
+does not reinforce itself.</p>
+<p><strong>Automatic activation</strong> runs before each turn. It
+merges relevance with a weight ranking that also admits every pinned or
+safety-critical event whose status is active or superseded
+(<code>runtime.ts:2051-2055</code>). Two properties combine:</p>
+<ul>
+<li><code>searchEvents</code> returns superseded events. Their weight
+cap of 0.1 lowers only the weight ranking, and a pinned event's weight
+is 1 regardless of the cap (<code>weights.ts:13-21</code>).</li>
+<li><code>renderActivatedMemory</code> prints id, title, summary,
+occurrence times and the temporal status (planned, occurred, cancelled),
+and not <code>event.status</code> or <code>supersededBy</code>
+(<code>runtime.ts:2117-2124</code>).</li>
+</ul>
+<p>A decision that was later superseded can therefore be injected as
+background memory next to, or instead of, its replacement, with nothing
+in the text to say it was retired. Graph facts in the same block are
+filtered to active, and tool results carry <code>status</code>
+(<code>compactEvent</code>, <code>runtime.ts:1976-1990</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Sealing first.</strong> L5, L4 and L3 are written before any
+model call, so a model failure leaves the source intact and the block
+pending with a retrying job.</p>
+<p><strong>Extraction</strong> runs per block as soon as its layers
+validate. It may read neighbouring blocks for context, but every fact
+and source reference must come from the target block.</p>
+<p><strong>Graph projection</strong> runs in batches of eight events,
+prioritising active events and project scope.</p>
+<p><strong>External memory import</strong> turns memory exported from
+another assistant into events while preserving the imported text, and
+removing an import restores events whose supersession pointed into it
+(<code>store.ts:1140-1160</code>).</p>
+<p><strong>Forget and restore</strong> exist on the core store
+(<code>store.ts:1638-1652</code>). No plugin tool or UI route calls
+them.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>Tools:</strong> <code>memory_search_events</code>,
+<code>memory_search_graph</code>, <code>memory_expand_graph_node</code>,
+the deprecated <code>memory_search_elements</code> and
+<code>memory_expand_element</code>, <code>memory_search_raw</code>,
+<code>memory_get_blocks</code>, <code>memory_expand_block</code>,
+<code>memory_expand_event</code>, <code>memory_assess</code>,
+<code>memory_record_use</code>, and <code>feedback_prepare</code>.</li>
+<li><strong>Automatic capture</strong> of completed main-agent turns and
+tool results, and automatic activation of up to four events and four
+graph nodes per turn.</li>
+<li><strong>Memory UI</strong> under DSH settings: overview, blocks with
+layer expansion, events, sources, graph, receipts, settings, job retries
+and imports. It deletes and edits nothing (<code>web.ts:1336</code>), so
+<code>human_review</code> is withheld.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance holds everywhere it is claimed.</strong> Every
+event cites source messages and every graph fact cites events. The UI's
+receipt view lets a person see what an answer relied on.</p>
+<p><strong>Namespaces are enforced by construction.</strong> The
+namespace comes from the session, not the model, and every load filters
+on it.</p>
+<p><strong>Retired events are not retired from the injected
+context,</strong> as in section 6.</p>
+<p><strong>The injected block says to use memory as background evidence,
+not instructions,</strong> and puts current user instructions first.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>196 test cases in 20 files cover block processing and layers,
+ingestion, persistence and migration, search, graph projection, external
+import and its reversal, the runtime, the web routes, model output
+parsing and legacy session folding. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>packages/core/tests/store.test.ts:70</code> asserts forgotten
+events are absent from search while their provenance survives, and
+<code>elements.test.ts:116-119</code> asserts an unrelated query returns
+no events or facts beside queries that return them. That earns
+<code>negative_eval</code>. No test checks that a superseded event is
+kept out of, or labelled in, activated memory, that a disputed graph
+fact is left out of the current state, or that one namespace cannot read
+another.</p>
+<p><strong>Benchmark.</strong>
+<code>benchmarks/locomo-conv26-r8-final.json</code> commits a comparison
+on LoCoMo conversation 26 — 152 questions, ten judge runs each — with
+mean accuracy of 80.46% against 63.22% for Mem0 base, per-category and
+per-question results, paired outcomes and source artifact hashes.
+<code>docs/EVALUATION.md</code> states the scope plainly: one
+conversation, two complete configurations, not an ablation and not a
+full LoCoMo score.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Seal the source before calling a model.</strong> A block
+cannot become memory until its verbatim record exists.</li>
+<li><strong>Record mention time apart from occurrence time,</strong>
+with the original wording, precision and basis.</li>
+<li><strong>Reinforce only from use receipts,</strong> never from
+retrieval.</li>
+<li><strong>An evidence batch the agent must assess</strong> before
+relying on it.</li>
+<li><strong>A benchmark comparison that ships its per-question results
+and hashes,</strong> with its limits in the first paragraph.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Rendering injected memory without the status the store
+already knows.</strong></li>
+<li><strong>Letting pins override supersession.</strong></li>
+<li><strong>An as-of read on a projection nothing writes
+anymore.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>StrataGate suits a DeepSeek Harness user who runs long projects and
+wants automatic memory whose every claim can be traced to a message,
+with temporal questions answered from explicit event times. Where a
+superseded decision must never be injected as context, activation needs
+to filter or label it first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should activation drop superseded events,</strong> or render
+<code>status</code> and <code>supersededBy</code> as tool results
+do?</li>
+<li><strong>Will the graph gain the as-of read</strong> that element
+cards had?</li>
+<li><strong>Will forget and restore reach the Memory UI?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>packages/core/src/store.ts</code>, <code>sqlite.ts</code>,
+<code>graph.ts</code>, <code>elements.ts</code>,
+<code>weights.ts</code>, <code>types.ts</code></li>
+<li><code>src/runtime.ts</code>, <code>src/tools.ts</code>,
+<code>src/llm.ts</code>, <code>src/web.ts</code></li>
+<li><code>packages/core/tests/store.test.ts</code>,
+<code>elements.test.ts</code>, <code>graph.test.ts</code></li>
+<li><code>benchmarks/locomo-conv26-r8-final.json</code>,
+<code>docs/EVALUATION.md</code>, <code>docs/ARCHITECTURE.md</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -n "status" src/runtime.ts</code> in
+<code>renderActivatedMemory</code> — graph facts filtered to active;
+events render no status</li>
+<li><code>grep -rn "elementProjector" src</code> — no match; only the
+core accepts one</li>
+<li><code>grep -rn "forgetEvent\|restoreEvent" src</code> — no caller in
+the plugin</li>
+<li><code>grep -n "req.method !== 'GET'" src/web.ts</code> — memory data
+routes are read-only</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7"><code class="commit-id" title="a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7">a30ffedd…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening: no auto-run surface, four build-time execution points, four
+unpinned surfaces, and five dependency files inside the cooldown.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
