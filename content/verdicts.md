@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 472 reports.**
+**This page covers all 473 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4126,3 +4126,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, plugin version 0.2.71, 126 commits since 10 August 2026, about 12,300 lines of TypeScript and 196 tests, a DeepSeek Harness plugin with a read-only Memory UI, and a committed LoCoMo conversation-26 comparison with per-question results and artifact hashes, scoped in its own documentation as one conversation and not an ablation.
 - Study when: long-running agents must answer temporal questions and every memory must be traceable to what was said.
 - Do not copy when: a superseded decision must never be injected as context, or a person needs to edit or delete memory through the interface.
+
+### [`agent-memory-mcp`](../systems/agent-memory-mcp/)
+- Best idea: **maintenance with a review step.** Session close turns a summary into a plan of additions, merges, outdatings and promotions with a risk level and a decision trace, `review-session` prints it without applying it, incident and migration sessions go review-first, and a steward that finds duplicates, conflicts and drift against the repository applies only what its policy allows and queues the rest in an inbox. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **the temporal tools are built on the filter that removes history.** Recall hides every entry whose successor exists; `recall_as_of` and `knowledge_timeline` both call recall and then work on its output, so neither can return what was valid before a supersession, and the as-of test passes only because its fixture never sets `superseded_by`. The validity window itself is written as the moment of supersession, and no tool accepts an explicit one.
+- Most reusable component: the session-close plan with its dry run and per-mode policy — a consolidation step a person can read before it touches maintained knowledge.
+- Maturity impression: MIT, version 0.13.3, 220 commits since 20 February 2026, about 33,400 lines of Go and 670 tests, about 50 MCP tools, Claude Code hooks, a RAG index with source classification, Homebrew and Docker packaging, and a changelog that records measured regressions such as age decay cutting Hit@5 from 0.72 to 0.19.
+- Study when: engineering agents need decisions, runbooks and incidents remembered beside the repository's documents, with maintenance a person can review.
+- Do not copy when: you need to ask what was true at a past date, or every change to memory needs a record.

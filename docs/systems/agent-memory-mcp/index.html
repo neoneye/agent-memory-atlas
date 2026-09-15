@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go MCP server and CLI for
+engineering agents that keeps typed memories and a document index in
+SQLite, closes sessions through an explainable consolidation plan, runs
+a steward that finds duplicates, conflicts and drift into a review
+inbox, and offers a recall as of a date and a knowledge timeline that
+cannot return the entries supersession retires.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="agent-memory-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="A Go MCP server and CLI for
+engineering agents that keeps typed memories and a document index in
+SQLite, closes sessions through an explainable consolidation plan, runs
+a steward that finds duplicates, conflicts and drift into a review
+inbox, and offers a recall as of a date and a knowledge timeline that
+cannot return the entries supersession retires.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="agent-memory-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go MCP server and CLI
+for engineering agents that keeps typed memories and a document index in
+SQLite, closes sessions through an explainable consolidation plan, runs
+a steward that finds duplicates, conflicts and drift into a review
+inbox, and offers a recall as of a date and a knowledge timeline that
+cannot return the entries supersession retires.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>agent-memory-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "agent-memory-mcp",
+      "description": "A Go MCP server and CLI for engineering agents that keeps typed memories and a document index in SQLite, closes sessions through an explainable consolidation plan, runs a steward that finds duplicates, conflicts and drift into a review inbox, and offers a recall as of a date and a knowledge timeline that cannot return the entries supersession retires.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A steward for engineering memory</p>
+          <h1>agent-memory-mcp</h1>
+          <p class="document-deck">A Go MCP server and CLI for
+engineering agents that keeps typed memories and a document index in
+SQLite, closes sessions through an explainable consolidation plan, runs
+a steward that finds duplicates, conflicts and drift into a review
+inbox, and offers a recall as of a date and a knowledge timeline that
+cannot return the entries supersession retires.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ipiton/agent-memory-mcp">
+              <span>Source</span>
+              <strong>ipiton/agent-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ipiton/agent-memory-mcp/commit/ceef5851c2012ec4e9500eb5e955ae3388b3add8" title="ceef5851c2012ec4e9500eb5e955ae3388b3add8">
+              <span>Analyzed revision</span>
+              <code>ceef5851…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ipiton--agent-memory-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ipiton--agent-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>agent-memory-mcp is a memory and context server for engineering
+agents, written in Go: version 0.13.3, MIT, 220 commits since 20
+February 2026, about 33,400 lines of non-test Go and 670 test functions.
+It serves about 50 MCP tools over stdio or HTTP/JSON-RPC, a CLI that
+mirrors them, and Claude Code hooks, with a Homebrew formula and a
+Docker recipe for running it as a team service.</p>
+<p>It is aimed at DevOps and platform work more than general chat
+memory. Memories are typed as decisions, runbooks, incidents,
+postmortems, dead ends and similar engineering artifacts. A RAG index
+covers project documents and classifies them as ADRs, RFCs, changelogs,
+runbooks or infrastructure files. Allowlisted file tools let the agent
+read and search the repository.</p>
+<p>The maintenance layer is the part to study:</p>
+<ul>
+<li><strong>Session close as a plan.</strong> A summary is classified
+and turned into proposed additions, merges, outdatings and promotions,
+each with a risk level and a decision trace. <code>review-session</code>
+prints the plan without applying it. Incident and migration sessions
+send risky changes to review.</li>
+<li><strong>A steward.</strong> It finds duplicates, conflicts, stale
+entries and drift against the live repository, applies low-risk actions
+under a configurable policy, and puts the rest in an inbox a person
+resolves.</li>
+<li><strong>Honest changelogs.</strong> The project records measured
+regressions in its own features and turned age decay off by default
+after measuring it.</li>
+</ul>
+<p>The temporal model has a gap. <code>mark_outdated</code> with a
+successor stamps the old entry <code>superseded_by</code>, closes its
+<code>valid_until</code> and opens the successor's
+<code>valid_from</code>, both at the current time. Recall hides
+superseded entries. <code>recall_as_of</code> is implemented as recall
+followed by a validity-window filter
+(<code>internal/memory/temporal.go:13-37</code>). A question about what
+was true before a supersession therefore cannot return the entry that
+was true then, and the test for <code>recall_as_of</code> passes only
+because its fixture never sets <code>superseded_by</code>.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory has a <strong>type</strong>, from the four cognitive types,
+and in metadata an <strong>engineering type</strong>, a
+<strong>lifecycle</strong> status and a <strong>knowledge
+layer</strong>. Canonical knowledge is recalled and listed separately
+from raw memory.</p>
+<p>Knowledge changes by lifecycle rather than by overwrite:</p>
+<ul>
+<li><code>mark_outdated</code> without a successor caps importance at
+0.25, marks the entry archived and outdated, and closes
+<code>valid_until</code>. It stays recallable, ranked lower.</li>
+<li><code>mark_outdated</code> with a successor does the same, marks it
+superseded, links both directions and opens the successor's
+<code>valid_from</code>. The old entry leaves recall.</li>
+<li>Promotion makes an entry canonical. Merges fold duplicates while
+keeping history.</li>
+</ul>
+<p>A <strong>sediment layer</strong> (surface, then deeper layers up to
+character) moves memories by age and references. When the flag is on,
+surface memories are visible only in their originating context.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession hides the old entry from recall, and recall_as_of filters recall's output, so the past version is never among its candidates</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession hides the old entry from recall, and recall_as_of filters recall&#39;s output, so the past version is never among its candidates
+flowchart TB
+    SESSION[&quot;session summary&lt;br/&gt;(hook or CLI)&quot;] --&gt; PLAN[&quot;session-close plan&lt;br/&gt;add / merge / outdate / promote&lt;br/&gt;risk level, decision trace&quot;]
+    PLAN --&gt;|&quot;review-session: dry run&quot;| PERSON[&quot;person reads the plan&quot;]
+    PERSON --&gt;|&quot;accept-session&quot;| APPLY[&quot;apply low-risk actions&quot;]
+    PLAN --&gt;|&quot;risky, or incident / migration mode&quot;| INBOX[(&quot;review inbox&quot;)]
+    STEWARD[&quot;steward run&lt;br/&gt;duplicates, conflicts, stale, drift&quot;] --&gt; INBOX
+    STEWARD --&gt;|&quot;policy allows&quot;| APPLY
+    APPLY --&gt; AUDIT[(&quot;steward_audit&quot;)]
+    INBOX --&gt;|&quot;person or agent resolves&quot;| APPLY
+    APPLY --&gt; MO[&quot;mark_outdated(old, successor)&quot;]
+    MO --&gt; OLD[(&quot;old: superseded_by, valid_until = now&quot;)]
+    MO --&gt; NEW[(&quot;successor: replaces, valid_from = now&quot;)]
+    Q[&quot;recall&quot;] --&gt; HIDE{&quot;superseded_by points&lt;br/&gt;at an existing memory?&quot;}
+    OLD --&gt; HIDE
+    NEW --&gt; HIDE
+    HIDE --&gt;|&quot;yes: skipped&quot;| GONE[&quot;not a candidate&quot;]
+    HIDE --&gt;|&quot;no&quot;| RANK[&quot;hybrid score with trust and freshness&quot;]
+    ASOF[&quot;recall_as_of(t)&quot;] --&gt; Q
+    RANK --&gt; WINDOW[&quot;keep entries valid at t&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/memory</code></td>
+<td>Store, schema and migrations, read and write paths, trust metadata,
+temporal queries, triples, project bank views, sediment layers</td>
+</tr>
+<tr>
+<td><code>internal/rag</code>, <code>internal/vectorstore</code>,
+<code>internal/embedder</code>, <code>internal/reranker</code></td>
+<td>Document indexing, chunk storage, embedding providers,
+reranking</td>
+</tr>
+<tr>
+<td><code>internal/sessionclose</code></td>
+<td>Session classification and the consolidation plan</td>
+</tr>
+<tr>
+<td><code>internal/steward</code></td>
+<td>Scanners, policy, inbox, run reports, audit</td>
+</tr>
+<tr>
+<td><code>internal/lifecycle</code></td>
+<td>Archive sweep</td>
+</tr>
+<tr>
+<td><code>internal/review</code></td>
+<td>Review queue resolution</td>
+</tr>
+<tr>
+<td><code>internal/server</code></td>
+<td>MCP and HTTP servers, tool schemas and handlers, the retrieval
+console</td>
+</tr>
+<tr>
+<td><code>cmd/agent-memory-mcp</code></td>
+<td>CLI, setup, hooks configuration</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Local:</strong> <code>brew install agent-memory-mcp</code>
+or <code>go install</code>, one embedding provider (Jina,
+OpenAI-compatible, or local Ollama), data under one directory,
+<code>.env</code> loaded from the project root.</li>
+<li><strong>Shared service:</strong> HTTP binds to loopback by default,
+and non-loopback binds require authentication unless explicitly
+overridden; Docker Compose and nginx examples are provided.</li>
+<li><strong>Hand-repairable:</strong> yes. SQLite, with export and
+import, backup and restore guides, and a <code>reembed</code> migration
+after changing models.</li>
+</ul>
+<p>The screen of this checkout found one auto-run surface
+(<code>server.json</code>), one build-time execution point
+(<code>Makefile</code>), nothing unpinned and nothing inside the
+cooldown. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Recall</strong> —
+<code>internal/memory/read.go:181-430</code>: candidate snapshot, skip
+activity-log records, skip superseded entries whose successor exists
+(<code>:292-301</code>), confine surface memories to their context when
+enabled (<code>:303-316</code>), derive trust and freshness, hybrid
+score, optional age decay.</li>
+<li><strong>Recall as of</strong> —
+<code>internal/memory/temporal.go:13-37</code>: <code>Recall</code> with
+a larger limit, then <code>isValidAt</code> (<code>:40-48</code>).</li>
+<li><strong>Mark outdated</strong> —
+<code>internal/memory/write.go:250-330</code>: status, archived flag,
+importance cap, <code>ValidUntil = now</code>,
+<code>SupersededBy</code>; on the successor <code>ValidFrom = now</code>
+and <code>Replaces</code>.</li>
+<li><strong>Temporal field writer</strong> —
+<code>SetTemporalFields</code>
+(<code>internal/memory/temporal.go:120-150</code>), which nothing
+calls.</li>
+<li><strong>Steward</strong> — <code>internal/steward/steward.go</code>:
+scan, apply by policy, write <code>steward_audit</code>
+(<code>:245</code>), queue the rest in the inbox.</li>
+<li><strong>Session close</strong> — <code>internal/sessionclose</code>
+and <code>cmd/agent-memory-mcp/session_close.go:26-44</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code>
+(<code>internal/memory/memory.go:307-323</code>): <code>id</code>,
+<code>content</code>, <code>type</code>, <code>title</code>,
+<code>tags</code>, <code>context</code>, <code>importance</code>,
+<code>metadata</code> (JSON), <code>embedding</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>accessed_at</code>, <code>access_count</code>,
+<code>targeted_access_count</code>, <code>sediment_layer</code>. The
+temporal fields, lifecycle, engineering type, owner, service and
+verification time live in metadata and are lifted into the cached
+memory.</p>
+<p><strong>Lifecycle is ranking, supersession is filtering.</strong>
+Draft, outdated and superseded lower a derived confidence and canonical
+raises it (<code>internal/memory/trust.go:173-185</code>). Only a
+<code>superseded_by</code> pointer to an existing memory removes an
+entry from recall. The statuses adjust a score rather than withhold, and
+the one exclusion is supersession, so <code>trust_state</code> is
+withheld.</p>
+<p><strong>Time.</strong> <code>valid_from</code> and
+<code>valid_until</code> are separate from <code>created_at</code>, and
+<code>recall_as_of</code> reads them. No tool accepts either field, and
+<code>SetTemporalFields</code> has no caller. The only writer is
+<code>MarkOutdated</code>, which stamps both ends with the moment of
+supersession. The window therefore records when the system learned of a
+change, and the as-of read cannot return a superseded entry (section 6),
+so <code>bitemporal</code> is withheld.</p>
+<p><strong>Audit.</strong> <code>steward_audit</code> records actions
+the steward applied, with rationale, evidence, confidence and actor.
+Stores, updates, deletes, merges and <code>mark_outdated</code> calls
+from tools and the CLI leave no record there, so <code>audit_log</code>
+is withheld.</p>
+<p><strong>Scope.</strong> <code>context</code> is a filter the caller
+may omit; without it recall spans every context. Surface-layer
+confinement depends on a flag. <code>scope_enforced</code> is
+withheld.</p>
+<p><strong>Dead ends</strong> are first-class engineering memories
+surfaced when a query looks like an attempt to repeat one. Nothing
+checks new writes against them, so <code>tombstone</code> is
+withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Hybrid recall</strong> combines embedding similarity with
+keyword matching, recency, importance, source type and trust metadata,
+with explainable debug output of every score component. Memories from a
+different embedding model are not compared semantically.</p>
+<p><strong>Age decay</strong> is opt-in per type. The README records
+that the old 30-day setting cut Hit@5 from 0.7217 to 0.1942, and that
+the type axis matters more than the rate.</p>
+<p><strong>Document retrieval</strong> indexes allowlisted paths with
+default excludes and secret redaction, classifies each file, and ranks
+with source-aware weights.</p>
+<p><strong>Recall as of a date.</strong> The recall loop skips any entry
+whose <code>superseded_by</code> names an existing memory.
+<code>RecallAsOf</code> asks recall for up to 200 results and keeps
+those valid at the requested instant. After the normal supersession
+path:</p>
+<ul>
+<li>The old entry is valid until time S and superseded.</li>
+<li>The successor is valid from S.</li>
+<li>A question as of any time before S receives no successor, because it
+is not yet valid, and no predecessor, because recall never returned
+it.</li>
+</ul>
+<p>The tool built to answer "what was true at time T" returns nothing
+for exactly the history supersession creates.
+<code>TestRecallAsOf</code>
+(<code>internal/memory/temporal_test.go:52-140</code>) stores two
+versions with validity windows and <code>Replaces</code> on the new one
+but never sets <code>superseded_by</code> on the old, so it exercises a
+state <code>MarkOutdated</code> does not produce.
+<code>KnowledgeTimeline</code> has the same shape: its comment says it
+recalls matching memories <em>"including archived/superseded"</em>, and
+it calls the same <code>Recall</code> (<code>temporal.go:65-67</code>),
+so the timeline of a topic omits the entries that were superseded.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Session close.</strong> A summary, from the end-of-session
+hook or the CLI, is classified by mode (coding, incident, migration,
+research, cleanup) and turned into a plan. Coding sessions auto-apply
+low-risk updates. Incident and migration sessions are review-first. A
+task finalisation folds the auto-captured session summary into one
+record instead of two.</p>
+<p><strong>The steward</strong> runs duplicate, conflict, stale and
+drift scanners. High-confidence near-identical duplicates can be merged
+automatically when a similarity threshold is met and the policy allows.
+Contradictions and lower-confidence findings go to the inbox. Canonical
+health reports stale, unverified, conflicting and low-support
+entries.</p>
+<p><strong>Write guards</strong> refuse records that are only journals
+of actions, repair byte-truncated UTF-8 once at startup, normalise tags
+and enforce content limits.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>MCP tools</strong> for recall, store per engineering type,
+canonical knowledge, project bank views, temporal recall and timelines,
+steward runs, inbox and policy, drift scans, verification, document
+search, file reading and session close.</li>
+<li><strong>Claude Code hooks</strong> checkpoint before compaction,
+capture at session end and compile pending summaries at session
+start.</li>
+<li><strong>Workflow snippets</strong> for CLAUDE.md and
+<code>.cursorrules</code>.</li>
+<li><strong>The retrieval console</strong> shows hybrid ranking and
+trust for a query.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Review is built into the risky paths.</strong> Session modes
+and steward policy decide what applies automatically, and the rest waits
+in an inbox with its evidence.</p>
+<p><strong>The HTTP service fails closed on exposure,</strong> refusing
+an unauthenticated non-loopback bind unless the operator opts in.</p>
+<p><strong>Temporal answers are not trustworthy after
+supersession,</strong> as above, and the validity window is record
+time.</p>
+<p><strong>Injection.</strong> Session summaries and documents are
+agent- or repository-supplied text; secret redaction covers indexing,
+and instructions inside stored content are not distinguished from
+facts.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>670 Go test functions cover recall and filters, supersession, the
+temporal queries, triples, sediment layers, the steward and inbox,
+session close, the CLI, hooks, embedding migration, UTF-8 repair and a
+goroutine-leak check. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>internal/memory/superseded_recall_test.go:88</code> asserts that a
+superseded entry is absent from recall while its successor is present
+and the old entry remains listable, with companion cases for an outdated
+entry without a successor and a dangling successor pointer. That earns
+<code>negative_eval</code>.</p>
+<p><strong>Benchmarks.</strong> The changelog and README report
+retrieval measurements such as the Hit@5 regression; no benchmark
+harness results are committed as files.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Session close as a reviewable plan,</strong> with a dry run
+and a mode that makes incident sessions review-first.</li>
+<li><strong>A steward that queues what it is unsure of,</strong> with
+evidence, instead of applying or dropping it.</li>
+<li><strong>Drift scans against the repository,</strong> so memory that
+names a file notices when the file changes.</li>
+<li><strong>Measure a ranking feature before shipping it on,</strong>
+and write the result down.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Building an as-of query on top of a filter that hides
+history.</strong> Query the store directly, and test with the state the
+real write path produces.</li>
+<li><strong>Stamping a validity window with the time of the
+edit.</strong></li>
+<li><strong>An audit table that covers only the automated
+writer.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a team running coding and operations agents against real
+repositories who want decisions, runbooks and incidents remembered with
+document context, and are willing to review a steward's inbox. For
+questions about what was true at a past date, the temporal layer needs
+fixing first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>RecallAsOf</code> bypass the superseded
+filter,</strong> since superseded entries are its reason to exist?</li>
+<li><strong>Will a tool accept an explicit
+<code>valid_from</code>,</strong> so the window can record when
+something became true rather than when it was edited?</li>
+<li><strong>Should tool and CLI writes join the steward
+audit?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>internal/memory/read.go</code>, <code>write.go</code>,
+<code>temporal.go</code>, <code>trust.go</code>, <code>memory.go</code>,
+<code>engineering.go</code></li>
+<li><code>internal/steward/steward.go</code>, <code>audit.go</code>,
+<code>inbox.go</code>, <code>scanner.go</code></li>
+<li><code>internal/sessionclose/</code>,
+<code>cmd/agent-memory-mcp/session_close.go</code>,
+<code>review_queue.go</code></li>
+<li><code>internal/memory/superseded_recall_test.go</code>,
+<code>temporal_test.go</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "SetTemporalFields(" internal cmd</code> — definition
+only</li>
+<li><code>grep -rn "valid_from\|valid_until" internal/server</code> —
+the <code>recall_as_of</code> description only; no tool writes them</li>
+<li><code>grep -rn "WriteAuditEntry" internal</code> — called from the
+steward only</li>
+<li><code>grep -n "SupersededBy" internal/memory/temporal_test.go</code>
+— <code>TestRecallAsOf</code> never sets it</li>
+<li><code>sed -n 65,67p internal/memory/temporal.go</code> —
+<code>KnowledgeTimeline</code> calls <code>Recall</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/ipiton/agent-memory-mcp/commit/ceef5851c2012ec4e9500eb5e955ae3388b3add8"><code class="commit-id" title="ceef5851c2012ec4e9500eb5e955ae3388b3add8">ceef5851…</code></a>
+— first reading, at a commit dated 4 September 2026. Screened before
+opening: one auto-run surface (an MCP server manifest), one build-time
+execution point, nothing unpinned and nothing inside the cooldown.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

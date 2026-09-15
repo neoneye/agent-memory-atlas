@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 411 of 472 screened at the report's current pin.**
+**Progress: 412 of 473 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 167 |
+| Repositories with an auto-run surface (`RUNS`) | 168 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 226 |
-| Repositories with build-time execution (`EXEC`) | 297 |
+| Repositories with build-time execution (`EXEC`) | 298 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -31,6 +31,7 @@ These execute without a command being typed. Read before opening the tree.
 | --- | --- |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
+| [`agent-memory-mcp`](../../content/systems/agent-memory-mcp.md) | `server.json` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |
