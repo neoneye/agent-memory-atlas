@@ -7,13 +7,13 @@ page_kind: system
 source_name: "Shweta-Mishra-ai/tokenmizer"
 source_url: https://github.com/Shweta-Mishra-ai/tokenmizer
 archive_name: "Shweta-Mishra-ai--tokenmizer"
-revision: 8495e2598b8c11547c64e5dc1f19cd198d5e363d
-revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d
-analyzed_at: 2026-08-19
+revision: 028fc8cc3f6bd6412c40464297ad65caadf57a3e
+revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e
+analyzed_at: 2026-09-15
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the decision graph — a nine-value status on decision nodes with the excluded set named as one constant | tokenmizer/graph_memory/types.py | `NodeStatus` and `INACTIVE_STATUSES`, a frozenset of SUPERSEDED, MODIFIED (its backward-compatible alias), INVALIDATED and ARCHIVED; `decision_tracker.py` supersedes on clear evidence and writes CONTESTED on both sides when the evidence is ambiguous, and CONTESTED stays retrievable on purpose | tests/unit/test_contested_decisions.py"
-  scope_enforced: "the HTTP read path — a principal derived from the credential, claimed per session and checked before any session-scoped route answers | tokenmizer/security/ownership.py | `principal_for_key` and `OwnershipStore.check_access`, reached through the `verify_session_access` dependency in tokenmizer/api/routes_graph.py, which claims only on write methods, fails closed to 503 when no principal was established, and answers 404 rather than 403 so the route cannot be used as a session-name oracle | tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http"
+  scope_enforced: "the HTTP read path — a principal derived from the credential, claimed per session and checked before any session-scoped route answers | tokenmizer/security/ownership.py | `principal_for_key` and `OwnershipStore.check_access`, reached through the `verify_session_access` dependency at tokenmizer/api/routes_graph.py:47, which claims only on write methods, fails closed to 503 when no principal was established, and answers 404 rather than 403 so the route cannot be used as a session-name oracle; opt-in cross-session recall reads only the sessions `OwnershipStore.sessions_for` returns for that principal (`SELECT session_id FROM session_owners WHERE owner=?`, tokenmizer/security/ownership.py:161) | tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http"
   audit_log: "the graph store — every decision status transition appended beside the node it moved | tokenmizer/graph_memory/persistence.py | `persist_transition` writes the transition row and pruning is written to keep transitions alive past the node | tests/unit/test_graph_persistence.py"
   negative_eval: "extraction and the supersession matcher — committed cases that particular material must not reach the graph | tests/unit/test_graph.py | `test_secrets_redacted_in_nodes` puts an Anthropic-shaped key through the real `extract_from_messages` path and asserts `sk-ant` appears in no node's label or summary, and `test_contested_decisions.py` asserts a decision about a different purpose in the same topic bucket is not returned as a contradiction | tests/unit/test_graph.py, tests/unit/test_contested_decisions.py"
 stack_storage: "sqlite"
@@ -36,15 +36,15 @@ matrix:
 ## 1. Executive Summary
 
 TokenMizer is an MIT-licensed session-memory tool for coding agents — *"keep
-your AI context alive across sessions"* — with a graph memory of 4,766 lines
-across thirteen modules and 440 test cases in 38 files.
+your AI context alive across sessions"* — with a graph memory of about 7,500 lines
+across seventeen modules and 804 test functions in 73 test files.
 
-**Its best mechanism is a status for not knowing.** Most systems in this atlas
-resolve a contradiction by picking: a newer decision supersedes an older one, the
+**Its best mechanism is a status for not knowing.** The usual way to resolve a
+contradiction is to pick: a newer decision supersedes an older one, the
 old row is filtered out of retrieval, and the model never learns there was a
 disagreement. TokenMizer's contradiction check asks whether the evidence supports
 that call, and when it does not, marks **both** sides `CONTESTED`. The comment
-explaining it is the clearest statement of the problem in the corpus:
+explaining it states the problem plainly:
 
 > Two decisions share a topic bucket (e.g. both "database") but don't share
 > enough descriptive context to confidently call one a genuine replacement of the
@@ -69,10 +69,13 @@ about different purposes in one topic bucket do not.
 session past the extractor with a hand-written ground truth — the tasks that were
 completed, the decisions that were made, the files that were touched — and
 asserts recall against it: `recall >= 0.4` for tasks, `>= 0.33` for decisions,
-`>= 0.33` for files. This atlas records again and again that extraction quality
-is the load-bearing property nobody measures. Here it is measured, in the test
+`>= 0.33` for files. Extraction quality is the load-bearing property of a memory like this. Here it
+is measured, in the test
 suite, against a ground truth someone wrote by hand, with the thresholds set at
-the honest floor rather than at an aspiration.
+the honest floor rather than at an aspiration. Beside it, `benchmarks/eval` scores
+precision as well as recall over a labelled corpus of fourteen sessions, six of
+them real audits, with a matcher documented to stop a one-giant-label extractor
+winning recall.
 
 ## 2. Mental Model
 
@@ -90,8 +93,8 @@ records *"the full story of why one decision replaced another… what triggered
 the change, why the old decision was wrong, what evidence caused the switch, and
 how confident we are now"*, and its docstring notes that it lives in a separate
 SQLite table *"so it survives graph pruning and is queryable independently"*.
-Most correction records in this atlas store the fact of a replacement; this one
-stores the argument for it, and puts it somewhere the garbage collector cannot
+A correction record usually stores the fact of a replacement; this one stores
+the argument for it, and puts it somewhere the garbage collector cannot
 reach.
 
 ```mermaid
@@ -130,16 +133,18 @@ session does not double-extract it.
 
 ## 4. Essential Implementation Paths
 
-- `tokenmizer/graph_memory/hybrid_extractor.py` (921) — extraction.
-- `tokenmizer/graph_memory/graph.py` (879) — nodes, edges, `query`,
+- `tokenmizer/graph_memory/hybrid_extractor.py` (962) — extraction.
+- `tokenmizer/graph_memory/graph.py` (1,156) — nodes, edges, `query`, `_score_nodes`,
   `add_node`'s contradiction check, `get_transitions`.
-- `tokenmizer/graph_memory/visualization.py` (553).
-- `tokenmizer/graph_memory/decision_tracker.py` (514).
-- `tokenmizer/graph_memory/validator.py` (380) and `ontology.py`.
-- `tokenmizer/graph_memory/persistence.py` (362) — the schema,
+- `tokenmizer/graph_memory/visualization.py` (789) and `communities.py`.
+- `tokenmizer/graph_memory/decision_tracker.py` (726).
+- `tokenmizer/graph_memory/validator.py` (420) and `ontology.py`.
+- `tokenmizer/graph_memory/persistence.py` (769) — the schema,
   `persist_transition`, pruning survival.
-- `tokenmizer/graph_memory/reasoning.py` (255), `context_block.py`,
-  `pruning.py`, `types.py`.
+- `tokenmizer/graph_memory/reasoning.py` (315), `context_block.py`,
+  `pruning.py`, `types.py`, `patterns.py`, `filelock.py`.
+- `tokenmizer/graph_memory/cross_session.py` — opt-in recall across a
+  principal's sessions.
 
 ## 5. Memory Data Model
 
@@ -160,7 +165,7 @@ withheld.
 
 `query()` walks the graph and excludes `SUPERSEDED`, `ARCHIVED` and
 `INVALIDATED`; `to_context_block()` renders the resume. A comment at
-`graph.py:832` records a fixed bug — *"was calling query() which excludes
+`graph.py:1013` records a fixed bug — *"was calling query() which excludes
 SUPERSEDED nodes"* — from a path that needed the hidden ones, which is the
 ordinary cost of expressing exclusion as a filter every reader has to remember.
 
@@ -168,7 +173,7 @@ The path that needed them is `query_at_time`, which answers the question its
 docstring gives as *"What did we decide last Tuesday?"* by scanning every node
 and keeping those whose interval covers the instant — `valid_from <= at_time`
 and `valid_until` either zero or later. That is the right shape, and the
-interval is half-built. `valid_until` has one producer, `graph.py:379`, which
+interval is half-built. `valid_until` has one producer, `graph.py:386`, which
 stamps `time.time()` on the old node at the moment of supersession. **`valid_from`
 has no producer anywhere in the repository** — it is never assigned outside its
 `field(default_factory=time.time)` default, so it always holds the instant the
@@ -187,7 +192,7 @@ writer can move is the record axis under a second label.
 principal is derived from the presented credential by `principal_for_key`
 (`tokenmizer/security/ownership.py`), a session is claimed by the first principal
 that writes to it, and `verify_session_access`
-(`tokenmizer/api/routes_graph.py:46-94`) checks the claim before any
+(`tokenmizer/api/routes_graph.py:47-96`) checks the claim before any
 session-scoped route answers. Three details make it more than a permission check.
 It **claims only on write methods**, so a GET for a session that was never
 created falls through to its ordinary empty response instead of staking a claim
@@ -208,13 +213,29 @@ Inside a graph there is still no scope key, which remains coherent for a
 per-session tool: the session is the unit, and the key is applied where the
 session is handed out.
 
+**Cross-session recall reads through the same key.** With
+`graph_checkpoint.cross_session_recall` on — off by default, because merging
+another session's nodes moves the benchmark fixtures — `query_across_sessions`
+scores the current graph and up to five of the principal's other sessions in one
+pool and tags each borrowed node `[from session …]` in the injected context. The
+other sessions come from `OwnershipStore.sessions_for(principal)`, whose
+docstring gives the reason: `graph_memory.db` holds every principal's sessions in
+one file, *"so listing from there would show one API key's sessions to another"*.
+The proxy (`api/app.py:701-731`) and `Memory.search()` both use it; `Memory`,
+which has no credential, falls back to the shared `DEV_PRINCIPAL`, so separate
+local callers on one storage directory see each other's sessions unless each
+passes its own principal. The committed cases cover recall across two sessions
+and the feature being off by default; none asserts that another principal's
+session is excluded with the feature on.
+
 ## 7. Write Mechanics
 
 The hybrid extractor runs over session messages with an ontology and a validator
 in front of the graph, and every decision node goes through
 `find_contradicting_decisions` before it lands. Non-fatal failures of that check
-are *counted* on the graph rather than swallowed — a small honesty that most
-best-effort paths in this atlas skip.
+are *counted* on the graph rather than swallowed. LLM extraction, when enabled,
+runs on the configured chat provider and model — a local model server or a
+router's free tier included — rather than a hard-coded cheaper model.
 
 Background passes have their own correctness suites: `test_decay_idempotence.py`,
 `test_compression_correctness.py`, `test_checkpoint_retention.py`. Testing that
@@ -237,11 +258,10 @@ does not support.
 **`audit_log` is earned on `decision_transitions`** — a named, separately-stored
 record of every supersession carrying its trigger, its reason, its evidence and a
 confidence, written by `persist_transition`, deliberately outside the node and
-edge JSON so that pruning cannot take it. It is the richest correction record in
-the corpus: most systems store *that* a value was replaced, and this stores *the
-argument*.
+edge JSON so that pruning cannot take it. It stores *the argument* for a
+replacement, not only *that* a value was replaced.
 
-**No tombstone**, and the gap is narrower here than almost anywhere. `INVALIDATED`
+**No tombstone**, and the gap is narrow. `INVALIDATED`
 is "explicitly wrong, kept as a warning" and the transition table holds the
 reason — everything a rejection needs except a key on the *value*, so a
 re-extraction of the same wrong decision produces a fresh node rather than
@@ -274,8 +294,8 @@ renderer the model actually reads.
 
 ## 10. Tests, Evals, and Benchmarks
 
-440 cases in 38 files, none run here, and the suite names are the most
-informative in this batch: `memory_accuracy/test_retention`, `chaos/test_recovery`,
+804 test functions in 73 files, none run here, and the suite names say what they
+guard: `memory_accuracy/test_retention`, `chaos/test_recovery`,
 `test_contested_decisions`, `test_decay_idempotence`,
 `test_compression_correctness`, `test_extractor_data_integrity`,
 `test_checkpoint_retention`, `test_cache_scoping`, `test_concurrency`.
@@ -285,6 +305,17 @@ task recall, 0.33 decision recall, 0.33 file recall — are worth reading as a
 disclosure rather than a weakness: this is a system that knows roughly two-thirds
 of the decisions in a session do not make it into the graph, has written that
 down where CI enforces it, and has not dressed it up.
+
+`benchmarks/eval` is the second instrument. It runs the extractor over fourteen
+labelled sessions and reports precision, recall and F1 per category, plus label
+quality, using a matcher whose rules are written at the top of `metrics.py`:
+coverage is measured over the ground-truth item's tokens so one enormous label
+cannot win recall, precision uses the same relation reversed, and nothing is
+fuzzier than word overlap — *"no embeddings, no LLM judge"*. The README publishes
+a macro F1 of 96%, and splits it into 97% on synthetic sessions and 90% on the
+six real ones, noting that fourteen sessions labelled by one person is a small
+sample; nothing here was run to check it. It also cites a 100-session comparison
+in a separate `tokenmizer-research` repository, which was not read.
 
 ## 11. For Your Own Build
 
@@ -305,7 +336,7 @@ down where CI enforces it, and has not dressed it up.
 - **Set the threshold where your performance is.** 0.33 asserted honestly is
   worth more than 0.9 asserted nowhere.
 - **Test that your decay pass is idempotent.** Running consolidation twice is a
-  thing that happens, and nothing else in this atlas asserts it is safe.
+  thing that happens, and it is worth asserting that it is safe.
 - **Count your non-fatal failures instead of swallowing them.** A counter on the
   contradiction-check failure path is the difference between a degraded system
   and an invisible one.
@@ -322,7 +353,7 @@ down where CI enforces it, and has not dressed it up.
   and which is assembled from those nodes by a separate renderer.
 - **Exclusion by filter with no accessor.** `query()` hiding three statuses means
   every caller that needs the hidden ones has to remember — and the comment at
-  `graph.py:832` is the bug that produced.
+  `graph.py:1013` is the bug that produced.
 
 ### Fit
 
@@ -331,8 +362,8 @@ which of two plausible decisions is still in force. The status model and the
 transition table are the parts to copy even if you never run the tool, and the
 retention suite is the part to copy first.
 
-Look elsewhere for multi-tenant or long-horizon personal memory: scope is a cache
-key, every clock is a record clock, and the graph is built around one project's
+Look elsewhere for multi-tenant or long-horizon personal memory: scope is a claimed
+session per API-key principal, every clock is a record clock, and the graph is built around one project's
 session history.
 
 ## 12. Open Questions
@@ -352,19 +383,24 @@ session history.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `tokenmizer/graph_memory/hybrid_extractor.py` | 921 | Extraction from session messages |
-| `tokenmizer/graph_memory/graph.py` | 879 | Nodes, edges, query, contradiction check |
-| `tokenmizer/graph_memory/visualization.py` | 553 | Graph rendering |
-| `tokenmizer/graph_memory/decision_tracker.py` | 514 | Decision lifecycle |
-| `tokenmizer/graph_memory/validator.py` | 380 | Ontology validation |
-| `tokenmizer/graph_memory/persistence.py` | 362 | Schema, `persist_transition`, prune survival |
-| `tokenmizer/graph_memory/reasoning.py` | 255 | Graph reasoning |
+| `tokenmizer/graph_memory/hybrid_extractor.py` | 962 | Extraction from session messages |
+| `tokenmizer/graph_memory/graph.py` | 1,156 | Nodes, edges, query, contradiction check |
+| `tokenmizer/graph_memory/visualization.py` | 789 | Graph rendering |
+| `tokenmizer/graph_memory/decision_tracker.py` | 726 | Decision lifecycle |
+| `tokenmizer/graph_memory/validator.py` | 420 | Ontology validation |
+| `tokenmizer/graph_memory/persistence.py` | 769 | Schema, `persist_transition`, prune survival |
+| `tokenmizer/graph_memory/reasoning.py` | 315 | Graph reasoning |
 | `tokenmizer/graph_memory/types.py` | — | Fourteen node types, nine statuses and the `INACTIVE_STATUSES` frozenset, eight edge types |
 | `tests/memory_accuracy/test_retention.py` | — | Ground-truth recall thresholds |
 | `tests/unit/test_contested_decisions.py` | — | Eight cases on the ambiguity rule |
 | `tests/chaos/test_recovery.py` | — | Storage corruption |
+| `tokenmizer/graph_memory/cross_session.py` | 68 | Recall across one principal's sessions |
+| `tokenmizer/security/ownership.py` | — | `principal_for_key`, `check_access`, `sessions_for` |
+| `benchmarks/eval/` | — | Fourteen labelled sessions; precision, recall, F1 and label quality |
 
 ## History
+
+**2026-09-15** — [`028fc8cc3f6bd6412c40464297ad65caadf57a3e`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e) — 37 commits on, 2026-09-14. Screened before reading: three auto-run manifests, one build-time execution point, one unpinned range and one dependency surface inside the cooldown; nothing was installed and no test was run. The graph memory grew to seventeen modules: opt-in cross-session recall that reads only the sessions the ownership store lists for the caller's principal, community detection for the graph page, checkpoints that accept a transcript, LangChain and LangGraph adapters, and LLM extraction on the configured chat model. Section 6 now describes cross-session recall and its missing cross-principal case, section 10 the `benchmarks/eval` precision harness that was already present, and every cited line was re-checked (`graph.py:1013` and `:386`, `routes_graph.py:47-96`). The status model, transition table, retention thresholds and the two exclusion cases are unchanged. Four marks kept.
 
 **2026-08-31** — [`8495e2598b8c11547c64e5dc1f19cd198d5e363d`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/8495e2598b8c11547c64e5dc1f19cd198d5e363d) — `negative_eval` resolved in favour of the mark, at the same pin. Two committed cases assert that particular material must not come back: `tests/unit/test_graph.py::test_secrets_redacted_in_nodes` (line 180) puts `sk-ant-api03-…` through the real `extract_from_messages` path and asserts `sk-ant` is in no node's label or summary, and `tests/unit/test_contested_decisions.py::test_different_purpose_same_topic_does_not_supersede` (line 35) asserts the older node's id is absent from `find_contradicting_decisions` hits when the two decisions serve different purposes in one topic bucket. Section 9 had reasoned only from `test_security.py`'s isolated redactor units, which alone would not reach the bar; the near-miss survives narrowed, since nothing asserts about `to_context_block()`'s output and nothing asserts an `INACTIVE_STATUSES` node is absent from a rendered resume. Section 9's status count is corrected to the nine `NodeStatus` members and the four in `INACTIVE_STATUSES`.
 
