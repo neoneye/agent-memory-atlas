@@ -114,14 +114,14 @@ memory rather than window management.</p>
               <strong>langchain-ai/langchain</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5" title="f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5">
+            <a class="meta-pill revision-pill" href="https://github.com/langchain-ai/langchain/commit/41d357287c0470f70e45e232c711013258c0ac1a" title="41d357287c0470f70e45e232c711013258c0ac1a">
               <span>Analyzed revision</span>
-              <code>f9ee55d9…</code>
+              <code>41d35728…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/langchain-ai--langchain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -154,14 +154,15 @@ agent-memory tutorial written since 2023, including the <a
 href="https://github.com/NirDiamant/Agent_Memory_Techniques">cookbook</a>
 whose reading list produced this report, are LangChain class names.</p>
 <p>At this commit the framework has removed all of them.
-<code>langchain</code> is at version 1.0.8 and contains <strong>no
+<code>langchain</code> is at version 1.4.0 and contains <strong>no
 memory implementation at all</strong>: <code>store</code> appears in
 <code>libs/langchain_v1/langchain/agents/factory.py</code> as a
 parameter forwarded to LangGraph and nowhere else. The ten classic
-classes survive in a separate package, <code>langchain_classic</code>,
-each carrying <code>@deprecated(since="0.3.1", removal="2.0.0")</code>
-and an addendum pointing at <code>create_agent</code> with checkpointing
-or <a href="../langgraph/">LangGraph's</a> Store API.</p>
+classes survive in a separate package, <code>langchain_classic</code>
+(<code>langchain-classic</code> 1.0.8), each carrying
+<code>@deprecated(since="0.3.1", removal="2.0.0")</code> and an addendum
+pointing at <code>create_agent</code> with checkpointing or <a
+href="../langgraph/">LangGraph's</a> Store API.</p>
 <p>That makes this an unusual subject: a report on a memory layer that
 its authors concluded should not be part of an agent framework. It is
 worth writing because the split they drew is precisely the one this
@@ -239,7 +240,7 @@ exposes no delete.</p>
 link, so there is no trust model to describe in either package.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — version 1 forwards memory to another package; the deprecated one overwrites a single slot per entity</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: version 1 forwards memory to another package; the deprecated one overwrites a single slot per entity
 flowchart TB
-    subgraph V1[&quot;langchain 1.0.8&quot;]
+    subgraph V1[&quot;langchain 1.4.0&quot;]
       Agent[&quot;create_agent(checkpointer=, store=)&quot;] --&gt;|&quot;forwarded unchanged&quot;| LG[&quot;LangGraph&lt;br/&gt;checkpointer + Store&quot;]
       Mid[&quot;middleware: summarization,&lt;br/&gt;context_editing, todo, pii&quot;] --&gt;|&quot;operates on the message list&quot;| Run[&quot;this run only&quot;]
     end
@@ -355,10 +356,12 @@ in the same file: the input string is the query,
 <li><strong>Version 1 pass-through</strong> —
 <code>create_agent(..., store=...)</code> in
 <code>libs/langchain_v1/langchain/agents/factory.py:782</code>,
-forwarded to <code>compile()</code> at <code>:1847</code>.</li>
+forwarded to <code>compile()</code> at <code>:1843</code>.</li>
 <li><strong>Tests</strong> —
-<code>libs/langchain/tests/unit_tests/memory/</code> and
-<code>tests/integration_tests/memory/</code>.</li>
+<code>libs/langchain/tests/unit_tests/chains/test_memory.py</code> and
+<code>test_summary_buffer_memory.py</code> for the buffers, and
+<code>libs/langchain/tests/unit_tests/memory/</code> for combined memory
+and imports.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>SQLiteEntityStore</code>:</p>
@@ -527,13 +530,18 @@ and it protects the transcript rather than a store, because there is no
 longer a store to protect.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Unit tests live in
-<code>libs/langchain/tests/unit_tests/memory/</code> and cover the
-buffer classes, combined memory and the summary-buffer token accounting;
-integration tests under <code>tests/integration_tests/memory/</code>
-exercise the backends. Coverage of the window-management classes is
-better than coverage of the durable ones, which inverts the priority a
-memory reader would want.</p>
+<p>The memory tests are few and sit in two places.
+<code>tests/unit_tests/chains/test_memory.py</code> has two tests —
+simple memory and a read-only wrapper — and
+<code>test_summary_buffer_memory.py</code> has six covering the summary
+buffer's token accounting. <code>tests/unit_tests/memory/</code> holds a
+44-line combined-memory test and import checks.
+<code>tests/integration_tests/memory/</code> holds an
+<code>__init__.py</code> and an Elasticsearch docker-compose file and no
+test. Nothing exercises <code>ConversationEntityMemory</code>, the three
+entity stores, or <code>VectorStoreRetrieverMemory</code> — the
+window-management classes are covered and the durable ones are not,
+which inverts the priority a memory reader would want.</p>
 <p>There is no eval harness, no retrieval-quality measurement, no
 benchmark, and no dataset anywhere in the memory packages. Nothing
 measures whether the entity extractor and the entity-store keys agree,
@@ -672,10 +680,31 @@ boundary)</strong></p>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>
-<li><code>libs/langchain/tests/unit_tests/memory/</code>,
-<code>libs/langchain/tests/integration_tests/memory/</code>.</li>
+<li><code>libs/langchain/tests/unit_tests/chains/test_memory.py</code>,
+<code>test_summary_buffer_memory.py</code>,
+<code>libs/langchain/tests/unit_tests/memory/</code>;
+<code>libs/langchain/tests/integration_tests/memory/</code> holds no
+test.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/langchain-ai/langchain/commit/41d357287c0470f70e45e232c711013258c0ac1a"><code class="commit-id" title="41d357287c0470f70e45e232c711013258c0ac1a">41d35728…</code></a>
+— 162 commits on, 2026-09-14, with <code>langchain</code> at 1.4.0 and
+<code>langchain-classic</code> at 1.0.8. Read from a sparse checkout of
+the memory package, the version-1 agent code and the memory tests; the
+screen covered the repository root and every package's top-level
+manifests — three auto-run surfaces
+(<code>.devcontainer/devcontainer.json</code>, <code>.mcp.json</code>,
+<code>.vscode/settings.json</code>), 23 build-time execution points, six
+dependency surfaces inside the cooldown and none unpinned — and nothing
+was installed or run. The only memory change is the corrected
+<code>sqlite3</code> guidance in <code>SQLiteEntityStore</code>'s import
+error. Two claims from the first reading were wrong and are corrected:
+<code>langchain</code> was at 1.3.15 at the previous pin, not 1.0.8,
+which is the <code>langchain-classic</code> version; and the memory
+tests do not exercise backends — <code>integration_tests/memory/</code>
+contains no test, and the entity stores and vector-store memory have
+none anywhere. No mark changes.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5"><code class="commit-id" title="f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5">f9ee55d9…</code></a>
 — first reading, with <code>langchain</code> at version 1.0.8. Screened

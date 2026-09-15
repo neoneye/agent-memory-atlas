@@ -7,9 +7,9 @@ page_kind: system
 source_name: "langchain-ai/langchain"
 source_url: https://github.com/langchain-ai/langchain
 archive_name: "langchain-ai--langchain"
-revision: f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5
-revision_url: https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5
-analyzed_at: 2026-08-14
+revision: 41d357287c0470f70e45e232c711013258c0ac1a
+revision_url: https://github.com/langchain-ai/langchain/commit/41d357287c0470f70e45e232c711013258c0ac1a
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "sqlite, redis, delegated"
 stack_retrieval: "vector"
@@ -38,10 +38,10 @@ written since 2023, including the
 list produced this report, are LangChain class names.
 
 At this commit the framework has removed all of them. `langchain` is at version
-1.0.8 and contains **no memory implementation at all**: `store` appears in
+1.4.0 and contains **no memory implementation at all**: `store` appears in
 `libs/langchain_v1/langchain/agents/factory.py` as a parameter forwarded to
 LangGraph and nowhere else. The ten classic classes survive in a separate
-package, `langchain_classic`, each carrying
+package, `langchain_classic` (`langchain-classic` 1.0.8), each carrying
 `@deprecated(since="0.3.1", removal="2.0.0")` and an addendum pointing at
 `create_agent` with checkpointing or [LangGraph's](../langgraph/) Store API.
 
@@ -127,7 +127,7 @@ there is no trust model to describe in either package.
 ```mermaid
 %% caption: version 1 forwards memory to another package; the deprecated one overwrites a single slot per entity
 flowchart TB
-    subgraph V1["langchain 1.0.8"]
+    subgraph V1["langchain 1.4.0"]
       Agent["create_agent(checkpointer=, store=)"] -->|"forwarded unchanged"| LG["LangGraph<br/>checkpointer + Store"]
       Mid["middleware: summarization,<br/>context_editing, todo, pii"] -->|"operates on the message list"| Run["this run only"]
     end
@@ -220,9 +220,10 @@ better than almost anything else in this atlas. Nothing was installed or run.
   `_documents_to_memory_variables` joins their `page_content` with newlines.
 - **Version 1 pass-through** — `create_agent(..., store=...)` in
   `libs/langchain_v1/langchain/agents/factory.py:782`, forwarded to `compile()`
-  at `:1847`.
-- **Tests** — `libs/langchain/tests/unit_tests/memory/` and
-  `tests/integration_tests/memory/`.
+  at `:1843`.
+- **Tests** — `libs/langchain/tests/unit_tests/chains/test_memory.py` and
+  `test_summary_buffer_memory.py` for the buffers, and
+  `libs/langchain/tests/unit_tests/memory/` for combined memory and imports.
 
 ## 5. Memory Data Model
 
@@ -398,11 +399,15 @@ store, because there is no longer a store to protect.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Unit tests live in `libs/langchain/tests/unit_tests/memory/` and cover the
-buffer classes, combined memory and the summary-buffer token accounting;
-integration tests under `tests/integration_tests/memory/` exercise the backends.
-Coverage of the window-management classes is better than coverage of the durable
-ones, which inverts the priority a memory reader would want.
+The memory tests are few and sit in two places.
+`tests/unit_tests/chains/test_memory.py` has two tests — simple memory and a
+read-only wrapper — and `test_summary_buffer_memory.py` has six covering the
+summary buffer's token accounting. `tests/unit_tests/memory/` holds a 44-line
+combined-memory test and import checks. `tests/integration_tests/memory/` holds
+an `__init__.py` and an Elasticsearch docker-compose file and no test. Nothing
+exercises `ConversationEntityMemory`, the three entity stores, or
+`VectorStoreRetrieverMemory` — the window-management classes are covered and the
+durable ones are not, which inverts the priority a memory reader would want.
 
 There is no eval harness, no retrieval-quality measurement, no benchmark, and no
 dataset anywhere in the memory packages. Nothing measures whether the entity
@@ -527,8 +532,10 @@ inheriting it by accident.
 
 **Tests**
 
-- `libs/langchain/tests/unit_tests/memory/`, `libs/langchain/tests/integration_tests/memory/`.
+- `libs/langchain/tests/unit_tests/chains/test_memory.py`, `test_summary_buffer_memory.py`, `libs/langchain/tests/unit_tests/memory/`; `libs/langchain/tests/integration_tests/memory/` holds no test.
 
 ## History
+
+**2026-09-15** — [`41d357287c0470f70e45e232c711013258c0ac1a`](https://github.com/langchain-ai/langchain/commit/41d357287c0470f70e45e232c711013258c0ac1a) — 162 commits on, 2026-09-14, with `langchain` at 1.4.0 and `langchain-classic` at 1.0.8. Read from a sparse checkout of the memory package, the version-1 agent code and the memory tests; the screen covered the repository root and every package's top-level manifests — three auto-run surfaces (`.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json`), 23 build-time execution points, six dependency surfaces inside the cooldown and none unpinned — and nothing was installed or run. The only memory change is the corrected `sqlite3` guidance in `SQLiteEntityStore`'s import error. Two claims from the first reading were wrong and are corrected: `langchain` was at 1.3.15 at the previous pin, not 1.0.8, which is the `langchain-classic` version; and the memory tests do not exercise backends — `integration_tests/memory/` contains no test, and the entity stores and vector-store memory have none anywhere. No mark changes.
 
 **2026-08-14** — [`f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5`](https://github.com/langchain-ai/langchain/commit/f9ee55d94c8c2e61b14391d4f4f5dfd491bbd2f5) — first reading, with `langchain` at version 1.0.8. Screened before opening: three auto-run surfaces, 42 dependency surfaces inside the cooldown, 40 build-time execution points, zero unpinned surfaces, and two agent-instruction files read as data. Nothing was installed or run.
