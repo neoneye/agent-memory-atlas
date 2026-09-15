@@ -37689,6 +37689,39 @@ conversations that could not be resumed rather than dropping them.
 Screened before reading: no auto-running configuration, no build-time
 execution path, two manifests inside the seven-day cooldown; nothing was
 built or run.</li>
+<li><strong><code>offendingcommit/openconcho</code> was examined and has
+no report: it is a person's console for a <a
+href="../systems/honcho/">Honcho</a> instance, and every memory it
+touches lives in Honcho's store.</strong> At <a
+href="https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87"><code class="commit-id" title="b5e25646d3f91e54c4aacf111c0f8ff734cead87">b5e25646…</code></a>
+(MIT, release 0.16.2, 211 commits since 24 April 2026, about 18,000
+lines of TypeScript and Rust) it is a React single-page app, a Tauri
+desktop build, a Docker image that reverse-proxies the Honcho API under
+its own origin, and a Helm chart. What it keeps itself is browser
+<code>localStorage</code>: the list of Honcho connections with optional
+tokens (<code>packages/web/src/lib/config.ts:67</code>), user-authored
+peer-card "seed kits" that are templates of lines like
+<code>Name: </code> and <code>Role: </code>
+(<code>lib/seedKits.ts:61</code>), a theme and a demo-mask flag —
+configuration, not memory. Everything else is a call to Honcho's v3 API
+through a typed <code>openapi-fetch</code> client
+(<code>src/api/queries.ts</code>): browsing workspaces, peers, sessions,
+summaries, representations and conclusions; semantic search over
+conclusions; a dream viewer that renders a consolidation burst as a
+premise tree; a playground fanning one dialectic query across reasoning
+levels; and triggering <code>schedule_dream</code>. It also writes:
+<code>ConclusionBrowser.tsx</code> creates and deletes conclusions,
+<code>PeerDetail.tsx</code> replaces a peer card, a seed kit applies a
+card across instances, and sessions and workspaces can be deleted
+(<code>rg -n 'DELETE\(' packages/web/src</code> finds workspace,
+session, session-peer, conclusion and webhook deletes). That makes it a
+human review surface for Honcho's memory rather than a memory system
+with a store, retrieval path or forgetting rule of its own, so it is
+recorded here and not as a report. Screened before reading: one
+auto-running surface (<code>.vscode/settings.json</code>), no manifests
+inside the seven-day cooldown, three build-time execution points and
+three unpinned surfaces, plus two agent-instruction files read as data;
+nothing was installed or run.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
