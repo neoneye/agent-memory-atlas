@@ -1,342 +1,239 @@
 ---
-title: "OpenMemory"
-eyebrow: "Twenty-five numbers nobody derived"
-description: "A hand-typed 5×5 sectoral interdependence matrix and twelve elaborately named constants sit under a claim of biological alignment, above a project-isolation test that actually holds."
+title: "LongMemory"
+eyebrow: "Truth as of a time"
+description: "The system formerly called OpenMemory, rewritten as a TypeScript engine whose strict recall is one SQL query that asks what was true at a given moment — excluding superseded facts, unresolved contradictions and ungrounded claims — with no committed test anywhere in the tree."
 root: ../..
 page_kind: system
 source_name: "CaviraOSS/LongMemory"
 source_url: https://github.com/CaviraOSS/LongMemory
 archive_name: "CaviraOSS--LongMemory"
-revision: 9fdfc2ac09317881d0cdad6efd8b4859fc886323
-revision_url: https://github.com/CaviraOSS/LongMemory/commit/9fdfc2ac09317881d0cdad6efd8b4859fc886323
-analyzed_at: 2026-08-09
-capabilities: "scope_enforced, negative_eval"
-stack_storage: "sqlite, postgres"
-stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+revision: 4da4986d0069dbaa59d9209a84e2267749a67b3f
+revision_url: https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, bitemporal, trust_state, audit_log"
+capability_evidence:
+  scope_enforced: "every store query — tenant and user composed unconditionally into the WHERE | src/stores/sqlite/queries.ts:16-58 | `hydro_nodes`, `hydro_edges`, `contradictions` and `entity_aliases` all carry `tenant_id` and `user_id` columns, and every query in the store's query table opens `WHERE tenant_id = ? AND user_id = ?` with no `IS NULL OR` escape — unlike `world_id`, which is optional. The values are bound per `createMemory` instance: `create_memory.ts:195` defaults both to `default`, the MCP runtime takes them from server config (`src/server/app.ts:111-112`), and the HTTP ingest route requires `user_id` in the body. So the predicate is always present and a caller cannot omit it to widen; what a caller can do on HTTP ingest is assert an identity, because it is not derived from authentication | no committed test exists in the repository"
+  bitemporal: "strict and current recall — an as-of query over valid time, with recorded time kept separately | src/stores/sqlite/queries.ts:20-26 `current_truth`, :27-31 `historical_truth`, :32-54 `strict_candidates`; src/core/temporal/mvcc.ts:30 | a node carries `valid_from`, `valid_to`, `observed_at`, `recorded_at` and `superseded_at`. Recall takes an `@at` and filters `valid_from <= @at AND (valid_to IS NULL OR valid_to > @at) AND (superseded_at IS NULL OR superseded_at > @at)`, so the question asked is what was believed true at that moment, not what is newest. `historical_truth` drops the supersession and status filters and orders by `valid_from`, which is the forensic as-of read. Supersession closes a node MVCC-style through `close_transaction` rather than overwriting it, and ARCHITECTURE.md states the invariant: `Recorded time and valid time are distinct` | no committed test exists in the repository"
+  trust_state: "strict recall — discrete status plus unresolved contradictions exclude a fact from reasoning | src/stores/sqlite/queries.ts:32-54 `strict_candidates` | a fact reaches strict recall only if `status = 'active'` and `use_for_reasoning = 1`, its confidence clears `@min_confidence`, its own `max_valid_duration` contract has not lapsed, it clears the grounding threshold when grounding is required, it carries a source when one is required, and `NOT EXISTS` an unresolved row in `contradictions` naming it on either side. The last clause is the unusual one: a contradicted fact is withheld until the contradiction is resolved, rather than ranked lower. The connector deletion marker ingested at `create_memory.ts:671` carries `use_for_reasoning: false`, so it is kept out of the same query | no committed test exists in the repository"
+  audit_log: "the MCP surface — one append-only line per tool call, allowed, denied or failed | src/mcp/security/audit.ts:47, src/mcp/runtime.ts:81 | `mcp_audit_log.record` appends `JSON.stringify(entry)` with `appendFileSync` to `<db_path>.mcp-audit.jsonl`, and an entry carries `tool`, `user_id`, `project_id`, `outcome` (`allowed`, `denied`, `error`), `dry_run`, timestamps and the error. It covers the thirteen MCP tools; the HTTP routes and the library API do not write to it, so a memory ingested over HTTP leaves no audit row | no committed test exists in the repository"
+stack_storage: "sqlite"
+stack_retrieval: "lexical, vector, graph"
+stack_source: "reviewed"
 matrix:
-  memory_unit: "A memory assigned to one of five sectors — episodic, semantic, procedural, emotional, reflective"
-  storage: "SQLite or Postgres with a vector store and a waypoint edge table"
-  retrieval: "A hybrid score summing similarity, token overlap, waypoint weight, recency and tags"
-  write: "Sector assignment plus cross-sector waypoint edges written in both directions at weight 0.5"
-  update_delete: "Decay, reflection and consolidation passes, counted into a stats table"
-  scoping: "user_id and project_id filter the query, with a system_global scope visible to all projects"
-  integration: "Python and Node SDKs, MCP, a VS Code extension, LangChain, CrewAI, AutoGen, a dashboard"
-  background: "Decay, reflect and consolidate maintenance operations"
-  trust: "Salience and activation energy as floats; nothing discrete and nothing epistemic"
-  strengths: "A project-isolation test that asserts the cross-project leak is absent, both directions"
-  risks: "The cognitive-science framing rests on constants and a matrix that nothing derives or measures"
+  memory_unit: "An immutable, content-addressed `HydroNode` with a facet, a world, provenance, a reasoning contract and five timestamps; mutable lifecycle state is stored beside it"
+  storage: "SQLite `hydro_nodes`, `hydro_edges`, `contradictions` and `entity_aliases`, keyed on tenant and user; an in-memory store for embedded use"
+  retrieval: "Several recall modes over one engine — current, historical and strict SQL candidates, plus graph traversal over executable edges — returned within a token bound"
+  write: "An immutable ingest pipeline shared by the library, CLI, HTTP server and MCP transports; connectors import external sources and sync their deletions"
+  update_delete: "Supersession closes a node's transaction and records `superseded_at`; a deleted connector source is ingested as a non-reasoning marker with a `supersedes` edge"
+  scoping: "`tenant_id` and `user_id` in every query, unconditionally; `world_id` optional beneath them; identity bound per engine instance rather than per request"
+  integration: "A TypeScript package, CLI, authenticated HTTP API, thirteen MCP tools, a Next.js dashboard, a VS Code extension and host plugins"
+  background: "Consolidation and reconsolidation passes over the hydrograph"
+  trust: "`status`, `use_for_reasoning`, confidence, grounding and source requirements, and unresolved contradictions all gate strict recall"
+  strengths: "Strict recall asks what was true at a time and refuses a fact under unresolved contradiction, in one legible query"
+  risks: "No committed test exists anywhere in the tree, and the fourteen stated invariants are returned as strings rather than asserted"
 ---
 
 ## 1. Executive Summary
 
-OpenMemory is an Apache-2.0 "cognitive memory engine" — SQLite or Postgres,
-Python and Node SDKs, MCP, a VS Code extension, integrations for LangChain,
-CrewAI and AutoGen, and source connectors for GitHub, Notion, Google Drive,
-OneDrive and a web crawler.
+LongMemory is the system this atlas reported on as **OpenMemory**. The repository was renamed from `CaviraOSS/OpenMemory` to `CaviraOSS/LongMemory` on 31 August 2026, with a `MIGRATION.md` moving the npm package, CLI, environment prefix and routes to the new name. It is Apache-2.0, version 1.0.0, about 28,400 lines of TypeScript under `src/`, plus a Next.js dashboard, a VS Code extension, host integrations, and a benchmark harness for LongMemEval, LoCoMo and BEAM.
 
-**The README opens with a banner: "🚧 This project is currently being rewritten.
-Expect breaking changes and potential bugs."** with development moved to a
-`rewrite` branch. This report reads `main` at the pinned commit and takes that
-warning at face value: what follows describes a system in transition.
+**It is a rewrite, not a rename.** The report's previous pin read `packages/openmemory-js/`, whose README announced a rewrite in progress on another branch. That rewrite is on `main`: `packages/openmemory-js` is gone, every file the previous appendix cited is gone, and the hand-typed sectoral interdependence matrix at the centre of that reading survives only as a mapping inside `src/core/migration/legacy_cleaner.ts`. The new engine's own invariant list rejects the old shape in so many words — *"worlds are recursive containers, not flat sectors"*.
 
-**The pitch is that it is not a vector database.** `Why.md` sets out a
-comparison table whose distinguishing rows are "Multi-sector (episodic, semantic,
-procedural, emotional, reflective)", "Biological alignment: Inspired by human
-brain's sectorial memory formation", and "Explainable recall ✅ Full trace path
-via waypoint graph", concluding: *"Vector DBs store 'what was said.' OpenMemory
-remembers 'what it meant, when, how it felt, and why it matters.'"*
+What replaced it is worth the report. **Strict recall is a single SQL query that asks what was true at a given moment**, and the conditions it applies cover most of what this atlas asks a read path to refuse:
 
-**The biological alignment is twenty-five numbers somebody typed.**
-`packages/openmemory-js/src/ops/dynamics.ts` opens with twelve constants —
-
-```
-ALPHA_LEARNING_RATE_FOR_RECALL_REINFORCEMENT = 0.15
-BETA_LEARNING_RATE_FOR_EMOTIONAL_FREQUENCY = 0.2
-GAMMA_ATTENUATION_CONSTANT_FOR_GRAPH_DISTANCE = 0.35
-THETA_CONSOLIDATION_COEFFICIENT_FOR_LONG_TERM = 0.4
-ETA_REINFORCEMENT_FACTOR_FOR_TRACE_LEARNING = 0.18
-LAMBDA_ONE_FAST_DECAY_RATE = 0.015
-LAMBDA_TWO_SLOW_DECAY_RATE = 0.002
-TAU_ENERGY_THRESHOLD_FOR_RETRIEVAL = 0.4
+```sql
+WHERE n.tenant_id = @tenant_id AND n.user_id = @user_id
+  AND n.valid_from <= @at AND (n.valid_to IS NULL OR n.valid_to > @at)
+  AND (n.superseded_at IS NULL OR n.superseded_at > @at)
+  AND n.status = 'active' AND n.use_for_reasoning = 1
+  AND n.confidence >= @min_confidence
+  AND (n.requires_grounding = 0 OR n.grounding_score >= @grounding_threshold)
+  AND NOT EXISTS (SELECT 1 FROM contradictions c
+                  WHERE ... AND c.resolved = 0
+                    AND (c.node_a = n.node_id OR c.node_b = n.node_id))
 ```
 
-— and a `SECTORAL_INTERDEPENDENCE_MATRIX_FOR_COGNITIVE_RESONANCE`: a symmetric
-5×5 grid of values from 0.2 to 0.8 relating the five sectors.
+As-of valid time with recorded time kept apart; supersession evaluated as of the same instant; a discrete status; a per-fact validity contract; grounding and source requirements; and — the rare one — **a fact under an unresolved contradiction is withheld from reasoning** rather than ranked beneath its rival.
 
-No citation, no derivation, no fitting procedure, no sensitivity analysis, and no
-evaluation anywhere in the tree. Greek-letter names and a "cognitive resonance"
-matrix are a *presentation* of arbitrary constants, not evidence of biological
-alignment, and this atlas has learned to check the difference.
-
-**And then the thing that is genuinely well done is a test** — section 10.
+**The defect is that none of it is tested.** There is no test file anywhere in the repository and no `test` script in `package.json`. The previous reading's `negative_eval` rested on `packages/openmemory-js/tests/test_project_isolation.ts`, which was deleted with the package it tested, and nothing replaced it. The engine's fourteen invariants — *"durable nodes are immutable"*, *"strict recall cannot use superseded facts"*, *"benchmarks define correctness"* — are exported as an array and handed back by `invariants: () => hydrograph_invariants`; the function named `assert_hydrograph_invariants` returns the list and asserts nothing. The last invariant is the stated substitute: the benchmark scorecard gates a `stale_leakage` rate, which measures a model's answers over external datasets rather than pinning the query's behaviour to a fixture.
 
 ## 2. Mental Model
 
-A memory is assigned a sector. Waypoint edges connect a memory to its
-cross-sector projections, and those edges contribute to the retrieval score
-alongside similarity, overlap and recency. Background passes decay, reflect and
-consolidate.
+A memory is a **node in a hydrograph**: immutable, content-addressed, and carrying the time it describes separately from the time it was learned.
+
+| Field | Meaning |
+| --- | --- |
+| `valid_from`, `valid_to` | when the claim is true in the world |
+| `observed_at` | when the source saw it |
+| `recorded_at` | when the store learned it |
+| `superseded_at` | when a later node closed this one's transaction |
+| `status`, `use_for_reasoning`, `confidence` | whether strict recall may use it |
+| `world_id`, facet | which recursive context it belongs to, and which cognitive attribute it is |
+
+Recall is a choice of question, not a choice of index:
+
+- **current truth** — active, unsuperseded, valid now;
+- **historical truth** — valid at `@at`, superseded or not, ordered by `valid_from` — the forensic read;
+- **strict candidates** — current truth further filtered by every reasoning contract and by unresolved contradictions;
+- **associative** recall is permitted to use superseded and emotional residue, and the invariant list says it *"must label it"*.
 
 ```mermaid
-%% caption: cross-sector waypoints are edges written at ingest and read as one term of the hybrid score, so structure contributes to ranking without a traversal at query time
+%% caption: one ingest pipeline writes immutable nodes; supersession closes a node rather than overwriting it, and each recall mode is a different question over the same valid-time and recorded-time columns — strict recall adding the reasoning contract and the unresolved-contradiction check
 flowchart TD
-    A["add(content, user_id, project_id)"] --> SEC["primary sector +<br/>additional sectors"]
-    SEC --> WP["create_cross_sector_waypoints:<br/>edges both directions at weight 0.5<br/>between id and id:sector"]
-    SEC --> ST["memories row + vector"]
-    Q["search(query, user_id, project_id)"] --> HS["compute_hybrid_score = sigmoid(<br/>similarity·w + overlap·w +<br/>waypoint·0.15 + recency·w +<br/>tag_match·w + keyword)"]
-    ST --> HS
-    WP --> HS
-    HS --> F["filter: project_id OR system_global OR NULL"]
-    F --> R["results"]
-    M["maintenance"] --> D["decay"]
-    M --> RF["reflect"]
-    M --> C["consolidate"]
-    D --> LOG["log_maint_op → stats(type, count, ts)"]
-    RF --> LOG
-    C --> LOG
+    SRC["events · documents · connectors"] --> ING["immutable ingest pipeline"]
+    ING --> N[("hydro_nodes<br/>valid_from · valid_to · recorded_at · superseded_at")]
+    ING -->|"later fact"| MV["close_transaction<br/>superseded_at = now"]
+    MV --> N
+    ING -->|"conflict"| C[("contradictions<br/>resolved = 0")]
+    DEL["connector source deleted"] -->|"marker node, use_for_reasoning = false<br/>+ supersedes edge"| N
+
+    N --> CUR["current_truth<br/>active · unsuperseded · valid at @at"]
+    N --> HIS["historical_truth<br/>valid at @at, superseded or not"]
+    N --> STR["strict_candidates<br/>+ confidence · contract · grounding · source"]
+    C -.->|"NOT EXISTS unresolved"| STR
+    STR --> CTX["bounded context"]
+    CUR --> CTX
 ```
 
 ## 3. Architecture
 
-`packages/openmemory-js` and `packages/openmemory-py` are the two SDKs, with the
-Node package carrying the engine: `memory/hsg.ts` (the hybrid scoring graph),
-`ops/dynamics.ts`, `core/db.ts`, and server routes for memory, dynamics,
-temporal, compression, sources, users, dashboard, IDE, LangGraph and Vercel.
-Plus a `dashboard/`, a VS Code extension, Docker Compose, and deploy manifests
-for Railway, Render and Vercel.
+One TypeScript package, `src/`, with a shared engine created by `createMemory`. `ARCHITECTURE.md` states the rule that makes the surfaces trustworthy relative to each other — *"api server and cli must use the same createMemory engine"* — and the tree keeps it: the CLI, the authenticated HTTP server, the MCP transports, the dashboard proxy and the integrations all construct the same engine.
 
-Governance is unusually complete for a project of this size: `GOVERNANCE.md`,
-`CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`, `MIGRATION.md`,
-`ARCHITECTURE.md`, `CHANGELOG.md` and `Why.md`.
+- `src/core` — the hydrograph types, temporal logic (`temporal/bitemporal.ts`, `temporal/mvcc.ts`), reconsolidation, invariants, migration
+- `src/stores` — the SQLite store and its query table, and an in-memory store
+- `src/answering`, `src/connectors` — recall assembly and external source import
+- `src/server` — HTTP routes (`ingest`, `recall`, `explain`, `timeline`, `worlds`, `entities`, `stats`) and middleware (auth, rate limit, CORS, concurrency, telemetry)
+- `src/mcp` — thirteen governed tools, resources, prompts, transports, and `security/audit.ts`
+
+### Deployment and ergonomics
+
+`npm`, `longmemory` CLI, a SQLite file. `Dockerfile`, `docker-compose.yml`, and deploy descriptors for Heroku, Railway, Render and Vercel sit at the root, beside PowerShell start and stop scripts. `MIGRATION.md` bridges the old npm and registry names through temporary compatibility packages; application identifiers keep no runtime aliases.
 
 ## 4. Essential Implementation Paths
 
-**Score** — `packages/openmemory-js/src/memory/hsg.ts` (`scoring_weights`
-`:140-165`, `compute_hybrid_score` `:471-488`).
+### The query table
 
-**Link sectors** — `hsg.ts` `create_cross_sector_waypoints` `:498-525`.
+`src/stores/sqlite/queries.ts` holds the recall SQL as named strings, which is the most legible way to publish a retrieval contract: `load_node`, `load_edge`, `current_truth`, `historical_truth`, `strict_candidates`, `aliases_for_entity`, `canonical_alias`. Every one opens on `tenant_id` and `user_id`. `world_id` is the only optional key, written `(@world_id IS NULL OR world_id = @world_id)`.
 
-**The constants** — `packages/openmemory-js/src/ops/dynamics.ts` `:5-28`
-(the twelve constants, the matrix, the sector index mapping),
-`AssociativeWaypointGraphNode` `:37-45`.
+### Supersession without overwrite
 
-**Isolate** — `packages/openmemory-js/tests/test_project_isolation.ts`.
+`temporal/mvcc.ts` closes a node's transaction by stamping `superseded_at` and returning a new node rather than mutating the stored one, consistent with *"durable nodes are immutable"* and with the architecture document's *"mutable lifecycle state is stored separately"*. Because `superseded_at` is compared against `@at`, a superseded fact is still returned by a recall asking about a moment before it was superseded — the property that makes the historical query honest.
 
-**Count maintenance** — `packages/openmemory-js/src/core/db.ts` `log_maint_op`
-`:913-931`.
+### Connector deletion, which is not a tombstone
+
+When an imported source item is deleted upstream, `create_memory.ts:661-690` ingests a marker node — text *"Source item deleted: …"*, `use_for_reasoning: false`, `metadata.source_deleted: true` — and a `supersedes` edge from it to the node it replaces. That is delete-sync recorded as supersession, which is the correct and auditable behaviour for a connector and is not a rejected-value tombstone: nothing keys on the content to stop it being ingested again from another source.
+
+### Contradictions as a gate
+
+`contradictions` rows carry `node_a`, `node_b` and `resolved`. `strict_candidates` excludes any node on either side of an unresolved row. The consequence is conservative in the right direction: two sources disagreeing about a deployment target produce an answer that uses neither, rather than one that silently picks the more confident.
 
 ## 5. Memory Data Model
 
-Memories carry a sector, an embedding, a salience, an activation energy and
-`user_id` / `project_id`. Waypoints are their own edge rows —
-`(from, to, user_id, project_id, weight, created, updated)` — written in both
-directions so the graph is symmetric by construction.
+`HydroNode` (`src/core/types/hydro_node.ts`) is content-addressed and immutable; `hydro_nodes` stores the serialised node in `node_json` with the filterable fields lifted into columns. A node's **contract** carries `use_for_reasoning`, `use_for_personalization`, `expires_if_unconfirmed` and an optional `max_valid_duration`, and strict recall reads the duration straight out of the JSON: a fact can declare that it is only good for a period, and the query enforces it.
 
-`create_cross_sector_waypoints` is worth reading because it is simpler than the
-vocabulary around it: for each additional sector it inserts two edges between the
-memory id and a synthetic `${id}:${sector}` node at a fixed weight of `0.5`. So a
-"cross-sector waypoint" is a projection of one memory into each sector it also
-belongs to, at a constant weight — not an association learned between distinct
-memories.
-
-There is no confidence field, no status, no supersession pointer and no
-tombstone. Salience and activation energy are floats.
+Provenance travels in `node_json` as `provenance.source_trace`, and `source_required` nodes are excluded from strict recall unless they carry a grounding reference or a non-empty trace.
 
 ## 6. Retrieval Mechanics
 
-`compute_hybrid_score` is a weighted sum through a sigmoid:
+Lexical, vector and graph arms feed the recall modes, and results are returned within a token bound — *"Recall is read-only and token bounded"*. The distinguishing work is not in ranking but in eligibility: `strict_candidates` decides what may be reasoned from before anything is scored, and orders the survivors by confidence, then grounding, then recency.
 
-```typescript
-const raw =
-    scoring_weights.similarity * s_p +
-    scoring_weights.overlap * tok_ov +
-    scoring_weights.waypoint * wp_wt +      // 0.15
-    scoring_weights.recency * rec_sc +
-    scoring_weights.tag_match * tag_match +
-    keyword_score;
-return sigmoid(raw);
-```
-
-So the waypoint graph is not decorative — it contributes 15% of the pre-sigmoid
-score, and `waypoint_boost` and `max_waypoint_weight` bound its growth. The
-mechanism the marketing rests on does exist and does affect ranking.
-
-**The `system_global` scope is the modelling decision worth naming.** The query
-filters `project_id OR system_global OR NULL`, so a project sees its own memories
-plus a shared global tier — and the isolation test asserts both halves: project
-Alpha finds its own, does *not* find Beta's, and *does* find the global one.
-That is the right shape for "my coding standards apply everywhere, my Alpha
-roadmap does not".
-
-`user_id` and `project_id` reach the query, so `scope_enforced` is earned. The
-test file itself flags the gap in a comment: "If `project_id` is NOT provided, it
-doesn't apply the project filter" — an unscoped query sees everything for that
-user, which is a documented and deliberate default rather than an oversight.
-
-**The explainability claim is the one this report could not verify.** `Why.md`
-promises "Full trace path via waypoint graph" and the README "Explainable traces
-(see which nodes were recalled and why)". Waypoint weights feed the score, and no
-trace structure was found in the memory route's query response — so the
-*information* exists inside scoring and the returned explanation was not located
-at this commit.
+`world_id` scopes recall inside a user to a recursive context; omitting it reads across the user's worlds, which is a design choice rather than a leak, since tenant and user still bound the query.
 
 ## 7. Write Mechanics
 
-Add, assign sectors, write waypoints. Correction is decay, reflection and
-consolidation running in the background; nothing marks a memory wrong, superseded
-or withdrawn.
-
-`log_maint_op(type, cnt)` writes `(type, count, ts)` into a `stats` table for
-`decay`, `reflect` and `consolidate`. That is operational telemetry — how many
-memories a pass touched — not a record of *what* changed, which is why the
-`audit_log` mark is withheld.
+One immutable ingest pipeline for every surface. The HTTP ingest route requires `user_id` in the body; the MCP runtime and a library `createMemory` bind `tenant_id` and `user_id` at construction, defaulting both to `default`. Consolidation and reconsolidation passes run over the graph; supersession is written as a closed transaction plus an edge, never as an update in place.
 
 ## 8. Agent Integration
 
-Two SDKs, MCP, a VS Code extension on the marketplace, framework adapters for
-LangChain, CrewAI, AutoGen and Streamlit, source connectors for GitHub, Notion,
-Google Drive, OneDrive and a crawler, a dashboard, and one-click deploys.
-
-The integration surface is the widest thing about the project, and the rewrite
-banner applies to all of it.
+Thirteen MCP tools behind `src/mcp/security`, with an audit log of every call; an authenticated HTTP API; a CLI with a deterministic JSON mode that the VS Code extension consumes; host plugins and MCP configurations under `integrations/`. Because every surface shares one engine, a fact ingested through one is recalled identically through another.
 
 ## 9. Reliability, Safety, and Trust
 
-**Two marks: scope enforced and negative eval.**
+Strengths:
 
-**Trust state, tombstone, bitemporal, audit log, human review — no.**
+- **Strict recall is an as-of question**, with valid time and recorded time kept apart and supersession evaluated at the same instant.
+- **An unresolved contradiction withholds both sides from reasoning.**
+- **Facts carry their own validity contract**, and the query enforces it.
+- **Grounding and source requirements gate reasoning**, not only ranking.
+- **Nodes are immutable and supersession closes rather than overwrites**, so the historical read is real.
+- **Tenant and user are in every query without an escape.**
+- **Every MCP tool call is audited**, including denials.
 
-**The framing is the risk.** A memory system that describes itself as
-biologically aligned, multi-sector and explainable, and whose distinguishing
-parameters are twenty-five hand-typed numbers with no derivation, invites a
-reader to trust the model rather than the measurement. Nothing here is dishonest
-— the constants are in a plainly named file, exported, and readable — and nothing
-justifies the claim either.
+Gaps:
 
-The practical consequence is that the sector matrix is unfalsifiable as shipped.
-There is no evaluation that would move a cell of it, so the difference between
-0.7 and 0.4 for episodic↔semantic is a preference. A single fixture set scoring
-retrieval with the matrix, with it flattened to all-ones, and with it randomised
-would settle whether it earns its place, and would take an afternoon.
-
-**The rewrite banner is doing real work** and a reader should let it: this is
-`main` for a project whose author has moved to a branch and asked for help.
+- **No committed test exists.** Not one file, and no test script. Every property above is established by reading the query text.
+- **The invariants are not asserted.** `assert_hydrograph_invariants` returns the list; nothing checks any entry.
+- **Identity is not derived from authentication.** It is fixed per engine instance from configuration, and asserted by the caller in the HTTP ingest body; a deployed server is effectively one identity for recall.
+- **Only the MCP surface is audited.** Ingest over HTTP and the library API leave no audit row.
+- **No rejected-value tombstone.** A fact a user wants gone can be superseded, but nothing keys on its content to stop it returning from another source.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper, no benchmark, no committed results.**
+**I ran nothing**, and there is nothing to run: no `*.test.*`, no `*.spec.*`, no `tests/` or `__tests__/` directory, and no `test` script. The previous pin's isolation test was deleted with `packages/openmemory-js`.
 
-**`packages/openmemory-js/tests/test_project_isolation.ts` earns the
-`negative_eval` mark, and it is the best thing in the repository.** It writes a
-memory into project Alpha, one into project Beta, and one into the global scope,
-then asserts in both directions:
+`benchmarks/` is a harness for LongMemEval, LoCoMo and BEAM with a scorecard and a `FAILURE_ANALYSIS.md`. Its gates include a `stale_leakage` rate — an answer scores only if it is correct **and** does not use stale material, and a provider passes only if the leakage rate is at or below `stale_leakage_max`. That is the right metric for a system whose central claim is not using superseded facts. It is also a measurement of a model's answers over external datasets, requiring a provider to run, rather than a committed case that fails when `strict_candidates` loses its `superseded_at` clause — so it does not carry `negative_eval`, and the invariant *"benchmarks define correctness"* is doing work a four-line fixture test would do more cheaply.
 
-```typescript
-if (!hasAlpha)      throw new Error(`FAIL: ${projA} could not find its own memory.`);
-if (hasBetaInA)     throw new Error(`FAIL: ${projA} found memory from ${projB}.`);
-if (hasGlobalInA.length === 0)
-                    throw new Error(`FAIL: ${projA} could not find global memory.`);
-```
-
-and then symmetrically from Beta. Three assertions per direction — **it finds its
-own, it does not find the other project's, and it does find the global tier** —
-is exactly the shape an isolation test needs, because each one alone can be
-satisfied by a broken implementation: return everything, return nothing, or drop
-the global scope.
-
-`mcp_per_tenant.test.ts` and `omnibus.test.ts` sit beside it.
-
-What is missing is any evaluation of retrieval quality, of the sector
-assignment, or of the constants. The system's entire distinguishing claim is
-unmeasured.
-
-**I ran nothing.**
+**No paper, arXiv reference or citation file exists in this repository.**
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Test isolation in three directions at once.** Own memories present,
-  other-scope memories absent, shared-scope memories present. Any one assertion
-  alone passes for a broken implementation; together they pin the behaviour.
-- **Have a `system_global` tier and test that it crosses the boundary.** "My
-  coding standards apply to every project, my roadmap does not" is a real
-  distinction, and the global tier is the part people forget to test.
-- **Note the unscoped default in the test file.** "If `project_id` is NOT
-  provided, it doesn't apply the project filter" — written where the next reader
-  will see it.
-- **Bound a graph signal's contribution.** `waypoint` at 0.15 of the pre-sigmoid
-  score, with a `waypoint_boost` and a `max_waypoint_weight`, keeps an
-  association graph from swamping similarity as it densifies.
-- **Say when your project is mid-rewrite.** The banner is the first thing in the
-  README and it changes how everything below it should be read.
-- **Ship the governance documents.** `GOVERNANCE.md`, `SECURITY.md`,
-  `MIGRATION.md` and `CONTRIBUTING.md` at this size is more than most.
+- **Publish recall as a named query table.** `current_truth`, `historical_truth` and `strict_candidates` side by side make the difference between modes reviewable in one file.
+- **Evaluate supersession as of the same instant as validity.** `superseded_at > @at` is what lets a historical read return what was believed then.
+- **Withhold a contradicted fact from reasoning until resolved.** `NOT EXISTS` an unresolved contradiction is one clause and a large change in failure mode.
+- **Let a fact carry its own expiry contract** and enforce it in the query rather than in a sweeper.
+- **Record connector deletions as supersession with a non-reasoning marker**, so the removal is visible in history and invisible to reasoning.
 
 ### Avoid
 
-- **Do not let naming carry an argument.**
-  `SECTORAL_INTERDEPENDENCE_MATRIX_FOR_COGNITIVE_RESONANCE` is a 5×5 array of
-  numbers somebody chose. Greek letters and a cognitive vocabulary make constants
-  look derived; a citation, a fitting procedure or an ablation makes them
-  derived.
-- **Do not claim biological alignment without a reference.** The comparison table
-  scores the project ✅ against vector databases' ❌ on exactly the rows nothing
-  measures.
-- **Do not promise an explainable trace the response does not carry.** Waypoint
-  weights feed the score; a query result that returns the path is the feature the
-  README describes.
-- **Do not confuse a maintenance counter with an audit trail.**
-  `stats(type, count, ts)` tells you a decay pass touched *n* memories, not which
-  ones or what changed.
-- **Do not leave the parameters unfalsifiable.** Run retrieval with the matrix,
-  flattened, and randomised. If flattened scores the same, delete the matrix.
+- **Stating invariants you do not check.** A list named `assert_…` that returns strings reads as a control and is not one.
+- **Replacing tests with benchmarks.** A benchmark gate over a model's answers cannot tell you which clause of your query regressed.
+- **Deleting the test with the package.** The isolation property the previous version tested still holds by reading, and nothing now fails if it stops holding.
+- **Auditing one surface of several.** If three surfaces share an engine, audit at the engine.
 
 ### Fit
 
-The integration surface — two SDKs, MCP, VS Code, four frameworks, five source
-connectors — is the reason to look, and the rewrite banner is the reason to wait.
-For a reader wanting sectored memory today, the parameters that make it sectored
-are unvalidated.
-
-The isolation test is worth copying into whatever you do build.
+Read this for the recall contract — it is one of the clearest statements in the corpus of what a memory should refuse to reason from. Adopt it with tests of your own, because the repository ships none, and with identity derived from your authentication rather than from configuration.
 
 ## 12. Open Questions
 
-- **Where did the matrix come from?** No citation or derivation appears in the
-  tree.
-- **Does the query response carry a waypoint trace?** The claim is in `Why.md`
-  and the README; no trace structure was found in the memory route.
-- **What changes on the `rewrite` branch?** The README directs contributors
-  there; only `main` was read.
-- **Do the Python and Node SDKs share the constants?** Only the Node engine was
-  traced.
+- Will the invariants become assertions, and will `strict_candidates` get fixture tests for each clause?
+- How is a contradiction resolved, and by whom — and does resolution record which side won?
+- Should identity for recall be derived from the authenticated request rather than bound per engine instance?
+- Why is the audit log on the MCP surface only, when every surface shares the engine?
+- What does the `stale_leakage` rate measure in practice — are benchmark results committed anywhere?
 
 ## Appendix: File Index
 
-**The constants** — `packages/openmemory-js/src/ops/dynamics.ts` (the twelve
-named constants `:5-12`, `SECTORAL_INTERDEPENDENCE_MATRIX_FOR_COGNITIVE_RESONANCE`
-`:14-20`, `SECTOR_INDEX_MAPPING_FOR_MATRIX_LOOKUP` `:22-28`,
-`DynamicSalienceWeightingParameters` `:30-35`, `AssociativeWaypointGraphNode`
-`:37-45`), `packages/openmemory-js/src/server/routes/dynamics.ts`
+- **Recall contract:** `src/stores/sqlite/queries.ts`, `src/stores/sqlite/sqlite_store.ts`.
+- **Temporal logic:** `src/core/temporal/bitemporal.ts`, `src/core/temporal/mvcc.ts`, `src/core/memory/reconsolidation.ts`.
+- **Model:** `src/core/types/hydro_node.ts`, `src/core/invariants.ts`.
+- **Engine and connectors:** `src/core/create_memory.ts` (identity defaults :195, connector deletion :661-690, invariants getter :815), `src/connectors/`.
+- **Surfaces:** `src/server/app.ts`, `src/server/routes/`, `src/server/middleware/auth.ts`, `src/mcp/runtime.ts`, `src/mcp/security/audit.ts`.
+- **Migration:** `MIGRATION.md`, `src/core/migration/legacy_cleaner.ts`.
+- **Benchmarks:** `benchmarks/src/scorecard.ts`, `benchmarks/src/report.ts`, `benchmarks/FAILURE_ANALYSIS.md`.
 
-**Scoring and waypoints** — `packages/openmemory-js/src/memory/hsg.ts`
-(`waypoint` interface `:31`, `scoring_weights` `:140-165`,
-`compute_hybrid_score` `:471-488`, `create_cross_sector_waypoints` `:498-525`)
+### Searches behind the absence claims
 
-**Storage** — `packages/openmemory-js/src/core/db.ts` (`log_maint_op`
-`:913-931`), `packages/openmemory-js/src/core/migrate.ts`
+```sh
+# no test file and no test script anywhere
+find . \( -name '*.test.*' -o -name '*.spec.*' -o -path '*/tests/*' -o -path '*/__tests__/*' \) -not -path '*/node_modules/*'
+grep -n '"test' package.json
 
-**Tests** — `packages/openmemory-js/tests/test_project_isolation.ts` (the setup
-`:22-52`, the Alpha assertions `:57-79`, the Beta assertions `:81-96`, the
-unscoped-default note `:98-101`), `mcp_per_tenant.test.ts`, `omnibus.test.ts`
+# the invariants are exported and returned, not asserted
+grep -rn 'hydrograph_invariants' --include='*.ts' src/
 
-**Claims** — `README.md` (the rewrite banner `:1-5`, the feature list `:20-30`,
-the trace claims `:26`, `:242`, `:304`), `Why.md` (the vector-DB comparison
-table `:11-24`, the SaaS comparison `:28-`)
+# the audit log is written only from the MCP security module
+grep -rn 'appendFileSync' --include='*.ts' src/
+
+# the only sector code left is the legacy migration
+grep -rniE 'sectoral|interdependence|SECTOR' --include='*.ts' src/
+```
 
 ## History
+
+**2026-09-15** — [`4da4986d0069dbaa59d9209a84e2267749a67b3f`](https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f) — second reading, 31 commits on, and a different system at the same slug. Screened first; nothing was installed and nothing was run. The rewrite the previous reading noted on a separate branch landed on `main`: `packages/openmemory-js` and every file the previous appendix cited are gone, the repository carries the LongMemory name throughout with a `MIGRATION.md` dated to the 31 August rename, and the sectoral interdependence matrix that gave the report its title survives only in a legacy migration. The report is rewritten for the code at this pin rather than annotated, and the title follows the product. Marks were re-tested from scratch. `scope_enforced` holds on a different mechanism — `tenant_id` and `user_id` composed unconditionally into every query in the SQLite store. `negative_eval` is **withdrawn**: its evidence, `test_project_isolation.ts`, was deleted with the package, and no test file exists anywhere in the tree. `bitemporal`, `trust_state` and `audit_log` are added on the new engine — an as-of valid-time query with recorded time kept apart, a strict-recall gate on status, contract, grounding and unresolved contradictions, and an append-only MCP call log. `tombstone` is withheld after reading the one place the word appears: the connector deletion marker is delete-sync recorded as supersession. The slug is kept, as the rename entry below decided, so no published URL moves.
 
 **2026-09-13** — the repository was renamed from `CaviraOSS/OpenMemory` to `CaviraOSS/LongMemory`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/CaviraOSS--LongMemory` to match.
 
