@@ -1813,9 +1813,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: splitting statement storage on whether the fact decomposes — `Identity`/`Knowledge`/`Event` become subject-predicate-object triples, while `Directive`/`Preference`/`Belief` stay whole "since they carry meaning that does not decompose cleanly into triples". Triple-ifying a preference throws away the phrasing that carries its force.
 - Biggest risk: an invalidated statement can be re-extracted from a new episode and become current again — correct for a memory over the user's own mail, and the wrong default for anything an agent writes.
 - Most reusable component: `invalidatedBy` beside `invalidAt`, which names the statement that ended this one and turns a set of timestamped rows into a walkable history.
-- Maturity impression: 152,800 lines across a monorepo with forty-plus connectors, a pluggable graph provider behind a three-value enum, six vector namespaces and nine pages of accurate documentation — beside 25 test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number published in a different repository.
+- Maturity impression: 152,800 lines across a monorepo with forty-plus connectors, a pluggable graph provider behind a three-value enum, six vector namespaces and nine pages of accurate documentation — beside 29 test files, AGPL-3.0 with a Commons Clause, and a LoCoMo number published in a different repository.
 - Study when: your memory holds both facts and directives and you are storing them the same way.
-- Do not copy when: you need lexical retrieval; V2 dropped BM25 and the pipeline that has it is version-gated.
+- Do not copy when: you need lexical retrieval; V2 dropped BM25, and the pipeline that has it is reached through a version fallback or an opt-in backstop that is off by default.
 
 ### [`yantrikdb`](../systems/yantrikdb/)
 

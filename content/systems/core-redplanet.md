@@ -7,10 +7,13 @@ page_kind: system
 source_name: "RedPlanetHQ/core"
 source_url: https://github.com/RedPlanetHQ/core
 archive_name: "RedPlanetHQ--core"
-revision: c91ca5765598bbbfe18277eb933e94430273b3eb
-revision_url: https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb
-analyzed_at: 2026-08-09
+revision: 4a5b18d8db55d66e5dfda41b18461f359b340c42
+revision_url: https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42
+analyzed_at: 2026-09-15
 capabilities: "bitemporal, scope_enforced"
+capability_evidence:
+  bitemporal: "statement search in the Neo4j provider — valid time queried as of a date, record time kept apart | packages/providers/src/graph/neo4j/domains/search.ts:146-152, apps/webapp/app/services/search.server.ts:77, apps/webapp/app/services/graphModels/statement.ts:157 | a `Statement` carries content-derived `validAt` and a closing `invalidAt` beside `createdAt`. The BM25, vector and episode search builders open with `s.validAt <= $validAt AND (s.invalidAt IS NULL OR s.invalidAt > $validAt)`, `includeInvalidated` drops the second clause, and `startTime` adds a lower bound; the service defaults `validAt` to now and a caller can pass another. `invalidateStatement` writes only `invalidAt` and `invalidatedBy`, so a statement closed by a contradiction is still answerable as of a date before the close | unknown"
+  scope_enforced: "every statement and episode read in the graph provider | packages/providers/src/graph/neo4j/domains/search.ts:180-181, :189, :280 | each query opens with `WHERE s.userId = $userId` or `{userId: $userId}` unconditionally; `workspaceId` is typed optional on the provider and its predicate is spliced in only when the value is truthy, while `search.server.ts` takes `workspaceId: string` as a required argument and passes it on every arm. Agents added in August share the workspace's memory by design; there is no agent key on a statement | unknown"
 stack_storage: "graph, delegated"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -20,7 +23,7 @@ matrix:
   retrieval: "An LLM router classifying the query into six types, each with a dedicated handler, merged and optionally reranked"
   write: "Episodes chunked and diffed, entities deduped by normalization plus vector similarity, statements classified by aspect"
   update_delete: "A contradiction writes invalidAt and an invalidatedBy pointer; history is preserved, never overwritten"
-  scoping: "userId and workspaceId threaded into every graph provider call as required parameters"
+  scoping: "userId as an unconditional predicate on every graph query; workspaceId required by the search service and optional at the provider, which drops its predicate when absent; no agent scope"
   integration: "An MCP server, forty-plus connectors, a Tauri desktop app, a web app and a CLI"
   background: "Sync jobs per connector, session compaction, persona generation and aspect derivation on a queue"
   trust: "Aspect classification and provenance; no epistemic status field on a statement"
@@ -72,8 +75,8 @@ types, six vector namespaces, two stores and three swappable graph providers.
 
 Five primitives, and the layering is clean:
 
-- an **Episode** is one ingested thing — a conversation, an email, a sync — and
-  "the original content is preserved as the source of truth";
+- an **Episode** is one ingested thing — a day of a conversation, an email, a
+  sync — and "the original content is preserved as the source of truth";
 - an **Entity** is a node, from eleven types including `Predicate`;
 - a **Statement** is an atomic fact extracted from an episode;
 - an **Aspect** is the twelve-value classification on a statement, and it decides
@@ -183,22 +186,43 @@ temporal facet scan, and CORE runs different code for each.
 
 The cost is stated plainly in the docs: "V2 does not use BM25." Dropping lexical
 retrieval entirely is a real trade — exact identifiers, error codes and rare
-tokens are where BM25 wins — and the legacy V1 path that still has it is
-reachable only for workspaces on an older version.
+tokens are where BM25 wins. The BM25-bearing V1 `SearchService` is reachable two
+ways: as the fallback for workspaces not on V3, and as a "broad recall backstop"
+that merges up to ten of its episodes into V2's episode-returning handlers. The
+backstop is off unless `MEMORY_SEARCH_V2_BROAD_RECALL_BACKSTOP` is set or a caller
+passes `enableBroadRecallBackstop`, and no caller in the tree passes it, so on a
+default deployment the docs' sentence holds.
 
 Scope is `userId` and `workspaceId`, threaded as parameters into every graph
 provider call including `getEntity`, `saveTriple` and both invalidation
-functions. It is not an optional filter that a caller may omit; it is in the
-signature. That earns `scope_enforced`, and it is enforced by the provider
-interface rather than by a policy — one layer weaker than
+functions. The two are not equally strong. `userId` is required in every
+provider signature and every search query opens with `s.userId = $userId`
+unconditionally. `workspaceId` is typed optional on the provider, and the query
+builders splice `AND s.workspaceId = $workspaceId` in only when the value is
+truthy; what closes that gap is the service layer, where `search.server.ts`
+takes `workspaceId: string` as a required argument and passes it to every search
+arm. The user predicate earns `scope_enforced`, and it is enforced by the
+provider interface rather than by a policy — one layer weaker than
 [Octopoda](../octopoda-os/)'s row-level security and considerably stronger than
 an optional argument.
 
 ## 7. Write Mechanics
 
 Ingest is queued, so a memory is not searchable the instant it is sent — every
-sync produces episodes, and every Butler exchange is ingested, both through
+sync produces episodes, and every agent exchange is ingested, both through
 background jobs.
+
+Workspaces can hold several named agents that share one memory, and
+`services/agent/conversation-ingest.ts` shapes what they write. The episode body
+names the speaker — `<user>…</user><agent handle="cass">…</agent>` rather than a
+bare `<assistant>` — so attribution lives in the episode text, not in a field
+any query can filter on. And the session key is `{conversationId}-YYYY-MM-DD` in
+the user's time zone, so a long conversation becomes one session per day for
+compaction and for search's session grouping. The file's own comment says
+*"Recall can still stitch across buckets by prefix match on conversationId"*;
+the grouping in `search.server.ts` keys on the exact `sessionId`, and no prefix
+match on it was found, so a conversation that spans days is returned as
+separate sessions.
 
 Contradiction handling never deletes and never rewrites. That is easy to state
 and worth checking against the code, and the code agrees: `invalidateStatement`
@@ -215,14 +239,15 @@ model reinstate a corrected fact by repeating itself.
 
 ## 8. Agent Integration
 
-An MCP server exposing `memory_ingest` and `memory_search`, forty-plus
+An MCP server exposing `memory_ingest` and `memory_search`, named agents with
+their own personalities that share the workspace's memory, forty-plus
 connectors (Gmail, Slack, Linear, Notion, Jira, GitHub, Google Workspace,
 HubSpot, Stripe and more), a Tauri desktop app, a web dashboard and a CLI.
 
 The connector breadth is the product: memory that indexes the tools the user
 already lives in, rather than only what they type at an agent. It is also the
 maintenance surface — forty-plus packages, each with its own dependency
-manifest, all of which the screen flagged as changed within a day.
+manifest.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -245,7 +270,7 @@ is no adjudication surface.
 
 **Tombstone — no**, for the reason in section 7.
 
-**Negative eval — no.** 25 test files under `apps/webapp`, which is thin for a
+**Negative eval — no.** 29 test files, which is thin for a
 monorepo this size, and none asserting that particular material must not be
 retrieved.
 
@@ -266,10 +291,10 @@ reasonable engineering choice and it has the same consequence recorded here for
 [Vestige](../vestige/) and [Token Savior](../token-savior/): the number on the
 front page is not checkable against the code it describes.
 
-25 test files. **I did not run them** — the screen flagged 92 dependency
-manifests inside the seven-day cooldown across the integration packages, plus
-build-time execution in `apps/tauri/src-tauri/build.rs` and the MCP proxy
-manifest. A tree with ninety-two same-day manifests is one to read only.
+29 test files. **I did not run them.** The screen flags a Claude Code plugin
+marketplace manifest as an auto-run surface, build-time execution in
+`apps/tauri/src-tauri/build.rs` and the MCP proxy manifest, and 52 unpinned
+dependency surfaces across the integration packages.
 
 The documentation set (`docs/memory/`) is unusually good and is the reason this
 report could be written efficiently: nine pages covering the primitives, the
@@ -314,8 +339,9 @@ each of which checked out against the code where it was tested.
   agent-authored one.
 - **Do not put the headline benchmark in another repository** if the number is
   in the README.
-- **Do not underestimate forty connectors as a maintenance surface.** Ninety-two
-  dependency manifests moved within a day of this commit.
+- **Do not underestimate forty connectors as a maintenance surface.** Forty-plus
+  packages, each with its own dependency manifest, is a surface of its own before
+  any of them is read.
 
 ### Fit
 
@@ -380,5 +406,7 @@ them and contain the whole idea.
 **Not in this tree** — the LoCoMo benchmark lives at `RedPlanetHQ/core-benchmark`
 
 ## History
+
+**2026-09-15** — [`4a5b18d8db55d66e5dfda41b18461f359b340c42`](https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42) — eight commits on, 2026-09-07. Screened before reading: one auto-run surface (a Claude Code plugin marketplace manifest), two build-time execution points and 52 unpinned surfaces, none inside the cooldown; nothing was installed or run. The graph models, the providers, `search.server.ts` and the aspect store are unchanged, so both marks stand and now carry evidence records. The commits build named agents on a shared workspace memory: episodes attribute each reply to an agent handle in the body text, and sessions are bucketed per conversation per day, where the ingest file's claim that recall stitches buckets by prefix has no code behind it. Two claims present since the first reading were incomplete and are corrected. V2 is not BM25-free in every configuration: an opt-in backstop, off by default and present at the previous pin, merges the V1 BM25 search into V2 episode handlers. And the scope claim overstated the provider: `userId` is an unconditional predicate, while `workspaceId` is optional at the provider and required only by the search service.
 
 **2026-08-09** — [`c91ca5765598bbbfe18277eb933e94430273b3eb`](https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb) — first reading. Screened before reading: no auto-run surface, build-time execution in `apps/tauri/src-tauri/build.rs` and the MCP proxy manifest, and 92 dependency manifests inside the seven-day cooldown across the integration packages. The tree was read, never installed, and no test or benchmark was run.

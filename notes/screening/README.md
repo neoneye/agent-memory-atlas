@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 378 of 457 screened at the report's current pin.**
+**Progress: 379 of 457 screened at the report's current pin.**
 
 6 further record(s) describe a revision the report has since moved
-off, and 73 report(s) have no record at all.
+off, and 72 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 156 |
+| Repositories with an auto-run surface (`RUNS`) | 157 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 201 |
-| Repositories with build-time execution (`EXEC`) | 281 |
+| Repositories with build-time execution (`EXEC`) | 282 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -55,6 +55,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
 | [`context-mode`](../../content/systems/context-mode.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/`, `hooks/hooks.json` |
+| [`core-redplanet`](../../content/systems/core-redplanet.md) | `.claude-plugin/` |
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`cortex-engine`](../../content/systems/cortex-engine.md) | `.githooks/`, `hooks/` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |

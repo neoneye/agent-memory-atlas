@@ -110,14 +110,14 @@ instead of an overwrite.</p>
               <strong>RedPlanetHQ/core</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb" title="c91ca5765598bbbfe18277eb933e94430273b3eb">
+            <a class="meta-pill revision-pill" href="https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42" title="4a5b18d8db55d66e5dfda41b18461f359b340c42">
               <span>Analyzed revision</span>
-              <code>c91ca576…</code>
+              <code>4a5b18d8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RedPlanetHQ--core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -187,9 +187,9 @@ swappable graph providers.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Five primitives, and the layering is clean:</p>
 <ul>
-<li>an <strong>Episode</strong> is one ingested thing — a conversation,
-an email, a sync — and "the original content is preserved as the source
-of truth";</li>
+<li>an <strong>Episode</strong> is one ingested thing — a day of a
+conversation, an email, a sync — and "the original content is preserved
+as the source of truth";</li>
 <li>an <strong>Entity</strong> is a node, from eleven types including
 <code>Predicate</code>;</li>
 <li>a <strong>Statement</strong> is an atomic fact extracted from an
@@ -296,21 +296,47 @@ entity is a different operation from a temporal facet scan, and CORE
 runs different code for each.</p>
 <p>The cost is stated plainly in the docs: "V2 does not use BM25."
 Dropping lexical retrieval entirely is a real trade — exact identifiers,
-error codes and rare tokens are where BM25 wins — and the legacy V1 path
-that still has it is reachable only for workspaces on an older
-version.</p>
+error codes and rare tokens are where BM25 wins. The BM25-bearing V1
+<code>SearchService</code> is reachable two ways: as the fallback for
+workspaces not on V3, and as a "broad recall backstop" that merges up to
+ten of its episodes into V2's episode-returning handlers. The backstop
+is off unless <code>MEMORY_SEARCH_V2_BROAD_RECALL_BACKSTOP</code> is set
+or a caller passes <code>enableBroadRecallBackstop</code>, and no caller
+in the tree passes it, so on a default deployment the docs' sentence
+holds.</p>
 <p>Scope is <code>userId</code> and <code>workspaceId</code>, threaded
 as parameters into every graph provider call including
 <code>getEntity</code>, <code>saveTriple</code> and both invalidation
-functions. It is not an optional filter that a caller may omit; it is in
-the signature. That earns <code>scope_enforced</code>, and it is
-enforced by the provider interface rather than by a policy — one layer
-weaker than <a href="../octopoda-os/">Octopoda</a>'s row-level security
-and considerably stronger than an optional argument.</p>
+functions. The two are not equally strong. <code>userId</code> is
+required in every provider signature and every search query opens with
+<code>s.userId = $userId</code> unconditionally.
+<code>workspaceId</code> is typed optional on the provider, and the
+query builders splice <code>AND s.workspaceId = $workspaceId</code> in
+only when the value is truthy; what closes that gap is the service
+layer, where <code>search.server.ts</code> takes
+<code>workspaceId: string</code> as a required argument and passes it to
+every search arm. The user predicate earns <code>scope_enforced</code>,
+and it is enforced by the provider interface rather than by a policy —
+one layer weaker than <a href="../octopoda-os/">Octopoda</a>'s row-level
+security and considerably stronger than an optional argument.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Ingest is queued, so a memory is not searchable the instant it is
-sent — every sync produces episodes, and every Butler exchange is
+sent — every sync produces episodes, and every agent exchange is
 ingested, both through background jobs.</p>
+<p>Workspaces can hold several named agents that share one memory, and
+<code>services/agent/conversation-ingest.ts</code> shapes what they
+write. The episode body names the speaker —
+<code>&lt;user&gt;…&lt;/user&gt;&lt;agent handle="cass"&gt;…&lt;/agent&gt;</code>
+rather than a bare <code>&lt;assistant&gt;</code> — so attribution lives
+in the episode text, not in a field any query can filter on. And the
+session key is <code>{conversationId}-YYYY-MM-DD</code> in the user's
+time zone, so a long conversation becomes one session per day for
+compaction and for search's session grouping. The file's own comment
+says <em>"Recall can still stitch across buckets by prefix match on
+conversationId"</em>; the grouping in <code>search.server.ts</code> keys
+on the exact <code>sessionId</code>, and no prefix match on it was
+found, so a conversation that spans days is returned as separate
+sessions.</p>
 <p>Contradiction handling never deletes and never rewrites. That is easy
 to state and worth checking against the code, and the code agrees:
 <code>invalidateStatement</code> only ever writes <code>invalidAt</code>
@@ -327,14 +353,14 @@ design in an agent-authored store would let a model reinstate a
 corrected fact by repeating itself.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>An MCP server exposing <code>memory_ingest</code> and
-<code>memory_search</code>, forty-plus connectors (Gmail, Slack, Linear,
-Notion, Jira, GitHub, Google Workspace, HubSpot, Stripe and more), a
-Tauri desktop app, a web dashboard and a CLI.</p>
+<code>memory_search</code>, named agents with their own personalities
+that share the workspace's memory, forty-plus connectors (Gmail, Slack,
+Linear, Notion, Jira, GitHub, Google Workspace, HubSpot, Stripe and
+more), a Tauri desktop app, a web dashboard and a CLI.</p>
 <p>The connector breadth is the product: memory that indexes the tools
 the user already lives in, rather than only what they type at an agent.
 It is also the maintenance surface — forty-plus packages, each with its
-own dependency manifest, all of which the screen flagged as changed
-within a day.</p>
+own dependency manifest.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Bitemporal — awarded.</strong> <code>validAt</code> is
@@ -355,9 +381,9 @@ when it took effect.</p>
 <p><strong>Human review — no.</strong> The dashboard displays memory and
 allows deletion; there is no adjudication surface.</p>
 <p><strong>Tombstone — no</strong>, for the reason in section 7.</p>
-<p><strong>Negative eval — no.</strong> 25 test files under
-<code>apps/webapp</code>, which is thin for a monorepo this size, and
-none asserting that particular material must not be retrieved.</p>
+<p><strong>Negative eval — no.</strong> 29 test files, which is thin for
+a monorepo this size, and none asserting that particular material must
+not be retrieved.</p>
 <p><strong>The licence is the safety note a reader needs first.</strong>
 AGPL-3.0 plus a Commons Clause means self-hosting is fine and offering
 it as a service is not. GitHub reports this kind of file as a custom
@@ -374,11 +400,11 @@ engineering choice and it has the same consequence recorded here for <a
 href="../vestige/">Vestige</a> and <a href="../token-savior/">Token
 Savior</a>: the number on the front page is not checkable against the
 code it describes.</p>
-<p>25 test files. <strong>I did not run them</strong> — the screen
-flagged 92 dependency manifests inside the seven-day cooldown across the
-integration packages, plus build-time execution in
-<code>apps/tauri/src-tauri/build.rs</code> and the MCP proxy manifest. A
-tree with ninety-two same-day manifests is one to read only.</p>
+<p>29 test files. <strong>I did not run them.</strong> The screen flags
+a Claude Code plugin marketplace manifest as an auto-run surface,
+build-time execution in <code>apps/tauri/src-tauri/build.rs</code> and
+the MCP proxy manifest, and 52 unpinned dependency surfaces across the
+integration packages.</p>
 <p>The documentation set (<code>docs/memory/</code>) is unusually good
 and is the reason this report could be written efficiently: nine pages
 covering the primitives, the storage layout, ingestion, search, aspects,
@@ -429,8 +455,8 @@ and wrong for an agent-authored one.</li>
 <li><strong>Do not put the headline benchmark in another
 repository</strong> if the number is in the README.</li>
 <li><strong>Do not underestimate forty connectors as a maintenance
-surface.</strong> Ninety-two dependency manifests moved within a day of
-this commit.</li>
+surface.</strong> Forty-plus packages, each with its own dependency
+manifest, is a surface of its own before any of them is read.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>This suits an individual or a team who want memory over the tools
@@ -503,6 +529,24 @@ the Commons Clause condition at <code>:32</code>)</p>
 <p><strong>Not in this tree</strong> — the LoCoMo benchmark lives at
 <code>RedPlanetHQ/core-benchmark</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/RedPlanetHQ/core/commit/4a5b18d8db55d66e5dfda41b18461f359b340c42"><code class="commit-id" title="4a5b18d8db55d66e5dfda41b18461f359b340c42">4a5b18d8…</code></a>
+— eight commits on, 2026-09-07. Screened before reading: one auto-run
+surface (a Claude Code plugin marketplace manifest), two build-time
+execution points and 52 unpinned surfaces, none inside the cooldown;
+nothing was installed or run. The graph models, the providers,
+<code>search.server.ts</code> and the aspect store are unchanged, so
+both marks stand and now carry evidence records. The commits build named
+agents on a shared workspace memory: episodes attribute each reply to an
+agent handle in the body text, and sessions are bucketed per
+conversation per day, where the ingest file's claim that recall stitches
+buckets by prefix has no code behind it. Two claims present since the
+first reading were incomplete and are corrected. V2 is not BM25-free in
+every configuration: an opt-in backstop, off by default and present at
+the previous pin, merges the V1 BM25 search into V2 episode handlers.
+And the scope claim overstated the provider: <code>userId</code> is an
+unconditional predicate, while <code>workspaceId</code> is optional at
+the provider and required only by the search service.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/RedPlanetHQ/core/commit/c91ca5765598bbbfe18277eb933e94430273b3eb"><code class="commit-id" title="c91ca5765598bbbfe18277eb933e94430273b3eb">c91ca576…</code></a>
 — first reading. Screened before reading: no auto-run surface,
