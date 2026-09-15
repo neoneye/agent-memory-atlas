@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 369 of 457 screened at the report's current pin.**
+**Progress: 370 of 457 screened at the report's current pin.**
 
 7 further record(s) describe a revision the report has since moved
-off, and 81 report(s) have no record at all.
+off, and 80 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 151 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 195 |
-| Repositories with build-time execution (`EXEC`) | 274 |
+| Repositories with an auto-run surface (`RUNS`) | 152 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 196 |
+| Repositories with build-time execution (`EXEC`) | 275 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -172,6 +172,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
 | [`tokenmizer`](../../content/systems/tokenmizer.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
+| [`trueforge`](../../content/systems/trueforge.md) | `.cursor/rules/` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |

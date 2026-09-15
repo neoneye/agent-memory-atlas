@@ -115,14 +115,14 @@ room.</p>
               <strong>truefoundry/trueforge</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8" title="bd156190ac0c6ab865a5cc549535a14a805f06e8">
+            <a class="meta-pill revision-pill" href="https://github.com/truefoundry/trueforge/commit/4fad485ac74db0d06a83e3bfe91ffb568bcd160a" title="4fad485ac74db0d06a83e3bfe91ffb568bcd160a">
               <span>Analyzed revision</span>
-              <code>bd156190…</code>
+              <code>4fad485a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-19</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/truefoundry--trueforge" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -354,10 +354,22 @@ removes nothing. That is more than many systems carrying this mark.</p>
 appear anywhere in the turn queries, and the child tables carry no
 tenant column — they inherit isolation by foreign key and cascade. So
 possession of a <code>session_id</code> is sufficient to read its turns
-at the store layer. And the shipped server closes the question by not
-opening it: <code>apis/sessions.ts</code> declares <em>"The server is
-single-tenant; every record lives under one fixed tenant scope"</em> and
-passes a <code>TENANT_ID</code> constant everywhere.</p>
+at the store layer. And which tenant a request carries depends on how
+the server authenticates. <code>apis/sessions.ts</code> passes
+<code>requestContext.tenant_id</code>, built by one of three
+authenticators. The TrueFoundry authenticator sets it from the platform
+session, <code>tenant_id: session.user.tenantName</code>, so tenants
+there are real. The standalone authenticator returns
+<code>STANDALONE_REQUEST_CONTEXT</code>, whose tenant is
+<code>'default'</code>, and the OIDC authenticator maps a verified ID
+token onto <code>tenant_id: 'default'</code> as well
+(<code>auth/claims.ts:68</code>) — distinct users are distinct
+<em>subjects</em> under one tenant. So the tenant predicate separates
+organisations only on the TrueFoundry platform; on a self-hosted OIDC
+deployment every user shares the <code>default</code> tenant, and what
+separates them is subject-level authorization in
+<code>auth/authorizer.ts</code> rather than the session store's tenant
+column.</p>
 <p>That is a defensible arrangement — a column reserved ahead of the
 feature, with the single-tenancy documented rather than implied — and a
 reader should not mistake the mark for multi-tenant isolation. It
@@ -489,8 +501,13 @@ event</td>
 </tr>
 <tr>
 <td><code>packages/trueforge/src/apis/sessions.ts</code></td>
-<td>The single-tenant declaration and the <code>TENANT_ID</code>
-constant</td>
+<td>Session APIs, passing <code>requestContext.tenant_id</code></td>
+</tr>
+<tr>
+<td><code>packages/trueforge/src/auth/claims.ts</code>,
+<code>standaloneAuthenticator.ts</code>,
+<code>truefoundry/TrueFoundryAuthenticator.ts</code></td>
+<td>Where each deployment mode sets the tenant</td>
 </tr>
 <tr>
 <td><code>benchmark/README.md</code></td>
@@ -499,6 +516,23 @@ constant</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/truefoundry/trueforge/commit/4fad485ac74db0d06a83e3bfe91ffb568bcd160a"><code class="commit-id" title="4fad485ac74db0d06a83e3bfe91ffb568bcd160a">4fad485a…</code></a>
+— second reading, 232 commits on. Screened again: one auto-run finding,
+<code>.cursor/rules/</code>, which is editor guidance rather than an
+executed hook; four build-time execution points; eight dependency
+surfaces inside the cooldown. Nothing was installed and nothing was run.
+All three marks were re-tested against the paths their evidence records
+cite, which are unchanged in location, and all three hold. One criticism
+moved and one did not. The single-tenant declaration and the
+<code>TENANT_ID</code> constant the previous reading quoted are gone:
+the session APIs pass a tenant from a request context, which is a real
+per-organisation value under the TrueFoundry authenticator and
+<code>default</code> under the standalone and OIDC authenticators — so
+the tenant column is live on one deployment mode of three. The turn
+queries still take a <code>session_id</code> and nothing else, and
+possession of a session id remains sufficient to read its turns at the
+store layer.</p>
 <p><strong>2026-08-19</strong> — <a
 href="https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8"><code class="commit-id" title="bd156190ac0c6ab865a5cc549535a14a805f06e8">bd156190…</code></a>
 — first reading. Screened before reading: one auto-run surface (a

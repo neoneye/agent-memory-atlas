@@ -7,9 +7,9 @@ page_kind: system
 source_name: "truefoundry/trueforge"
 source_url: https://github.com/truefoundry/trueforge
 archive_name: "truefoundry--trueforge"
-revision: bd156190ac0c6ab865a5cc549535a14a805f06e8
-revision_url: https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8
-analyzed_at: 2026-08-19
+revision: 4fad485ac74db0d06a83e3bfe91ffb568bcd160a
+revision_url: https://github.com/truefoundry/trueforge/commit/4fad485ac74db0d06a83e3bfe91ffb568bcd160a
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "the session subsystem — a tenant key stored on the session row and applied as a predicate on the session read path | packages/trueforge/src/db/sqlite/session-store/queries/sessions.ts | `getSession`, `listSessions` and `deleteSession` each carry `.where('tenant_id', '=', input.tenant_id)`, and the store contract asserts both directions of it: a `session_id` already used by another tenant is rejected at create, and a delete whose tenant does not match is a no-op rather than a deletion | packages/trueforge-core/tests/agent-session/store/storeContractSuite.ts"
@@ -24,7 +24,7 @@ matrix:
   retrieval: "None in the search sense. A turn's context is assembled by reading its pointer rows in `pos` order; nothing ranks, scores or searches, and no agent-facing tool queries history"
   write: "Synchronous, inside a transaction, fenced on the turn still being `running`. Appends write a body row and a pointer row; an overwrite deletes the pointer rows and writes new ones"
   update_delete: "Bodies are immutable and never deleted individually. Compaction replaces a thread's pointer list with two entries — a generated summary and a continuation message — leaving every superseded body in the log. `deleteSession` cascades and removes everything for that session"
-  scoping: "`tenant_id` on the session row, applied as a predicate on session reads and asserted in both directions by the store contract. Turn-level queries take `session_id` alone, and the shipped HTTP server passes one constant tenant"
+  scoping: "`tenant_id` on the session row, applied as a predicate on session reads and asserted in both directions by the store contract. Turn-level queries take `session_id` alone, and the tenant comes from the request context — a real tenant only in TrueFoundry mode, `default` in standalone and OIDC modes"
   integration: "A chat UI, an HTTP API with a TypeScript SDK, an embeddable UI SDK, MCP servers with OAuth, git-sourced `SKILL.md` packs sparse-cloned into a sandbox, and subagents"
   background: "None over the store. Compaction runs as a pre-LLM processor inside the turn when the context crosses a token threshold"
   trust: "No epistemic state. Nothing stored is a claim — a body is a message that was sent, and the only judgement in the system is whether a message is currently in force"
@@ -242,10 +242,17 @@ But the boundary stops at the session table. `GetTurnInput` and `ListTurnsInput`
 are `session_id` and nothing else; `tenant` does not appear anywhere in the turn
 queries, and the child tables carry no tenant column — they inherit isolation by
 foreign key and cascade. So possession of a `session_id` is sufficient to read
-its turns at the store layer. And the shipped server closes the question by not
-opening it: `apis/sessions.ts` declares *"The server is single-tenant; every
-record lives under one fixed tenant scope"* and passes a `TENANT_ID` constant
-everywhere.
+its turns at the store layer. And which tenant a request carries depends on how the server authenticates.
+`apis/sessions.ts` passes `requestContext.tenant_id`, built by one of three
+authenticators. The TrueFoundry authenticator sets it from the platform session,
+`tenant_id: session.user.tenantName`, so tenants there are real. The standalone
+authenticator returns `STANDALONE_REQUEST_CONTEXT`, whose tenant is `'default'`,
+and the OIDC authenticator maps a verified ID token onto `tenant_id: 'default'`
+as well (`auth/claims.ts:68`) — distinct users are distinct *subjects* under one
+tenant. So the tenant predicate separates organisations only on the TrueFoundry
+platform; on a self-hosted OIDC deployment every user shares the `default` tenant,
+and what separates them is subject-level authorization in `auth/authorizer.ts`
+rather than the session store's tenant column.
 
 That is a defensible arrangement — a column reserved ahead of the feature, with
 the single-tenancy documented rather than implied — and a reader should not
@@ -343,10 +350,13 @@ self-corrects, is more useful than a number that looks authoritative.
 | `packages/trueforge-core/src/agent-session/TurnHandle.ts` | Event routing, including `overwriteThreadContext` |
 | `packages/trueforge-core/src/core/sandbox/skills/SkillMounter.ts` | Git-sourced read-only skill packs |
 | `packages/trueforge-core/tests/agent-session/store/storeContractSuite.ts` | 2,085 lines run against all three store backends |
-| `packages/trueforge/src/apis/sessions.ts` | The single-tenant declaration and the `TENANT_ID` constant |
+| `packages/trueforge/src/apis/sessions.ts` | Session APIs, passing `requestContext.tenant_id` |
+| `packages/trueforge/src/auth/claims.ts`, `standaloneAuthenticator.ts`, `truefoundry/TrueFoundryAuthenticator.ts` | Where each deployment mode sets the tenant |
 | `benchmark/README.md` | The blind-judge method and the 14-task, n=3 result table |
 
 ## History
+
+**2026-09-15** — [`4fad485ac74db0d06a83e3bfe91ffb568bcd160a`](https://github.com/truefoundry/trueforge/commit/4fad485ac74db0d06a83e3bfe91ffb568bcd160a) — second reading, 232 commits on. Screened again: one auto-run finding, `.cursor/rules/`, which is editor guidance rather than an executed hook; four build-time execution points; eight dependency surfaces inside the cooldown. Nothing was installed and nothing was run. All three marks were re-tested against the paths their evidence records cite, which are unchanged in location, and all three hold. One criticism moved and one did not. The single-tenant declaration and the `TENANT_ID` constant the previous reading quoted are gone: the session APIs pass a tenant from a request context, which is a real per-organisation value under the TrueFoundry authenticator and `default` under the standalone and OIDC authenticators — so the tenant column is live on one deployment mode of three. The turn queries still take a `session_id` and nothing else, and possession of a session id remains sufficient to read its turns at the store layer.
 
 **2026-08-19** — [`bd156190ac0c6ab865a5cc549535a14a805f06e8`](https://github.com/truefoundry/trueforge/commit/bd156190ac0c6ab865a5cc549535a14a805f06e8)
 — first reading. Screened before reading: one auto-run surface (a `.cursor/rules/`
