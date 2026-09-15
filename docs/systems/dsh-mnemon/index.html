@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A composable memory plugin for
+DeepSeek Harness that pins one view per turn from three tiers — a
+byte-bounded runtime USER/MEMORY projection, workspace documents, and
+provider-backed memory spaces defaulting to the Mnemon CLI — with an
+archival path that verifies every overflowing entry lands in a space,
+and a branch scope that archived entries lose.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="dsh-mnemon — Agent Memory Atlas">
+    <meta property="og:description" content="A composable memory plugin
+for DeepSeek Harness that pins one view per turn from three tiers — a
+byte-bounded runtime USER/MEMORY projection, workspace documents, and
+provider-backed memory spaces defaulting to the Mnemon CLI — with an
+archival path that verifies every overflowing entry lands in a space,
+and a branch scope that archived entries lose.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dsh-mnemon — Agent Memory Atlas">
+    <meta name="twitter:description" content="A composable memory plugin
+for DeepSeek Harness that pins one view per turn from three tiers — a
+byte-bounded runtime USER/MEMORY projection, workspace documents, and
+provider-backed memory spaces defaulting to the Mnemon CLI — with an
+archival path that verifies every overflowing entry lands in a space,
+and a branch scope that archived entries lose.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>dsh-mnemon — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "dsh-mnemon",
+      "description": "A composable memory plugin for DeepSeek Harness that pins one view per turn from three tiers \u2014 a byte-bounded runtime USER/MEMORY projection, workspace documents, and provider-backed memory spaces defaulting to the Mnemon CLI \u2014 with an archival path that verifies every overflowing entry lands in a space, and a branch scope that archived entries lose.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Three tiers composed per turn</p>
+          <h1>dsh-mnemon</h1>
+          <p class="document-deck">A composable memory plugin for
+DeepSeek Harness that pins one view per turn from three tiers — a
+byte-bounded runtime USER/MEMORY projection, workspace documents, and
+provider-backed memory spaces defaulting to the Mnemon CLI — with an
+archival path that verifies every overflowing entry lands in a space,
+and a branch scope that archived entries lose.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/omdsh-dev/dsh-mnemon">
+              <span>Source</span>
+              <strong>omdsh-dev/dsh-mnemon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/omdsh-dev/dsh-mnemon/commit/1363ebffaf19c9ab4badf0137f6fe87acacaf989" title="1363ebffaf19c9ab4badf0137f6fe87acacaf989">
+              <span>Analyzed revision</span>
+              <code>1363ebff…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/omdsh-dev--dsh-mnemon" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>omdsh-dev--dsh-mnemon</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>dsh-mnemon is a memory plugin for DeepSeek Harness, published on npm
+as version 0.5.9, MIT, 891 commits since 10 August 2026. It has about
+33,400 lines of TypeScript across a host, a client and 17 plugin
+packages, with about 1,000 test cases. It does not implement a memory
+engine. It composes three tiers and delegates long-term evidence to
+providers:</p>
+<ul>
+<li><strong>Runtime memory</strong> — a byte-bounded
+<code>USER.md</code> profile and <code>MEMORY.md</code> working
+reference, projected whole into every turn.</li>
+<li><strong>Documents</strong> — designs, investigations and handoffs in
+the workspace, searched and then read.</li>
+<li><strong>Memory spaces</strong> — named, provider-backed stores of
+durable facts. The default is Mnemon Native through the separately
+installed <a href="../mnemon/">Mnemon</a> CLI; Mem0, Honcho, Hindsight,
+Supermemory, OpenViking, RetainDB, ByteRover and Holographic are opt-in
+adapters.</li>
+</ul>
+<p>What the plugin itself owns is the composition. Before each root turn
+a strategy selects sources, pins their revisions and builds one bounded
+view. That view holds for every model step in the turn and is inherited
+by child agents. The Sidebar lets a person edit, remove and forget
+memory across the tiers. When a runtime write would exceed its byte
+limit, the host archives older entries into existing memory spaces. It
+commits the runtime change only after verifying that every entry was
+durably written or already exists.</p>
+<p>Runtime entries can be scoped to git branches, so a decision made on
+one branch is not projected on another. The scope does not survive
+archival. An archived entry is written to its memory space with a
+<code>branch:&lt;name&gt;</code> tag
+(<code>src/host/subagent.ts:1481</code>), and nothing on the recall side
+reads that tag. Once working memory overflows, a branch-only decision is
+recalled on every branch. The projection also falls back to every branch
+whenever the current branch cannot be read, as in a detached HEAD during
+a rebase or bisect.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>source</strong> contributes facts and a projection. A
+<strong>strategy</strong> decides which sources enter the
+<strong>view</strong> for a turn and which are writable. The default
+strategy uses three roles: working context (runtime), narrative
+(documents) and durable evidence (memory spaces).</p>
+<p>The runtime tier is <strong>exact and bounded</strong>. Entries are
+complete sentences with an importance, stored in JSON and rendered to
+two Markdown files. The whole projection goes into the turn's wake
+snapshot, with the static protocol for writing it kept byte-identical in
+the system prompt.</p>
+<p><strong>Memory spaces</strong> are <strong>evidence on
+demand</strong>. The agent recalls with one initial query and at most
+one refinement. The host validates the spaces, drops brittle semantic
+filters and selects evidence by quality within the limit.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — runtime overflow archives entries into memory spaces with host-verified coverage; the branch scope survives only as a tag recall does not read</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: runtime overflow archives entries into memory spaces with host-verified coverage; the branch scope survives only as a tag recall does not read
+flowchart TB
+    TURN[&quot;root turn start&quot;] --&gt; FACTS[&quot;sources report facts + revisions&quot;]
+    FACTS --&gt; STRAT[&quot;strategy selects sources and writable set&quot;]
+    STRAT --&gt; VIEW[(&quot;pinned view for the whole turn&lt;br/&gt;inherited by child agents&quot;)]
+    VIEW --&gt; WAKE[&quot;wake snapshot: USER.md + MEMORY.md&lt;br/&gt;(branch-filtered when branch known)&lt;br/&gt;document and space covers&quot;]
+    AGENT[&quot;agent&quot;] --&gt;|&quot;mnemon_runtime_memory add&quot;| LIMIT{&quot;MEMORY.md over&lt;br/&gt;byte limit?&quot;}
+    LIMIT --&gt;|&quot;no&quot;| RT[(&quot;runtime JSON + Markdown&lt;br/&gt;entry: content, importance, branches&quot;)]
+    LIMIT --&gt;|&quot;yes&quot;| ROUTE[&quot;routing worker: entry → existing space&quot;]
+    ROUTE --&gt; VERIFY[&quot;host verifies coverage, authority, revision&quot;]
+    VERIFY --&gt; WRITE[&quot;write each entry to its space&lt;br/&gt;branches → tag branch:main&quot;]
+    WRITE --&gt; SPACE[(&quot;memory space&lt;br/&gt;Mnemon Native or external provider&quot;)]
+    VERIFY --&gt; CAS[&quot;compare-and-swap runtime commit&quot;]
+    AGENT --&gt;|&quot;mnemon_recall&quot;| SEARCH[&quot;search pinned active spaces&lt;br/&gt;no branch tag filter&quot;]
+    SPACE --&gt; SEARCH
+    PERSON[&quot;person in Sidebar&quot;] --&gt;|&quot;edit / remove / forget&quot;| RT
+    PERSON --&gt; SPACE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core composition</td>
+<td><code>src/core/composition.ts</code>,
+<code>src/core/contracts/</code> — sources, strategies, views,
+validation</td>
+</tr>
+<tr>
+<td>Host</td>
+<td><code>src/host/lifecycle.ts</code> (turn pinning),
+<code>tools.ts</code> (conversation tools), <code>subagent.ts</code>
+(archival, routing and background work), <code>storage-scope.ts</code>,
+<code>access.ts</code>, <code>pack.ts</code>, <code>rpc.ts</code></td>
+</tr>
+<tr>
+<td>Client</td>
+<td><code>src/client/</code> — Sidebar workbench, settings, source
+pages</td>
+</tr>
+<tr>
+<td>Sources</td>
+<td><code>plugins/dsh-mnemon-source-runtime</code>,
+<code>-source-documents</code>, <code>-source-memory-spaces</code>
+(service, providers, native CLI runner, recall quality)</td>
+</tr>
+<tr>
+<td>Strategies</td>
+<td><code>plugins/dsh-mnemon-strategy-default-three-tier</code>,
+<code>-scoped</code>, <code>-light-context</code>,
+<code>-auto-capture</code></td>
+</tr>
+<tr>
+<td>Providers</td>
+<td><code>plugins/dsh-mnemon-provider-*</code> — Mnemon Native and eight
+adapters</td>
+</tr>
+<tr>
+<td>Evaluation</td>
+<td><code>provider-lab/</code>, provider conformance tests</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong>
+<code>dsh plugin --profile web add dsh-mnemon</code>, plus the Mnemon
+CLI for the native provider; external providers need their own services
+and keys.</li>
+<li><strong>Storage scope</strong> is explicit: global, workspace,
+centralized workspace or custom.</li>
+<li><strong>Hand-repairable:</strong> the runtime tier yes — JSON and
+Markdown. Memory spaces depend on the provider.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, one build-time
+execution point, eighteen unpinned surfaces and twenty dependency files
+inside the seven-day cooldown. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Turn pinning</strong> — <code>src/host/lifecycle.ts</code>:
+facts, view spec, validation, projection, pin, wake, all before the
+host's prompt assembly continues.</li>
+<li><strong>Runtime projection</strong> —
+<code>plugins/dsh-mnemon-source-runtime/src/source.ts:72</code> calls
+<code>contextProjection(resolveGitBranch(workspaceId))</code>;
+<code>controller.ts:408-460</code> hides memory entries scoped to other
+branches, never filters the user profile, and leaves the files
+complete.</li>
+<li><strong>Branch probe</strong> — <code>git-branch.ts:11-24</code>:
+<code>git branch --show-current</code>, returning undefined for a
+non-repository, a detached HEAD, a failure or a timeout, "so callers
+fall back to the unfiltered view".</li>
+<li><strong>Archival</strong> —
+<code>src/host/subagent.ts:1440-1520</code>: plan from the snapshot,
+requests per entry with <code>tags: branch:&lt;name&gt;</code>
+(<code>:1481</code>), provider writes with receipts, verification, then
+<code>compactAndMutate</code> under compare-and-swap.</li>
+<li><strong>Recall</strong> —
+<code>plugins/dsh-mnemon-source-memory-spaces/src/service.ts:639</code>
+<code>search</code>, and the <code>mnemon_recall</code> tool
+(<code>src/host/tools.ts</code>), neither of which reads branch
+tags.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Runtime entry</strong>
+(<code>plugins/dsh-mnemon-source-runtime/src/contracts.ts:5-13</code>):
+<code>content</code>, <code>created_at</code>, <code>updated_at</code>,
+<code>target</code> (user or memory), <code>importance</code> (critical,
+normal, low), and optional <code>branches</code>. Branch names are
+validated, and the user target refuses a branch scope.</p>
+<p><strong>Documents</strong> hold narrative with sections and are
+archived by the document source.</p>
+<p><strong>Memory spaces</strong> delegate the data model. The providers
+guide tabulates each backend's graph support, exact lookup and deletion
+semantics — soft delete for Mnemon Native, and others per provider.</p>
+<p><strong>What the plugin records.</strong> Archival keeps lineage from
+runtime entries to their destinations, and the host's activity
+projection counts recalls and writes per turn from the session event
+log. Neither is a mutation record in a memory store, so
+<code>audit_log</code> is withheld. Provider statuses are the
+provider's. Nothing in the plugin keeps a rejected value or a validity
+window, so <code>trust_state</code>, <code>tombstone</code> and
+<code>bitemporal</code> are withheld.</p>
+<p><strong>Scope.</strong> Storage scopes are separate directories.
+Branch scope on runtime entries is optional and applies only to the
+projection. <code>scope_enforced</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The wake snapshot</strong> carries the complete runtime state
+(or the branch-filtered memory target) and bounded covers of documents
+and spaces. It is appended only when it changes, as a complete snapshot
+rather than a patch.</p>
+<p><strong>Agent recall</strong> runs one query and one refinement
+across pinned spaces, keeps high-confidence evidence first, and does not
+let medium or unknown evidence fill the limit.</p>
+<p><strong>Branch scope in practice.</strong></p>
+<ul>
+<li><strong>While an entry is in runtime memory,</strong> a
+<code>main</code>-only decision is hidden on <code>dev</code>, and the
+projection notes how many entries it hid.</li>
+<li><strong>When the branch cannot be read,</strong> every scoped entry
+is projected. A detached HEAD during a rebase, a bisect or a CI checkout
+is exactly when branch-specific decisions matter.</li>
+<li><strong>After the entry is archived,</strong> it lives in a memory
+space tagged <code>branch:main</code>. <code>mnemon_recall</code>
+searches pinned active spaces with no reference to branch tags, and the
+space search in
+<code>plugins/dsh-mnemon-source-memory-spaces/src/</code> has none
+either. The decision is recalled on every branch, and depending on the
+provider the tag may not be stored at all.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Runtime writes</strong> are exact-text add, replace and
+remove under a file lock, refused when the projected size would exceed
+the byte limit unless archival and compaction run first.</p>
+<p><strong>Archival is the most carefully engineered path.</strong></p>
+<ul>
+<li>The routing worker has no data-plane tools and cannot create a
+space. It only maps entries to existing destinations.</li>
+<li>The host validates coverage, destinations, authority and the source
+revision. It writes each entry exactly, and requires recall evidence for
+an entry reported as skipped.</li>
+<li>Only then does it compact runtime memory in one compare-and-swap
+commit.</li>
+<li>A late revision conflict keeps durable copies as safe duplicates
+rather than rolling them back.</li>
+</ul>
+<p><strong>Semantic compaction</strong> carries branch scope forward
+within runtime memory; the loss happens only across the tier
+boundary.</p>
+<p><strong>Background review</strong> at idle is deterministic scoring
+first, and a model only when configured.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>Tools:</strong> runtime memory, remember, recall, related,
+link, forget, document create and manage, status, and memory-space
+create, update and merge.</li>
+<li><strong>Child agents</strong> inherit the parent's pinned view and
+runtime at creation, so a delegated task reads the same memory the
+parent's turn did.</li>
+<li><strong>Mnemon Packs</strong> import curated memory; the plugin SDK
+lets contributors add sources, strategies and providers.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Views are immutable per turn,</strong> so a write during a
+turn cannot change what the rest of that turn reads.</p>
+<p><strong>The host owns authority.</strong> Workers plan and the host
+writes, which keeps a model from creating spaces or writing outside the
+pinned scope.</p>
+<p><strong>Branch scope fails open,</strong> in the projection and after
+archival, as above.</p>
+<p><strong>Provider risk is inherited.</strong> External providers send
+memory to their services; the guide marks them opt-in and disabled until
+configured.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>About 1,000 test cases in 118 files cover composition, turn pinning,
+the Sidebar and settings, runtime memory and branch projection,
+archival, memory spaces and provider conformance, subagents and version
+maintenance. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>controller.spec.ts:516</code> asserts a <code>main</code>-only
+entry is absent from the <code>dev</code> projection while a shared
+entry is present, and <code>:538</code> does the same for a
+<code>release</code>-only decision against a user profile that stays.
+That earns <code>negative_eval</code>. No test checks that an archived
+branch-scoped entry stays out of recall on another branch, or what a
+detached HEAD projects.</p>
+<p><strong>Provider lab.</strong> <code>provider-lab/</code> holds a
+harness for comparing providers; no results are committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Pin one view per turn</strong> and hand it to child
+agents.</li>
+<li><strong>Let a worker plan and the host write,</strong> with coverage
+and revision checks before any destructive change.</li>
+<li><strong>Keep working memory byte-bounded and whole,</strong> and
+move overflow to durable storage with lineage.</li>
+<li><strong>Branch-aware projection</strong> of working memory for
+coding agents.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope that becomes a tag across a tier boundary</strong>
+without a reader on the other side.</li>
+<li><strong>Failing open on scope</strong> when the branch probe
+fails.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>dsh-mnemon suits a DeepSeek Harness user who wants working memory,
+project documents and durable evidence composed per turn, with a Sidebar
+to inspect and correct each, and a choice of memory engine. Where
+branch-specific decisions must never reach other branches, both the
+fallback and the archival path need to keep the scope.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should recall filter or label <code>branch:</code>
+tags</strong> against the current branch?</li>
+<li><strong>Should an unreadable branch hide scoped entries</strong>
+rather than show all of them?</li>
+<li><strong>Will the provider lab publish comparisons?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/host/lifecycle.ts</code>,
+<code>src/host/subagent.ts</code>, <code>src/host/tools.ts</code>,
+<code>src/core/composition.ts</code></li>
+<li><code>plugins/dsh-mnemon-source-runtime/src/controller.ts</code>,
+<code>source.ts</code>, <code>git-branch.ts</code>,
+<code>contracts.ts</code>, <code>client/pages.tsx</code></li>
+<li><code>plugins/dsh-mnemon-source-memory-spaces/src/service.ts</code>,
+<code>memory-spaces.ts</code>, <code>client/ui.tsx</code></li>
+<li><code>docs/en/reference/workflows.md</code>,
+<code>docs/en/guides/memory-providers.md</code></li>
+<li><code>plugins/dsh-mnemon-source-runtime/tests/controller.spec.ts</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "branch:" src plugins --include=*.ts</code> — written
+in <code>src/host/subagent.ts:1481</code> only</li>
+<li><code>grep -rn "branch" plugins/dsh-mnemon-source-memory-spaces/src</code>
+— a comment about provider identity only</li>
+<li><code>sed -n 1,25p plugins/dsh-mnemon-source-runtime/src/git-branch.ts</code>
+— undefined on a detached HEAD</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/omdsh-dev/dsh-mnemon/commit/1363ebffaf19c9ab4badf0137f6fe87acacaf989"><code class="commit-id" title="1363ebffaf19c9ab4badf0137f6fe87acacaf989">1363ebff…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening: no auto-run surface, one build-time execution point, eighteen
+unpinned surfaces, and twenty dependency files inside the cooldown.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

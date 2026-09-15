@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 474 reports.**
+**This page covers all 475 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4142,3 +4142,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: VelesDB Core License 1.0 (source-available, adapted from ELv2), 4,620 commits since 17 December 2025, a Rust database of more than 400,000 lines; the `velesdb-memory` crate is version 0.14.2, about 35,800 lines with 1,296 tests, 27 MCP tools, loopback HTTPS daemon, Node, Python and WASM bindings, and multi-hop, LoCoMo and context-savings harnesses.
 - Study when: an agent needs local memory that can answer why, not only what, and you want the write path free of model calls.
 - Do not copy when: corrections must propagate to everything derived from a fact, or several users share one store.
+
+### [`dsh-mnemon`](../systems/dsh-mnemon/)
+- Best idea: **a pinned view per turn and an archival path the host verifies.** A strategy composes byte-bounded runtime memory, workspace documents and provider-backed memory spaces into one revisioned view that holds for the whole turn and passes to child agents; when runtime memory overflows, a routing worker only plans destinations, and the host writes every entry, verifies coverage and revision, and compacts runtime memory in one compare-and-swap commit. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **branch scope fails open.** Runtime entries scoped to a git branch are hidden from other branches, but the branch probe returns nothing on a detached HEAD, so every scoped entry is projected during a rebase or bisect, and archival turns the scope into a `branch:` tag that no recall path reads, so an archived branch-only decision is recalled on every branch.
+- Most reusable component: the archival protocol — a tool-less planner, host-owned writes with receipts, recall evidence for skipped entries, and duplicates kept rather than destructive rollback on a late conflict.
+- Maturity impression: MIT, version 0.5.9, 891 commits since 10 August 2026, about 33,400 lines of TypeScript and 1,000 tests across a host, a client and 17 plugin packages, nine memory providers with a conformance suite, and a Sidebar workbench; memory semantics for the third tier are the chosen provider's.
+- Study when: you compose several memory tiers inside an agent host and need a consistent view per turn with safe movement between tiers.
+- Do not copy when: scope must hold across every tier and every repository state, or you need the plugin itself to model belief or history.

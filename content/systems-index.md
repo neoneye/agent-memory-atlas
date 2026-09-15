@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **474 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **475 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -148,6 +148,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/dovsg/"><span class="az-id">DovSG</span><span class="az-what">A scene graph the robot edits after every grasp</span><code class="az-repo">BJHYZJ/DovSG</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/dsh-ai-memory/"><span class="az-id">dsh-ai-memory</span><span class="az-what">Budgeted project memory for DeepSeek Harness</span><code class="az-repo">zzjzzb/ai-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/dsh-mneme/"><span class="az-id">dsh-mneme</span><span class="az-what">Consolidation with receipts</span><code class="az-repo">modusensus/dsh-mneme</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/dsh-mnemon/"><span class="az-id">dsh-mnemon</span><span class="az-what">Three tiers composed per turn</span><code class="az-repo">omdsh-dev/dsh-mnemon</code><span class="az-caps"><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## E
