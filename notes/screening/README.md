@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 415 of 476 screened at the report's current pin.**
+**Progress: 416 of 477 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 169 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 229 |
-| Repositories with build-time execution (`EXEC`) | 301 |
+| Repositories with an auto-run surface (`RUNS`) | 170 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 230 |
+| Repositories with build-time execution (`EXEC`) | 302 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -92,6 +92,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`holographic`](../../content/systems/holographic.md) | `.envrc` |
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
+| [`inite-brain`](../../content/systems/inite-brain.md) | `.claude-plugin/`, `server.json` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`kaeru`](../../content/systems/kaeru.md) | `.gitmodules` |

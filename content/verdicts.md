@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 476 reports.**
+**This page covers all 477 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4158,3 +4158,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.25.0, 124 commits since 15 April 2026, about 8,700 lines of Python and 485 tests, an in-process engine by default, 23 tools, packs, skills with an outcome ledger, and two live end-to-end verification runs recorded with transcripts.
 - Study when: you wire a structured memory engine into an agent host and need per-agent or per-person namespaces derived from the session.
 - Do not copy when: several people share one gateway and a shared namespace or id-based deletion is in play.
+
+### [`inite-brain`](../systems/inite-brain/)
+- Best idea: **two clocks that never borrow from each other, pinned by a parity test.** Real-world validity lives on `validFrom`/`validUntil` and knowledge time on `recordedAt`/`retractedAt`, an `asOf` read gates the first and deliberately leaves the second alone, and a committed test asserts the entity profile and the search lane gate the same three axes and no more — so a backdated fact cannot appear on one surface and vanish from the other for the same instant. Four marks: `bitemporal`, `trust_state`, `scope_enforced`, `negative_eval`.
+- Biggest risk: **the per-user fence stops at the search lane.** `READ_SURFACE_USER_SCOPE` is opt-in, so by default the entity timeline and the competing-pair list pin `userId IS NONE`; the code's own comments record the cost — "a personal fact never produced a timeline event" and "a user-scoped COMPETING pair was invisible to adjudication" — which leaves contradiction handling blind to per-user memory in the shipped configuration.
+- Most reusable component: the where-builder's fence stack — retraction, contest, insight-row arbitration, user scope, scope tags and the validity window as independent named clauses, each commented, with the fail-closed ones labelled as such.
+- Maturity impression: AGPL-3.0-or-later, version 2.2.0, 1,129 commits since 5 May 2026, 154,197 lines of TypeScript against 156,194 lines across 747 test files, 146 ordered SurrealDB migrations whose headers name the failure each one fixes, REST plus a native MCP server, and an ABAC row policy with report-only and enforce modes.
+- Study when: you need genuine bitemporal memory per tenant and want a worked example of composing read fences as separate, individually justified clauses.
+- Do not copy when: you need an always-on mutation audit, a reviewer's surface that can act, or an erasure record that stops the value returning.

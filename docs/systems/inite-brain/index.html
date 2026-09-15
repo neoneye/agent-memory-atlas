@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A NestJS service over a per-tenant
+SurrealDB database that stores agent memory as bitemporal facts —
+real-world validity and knowledge time on separate columns, with a
+six-value status filtering every read — whose per-user fence is
+unconditional on search and flag-gated, default off, on the entity
+timeline and the contradiction list, so a personal fact produces no
+timeline event and a personal contradiction is never adjudicated.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="INITE
+Brain — Agent Memory Atlas">
+    <meta property="og:description" content="A NestJS service over a
+per-tenant SurrealDB database that stores agent memory as bitemporal
+facts — real-world validity and knowledge time on separate columns, with
+a six-value status filtering every read — whose per-user fence is
+unconditional on search and flag-gated, default off, on the entity
+timeline and the contradiction list, so a personal fact produces no
+timeline event and a personal contradiction is never adjudicated.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="INITE
+Brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A NestJS service over a
+per-tenant SurrealDB database that stores agent memory as bitemporal
+facts — real-world validity and knowledge time on separate columns, with
+a six-value status filtering every read — whose per-user fence is
+unconditional on search and flag-gated, default off, on the entity
+timeline and the contradiction list, so a personal fact produces no
+timeline event and a personal contradiction is never adjudicated.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>INITE Brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "INITE Brain",
+      "description": "A NestJS service over a per-tenant SurrealDB database that stores agent memory as bitemporal facts \u2014 real-world validity and knowledge time on separate columns, with a six-value status filtering every read \u2014 whose per-user fence is unconditional on search and flag-gated, default off, on the entity timeline and the contradiction list, so a personal fact produces no timeline event and a personal contradiction is never adjudicated.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two clocks, and a fence that stops at the
+search lane</p>
+          <h1>INITE Brain</h1>
+          <p class="document-deck">A NestJS service over a per-tenant
+SurrealDB database that stores agent memory as bitemporal facts —
+real-world validity and knowledge time on separate columns, with a
+six-value status filtering every read — whose per-user fence is
+unconditional on search and flag-gated, default off, on the entity
+timeline and the contradiction list, so a personal fact produces no
+timeline event and a personal contradiction is never adjudicated.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/inite-ai/inite-brain-service">
+              <span>Source</span>
+              <strong>inite-ai/inite-brain-service</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/inite-ai/inite-brain-service/commit/3ed9e528e9ab5fa71bd1105d72cfe5a4ffac7410" title="3ed9e528e9ab5fa71bd1105d72cfe5a4ffac7410">
+              <span>Analyzed revision</span>
+              <code>3ed9e528…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/inite-ai--inite-brain-service" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>inite-ai--inite-brain-service</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>INITE Brain is an agent memory service: a NestJS application over
+SurrealDB, published under AGPL-3.0-or-later at version 2.2.0, with
+1,129 commits since 5 May 2026 across 154,197 lines of TypeScript in
+<code>src/</code> against 156,194 lines in 747 test files. Its own
+description calls it an "[o]pen-source bitemporal knowledge graph —
+long-term memory for AI agents", and the bitemporal claim is the one
+that holds up best under reading.</p>
+<p>A memory is a <code>knowledge_fact</code>: a subject entity, a
+predicate and an object value, carrying two independent pairs of
+timestamps. <code>validFrom</code> and <code>validUntil</code> say when
+the claim was true in the world. <code>recordedAt</code> and
+<code>retractedAt</code> say when this system believed it. The
+distinction is not decoration — a committed test asserts that an
+<code>asOf</code> read gates validity and retraction and deliberately
+does <strong>not</strong> bound <code>recordedAt</code>, because
+bounding knowledge time there "made a BACKDATED fact appear in search
+and vanish from the profile for the very same asOf".</p>
+<p>Each fact also carries a <code>status</code> from a fixed set of six,
+and every read path names the subset it excludes. That is a stored
+discrete state filtering the read path rather than a computed one, and
+it earns <code>trust_state</code> alongside <code>bitemporal</code>.</p>
+<p>The scope story is where the system divides against itself. On the
+search lane, the per-user fence is unconditional and fail-closed: no
+<code>userId</code> on the request narrows to tenant-global memory, one
+widens to global plus that user's own rows, and a caller can widen by
+argument but cannot omit the clause. On the entity timeline, the
+competing-pair list and entity reads, the same fence sits behind
+<code>READ_SURFACE_USER_SCOPE</code>, which is off unless an operator
+sets it to <code>1</code> or <code>true</code>. The consequence is
+written into the code's own comments: with the flag off, "a personal
+fact never produced a timeline event" and "a user-scoped COMPETING pair
+was invisible to adjudication". This is not a leak — the default is the
+narrower fence — but it means the system's contradiction machinery does
+not see per-user memory in the configuration it ships with.</p>
+<p>Two other mechanisms look stronger in the README than in the tree.
+The GDPR forget path writes an HMAC-hashed <code>forgotten_entity</code>
+row, and the MCP tool description calls it a "tombstone"; its only
+readers are an admin listing and the memory-diff service, and no ingest
+or entity-create path consults it, so it proves an erasure happened and
+does nothing to stop the same entity being recreated by the next ingest.
+And the data-change audit mirror — a SurrealDB <code>CHANGEFEED</code>
+declared in migration 0002, unread until migration 0023 added a consumer
+— is gated by <code>AUDIT_CHANGEFEED_ENABLED</code>, which is default
+off.</p>
+<p>Four marks: <code>bitemporal</code>, <code>trust_state</code>,
+<code>scope_enforced</code> and <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>tenant</strong> is a SurrealDB database named
+<code>co_&lt;companyId&gt;</code>. Nothing crosses that boundary; every
+service call opens a connection pinned to one company.</p>
+<p>A <strong>fact</strong> is one claim with four timestamps:</p>
+<ul>
+<li><code>validFrom</code> / <code>validUntil</code> — the world's
+clock. When was this true?</li>
+<li><code>recordedAt</code> / <code>retractedAt</code> — the system's
+clock. When did we believe it?</li>
+</ul>
+<p>A <strong>status</strong> is the fact's standing, one of
+<code>active</code>, <code>competing</code>, <code>retracted</code>,
+<code>superseded</code>, <code>compacted</code> or
+<code>corroborating</code>. A supersede sets <code>validUntil</code> and
+<code>supersededBy</code> and pointedly leaves <code>retractedAt</code>
+unset, because a superseded fact whose interval still covers the present
+<em>is</em> the current value while its successor is future-dated.</p>
+<p>A <strong>scope</strong> is a <code>userId</code> stamped on a fact
+or edge. Absent means tenant-global.</p>
+<p>A <strong>fence</strong> is a clause the read path appends. The
+codebase writes them as named, commented blocks and marks the
+fail-closed ones in the comment itself.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the user fence is unconditional on the search lane and flag-gated, default off, on the timeline and the competing list; the forget tombstone is read by admin and diff, never by a write path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the user fence is unconditional on the search lane and flag-gated, default off, on the timeline and the competing list; the forget tombstone is read by admin and diff, never by a write path
+flowchart TB
+    ING[&quot;ingest (REST / MCP)&quot;] --&gt; CONF{&quot;contradicts&lt;br/&gt;an active fact?&quot;}
+    CONF --&gt;|&quot;no&quot;| FACT[(&quot;knowledge_fact&lt;br/&gt;validFrom / validUntil&lt;br/&gt;recordedAt / retractedAt&lt;br/&gt;status, userId&quot;)]
+    CONF --&gt;|&quot;yes&quot;| COMP[(&quot;both rows&lt;br/&gt;status = &#39;competing&#39;&quot;)]
+    SUP[&quot;supersede&quot;] --&gt; SETV[&quot;validUntil + supersededBy&lt;br/&gt;retractedAt stays NONE&quot;]
+    SETV --&gt; FACT
+    RET[&quot;POST /facts/:id/retract&quot;] --&gt; FENCE{&quot;owner fence&quot;}
+    FENCE --&gt;|&quot;another user&#39;s fact&quot;| F404[&quot;404 — existence never leaks&quot;]
+    FENCE --&gt;|&quot;tenant-global, user-bound token&quot;| F403[&quot;403 without brain:admin&quot;]
+    FENCE --&gt;|&quot;ok&quot;| STAMP[&quot;retractedAt = now&quot;]
+    STAMP --&gt; FACT
+    FACT --&gt; SEARCH[&quot;search lane&lt;br/&gt;where-builder&quot;]
+    SEARCH --&gt; UFENCE[&quot;userId fence: ALWAYS ON&lt;br/&gt;no userId → userId IS NONE&quot;]
+    FACT --&gt; TL[&quot;entity timeline&quot;]
+    FACT --&gt; CL[&quot;competing list (adjudication)&quot;]
+    TL --&gt; FLAG{&quot;READ_SURFACE_USER_SCOPE&lt;br/&gt;default OFF&quot;}
+    CL --&gt; FLAG
+    FLAG --&gt;|&quot;off&quot;| ONLYG[&quot;pinned userId IS NONE&lt;br/&gt;personal facts invisible&quot;]
+    FLAG --&gt;|&quot;on&quot;| UNION[&quot;userId IS NONE OR userId = caller&quot;]
+    FORGET[&quot;entity forget (GDPR)&quot;] --&gt; HARD[&quot;hard-delete entity,&lt;br/&gt;facts, edges, embeddings&quot;]
+    HARD --&gt; TOMB[(&quot;forgotten_entity&lt;br/&gt;HMAC hash + reason&quot;)]
+    TOMB --&gt; ADMINR[&quot;admin listing&quot;]
+    TOMB --&gt; DIFFR[&quot;memory-diff service&quot;]
+    ING -.-&gt;|&quot;never consulted&quot;| TOMB
+    FACT --&gt; CF[&quot;CHANGEFEED 30d&quot;]
+    CF --&gt; GATE{&quot;AUDIT_CHANGEFEED_ENABLED&lt;br/&gt;default OFF&quot;}
+    GATE --&gt;|&quot;on&quot;| AE[(&quot;audit_event&quot;)]
+    GATE --&gt;|&quot;off&quot;| NOOP[&quot;stream accumulates, nothing drains&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/db</code></td>
+<td><code>schema.surql</code> plus 146 ordered migrations, the
+authoritative schema; each migration's header names the failure it
+fixes</td>
+</tr>
+<tr>
+<td><code>src/facts</code>, <code>src/entities</code></td>
+<td>The memory core: ingest, retract, the entity profile closure, the
+timeline, competing adjudication, provenance closure</td>
+</tr>
+<tr>
+<td><code>src/search</code></td>
+<td>The hybrid retrieval lane — <code>internals/where-builder.ts</code>
+composes the fences, <code>internals/edge-fence.ts</code> guards graph
+expansion</td>
+</tr>
+<tr>
+<td><code>src/audit</code></td>
+<td>The changefeed consumer, its leader lease, the per-tenant drain and
+PII redaction</td>
+</tr>
+<tr>
+<td><code>src/admin</code></td>
+<td>Admin controllers behind <code>brain:admin</code>, the
+operator-action interceptor and store, the config catalog and health
+components</td>
+</tr>
+<tr>
+<td><code>src/mcp</code></td>
+<td>The native MCP server: read tools and write tools, including the
+forget tool</td>
+</tr>
+<tr>
+<td><code>src/policy</code>, <code>src/keys</code>,
+<code>src/auth</code></td>
+<td>ABAC policies, API keys and scopes, the row policy filter</td>
+</tr>
+<tr>
+<td><code>src/dreams</code>, <code>src/compaction</code>,
+<code>src/jobs</code></td>
+<td>Background consolidation, compaction and the scheduler</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>747 files, <code>*.unit-spec.ts</code> and
+<code>*.e2e-spec.ts</code>, run against a real database for the e2e
+set</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-shape">Deployment shape</h3>
+<p>Docker Compose for the service and SurrealDB; per-tenant databases
+created on demand; a leader lease so multi-pod deploys do not
+double-drain the changefeed. Configuration is catalogued in
+<code>src/admin/config-catalog.data.ts</code>, and
+<code>src/common/env-validation.ts</code> splits flags into two idioms
+that matter when reading defaults: <code>envFlagEnabled</code> is opt-in
+(only <code>1</code> or <code>true</code> turn it on) and
+<code>envFlagNotDisabled</code> is opt-out. Both flags discussed in this
+report use the first.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/search/internals/where-builder.ts:85-115</code> — the
+fence stack, with each block commented and the fail-closed ones
+labelled.</li>
+<li><code>src/entities/entity-read-helpers.ts</code> —
+<code>activeFactWhere</code>, the profile's believed-and-valid closure,
+and its <code>asOf</code> branch.</li>
+<li><code>src/facts/facts.service.ts:751-800</code> — retract, with the
+ownership fence.</li>
+<li><code>src/facts/facts.service.ts:955-1060</code> —
+<code>listCompeting</code>, the knowledge-time as-of surface.</li>
+<li><code>src/entities/entity-forget.service.ts:432</code> — the
+transaction that deletes the entity and writes the tombstone
+together.</li>
+<li><code>src/audit/changefeed-consumer.service.ts</code> — the cron
+shell and the lease.</li>
+<li><code>src/admin/operator-action.interceptor.ts</code> — the
+always-on admin log.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>knowledge_fact</code> is the unit. Beyond the two clocks and
+the status, it carries:</p>
+<ul>
+<li><code>supersededBy</code> — the fact that replaced it;</li>
+<li><code>derivedFrom</code> — provenance for a derived claim;</li>
+<li><code>confidence</code> — a per-fact number;</li>
+<li><code>userId</code> — the scope key, absent for tenant-global
+memory;</li>
+<li><code>source</code> — an object naming the recorder, used both for
+provenance and for insight-row arbitration
+(<code>source.recorder != $insightRecorder</code> keeps the aggregate
+composer from reading its own output back in).</li>
+</ul>
+<p><code>knowledge_entity</code> is the subject;
+<code>knowledge_edge</code> is a typed relation with its own
+<code>invalidatedAt</code> and <code>userId</code>.
+<code>fact_usage</code> records retrieval, kept off the fact row so
+per-search stamps stay out of the changefeed audit stream — a deliberate
+separation the schema comments out loud. <code>ingest_dead_letter</code>
+holds failed ingests. <code>forgotten_entity</code> holds erasure
+proof.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search composes a WHERE from independent, commented fences:
+retraction (<code>retractedAt IS NONE</code>), contest
+(<code>status != 'competing'</code>), insight-row arbitration, the user
+scope, the scope-tag fence, and — under <code>asOf</code> — the validity
+window. The profile closure in <code>activeFactWhere</code> mirrors it
+and is tested for parity.</p>
+<p>The <code>asOf</code> semantics are the subtle part, and the test
+states the rule plainly: on these surfaces <code>asOf</code> is
+<strong>valid</strong> time. It emits
+<code>(retractedAt IS NONE OR retractedAt &gt; $asOf)</code>,
+<code>validFrom &lt;= $asOf</code> and
+<code>(validUntil IS NONE OR validUntil &gt; $asOf)</code>, and no
+<code>recordedAt</code> bound at all. Knowledge time keeps its own
+parameter and its own surface: <code>listCompeting</code> filters
+<code>recordedAt</code> and <code>retractedAt</code> to answer what the
+system believed at a moment, which is the other half of a bitemporal
+store.</p>
+<p>Graph expansion runs behind <code>edge-fence.ts</code>, which applies
+<code>invalidatedAt IS NONE AND userId IS NONE</code> when the request
+carries no user — the same fail-closed shape as the row fence.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest is conflict-aware: a contradiction sets both rows to
+<code>competing</code> rather than overwriting, deferring the decision
+to adjudication. A supersede closes the old interval and links forward
+without stamping <code>retractedAt</code>, preserving the distinction
+between "no longer true" and "we stopped believing it".</p>
+<p>Retract is the one mutation with a documented history. A comment at
+<code>src/facts/facts.service.ts:770</code> records that retract "used
+to mutate with no ownership fence at all — a user-bound brain:write
+token could retract any fact by id", attributes the finding to a dated
+release-blocking audit, and states the replacement semantics: another
+user's fact is a 404 so existence never leaks; a tenant-global fact is a
+403 for a user-bound token without <code>brain:admin</code>, because
+that row is already readable so the 403 leaks nothing new. The
+controller comment explains why the scope check cannot live there: the
+predicate is unknown until the row is read.</p>
+<p>Entity forget is a hard delete of the entity with its facts, edges
+and embeddings in a single transaction that "commits together or not at
+all", writing the <code>forgotten_entity</code> row in the same
+statement.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>REST under <code>/v1</code> and a native MCP server. The write tools
+include the forget tool, whose description is unusually explicit: it
+names the operation destructive and irreversible, restricts it to a GDPR
+Article 17 request or operator-grade cleanup, and requires a reason and
+a request id. Admin routes sit under <code>/v1/admin</code> behind
+<code>brain:admin</code>, and every call to them is recorded.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Three gaps are worth stating precisely, because each is narrower than
+it first looks and none is a leak.</p>
+<p><strong>The user fence stops at the search lane.</strong>
+<code>READ_SURFACE_USER_SCOPE</code> is <code>envFlagEnabled</code>, so
+off unless explicitly set. With it off, the entity timeline and
+<code>listCompeting</code> pin <code>userId IS NONE</code>: they show
+tenant-global rows and hide personal ones. The failure mode is
+invisibility, not exposure — but the code names the cost itself, at
+<code>src/entities/entities.service.ts:450</code> ("a personal fact
+never produced a timeline event") and
+<code>src/facts/facts.service.ts:991</code> ("a user-scoped COMPETING
+pair was invisible to adjudication"). A system whose central correctness
+story is contradiction handling ships with contradiction handling blind
+to per-user memory.</p>
+<p><strong>The tombstone proves erasure and does not prevent
+return.</strong> <code>forgotten_entity</code> carries an HMAC of the
+entity id under a UNIQUE index, so a second forget of the same entity
+collides. Searching the tree for readers finds an admin listing
+(<code>src/admin/admin.service.ts:568</code>, <code>:804</code>,
+<code>:880</code>), the memory-diff service
+(<code>src/diff/memory-diff.service.ts:123</code>) and nothing else;
+<code>src/ingest</code>, <code>src/entities</code> and
+<code>src/facts</code> contain no check against it outside the forget
+service that writes it. The atlas withholds <code>tombstone</code> here:
+the record is a rejected <em>event</em>, not a rejected value consulted
+on write, and a re-ingest of the same entity recreates it.</p>
+<p><strong>The data-change audit is default off.</strong> Migration 0002
+declared <code>CHANGEFEED 30d INCLUDE ORIGINAL</code> on the three
+memory tables, and the consumer's own header records that "the audit
+flagged that NOTHING ever read them, so the 30-day pre-image stream sat
+as unbounded rocksdb storage growth + compaction load". Migration 0023
+added the consumer and the <code>audit_event</code> table, gated by
+<code>AUDIT_CHANGEFEED_ENABLED</code> and documented as "[l]azy /
+disabled-by-default". What runs unconditionally is
+<code>operator_action</code>: an interceptor recording every
+<code>/v1/admin/*</code> HTTP call with actor, scopes, method, path,
+status and a truncated body. That is a log of human actions, not of
+memory mutations, and the migration comment says so — the two tables are
+designed as complements. <code>audit_log</code> is withheld because the
+half that covers write paths is opt-in.</p>
+<p><strong>Human review is read-only.</strong>
+<code>admin-memory-decisions.controller.ts</code> exposes
+<code>@Get()</code> and <code>@Get('stats')</code> and nothing else, and
+no admin route edits or deletes an individual fact. Retraction is an API
+action on <code>/v1/facts</code>, not a reviewer's surface.
+<code>human_review</code> is withheld on the atlas's rule that a
+display-only surface does not count.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>747 test files, roughly line-for-line with the source. The set that
+matters for this report:</p>
+<ul>
+<li><code>test/entity-read-helpers.unit-spec.ts:104-165</code> pins the
+two-clock semantics and then pins <em>parity</em>: a backdated fact must
+be visible on the profile for the same <code>asOf</code> as on search,
+asserted by checking that neither clause mentions
+<code>recordedAt</code> and that both contain the same three validity
+axes. That cross-surface assertion is the strongest single test in the
+tree.</li>
+<li><code>test/abac-row-filter.e2e-spec.ts:167-227</code> is a proper
+negative eval: a golden case fixing the pre-ABAC response byte-for-byte,
+then a deny rule with a present-and-absent pair asserted on search, on
+the entity profile and on the entity timeline.</li>
+<li><code>test/read-surface-user-scope.unit-spec.ts</code> pins both
+sides of the flag, including "flag off: historical clause
+byte-identical, userId ignored" — which is how the default behaviour is
+guaranteed rather than assumed.</li>
+<li><code>test/revive-after-retract.e2e-spec.ts</code>,
+<code>test/retract-auth.e2e-spec.ts</code>,
+<code>test/entities-forget.e2e-spec.ts</code> cover the mutation
+paths.</li>
+</ul>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Two clocks, and a test that makes two surfaces agree about
+one instant.</strong> Most stores that claim bitemporality test each
+surface alone. Asserting that the profile and the search lane gate the
+<em>same three axes and no more</em> is what stops them drifting
+apart.</li>
+<li><strong>Name each fence and label the fail-closed ones in the
+comment.</strong> The where-builder reads as a list of independent,
+individually justified clauses. It is the clearest example of this shape
+the atlas has read.</li>
+<li><strong>Migration headers that name the failure.</strong> Migration
+0023's header records that a changefeed had been accumulating unread for
+twenty-one migrations. Migration 0027 explains why two audit tables
+exist rather than one.</li>
+<li><strong>A 404 where a 403 would leak existence, and a comment saying
+why the other case is a 403.</strong> The retract fence reasons about
+what each status code reveals, not just about permission.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping a correctness mechanism behind a default-off
+flag.</strong> The invisibility of per-user facts to adjudication is a
+behaviour, not a performance knob, and the flag's default decides
+it.</li>
+<li><strong>Calling a proof-of-erasure record a tombstone.</strong> If
+no write path reads it, it does not stop the value coming back, and the
+MCP tool description invites the opposite reading.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you need real bitemporal memory with tenant
+isolation and an ABAC row policy, and you are prepared to read the flag
+defaults before trusting a surface. Look elsewhere if you need an
+always-on mutation audit or a reviewer's console that can act.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>READ_SURFACE_USER_SCOPE</code> intended to become
+default-on, and what blocks it? The comments read as a staged migration
+with no stated end.</li>
+<li>Should ingest consult <code>forgotten_entity</code>? A GDPR erasure
+that a re-ingest silently undoes is a weaker guarantee than the tool
+description implies.</li>
+<li><code>pinUserScope(undefined)</code> in retract resolves through
+ambient request context; what happens on an in-process caller is
+documented as "unrestricted, as before", which is the one place the
+fail-closed idiom inverts.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/db/schema.surql</code></td>
+<td>The fact, entity, edge and forgotten-entity shapes</td>
+</tr>
+<tr>
+<td><code>src/db/migrations/0023_changefeed_audit.surql</code></td>
+<td>The audit mirror and why it exists</td>
+</tr>
+<tr>
+<td><code>src/db/migrations/0027_operator_action.surql</code></td>
+<td>The human-action log and its complement</td>
+</tr>
+<tr>
+<td><code>src/search/internals/where-builder.ts</code></td>
+<td>The fence stack</td>
+</tr>
+<tr>
+<td><code>src/search/internals/edge-fence.ts</code></td>
+<td>The graph-expansion fence</td>
+</tr>
+<tr>
+<td><code>src/entities/entity-read-helpers.ts</code></td>
+<td>The profile closure and its as-of branch</td>
+</tr>
+<tr>
+<td><code>src/entities/entity-forget.service.ts</code></td>
+<td>The erasure transaction</td>
+</tr>
+<tr>
+<td><code>src/facts/facts.service.ts</code></td>
+<td>Retract and competing adjudication</td>
+</tr>
+<tr>
+<td><code>src/audit/changefeed-consumer.service.ts</code></td>
+<td>The drain, its lease and its gate</td>
+</tr>
+<tr>
+<td><code>src/common/env-validation.ts</code></td>
+<td><code>envFlagEnabled</code> versus
+<code>envFlagNotDisabled</code></td>
+</tr>
+<tr>
+<td><code>test/entity-read-helpers.unit-spec.ts</code></td>
+<td>The bitemporal parity test</td>
+</tr>
+<tr>
+<td><code>test/abac-row-filter.e2e-spec.ts</code></td>
+<td>The negative eval</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/inite-ai/inite-brain-service/commit/3ed9e528e9ab5fa71bd1105d72cfe5a4ffac7410"><code class="commit-id" title="3ed9e528e9ab5fa71bd1105d72cfe5a4ffac7410">3ed9e528…</code></a>
+— first reading, at a commit dated 11 September 2026. Screened before
+opening, from a shallow clone: two auto-run surfaces, three build-time
+execution points, five unpinned surfaces, seven dependency files inside
+the cooldown across fifteen scanned files, and <code>AGENTS.md</code>
+read as data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

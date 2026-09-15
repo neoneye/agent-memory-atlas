@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 476 reports.</strong></p>
+<p><strong>This page covers all 477 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17169,6 +17169,43 @@ and need per-agent or per-person namespaces derived from the
 session.</li>
 <li>Do not copy when: several people share one gateway and a shared
 namespace or id-based deletion is in play.</li>
+</ul>
+<h3 id="inite-brain"><a
+href="../systems/inite-brain/"><code>inite-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>two clocks that never borrow from each other,
+pinned by a parity test.</strong> Real-world validity lives on
+<code>validFrom</code>/<code>validUntil</code> and knowledge time on
+<code>recordedAt</code>/<code>retractedAt</code>, an <code>asOf</code>
+read gates the first and deliberately leaves the second alone, and a
+committed test asserts the entity profile and the search lane gate the
+same three axes and no more — so a backdated fact cannot appear on one
+surface and vanish from the other for the same instant. Four marks:
+<code>bitemporal</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the per-user fence stops at the search
+lane.</strong> <code>READ_SURFACE_USER_SCOPE</code> is opt-in, so by
+default the entity timeline and the competing-pair list pin
+<code>userId IS NONE</code>; the code's own comments record the cost —
+"a personal fact never produced a timeline event" and "a user-scoped
+COMPETING pair was invisible to adjudication" — which leaves
+contradiction handling blind to per-user memory in the shipped
+configuration.</li>
+<li>Most reusable component: the where-builder's fence stack —
+retraction, contest, insight-row arbitration, user scope, scope tags and
+the validity window as independent named clauses, each commented, with
+the fail-closed ones labelled as such.</li>
+<li>Maturity impression: AGPL-3.0-or-later, version 2.2.0, 1,129 commits
+since 5 May 2026, 154,197 lines of TypeScript against 156,194 lines
+across 747 test files, 146 ordered SurrealDB migrations whose headers
+name the failure each one fixes, REST plus a native MCP server, and an
+ABAC row policy with report-only and enforce modes.</li>
+<li>Study when: you need genuine bitemporal memory per tenant and want a
+worked example of composing read fences as separate, individually
+justified clauses.</li>
+<li>Do not copy when: you need an always-on mutation audit, a reviewer's
+surface that can act, or an erasure record that stops the value
+returning.</li>
 </ul>
         </article>
       </div>
