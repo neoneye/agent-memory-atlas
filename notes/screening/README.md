@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 401 of 462 screened at the report's current pin.**
+**Progress: 402 of 463 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 162 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 219 |
+| Repositories with an auto-run surface (`RUNS`) | 163 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 220 |
 | Repositories with build-time execution (`EXEC`) | 290 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -90,6 +90,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
+| [`kaeru`](../../content/systems/kaeru.md) | `.gitmodules` |
 | [`kage`](../../content/systems/kage.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |

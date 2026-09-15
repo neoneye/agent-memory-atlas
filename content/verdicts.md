@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 462 reports.**
+**This page covers all 463 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4046,3 +4046,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 1.6.0, 167 commits since 8 March 2026, about 6,900 lines with 584 test functions over three vector backends; a LoCoMo harness with an independent judge, the adversarial category scored as abstention and a held-out split, though the 55.15% headline's result files are not committed.
 - Study when: you want a Mem0-shaped library with priorities about what must not be forgotten and a model of how to keep a project's claims honest.
 - Do not copy when: callers might omit the user id, or you need to know what was believed before a correction.
+
+### [`kaeru`](../systems/kaeru/)
+- Best idea: **a graph the agent reasons in, where nothing is overwritten.** Every node and edge carries a CozoDB validity in its key, so an update retracts and re-asserts, `history` lists every revision and `at` returns a node in full as it stood at a past second; every mutation also writes an `audit_event` node into the same graph. Reasoning chains are saved as recallable trails, and role slots stop an initiative from holding three "current" handoffs. Two marks: `audit_log`, `negative_eval`.
+- Biggest risk: **the recorded epistemics do not reach recall, and the time axis is single.** A refuted hypothesis or a node under a `contradicts` review is returned by `walk`, `search` and `awake` like any other; every writer stamps validity with the current time, so the "bi-temporal" graph records when something was written and never when it held; initiative scope is the initiative the agent names, and a cleared one sees everything.
+- Most reusable component: re-entry that lists what is owed — `awake` restores an initiative's layered working set together with overdue tasks, claims awaiting a verdict and saved trails, and warns when a shared initiative's local view may be incomplete.
+- Maturity impression: BSL 1.1 converting to Apache-2.0 in 2030, version 0.7.3, 188 commits since 7 May 2026, about 39,000 lines of Rust and 365 tests; pre-1.0 with a schema that may change, and benchmarks kept in a separate repository.
+- Study when: an agent's long analytical work needs its structure — hypotheses, verdicts, provenance, trails — kept and reread across sessions.
+- Do not copy when: you need facts extracted for you, embeddings, isolation between users, or a valid-time axis.

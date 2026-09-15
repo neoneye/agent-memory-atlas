@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory engine on embedded
+CozoDB where an agent works in a typed graph of episodes, hypotheses,
+tasks and reasoning chains, promotes settled work into an archival tier,
+and reads any node as it stood at a past moment — along one time axis,
+the moment it was written, though the documentation calls it
+bi-temporal.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="kaeru — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory engine on
+embedded CozoDB where an agent works in a typed graph of episodes,
+hypotheses, tasks and reasoning chains, promotes settled work into an
+archival tier, and reads any node as it stood at a past moment — along
+one time axis, the moment it was written, though the documentation calls
+it bi-temporal.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="kaeru — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory engine on
+embedded CozoDB where an agent works in a typed graph of episodes,
+hypotheses, tasks and reasoning chains, promotes settled work into an
+archival tier, and reads any node as it stood at a past moment — along
+one time axis, the moment it was written, though the documentation calls
+it bi-temporal.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>kaeru — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "kaeru",
+      "description": "A Rust memory engine on embedded CozoDB where an agent works in a typed graph of episodes, hypotheses, tasks and reasoning chains, promotes settled work into an archival tier, and reads any node as it stood at a past moment \u2014 along one time axis, the moment it was written, though the documentation calls it bi-temporal.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A graph the agent thinks in</p>
+          <h1>kaeru</h1>
+          <p class="document-deck">A Rust memory engine on embedded
+CozoDB where an agent works in a typed graph of episodes, hypotheses,
+tasks and reasoning chains, promotes settled work into an archival tier,
+and reads any node as it stood at a past moment — along one time axis,
+the moment it was written, though the documentation calls it
+bi-temporal.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LamantinAI/kaeru">
+              <span>Source</span>
+              <strong>LamantinAI/kaeru</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LamantinAI/kaeru/commit/566b6c6efbc2a080e64059609c7423f38d6892be" title="566b6c6efbc2a080e64059609c7423f38d6892be">
+              <span>Analyzed revision</span>
+              <code>566b6c6e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/LamantinAI--kaeru" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>LamantinAI--kaeru</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>kaeru is a memory engine for LLM agents written in Rust, version
+0.7.3, 188 commits since 7 May 2026, about 39,000 non-test lines across
+<code>kaeru-core</code> (19,700), <code>kaeru-mcp</code> (12,100),
+<code>kaeru-rig</code> (5,000) and <code>kaeru-cloud</code> (2,100),
+with 365 tests. It is licensed under the Business Source License 1.1
+with a grant for production use and embedding, excluding offering kaeru
+as a hosted service, and converts to Apache-2.0 on 28 August 2030.</p>
+<p>It is not a store of extracted facts. It is a typed property graph
+the agent works in: an agent jots episodes, formulates hypotheses and
+records verdicts on them, links causes, synthesises summaries from
+nodes, saves reasoning chains as trails, fills role slots such as
+<code>handoff</code>, and <code>settle</code>s work that stopped
+changing into an archival tier. About seventy verbs are exposed as MCP
+tools. On re-entry, <code>awake</code> restores an initiative's working
+set by memory layer and what is still owed — open tasks, claims awaiting
+verdicts, saved trails.</p>
+<p>Two properties hold throughout, and both are well built:</p>
+<ul>
+<li><strong>Nothing is overwritten.</strong> Every node and edge carries
+a CozoDB <code>Validity</code> in its key. An update retracts the prior
+validity and asserts a new one, so <code>history</code> lists every
+revision and <code>at</code> returns a node in full as it stood at any
+past second.</li>
+<li><strong>Every mutation writes an audit node</strong> into the same
+graph, so the agent can query its own changes.</li>
+</ul>
+<p>The documentation calls the graph bi-temporal, and that is where the
+code parts from the README. A Cozo <code>Validity</code> is one
+timestamp with an assertion flag. Every writer in
+<code>kaeru-core/src/mutate/</code> stamps it with the current time
+(<code>now_validity_seconds</code>), and no field records when a claim
+held in the world rather than when it was written. <code>at</code> is
+time travel over record time. That is real and useful, and it is not the
+second axis the atlas's <code>bitemporal</code> mark asks for.</p>
+<p>Two marks: <code>audit_log</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A node has a <strong>tier</strong> — operational ("hippocampus",
+where thinking happens) or archival ("cortex", settled) — and a
+<strong>memory layer</strong>: Core is always injected, Hot next, Warm
+by default, Cold and Frozen only on explicit recall. Hygiene moves nodes
+between layers by age and references; <code>settle</code> moves them
+between tiers, carrying provenance.</p>
+<p>Knowledge changes through edges with meaning.
+<code>derived_from</code> is provenance. <code>supersedes</code>
+retracts the older node's validity and links the successor.
+<code>contradicts</code> flags a target and puts it in the open-review
+queue until <code>resolve_review</code> retracts the flag. A hypothesis
+carries <code>status:open</code>, <code>status:supported</code>,
+<code>status:refuted</code> or <code>status:inconclusive</code> as a
+tag, set with the claim or later with an optional <code>verifies</code>
+or <code>falsifies</code> edge.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a node changes without being overwritten, and what the agent can read back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a node changes without being overwritten, and what the agent can read back
+flowchart TB
+    JOT[&quot;jot / claim / synthesise&quot;] --&gt; N1[(&quot;node v1&lt;br/&gt;Validity [t1, asserted]&quot;)]
+    N1 --&gt;|&quot;update or supersede&quot;| RET[&quot;retract at t2&quot;]
+    RET --&gt; N2[(&quot;node v2&lt;br/&gt;Validity [t2, asserted]&quot;)]
+    N1 -.-&gt;|&quot;contradicts edge&quot;| REV[&quot;open-review queue&quot;]
+    REV --&gt;|&quot;resolve_review retracts edge&quot;| N1
+    CLAIM[&quot;claim(text, verdict)&quot;] --&gt; TAG[&quot;status:supported / refuted tag&quot;]
+    N2 --&gt;|&quot;settle&quot;| ARCH[&quot;archival tier&lt;br/&gt;provenance kept&quot;]
+    MUT[&quot;every mutation&quot;] --&gt; AUD[(&quot;audit_event node&lt;br/&gt;op, actor, affected ids&quot;)]
+    N1 --&gt; AT[&quot;at(id, t): node as written at t&quot;]
+    N2 --&gt; HIST[&quot;history(id): every assert and retract&quot;]
+    TAG -.-&gt;|&quot;not a recall filter&quot;| RECALL[&quot;walk / drill / search / awake&quot;]</code></pre></details></figure>
+<p>Belief is recorded but not enforced. A refuted hypothesis and a node
+under review are returned by <code>walk</code>, <code>drill</code>,
+<code>search</code> and <code>awake</code> like any other; statuses feed
+the board, <code>reflect</code> and re-entry summaries
+(<code>recall/board.rs</code>, <code>recall/reflect.rs:331-338</code>).
+So <code>trust_state</code> is withheld. Nothing records a rejected
+value that a later write is checked against, so <code>tombstone</code>
+is withheld. <code>bitemporal</code> is withheld for the single time
+axis described above.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kaeru-core</code></td>
+<td>Store, schema and migrations, graph types, <code>mutate/</code>
+verbs, <code>recall/</code> reads, temporal reads, hygiene, secret
+guard, export</td>
+</tr>
+<tr>
+<td><code>kaeru-mcp</code></td>
+<td>The <code>kaeru-mcp</code> daemon: MCP tools grouped by capture,
+lookup, chain, hypothesis, review, slots, tasks, board, temporal,
+consolidation, hygiene, cloud and vault</td>
+</tr>
+<tr>
+<td><code>kaeru-rig</code></td>
+<td>The curator verbs as <code>rig</code> framework tools over an
+embedded store</td>
+</tr>
+<tr>
+<td><code>kaeru-cloud</code></td>
+<td>An Axum REST service over <code>kaeru-core</code> holding shared
+nodes</td>
+</tr>
+<tr>
+<td><code>kaeru-viz</code></td>
+<td>A JavaScript galaxy visualisation that reads nodes over HTTP</td>
+</tr>
+</tbody>
+</table></div>
+<p>The schema (<code>kaeru-core/src/store.rs:246-360</code>) is
+<code>node</code> and <code>edge</code>, both keyed with
+<code>Validity</code>, and non-temporal junctions and bookkeeping:
+<code>node_initiative</code>, <code>edge_initiative</code>,
+<code>initiative</code> with a <code>share_policy</code>,
+<code>chain_member</code>, <code>session_pin</code>,
+<code>slot_occupant</code>, <code>initiative_hygiene</code>,
+<code>initiative_cloud</code>. Initiative membership is a junction
+rather than a column, so a scoped read is a RocksDB prefix scan.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the <code>kaeru-mcp</code> binary,
+built from source; the vault is a directory under the platform's data
+path, overridable with <code>KAERU_VAULT_PATH</code>.</li>
+<li><strong>No model and no key.</strong> kaeru calls no LLM and
+computes no embeddings; the agent does the thinking and kaeru stores its
+structure.</li>
+<li><strong>The cloud tier</strong> is a separate service behind one
+bearer token, refusing to start without a token on a non-loopback
+address.</li>
+<li><strong>Hand-repairable:</strong> not directly — it is a
+RocksDB-backed Cozo database — but any initiative exports to
+Obsidian-friendly Markdown.</li>
+<li><strong>Pre-1.0 alpha;</strong> the README warns the schema may
+change between minor versions.</li>
+</ul>
+<p>The screen of this checkout found one auto-run surface (a
+<code>.gitmodules</code> entry for the benchmarks submodule, not
+initialised), three manifests inside the seven-day cooldown, one
+unpinned surface, and <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+read as data. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Temporal reads</strong> — <code>graph/temporal.rs</code>:
+<code>at</code> (<code>:50</code>) queries
+<code>*node{… validity @ t}</code>; <code>history</code>
+(<code>:106</code>) lists assertions and retractions.</li>
+<li><strong>Write stamping</strong> —
+<code>now_validity_seconds()</code> in every <code>mutate/</code>
+module; whole seconds, which is why the hypothesis writer records a
+known verdict in one write rather than create-then-update within the
+same second (<code>mutate/hypothesis.rs:36-47</code>).</li>
+<li><strong>Audit</strong> — <code>graph/audit.rs:25-57</code>, a node
+of type <code>audit_event</code> in tier <code>operational</code> with
+<code>{op, actor, affected_refs}</code>.</li>
+<li><strong>Review</strong> — <code>mutate/review.rs</code>:
+<code>mark_under_review</code>, <code>resolve_review</code>,
+<code>mark_resolved</code>; <code>recall/under_review.rs</code> lists
+targets of current <code>contradicts</code> edges, joined to the current
+initiative when one is set.</li>
+<li><strong>Supersession</strong> —
+<code>mutate/supersedes.rs:34</code>.</li>
+<li><strong>Initiative scope</strong> —
+<code>store.use_initiative</code> / <code>clear_initiative</code>;
+recall modules join <code>node_initiative</code> when
+<code>current_initiative()</code> is <code>Some</code>.</li>
+<li><strong>Sharing gates</strong> —
+<code>initiative.share_policy</code> (Gate 1) and <code>guard.rs</code>
+(Gate 2), a deterministic scanner for API keys, tokens and private keys
+that runs before content leaves for a cloud.</li>
+<li><strong>Hygiene</strong> — <code>hygiene.rs</code>, triggered by
+write counts, Core growth and elapsed time, changing only a node's
+layer.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>node</code>: <code>id</code>, <code>validity</code> ⇒
+<code>type</code>, <code>tier</code>, <code>name</code>,
+<code>body</code>, <code>tags</code>, <code>initiatives</code>,
+<code>properties</code> (JSON), <code>visibility</code>
+(<code>local</code> or shared), <code>layer</code>. <code>edge</code>:
+<code>src</code>, <code>dst</code>, <code>edge_type</code>,
+<code>validity</code> ⇒ <code>weight</code>, <code>properties</code>,
+<code>dst_store</code> (local or a cloud).</p>
+<p><strong>Statuses are tags.</strong> Tasks and hypotheses carry
+<code>status:&lt;key&gt;</code>; boards bucket by it and
+<code>reflect</code> flags overdue and stale items.</p>
+<p><strong>Provenance</strong> is structural: <code>derived_from</code>
+edges from summaries to their seeds, chains as ordered member lists with
+an agent-written summary, and audit nodes naming the affected ids. The
+actor on most audit nodes is the literal <code>system</code>; the
+README's "who did it and why" is aspirational at this commit — there is
+no reason field, and only layer moves distinguish the caller.</p>
+<p><strong>Scope.</strong> Initiatives are named partitions of one graph
+with many-to-many membership. Reads honour the store's current
+initiative, which the MCP tools set from the initiative the agent names;
+a cleared initiative sees everything, and the kaeru-cloud tier is one
+shared team space whose README defers per-user isolation.
+<code>scope_enforced</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is structural first: resolve a name exactly, then traverse
+— <code>walk</code> by edge types to a depth, <code>drill</code> into a
+node, <code>trace</code> provenance, <code>between</code> two nodes.
+Cozo full-text search is the fallback when a name is forgotten, and a
+failed lookup says whether the name exists in another initiative,
+something close exists, or nothing does. There is no embedding or vector
+search; the README says so.</p>
+<p>Reads are excerpt-first and point onward: an excerpt names
+<code>at</code> for the full body, a changed node names
+<code>history</code>, a node inside a trail names <code>why</code>.</p>
+<p><code>awake</code> is the injection surface: an initiative's Core,
+Hot and Warm nodes, the archival cortex, open work with overdue tasks
+first, pending claims, and saved trails. On a shared initiative it warns
+that the local view may be incomplete.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every verb is synchronous and local: a Cozo script that retracts and
+re-asserts as needed, a junction insert for initiative membership, and
+an audit node. There is no model call, so writes are fast and
+retrievable immediately.</p>
+<p>Whole-second validities are a real constraint: two writes to one node
+inside the same second produce an assertion and a retraction that cannot
+be ordered, and the code works around it in several places.</p>
+<p>Hygiene runs in the background of the MCP daemon by default since
+0.7.3, off the request path and in batches, and only moves layers;
+<code>hygiene &lt;initiative&gt;</code> previews what it would move. In
+the rig adapter it is opt-in.</p>
+<p>Sharing to the cloud passes the initiative's policy, which names
+whether and to which clouds it may go, and the secret guard;
+<code>unshare</code> withdraws a mistake.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP daemon is the main surface, with a portable skill describing
+a re-entry ritual (<code>awake</code>, <code>overview</code>) and habits
+for capture and hypothesis cycles. The <code>rig</code> adapter gives a
+Rust agent the same verbs as tools over an embedded store.
+<code>kaeru-viz</code> renders a vault as a galaxy and replays reasoning
+chains; it reads and does not edit. No person-facing surface adjudicates
+memory — the daemon "hints but doesn't block", and escalations go back
+to the agent's user in conversation — so <code>human_review</code> is
+withheld.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>History is intact by construction.</strong> No code path
+removes a <code>node</code> row; the only <code>:rm</code> statements
+delete initiative junctions, initiative rows and chain positions. A
+mistaken supersession or merge can be read around with <code>at</code>
+and <code>history</code>.</p>
+<p><strong>The secret guard is a hard floor</strong> on the share path
+regardless of what the agent believes, silent on clean content and
+specific on a hit.</p>
+<p><strong>Contradiction is flagged, not acted on.</strong> A
+<code>contradicts</code> edge queues a review; nothing lowers the
+flagged node in recall or keeps it out of <code>awake</code> until the
+review is resolved.</p>
+<p><strong>Injection.</strong> Nodes are whatever the agent writes;
+nothing distinguishes an instruction copied from a tool result from a
+fact.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>365 Rust tests, mostly inline in <code>kaeru-core</code> and
+<code>kaeru-mcp</code>, covering the temporal reads, supersession,
+chains and rechaining, hygiene (including that a pass never stalls
+concurrent writers), slots, sharing gates and MCP parameter handling.
+None was run for this report.</p>
+<p><code>lib.rs:425</code> is the retrieval-exclusion case: a chain, its
+summary and its provenance in initiative alpha are asserted invisible
+from beta — empty walk, NotFound summary, empty provenance, and a lint
+whose orphans include beta's node and not alpha's — and then visible
+again with the initiative cleared. <code>:1495</code> asserts an
+unlinked node drops out of a walk that reached it a second earlier. That
+earns <code>negative_eval</code>.</p>
+<p><strong>Benchmarks</strong> live in the <code>kaeru-benchmarks</code>
+repository, referenced as a submodule and not checked out here; no
+result is in this tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the version in the key.</strong> A validity-keyed node
+makes every update a retraction plus assertion, and <code>at</code> and
+<code>history</code> come for free.</li>
+<li><strong>Write an audit node into the same graph</strong> so the
+agent can reason about its own changes with the same queries it uses on
+memory.</li>
+<li><strong>Save reasoning as trails.</strong> A chain with an
+agent-authored summary, folded on duplicates and refreshable after the
+graph moves, is recall of <em>why</em>, not only <em>what</em>.</li>
+<li><strong>Slots for singular roles.</strong> A <code>handoff</code>
+slot that archives its previous holder prevents three competing
+"current" handoffs.</li>
+<li><strong>A deterministic secret scanner as the floor before
+sharing.</strong></li>
+<li><strong>Make re-entry list what is owed</strong>, not only what was
+touched.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Calling a single time axis bi-temporal.</strong> Readers
+will assume they can record when something was true separately from when
+it was learned.</li>
+<li><strong>Statuses that recall ignores.</strong> A refuted hypothesis
+should not read like a supported one on re-entry.</li>
+<li><strong>Scope the agent can clear.</strong> Initiatives organise,
+and a cleared initiative shows everything.</li>
+<li><strong>An audit actor that is almost always
+<code>system</code>.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits an agent — or a small team of agents with people — doing
+long, multi-session analytical work where the structure of the reasoning
+matters as much as the facts: research, debugging campaigns, design
+decisions with hypotheses and verdicts. It asks the agent to use verbs
+deliberately and offers no extraction or embedding to do it for them.
+For multi-tenant isolation or automatic fact capture, it is the wrong
+shape at this commit.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Will validity ever carry world time</strong>, for example a
+backdated assertion from a supplied event date?</li>
+<li><strong>Should <code>refuted</code> or an open review exclude or
+demote a node in <code>awake</code>?</strong></li>
+<li><strong>What do the benchmarks in <code>kaeru-benchmarks</code>
+measure?</strong></li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>kaeru-core/src/store.rs</code> — schema</li>
+<li><code>kaeru-core/src/graph/temporal.rs</code>,
+<code>graph/audit.rs</code>, <code>graph/node.rs</code></li>
+<li><code>kaeru-core/src/mutate/</code> — <code>hypothesis.rs</code>,
+<code>review.rs</code>, <code>supersedes.rs</code>,
+<code>consolidate.rs</code>, <code>slot.rs</code>,
+<code>sharing.rs</code>, <code>initiative.rs</code>,
+<code>layer.rs</code></li>
+<li><code>kaeru-core/src/recall/</code> — <code>walk.rs</code>,
+<code>by_name.rs</code>, <code>fts.rs</code>, <code>layered.rs</code>,
+<code>under_review.rs</code>, <code>reflect.rs</code>,
+<code>board.rs</code></li>
+<li><code>kaeru-core/src/hygiene.rs</code>, <code>guard.rs</code>,
+<code>lib.rs</code> (integration tests)</li>
+<li><code>kaeru-mcp/src/tools/</code>, <code>kaeru-rig/</code>,
+<code>kaeru-cloud/src/lib.rs</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>rg -n "validity" kaeru-core/src/mutate</code> — every writer
+stamps <code>now_validity_seconds()</code></li>
+<li><code>rg -n ":rm" kaeru-core/src</code> — junctions, initiative rows
+and chain members only</li>
+<li><code>rg -n "status:" kaeru-core/src/recall</code> — board and
+reflect, no recall filter</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/LamantinAI/kaeru/commit/566b6c6efbc2a080e64059609c7423f38d6892be"><code class="commit-id" title="566b6c6efbc2a080e64059609c7423f38d6892be">566b6c6e…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: one auto-run surface (an uninitialised submodule), three
+manifests inside the seven-day cooldown, one unpinned surface, and two
+agent-instruction files read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
