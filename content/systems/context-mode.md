@@ -7,9 +7,9 @@ page_kind: system
 source_name: "mksglu/context-mode"
 source_url: https://github.com/mksglu/context-mode
 archive_name: "mksglu--context-mode"
-revision: ff5f911d5732a036336c59684c27f4514f211edf
-revision_url: https://github.com/mksglu/context-mode/commit/ff5f911d5732a036336c59684c27f4514f211edf
-analyzed_at: 2026-08-09
+revision: f889a0537dc1fd264bb5e39299db8f9be1ef3fb6
+revision_url: https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
@@ -385,8 +385,7 @@ test is on the function the adapters call. And a test of the two-step
 `projectScope` `IN` clause on the content store, which is the same boundary on the
 other arm and is untested as far as this reading found.
 
-I ran nothing. Every claim here comes from reading the tree at
-`ff5f911d5732a036336c59684c27f4514f211edf`.
+I ran nothing. Every claim here comes from reading the tree at the pinned commit.
 
 ## 11. For Your Own Build
 
@@ -482,6 +481,8 @@ lexical over what a hook observed.
 `tests/benchmark-results-v04.json`
 
 ## History
+
+**2026-09-15** — [`f889a0537dc1fd264bb5e39299db8f9be1ef3fb6`](https://github.com/mksglu/context-mode/commit/f889a0537dc1fd264bb5e39299db8f9be1ef3fb6) — second reading. Fifty-six commits since the previous pin, every one `ci: update install stats` from `github-actions[bot]`; the net diff is `stats.json`, three lines. No source, hook or test changed, so both marks and both evidence records stand as written, and their cited paths are unchanged. The screen reports four auto-run surfaces where the previous reading recorded one — the plugin manifest, `.claude/settings.json`, `hooks/` and `hooks/hooks.json` — and all four were present at the previous pin; the difference is a more thorough screen, not a change in the tree. The hooks are the product: this is a hook-based plugin whose memory is written by them. Nothing was installed and nothing was run.
 
 **2026-08-09** — [`ff5f911d5732a036336c59684c27f4514f211edf`](https://github.com/mksglu/context-mode/commit/ff5f911d5732a036336c59684c27f4514f211edf) —
 first reading, from the
