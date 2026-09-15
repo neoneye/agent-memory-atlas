@@ -7,10 +7,13 @@ page_kind: system
 source_name: "bytedance/deer-flow"
 source_url: https://github.com/bytedance/deer-flow
 archive_name: "bytedance--deer-flow"
-revision: 5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
-revision_url: https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504
-analyzed_at: 2026-08-02
+revision: 14c9d44440780e63563e935046db8708e121a5b1
+revision_url: https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "memory retrieval — the host resolves a user for every call and the default backend's shared index filters on it | backend/app/gateway/routers/memory.py:18-37 `_resolve_memory_user_id`, backend/packages/harness/deerflow/runtime/user_context.py:101-110 and :178, backend/packages/harness/deerflow/agents/memory/backends/deermem/deermem/core/retrieval.py:383-405 | the HTTP router honours a trusted internal owner header only after the auth middleware validated the internal token, otherwise takes `get_effective_user_id()`; the agent's memory tools call `resolve_runtime_user_id(runtime)`, which walks server identity, LangGraph auth, runtime context and the ContextVar. Both are typed `-> str` and fall back to `DEFAULT_USER_ID = \"default\"`, so no shipped caller passes an empty user. The default DeerMem backend keeps facts in per-user files and searches one shared FTS5 database, adding `scope_user = ?` to the query when a user is given — a conditional clause the host always satisfies. Unauthenticated CLI and test paths share the `default` bucket | backend/tests/"
+  human_review: "the memory settings page — a person creates, edits and deletes stored facts | frontend/src/components/workspace/settings/memory-settings-page.tsx:284-288, backend/app/gateway/routers/memory.py:305, :338, :362 | the page wires `useCreateMemoryFact`, `useUpdateMemoryFact` and `useDeleteMemoryFact` to `POST /memory/facts`, `PATCH /memory/facts/{fact_id}` and `DELETE /memory/facts/{fact_id}`, which call the manager's `create_fact`, `update_fact` and `delete_fact` against the same store the agent reads. Review is post-hoc — facts the agent extracts take effect before a person sees them | backend/tests/"
 stack_storage: "files, delegated"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -349,5 +352,7 @@ the original one.
 | `backend/tests/test_memory_prompt_injection.py` | A test name almost nothing else here has |
 
 ## History
+
+**2026-09-15** — [`14c9d44440780e63563e935046db8708e121a5b1`](https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1) — second reading, 398 commits on. Screened again; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The scope record states a dependency the first reading did not: the default DeerMem backend searches a shared FTS5 database and adds its user clause only when a user is supplied, so the mark rests on the host — and both host paths resolve through functions that return a string and fall back to `default`, never an empty value. The memory package moved by 3,139 lines, most of it in the OpenViking adapter, whose HTTP client module was removed in favour of a session module and a rewritten manager; the manager contract grew by 204 lines.
 
 **2026-08-02** — [`5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504`](https://github.com/bytedance/deer-flow/commit/5b7ada0cac7afdcd44ddf0481bb3f1a681fd9504) — first reading.
