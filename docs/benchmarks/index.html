@@ -327,9 +327,9 @@ product, and it is worth recording because the rest of this page reaches
 the same conclusion from the other direction: by reading what the
 benchmarks score and finding correction and deletion mostly absent from
 it.</p>
-<p><strong>open-cowork's harness</strong> is described below and is the
-most interesting evaluation shape in the atlas, precisely because it is
-not a public benchmark.</p>
+<p><strong>open-cowork's harness</strong> is described below, and its
+shape is worth the space precisely because it is not a public benchmark
+— though no committed case runs it.</p>
 <p><strong>Kitaru is the general-purpose version of the machinery these
 harnesses each rebuild</strong>, and it is worth naming here because <a
 href="../build/#4-verify-by-test-id">this page's twenty acceptance tests
@@ -1616,20 +1616,21 @@ below</td>
 <td>Negative precision (forbidden hits)</td>
 <td>Whether the <em>wrong</em> memory stayed out</td>
 <td>Two hundred and eleven of four hundred and fifty-seven. <a
-href="../systems/open-cowork/">open-cowork</a>, <a
 href="../systems/verel/">Verel</a>, <a href="../systems/neko/">Project
 N.E.K.O.</a>, <a href="../systems/helm/">Helm</a> and <a
 href="../systems/agno/">Agno</a> assert it about <em>content</em>; <a
 href="../systems/mirix/">MIRIX</a>, <a
-href="../systems/aukora-kernel/">Aukora Kernel</a> and <a
-href="../systems/everos/">EverOS</a> assert it about a <em>scope
-boundary</em>, which is a different question</td>
+href="../systems/aukora-kernel/">Aukora Kernel</a>, <a
+href="../systems/everos/">EverOS</a> and <a
+href="../systems/open-cowork/">open-cowork</a> assert it about a
+<em>scope boundary</em>, which is a different question</td>
 </tr>
 <tr>
 <td>Prompt-prefix fidelity</td>
 <td>Whether the retrieved memory survived truncation into the actual
 prompt</td>
-<td><a href="../systems/open-cowork/">open-cowork</a> only</td>
+<td><a href="../systems/open-cowork/">open-cowork</a>'s harness scores
+against the prefix; no committed case runs it</td>
 </tr>
 <tr>
 <td>Ingest token cost</td>
@@ -2011,12 +2012,12 @@ whose answers are not in the conversation, testing whether a system
 declines rather than confabulates. Adjacent to forgetting; not the same
 thing.</p></li>
 <li><p><strong><a href="../systems/open-cowork/">open-cowork</a>'s
-<code>forbiddenHits</code></strong> is the closest mechanism in this
-atlas to a negative retrieval assertion — an eval case declares material
-that a query must <em>not</em> surface, scored against the assembled
-prompt prefix rather than the retriever's raw output. That is exactly
-the shape a forgetting test needs. It is used for relevance, not for
-deletion, and no scored results were found committed.</p></li>
+<code>forbiddenHits</code></strong> is the shape of a negative retrieval
+assertion as an eval field — a case declares material that a query must
+<em>not</em> surface, scored against the assembled prompt prefix rather
+than the retriever's raw output. That is exactly the shape a forgetting
+test needs. No committed case populates the field, and no scored results
+were found.</p></li>
 <li><p><strong><a href="../systems/redis-agent-memory-server/">Redis
 Agent Memory Server</a>'s <code>test_forgetting.py</code></strong>
 exercises the most developed retention policy in the atlas — TTL,
@@ -2097,10 +2098,10 @@ adjacent claim — that negative retrieval assertions barely exist — now
 needs qualifying. PersistBench is a negative-<em>use</em> benchmark with
 a positive control, released, and running inside a standard harness. It
 is the shape <a href="../systems/open-cowork/">open-cowork</a>'s
-<code>forbiddenHits</code> has at repository scale, executed one layer
-up and published. A forgetting benchmark could borrow its structure
-wholesale and change only what sits between the memory and the
-model.</p>
+<code>forbiddenHits</code> field declares and no committed case
+exercises, executed one layer up and published. A forgetting benchmark
+could borrow its structure wholesale and change only what sits between
+the memory and the model.</p>
 <h4 id="a-harness-paper-publishes-the-harness-and-not-the-measurement">A
 harness paper publishes the harness and not the measurement</h4>
 <p><em>Prime Agent: A Self-Improving RLM Harness</em> (<a
@@ -4111,8 +4112,8 @@ one, leaving the model to guess which holds. A system that retrieves
 both unlabelled and gets the right answer anyway has not corrected
 anything; it has handed the contradiction to the model and got lucky.
 Measure this against the prompt prefix, the way <a
-href="../systems/open-cowork/">open-cowork</a>'s harness does, not
-against the retriever's return value.</p>
+href="../systems/open-cowork/">open-cowork</a>'s harness is built to,
+not against the retriever's return value.</p>
 <p>This is the one criterion a plain string check cannot score, and
 pretending otherwise would penalise exactly the systems this atlas
 argues are doing it right. B needs a judge — or a machine-readable

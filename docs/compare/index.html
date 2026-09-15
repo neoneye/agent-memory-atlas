@@ -18273,21 +18273,34 @@ and never write it</td>
 </tr>
 <tr>
 <td><code>open-cowork</code></td>
-<td>Core memory and experience memory as separately extracted kinds</td>
-<td>Per-kind stores plus SQLite FTS, with an ingestion queue</td>
-<td>Retriever then navigator assembles the prompt prefix; tested
-FTS-absent path</td>
-<td>Queue, then per-kind extractors with independently optimized
-prompts</td>
-<td>No visible trust state or tombstone</td>
-<td>Workspace field on eval queries; scope model not traced</td>
-<td>Memory tools plus an extension entry point</td>
-<td>Ingestion queue and prompt optimization</td>
-<td>Not traced; no verification modules found</td>
-<td>A committed eval harness with <code>forbiddenHits</code> — negative
-retrieval assertions</td>
-<td>Harness present, results absent; substring scoring favours
-extractive memory</td>
+<td>A core memory entry — one <code>category.key</code> string value in
+a map of at most 24 — and an experience chunk with summary, details, raw
+text, keywords and an embedding</td>
+<td>Two JSON files under the app storage root,
+<code>core_memory.json</code> and <code>experience_memory.json</code>;
+sessions and messages stay in SQLite for rebuilds</td>
+<td>A prompt prefix built before every run: the whole core map plus ten
+chunks and five sessions ranked by lexical score, cosine similarity, a
+workspace boost and recency, expanded by an LLM navigator</td>
+<td>After every memory-enabled session, an LLM emits add/update/delete
+actions on the core map and a second extracts experience chunks; no
+write gate</td>
+<td>Core keys are overwritten by extractor actions and evicted past 24
+without a record; deleting a session removes its experience memory but
+not core keys it produced</td>
+<td>Workspace is a filter on the Settings search and a ranking boost on
+the prefix the agent receives; no user or tenant key</td>
+<td>A runtime extension with before-run, after-run and session-deleted
+hooks; the memory tools are defined and not registered</td>
+<td>A per-session in-process promise chain for extraction; no scheduled
+pass</td>
+<td>Memory is escaped and labelled untrusted evidence inside the prefix;
+no status, confidence or verification on stored entries</td>
+<td>A fenced, escaped memory prefix under test, and deletion that wins a
+race with queued extraction</td>
+<td>Core facts outlive the sessions they came from, the 24-key cap
+evicts silently, and the eval harness and prompt optimizer run only in
+tests</td>
 </tr>
 <tr>
 <td><code>open-knowledge-format</code></td>
@@ -25218,10 +25231,11 @@ same system already claims</strong> — which is worth having, and is not
 evidence about deletion or correction.</p>
 <p><strong>Ten assert about content:</strong> that particular material
 must not surface to anyone entitled to search, regardless of who is
-asking. <a href="../systems/open-cowork/">open-cowork</a>'s
-<code>forbiddenHits</code> is an eval-harness field naming what a query
-must not return, scored as a penalty. <a
-href="../systems/verel/">Verel</a>'s
+asking. <a href="../systems/open-cowork/">open-cowork</a>'s service
+tests assert that a session deleted while its extraction is queued
+leaves nothing searchable; its <code>forbiddenHits</code> eval field,
+which would name what a query must not return, is populated by no
+committed case. <a href="../systems/verel/">Verel</a>'s
 <code>tests/test_memory_negative_eval.py</code> asserts a REJECTED fact
 is invisible to every recall path — a suite built from the red-team
 finding that produced its tombstone. <a href="../systems/neko/">Project
@@ -27655,13 +27669,15 @@ decorator chain already instruments every provider, so per-backend
 comparison would be straightforward and does not appear to have been
 done.</li>
 <li><code>open-cowork</code>: <code>memory-eval-harness.ts</code>
-defines eval cases as a session plus queries carrying <strong>both
-<code>expectedHits</code> and <code>forbiddenHits</code></strong>,
+defines eval cases as a session plus queries carrying
+<code>expectedHits</code> and optional <code>forbiddenHits</code>,
 scores the assembled prompt prefix rather than raw retrieval output,
 combines a deterministic containment score with an LLM judge, and writes
-reports with a run id and artifact directory. This is the most complete
-memory benchmark shape in the atlas; no scored results were found
-committed at this commit.</li>
+reports with a run id and artifact directory. The harness and its prompt
+optimizer run only in tests, no committed case populates
+<code>forbiddenHits</code>, and no scored results are committed; the
+memory's negative assertions are service tests on workspace-scoped
+search and deletion during queued ingestion.</li>
 <li><code>gini-agent</code>: per-module and integration tests, including
 an assertion that a follow-up task records recalled units; no
 memory-quality benchmark, despite a recall implementation that cites
@@ -29068,12 +29084,14 @@ provided every derived index has a reconciliation path.</p>
 <h3 id="testing-rollout-and-the-decision-record">Testing, rollout, and
 the decision record</h3>
 <p>Test what memory must <strong>not</strong> surface. <a
-href="../systems/open-cowork/">open-cowork</a>'s eval cases carry
-<code>forbiddenHits</code> alongside <code>expectedHits</code>, and a
+href="../systems/open-cowork/">open-cowork</a>'s eval harness has a
+<code>forbiddenHits</code> field beside <code>expectedHits</code>, and a
 leak floors the case score regardless of how much correct material was
-also retrieved. Every "tests to require" list in the pattern library
-asks for scope-leakage, rejected-value, and sensitivity assertions; this
-is what they look like as an executable fixture.</p>
+also retrieved — but no committed case uses the field, which is the
+other half of the lesson: a negative field is a test only once a case
+names what must not appear. Every "tests to require" list in the pattern
+library asks for scope-leakage, rejected-value, and sensitivity
+assertions; this is what they look like as an executable fixture.</p>
 <p>Ship new memory behaviour off by default until an evaluation says
 otherwise. <a href="../systems/atomic-agent/">Atomic Agent</a>'s v2.5
 features are all <code>default: false</code> while its campaign
@@ -29820,7 +29838,7 @@ runtime artifacts</li>
 <li><a
 href="https://github.com/OpenCoworkAI/open-cowork">OpenCoworkAI/open-cowork</a>
 at <a
-href="https://github.com/OpenCoworkAI/open-cowork/commit/6f0c04741386b8600aa977f14ac0679d2203bd1b"><code class="commit-id" title="6f0c04741386b8600aa977f14ac0679d2203bd1b">6f0c0474…</code></a></li>
+href="https://github.com/OpenCoworkAI/open-cowork/commit/a1d0e4ab0f0f78bc42c622653174650cd2025968"><code class="commit-id" title="a1d0e4ab0f0f78bc42c622653174650cd2025968">a1d0e4ab…</code></a></li>
 <li><a
 href="https://github.com/Open-Curiosity/gini-agent">Open-Curiosity/gini-agent</a>
 at <a

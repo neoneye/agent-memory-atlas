@@ -121,8 +121,8 @@ product, and it is worth recording because the rest of this page reaches the sam
 conclusion from the other direction: by reading what the benchmarks score and
 finding correction and deletion mostly absent from it.
 
-**open-cowork's harness** is described below and is the most interesting
-evaluation shape in the atlas, precisely because it is not a public benchmark.
+**open-cowork's harness** is described below, and its shape is worth the space
+precisely because it is not a public benchmark — though no committed case runs it.
 
 **Kitaru is the general-purpose version of the machinery these harnesses each
 rebuild**, and it is worth naming here because [this page's twenty acceptance
@@ -1206,8 +1206,8 @@ time to recall?* — has a short answer: barely, occasionally, and no.
 | --- | --- | --- |
 | Answer accuracy (LLM-judged) | Whether the agent got the question right | Yes — the standard metric, in every public harness |
 | Recall@k / hit rate | Whether the right memory was returned at all | Rarely; [agentmemory](../systems/agentmemory/)'s figures are retrieval-only, which is honest but partial, and [Muninn](../systems/muninn/) ships the harness that computes hit@k, recall@k and MRR per query and persists every run — see below |
-| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Two hundred and eleven of four hundred and fifty-seven. [open-cowork](../systems/open-cowork/), [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/) and [EverOS](../systems/everos/) assert it about a *scope boundary*, which is a different question |
-| Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/) only |
+| Negative precision (forbidden hits) | Whether the *wrong* memory stayed out | Two hundred and eleven of four hundred and fifty-seven. [Verel](../systems/verel/), [Project N.E.K.O.](../systems/neko/), [Helm](../systems/helm/) and [Agno](../systems/agno/) assert it about *content*; [MIRIX](../systems/mirix/), [Aukora Kernel](../systems/aukora-kernel/), [EverOS](../systems/everos/) and [open-cowork](../systems/open-cowork/) assert it about a *scope boundary*, which is a different question |
+| Prompt-prefix fidelity | Whether the retrieved memory survived truncation into the actual prompt | [open-cowork](../systems/open-cowork/)'s harness scores against the prefix; no committed case runs it |
 | Ingest token cost | What it costs to remember | [OpenViking](../systems/openviking/)'s harness records token volume |
 | Per-turn context cost | What memory costs on every single turn | Treated as a tunable by [MetaClaw](../systems/metaclaw/); reasoned about explicitly by [GenericAgent](../systems/genericagent/) |
 | Retrieval latency | Whether recall is fast enough to be on the critical path | [llm-wiki-memory](../systems/llm-wiki-memory/)'s `PERFORMANCE.md` — latency and scaling, explicitly not relevance |
@@ -1521,12 +1521,12 @@ instruction. Joining them is one assertion.
 - **LoCoMo's adversarial category** includes questions whose answers are not in
   the conversation, testing whether a system declines rather than confabulates.
   Adjacent to forgetting; not the same thing.
-- **[open-cowork](../systems/open-cowork/)'s `forbiddenHits`** is the closest
-  mechanism in this atlas to a negative retrieval assertion — an eval case
-  declares material that a query must *not* surface, scored against the
-  assembled prompt prefix rather than the retriever's raw output. That is
-  exactly the shape a forgetting test needs. It is used for relevance, not for
-  deletion, and no scored results were found committed.
+- **[open-cowork](../systems/open-cowork/)'s `forbiddenHits`** is the shape of a
+  negative retrieval assertion as an eval field — a case declares material that a
+  query must *not* surface, scored against the assembled prompt prefix rather
+  than the retriever's raw output. That is exactly the shape a forgetting test
+  needs. No committed case populates the field, and no scored results were
+  found.
 - **[Redis Agent Memory Server](../systems/redis-agent-memory-server/)'s
   `test_forgetting.py`** exercises the most developed retention policy in the
   atlas — TTL, inactivity, pinning, type allowlists, budget pruning. These are
@@ -1584,7 +1584,8 @@ not measure whether a deleted memory stays deleted.** But the adjacent claim —
 retrieval assertions barely exist — now needs qualifying. PersistBench is a
 negative-*use* benchmark with a positive control, released, and running inside a
 standard harness. It is the shape [open-cowork](../systems/open-cowork/)'s
-`forbiddenHits` has at repository scale, executed one layer up and published.
+`forbiddenHits` field declares and no committed case exercises, executed one
+layer up and published.
 A forgetting benchmark could borrow its structure wholesale and change only what
 sits between the memory and the model.
 
@@ -3200,7 +3201,7 @@ the interesting failures:
   one, leaving the model to guess which holds. A system that retrieves both
   unlabelled and gets the right answer anyway has not corrected anything; it has
   handed the contradiction to the model and got lucky. Measure this against the
-  prompt prefix, the way [open-cowork](../systems/open-cowork/)'s harness does,
+  prompt prefix, the way [open-cowork](../systems/open-cowork/)'s harness is built to,
   not against the retriever's return value.
 
   This is the one criterion a plain string check cannot score, and pretending

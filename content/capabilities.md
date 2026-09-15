@@ -133,8 +133,10 @@ worth having, and is not evidence about deletion or correction.
 **Twenty asserted about content** at that reading: that particular material must
 not surface to anyone entitled to search, regardless of who is asking. Eight
 show the range.
-[open-cowork](../systems/open-cowork/)'s `forbiddenHits` is an eval-harness field
-naming what a query must not return, scored as a penalty.
+[open-cowork](../systems/open-cowork/)'s service tests assert that a session deleted
+while its extraction is queued leaves nothing searchable; its `forbiddenHits`
+eval field, which would name what a query must not return, is populated by no
+committed case.
 [Verel](../systems/verel/)'s `tests/test_memory_negative_eval.py` asserts a
 REJECTED fact is invisible to every recall path — a suite built from the
 red-team finding that produced its tombstone. [Project N.E.K.O.](../systems/neko/)'s
@@ -236,8 +238,8 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| Files on disk | 220 | 146 | | Lexical | 280 | 190 |
-| SQLite | 214 | 128 | | Vector | 274 | 163 |
+| Files on disk | 221 | 146 | | Lexical | 280 | 190 |
+| SQLite | 213 | 128 | | Vector | 275 | 163 |
 | Postgres | 88 | 51 | | Graph | 105 | 65 |
 | Delegated to the adopter | 39 | 18 | | No arm named in the review | 85 | 35 |
 | Graph database | 27 | 17 | |  |  |  |

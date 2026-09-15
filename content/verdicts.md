@@ -356,12 +356,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: facts must be traceable, correctable, or scoped — those are left to the application.
 
 ### [`open-cowork`](../systems/open-cowork/)
-- Best idea: a committed memory benchmark whose queries assert forbidden hits as well as expected ones, scored against the assembled prompt prefix.
-- Biggest risk: the harness exists but no scored results are committed, and no trust state guards extraction.
-- Most reusable component: `memory-eval-harness.ts` — the eval-case shape is largely independent of the rest of the system.
-- Maturity impression: a well-factored memory subsystem whose evaluation thinking is ahead of most of the atlas.
-- Study when: you need to turn "our memory works" into something a CI job can check.
-- Do not copy when: you need verification or correction semantics; neither appears in the module set.
+- Best idea: injected memory treated as untrusted input — escaped, wrapped in a `<memory_context>` block that names it evidence rather than instruction, and tested with a planted closing tag.
+- Biggest risk: core memory is a 24-key map with no provenance, so it evicts silently and outlives the sessions it came from; deleting a conversation removes its experience chunks and leaves its conclusions in every future prefix.
+- Most reusable component: the deletion race guard — a deleted session id recorded before queued extraction can write it back, checked at every write step, under test.
+- Maturity impression: a 4,100-line subsystem with focused service tests, beside an eval harness and prompt optimizer that run only in tests and a `forbiddenHits` field no committed case populates.
+- Study when: you inject memory as a preamble and want the fencing, or you have asynchronous extraction that deletion must beat.
+- Do not copy when: users will delete conversations and expect what was learned in them to go too, or you want evidence that memory quality was measured.
 
 ### [`gini-agent`](../systems/gini-agent/)
 - Best idea: bi-temporal units with `rejected` and `conflicted` states, four RRF-fused recall channels, and architecture decisions recorded as ADRs.
