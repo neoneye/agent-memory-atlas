@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Go memory service
+over PostgreSQL whose recall SQL gates real-world validity and knowledge
+time together and replays a relationship's transition history to answer
+what was believed at a past instant, with an eight-value status and a
+three-tier ladder enforced by database CHECK constraints — and whose
+promotion from candidate to fact is decided by a configured verifier
+model, with no person in the loop.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Dense-Mem — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Go memory
+service over PostgreSQL whose recall SQL gates real-world validity and
+knowledge time together and replays a relationship's transition history
+to answer what was believed at a past instant, with an eight-value
+status and a three-tier ladder enforced by database CHECK constraints —
+and whose promotion from candidate to fact is decided by a configured
+verifier model, with no person in the loop.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dense-Mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Go memory
+service over PostgreSQL whose recall SQL gates real-world validity and
+knowledge time together and replays a relationship's transition history
+to answer what was believed at a past instant, with an eight-value
+status and a three-tier ladder enforced by database CHECK constraints —
+and whose promotion from candidate to fact is decided by a configured
+verifier model, with no person in the loop.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Dense-Mem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Dense-Mem",
+      "description": "A self-hosted Go memory service over PostgreSQL whose recall SQL gates real-world validity and knowledge time together and replays a relationship's transition history to answer what was believed at a past instant, with an eight-value status and a three-tier ladder enforced by database CHECK constraints \u2014 and whose promotion from candidate to fact is decided by a configured verifier model, with no person in the loop.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Both clocks in the WHERE, and a model
+holding the gate</p>
+          <h1>Dense-Mem</h1>
+          <p class="document-deck">A self-hosted Go memory service over
+PostgreSQL whose recall SQL gates real-world validity and knowledge time
+together and replays a relationship's transition history to answer what
+was believed at a past instant, with an eight-value status and a
+three-tier ladder enforced by database CHECK constraints — and whose
+promotion from candidate to fact is decided by a configured verifier
+model, with no person in the loop.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/markhuangai/dense-mem">
+              <span>Source</span>
+              <strong>markhuangai/dense-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/markhuangai/dense-mem/commit/26b95700646b22265e696ae27df7e1a240eebc43" title="26b95700646b22265e696ae27df7e1a240eebc43">
+              <span>Analyzed revision</span>
+              <code>26b95700…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/markhuangai--dense-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>markhuangai--dense-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Dense-Mem is a self-hosted memory service: Go over PostgreSQL with
+pgvector, Apache-2.0, 441 commits since 13 April 2026, 274,786 lines of
+Go across 608 test files, reached by agents over MCP at
+<code>/mcp</code>. Its README states the division of labour plainly —
+"[t]he host LLM owns conversation and judgment. Dense-Mem owns durable
+evidence, owner authorization, lifecycle events, support eligibility,
+and bounded recall." It is part of a research preprint on governed
+enterprise memory.</p>
+<p>Two things here are the best this atlas has read of their kind.</p>
+<p>The first is the <strong>temporal query</strong>. A relationship
+carries <code>valid_from</code> and <code>valid_to</code> for when the
+claim held in the world, and <code>created_at</code> and
+<code>recorded_to</code> for when this store believed it. A recall with
+an as-of instant gates both windows in the same <code>WHERE</code>. It
+then goes further: a lateral join selects the most recent
+<code>relationship_transition_events</code> row with
+<code>created_at &lt;= ?</code>, and the status test becomes
+<code>COALESCE(known_status.status, relationship.status)</code>. The
+query does not ask what is true now about a past interval; it asks what
+this store would have said at that moment. Most systems in this corpus
+that claim bitemporality have two columns and a filter on one of
+them.</p>
+<p>The second is <strong>where the invariants live</strong>.
+<code>relationship_records</code> constrains <code>status</code> to
+eight values and <code>tier</code> to three, and then adds
+<code>relationship_records_active_tier_check</code>, which makes it
+impossible to store a row that is both <code>candidate</code> and
+<code>active</code>. The indexes the read path uses are partial —
+<code>WHERE status = 'active' AND tier IN ('validated_claim','fact')</code>
+— so an unpromoted relationship is not filtered out of a result, it is
+absent from the structure the result is built from. The transition
+ledger has foreign keys to the verification event and the support
+decision that caused each change, every one
+<code>ON DELETE RESTRICT</code>, so the reason a memory changed state
+cannot be deleted while the transition exists.</p>
+<p>The correction path is equally deliberate. A relationship's identity
+is unique across its entire history under
+<code>NULLS NOT DISTINCT</code>, covering subject, predicate, object,
+polarity, validity window and scope key. When a correction would land on
+an identity whose history is inactive or unsupported, the code calls
+<code>rejectAppliedRelationshipCorrection</code> with
+<code>inactive_relationship_collision</code> — "corrected Relationship
+collides with inactive or unsupported history" — rather than quietly
+reviving it.</p>
+<p>What is missing is a person. The status set contains
+<code>needs_review</code>, <code>quarantined</code> and
+<code>disputed</code>, and the README says conflict review runs as a
+background worker. The thing that moves a relationship up the tier
+ladder is a verifier: the server refuses to start without
+<code>AI_VERIFIER_MODEL</code>, alongside the embedding configuration.
+The human-facing surfaces are the control portal — teams, credentials —
+and a user portal; there is no route where a person approves a claim
+into <code>fact</code>. This is governed memory whose governor is a
+model, and <code>human_review</code> is withheld on that basis.</p>
+<p>Six marks: <code>bitemporal</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>tombstone</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>Evidence</strong> is exact and append-only: content, a
+content hash, an authority tier, a source reference and a revision
+token. A lifecycle action changes its effective state without deleting
+it.</p>
+<p>An <strong>Entity</strong> and a typed <strong>Value</strong> are
+semantic nodes. A <strong>Relationship</strong> joins them through a
+versioned <strong>predicate</strong> and becomes an active graph edge
+only when its evidence support is eligible.</p>
+<p>A <strong>tier</strong> is how well established the claim is:
+<code>candidate</code>, <code>validated_claim</code>, <code>fact</code>.
+A <strong>status</strong> is its standing:
+<code>pending_evidence</code>, <code>active</code>,
+<code>needs_review</code>, <code>quarantined</code>,
+<code>superseded</code>, <code>disputed</code>, <code>retracted</code>,
+<code>rejected</code>. The database forbids the combination
+candidate-and-active.</p>
+<p>A <strong>memory space</strong> is the scope, and it has a
+<strong>generation</strong>; a recall pins both, so a space that has
+been reset does not return its old contents.</p>
+<p>An <strong>actor</strong> is
+<code>team + identity + membership + permanent owner alias + optional credential</code>,
+and the README is explicit that "[t]eam, identity, membership, and
+credential fields never let a client choose or replace the semantic
+owner."</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a proposal becomes recallable only through a verifier-driven tier change, and every recall gates both clocks plus the status as known at the requested instant</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a proposal becomes recallable only through a verifier-driven tier change, and every recall gates both clocks plus the status as known at the requested instant
+flowchart TB
+    AGENT[&quot;agent over MCP /mcp&quot;] --&gt; REM[&quot;remember: a proposal&quot;]
+    REM --&gt; VALID[&quot;closed-schema validation&lt;br/&gt;+ deterministic server policy&quot;]
+    VALID --&gt; EV[(&quot;evidence&lt;br/&gt;append-only, content hash,&lt;br/&gt;authority tier&quot;)]
+    EV --&gt; REL[(&quot;relationship_records&lt;br/&gt;tier, status, polarity,&lt;br/&gt;valid_from / valid_to,&lt;br/&gt;created_at / recorded_to,&lt;br/&gt;support_count, scope_key&quot;)]
+    REL --&gt; CHK{&quot;DB CHECK:&lt;br/&gt;candidate AND active&lt;br/&gt;is unstorable&quot;}
+    VERIF[&quot;verifier model&lt;br/&gt;AI_VERIFIER_MODEL&quot;] --&gt; TIER[&quot;tier change&lt;br/&gt;candidate → validated_claim → fact&quot;]
+    WORKER[&quot;background workers&lt;br/&gt;dreaming, conflict review&quot;] --&gt; TIER
+    TIER --&gt; LEDGER[(&quot;relationship_transition_events&lt;br/&gt;from/to tier + status, reason,&lt;br/&gt;FK to verification event&lt;br/&gt;and support decision,&lt;br/&gt;ON DELETE RESTRICT&quot;)]
+    CORR[&quot;correction&quot;] --&gt; COLL{&quot;identity already&lt;br/&gt;inactive or unsupported?&quot;}
+    COLL --&gt;|&quot;yes&quot;| REJ[&quot;inactive_relationship_collision&lt;br/&gt;refused, not revived&quot;]
+    COLL --&gt;|&quot;no&quot;| REL
+    RECALL[&quot;recall&quot;] --&gt; SPACE[&quot;space_id AND space_generation&lt;br/&gt;unparseable space → AND FALSE&quot;]
+    SPACE --&gt; GATE{&quot;as-of instant supplied?&quot;}
+    GATE --&gt;|&quot;no&quot;| NOW[&quot;status = &#39;active&#39;&lt;br/&gt;AND support_count &gt; 0&quot;]
+    GATE --&gt;|&quot;yes&quot;| THEN[&quot;valid_from &lt;= T AND valid_to &gt; T&lt;br/&gt;AND created_at &lt;= T AND recorded_to &gt; T&quot;]
+    THEN --&gt; REPLAY[&quot;lateral join: latest transition&lt;br/&gt;with created_at &lt;= T&quot;]
+    REPLAY --&gt; COAL[&quot;COALESCE(known_status.status, status)&lt;br/&gt;= what we believed then&quot;]
+    LEDGER --&gt; REPLAY</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>migrations/postgres</code></td>
+<td>113 SQL files across v2_4, v2_5 and v2_6;
+<code>2026071704_v2_semantic_ledger.sql</code> is the core schema and
+the best single file to read</td>
+</tr>
+<tr>
+<td><code>internal/knowledge</code></td>
+<td>The ledger contract and its Postgres implementation, including
+correction handling</td>
+</tr>
+<tr>
+<td><code>internal/recall</code></td>
+<td>Recall, space fusion, conflicts, feedback, and the Postgres
+repositories where the temporal SQL lives</td>
+</tr>
+<tr>
+<td><code>internal/remember</code></td>
+<td>Submission, its status projection, and the error taxonomy</td>
+</tr>
+<tr>
+<td><code>internal/verifier</code>, <code>internal/assessor</code></td>
+<td>The model-driven assessment that moves tiers</td>
+</tr>
+<tr>
+<td><code>internal/access</code>, <code>internal/ownership</code>,
+<code>internal/privacy</code></td>
+<td>Authorization, owner alias, privacy</td>
+</tr>
+<tr>
+<td><code>internal/audit</code></td>
+<td>The <code>audit_log</code> table, field redaction, and read
+policy</td>
+</tr>
+<tr>
+<td><code>internal/dream</code>, <code>internal/community</code>,
+<code>internal/conflict</code></td>
+<td>Background consolidation, summarisation, conflict review</td>
+</tr>
+<tr>
+<td><code>internal/mcp</code>, <code>internal/http</code></td>
+<td>The MCP surface, the user portal, the separate control portal</td>
+</tr>
+<tr>
+<td><code>cmd/eval-seedgen</code>, <code>tests/eval</code></td>
+<td>The evaluation scenario generator and committed baselines</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>migrations/postgres/v2_4/2026071704_v2_semantic_ledger.sql:203-280</code>
+— the relationship table, its constraints and its partial indexes.</li>
+<li><code>:432-463</code> — the transition ledger and its foreign
+keys.</li>
+<li><code>internal/recall/postgres/recall_relationship_repository.go:505-544</code>
+— the status replay and both temporal windows.</li>
+<li><code>internal/recall/postgres/recall_repository.go:817-845</code> —
+the space predicate.</li>
+<li><code>internal/knowledge/postgres/relationship_correction_helpers.go:754</code>
+— the collision refusal.</li>
+<li><code>internal/remember/service/status_errors.go</code> — the full
+submission error taxonomy, which is a readable specification of
+everything that can be refused.</li>
+<li><code>cmd/eval-seedgen/main.go</code> — the must-include /
+must-not-include scenarios.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Evidence is append-only with an authority tier. Relationships are the
+queryable layer, and their columns encode the whole governance story:
+<code>tier</code>, <code>status</code>, <code>polarity</code> (so a
+negative claim is representable rather than an absence),
+<code>support_count</code>, <code>source_group_count</code>,
+<code>scope_key</code>, both time windows, and a <code>version</code>.
+Entities carry their own
+<code>status IN ('active','retired', 'needs_review')</code> and their
+names carry validity windows of their own.</p>
+<p>Predicates are versioned and referenced by
+<code>(predicate_key, predicate_version)</code>, with foreign keys
+<code>ON DELETE RESTRICT</code>, so a predicate definition cannot be
+removed while any claim uses it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall fuses across the actor's authorized spaces with
+reciprocal-rank fusion and a stable tie-break, and records a
+discoverability metric per call. Every query pins the space and its
+generation. Without an as-of instant the query requires
+<code>status = 'active'</code> and <code>support_count &gt; 0</code> —
+the support gate the README advertises. With one, it admits
+<code>superseded</code> rows whose validity or knowledge window covers
+the instant, and replaces the current status with the one the transition
+ledger says was in force.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The provider's output is a proposal. The ledger contract's header
+states the boundary: "Semantic claiming and status mutation are
+intentionally not part of the runtime API." A submission can fail in
+roughly forty named ways, each with a next action of retry, resubmit,
+retry-correction, contact-operator or none — including
+<code>support_set_mismatch</code>,
+<code>predicate_object_kind_mismatch</code>,
+<code>confirmation_expired</code>, <code>persistent_ambiguity</code> and
+the collision above. Reading that list is the fastest way to understand
+what the system refuses to guess.</p>
+<p>Retraction takes evidence ids, a reason and an idempotency key, and
+reports how many relationships were affected, how many fell back to
+pending and how many stayed active — so a caller learns whether removing
+a source actually changed what is recallable.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP at <code>/mcp</code> is the automation contract; the README says
+browser routes are "first-party interfaces, not an alternative public
+automation API". Administration lives on a separate port behind a
+control token. The evaluation MCP tools are compiled behind a build tag
+into a separate Docker target, and the README states there is "no
+runtime switch that can expose them in the production binary" — a
+cleaner separation than most projects manage between their eval hooks
+and their release image.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The governor is a model.</strong> <code>needs_review</code>,
+<code>quarantined</code> and <code>disputed</code> exist as statuses,
+and conflict review runs as a background worker; the tier ladder is
+driven by the assessor and verifier, and <code>AI_VERIFIER_MODEL</code>
+is a required startup variable alongside the embedding configuration.
+There is no route on which a person approves a claim into
+<code>fact</code>. For an enterprise memory this is the decision most
+worth being explicit about, because every other governance mechanism
+here is exact and checkable while the judgement that uses them is a
+model call. <code>human_review</code> is withheld: the atlas's rule is
+that the mark tests the approver, not the presence of review states.</p>
+<p><strong>Everything durable depends on a configured provider.</strong>
+The server refuses to start without embedding and verifier
+configuration. That is honest — better than degrading silently — but it
+means the store cannot be operated as a plain database.</p>
+<p><strong>The audit picture is two mechanisms.</strong> The
+<code>audit_log</code> table has an append-only <code>Store</code>
+interface with field redaction, and its consumers are settings, privacy,
+operations and HTTP — administrative. The memory-side record is
+<code>relationship_transition_events</code>, and it earns the mark on
+its own terms: every tier and status change, with a reason and a foreign
+key to its cause, and the recall path reads it, which is the strongest
+evidence a log is real.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>608 Go test files, plus <code>tests/eval</code> with committed
+baselines and source locks, <code>tests/uat</code> end-to-end scripts,
+and <code>tests/integration</code>.</p>
+<p><code>cmd/eval-seedgen/main.go</code> is the part worth copying. Each
+scenario carries a required answer, <code>MustInclude</code>,
+<code>MustNotInclude</code>, and hand-written distractor documents
+designed to be retrievable: the retraction case seeds an original
+announcement, a forwarded approval and a calendar hold that all repeat
+the withdrawn value, then requires the current decision and forbids the
+withdrawn one. There are similar traps for units, defaults, informal
+versus formal statements and retention windows. That is a negative eval
+built to be failed by a naive similarity search, which is what makes it
+worth running.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put both clocks in the same <code>WHERE</code>, then replay
+the status.</strong> Gating validity is common; gating knowledge time as
+well, and reconstructing the status from a transition ledger so the
+answer is what you <em>believed</em> then, is the thing almost nobody
+does.</li>
+<li><strong>Let the database hold the invariant.</strong> A CHECK that
+makes candidate-and-active unstorable cannot be forgotten by a new code
+path, and partial indexes make an unpromoted row absent rather than
+filtered.</li>
+<li><strong>Foreign-key a state change to its cause with
+<code>ON DELETE RESTRICT</code>.</strong> The transition knows which
+verification event and which support decision produced it, and neither
+can be deleted out from under it.</li>
+<li><strong>Refuse a correction that collides with rejected
+history.</strong> Keying identity across the whole history, including
+the validity window and scope key, turns "we already decided against
+this" into a constraint rather than a memory.</li>
+<li><strong>Write distractors into your eval.</strong> A must-not
+assertion is only worth something if a plausible wrong answer is sitting
+in the corpus.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Naming the states of a review you never staff.</strong>
+<code>needs_review</code>, <code>quarantined</code> and
+<code>disputed</code> are the vocabulary of human governance; if a
+worker resolves all three, say that, and be deliberate about whether
+that is what enterprise buyers are being sold.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want a governed, self-hosted knowledge graph
+with real point-in-time answers and are content for a model to decide
+promotion. Look elsewhere if a person must sign off before a claim
+becomes recallable, or if you cannot depend on an external embedding and
+verifier provider.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a person-facing review queue planned for
+<code>needs_review</code> and <code>disputed</code>, and would it use
+the same transition ledger?</li>
+<li>The <code>audit_log</code> table is administrative and the
+transition ledger is memory-side. Is there a case where an
+evidence-level mutation lands in neither?</li>
+<li>The eval scenarios are generated by <code>eval-seedgen</code> rather
+than committed as data. What pins the generated corpus to the committed
+baseline across versions?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>migrations/postgres/v2_4/2026071704_v2_semantic_ledger.sql</code></td>
+<td>The whole model, its constraints and its indexes</td>
+</tr>
+<tr>
+<td><code>internal/recall/postgres/recall_relationship_repository.go</code></td>
+<td>Both time axes and the status replay</td>
+</tr>
+<tr>
+<td><code>internal/recall/postgres/recall_repository.go</code></td>
+<td>The fail-closed space predicate</td>
+</tr>
+<tr>
+<td><code>internal/knowledge/contract/lifecycle.go</code></td>
+<td>Retraction and what it reports</td>
+</tr>
+<tr>
+<td><code>internal/knowledge/postgres/relationship_correction_helpers.go</code></td>
+<td>The collision refusal</td>
+</tr>
+<tr>
+<td><code>internal/remember/service/status_errors.go</code></td>
+<td>Everything the system refuses to guess</td>
+</tr>
+<tr>
+<td><code>internal/audit/service.go</code></td>
+<td>Redaction and audit read policy</td>
+</tr>
+<tr>
+<td><code>cmd/eval-seedgen/main.go</code></td>
+<td>Must-include beside must-not-include, with traps</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/markhuangai/dense-mem/commit/26b95700646b22265e696ae27df7e1a240eebc43"><code class="commit-id" title="26b95700646b22265e696ae27df7e1a240eebc43">26b95700…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: sixteen files, one auto-run surface (a
+<code>.githooks/</code> directory), no build-time execution points, two
+unpinned surfaces, ten dependency files inside the cooldown, and
+<code>AGENTS.md</code> read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

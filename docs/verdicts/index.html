@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 479 reports.</strong></p>
+<p><strong>This page covers all 480 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17297,6 +17297,56 @@ person controls.</li>
 <li>Do not copy when: untrusted input can reach the transfer tool, or
 you need an append-only mutation record covering the observation write
 paths rather than the curated tier alone.</li>
+</ul>
+<h3 id="dense-mem"><a
+href="../systems/dense-mem/"><code>dense-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>both clocks in the same <code>WHERE</code>, and
+the status replayed from a ledger.</strong> A relationship carries
+<code>valid_from</code>/<code>valid_to</code> for the world and
+<code>created_at</code>/<code>recorded_to</code> for when the store
+believed it; a recall with an as-of instant gates both windows and then
+joins the latest <code>relationship_transition_events</code> row at or
+before that instant, so
+<code>COALESCE(known_status.status, relationship.status)</code> answers
+what this store would have said then rather than what is true now. The
+invariants sit in the database: a CHECK makes a candidate-and-active row
+unstorable, and the read path's indexes are partial on
+<code>status = 'active' AND tier IN ('validated_claim','fact')</code>,
+so an unpromoted claim is absent rather than filtered. Six marks:
+<code>bitemporal</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>tombstone</code>,
+<code>audit_log</code>, <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the governor is a model.</strong>
+<code>needs_review</code>, <code>quarantined</code> and
+<code>disputed</code> are statuses, conflict review runs as a background
+worker, and the tier ladder is driven by an assessor and a verifier the
+server refuses to start without (<code>AI_VERIFIER_MODEL</code>). No
+route lets a person approve a claim into <code>fact</code>; the human
+surfaces are team and credential administration. Every other governance
+mechanism here is exact and checkable, and the judgement that uses them
+is a model call — which is why <code>human_review</code> is
+withheld.</li>
+<li>Most reusable component: the correction refusal — a relationship
+identity unique across its whole history under
+<code>NULLS NOT DISTINCT</code> covering subject, predicate, object,
+polarity, validity window and scope key, so a correction landing on
+inactive or unsupported history returns
+<code>inactive_relationship_collision</code> instead of quietly reviving
+it.</li>
+<li>Maturity impression: Apache-2.0, release v2.6.2, 441 commits since
+13 April 2026, 274,786 lines of Go across 608 test files, PostgreSQL
+with pgvector as the only durable authority and Redis for coordination,
+113 migrations, MCP at <code>/mcp</code> with administration on a
+separate control portal, and evaluation tools compiled behind a build
+tag into a separate image with no runtime switch to expose them in
+production.</li>
+<li>Study when: you need governed point-in-time answers from a
+self-hosted knowledge graph and want a worked example of putting memory
+invariants in the schema.</li>
+<li>Do not copy when: a person must sign off before a claim becomes
+recallable, or you cannot depend on an external embedding and verifier
+provider at startup.</li>
 </ul>
         </article>
       </div>

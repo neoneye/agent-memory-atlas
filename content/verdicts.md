@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 479 reports.**
+**This page covers all 480 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4182,3 +4182,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 1.9.3, 833 commits since 14 February 2026, 292,812 lines of TypeScript against 135,576 lines across 620 test files, SQLite plus an Orama index under a project data directory, an MCP server aimed at a long list of agent hosts, hooks, rules, a CLI, a TUI and a dashboard.
 - Study when: you want local-first shared memory across several agent hosts with real per-agent and per-team scoping and a curated tier a person controls.
 - Do not copy when: untrusted input can reach the transfer tool, or you need an append-only mutation record covering the observation write paths rather than the curated tier alone.
+
+### [`dense-mem`](../systems/dense-mem/)
+- Best idea: **both clocks in the same `WHERE`, and the status replayed from a ledger.** A relationship carries `valid_from`/`valid_to` for the world and `created_at`/`recorded_to` for when the store believed it; a recall with an as-of instant gates both windows and then joins the latest `relationship_transition_events` row at or before that instant, so `COALESCE(known_status.status, relationship.status)` answers what this store would have said then rather than what is true now. The invariants sit in the database: a CHECK makes a candidate-and-active row unstorable, and the read path's indexes are partial on `status = 'active' AND tier IN ('validated_claim','fact')`, so an unpromoted claim is absent rather than filtered. Six marks: `bitemporal`, `trust_state`, `scope_enforced`, `tombstone`, `audit_log`, `negative_eval`.
+- Biggest risk: **the governor is a model.** `needs_review`, `quarantined` and `disputed` are statuses, conflict review runs as a background worker, and the tier ladder is driven by an assessor and a verifier the server refuses to start without (`AI_VERIFIER_MODEL`). No route lets a person approve a claim into `fact`; the human surfaces are team and credential administration. Every other governance mechanism here is exact and checkable, and the judgement that uses them is a model call — which is why `human_review` is withheld.
+- Most reusable component: the correction refusal — a relationship identity unique across its whole history under `NULLS NOT DISTINCT` covering subject, predicate, object, polarity, validity window and scope key, so a correction landing on inactive or unsupported history returns `inactive_relationship_collision` instead of quietly reviving it.
+- Maturity impression: Apache-2.0, release v2.6.2, 441 commits since 13 April 2026, 274,786 lines of Go across 608 test files, PostgreSQL with pgvector as the only durable authority and Redis for coordination, 113 migrations, MCP at `/mcp` with administration on a separate control portal, and evaluation tools compiled behind a build tag into a separate image with no runtime switch to expose them in production.
+- Study when: you need governed point-in-time answers from a self-hosted knowledge graph and want a worked example of putting memory invariants in the schema.
+- Do not copy when: a person must sign off before a claim becomes recallable, or you cannot depend on an external embedding and verifier provider at startup.
