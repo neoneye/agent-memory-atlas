@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 464 reports.**
+**This page covers all 465 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4062,3 +4062,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 from IBM Research, 246 commits since 12 December 2025, about 17,000 lines and 1,319 test functions, three storage backends, a retention engine with scheduled jobs, and a paper ([arXiv:2603.10600](https://arxiv.org/abs/2603.10600)) reporting an AppWorld gain from 50.0% to 58.9% scenario goal completion, with the runs not committed.
 - Study when: agents repeat task families and should accumulate procedural lessons, and you want a worked answer to how much of that memory to inject.
 - Do not copy when: you need factual user memory, a history of corrections, or isolation finer than one table per namespace.
+
+### [`open-brain`](../systems/open-brain/)
+- Best idea: **every automated change is a reviewed, reversible execution.** Lifecycle, consolidation and pruning proposals carry a snapshot and a fingerprint so a stale one cannot apply, executions keep the previous status for reversal, and pruning writes a restorable tombstone — around assertions with candidate-to-confirmed statuses, validity windows and supporting or contradicting evidence.
+- Biggest risk: **nothing writes the tables that design governs.** No code in `src/` inserts an assertion, evidence row, decision, outcome, project or task; only tests seed assertions by SQL. The proposal generators have no input, the review endpoints nothing to review, and context packets' structured half is empty. The live system is a flat pgvector memory table with no scope filter and no delete path, plus an idempotent event log with rollups. No capability mark.
+- Most reusable component: idempotent event ingestion with adapter-side spools that retry, quarantine malformed records and dead-letter the rest, feeding deterministic, fingerprinted rollups that supersede rather than delete.
+- Maturity impression: version 1.0.2, 215 commits since 2 March 2026, about 12,500 lines of Python and 212 tests, native Hermes and Medusa, Codex and Claude Code adapters, staged imports with rollback; the README claims MIT and the tree has no licence file.
+- Study when: you are designing review-and-reverse governance for automated memory changes and want a schema to argue with.
+- Do not copy when: you need that governance to work today — the reconciliation step that would create assertions does not exist.

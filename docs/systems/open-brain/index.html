@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A PostgreSQL and pgvector memory
+service for coding agents whose live path is a flat memory table, an
+append-only event log with deterministic rollups, and session identities
+— beside a complete assertion model with candidate-to-confirmed
+statuses, validity windows, reviewed proposals, tombstones and receipts
+that no code in the service ever populates.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Open Brain — Agent Memory Atlas">
+    <meta property="og:description" content="A PostgreSQL and pgvector
+memory service for coding agents whose live path is a flat memory table,
+an append-only event log with deterministic rollups, and session
+identities — beside a complete assertion model with
+candidate-to-confirmed statuses, validity windows, reviewed proposals,
+tombstones and receipts that no code in the service ever populates.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Open
+Brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A PostgreSQL and pgvector
+memory service for coding agents whose live path is a flat memory table,
+an append-only event log with deterministic rollups, and session
+identities — beside a complete assertion model with
+candidate-to-confirmed statuses, validity windows, reviewed proposals,
+tombstones and receipts that no code in the service ever populates.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Open Brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Open Brain",
+      "description": "A PostgreSQL and pgvector memory service for coding agents whose live path is a flat memory table, an append-only event log with deterministic rollups, and session identities \u2014 beside a complete assertion model with candidate-to-confirmed statuses, validity windows, reviewed proposals, tombstones and receipts that no code in the service ever populates.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A governance layer over empty tables</p>
+          <h1>Open Brain</h1>
+          <p class="document-deck">A PostgreSQL and pgvector memory
+service for coding agents whose live path is a flat memory table, an
+append-only event log with deterministic rollups, and session identities
+— beside a complete assertion model with candidate-to-confirmed
+statuses, validity windows, reviewed proposals, tombstones and receipts
+that no code in the service ever populates.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/benclawbot/open-brain">
+              <span>Source</span>
+              <strong>benclawbot/open-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/benclawbot/open-brain/commit/02a7e65a8064a04ad91d77ddbe9dc048d6746153" title="02a7e65a8064a04ad91d77ddbe9dc048d6746153">
+              <span>Analyzed revision</span>
+              <code>02a7e65a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/benclawbot--open-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>benclawbot--open-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Open Brain describes itself as "the user-owned memory and continuity
+layer for coding agents". Version 1.0.2, 215 commits since 2 March 2026,
+almost all by one author, about 12,500 lines of Python and 212 test
+functions in 45 files. The README badge says MIT; the repository
+contains no licence file.</p>
+<p>The design, set out in the README and in 15 SQL migrations, separates
+three things: <strong>canonical evidence</strong> (append-only events,
+sessions, imports), a <strong>knowledge model</strong> (assertions with
+statuses, projects, tasks, decisions, outcomes), and <strong>retrieval
+projections</strong> (embeddings, caches, context packets). The
+governance around the knowledge model is detailed and well
+considered:</p>
+<ul>
+<li>An <code>assertion</code> carries a status of
+<code>candidate</code>, <code>active</code>, <code>confirmed</code>,
+<code>superseded</code>, <code>contradicted</code>,
+<code>dormant</code>, <code>archived</code> or <code>deleted</code>,
+with authority, confidence, a temporal class, <code>valid_from</code>
+and <code>valid_until</code>, and evidence rows that support,
+contradict, qualify or supersede it.</li>
+<li>Lifecycle, consolidation and pruning changes arrive as
+<strong>proposals</strong> a reviewer accepts or rejects, are
+<strong>applied</strong> as execution records that can be
+<strong>reversed</strong>, and pruning writes a
+<strong>tombstone</strong> with the full snapshot that can be
+restored.</li>
+<li>Context packets read only <code>active</code> and
+<code>confirmed</code> assertions and label each item with a trust
+level.</li>
+</ul>
+<p>None of it runs. Across <code>src/</code>, the <code>INSERT</code>
+statements target <code>memory</code>, <code>event</code>,
+<code>session</code>, <code>identity</code>, <code>identity_link</code>,
+the import tables, the compaction tables, the context caches, and the
+proposal, execution and tombstone tables. Nothing inserts into
+<code>assertion</code>, <code>assertion_evidence</code>,
+<code>decision</code>, <code>outcome</code>, <code>project</code> or
+<code>task</code>, and no REST, MCP or CLI surface creates them; the
+only inserts into <code>assertion</code> are in
+<code>tests/test_context_revision_triggers.py:70</code> and
+<code>tests/test_context_feedback_scoring.py:44</code>. So every
+proposal generator finds no assertions to propose on, every review
+endpoint has nothing to review, and the structured half of a context
+packet is empty.</p>
+<p>What does run is simpler: a <code>memory</code> table searched by
+embedding or full text, an idempotent event log with identities and
+sessions, deterministic rollups of old events per scope, staged imports
+with rollback, and adapters for Hermes, Medusa, Codex and Claude
+Code.</p>
+<p>No capability mark. Each mark the design reaches for sits on the
+unwritten tables.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two layers exist in the schema; one exists in practice.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the live memory path, and the knowledge model beside it that nothing in the service writes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the live memory path, and the knowledge model beside it that nothing in the service writes
+flowchart TB
+    AG[&quot;agents: Hermes, Medusa,&lt;br/&gt;Codex, Claude Code, MCP, REST&quot;] --&gt; MEM[(&quot;memory&lt;br/&gt;content, embedding, tags, entities&quot;)]
+    AG --&gt; EV[(&quot;event&lt;br/&gt;idempotency key, identities, payload&quot;)]
+    IMP[&quot;staged imports&lt;br/&gt;with rollback&quot;] --&gt; MEM
+    EV --&gt;|&quot;older than N days, per scope&quot;| ROLL[(&quot;memory_compaction&lt;br/&gt;deterministic rollup, fingerprint&quot;)]
+    MEM --&gt; SEARCH[&quot;memory search&lt;br/&gt;vector or full text, filters&quot;]
+    ROLL --&gt; PKT[&quot;context packet&lt;br/&gt;trust labels, token budget&quot;]
+    subgraph UNWRITTEN[&quot;declared, never inserted by src/&quot;]
+      AS[(&quot;assertion&lt;br/&gt;candidate → active → confirmed&lt;br/&gt;valid_from, valid_until&quot;)]
+      PROJ[(&quot;project, task,&lt;br/&gt;decision, outcome&quot;)]
+    end
+    AS --&gt; PROP[&quot;lifecycle, consolidation,&lt;br/&gt;pruning proposals&quot;]
+    PROP --&gt; REV[&quot;review → apply → reverse,&lt;br/&gt;tombstone → restore&quot;]
+    AS -.-&gt;|&quot;status IN active, confirmed&quot;| PKT
+    PROJ -.-&gt; PKT
+
+    style UNWRITTEN fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
+<p>A live memory is present until the database is edited by hand: no
+code path deletes or updates a <code>memory</code> row except the
+attribution backfill that stamps <code>captured_by</code>
+(<code>src/db/attribution.py:192</code>). Events have
+<code>archived_at</code> and <code>deleted_at</code> columns and no
+writer of either. Event rollups are the only live supersession: a new
+rollup for the same scope and event type marks the previous one
+<code>superseded</code>.</p>
+<p>The marks the design would earn are all on the unwritten side.
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>tombstone</code> and <code>human_review</code> have schema,
+readers, reviewed executions and tests, and no producer of the rows they
+act on.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Where</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory</td>
+<td><code>src/db/queries.py</code>, <code>src/extractors/</code>,
+<code>src/embedder/</code></td>
+<td>Store with tagging and entity extraction, search, stats</td>
+</tr>
+<tr>
+<td>Continuity</td>
+<td><code>src/db/continuity_queries.py</code>,
+<code>src/db/scope_queries.py</code></td>
+<td>Events, identities, sessions</td>
+</tr>
+<tr>
+<td>Compaction</td>
+<td><code>src/compaction/engine.py</code>,
+<code>src/db/compaction_queries.py</code></td>
+<td><code>event-rollup-v1</code> summaries of old events</td>
+</tr>
+<tr>
+<td>Context</td>
+<td><code>src/context/builder.py</code>, <code>cache.py</code></td>
+<td>Trust-labelled packets, revision-keyed cache, feedback</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td><code>src/lifecycle/</code>, <code>src/pruning/</code>,
+<code>src/db/{lifecycle,consolidation,pruning}_queries.py</code></td>
+<td>Proposals, review, apply, reverse, tombstones</td>
+</tr>
+<tr>
+<td>Imports</td>
+<td><code>src/importers/</code>, <code>src/ingestion/</code>,
+<code>src/connectors/</code></td>
+<td>Hermes, Mem0, Honcho, Hindsight, Gmail Takeout, Telegram, WhatsApp,
+Claude Code logs, file watcher</td>
+</tr>
+<tr>
+<td>Interfaces</td>
+<td><code>src/main.py</code> (MCP), <code>src/api/</code> (FastAPI),
+<code>src/cli/</code>, <code>ui/dashboard.py</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Adapters</td>
+<td><code>src/openbrain_hermes_plugin/</code>,
+<code>openbrain_medusa_adapter/</code>,
+<code>openbrain_codex_adapter/</code></td>
+<td>Lifecycle bridges with local spools</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> PostgreSQL with pgvector and the
+FastAPI service, via Docker Compose or <code>install.sh</code>; an
+embedding provider for semantic search.</li>
+<li><strong>Authentication:</strong> API keys, request size and rate
+limits, explicit CORS.</li>
+<li><strong>Hand-repairable:</strong> yes, as ordinary SQL tables.</li>
+<li>A Docker-based command sandbox (<code>src/sandbox/</code>) is
+included beside the memory service.</li>
+</ul>
+<p>The screen of this checkout found no auto-running configuration, one
+build-time execution point, two unpinned surfaces, no manifests inside
+the seven-day cooldown, and <code>AGENTS.md</code> read as data. Nothing
+was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store memory</strong> — the <code>INSERT INTO memory</code>
+in <code>src/db/queries.py:57</code>, reached from MCP
+<code>memory_store</code>, <code>POST /memories</code>
+(<code>src/api/main.py:159</code>) and the CLI.</li>
+<li><strong>Search</strong> — <code>search_memories</code>
+(<code>src/db/queries.py:83</code>): embedding similarity or full text,
+with <code>source</code>, <code>tags</code> and date filters and no
+identity filter.</li>
+<li><strong>Events</strong> — <code>ingest_event</code>
+(<code>src/db/continuity_queries.py:53</code>), idempotent on
+<code>idempotency_key</code>.</li>
+<li><strong>Sessions and identities</strong> —
+<code>resolve_identity</code>, <code>open_session</code>,
+<code>close_session</code> in <code>src/db/scope_queries.py</code>.</li>
+<li><strong>Compaction</strong> — <code>compact_events</code>
+(<code>src/db/compaction_queries.py:36</code>): events older than a
+threshold for a user, workspace, session, project or task scope,
+summarised deterministically, inserted with
+<code>ON CONFLICT DO NOTHING</code> on the source fingerprint,
+superseding the previous active rollup.</li>
+<li><strong>Context packets</strong> — <code>build</code> in
+<code>src/context/builder.py</code>:
+<code>fetch_structured_context</code> (projects, tasks, decisions,
+outcomes, and assertions with
+<code>status IN ('active','confirmed')</code>,
+<code>src/db/context_queries.py:130-150</code>) plus
+<code>fetch_active_compactions</code>, each item labelled by
+<code>_trust</code> (<code>:27</code>).</li>
+<li><strong>Proposals</strong> — <code>POST /proposals/generate</code>,
+<code>/review</code>, <code>/apply</code>, and reverse or restore routes
+in <code>src/api/lifecycle.py</code>, <code>consolidation.py</code> and
+<code>pruning.py</code>, with tombstones inserted at
+<code>src/db/pruning_queries.py:123</code>.</li>
+</ul>
+<p>The searches behind the central finding:</p>
+<pre class="sh"><code>grep -rhoE &quot;INSERT INTO [a-z_]+&quot; src | sort | uniq -c
+grep -rn &quot;INSERT INTO assertion&quot; src tests</code></pre>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory</code> (<code>001_base_schema.sql:9-25</code>):
+<code>id</code>, <code>source</code>, <code>source_id</code>,
+<code>captured_by</code>, <code>content</code>,
+<code>raw_content</code>, <code>embedding vector(768)</code>,
+<code>entities</code>, <code>tags</code>, <code>tag_sources</code>,
+<code>importance</code>, <code>created_at</code>,
+<code>original_date</code>, <code>language</code>,
+<code>metadata</code>, with HNSW, GIN and full-text indexes.</p>
+<p><code>event</code>
+(<code>002_continuity_foundation.sql:81-103</code>): type, unique
+idempotency key, source system and record, user, agent and workspace
+identities, session, project and task references, causation and
+correlation ids, authority, sensitivity, retention policy, payload,
+occurred and ingested times, and unwritten <code>archived_at</code> and
+<code>deleted_at</code>.</p>
+<p><code>assertion</code> (<code>:105-131</code>) and
+<code>assertion_evidence</code> (<code>:133-146</code>) are described in
+section 1. <code>assertion_tombstone</code>
+(<code>010_assertion_pruning_tombstones.sql:24-38</code>) holds the
+pruned assertion's snapshot, previous status and a retention deadline,
+keyed by assertion and proposal — a restorable archive, not a record of
+a rejected value.</p>
+<p><strong>Scope.</strong> Events carry identities and sessions, and
+rollups are per scope, but the memory table has no user, project or
+workspace column and search applies none. <code>scope_enforced</code> is
+withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Memory search runs either a pgvector cosine query or a PostgreSQL
+full-text query, filtered by source, tags and dates, ordered by score
+and limited. Related memories, entity lookups, today's memories and
+trend reports are further reads over the same table.</p>
+<p>Context packets are the continuity surface: diversity-ordered
+warnings, next actions, decisions, tasks, assertions, projects and
+outcomes, labelled <code>user_confirmed</code>,
+<code>tool_observed</code>, <code>curated_memory</code>,
+<code>inferred</code>, <code>stale</code> or <code>contradicted</code>,
+packed under a token estimate and cached by a revision number that
+database triggers bump when the underlying rows change. Feedback on a
+packet is recorded per item in
+<code>context_feedback_application</code>, linked to the cited
+assertion; nothing in <code>src/</code> increments the
+<code>useful_count</code> and <code>harmful_count</code> the lifecycle
+policy reads. With no assertions, projects or tasks in the database, a
+packet for a project or task carries only event rollups for that scope —
+and events can reference a project or task only by a foreign key to rows
+nothing creates.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>memory_store</code> extracts tags and entities and embeds
+synchronously; the memory is searchable when the call returns. Events
+are written idempotently, so adapter replays from a local spool after an
+outage do not duplicate. The Hermes provider covers recall, remember,
+prefetch, turn sync, session switch, compression, delegation and session
+end; the Medusa and Codex adapters bridge their hosts' lifecycles.</p>
+<p>Imports are staged, resumable and reversible per run
+(<code>003_import_rollback.sql</code>), and the README states the policy
+that imported records "retain authority and provenance until
+reconciliation classifies them". The classification into assertions is
+the step that is not implemented.</p>
+<p>The maintenance orchestrator runs compaction and the three proposal
+generators under bounds; only compaction has input.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP tools for search, store, related memories, entities, today's
+memories and stats; a REST API with OpenAPI docs for memories,
+continuity, context, imports, compaction, maintenance and proposals; a
+CLI; a Streamlit dashboard with a settings page; and a provider SDK with
+a conformance suite (<code>test_provider_conformance.py</code>) for
+additional hosts.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The ingestion discipline is real.</strong> Idempotency keys,
+spools with retry, quarantine and dead-letter files, staged imports with
+rollback, retry-aware database access and checksum-protected
+migrations.</p>
+<p><strong>The trust model is not.</strong> The trust labels that do
+appear in a packet come from event rollups and constant labels in the
+builder; the status-based distinctions — candidate versus confirmed,
+contradicted, superseded — cannot apply to anything.</p>
+<p><strong>Every automated change is designed to be reviewed and
+reversed</strong>, and that design is the part to study: a proposal
+carries a snapshot and a fingerprint so a stale proposal cannot apply,
+an execution records the previous status so it can be reversed, and a
+tombstone keeps enough to restore. It has been built ahead of the data
+it governs.</p>
+<p><strong>Injection.</strong> Imported chat exports and logs are stored
+as memories and returned by search; nothing marks them as
+lower-authority text in the live path.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>212 test functions in 45 files, covering adapters and the provider
+contract, importers, compaction, context packet models, caching,
+diversity and revision triggers, and the assertion lifecycle,
+consolidation and pruning machinery — the last group seeding
+<code>assertion</code> rows directly in SQL, which is how those tests
+can pass while production never creates one. None was run for this
+report.</p>
+<p>No test asserts that particular material is excluded from a memory
+search or a context packet with a positive control beside it; the
+<code>not in</code> assertions in the suite check configuration secrets,
+SQL text and payload keys. <code>negative_eval</code> is withheld. No
+benchmark is committed and no paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Idempotency keys on every event</strong> and a local spool
+with quarantine and dead-letter handling for adapters.</li>
+<li><strong>Deterministic rollups with a source fingerprint</strong>
+that supersede rather than delete.</li>
+<li><strong>The review, apply and reverse shape for automated
+changes</strong> — snapshot, fingerprint to detect staleness, previous
+state kept for reversal, a restorable tombstone.</li>
+<li><strong>Staged, reversible imports</strong> that keep
+provenance.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Governance before the data it governs.</strong> A status
+machine, review queues and receipts over a table with no writer pass
+their tests and do nothing. Write the producer first, or test from the
+entry point a user reaches.</li>
+<li><strong>Tests that seed the table production never
+fills.</strong></li>
+<li><strong>A licence badge without a licence file.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>As it stands, Open Brain is a pgvector memory store with good event
+ingestion and host adapters, suitable for a single user who wants
+coding-agent memories and session continuity in their own Postgres. The
+assertion model is a design worth reading and a roadmap, not a
+capability; anyone adopting it for its governance should expect to write
+the reconciliation step that turns events and imports into
+assertions.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Where will assertions come from?</strong> The README's
+reconciliation step names the classification; no code performs it.</li>
+<li><strong>Are projects and tasks meant to be created by
+adapters</strong> through an endpoint not yet written?</li>
+<li><strong>What licence governs the code</strong> in the absence of a
+licence file?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/db/migrations/001_base_schema.sql</code> through
+<code>015_embedding_dim_change.sql</code></li>
+<li><code>src/db/queries.py</code>, <code>continuity_queries.py</code>,
+<code>scope_queries.py</code>, <code>compaction_queries.py</code>,
+<code>context_queries.py</code></li>
+<li><code>src/db/lifecycle_queries.py</code>,
+<code>consolidation_queries.py</code>,
+<code>pruning_queries.py</code></li>
+<li><code>src/context/builder.py</code>,
+<code>src/compaction/engine.py</code></li>
+<li><code>src/api/main.py</code>, <code>lifecycle.py</code>,
+<code>consolidation.py</code>, <code>pruning.py</code>,
+<code>context.py</code>, <code>continuity.py</code></li>
+<li><code>src/main.py</code> — MCP server</li>
+<li><code>src/openbrain_hermes_plugin/</code>,
+<code>src/openbrain_medusa_adapter/</code>,
+<code>src/openbrain_codex_adapter/</code></li>
+<li><code>tests/test_context_revision_triggers.py</code>,
+<code>test_context_feedback_scoring.py</code>,
+<code>test_assertion_lifecycle.py</code>,
+<code>test_assertion_pruning_execution.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/benclawbot/open-brain/commit/02a7e65a8064a04ad91d77ddbe9dc048d6746153"><code class="commit-id" title="02a7e65a8064a04ad91d77ddbe9dc048d6746153">02a7e65a…</code></a>
+— first reading, at a commit dated 7 September 2026. Screened before
+opening: no auto-running configuration, one build-time execution point,
+two unpinned surfaces, no manifests inside the seven-day cooldown, and
+<code>AGENTS.md</code> read as data. Nothing was installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
