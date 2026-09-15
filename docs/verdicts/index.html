@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 478 reports.</strong></p>
+<p><strong>This page covers all 479 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17251,6 +17251,52 @@ re-extraction.</li>
 <li>Do not copy when: you need one uniform scope rule across every read
 surface, or a mutation audit that covers library writes rather than host
 writeback alone.</li>
+</ul>
+<h3 id="memorix"><a
+href="../systems/memorix/"><code>memorix</code></a></h3>
+<ul>
+<li>Best idea: <strong>the visibility check lives at every seam that
+returns a record, and promotion lives off the agent's tool
+surface.</strong> <code>canReadObservation</code> is called from the MCP
+handlers, the Orama index, the session loader, the compaction engine and
+the SDK rather than at one gate, and it is fail-closed — a personal or
+team record needs a bound project and an agent id before it is visible
+at all, team needs an active coordination membership, and the catch
+around the membership lookup says so: <em>"A missing coordination store
+must never grant team visibility."</em> Long-term memories climb
+candidate → qualified → approved through CLI-only transitions that run
+in a transaction, refuse a record with no evidence rows, and store the
+reason a person typed. Four marks: <code>scope_enforced</code>,
+<code>trust_state</code>, <code>human_review</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the transfer tool's import trusts its payload
+when the export beside it does not.</strong> <code>exportAsJson</code>
+takes a reader and returns only readable records;
+<code>importFromJson</code> inserts
+<code>{ ...obs, id: nextId++ }</code> with no visibility validation, no
+<code>projectId</code> re-stamping, no <code>createdByAgentId</code>
+check and no admission gate. Because an unrecognised visibility resolves
+to <code>project</code> and a missing admission state counts as
+deliverable, a crafted payload writes project-wide,
+automatically-delivered observations attributed to any project and any
+agent — through an MCP tool the agent already holds.</li>
+<li>Most reusable component: consolidation that filters to project
+visibility before clustering, with the reason written into the file —
+personal notes and targeted handoffs <em>"must remain individually
+inspectable and are never merged by a background job or another agent's
+manual cleanup"</em> — which is the seam where scope usually dies
+quietly.</li>
+<li>Maturity impression: Apache-2.0, version 1.9.3, 833 commits since 14
+February 2026, 292,812 lines of TypeScript against 135,576 lines across
+620 test files, SQLite plus an Orama index under a project data
+directory, an MCP server aimed at a long list of agent hosts, hooks,
+rules, a CLI, a TUI and a dashboard.</li>
+<li>Study when: you want local-first shared memory across several agent
+hosts with real per-agent and per-team scoping and a curated tier a
+person controls.</li>
+<li>Do not copy when: untrusted input can reach the transfer tool, or
+you need an append-only mutation record covering the observation write
+paths rather than the curated tier alone.</li>
 </ul>
         </article>
       </div>

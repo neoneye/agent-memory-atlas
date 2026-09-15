@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 478 reports.**
+**This page covers all 479 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4174,3 +4174,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.8.0, 1,131 commits since 23 March 2026, 163,939 lines of TypeScript against 392,190 lines across 807 test files, SQLite by default under Bun with Postgres and injected adapters, managed hooks for Codex and Claude Code, a read-only MCP server with opt-in writeback, and a local Inspector web app.
 - Study when: you are adding memory to an installed coding agent and want the write path gated on a person, with rejections that survive re-extraction.
 - Do not copy when: you need one uniform scope rule across every read surface, or a mutation audit that covers library writes rather than host writeback alone.
+
+### [`memorix`](../systems/memorix/)
+- Best idea: **the visibility check lives at every seam that returns a record, and promotion lives off the agent's tool surface.** `canReadObservation` is called from the MCP handlers, the Orama index, the session loader, the compaction engine and the SDK rather than at one gate, and it is fail-closed — a personal or team record needs a bound project and an agent id before it is visible at all, team needs an active coordination membership, and the catch around the membership lookup says so: *"A missing coordination store must never grant team visibility."* Long-term memories climb candidate → qualified → approved through CLI-only transitions that run in a transaction, refuse a record with no evidence rows, and store the reason a person typed. Four marks: `scope_enforced`, `trust_state`, `human_review`, `negative_eval`.
+- Biggest risk: **the transfer tool's import trusts its payload when the export beside it does not.** `exportAsJson` takes a reader and returns only readable records; `importFromJson` inserts `{ ...obs, id: nextId++ }` with no visibility validation, no `projectId` re-stamping, no `createdByAgentId` check and no admission gate. Because an unrecognised visibility resolves to `project` and a missing admission state counts as deliverable, a crafted payload writes project-wide, automatically-delivered observations attributed to any project and any agent — through an MCP tool the agent already holds.
+- Most reusable component: consolidation that filters to project visibility before clustering, with the reason written into the file — personal notes and targeted handoffs *"must remain individually inspectable and are never merged by a background job or another agent's manual cleanup"* — which is the seam where scope usually dies quietly.
+- Maturity impression: Apache-2.0, version 1.9.3, 833 commits since 14 February 2026, 292,812 lines of TypeScript against 135,576 lines across 620 test files, SQLite plus an Orama index under a project data directory, an MCP server aimed at a long list of agent hosts, hooks, rules, a CLI, a TUI and a dashboard.
+- Study when: you want local-first shared memory across several agent hosts with real per-agent and per-team scoping and a curated tier a person controls.
+- Do not copy when: untrusted input can reach the transfer tool, or you need an append-only mutation record covering the observation write paths rather than the curated tier alone.

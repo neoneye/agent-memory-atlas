@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 417 of 478 screened at the report's current pin.**
+**Progress: 418 of 479 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 171 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 231 |
-| Repositories with build-time execution (`EXEC`) | 303 |
+| Repositories with an auto-run surface (`RUNS`) | 173 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 233 |
+| Repositories with build-time execution (`EXEC`) | 305 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -119,6 +119,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memoir`](../../content/systems/memoir.md) | `.claude-plugin/` |
 | [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
 | [`memora`](../../content/systems/memora.md) | `.claude-plugin/` |
+| [`memorix`](../../content/systems/memorix.md) | `.gitmodules`, `.opencode/`, `server.json` |
 | [`memory-engine`](../../content/systems/memory-engine.md) | `.claude-plugin/` |
 | [`memory-project`](../../content/systems/memory-project.md) | `hooks/` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
@@ -129,6 +130,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
 | [`mnemosyne`](../../content/systems/mnemosyne.md) | `.githooks/` |
+| [`mnemoverse-mcp-memory-server`](../../content/systems/mnemoverse-mcp-memory-server.md) | `server.json` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |

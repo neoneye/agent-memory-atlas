@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first shared memory layer
+for coding agents whose observations carry a personal, team or project
+visibility enforced fail-closed at every read seam, and whose long-term
+memories climb a candidate-qualified-approved ladder a person drives —
+while the MCP transfer tool's import inserts arbitrary records verbatim,
+with no visibility validation, no project re-stamping and no reader
+check.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memorix — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first shared memory
+layer for coding agents whose observations carry a personal, team or
+project visibility enforced fail-closed at every read seam, and whose
+long-term memories climb a candidate-qualified-approved ladder a person
+drives — while the MCP transfer tool's import inserts arbitrary records
+verbatim, with no visibility validation, no project re-stamping and no
+reader check.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memorix — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first shared
+memory layer for coding agents whose observations carry a personal, team
+or project visibility enforced fail-closed at every read seam, and whose
+long-term memories climb a candidate-qualified-approved ladder a person
+drives — while the MCP transfer tool's import inserts arbitrary records
+verbatim, with no visibility validation, no project re-stamping and no
+reader check.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memorix — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memorix",
+      "description": "A local-first shared memory layer for coding agents whose observations carry a personal, team or project visibility enforced fail-closed at every read seam, and whose long-term memories climb a candidate-qualified-approved ladder a person drives \u2014 while the MCP transfer tool's import inserts arbitrary records verbatim, with no visibility validation, no project re-stamping and no reader check.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Every read fenced, one write unchecked</p>
+          <h1>Memorix</h1>
+          <p class="document-deck">A local-first shared memory layer for
+coding agents whose observations carry a personal, team or project
+visibility enforced fail-closed at every read seam, and whose long-term
+memories climb a candidate-qualified-approved ladder a person drives —
+while the MCP transfer tool's import inserts arbitrary records verbatim,
+with no visibility validation, no project re-stamping and no reader
+check.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/AVIDS2/memorix">
+              <span>Source</span>
+              <strong>AVIDS2/memorix</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/AVIDS2/memorix/commit/7071a49c178f3ea7aa3eb811fa802da4c436f28e" title="7071a49c178f3ea7aa3eb811fa802da4c436f28e">
+              <span>Analyzed revision</span>
+              <code>7071a49c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AVIDS2--memorix" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>AVIDS2--memorix</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memorix is a local-first shared memory layer for coding agents —
+Apache-2.0, version 1.9.3, 833 commits since 14 February 2026, 292,812
+lines of TypeScript against 135,576 lines across 620 test files. It
+targets a long list of hosts through MCP and its own hooks, and keeps
+everything on the machine.</p>
+<p>Its memory has two tiers, and both are more carefully governed than
+the norm.</p>
+<p>An <strong>observation</strong> carries a visibility —
+<code>personal</code>, <code>team</code> or <code>project</code> — and
+<code>canReadObservation</code> is consulted at every seam that returns
+one: the MCP server's handlers, the Orama store's search and hydration
+paths, the session loader, and the compaction engine. The policy is
+fail-closed where it matters: a personal or team record needs a bound
+project <em>and</em> an agent id before it is visible at all, team needs
+<code>isTeamMember === true</code>, and the server derives membership
+from the coordination store inside a <code>try</code> whose
+<code>catch</code> carries the rule in a comment — "A missing
+coordination store must never grant team visibility."</p>
+<p>A <strong>long-term memory</strong> climbs a ladder. It is created as
+a <code>candidate</code>, and <code>selectLongTermMemoriesForTask</code>
+will not return it. A person runs <code>memorix memory qualify</code>
+and then <code>approve</code>, each with a reason; the transition runs
+in a transaction, refuses to fire unless the record is in the expected
+state, refuses to advance a record with no evidence rows, and appends an
+event carrying <code>fromState</code>, <code>toState</code> and the
+reason. Archived and superseded records drop out of delivery.</p>
+<p>The discipline extends to the background work, which is where systems
+in this corpus usually leak. Consolidation filters to project visibility
+before clustering, with the reason written down: personal notes and
+targeted handoffs "must remain individually inspectable and are never
+merged by a background job or another agent's manual cleanup."</p>
+<p>Against all of that stands one unchecked write. The
+<code>memorix</code> transfer MCP tool has two actions. Export calls
+<code>exportAsJson(projectDir, project.id, getObservationReader())</code>,
+so it returns only what the caller may read. Import takes a JSON string,
+parses it, and hands it to <code>importFromJson</code>, which loops over
+<code>data.observations</code> and inserts
+<code>{ ...obs, id: nextId++ }</code>. It does not validate
+<code>visibility</code>, does not re-stamp <code>projectId</code>, does
+not check <code>createdByAgentId</code> against the caller, does not
+consult a reader, and does not apply the admission gate. Since an
+unrecognised visibility resolves to <code>project</code> and a missing
+<code>admissionState</code> counts as deliverable, a crafted payload
+writes project-wide, automatically-delivered memory attributed to any
+project and any agent — through the same tool surface the agent already
+holds.</p>
+<p>Four marks: <code>scope_enforced</code>, <code>trust_state</code>,
+<code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>observation</strong> is what an agent noticed: an entity,
+a type, a body, and the provenance around it. Its
+<strong>visibility</strong> decides who sees it; its
+<strong>admissionState</strong> decides whether it is delivered without
+being asked for.</p>
+<p>A <strong>reader</strong> is the caller's identity: a bound project
+id, an agent id, and whether that agent is an active team member. Every
+read takes one. A reader of <code>undefined</code> returns true from the
+policy and is documented as reserved for "trusted internal maintenance,
+not MCP delivery".</p>
+<p>A <strong>long-term memory</strong> is a curated, durable lesson —
+episodic, semantic or procedural — scoped to a project, a user or a
+team, marked <code>project-bound</code> or <code>portable</code>, and
+backed by typed <strong>evidence</strong> rows whose relation is
+<code>supports</code>, <code>verifies</code>, <code>derives</code> or
+<code>user-confirmed</code>.</p>
+<p>A <strong>lifecycle</strong> is the ladder: <code>candidate</code> →
+<code>qualified</code> → <code>approved</code>, with
+<code>archived</code> and <code>superseded</code> as exits. Only
+<code>qualified</code> and <code>approved</code> are delivered.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every read is fenced by the visibility policy and the lifecycle ladder; the transfer tool's import inserts records verbatim, skipping both</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every read is fenced by the visibility policy and the lifecycle ladder; the transfer tool&#39;s import inserts records verbatim, skipping both
+flowchart TB
+    AGENT[&quot;coding agent over MCP&quot;] --&gt; CAP[&quot;capture observation&quot;]
+    CAP --&gt; OBS[(&quot;observation&lt;br/&gt;projectId, visibility,&lt;br/&gt;createdByAgentId,&lt;br/&gt;admissionState&quot;)]
+    MANUAL[&quot;memorix memory create&quot;] --&gt; CAND[(&quot;long-term memory&lt;br/&gt;state = candidate&lt;br/&gt;+ evidence rows&quot;)]
+    CAND --&gt; SEL1{&quot;selectLongTermMemoriesForTask&quot;}
+    SEL1 --&gt;|&quot;candidate&quot;| NONE[&quot;returns nothing&quot;]
+    PERSON[&quot;person runs qualify / approve&lt;br/&gt;with a reason&quot;] --&gt; TRANS{&quot;transitionMemory&lt;br/&gt;in a transaction&quot;}
+    TRANS --&gt;|&quot;wrong current state&quot;| ERR1[&quot;throws&quot;]
+    TRANS --&gt;|&quot;no evidence rows&quot;| ERR2[&quot;throws — cannot advance&quot;]
+    TRANS --&gt;|&quot;ok&quot;| ADV[(&quot;state = qualified / approved&lt;br/&gt;event: fromState, toState, reason&quot;)]
+    ADV --&gt; SEL2[&quot;delivered to a task&quot;]
+    OBS --&gt; READ{&quot;canReadObservation(record, reader)&quot;}
+    READ --&gt;|&quot;project&quot;| P[&quot;visible if same project&lt;br/&gt;or an explicit global read&quot;]
+    READ --&gt;|&quot;team&quot;| T[&quot;needs bound project + agentId&lt;br/&gt;+ isTeamMember === true&quot;]
+    READ --&gt;|&quot;personal&quot;| PR[&quot;needs creator or&lt;br/&gt;sharedWithAgentIds&quot;]
+    READ --&gt; SEAMS[&quot;applied at: server handlers,&lt;br/&gt;orama-store, session loader,&lt;br/&gt;compact engine, sdk&quot;]
+    CONS[&quot;consolidation / dedup&quot;] --&gt; ONLYP[&quot;filters to visibility === &#39;project&#39;&lt;br/&gt;personal and handoffs never merged&quot;]
+    TOOL[&quot;memorix transfer tool&quot;] --&gt; EXP[&quot;action: export&lt;br/&gt;reader-filtered&quot;]
+    TOOL --&gt; IMP[&quot;action: import&lt;br/&gt;JSON string from the caller&quot;]
+    IMP --&gt; INS[&quot;importFromJson:&lt;br/&gt;insert { ...obs, id: nextId++ }&quot;]
+    INS -.-&gt;|&quot;no visibility validation&lt;br/&gt;no projectId re-stamp&lt;br/&gt;no reader, no admission gate&quot;| OBS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory</code></td>
+<td>The model: <code>visibility.ts</code>, <code>admission.ts</code>,
+<code>long-term*.ts</code>, <code>consolidation.ts</code>,
+<code>deduplication.ts</code>, <code>retention.ts</code>,
+<code>freshness.ts</code>, <code>secret-filter.ts</code>,
+<code>attribution-guard.ts</code>,
+<code>disclosure-policy.ts</code></td>
+</tr>
+<tr>
+<td><code>src/store</code></td>
+<td>The Orama index and the observation store, both applying the
+visibility filter</td>
+</tr>
+<tr>
+<td><code>src/server.ts</code></td>
+<td>The MCP server: reader construction, every tool handler, the
+transfer tool</td>
+</tr>
+<tr>
+<td><code>src/compact</code></td>
+<td>Compact search, timeline and detail — the bounded retrieval surface
+for one turn</td>
+</tr>
+<tr>
+<td><code>src/cli</code></td>
+<td>The CLI, including the <code>memory</code> command where
+qualification and approval live</td>
+</tr>
+<tr>
+<td><code>src/codegraph</code>, <code>src/rerank</code>,
+<code>src/embedding</code>, <code>src/knowledge</code></td>
+<td>Retrieval machinery and the knowledge-claim layer</td>
+</tr>
+<tr>
+<td><code>src/audit</code></td>
+<td>Tracks files Memorix wrote into a project (hooks, rules) for cleanup
+and rollback — not a memory mutation log</td>
+</tr>
+<tr>
+<td><code>packages/</code></td>
+<td><code>agent-core</code>, <code>ai</code>, <code>memcode</code>,
+<code>tui</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/memory/visibility.ts:42-54</code> —
+<code>canReadObservation</code>, the whole policy.</li>
+<li><code>src/server.ts:621-637</code> —
+<code>getObservationReader</code>, and the fail-closed catch.</li>
+<li><code>src/memory/long-term.ts:394-425</code> —
+<code>transitionMemory</code>.</li>
+<li><code>src/memory/admission.ts:15-29</code> — the delivery gate and
+its legacy default.</li>
+<li><code>src/memory/consolidation.ts:151-157</code> — why personal
+records are never merged.</li>
+<li><code>src/memory/export-import.ts:157-212</code> —
+<code>importFromJson</code>.</li>
+<li><code>src/server.ts:4268-4281</code> — the transfer tool's import
+branch.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Observations carry provenance and policy fields side by side:
+<code>projectId</code>, <code>visibility</code>,
+<code>createdByAgentId</code>, <code>sharedWithAgentIds</code>,
+<code>admissionState</code>, <code>valueCategory</code>,
+<code>topicKey</code>. The types that count as durable automatic
+captures are enumerated — <code>decision</code>, <code>gotcha</code>,
+<code>problem-solution</code>, <code>trade-off</code>,
+<code>why-it-exists</code> — which is a narrower and more opinionated
+set than most.</p>
+<p>Long-term memories are deliberately separate, and the header says so:
+these contracts are "intentionally separate from Observation provenance
+and Knowledge Claim truth contracts." A long-term memory has a kind, a
+scope, a state, a portability, <code>qualifiedAt</code> /
+<code>approvedAt</code> / <code>archivedAt</code> /
+<code>lastValidatedAt</code>, and evidence rows typed by both source
+kind and relation.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The compact API is the normal path for one coding turn, with an
+explicit retrieval boundary that keeps accidental search-and-detail
+loops cheap and an escape hatch when a caller genuinely needs history.
+Every one of those calls passes a reader.</p>
+<p><code>selectLongTermMemoriesForTask</code> filters on scope,
+lifecycle and portability before scoring, then ranks by similarity with
+a bonus for <code>approved</code> and a freshness term derived from
+<code>lastValidatedAt</code> or the approval date. A project-bound user
+memory stays in its project; an explicitly portable one crosses.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Observation capture runs through the secret filter and the
+attribution guard. Long-term creation produces a candidate and nothing
+else; the header on the creation helper says it plainly — "Qualification
+and approval are deliberate later transitions."</p>
+<p>Import is the exception, and it is the one write that skips every
+check the rest of the file applies. Its only guard is a dedup on
+<code>topicKey</code> scoped by the <code>projectId</code> <em>in the
+payload</em>, which the payload also controls.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server aimed at a long list of hosts, plus hooks, rules, a TUI
+and a dashboard. Agents get the compact retrieval surface, capture tools
+and the transfer tool. Qualification and approval are deliberately not
+MCP tools — they are CLI commands, which is what makes the human-review
+mark real rather than nominal.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Import is the hole in an otherwise careful policy.</strong>
+<code>exportAsJson</code> takes a reader and returns only readable
+records. <code>importFromJson</code> takes a parsed object and inserts
+each observation with a fresh id and everything else copied. Three
+defaults compound it. <code>resolveObservationVisibility</code> maps any
+value that is not <code>personal</code>, <code>team</code> or
+<code>project</code> to <code>project</code> — a deliberate upgrade
+choice, since "[p]re-control-plane records were intentionally
+project-shared", but it means an absent or misspelled visibility becomes
+project-wide. <code>isEligibleForAutomaticDelivery</code> treats an
+absent <code>admissionState</code> as deliverable, for the same
+compatibility reason. And nothing re-stamps <code>projectId</code> to
+the importing project. The result is that the transfer tool can write
+project-visible, automatically-delivered observations attributed to any
+project and any agent id — and it is an MCP tool, so the agent holds
+it.</p>
+<p>Two smaller notes. An explicit global read drops
+<code>projectId</code> from the reader, and
+<code>canReadObservation</code> then allows project-visible records from
+other projects; the comment states the intent and the narrow scopes stay
+fenced, so this is a documented widening rather than a slip. And the
+module called <code>audit</code> records which files Memorix wrote into
+a project so they can be cleaned up or rolled back; it is not a mutation
+log for memory, and the only per-record mutation history is the
+long-term tier's transition events. <code>audit_log</code> is therefore
+withheld: no append-only record covers the observation write paths.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>620 test files. <code>tests/memory/long-term.test.ts</code> is the
+one to read first: its eight cases are each named for a property rather
+than a function, and they pair a must-not with a positive control in the
+same body — nothing selected before qualification and an exact match
+after, nothing selected without team membership and the record returned
+with it, a portable user fact crossing projects while a project-bound
+one stays home, and a portable candidate derived from project evidence
+rejected outright.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the visibility check at every seam that returns a
+record</strong>, not at one gate. Memorix calls the same predicate from
+the server, the index, the session loader, the compaction engine and the
+SDK, which is why adding a retrieval path does not quietly add a
+bypass.</li>
+<li><strong>Refuse to advance a memory that has no evidence.</strong>
+The transition throws rather than promoting an unsupported record, and
+the reason a person typed is stored on the event.</li>
+<li><strong>Exclude personal and handoff records from background
+merging</strong>, and write down why. Consolidation is where privacy
+scopes usually die.</li>
+<li><strong>Keep promotion off the agent's tool surface.</strong>
+Qualification and approval are CLI-only, so the thing being reviewed
+cannot approve itself.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An import that trusts its payload when the export beside it
+does not.</strong> If every read is fenced and one write is not, the
+write is the policy.</li>
+<li><strong>Compatibility defaults that fail open on a field that
+decides visibility.</strong> Defaulting an unknown visibility to
+project-wide is defensible for rows written before the field existed;
+applying the same default to rows arriving from outside is not the same
+decision.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want local-first shared memory across several
+agent hosts with real per-agent and per-team scoping, and a curated tier
+a person controls. Be deliberate about who can call the transfer
+tool.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>importFromJson</code> re-stamp <code>projectId</code>,
+reject unknown visibility values, and drop <code>createdByAgentId</code>
+it cannot attribute to the caller? All three are one-line changes
+against the helpers already in the file.</li>
+<li>Should the import action be a CLI-only surface, like qualification,
+rather than an MCP tool?</li>
+<li>Does anything call the observation read path with
+<code>reader: undefined</code> outside maintenance? The bypass is
+documented; a type that made it unrepresentable on MCP paths would
+retire the question.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory/visibility.ts</code></td>
+<td>The read policy and its fail-closed reasoning</td>
+</tr>
+<tr>
+<td><code>src/memory/admission.ts</code></td>
+<td>The delivery gate and the legacy default</td>
+</tr>
+<tr>
+<td><code>src/memory/long-term-types.ts</code></td>
+<td>States, scopes, portability, evidence kinds</td>
+</tr>
+<tr>
+<td><code>src/memory/long-term.ts</code></td>
+<td>The transition machinery and its refusals</td>
+</tr>
+<tr>
+<td><code>src/memory/consolidation.ts</code></td>
+<td>Why personal records are never merged</td>
+</tr>
+<tr>
+<td><code>src/memory/export-import.ts</code></td>
+<td>The unchecked import</td>
+</tr>
+<tr>
+<td><code>src/server.ts</code></td>
+<td>Reader construction and the transfer tool</td>
+</tr>
+<tr>
+<td><code>src/cli/commands/memory.ts</code></td>
+<td>Where a person qualifies and approves</td>
+</tr>
+<tr>
+<td><code>tests/memory/long-term.test.ts</code></td>
+<td>Eight property-named tests worth copying</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/AVIDS2/memorix/commit/7071a49c178f3ea7aa3eb811fa802da4c436f28e"><code class="commit-id" title="7071a49c178f3ea7aa3eb811fa802da4c436f28e">7071a49c…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening, from a shallow clone: thirty-five files, three auto-run
+surfaces (<code>.gitmodules</code>, an <code>.opencode/</code> directory
+and an MCP server manifest declaring a start command), five build-time
+execution points, three unpinned surfaces, four dependency files inside
+the cooldown, and <code>CLAUDE.md</code> and <code>GEMINI.md</code> read
+as data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
