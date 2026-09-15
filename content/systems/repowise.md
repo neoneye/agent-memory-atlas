@@ -1,19 +1,21 @@
 ---
 title: "repowise"
 eyebrow: "A gate that drops the sentence it cannot quote"
-description: "A codebase index whose decision records are refused unless a verbatim span of the source supports them, published with a sealed benchmark split and the rows it loses — and a scope boundary that lives in which database you opened rather than in the query."
+description: "A codebase index whose decision records are refused unless a verbatim span of the source supports them, governed only once a recorded acceptance says so, published with a sealed benchmark split and the rows it loses — and a repository boundary that is still mostly which database you opened."
 root: ../..
 page_kind: system
 source_name: "repowise-dev/repowise"
 source_url: https://github.com/repowise-dev/repowise
 archive_name: "repowise-dev--repowise"
-revision: e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
-revision_url: https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3
-analyzed_at: 2026-08-21
-capabilities: "trust_state, audit_log, negative_eval"
+revision: fbfe6dec2a1c529573b0b4958ecf0777cd130081
+revision_url: https://github.com/repowise-dev/repowise/commit/fbfe6dec2a1c529573b0b4958ecf0777cd130081
+analyzed_at: 2026-09-15
+capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
+  tombstone: "the decision store — a dismissed decision keeps its row so re-extraction of the same decision cannot propose it again | packages/core/src/repowise/core/persistence/crud/decisions.py:63-70 (`_PROTECTED_STATUSES`), :86-95 (`_merge_status`), :98 and :121 (identity) | a decision's identity is `(repository_id, title, source, evidence_file)`, which is both the dedupe query and, since #2071, the derived primary key. `dismissed` is in `_PROTECTED_STATUSES`, and `_merge_status` keeps a protected stored status whenever an incoming extraction says `proposed`, under the comment that `dismissed is terminal: the row is kept purely as a tombstone so the same content never re-proposes`. Listings hide dismissed records unless asked. A reworded title is a different identity and is not blocked | tests/unit/persistence/test_decision_sticky_status.py:56 (`test_dismissed_decision_survives_reindex_untouched`), :132 (`test_list_decisions_hides_dismissed_by_default`)"
   trust_state: "the decision record — a grounding verdict distinct from both status and confidence | packages/core/src/repowise/core/analysis/decisions/gate.py | `apply_substring_gate` clears any `decision`/`rationale`/`source_quote` that does not substring- or token-match the verbatim `source_text` its producer recorded, rejects a candidate whose every produced field is ungrounded, and stamps `verification` with the strongest surviving verdict of exact, fuzzy or unverified; `crud/decisions.py:490` aggregates it across evidence rows and the MCP answer path reads it | tests/unit/analysis/test_decision_provenance.py"
-  audit_log: "the generated wiki page store — an append-only archive of every regeneration | packages/core/src/repowise/core/persistence/crud/pages.py | a `PageVersion` row is written before a page is overwritten, carrying the superseded content, its `source_hash`, the model and provider that produced it, its token counts and its confidence, so a page's history is the sequence of what each model said and what it cost | tests/unit/persistence/test_page_tree_sync.py"
+  audit_log: "the generated wiki page store — an append-only archive of every regeneration | packages/core/src/repowise/core/persistence/crud/pages.py | a `PageVersion` row is written before a page is overwritten, carrying the superseded content, its `source_hash`, the model and provider that produced it, its token counts and its confidence, so a page's history is the sequence of what each model said and what it cost. Decision authority has its own append-only record: `decision_acceptances` gains a row for every accept, reaffirm, supersede, dismiss, return-to-review and merge, with a per-decision `seq`, and nothing edits one (packages/core/src/repowise/core/persistence/models.py:1105) | tests/unit/persistence/test_page_tree_sync.py"
+  human_review: "decision acceptance — an extracted decision governs nothing until a recorded acceptance admits it | packages/core/src/repowise/core/persistence/crud/authority.py:435 (`record_acceptance`), :142 and :180 (authority reads), packages/core/src/repowise/core/persistence/models.py:1105, packages/cli/src/repowise/cli/commands/decision_cmd.py:772 and :837, packages/server/src/repowise/server/routers/decisions.py | extraction writes `proposed` only; `repowise decision confirm` and `dismiss`, and the web dashboard's review lanes with an Accept that disables itself when the contract would refuse, all go through `record_acceptance`, the only writer of the append-only `decision_acceptances` table, whose CHECK constraints require a reason, a scope, an evidence reference and an accepter or a git-tracked artifact. Governance reads — the why lanes, alignment, overview, risk directives and the answer prompt — join the acceptance table, so a candidate cannot govern. The accepter is self-declared: the web path records `web`, the CLI the git identity or `--as`, and the commands are drivable by an agent | tests/unit/server/test_decisions_lanes.py:73 (`test_an_active_status_without_an_acceptance_is_a_candidate`), :123, :148"
   negative_eval: "the index admission floor — committed cases that a page must not receive a vector | packages/core/src/repowise/core/persistence/information_floor.py | `meets_information_floor` refuses a vector to a page whose substantive text is below a threshold, on the argument that search fetches a fixed number of rows before it filters and a page restating its filename spends a slot a useful page could have had; the page is still kept as a link target | tests/unit/persistence/test_information_floor.py, tests/unit/persistence/test_embed_recipe_information_floor.py, tests/unit/generation/test_generation_information_floor.py"
 stack_storage: "sqlite, postgres, lancedb"
 stack_retrieval: "lexical, vector, graph"
@@ -23,11 +25,11 @@ matrix:
   storage: "SQLAlchemy async over SQLite by default at `<repo>/.repowise/wiki.db`, or PostgreSQL; FTS5 or a Postgres GIN index for lexical, and LanceDB, pgvector or an in-memory store for dense"
   retrieval: "Lexical and dense over generated pages, fused and neighbor-reranked, with a graph walk for structural questions; the answer path grades its own output twice, as `confidence` and as `retrieval_quality`"
   write: "Batch, through an indexing pipeline with a full and an incremental mode; decision candidates from inline markers, git archaeology, README mining, session transcripts and an LLM docs harvest all pass the same grounding gate before persistence"
-  update_delete: "Re-indexing overwrites a page and archives the prior version; a decision is superseded by pointer (`superseded_by`, status `deprecated` or `superseded`) and carries a `staleness_score` recomputed against the git history of the files it governs. No tombstone — nothing blocks a superseded decision from being re-extracted"
-  scoping: "Per store, not per query. The default is one SQLite file inside the repository; `FullTextSearch.search` takes no repository argument and the Postgres statement carries no repository predicate, so the boundary is which engine the router selected"
+  update_delete: "Re-indexing overwrites a page and archives the prior version; a decision is superseded by pointer or dismissed, and a dismissed decision keeps its row so the same identity is never proposed again; authority changes are appended to an acceptance log"
+  scoping: "Mostly per store. The default is one SQLite file inside the repository; in server workspace mode on a shared database, full-text search takes an optional repository_id predicate and the router fans out per repository when none is given"
   integration: "An MCP server, a CLI, a FastAPI server, a VS Code extension, a web dashboard and a Claude Code plugin; the MCP surface is a small tool set built around `get_answer`, `search_codebase`, `blast_radius` and `change_risk`"
   background: "A watch command and an incremental pipeline re-index on change; staleness rescoring and health snapshots run as invoked passes"
-  trust: "Three separate axes on a decision — `status` (proposed, active, deprecated, superseded), `confidence` derived from the best source rank plus corroboration count, and `verification` (exact, fuzzy, unverified) recording whether a verbatim span of the source supports the text"
+  trust: "Status (proposed, active, deprecated, superseded, dismissed), confidence from source rank and corroboration, verification (exact, fuzzy, unverified), and authority — whether an acceptance row admits the decision — which is what governance reads join on"
   strengths: "A grounding gate that deletes an ungrounded field rather than flagging it, and refuses to invent a rejection it cannot justify; and a benchmark page that pre-registers a split, publishes the rows it loses, and writes 'not measured' where a checkmark would have served"
   risks: "The gate's guarantee is conditional on the producer having recorded a `source_text` to check against — a candidate that supplies none is kept and merely labelled unverified; and scope is a property of the store rather than of the query"
 ---
@@ -80,16 +82,26 @@ that the harnesses and the graded cells are not in this tree: they live in a
 separate `repowise-bench` repository, so this page is a claim about evidence held
 elsewhere rather than evidence.
 
-Against that, the scope story is the weak seam. `FullTextSearch.search(query,
-limit)` takes no repository argument, and the PostgreSQL statement selects
-`FROM wiki_pages` with no repository predicate. The default deployment makes
-that safe by construction — one SQLite file at `<repo>/.repowise/wiki.db`, so
-the store *is* the scope — and the server maintains a dictionary of one search
-instance per repository id and fans out across it. But the same module documents
-a fallback to a global `~/.repowise/wiki.db`, and the product is sold hosted for
-teams on PostgreSQL. Wherever one store holds two repositories, the boundary
-between them is which engine the router happened to select, and there is no
-predicate underneath it to fail closed.
+**Authority is a recorded acceptance, not a status word.** Extraction can only
+propose. A decision governs — reaches the rules an agent is shown, the alignment
+score, the risk directives and the answer prompt — only when the append-only
+`decision_acceptances` table holds a row for it, and that table's CHECK
+constraints demand a reason, a scope, an evidence reference, and an accepter or a
+git-tracked artifact. The project measured why it mattered on its own store: the
+status column claimed 122 active decisions and the acceptance join found none,
+because the session miner had been promoting decisions that recurred in two
+agent sessions with nobody involved. Dismissal goes through the same log and
+leaves the row behind, so re-extracting the same decision does not propose it
+again.
+
+Against that, the scope story is the weak seam. `FullTextSearch.search` takes an
+optional `repository_id`, added for workspaces that share one database, and the
+server router passes it when a request names a repository and fans out per
+repository when none is given. The default deployment is safe by construction —
+one SQLite file at `<repo>/.repowise/wiki.db`, so the store *is* the scope — but
+the same module documents a fallback to a global `~/.repowise/wiki.db`, and the
+product is sold hosted for teams on PostgreSQL. Wherever one store holds two
+repositories, the boundary between them is a parameter the caller may omit.
 
 ## 2. Mental Model
 
@@ -322,18 +334,29 @@ the span it read yields memory the gate has, by its own rule, declined to judge.
 Nothing in the gate can detect the difference between a source that genuinely had
 no quotable span and a producer that forgot to pass one.
 
-**Supersession is not retraction.** `superseded_by`, the `deprecated` and
-`superseded` statuses and the `supersedes` edge all record that a decision has
-been replaced, and the lineage walk makes the replacement legible. None of them
-stops the superseded decision from being extracted again on the next index —
-uniqueness is on `(repository_id, title, source, evidence_file)`, which dedupes a
-repeat of the same sentence from the same place but does not carry a *rejected*
-verdict that a future extraction must respect. The atlas's tombstone mark is
-withheld for that reason.
+**Dismissal is retraction; supersession is not.** `superseded_by`, the
+`deprecated` and `superseded` statuses and the `supersedes` edge record that a
+decision was replaced. `dismissed` records that it was wrong, and it is terminal:
+the row stays, `_PROTECTED_STATUSES` makes `_merge_status` keep it whenever a
+re-extraction arrives as `proposed`, and because a decision's id derives from
+`(repository_id, title, source, evidence_file)` the re-extracted candidate lands
+on the dismissed row rather than beside it. That earns `tombstone`, keyed on the
+decision's identity rather than on its meaning — a reworded title from the same
+file is a new candidate.
 
-**Scope is the store, not the query.** Covered in section 1; the failure mode is
-a single database holding two repositories, which the documented
-`~/.repowise/wiki.db` fallback and any shared PostgreSQL deployment both produce.
+**Review is an admission gate with a self-declared reviewer.** `repowise decision
+confirm` and `dismiss`, the dashboard's review lanes, and a committed ADR that
+says accepted and names a scope are the ways a decision gains or loses authority,
+and all of them write through `record_acceptance`. That earns `human_review`. The
+accepter is whatever the surface supplies — `web` from the dashboard, the git
+identity or `--as` from the CLI — and the commands have machine-readable forms,
+so the gate establishes that an acceptance was recorded with its reason, scope and
+evidence, not that a person rather than an agent issued it.
+
+**Scope is mostly the store.** Covered in section 1; the failure mode is a single
+database holding two repositories with a caller that omits `repository_id`, which
+the documented `~/.repowise/wiki.db` fallback and any shared PostgreSQL deployment
+both allow.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -435,6 +458,8 @@ was true anyway.
 | `docs/BENCHMARKS.md` | Ten rows, one of them a loss, two of them "not measured" |
 
 ## History
+
+**2026-09-15** — [`fbfe6dec2a1c529573b0b4958ecf0777cd130081`](https://github.com/repowise-dev/repowise/commit/fbfe6dec2a1c529573b0b4958ecf0777cd130081) — 320 commits on, 2026-09-15, most of them workspace, MCP, health and CLI work. Screened before reading: two auto-run surfaces (`.claude-plugin/`, `server.json`), fourteen build-time execution points, nine unpinned surfaces and three dependency surfaces inside the cooldown; nothing was installed or run. Two marks are added. `human_review` is new: from 1–2 September (#2067, #2069, #2070) extraction can only propose, authority is a row in an append-only `decision_acceptances` table whose CHECK constraints require reason, scope, evidence and an accepter or tracked artifact, and every governance read joins it — the project found its status column claiming 122 active decisions its acceptance join did not support. `tombstone` was missed: at the previous pin `dismissed` was already a protected terminal status that re-extraction of the same decision could not walk back, with `test_dismissed_decision_survives_reindex_untouched` pinning it; the first reading considered only supersession. The acceptance log also strengthens `audit_log`. The scope finding moved: `FullTextSearch.search` gained an optional `repository_id` for shared-database workspaces (#2195), so the boundary is a parameter the caller may omit rather than only the engine selected, and `scope_enforced` stays withheld. Decision ids now derive from their dedupe identity (#2071).
 
 **2026-08-21** — [`e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3`](https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3) — re-pinned 34 commits and +15,873 lines on, at release v0.45.0. Screened again: two auto-run surfaces (`.claude-plugin/`, `server.json`), build-time execution in the `Makefile` and `conftest.py`; nothing was installed and nothing was run. Marks unchanged at `trust_state`, `audit_log` and `negative_eval`.
 

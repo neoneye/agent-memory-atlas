@@ -134,7 +134,7 @@ the line are worked through in <a href="#not-in-scope-the-kv-cache">what
 is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
-<li><strong>Correction is the phase that goes unbuilt.</strong> 43
+<li><strong>Correction is the phase that goes unbuilt.</strong> 44
 systems of 457 carry a rejected-value tombstone — a record keyed on the
 <em>value</em>, so a later extraction cannot silently re-assert
 something already judged wrong. Almost everything else corrects by
@@ -324,7 +324,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-forty-three tombstones, two hundred and fourteen negative-eval suites —
+forty-four tombstones, two hundred and fourteen negative-eval suites —
 are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
@@ -334,7 +334,7 @@ finding one proves only that nobody built one <em>in public</em>.</p>
 systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
-everything can overwrite or supersede. Forty-three of four hundred and
+everything can overwrite or supersede. Forty-four of four hundred and
 fifty-seven systems carry a rejected-value tombstone — a record that
 extraction cannot bring back what was refused. This is the widest gap
 this atlas has found, and it is invisible on every benchmark. <em>Widest
@@ -20735,26 +20735,23 @@ mode; decision candidates from inline markers, git archaeology, README
 mining, session transcripts and an LLM docs harvest all pass the same
 grounding gate before persistence</td>
 <td>Re-indexing overwrites a page and archives the prior version; a
-decision is superseded by pointer (<code>superseded_by</code>, status
-<code>deprecated</code> or <code>superseded</code>) and carries a
-<code>staleness_score</code> recomputed against the git history of the
-files it governs. No tombstone — nothing blocks a superseded decision
-from being re-extracted</td>
-<td>Per store, not per query. The default is one SQLite file inside the
-repository; <code>FullTextSearch.search</code> takes no repository
-argument and the Postgres statement carries no repository predicate, so
-the boundary is which engine the router selected</td>
+decision is superseded by pointer or dismissed, and a dismissed decision
+keeps its row so the same identity is never proposed again; authority
+changes are appended to an acceptance log</td>
+<td>Mostly per store. The default is one SQLite file inside the
+repository; in server workspace mode on a shared database, full-text
+search takes an optional repository_id predicate and the router fans out
+per repository when none is given</td>
 <td>An MCP server, a CLI, a FastAPI server, a VS Code extension, a web
 dashboard and a Claude Code plugin; the MCP surface is a small tool set
 built around <code>get_answer</code>, <code>search_codebase</code>,
 <code>blast_radius</code> and <code>change_risk</code></td>
 <td>A watch command and an incremental pipeline re-index on change;
 staleness rescoring and health snapshots run as invoked passes</td>
-<td>Three separate axes on a decision — <code>status</code> (proposed,
-active, deprecated, superseded), <code>confidence</code> derived from
-the best source rank plus corroboration count, and
-<code>verification</code> (exact, fuzzy, unverified) recording whether a
-verbatim span of the source supports the text</td>
+<td>Status (proposed, active, deprecated, superseded, dismissed),
+confidence from source rank and corroboration, verification (exact,
+fuzzy, unverified), and authority — whether an acceptance row admits the
+decision — which is what governance reads join on</td>
 <td>A grounding gate that deletes an ungrounded field rather than
 flagging it, and refuses to invent a rejection it cannot justify; and a
 benchmark page that pre-registers a split, publishes the rows it loses,
@@ -24181,7 +24178,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>43 of 457:</em> <a
+<p><em>44 of 457:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
@@ -24214,6 +24211,7 @@ href="../systems/provem/"><code>provem</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/rck/"><code>rck</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/sage-memory/"><code>sage-memory</code></a>, <a
 href="../systems/skillcorpus/"><code>skillcorpus</code></a>, <a
 href="../systems/slowave/"><code>slowave</code></a>, <a
@@ -24835,7 +24833,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>133 of 457:</em> <a
+<p><em>134 of 457:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -24941,6 +24939,7 @@ href="../systems/ragflow/"><code>ragflow</code></a>, <a
 href="../systems/rainbox/"><code>rainbox</code></a>, <a
 href="../systems/reasonix/"><code>reasonix</code></a>, <a
 href="../systems/redcell/"><code>redcell</code></a>, <a
+href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/ripwire/"><code>ripwire</code></a>, <a
 href="../systems/risuai/"><code>risuai</code></a>, <a
 href="../systems/runar-forge/"><code>runar-forge</code></a>, <a
@@ -31296,7 +31295,7 @@ read rather than run</li>
 <li><a
 href="https://github.com/repowise-dev/repowise">repowise-dev/repowise</a>
 at <a
-href="https://github.com/repowise-dev/repowise/commit/e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3"><code class="commit-id" title="e2bb8a2e4eff3d00005a602ac65a8e4be7daa4a3">e2bb8a2e…</code></a>
+href="https://github.com/repowise-dev/repowise/commit/fbfe6dec2a1c529573b0b4958ecf0777cd130081"><code class="commit-id" title="fbfe6dec2a1c529573b0b4958ecf0777cd130081">fbfe6dec…</code></a>
 — read only; a <code>.claude-plugin/</code> directory and an MCP
 <code>server.json</code> declare start commands, five dependency
 surfaces were inside the seven-day cooldown, and a pytest tree of this
@@ -36044,7 +36043,7 @@ agent.</strong> Every response <em>"drop[s] null fields, omit[s] empty
 arrays, and skip[s] mdbook's success boilerplate"</em>, and
 <code>wiki_search</code> ships budgets rather than a limit — 3 matches
 per page, 20 pages, 200-character snippets by default, a hard ceiling of
-1000 and a floor of 43 — with <strong>truncation flags on both
+1000 and a floor of 44 — with <strong>truncation flags on both
 axes</strong>, so a capped result reports that it was capped instead of
 arriving as a short list. That last property is exactly what <a
 href="../systems/repowise/">repowise</a>'s vector leg lacked when it

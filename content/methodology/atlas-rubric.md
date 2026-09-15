@@ -54,7 +54,7 @@ status on a row. Those are all keyed on a *record*; re-extraction produces a new
 record and walks straight past them.
 
 **Why it is on the list:** it is the widest gap *this corpus has found* —
-forty-three systems of 457 carry a value-level tombstone, and the corpus is an opportunistic collection rather
+forty-four systems of 457 carry a value-level tombstone, and the corpus is an opportunistic collection rather
 than a sample, so that is a fact about what has been read and not a prevalence
 figure for the field. It is invisible on every published benchmark, and it is the mechanism
 that decides whether "forget that" survives the next background pass.
