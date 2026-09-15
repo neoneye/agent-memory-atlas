@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 465 reports.**
+**This page covers all 466 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4070,3 +4070,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: version 1.0.2, 215 commits since 2 March 2026, about 12,500 lines of Python and 212 tests, native Hermes and Medusa, Codex and Claude Code adapters, staged imports with rollback; the README claims MIT and the tree has no licence file.
 - Study when: you are designing review-and-reverse governance for automated memory changes and want a schema to argue with.
 - Do not copy when: you need that governance to work today — the reconciliation step that would create assertions does not exist.
+
+### [`distill-kura`](../systems/distill-kura/)
+- Best idea: **a write gate made of evidence classes.** Every candidate memory must carry quotes found verbatim in the session transcript, classed USER, TOOL, ACT or SELF; numbers need a TOOL quote, crediting the human needs a USER quote, the agent's own prose licenses only a judgement, and quotes the store already contains are dropped as echoes. Pours and retirements re-verify a signed draft and a hash-named evidence manifest. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **recall does not see what the write path proved.** A retired memory keeps its slug and body and is recalled like any other; its index line says it was superseded, but recall's context is built from memory files, and the body note naming the successor is not pinned when a long memory is trimmed to budget. Several stores behind one unauthenticated server are separate routing, not separate trust, as the project's own trust document says.
+- Most reusable component: `distill/gate.py` — verbatim quote matching per evidence class, echo suppression against the store, and a final-surface floor that refuses invented numbers, invented quotations, unknown links and unearned attribution to the human.
+- Maturity impression: MIT, standard-library Python, 200 commits since 22 August 2026, about 14,800 lines with 878 tests written largely as escape attempts, a write-ahead log with quarantine, and a DeepSeek Harness plugin; the retention score of 1.0 on ten planted facts is reported in the README without result files.
+- Study when: an agent's own assertions must not become its memory, and you want recall by recognition from one index read by a model instead of embeddings.
+- Do not copy when: stores of different trust share a process, the index will outgrow one prompt, or the journal's attribution of who said what cannot be trusted.

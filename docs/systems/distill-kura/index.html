@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A standard-library Python memory
+for agents, one Markdown store per agent mode, where recall hands the
+whole index to a model that names what applies and every write must
+carry quotes found character for character in the session transcript,
+classed by who said them.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="distill-kura — Agent Memory Atlas">
+    <meta property="og:description" content="A standard-library Python
+memory for agents, one Markdown store per agent mode, where recall hands
+the whole index to a model that names what applies and every write must
+carry quotes found character for character in the session transcript,
+classed by who said them.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="distill-kura — Agent Memory Atlas">
+    <meta name="twitter:description" content="A standard-library Python
+memory for agents, one Markdown store per agent mode, where recall hands
+the whole index to a model that names what applies and every write must
+carry quotes found character for character in the session transcript,
+classed by who said them.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>distill-kura — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "distill-kura",
+      "description": "A standard-library Python memory for agents, one Markdown store per agent mode, where recall hands the whole index to a model that names what applies and every write must carry quotes found character for character in the session transcript, classed by who said them.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Written only on verbatim evidence</p>
+          <h1>distill-kura</h1>
+          <p class="document-deck">A standard-library Python memory for
+agents, one Markdown store per agent mode, where recall hands the whole
+index to a model that names what applies and every write must carry
+quotes found character for character in the session transcript, classed
+by who said them.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/lna-lab/distill-kura">
+              <span>Source</span>
+              <strong>lna-lab/distill-kura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/lna-lab/distill-kura/commit/33aec61dcd28076848bfdfa9dfdf5902300fe109" title="33aec61dcd28076848bfdfa9dfdf5902300fe109">
+              <span>Analyzed revision</span>
+              <code>33aec61d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lna-lab--distill-kura" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>lna-lab--distill-kura</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>distill-kura (蒸留蔵, "distillation storehouse") is a long-term
+memory for LLM agents in dependency-free Python 3.11, MIT, 200 commits
+since 22 August 2026, about 14,800 lines across
+<code>distill_kura/</code> plus a 600-line Node plugin for DeepSeek
+Harness, with 878 tests. It serves as a plugin, an MCP bridge, an HTTP
+service and a library, and uses no embeddings and no vector store.</p>
+<p>Its argument is about two failures. Keyword search misses a memory
+that shares no word with the question, so recall hands the entire index
+— one trigger line per memory — to a model and asks it which memories
+apply. And an agent that writes down its own assertions reads them back
+later as fact, so every write is gated in deterministic Python: a
+candidate must carry quotes that exist verbatim in the raw session
+transcript, and the class of each quote licenses what the memory may
+say. A number needs a <code>[TOOL]</code> quote. "They decided" needs a
+<code>[USER]</code> quote. The agent's own prose licenses only a
+first-person judgement.</p>
+<p>The gate is the part to study. It fails closed on paraphrase, drops
+quotes the store already contains (the store reading itself back through
+a tool result), strips numbers no tool produced, and refuses text that
+credits the human without a surviving <code>[USER]</code> quote. Pours
+and retirements then check a signed draft and a content-addressed
+evidence manifest, so provenance has to exist before the memory
+does.</p>
+<p>What the gate protects is the write. Recall does not consult any of
+it. A retired memory is marked on its index line and still recalled like
+any other, and the line in its body that names the successor competes
+for room when recall trims a long memory.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>store</strong> is a directory: memory files,
+<code>MEMORY.md</code> and a workshop called <code>_still/</code>. A
+<strong>mode</strong> — "maker", "EQ", a research room — maps to one
+store, and the host picks it before the session starts. Nothing reads a
+message to decide where it belongs.</p>
+<p>A <strong>memory</strong> is one Markdown file. Its index line is a
+recognition trigger, not a summary: the words a future question would
+use.</p>
+<p><strong>Recall</strong> tries recognition in two tiers. Tier zero is
+deterministic: if the question names a memory confidently enough, that
+is the pick and no model is called. Otherwise a thinker model reads the
+whole index with the question and returns slugs. An empty answer is
+respected as "nothing here" rather than replaced by word overlap. The
+picks are expanded along <code>[[links]]</code>.</p>
+<p><strong>Distilling</strong> turns journals into drafts. Evidence is
+classed at intake. Candidates that survive the gate are checked for
+novelty against the store — covered, extends or new — composed, checked
+again at the final surface, signed and staged. A draft enters the store
+only when it is poured.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a transcript becomes a memory only through verbatim evidence; recall reads the index and walks links</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a transcript becomes a memory only through verbatim evidence; recall reads the index and walks links
+flowchart TB
+    J[&quot;session journal&quot;] --&gt; CL[&quot;segments classed&lt;br/&gt;USER / TOOL / ACT / SELF&quot;]
+    CL --&gt; CAND[&quot;model proposes candidates&lt;br/&gt;each with quotes&quot;]
+    CAND --&gt; GATE{&quot;gate.py&lt;br/&gt;quote found verbatim?&lt;br/&gt;already in the store?&quot;}
+    GATE --&gt;|&quot;no surviving quote&quot;| DROP[&quot;dropped.jsonl&lt;br/&gt;(a gauge, never consulted)&quot;]
+    GATE --&gt;|&quot;idea&quot;| SEED[&quot;seeds.jsonl&lt;br/&gt;graduates on later evidence&quot;]
+    GATE --&gt;|&quot;kept&quot;| NOV{&quot;novelty&lt;br/&gt;COVERED / EXTENDS / NEW&quot;}
+    NOV --&gt; COMP[&quot;composed; final-surface floors&lt;br/&gt;numbers, attribution, links&quot;]
+    COMP --&gt; DRAFT[(&quot;signed draft&lt;br/&gt;+ evidence manifest&quot;)]
+    DRAFT --&gt;|&quot;drain: scribe model&quot;| POUR[&quot;pour / fix / toss&quot;]
+    DRAFT --&gt;|&quot;kura distill pour: a person&quot;| POUR
+    POUR --&gt; WAL[&quot;write-ahead log&quot;] --&gt; STORE[(&quot;memory file&lt;br/&gt;+ MEMORY.md line&quot;)]
+    STORE --&gt;|&quot;retire: USER quote names old and new&quot;| FACE[&quot;index line: superseded … now [[new]]&quot;]
+    Q[&quot;question&quot;] --&gt; T0{&quot;tier zero&lt;br/&gt;n-gram heads + gate&quot;}
+    T0 --&gt;|&quot;confident hit&quot;| WALK[&quot;walk [[links]]&quot;]
+    T0 --&gt;|&quot;no hit&quot;| THINK[&quot;thinker reads whole index&quot;]
+    THINK --&gt; WALK
+    STORE --&gt; WALK
+    WALK --&gt; FIT[&quot;fit each memory to budget&quot;] --&gt; CTX[&quot;context&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>store.py</code></td>
+<td>Store directory, index parsing, exact and fuzzy slug resolution,
+write doors per <code>write_policy</code>, curation marks,
+<code>retire</code>, write-ahead log, revision counter,
+<code>doctor</code></td>
+</tr>
+<tr>
+<td><code>recall.py</code>, <code>fastpath.py</code></td>
+<td>Tier zero, the thinker pick, word overlap, link walk and
+<code>fit</code></td>
+</tr>
+<tr>
+<td><code>glance.py</code></td>
+<td>A ~150-token confirmation of one exact memory: index line, verified
+KEEP sentence, links, typed edges</td>
+</tr>
+<tr>
+<td><code>distill/sources.py</code>, <code>watermark.py</code></td>
+<td>Journal adapters (Claude Code transcripts, DSH archives, evidence
+JSONL, plain text, <code>.lna.jsonl</code> journals) and
+reserve-before-drinking watermarks</td>
+</tr>
+<tr>
+<td><code>distill/gate.py</code>, <code>transition.py</code>,
+<code>seeds.py</code>, <code>pipeline.py</code></td>
+<td>The gate, succession proofs, the seed ledger, and the run, stage,
+pour, drain and tidy steps</td>
+</tr>
+<tr>
+<td><code>weave.py</code>, <code>prefill.py</code>,
+<code>trail.py</code>, <code>payforward.py</code>,
+<code>warm.py</code></td>
+<td>The resident map in three layers, its prefill block, a recent-path
+block, and prefix-cache warming</td>
+</tr>
+<tr>
+<td><code>edges.py</code>, <code>constellation.py</code>,
+<code>cues.py</code></td>
+<td>A derived typed-edge map and verified routing callsigns — derived
+state that may not rewrite canonical</td>
+</tr>
+<tr>
+<td><code>registry.py</code>, <code>server.py</code>,
+<code>mcp.py</code>, <code>cli.py</code>, <code>tend.py</code></td>
+<td>Modes to stores, HTTP routes, the MCP bridge, the CLI and the
+watcher</td>
+</tr>
+<tr>
+<td><code>bench*.py</code>, <code>worldline.py</code>,
+<code>richness.py</code></td>
+<td>Compression and retention benches, recovery traces, read-only
+gauges</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> <code>kura serve</code> for HTTP,
+or the MCP bridge, or the plugin; <code>kura tend</code> per store for
+unattended distilling. Python 3.11 and nothing else; Node 20 only for
+the plugin, <code>zstd</code> only to read DSH archives.</li>
+<li><strong>Models:</strong> any endpoint answering OpenAI-shaped chat
+completions, with roles (<code>thinker</code>, <code>brain</code>,
+<code>scribe</code>) configurable per store. With no model reachable,
+recall falls back to tier zero and word overlap, and the loom trims the
+map mechanically.</li>
+<li><strong>Hand-repairable:</strong> yes. Memories are Markdown files
+and the index is a Markdown list; <code>doctor</code> reports orphans,
+hard links, escaping paths, unsigned or tampered curation, and faced
+memories.</li>
+<li><strong>No authentication</strong> on the HTTP server;
+<code>docs/TRUST.md</code> tells operators to run one process per trust
+level.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, no build-time
+execution, nothing inside the seven-day cooldown and one unpinned
+surface, and read <code>AGENTS.md</code> as data. Nothing was installed,
+built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Recall</strong> — <code>recall.py:140-235</code>:
+<code>fastpath.lookup</code> (<code>fastpath.py:298</code>), then
+<code>pick_by_meaning</code> (<code>:56</code>) with
+<code>pick_prompt</code> = label plus the whole index
+(<code>:45</code>), <code>pick_by_words</code> (<code>:80</code>) only
+when the thinker is unreachable, <code>store.walk</code>
+(<code>store.py:521</code>), and <code>fit</code>
+(<code>recall.py:107</code>).</li>
+<li><strong>Gate</strong> — <code>distill/gate.py:69-155</code>: quotes
+normalised and searched in the class haystacks; echoes of
+<code>store_text</code> counted and dropped; SELF-only candidates
+dropped unless phrased as judgement; numbers without TOOL or ACT
+flagged. <code>final_surface_violations</code> (<code>:265</code>)
+checks the composed text for numbers, invented quotations, unknown links
+and human attribution.</li>
+<li><strong>Stage and pour</strong> — <code>pipeline.py:889-935</code>:
+a bare slug only, a valid HMAC gate mark over name, kind, manifest and
+body, a manifest that verifies, then <code>pour_verified</code>.
+<code>drain</code> (<code>:1100-1200</code>) lets the scribe model pour,
+fix or toss.</li>
+<li><strong>Write doors</strong> — <code>store.py:574-625</code>:
+<code>_frozen_refused</code>, <code>_direct_refused</code>,
+<code>remember_direct</code> and <code>pour_verified</code>; every
+change goes through <code>_commit</code> (<code>:1106</code>), which
+writes intent to <code>_still/wal/</code>, applies it and removes the
+entry.</li>
+<li><strong>Retirement</strong> — <code>store.py:784-860</code>, called
+by <code>kura retire</code> and by the distiller when a pour carries the
+transition (<code>pipeline.py:1030</code>), with
+<code>_manifest_names_old</code> and <code>_proven_transition</code>
+requiring one USER quote that retires the old memory and names the new
+one.</li>
+<li><strong>Curation</strong> — <code>store.py:668-693</code>: an HMAC
+over slug, tags and the three sentences, keyed by
+<code>_still/gate.key</code>; <code>glance.py:76</code> shows the KEEP
+sentence only when the mark verifies.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory file: frontmatter with <code>name</code>,
+<code>description</code>, <code>type</code>, tags, the curation
+sentences (<code>keep</code> among them), <code>curation_mark</code>,
+and the evidence manifest reference; then the body. Its index line is
+<code>- [Title](slug.md) — trigger</code>, and a family of memories may
+share one grouped line.</p>
+<p><strong>Reserved tags</strong> are a fixed vocabulary. Claiming tags
+need matching evidence — <code>entrusted</code> says the human asked for
+the memory to be kept and needs a USER quote asking — and seven words
+held for a forgetting pass that is not yet designed,
+<code>superseded</code> and <code>expired</code> among them, are refused
+outright (<code>distill/gate.py:300</code>).</p>
+<p><strong>Evidence manifests</strong> are JSON files in
+<code>_evidence/</code>, named by the hash of their bytes and holding
+the classed quotes a memory was written from. Pours and retirements load
+them with <code>load_manifest_verified</code>
+(<code>store.py:1453</code>), which re-hashes on every read, so a
+hand-edited manifest is treated as absent.</p>
+<p><strong>The retirement face</strong> is the only canonical mark of
+change. The old file keeps its slug, body and index position; its
+trigger becomes
+<code>superseded: &lt;old trigger&gt; — now [[new]]</code> (or
+<code>退役：…／現在は [[new]]</code> when the trigger is Japanese), and
+one body line records
+<code>retired: superseded by [[new]] (manifest sha256:…)</code>.</p>
+<p><strong>Curation state</strong> — none, verified, unsigned or
+tampered — is computed from the HMAC each time it is read. It is not a
+stored status, and it decides only whether glance shows the KEEP
+sentence, so <code>trust_state</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Tier zero</strong> builds five heads over an inverted index
+of the store — slug or title containment, word IDF, character trigrams
+with stop-grams, character bigrams and the opening of the body — and an
+honesty gate answers only when the winner is strong and at least 1.15
+times the runner-up. Its cache is keyed on the store's revision counter,
+so a body-only edit refreshes it
+(<code>tests/test_fastpath.py:114</code>). Verified callsigns, short
+phrases a memory is known by, answer before the heads.</p>
+<p><strong>The thinker</strong> receives a system prompt made of the
+store's label and the full index, and the question as the user turn. The
+prompt is factored out so <code>warm.py</code> can prefill the exact
+bytes recall will send; the resident map and pay-forward commands exist
+to keep that prefix cached. A model's slug list is cleaned of
+<code>.md</code>, brackets and paths; a malformed answer is rescued by
+scanning it for real slugs.</p>
+<p><strong>Refusal is a feature.</strong> A thinker that reads the index
+and names nothing yields <code>meaning→none</code> and an empty context.
+Only an unreachable thinker falls to word overlap.</p>
+<p><strong>The walk</strong> is breadth-first over
+<code>[[links]]</code> for <code>hops</code> rounds, default one. Each
+memory is fitted to <code>chars</code> (6,000 by default) and the whole
+context to an optional <code>total_chars</code>; memories that do not
+fit are listed as <code>dropped_for_budget</code>. <code>fit</code>
+keeps the frontmatter whole, then keeps paragraphs in order of how often
+they mention the question's words.</p>
+<p><strong>Retirement does not filter.</strong> Recall, glance and the
+walk treat a faced memory like any other;
+<code>tests/test_retirement_face.py:193</code> pins that it is "never
+deleted, never hidden". The thinker sees the face because it reads the
+index. A tier-zero hit does not show the index line, and neither does
+the context recall returns: it is built from memory files. The successor
+arrives only through the walk, as the <code>[[new]]</code> link in the
+retirement note. <code>fit</code> does not pin that note. On a memory
+longer than the budget it is a closing paragraph that rarely shares the
+question's words, kept only if room is left, so a caller can receive the
+old memory without the line that says it was replaced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Intake.</strong> Watermarks are claimed before a journal
+stretch is read, under a lock, and move only forward: byte offsets for
+append-only transcripts, sequence numbers for archives that get
+rewritten. <code>kura distill catchup</code> moves them to now for a
+journal never seen.</p>
+<p><strong>The gate</strong> is the whole of the defence against
+self-poisoning, and it is deterministic. A quote whose normalised text
+is not in the class haystack is dropped, since it is fabricated or
+paraphrased. A quote already present in the store's text is an echo. A
+candidate with no surviving quote is dropped with a reason written to
+<code>_still/dropped.jsonl</code>. That file is read only by
+<code>richness.py</code> as a gauge. No later gate checks it, so a
+candidate rejected today is judged afresh the next time the same
+material yields it, and <code>tombstone</code> is withheld.</p>
+<p><strong>Ideas</strong> are kept apart: a candidate of kind
+<code>idea</code> goes to the seed ledger, unless it is a factual report
+dressed as an idea, and graduates only when later evidence confirms
+it.</p>
+<p><strong>Composition</strong> is checked again at the final surface —
+numbers must appear in TOOL evidence, quotations must be real, links
+must name known memories, and attribution to the human needs a USER
+quote. The result is staged as a draft signed with the store's gate key
+(<code>_still/gate.key</code>).</p>
+<p><strong>Pouring.</strong> <code>drain</code> gives each draft to the
+scribe model cold to pour, fix or toss. A person can list drafts and
+pour one by name. Either way <code>pour</code> re-verifies the mark and
+the manifest, so a hand-written file dropped into
+<code>_still/drafts/</code> is refused. Poured drafts are renamed
+<code>.poured</code> with a unique suffix
+(<code>tests/test_write_authority.py:170</code>).</p>
+<p><strong>Write policy</strong> per store: <code>direct-allowed</code>
+(tool calls and the CLI may write), <code>distiller-only</code> (only
+verified pours) or <code>frozen</code> (nothing, retirement
+included).</p>
+<p><strong>Durability.</strong> <code>_commit</code> writes the targets
+to a write-ahead entry, applies them with fsync — memory file, then
+index, then revision — and removes the entry. A crash replays intact
+entries and moves broken ones to <code>_still/wal-quarantine/</code>.
+The entry is removed after apply, so the log is a recovery mechanism and
+not a history. Tossed drafts and gate rejections are logged as gauges,
+but pours, direct writes, annotations and retirements leave no
+append-only record, so <code>audit_log</code> is withheld.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>DeepSeek Harness plugin</strong>
+(<code>dsh-plugin/lib/index.js</code>): <code>kura_recall</code>,
+<code>kura_glance</code>, <code>kura_read</code>, <code>kura_list</code>
+and <code>kura_doctor</code>, bound to a store, and with
+<code>prefill</code> on, the resident map kept in the system
+prompt.</li>
+<li><strong>MCP bridge</strong> (<code>mcp.py</code>) over the HTTP
+server, bound with <code>KURA_STORE</code>; a 404 is read as "no such
+memory" rather than an outage.</li>
+<li><strong>HTTP</strong> routes take a <code>mode</code> or
+<code>store</code> selector, or a <code>/s/&lt;store&gt;/</code> path;
+an unknown selector is an error rather than a fall to the default.</li>
+<li><strong>Resident map</strong> (<code>weave.py</code>): pinned types
+in full, recently changed memories in full, everything else compressed
+to a trigger by the scribe, cached by description and budget; the loom
+distrusts mtimes a fifth of the store shares with one day.</li>
+<li><strong><code>kura tend</code></strong>: drains, distils, re-weaves
+and warms when the newest journal has been quiet for
+<code>idle_min</code>, yields when the journal moves, and writes a
+heartbeat <code>doctor</code> reads.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Store separation is routing.</strong>
+<code>docs/TRUST.md</code> states it exactly: several stores behind one
+server are independent as routing and "not a confidentiality boundary".
+The server has no authentication, and any process that can reach the
+port can name any store. A bound agent is kept in its lane; a process is
+not kept out. The document's rule is one trust level per process, with
+private stores under a separate config, port and OS user. Each store is
+its own directory, a physical partition, so <code>scope_enforced</code>
+is withheld.</p>
+<p><strong>Containment is tested as attack.</strong>
+<code>test_containment.py</code> is written as escape attempts against a
+hole that existed: a store answered for any file whose path could be
+spelled. Slugs are validated, hard-linked memories in journal roots are
+not read, and two journal roots may not nest.</p>
+<p><strong>The gate trusts its journal.</strong> A USER quote is
+whatever the journal adapter classes as the user's turn. Anything that
+can write a journal the distiller reads — or a tool result echoed into a
+user turn by a host — can supply the quotes that license "they decided"
+and retire a memory. The per-store journal roots and the containment
+tests narrow that, and nothing in the tree authenticates a journal
+line.</p>
+<p><strong>Curation is signed, not secret.</strong> The HMAC key sits in
+<code>_still/gate.key</code> beside the store, so the mark detects edits
+by a process that cannot read the key, not by one that can.</p>
+<p><strong>Injection.</strong> Memories are distilled from transcripts
+that include tool output. The class system limits what a TOOL quote can
+license, and it does not stop instructions inside a tool quote from
+being composed into a memory the thinker later reads.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>878 test functions in 49 files, none needing a model: the gate's
+adversarial cases, write authority, containment, WAL recovery and
+revision counting, tag and callsign verification, retirement proofs in
+English and Japanese, tier zero, the resident map, the watcher and an
+end-to-end distil and drain against a scripted model server on a real
+socket. The plugin has its own suite. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/test_registry_and_recall.py:374</code> asserts that degraded
+recall does not return a phantom slug taken from the index header's
+example, that every pick is a real memory, and that a real question
+still returns <code>cooling</code>.
+<code>tests/test_fastpath.py:87</code> asserts that nonsense gets no
+tier-zero hit, beside direct hits in the same file. That earns
+<code>negative_eval</code>. The worldline bench's
+<code>must_not_anchor</code> and <code>obsolete_slugs</code> fields go
+further — a question naming a superseded plan must not land on it — but
+its tests run with a stubbed model and score traces, and
+<code>obsolete_faced</code> is reported raw, never scored.</p>
+<p><strong>Benchmarks.</strong> <code>kura bench retention</code> scores
+planted facts by markers that must appear in recall output, with
+distractors marked <code>must_not_store</code> that cost a point if
+kept. The README reports 1.0 on ten planted facts with a local
+Qwen3.8-27B as brain, scribe and thinker, and store ratios of 0.18 and
+1.14 on two corpora; no result files are committed. Its three-layer map
+shape comes from a 20-question blind A/B the README summarises and does
+not include.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Class every quote by who said it, and let the class license
+the claim.</strong> Numbers from tools, decisions from the human,
+judgements from the agent in the first person.</li>
+<li><strong>Fail closed on paraphrase.</strong> A verbatim substring
+check is cheap, deterministic and hard to argue with.</li>
+<li><strong>Echo suppression.</strong> Drop evidence the store already
+contains, or the store rediscovers itself through its own tool
+results.</li>
+<li><strong>Proof of succession in the human's words.</strong>
+Retirement needs one USER quote naming both the old memory and its
+successor — proposed is not proven.</li>
+<li><strong>Respect an empty pick.</strong> When the model reads the
+index and names nothing, return nothing.</li>
+<li><strong>Reserve before reading</strong> a journal, and keep
+watermarks forward-only.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A supersession recall cannot see.</strong> Put the face in
+what recall returns, or pin the note in <code>fit</code>.</li>
+<li><strong>Gauging rejections without consulting them.</strong> A
+rejection log nobody checks cannot stop the same candidate
+returning.</li>
+<li><strong>One process holding stores of different trust</strong> — the
+project says so itself.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single person running local models who wants an agent's
+long-term memory to be small, readable in a text editor and hard to
+poison with the agent's own assertions, and who can run a watcher per
+store. It is the wrong shape for multi-tenant serving, for stores too
+large for the index to fit in one prompt, or where who said what in a
+journal cannot be trusted.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should a faced memory's successor be spliced into recall
+output</strong> when the old memory is picked at
+<code>hops=0</code>?</li>
+<li><strong>How large can the index grow</strong> before the one-prompt
+pick loses to the prefill cost the warming machinery is built to
+hide?</li>
+<li><strong>Will rejected candidates ever be matched on the next
+run</strong>, or is re-judging them the intended cost?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>distill_kura/store.py</code> — store, write doors, curation,
+retirement, WAL</li>
+<li><code>distill_kura/recall.py</code>, <code>fastpath.py</code>,
+<code>glance.py</code></li>
+<li><code>distill_kura/distill/gate.py</code>, <code>pipeline.py</code>,
+<code>transition.py</code>, <code>seeds.py</code>,
+<code>sources.py</code>, <code>watermark.py</code></li>
+<li><code>distill_kura/weave.py</code>, <code>prefill.py</code>,
+<code>payforward.py</code>, <code>warm.py</code>,
+<code>tend.py</code></li>
+<li><code>distill_kura/registry.py</code>, <code>server.py</code>,
+<code>mcp.py</code>, <code>cli.py</code></li>
+<li><code>docs/TRUST.md</code>, <code>docs/DESIGN.md</code>,
+<code>docs/OPERATING.md</code></li>
+<li><code>tests/test_retirement_face.py</code>,
+<code>test_registry_and_recall.py</code>, <code>test_fastpath.py</code>,
+<code>test_write_authority.py</code>,
+<code>test_containment.py</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "dropped.jsonl\|tossed.jsonl" distill_kura</code> —
+written in <code>pipeline.py</code>, read only in
+<code>richness.py</code></li>
+<li><code>grep -rn "is_faced\|faced()" distill_kura</code> —
+<code>doctor</code>, <code>richness</code>, <code>worldline</code> and
+<code>retire</code> itself; no recall or glance filter</li>
+<li><code>grep -rn "curation_state" distill_kura</code> —
+<code>glance.py:76</code> and <code>doctor</code>; computed from the
+HMAC on read</li>
+<li><code>sed -n 1130,1145p distill_kura/store.py</code> —
+<code>_apply</code> unlinks the write-ahead entry after applying it</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/lna-lab/distill-kura/commit/33aec61dcd28076848bfdfa9dfdf5902300fe109"><code class="commit-id" title="33aec61dcd28076848bfdfa9dfdf5902300fe109">33aec61d…</code></a>
+— first reading, at a commit dated 6 September 2026. Screened before
+opening: no auto-run surface, no build-time execution, nothing inside
+the cooldown, one unpinned surface, and <code>AGENTS.md</code> read as
+data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
