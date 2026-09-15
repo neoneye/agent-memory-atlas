@@ -7,15 +7,17 @@ page_kind: system
 source_name: VictorTaelin/OptMem
 source_url: https://github.com/VictorTaelin/OptMem
 archive_name: "VictorTaelin--OptMem"
-revision: e36da55815951d50d103d7242d92cf9a71ceee96
-revision_url: https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96
-analyzed_at: 2026-07-28
+revision: 1fb164cf39028047781f72ac3bb1e5a691c1dcb0
+revision_url: https://github.com/VictorTaelin/OptMem/commit/1fb164cf39028047781f72ac3bb1e5a691c1dcb0
+analyzed_at: 2026-09-15
 capabilities: "audit_log"
+capability_evidence:
+  audit_log: "LOG.txt, the store of record | memo:336 log_append, memo:718 cmd_forget | every note is one fixed-width `#id date text` record appended under a cross-process lock and fsynced, and log_append is the only writer; the derived TREE summaries that nap writes and forget drops are not recorded | test.py:450-466 sixteen parallel notes keep distinct ids, test.py:468-479 a torn record is dropped before the next append"
 stack_storage: ""
 stack_retrieval: ""
 stack_source: "seeded"
 matrix:
-  memory_unit: "One line of at most 280 characters, fixed width, position-addressed"
+  memory_unit: "One line of at most 280 bytes, fixed width, position-addressed"
   storage: "`LOG.txt` append-only, never edited; `TREE/` of compressed blocks, a rebuildable cache"
   retrieval: "`wake` prints a budgeted cover of the merge tree — verbatim recent, compressed ancient"
   write: "`note` appends one line and may return a compression for the agent to answer"
@@ -33,8 +35,8 @@ matrix:
 > **Licence: none.** There is no `LICENSE` file in this repository, so all
 > rights are reserved by default and the code cannot be reused. This atlas
 > normally skips unlicensed repositories for that reason. It is reviewed here as
-> an exception, because it carries several mechanisms the atlas has not otherwise
-> found — the exception is about *reading* it, not about using it. Ask the author
+> an exception, because its mechanisms are worth reading — the
+> exception is about *reading* it, not about using it. Ask the author
 > before adopting anything below.
 
 OptMem is about 860 lines of dependency-free Python in a single file called
@@ -42,8 +44,7 @@ OptMem is about 860 lines of dependency-free Python in a single file called
 That is the whole integration. Its commands are `wake`, `note`, `nap`, `recall`,
 `zoom`, `forget`, `config`.
 
-It is the smallest system in this atlas and one of the most opinionated, and
-three of its positions are held by nothing else here.
+It is small and opinionated, and three positions define it.
 
 **Nothing ever runs in the background.** Not "a queue you can disable" — there
 is no background path at all. When `note` appends a memory and a compression
@@ -76,9 +77,9 @@ fits, nothing is compressed at all.**
 > everywhere."
 
 The README states the resulting numbers — a million memories is 608 MB and `wake`
-takes 0.03s — which makes OptMem the only system in this atlas that reports its
-**storage footprint and recall latency at scale**, the two metrics this atlas's
-[benchmarks page](../../benchmarks/) complains nobody publishes.
+takes 0.03s — a committed **storage footprint and recall latency at scale**, the
+two metrics the [benchmarks page](../../benchmarks/) finds projects rarely
+publish.
 
 Reservations beyond the licence: there is no scope, no trust state, no
 correction of a recorded memory, and no multi-user story. `forget` drops a
@@ -141,8 +142,8 @@ flowchart TD
 
 ### Consolidation with no scheduler
 
-Every other system in this atlas that consolidates does it in a worker, a cron,
-a queue, or a hook — and pays for it. The atlas's own
+Consolidation usually runs in a worker, a cron, a queue, or a hook — and pays
+for it. The
 [benchmarks page](../../benchmarks/) names *write-to-readable lag* as a metric
 nobody measures, and the [recoverable background work](../../patterns/recoverable-background-work/)
 pattern exists because background passes lose data when they fail.
@@ -155,8 +156,7 @@ retry, monitor, or lose.
 
 What it costs is honest: the agent pays for consolidation in its own turn, and a
 compression is only as good as the model that happens to be running. What it buys
-is that **no process can change your memory while you are not looking**, which
-several systems in this atlas cannot say.
+is that **no process can change your memory while you are not looking**.
 
 `pending_count` deserves note for a detail most such loops get wrong: levels are
 clamped at zero, because "a level can hold MORE blocks than T needs — T is a
@@ -190,7 +190,7 @@ edited", and `TREE/` as "a cache, rebuildable from the log alone". `recall`
 searches "every memory ever recorded, word for word".
 
 That is [evidence before belief](../../patterns/evidence-before-belief/) in its
-purest form and with the strongest guarantee in the atlas: the derived layer
+purest form: the derived layer
 cannot corrupt the evidence, because the code never writes to the evidence except
 by appending. `WAKE_LINES` is explicitly "a reading budget, not a storage budget:
 change it whenever, in either direction, and nothing is recomputed".
@@ -215,13 +215,18 @@ Several small decisions treat partial writes as normal:
   the exact command to run: "The summary of #a-b is blank. Run: `memo forget
   a-b`", because "pending() lists a block only after its halves settled, so a
   missing half is a blank record — a corrupt write."
-- `repair` exists for truncated files.
+- `repair` drops a torn trailing record before the next append, so a crash
+  mid-write cannot misalign every later record; `test.py` writes half a record
+  and checks the next `note` lands whole with the expected id.
+- Ids are assigned inside a cross-process lock (`fcntl.flock`, or `msvcrt` on
+  Windows); the tests start sixteen `note` processes at once and require ids
+  `#0`–`#15` with no collision.
 - The store is "UTF-8 by construction, so the tool reads and prints UTF-8 no
   matter what the machine's locale says. Without this, one arrow in a memory
   makes wake crash on a latin-1 locale."
 
-An error message that contains the command that fixes it is a small thing that
-this atlas has otherwise seen only in [MemPalace](../mempalace/)'s repair tooling.
+An error message that contains the command that fixes it is a small thing;
+[MemPalace](../mempalace/)'s repair tooling does the same.
 
 ### Transport limits are a first-class concern
 
@@ -230,7 +235,7 @@ this atlas has otherwise seen only in [MemPalace](../mempalace/)'s repair toolin
 > at 50 KB, Codex budgets 10,000 tokens. So the memory is handed over in parts
 > that fit all of them. These are transport limits, not memory limits."
 
-No other system in this atlas has noticed that the *harness* silently truncates
+The design starts from the fact that the *harness* silently truncates
 tool output, that each one truncates a different region, and that a memory block
 sized for a token budget can therefore arrive with its middle missing. For a
 design whose entire delivery mechanism is "print a lot of text at session start",
@@ -242,15 +247,16 @@ command is emitted with the path that will actually execute.
 
 ## 5. Memory Data Model
 
-One line, at most 280 characters, fixed width, addressed by position. No tags, no
-type, no source, no timestamp field surfaced, no scope, no status.
+One line, at most 280 bytes of UTF-8, fixed width (a 320-byte record), addressed
+by position. Each record carries its id and the date of the `note`; there are no
+tags, no type, no source, no scope and no status.
 
 The prompt does the work a schema would elsewhere: it tells the agent to record
 "a task worth real effort, a fact or insight the user teaches you, anything you
 learn about their life (even indirectly), any event of lasting effect", and "Do
 not register redundant memories."
 
-What is absent is nearly everything this atlas usually looks for — trust state,
+What is absent is trust state,
 provenance, scope, supersession, tombstones, contradiction handling. The
 compression prompt carries the only epistemic instruction in the system: "Keep
 what has lasting effect, drop what does not. **Invent nothing.**"
@@ -262,8 +268,7 @@ age-appropriate resolution, with no query. `recall <regex>` searches every raw
 memory word for word, which is exact and unranked.
 
 There is no embedding model, so there is no version to migrate and no drift when
-a provider changes a model — the failure mode this atlas lists as an uncovered
-dimension does not exist here. `zoom <lo>-<hi>` opens a block into its two halves
+a provider changes a model. `zoom <lo>-<hi>` opens a block into its two halves
 for reading down the tree.
 
 ## 7. Write Mechanics
@@ -320,9 +325,17 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-`test.py` is 611 lines against an 860-line tool, which is a good ratio, and the
-README's scale figures (608 MB and 0.03s at a million memories) are the only
-committed footprint-and-latency numbers in this atlas.
+`test.py` is 614 lines against an 859-line tool, and the README's scale figures
+(608 MB and 0.03s at a million memories) are committed footprint-and-latency
+numbers.
+
+The tests assert invariants of the cover and the store rather than retrieval
+exclusions: a part rendered as of `T` is byte-identical after a later `note` and
+after compressions paid mid-wake, a future `T` is refused, `init` on a lived-in
+store leaves every file's fingerprint unchanged, `forget` returns the tree to
+its size, and `recall` stays under the harness cap and says it was capped. None
+asserts that particular material must not be returned, so `negative_eval` is not
+awarded.
 
 Nothing was run for this review. There is no quality benchmark, and the thing
 worth measuring is specific: **how much is lost by the geometric cover**. Because
@@ -379,7 +392,6 @@ a memory you can always trust to be what was written, and can never repair.
 - What happens when a wrong memory is recorded — is there any intended workflow
   beyond noting a correction later and hoping the compression prefers it?
 - Which model produced each summary? Nothing records it, and quality varies.
-- What does concurrent `note` from two agents do to a fixed-width append?
 - Would a licence be added on request? Everything above is unusable without one.
 
 ## Appendix: File Index
@@ -392,5 +404,7 @@ a memory you can always trust to be what was written, and can never repair.
   `$MEMORY_DIR`.
 
 ## History
+
+**2026-09-15** — [`1fb164cf39028047781f72ac3bb1e5a691c1dcb0`](https://github.com/VictorTaelin/OptMem/commit/1fb164cf39028047781f72ac3bb1e5a691c1dcb0) — three commits on, 2026-07-30. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface (`install.sh` fetches `memo` from `main`); nothing was installed or run. The default `WAKE_LINES` dropped from 208 to 96 (about 8k tokens in two parts), and every limit is stated in bytes. Still no licence file. `audit_log` kept, with the record naming `log_append` as the sole writer and the unrecorded summary layer.
 
 **2026-07-28** — [`e36da55815951d50d103d7242d92cf9a71ceee96`](https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96) — first reading.

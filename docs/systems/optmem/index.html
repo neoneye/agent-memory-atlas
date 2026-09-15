@@ -110,14 +110,14 @@ nothing ever runs in the background.</p>
               <strong>VictorTaelin/OptMem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96" title="e36da55815951d50d103d7242d92cf9a71ceee96">
+            <a class="meta-pill revision-pill" href="https://github.com/VictorTaelin/OptMem/commit/1fb164cf39028047781f72ac3bb1e5a691c1dcb0" title="1fb164cf39028047781f72ac3bb1e5a691c1dcb0">
               <span>Analyzed revision</span>
-              <code>e36da558…</code>
+              <code>1fb164cf…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/VictorTaelin--OptMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -145,10 +145,9 @@ nothing ever runs in the background.</p>
 <p><strong>Licence: none.</strong> There is no <code>LICENSE</code> file
 in this repository, so all rights are reserved by default and the code
 cannot be reused. This atlas normally skips unlicensed repositories for
-that reason. It is reviewed here as an exception, because it carries
-several mechanisms the atlas has not otherwise found — the exception is
-about <em>reading</em> it, not about using it. Ask the author before
-adopting anything below.</p>
+that reason. It is reviewed here as an exception, because its mechanisms
+are worth reading — the exception is about <em>reading</em> it, not
+about using it. Ask the author before adopting anything below.</p>
 </blockquote>
 <p>OptMem is about 860 lines of dependency-free Python in a single file
 called <code>memo</code>, plus a 426-token prompt block you paste into
@@ -156,9 +155,7 @@ called <code>memo</code>, plus a 426-token prompt block you paste into
 integration. Its commands are <code>wake</code>, <code>note</code>,
 <code>nap</code>, <code>recall</code>, <code>zoom</code>,
 <code>forget</code>, <code>config</code>.</p>
-<p>It is the smallest system in this atlas and one of the most
-opinionated, and three of its positions are held by nothing else
-here.</p>
+<p>It is small and opinionated, and three positions define it.</p>
 <p><strong>Nothing ever runs in the background.</strong> Not "a queue
 you can disable" — there is no background path at all. When
 <code>note</code> appends a memory and a compression becomes due, the
@@ -190,11 +187,10 @@ there is no index:</p>
 ~2x on disk and buys O(1) everywhere."</p>
 </blockquote>
 <p>The README states the resulting numbers — a million memories is 608
-MB and <code>wake</code> takes 0.03s — which makes OptMem the only
-system in this atlas that reports its <strong>storage footprint and
-recall latency at scale</strong>, the two metrics this atlas's <a
-href="../../benchmarks/">benchmarks page</a> complains nobody
-publishes.</p>
+MB and <code>wake</code> takes 0.03s — a committed <strong>storage
+footprint and recall latency at scale</strong>, the two metrics the <a
+href="../../benchmarks/">benchmarks page</a> finds projects rarely
+publish.</p>
 <p>Reservations beyond the licence: there is no scope, no trust state,
 no correction of a recorded memory, and no multi-user story.
 <code>forget</code> drops a <em>summary</em>, not a memory. The log is
@@ -252,11 +248,10 @@ flowchart TD
 Paths</h2>
 <h3 id="consolidation-with-no-scheduler">Consolidation with no
 scheduler</h3>
-<p>Every other system in this atlas that consolidates does it in a
-worker, a cron, a queue, or a hook — and pays for it. The atlas's own <a
-href="../../benchmarks/">benchmarks page</a> names <em>write-to-readable
-lag</em> as a metric nobody measures, and the <a
-href="../../patterns/recoverable-background-work/">recoverable
+<p>Consolidation usually runs in a worker, a cron, a queue, or a hook —
+and pays for it. The <a href="../../benchmarks/">benchmarks page</a>
+names <em>write-to-readable lag</em> as a metric nobody measures, and
+the <a href="../../patterns/recoverable-background-work/">recoverable
 background work</a> pattern exists because background passes lose data
 when they fail.</p>
 <p>OptMem's answer is to have no background. <code>note</code> appends
@@ -268,8 +263,7 @@ or lose.</p>
 <p>What it costs is honest: the agent pays for consolidation in its own
 turn, and a compression is only as good as the model that happens to be
 running. What it buys is that <strong>no process can change your memory
-while you are not looking</strong>, which several systems in this atlas
-cannot say.</p>
+while you are not looking</strong>.</p>
 <p><code>pending_count</code> deserves note for a detail most such loops
 get wrong: levels are clamped at zero, because "a level can hold MORE
 blocks than T needs — T is a snapshot, and memories keep arriving while
@@ -302,12 +296,11 @@ append-only, never edited", and <code>TREE/</code> as "a cache,
 rebuildable from the log alone". <code>recall</code> searches "every
 memory ever recorded, word for word".</p>
 <p>That is <a href="../../patterns/evidence-before-belief/">evidence
-before belief</a> in its purest form and with the strongest guarantee in
-the atlas: the derived layer cannot corrupt the evidence, because the
-code never writes to the evidence except by appending.
-<code>WAKE_LINES</code> is explicitly "a reading budget, not a storage
-budget: change it whenever, in either direction, and nothing is
-recomputed".</p>
+before belief</a> in its purest form: the derived layer cannot corrupt
+the evidence, because the code never writes to the evidence except by
+appending. <code>WAKE_LINES</code> is explicitly "a reading budget, not
+a storage budget: change it whenever, in either direction, and nothing
+is recomputed".</p>
 <h3 id="forget-corrects-the-summary-not-the-memory"><code>forget</code>
 corrects the summary, not the memory</h3>
 <p><code>memo forget &lt;lo&gt;-&lt;hi&gt;</code> "drop[s] a bad
@@ -329,14 +322,21 @@ format</h3>
 of #a-b is blank. Run: <code>memo forget a-b</code>", because "pending()
 lists a block only after its halves settled, so a missing half is a
 blank record — a corrupt write."</li>
-<li><code>repair</code> exists for truncated files.</li>
+<li><code>repair</code> drops a torn trailing record before the next
+append, so a crash mid-write cannot misalign every later record;
+<code>test.py</code> writes half a record and checks the next
+<code>note</code> lands whole with the expected id.</li>
+<li>Ids are assigned inside a cross-process lock
+(<code>fcntl.flock</code>, or <code>msvcrt</code> on Windows); the tests
+start sixteen <code>note</code> processes at once and require ids
+<code>#0</code>–<code>#15</code> with no collision.</li>
 <li>The store is "UTF-8 by construction, so the tool reads and prints
 UTF-8 no matter what the machine's locale says. Without this, one arrow
 in a memory makes wake crash on a latin-1 locale."</li>
 </ul>
 <p>An error message that contains the command that fixes it is a small
-thing that this atlas has otherwise seen only in <a
-href="../mempalace/">MemPalace</a>'s repair tooling.</p>
+thing; <a href="../mempalace/">MemPalace</a>'s repair tooling does the
+same.</p>
 <h3 id="transport-limits-are-a-first-class-concern">Transport limits are
 a first-class concern</h3>
 <blockquote>
@@ -346,37 +346,36 @@ cuts the head at 50 KB, Codex budgets 10,000 tokens. So the memory is
 handed over in parts that fit all of them. These are transport limits,
 not memory limits."</p>
 </blockquote>
-<p>No other system in this atlas has noticed that the <em>harness</em>
-silently truncates tool output, that each one truncates a different
-region, and that a memory block sized for a token budget can therefore
-arrive with its middle missing. For a design whose entire delivery
-mechanism is "print a lot of text at session start", that is the
-difference between working and appearing to work.</p>
+<p>The design starts from the fact that the <em>harness</em> silently
+truncates tool output, that each one truncates a different region, and
+that a memory block sized for a token budget can therefore arrive with
+its middle missing. For a design whose entire delivery mechanism is
+"print a lot of text at session start", that is the difference between
+working and appearing to work.</p>
 <p>Related, and equally practical: "After <code>curl | sh</code> nothing
 is on PATH, so a bare <code>memo nap 0-1 '...'</code> would not [run]:
 the tool names itself." Every printed command is emitted with the path
 that will actually execute.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
-<p>One line, at most 280 characters, fixed width, addressed by position.
-No tags, no type, no source, no timestamp field surfaced, no scope, no
-status.</p>
+<p>One line, at most 280 bytes of UTF-8, fixed width (a 320-byte
+record), addressed by position. Each record carries its id and the date
+of the <code>note</code>; there are no tags, no type, no source, no
+scope and no status.</p>
 <p>The prompt does the work a schema would elsewhere: it tells the agent
 to record "a task worth real effort, a fact or insight the user teaches
 you, anything you learn about their life (even indirectly), any event of
 lasting effect", and "Do not register redundant memories."</p>
-<p>What is absent is nearly everything this atlas usually looks for —
-trust state, provenance, scope, supersession, tombstones, contradiction
-handling. The compression prompt carries the only epistemic instruction
-in the system: "Keep what has lasting effect, drop what does not.
-<strong>Invent nothing.</strong>"</p>
+<p>What is absent is trust state, provenance, scope, supersession,
+tombstones, contradiction handling. The compression prompt carries the
+only epistemic instruction in the system: "Keep what has lasting effect,
+drop what does not. <strong>Invent nothing.</strong>"</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Two paths. <code>wake</code> prints the budgeted cover — the whole
 memory, at age-appropriate resolution, with no query.
 <code>recall &lt;regex&gt;</code> searches every raw memory word for
 word, which is exact and unranked.</p>
 <p>There is no embedding model, so there is no version to migrate and no
-drift when a provider changes a model — the failure mode this atlas
-lists as an uncovered dimension does not exist here.
+drift when a provider changes a model.
 <code>zoom &lt;lo&gt;-&lt;hi&gt;</code> opens a block into its two
 halves for reading down the tree.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
@@ -440,10 +439,18 @@ naps promptly; nothing enforces it.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>test.py</code> is 611 lines against an 860-line tool, which is
-a good ratio, and the README's scale figures (608 MB and 0.03s at a
-million memories) are the only committed footprint-and-latency numbers
-in this atlas.</p>
+<p><code>test.py</code> is 614 lines against an 859-line tool, and the
+README's scale figures (608 MB and 0.03s at a million memories) are
+committed footprint-and-latency numbers.</p>
+<p>The tests assert invariants of the cover and the store rather than
+retrieval exclusions: a part rendered as of <code>T</code> is
+byte-identical after a later <code>note</code> and after compressions
+paid mid-wake, a future <code>T</code> is refused, <code>init</code> on
+a lived-in store leaves every file's fingerprint unchanged,
+<code>forget</code> returns the tree to its size, and
+<code>recall</code> stays under the harness cap and says it was capped.
+None asserts that particular material must not be returned, so
+<code>negative_eval</code> is not awarded.</p>
 <p>Nothing was run for this review. There is no quality benchmark, and
 the thing worth measuring is specific: <strong>how much is lost by the
 geometric cover</strong>. Because the log is retained, that is directly
@@ -505,8 +512,6 @@ workflow beyond noting a correction later and hoping the compression
 prefers it?</li>
 <li>Which model produced each summary? Nothing records it, and quality
 varies.</li>
-<li>What does concurrent <code>note</code> from two agents do to a
-fixed-width append?</li>
 <li>Would a licence be added on request? Everything above is unusable
 without one.</li>
 </ul>
@@ -525,6 +530,17 @@ integration.</li>
 relocatable with <code>$MEMORY_DIR</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/VictorTaelin/OptMem/commit/1fb164cf39028047781f72ac3bb1e5a691c1dcb0"><code class="commit-id" title="1fb164cf39028047781f72ac3bb1e5a691c1dcb0">1fb164cf…</code></a>
+— three commits on, 2026-07-30. Screened before reading: no auto-run
+surface, no build-time execution, one unpinned surface
+(<code>install.sh</code> fetches <code>memo</code> from
+<code>main</code>); nothing was installed or run. The default
+<code>WAKE_LINES</code> dropped from 208 to 96 (about 8k tokens in two
+parts), and every limit is stated in bytes. Still no licence file.
+<code>audit_log</code> kept, with the record naming
+<code>log_append</code> as the sole writer and the unrecorded summary
+layer.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/VictorTaelin/OptMem/commit/e36da55815951d50d103d7242d92cf9a71ceee96"><code class="commit-id" title="e36da55815951d50d103d7242d92cf9a71ceee96">e36da558…</code></a>
 — first reading.</p>

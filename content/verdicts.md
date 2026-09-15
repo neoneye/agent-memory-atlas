@@ -587,7 +587,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: no background work at all — consolidation is requested inline in the output of `note`, so write-to-readable lag is zero and nothing rewrites memory unobserved.
 - Biggest risk: no licence file, so nothing here is reusable; and a wrong memory is permanent, because the log is never edited.
 - Most reusable component: the `cover` geometry — one parameter, closed form, and no compression at all while everything fits.
-- Maturity impression: 860 lines with a 611-line test file, and the only committed footprint-and-latency figures in the atlas.
+- Maturity impression: 859 lines with a 614-line test file covering cross-process ids and torn writes, plus committed footprint-and-latency figures at a million memories.
 - Study when: you are about to build a consolidation queue and have not asked whether you need one.
 - Do not copy when: you need to fix a mistake — OptMem can always tell you what was written and can never repair it.
 
