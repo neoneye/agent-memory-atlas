@@ -150,7 +150,7 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 232 of 457 apply a scope key as a filter on the
+shallowest.</strong> 233 of 457 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
 <li><strong>Negative evidence is almost never tested.</strong> 220 of
@@ -162,7 +162,7 @@ path</strong>, and the rest keep material out of a projection, a
 preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
-<li><strong>Trust is usually a number, not a state.</strong> 103 of 457
+<li><strong>Trust is usually a number, not a state.</strong> 104 of 457
 record a discrete epistemic status. The rest store a confidence float,
 which cannot express <em>rejected</em> and so cannot survive being
 wrong.</li>
@@ -353,7 +353,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 232 of
+A scope <em>key applied as a filter on the read path</em> is what 233 of
 457 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -13624,39 +13624,48 @@ custom agent's facts flow up to the default agent</td>
 </tr>
 <tr>
 <td><code>kirocrew</code></td>
-<td>Two kinds — a semantic key-value entry under an allow-listed prefix,
-and an episodic conversation fragment with an embedding, tags and an
-importance score — beside three markdown files a person can read</td>
-<td><code>~/.kiro/crew/memory.db</code> in SQLite WAL with an optional
-FAISS index beside it, plus <code>preferences.md</code>,
-<code>projects.md</code> and dated <code>history/</code> files under the
-workspace directory</td>
-<td>Vector similarity over FAISS with time-decay scoring, falling back
-to FTS5 when embeddings are unavailable; relevance is filtered on raw
-cosine before decay is applied</td>
-<td>An ordered validation chain returning a typed
-<code>SemanticRejectCode</code>; <code>user_explicit</code> is the
-privileged source that bypasses the confidence floor and alone may write
-the reserved <code>system.</code> namespace</td>
-<td><code>is_deleted</code> flags on both tables, delete endpoints on
-the dashboard, and a conflict resolver that can skip a write outright;
-no supersession chain and no record keyed on a refused value</td>
-<td>None — a single local workspace per machine, with no user, project
-or tenant key on the read path</td>
-<td>A desktop app, a web dashboard, a CLI, Slack and Discord bridges,
-and Kiro Crew Apps bundling agents, skills, schedules and services</td>
-<td>Unattended multi-step tasks, scheduled recurring jobs and
-heartbeats; event rotation past ten thousand rows; a self-heal path over
-the memory store</td>
-<td>A confidence float gated at 0.8, a <code>source</code> string on
-every entry, and a privileged <code>user_explicit</code> source — no
-discrete epistemic status</td>
-<td>Rejected writes are audited, and an injection-blocked snippet is
-stripped of exfiltration URLs and credentials before it is persisted,
-because the dashboard renders that snippet verbatim</td>
-<td>Refusals are recorded and never consulted, so a blocked value can be
-offered again; the event log rotates at ten thousand rows; and no scope
-key exists anywhere</td>
+<td>Three structured kinds — a semantic key-value fact under an
+allow-listed prefix, an episodic fragment with an embedding, and a
+lesson — each with a record-metadata row carrying status, validity
+window, subject, predicate and revision; beside markdown files a person
+can read</td>
+<td>SQLite WAL <code>memory.db</code> per store with an optional FAISS
+index, <code>memory_record_meta</code> and a
+<code>memory_revisions</code> journal; the global V1 store under
+<code>~/.kiro/crew/</code>, and a private V2 store per Crew Member
+behind a protected binding</td>
+<td>Eligibility first — non-active or out-of-window records withheld —
+then vector similarity admitted on raw cosine with decay for ranking in
+V1, FTS5 as fallback; V2 fragments only through explicit
+<code>memory_recall</code>; lessons gated by a stored repository
+scope</td>
+<td>An ordered validation chain returning one of eight typed
+<code>SemanticRejectCode</code>s; in a private store a non-owner,
+unverified change to an existing fact becomes a conflict proposal and
+the current fact stays</td>
+<td>Status moves to superseded, expired or forgotten rather than
+deleting; every accepted change journaled with before and after (V1
+keeps 20 per record); up to three contradicted episodes retired per
+write and restorable</td>
+<td>Lessons carry a <code>repo_scope</code> applied on injection and
+failing closed without a project; members are separate stores; semantic
+and episodic rows have no scope predicate inside a store</td>
+<td>A desktop app, a web dashboard with a record editor, a CLI, Slack,
+Discord and Telegram bridges, Crew Apps, and a private-memory MCP for
+Kiro, Claude Code and KAS backends</td>
+<td>Consolidation, bounded episodic retirement, whole-store backups,
+event rotation past ten thousand rows, a self-heal path, and a nightly
+memory benchmark in CI</td>
+<td>A four-value record status read on every recall, a confidence float
+gated at 0.8, a privileged <code>user_explicit</code> source, and
+literal verified corrections bound to the revision the model saw</td>
+<td>Typed refusals with redacted audit snippets; disputed changes parked
+as proposals for the owner; status and validity checked at read time; a
+repository scope that fails closed</td>
+<td>Refusals are recorded and never consulted; the
+<code>user_explicit</code> exemption is a string; path-fragment scopes
+can match many repositories; V1 history is pruned to 20 accepted
+snapshots per record</td>
 </tr>
 <tr>
 <td><code>klypix-mcp</code></td>
@@ -24247,7 +24256,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>103 of 457:</em> <a
+<p><em>104 of 457:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
 <a href="../systems/agentdatabase/"><code>agentdatabase</code></a>, <a
@@ -24288,6 +24297,7 @@ href="../systems/hexis/"><code>hexis</code></a>, <a
 href="../systems/hippo-memory/"><code>hippo-memory</code></a>, <a
 href="../systems/icarus/"><code>icarus</code></a>, <a
 href="../systems/kage/"><code>kage</code></a>, <a
+href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
 href="../systems/klypix-mcp/"><code>klypix-mcp</code></a>, <a
 href="../systems/knowledge-worker/"><code>knowledge-worker</code></a>,
 <a href="../systems/llm-wiki-cli/"><code>llm-wiki-cli</code></a>, <a
@@ -24438,7 +24448,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>232 of 457:</em> <a
+<p><em>233 of 457:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -24533,6 +24543,7 @@ href="../systems/hivemind-activeloop/"><code>hivemind-activeloop</code></a>,
 <a href="../systems/honcho/"><code>honcho</code></a>, <a
 href="../systems/intaris/"><code>intaris</code></a>, <a
 href="../systems/khoj/"><code>khoj</code></a>, <a
+href="../systems/kirocrew/"><code>kirocrew</code></a>, <a
 href="../systems/kube-coder/"><code>kube-coder</code></a>, <a
 href="../systems/langgraph/"><code>langgraph</code></a>, <a
 href="../systems/langmem/"><code>langmem</code></a>, <a
@@ -28647,13 +28658,13 @@ seed or replay path for debugging a selection.</p>
 Modes</h2>
 <h3 id="an-audit-log-that-renders-what-it-caught">An audit log that
 renders what it caught</h3>
-<p><a href="../systems/kirocrew/">Kiro Crew</a> is the only system here
-that treats its own security log as an attack surface. It screens both
-stores for prompt-injection patterns, logs a blocked write with a
-snippet of the offending text — and redacts exfiltration URLs and
-credentials from that snippet <em>before persisting it</em>, with the
-reason in the code: the dashboard renders the snippet verbatim, so
-<em>"poisoned text can't smuggle secrets onto that surface."</em></p>
+<p><a href="../systems/kirocrew/">Kiro Crew</a> treats its own security
+log as an attack surface. It screens both stores for prompt-injection
+patterns, logs a blocked write with a snippet of the offending text —
+and scrubs that snippet <em>before persisting it</em> (<em>"Scrub
+untrusted rejected content before persisting its audit snippet"</em>),
+then redacts every memory event again before the dashboard receives
+it.</p>
 <p>The generalisation is worth naming because the corpus is full of the
 first half without the second. A refusal log is a place where hostile
 input is stored by design and later displayed to a human — which makes
@@ -30392,7 +30403,7 @@ href="https://github.com/BasedHardware/omi/commit/bacd4cf2985bdab6098994345bd52e
 <li><a
 href="https://github.com/kirodotdev/KiroCrew">kirodotdev/KiroCrew</a> at
 <a
-href="https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2"><code class="commit-id" title="429cbad8cdb7bfbf4c10f6343374565832b176d2">429cbad8…</code></a></li>
+href="https://github.com/kirodotdev/KiroCrew/commit/534b003ee9550ecfa83b8c8428794323a97ce9d9"><code class="commit-id" title="534b003ee9550ecfa83b8c8428794323a97ce9d9">534b003e…</code></a></li>
 <li><a href="https://github.com/fpytloun/mnemory">fpytloun/mnemory</a>
 at <a
 href="https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681"><code class="commit-id" title="c67b9167e18f1730786c07c48f883674425dd681">c67b9167…</code></a></li>
@@ -35450,19 +35461,18 @@ each reference the analyzer could not resolve, so the index ships its
 own coverage gaps. Read against the corpus this atlas holds, that is a
 discrete ordered status that withholds, kept apart from where a claim
 came from, and applied on the read path — the combination <a
-href="../capabilities/">one hundred and three systems</a> here express
-as a single float, and the reason <code>trust_state</code> is the mark
-most often refused. <strong>And the README states the retrieval
-consequence better than most memory systems state it about
-themselves</strong>: because the edges are type-resolved rather than
-name-matched, <em>"an empty reference list means <strong>nobody calls
-it</strong>, not that nothing was found, and <code>grep</code> cannot
-tell those apart."</em> That distinction — evidence of absence against
-absence of evidence — is what this atlas's negative-retrieval mark asks
-a test to establish, here made a property of the read path itself. The
-reversal condition: a store beside the graph holding something an agent
-concluded about the code rather than something a type checker derived
-from it.</li>
+href="../capabilities/">one hundred and four systems</a> here express as
+a single float, and the reason <code>trust_state</code> is the mark most
+often refused. <strong>And the README states the retrieval consequence
+better than most memory systems state it about themselves</strong>:
+because the edges are type-resolved rather than name-matched, <em>"an
+empty reference list means <strong>nobody calls it</strong>, not that
+nothing was found, and <code>grep</code> cannot tell those apart."</em>
+That distinction — evidence of absence against absence of evidence — is
+what this atlas's negative-retrieval mark asks a test to establish, here
+made a property of the read path itself. The reversal condition: a store
+beside the graph holding something an agent concluded about the code
+rather than something a type checker derived from it.</li>
 <li><strong><code>Arc-Computer/ATLAS</code> was examined and has no
 report: it is an offline training engine, and the store it trains from
 lives in a different repository.</strong> Apache-2.0, 11,250 lines of
@@ -36980,7 +36990,7 @@ workflow."</em> What is public is the product of the multi-day run:
 single <code>gameloop</code> branch of 291 commits with no GitHub
 issues, whose generated 5,107-line README is a per-loop development
 record for 96 loops (the paper describes 70) carrying an issue ledger of
-103 recorded and 94 closed (the paper's count at loop 70 is 81 and 65,
+104 recorded and 94 closed (the paper's count at loop 70 is 81 and 65,
 with seventeen reopened after a later change broke verified behaviour),
 a <code>.gameloop/vcs.json</code> binding the three roles to bot
 identities under the push policy

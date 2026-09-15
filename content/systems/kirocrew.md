@@ -1,51 +1,64 @@
 ---
 title: "Kiro Crew"
-eyebrow: "Seven ways a write is refused"
-description: "A local development workspace whose memory writes pass an ordered gate — key shape, prefix allow-list, reserved namespace, confidence floor, size, injection patterns, conflict — each refusal typed and the security ones logged with the value redacted first."
+eyebrow: "Refused, parked, or journaled"
+description: "A local development workspace whose memory writes pass an ordered gate of eight typed refusals, whose private member stores park a disputed change as a proposal for the owner, and whose every structured read checks a record status and validity window first."
 root: ../..
 page_kind: system
 source_name: "kirodotdev/KiroCrew"
 source_url: https://github.com/kirodotdev/KiroCrew
 archive_name: "kirodotdev--KiroCrew"
-revision: 429cbad8cdb7bfbf4c10f6343374565832b176d2
-revision_url: https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2
-analyzed_at: 2026-08-06
-capabilities: "audit_log, human_review, negative_eval"
+revision: 534b003ee9550ecfa83b8c8428794323a97ce9d9
+revision_url: https://github.com/kirodotdev/KiroCrew/commit/534b003ee9550ecfa83b8c8428794323a97ce9d9
+analyzed_at: 2026-09-15
+capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+capability_evidence:
+  trust_state: "the record-metadata status, read on every structured recall | src/kiro_crew/memory_record_metadata.py:107 statuses, :468 eligible; src/kiro_crew/vector_memory.py:2125 _ineligible_ids, :2151 _eligible_rows, :2522 supersede | `status` is one of active, superseded, expired or forgotten, set by supersession, forgetting and the owner's editor, and any record not active or outside valid_from/valid_until is withheld before ranking and capping | test/test_perf_memory_quickwins.py:126 (tombstoned rows excluded)"
+  scope_enforced: "lessons, by stored repository scope | src/kiro_crew/vector_memory.py:5385 get_lessons_context, src/kiro_crew/project_scope.py:100 project_scope_satisfied | a lesson's repo_scope is applied on the injection read against the session's active project, a scoped lesson is withheld when no project is known, and a present but unusable scope is withheld rather than treated as global; semantic and episodic rows carry no read predicate, and member stores are a partition | test/test_lesson_project_scope.py:303, :313"
+  audit_log: "memory_events and the revision journal | src/kiro_crew/vector_memory.py:2324 event insert, :2868 rotate_events; src/kiro_crew/memory_record_metadata.py:251 _append_revision | memory_events records create and update with old and new values plus five refusal codes, rotating at 10,000 rows; memory_revisions appends every accepted mutation with before and after snapshots and every conflict proposal, kept in full for V2 and capped at 20 accepted snapshots per record in V1 | test/test_member_memory_denial_audit.py"
+  human_review: "the owner's record editor and conflict proposals | src/kiro_crew/vector_memory.py:2267-2292 proposal branch; src/kiro_crew/memory_record_metadata.py:428 propose_conflict; src/kiro_crew/memory_edit.py:383-392, :470 preview_edit, :620 apply_edit | in a private store a non-owner, unverified change to an existing fact is saved as a conflict proposal and the current fact retained; the owner previews a correction as a signed token whose digest includes pending proposal ids and applies it in one transaction; the dashboard also deletes and restores retired episodes | test/test_memory_edit.py"
+  negative_eval: "redaction, embedding and tombstone exclusion, and lesson scope | test/test_memory_graph.py, test/test_perf_memory_quickwins.py, test/test_lesson_project_scope.py | an AWS example key id is asserted absent from a graph node title; an embedding BLOB is asserted absent from search results and a tombstoned row from the result ids; a scoped lesson's text is asserted absent from context outside its repository beside the in-repository control | test/test_memory_graph.py:229, test/test_perf_memory_quickwins.py:122, :140, test/test_lesson_project_scope.py:310-311"
 stack_storage: "sqlite, faiss"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
-  memory_unit: "Two kinds — a semantic key-value entry under an allow-listed prefix, and an episodic conversation fragment with an embedding, tags and an importance score — beside three markdown files a person can read"
-  storage: "`~/.kiro/crew/memory.db` in SQLite WAL with an optional FAISS index beside it, plus `preferences.md`, `projects.md` and dated `history/` files under the workspace directory"
-  retrieval: "Vector similarity over FAISS with time-decay scoring, falling back to FTS5 when embeddings are unavailable; relevance is filtered on raw cosine before decay is applied"
-  write: "An ordered validation chain returning a typed `SemanticRejectCode`; `user_explicit` is the privileged source that bypasses the confidence floor and alone may write the reserved `system.` namespace"
-  update_delete: "`is_deleted` flags on both tables, delete endpoints on the dashboard, and a conflict resolver that can skip a write outright; no supersession chain and no record keyed on a refused value"
-  scoping: "None — a single local workspace per machine, with no user, project or tenant key on the read path"
-  integration: "A desktop app, a web dashboard, a CLI, Slack and Discord bridges, and Kiro Crew Apps bundling agents, skills, schedules and services"
-  background: "Unattended multi-step tasks, scheduled recurring jobs and heartbeats; event rotation past ten thousand rows; a self-heal path over the memory store"
-  trust: "A confidence float gated at 0.8, a `source` string on every entry, and a privileged `user_explicit` source — no discrete epistemic status"
-  strengths: "Rejected writes are audited, and an injection-blocked snippet is stripped of exfiltration URLs and credentials before it is persisted, because the dashboard renders that snippet verbatim"
-  risks: "Refusals are recorded and never consulted, so a blocked value can be offered again; the event log rotates at ten thousand rows; and no scope key exists anywhere"
+  memory_unit: "Three structured kinds — a semantic key-value fact under an allow-listed prefix, an episodic fragment with an embedding, and a lesson — each with a record-metadata row carrying status, validity window, subject, predicate and revision; beside markdown files a person can read"
+  storage: "SQLite WAL `memory.db` per store with an optional FAISS index, `memory_record_meta` and a `memory_revisions` journal; the global V1 store under `~/.kiro/crew/`, and a private V2 store per Crew Member behind a protected binding"
+  retrieval: "Eligibility first — non-active or out-of-window records withheld — then vector similarity admitted on raw cosine with decay for ranking in V1, FTS5 as fallback; V2 fragments only through explicit `memory_recall`; lessons gated by a stored repository scope"
+  write: "An ordered validation chain returning one of eight typed `SemanticRejectCode`s; in a private store a non-owner, unverified change to an existing fact becomes a conflict proposal and the current fact stays"
+  update_delete: "Status moves to superseded, expired or forgotten rather than deleting; every accepted change journaled with before and after (V1 keeps 20 per record); up to three contradicted episodes retired per write and restorable"
+  scoping: "Lessons carry a `repo_scope` applied on injection and failing closed without a project; members are separate stores; semantic and episodic rows have no scope predicate inside a store"
+  integration: "A desktop app, a web dashboard with a record editor, a CLI, Slack, Discord and Telegram bridges, Crew Apps, and a private-memory MCP for Kiro, Claude Code and KAS backends"
+  background: "Consolidation, bounded episodic retirement, whole-store backups, event rotation past ten thousand rows, a self-heal path, and a nightly memory benchmark in CI"
+  trust: "A four-value record status read on every recall, a confidence float gated at 0.8, a privileged `user_explicit` source, and literal verified corrections bound to the revision the model saw"
+  strengths: "Typed refusals with redacted audit snippets; disputed changes parked as proposals for the owner; status and validity checked at read time; a repository scope that fails closed"
+  risks: "Refusals are recorded and never consulted; the `user_explicit` exemption is a string; path-fragment scopes can match many repositories; V1 history is pruned to 20 accepted snapshots per record"
 ---
 
 ## 1. Executive Summary
 
 Kiro Crew is a local development workspace from the Kiro team — desktop app, web
-dashboard, CLI, Slack and Discord bridges — that runs unattended tasks and
-scheduled jobs on your own hardware. Apache-2.0, 1,606 commits since 1 June
-2026, 475,988 lines of Python under **502,973 lines of tests across 1,024
-files**. The README's claim is memory: *"persistent, self-learning, and
+dashboard, CLI, Slack, Discord and Telegram bridges — that runs unattended tasks
+and scheduled jobs on your own hardware. Apache-2.0, 6,247 commits since 1 June
+2026, about 1,560 Python modules under `src/kiro_crew/` beside 2,544 files under
+`test/`. The README's claim is memory: *"persistent, self-learning, and
 self-evolving… remembers across sessions."*
 
-The memory is two stores with different jobs. `src/kiro_crew/memory.py` (528
-lines) keeps `preferences.md`, `projects.md` and dated `history/` files under
-`~/.kiro/crew/workspace/memory/`, with an FTS5 index beside them — human-readable
-by design. `src/kiro_crew/vector_memory.py` (2,764 lines) is the structured half:
-a semantic key-value table and an episodic fragment table in SQLite WAL, with an
-optional FAISS index.
+The memory is now two generations in one package. **V1** is the global store every
+install already runs: `preferences.md`, `projects.md` and dated `history/` files
+with an FTS5 index (`src/kiro_crew/memory.py`), and a structured `memory.db` —
+semantic key-value rows, episodic fragments with embeddings, lessons, and an
+events table — behind `VectorMemoryStore` (`src/kiro_crew/vector_memory.py`,
+7,033 lines). **V2** is a private store per Crew Member: new members get one
+automatically, an existing member moves only when the owner chooses *Create
+private memory*, and a member's process reaches its store through a
+process-protected binding and a signed proof rather than a caller-selected
+session header. V2 execution also requires the OS filesystem sandbox. Both
+generations share the record metadata, revision journal and editor described
+below.
 
-**The reason to read this is the write path.** A semantic write passes an ordered
-chain, and every refusal is a typed `SemanticRejectCode`:
+**The write gate is still the reason to read it.** A semantic write passes an
+ordered chain in `validate_semantic` (`vector_memory.py:1678`), and every
+refusal is a typed `SemanticRejectCode` (`:189`):
 
 | Code | Refuses |
 | --- | --- |
@@ -53,455 +66,414 @@ chain, and every refusal is a typed `SemanticRejectCode`:
 | `allowlist_reject` | a key outside the configured prefixes |
 | `reserved_prefix` | a `system.` key from any source but `user_explicit` |
 | `low_confidence` | confidence below 0.8, unless the source is `user_explicit` |
+| `value_empty` | a null or empty value |
 | `value_size` | a value over 4,096 bytes |
 | `injection_blocked` | a value matching the prompt-injection patterns |
 | `conflict_skip` | a write the conflict resolver declines against the existing value |
 
-Four of the seven are `_AUDITABLE_REJECT_CODES` and land in the `memory_events`
-table; two are `_SECURITY_REJECT_CODES`. A refusal here is a fact with a name and
-a record, not a silent `return False` — which is the difference between a gate
-you can operate and a gate you can only hope is working.
+Five of the eight are `_AUDITABLE_REJECT_CODES` (`:307`) and land in the
+`memory_events` table; `injection_blocked` and `reserved_prefix` are the security
+codes. Episodic text is screened for injection too, because *"a poisoned turn
+could persist steering instructions that get re-injected into future
+contexts"*, and the rejected text passes through `redact_and_truncate` before its
+audit snippet is stored (`:3075-3092`), with the dashboard redacting every memory
+event again before returning it.
 
-**And one comment in that path is worth the whole report.** Episodic text is
-screened for injection too, because *"a poisoned turn could persist steering
-instructions that get re-injected into future contexts."* When it matches, the
-rejection is logged with a snippet — and before the snippet is stored:
+**What changed since the first reading is that a memory now has a status, a
+validity window and a revision history.** `memory_record_meta` gives every fact,
+directive and episode a `status` — `active`, `superseded`, `expired`,
+`forgotten` — plus `valid_from`, `valid_until`, `observed_at`, `source_ref`,
+`subject`, `predicate` and `scope`, and `memory_revisions` journals every
+accepted mutation with its before and after snapshots. The read path drops any
+record that is not active or is outside its window before ranking
+(`_ineligible_ids`, `:2125`). In a private store, a non-owner change to an
+existing fact that no verified correction backs is not applied: it becomes a
+`conflict` proposal *"saved for review"* while the current fact is retained
+(`:2267-2292`), and the owner resolves it in the record editor.
 
-```python
-# The rejected text is untrusted conversation content and the snippet
-# is surfaced verbatim on the dashboard (/api/memory/events -> get_events).
-# Scrub exfiltration URLs + credentials before persisting the audit
-# snippet so poisoned text can't smuggle secrets onto that surface.
-safe_snippet, _ = redact_exfiltration_urls(text[:200])
-safe_snippet, _ = redact_credentials(safe_snippet)
-```
-
-That is second-order reasoning about a defence: having built an audit log for
-blocked injections, they asked what the audit log itself becomes when the thing
-it records is hostile and a human UI renders it. **No other system here treats
-its own security log as an attack surface.**
-
-**The trust model is a privileged source rather than a status.** `user_explicit`
-bypasses the confidence floor and is the only source permitted to write the
-reserved `system.` namespace. Everything else — extraction, tool output,
-conversation — is subject to the 0.8 gate. That is a clean two-tier hierarchy and
-it is expressed entirely in `source` string comparisons, with no field recording
-what the system concluded about a given memory.
-
-**The gap is the one the refusal machinery makes conspicuous.** Every reject is
-recorded and none is consulted. `log_reject_event` writes the code, the key and
-the value into `memory_events`; nothing reads that table on the write path. A
-value blocked as an injection today can be offered again tomorrow and is screened
-afresh by the same pattern list — which works until the pattern list is the thing
-that was wrong. The material for a value-keyed refusal is already sitting in the
-audit table, unqueried.
-
+**The gap the first reading named has narrowed from one side.** Refusals are
+still recorded and not consulted: nothing reads `memory_events` before a write,
+so a value blocked as an injection is re-screened by the same pattern list when
+it returns. Conflict proposals, by contrast, are deduplicated on their exact
+proposed value and base revision (`memory_record_metadata.py:428`), so the same
+disputed change does not queue twice — but that is a check against the proposal
+queue, not a refusal keyed on a rejected value.
 
 ## 2. Mental Model
 
-There are two memories and they are kept deliberately unalike.
-
-The **markdown half** is what a person reads: `preferences.md` for learned user
-preferences, `projects.md` for active project context, and one file per day under
-`history/`. It seeds itself with comment markers — `<!-- Learned from
-conversations -->` — so an empty store explains what it is for. Recall over it is
-FTS5 plus a recency window, and correction is editing the file.
-
-The **structured half** is what the retrieval path uses: `semantic_memory` keyed
-on an allow-listed string, and `episodic_memories` holding conversation
-fragments with embeddings, tags and importance. Both carry `is_deleted` rather
-than being removed.
-
-A memory becomes a belief by surviving the gate, and the gate is where all the
-epistemics live. There is no candidate state, no review queue, no promotion: a
-write either passes all seven checks and lands, or is refused with a code. What
-would elsewhere be a status field is here a decision made once, at the door, and
-recorded in the event log rather than on the record.
-
-How a belief stops being one is thinner. `is_deleted` hides it, a person can
-delete it from the dashboard, and the conflict resolver can decline a
-replacement. Nothing marks a value as *wrong*, and nothing stops the same value
-arriving again.
+A memory becomes a belief by surviving the gate, and stops being one by a status
+change rather than a deletion. The gate decides at the door; the status decides
+at every read; the revision journal remembers both sides of every accepted
+change.
 
 ```mermaid
-%% caption: seven checks can refuse a write and four of the refusals are auditable — and nothing consults that log, so a refused value can be proposed again
-stateDiagram-v2
-    [*] --> Proposed: a write arrives with a source and a confidence
-    Proposed --> Refused: one of seven SemanticRejectCode checks fails
-    Refused --> Logged: four of the seven are auditable
-    Logged --> Proposed: nothing consults the log, so the value may return
-    Proposed --> Stored: all checks pass
-    Stored --> Stored: conflict resolver may decline a replacement
-    Stored --> Hidden: is_deleted set, by a person on the dashboard
-    Logged --> Rotated: oldest rows dropped past ten thousand
+%% caption: a write is refused with a typed code, parked as a proposal, or accepted into a journaled record whose status and validity window the read path checks every time
+flowchart TD
+    W["write: key, value, source, confidence"] --> GATE{"validate_semantic<br/>8 typed refusal codes"}
+    GATE -- "refused" --> EV[("memory_events<br/>5 codes audited, rotates at 10,000")]
+    EV -. "not consulted on the next write" .-> W
+    GATE -- "passes" --> PRIV{"private V2 store, existing fact,<br/>not owner, not verified correction?"}
+    PRIV -- "yes" --> PROP[("memory_revisions<br/>status = conflict<br/>current fact retained")]
+    PROP --> ED["owner record editor<br/>signed preview, then apply"]
+    ED --> REC
+    PRIV -- "no" --> REC[("record + memory_record_meta<br/>status, valid_from, valid_until")]
+    REC --> J[("memory_revisions<br/>accepted before/after")]
+    REC --> READ{"read: status active<br/>and inside validity window?"}
+    READ -- "no" --> HIDE["withheld before ranking"]
+    READ -- "yes" --> CTX["context or memory_recall"]
+    SUP["newer semantic value"] --> RET["retire up to 3 contradicting episodes<br/>restorable"]
+    RET --> REC
 ```
 
-The loop from `Logged` back to `Proposed` is the finding. Every other edge is a
-decision the system keeps; that one is a decision it writes down and then does
-not read.
-
+The dotted edge is still the finding the first reading made. The proposal path is
+the new one: in a private store, a disputed change waits for a person instead of
+landing.
 
 ## 3. Architecture
 
 **Runtime.** A Python backend (`src/kiro_crew/`) with an aiohttp dashboard, an
-Electron desktop app and a React web UI under `website/`, a CLI, and connection
-bridges. Everything runs on the operator's own hardware, locally or on a remote
-box they own.
+Electron desktop app and a React web UI under `website/`, a CLI, and channel
+bridges. Everything runs on the operator's own hardware.
 
-**Persistence.** `~/.kiro/crew/memory.db` is SQLite in WAL mode holding
-`semantic_memory`, `episodic_memories`, `memory_events` and a `schema_version`
-table. `~/.kiro/crew/memory.faiss` is an optional FAISS index. Beside them, the
-markdown workspace and `~/.kiro/crew/memory_index.db` for FTS5 over it.
+**Stores.** The global V1 store lives under `~/.kiro/crew/`: `memory.db` in SQLite
+WAL with `semantic_memory`, `episodic_memories`, `memory_events` and
+`schema_version`, an optional FAISS index, and the markdown workspace with its FTS5
+index. Each private member store is its own directory under the `memory_stores/`
+fence, carrying a manifest with a durable store and owner identity; a raw open
+refuses a lost or changed manifest. Opening an existing V1 database adds the
+shared `memory_record_meta` and `memory_revisions` tables and reconciles record
+identities, so V1 keeps its rows, algorithms and prompt behaviour but not
+byte-identical files.
 
-The SQLite import is worth a note for anyone who has fought this: it prefers
-`pysqlite3` and falls back to the stdlib, with a guard for the case where a
-bundle prune leaves an empty `pysqlite3` package whose import succeeds but which
-has no `connect` — *"an AttributeError at first use, not an ImportError."*
-Someone met that failure.
+**Which store a surface reaches.** The dashboard chat turn, delegated runs,
+member-owned scheduled jobs and the channel dispatchers resolve the session's
+recorded binding; jobs without member ownership, the heartbeat, the webhook
+runner and the task runner read the global store, and the specification lists
+that backlog under *"What is NOT isolated yet"*, pinned by
+`test_memory_store_seam.EXPECTED_BACKLOG`. The owner's dashboard Memory panel
+reaches any declared store through `?store=`; the memory graph, promotion,
+migration and import routes remain global-only.
 
-**Search stack.** FAISS for vector similarity when embeddings exist, FTS5
-otherwise, with a stemmer (`snowballstemmer`) on the lexical path. Retrieval
-applies time decay after relevance filtering, not before —
-*"Admission reads the raw `cosine_sim`, never the decay-adjusted"* score — so an
-old but genuinely relevant fragment is not filtered out for being old.
-
-**Background work.** Unattended multi-step tasks, scheduled recurring jobs,
-heartbeats that watch a system until it needs attention, a self-heal path over
-the memory store (`test_memory_selfheal.py`), and `rotate_events` trimming the
-audit table past 10,000 rows.
+**Background work.** Consolidation (V1 replaces preferences and projects; V2 keeps
+them owner-managed), episodic retirement on semantic change, automatic backups
+that cover a whole member store, `rotate_events` past 10,000 rows, and a self-heal
+path over the memory database.
 
 ### Deployment and ergonomics
 
-One machine, one install script, no services to stand up — the memory needs
-SQLite and nothing else, with FAISS and embeddings optional and a documented
-degradation to FTS5 without them.
-
-The markdown half is the ergonomic win. Three files in a directory, readable and
-editable in any editor, with the database as the index rather than the authority
-for that half. When something goes wrong with preferences, the fix is opening a
-file.
-
-The structured half is a SQLite database a person can open but is not meant to
-edit by hand, and the dashboard is the intended surface for it.
-
+One machine, one install, no services to stand up. FAISS and embeddings are
+optional, with FTS5 as the documented fallback. The markdown half is still three
+kinds of file a person can open. The structured half is meant to be edited
+through the dashboard's record editor, which previews a change as a signed token
+over a selector and applies it inside one SQLite transaction
+(`src/kiro_crew/memory_edit.py:470`, `:620`).
 
 ## 4. Essential Implementation Paths
 
-- **Markdown memory:** `src/kiro_crew/memory.py` — `preferences.md`,
-  `projects.md`, dated history, FTS5 index, and a 5-second history cache because
-  *"statting + reading up to 181 daily files synchronously on the event loop is a
-  per-message cost."*
-- **Structured memory:** `src/kiro_crew/vector_memory.py` — the schema at `:151`,
-  `SemanticRejectCode` at `:90`, the validation chain at `:475`–`:513`,
-  `_write_semantic` and conflict resolution at `:625`, episodic screening at
-  `:1066`, `rotate_events` at `:937`.
-- **Constants:** `src/kiro_crew/vector_memory_constants.py` — the injection
-  patterns and `_contains_injection`.
-- **Session memory:** `src/kiro_crew/dashboard/session_memory.py`.
-- **HTTP surface:** `src/kiro_crew/dashboard/handlers/memory.py` (1,374 lines) —
-  `api_memory_semantic_delete`, `api_memory_episodic_delete`, and the events
-  feed the dashboard renders.
-- **Human surface:** `website/src/pages/overview/MemoryTab.tsx`,
-  `MemoryGraphTab.tsx`, `VectorMemoryCard.tsx`, `SessionMemoryCard.tsx`,
-  `website/src/apps/crew-companion/MemoriesSection.tsx`.
-- **Tests:** `test/test_vector_memory.py`, `test_memory.py`,
-  `test_memory_graph.py`, `test_memory_selfheal.py`, `test_session_memory.py`,
-  `test_perf_memory_quickwins.py`.
-
+- **Write gate:** `vector_memory.py` — `SemanticRejectCode` `:189`, audited and
+  security code sets `:307`/`:315`, `validate_semantic` `:1678`,
+  `log_reject_event` `:1760`, `_write_semantic` `:2198` with the private-store
+  proposal branch at `:2267-2292`, episodic screening and redacted snippet at
+  `:3075-3092`.
+- **Record metadata and journal:** `src/kiro_crew/memory_record_metadata.py` —
+  statuses `:107`, schema `:133-153`, `_append_revision` `:251`, the V1
+  accepted-history cap `:285`, `propose_conflict` `:428`, `eligible` `:468`,
+  `verified_correction` `:35`.
+- **Read eligibility:** `vector_memory.py` — `_ineligible_ids` `:2125` and
+  `_eligible_rows` `:2151`; raw-cosine admission at `:3354`; lessons with the
+  repository gate in `get_lessons_context` `:5385`.
+- **Retirement and restore:** `_retire_stale_episodic` `:2529`,
+  `get_retired_episodic` `:4020`, `restore_episodic` `:4056`.
+- **Scope:** `src/kiro_crew/project_scope.py:100` `project_scope_satisfied`;
+  member bindings in `src/kiro_crew/member_memory_auth.py`.
+- **Editor:** `src/kiro_crew/memory_edit.py` and
+  `src/kiro_crew/dashboard/handlers/memory_edit.py`.
+- **Specification:** `docs/system-specs/modules/memory-skills-hooks.md`, 4,783
+  lines, which states each contract with the test that pins it.
 
 ## 5. Memory Data Model
 
-`semantic_memory` is `key` (primary key), `value_json`, `confidence`, `source`,
-`created_at`, `updated_at`, `is_deleted`. The key is the identity, which is what
-makes the allow-list meaningful: memory is a bounded namespace of things the
-system is permitted to know, not an open set.
+`semantic_memory` is still `key`, `value_json`, `confidence`, `source`,
+timestamps and `is_deleted`; `episodic_memories` is still id, conversation,
+text, embedding, tags, importance and `is_deleted`. `memory_events` keeps
+`event_type`, `memory_type`, `memory_key`, `old_value`, `new_value`, `source`,
+`created_at`.
 
-`episodic_memories` is `id`, `conversation_id`, `text`, `embedding` BLOB, `tags`,
-`importance`, `created_at`, `last_accessed_at`, `is_deleted`.
+`memory_record_meta` is the new layer over both, keyed on a lineage-independent
+record id: `kind` (fact, directive, episode), `revision`, `category`, `subject`,
+`predicate`, `scope`, **`status`**, **`valid_from`**, **`valid_until`**,
+`observed_at`, `source_ref`, a content hash and extracted email addresses. A
+unique index allows one *active* fact per `(scope, subject, predicate)`, so an
+explicit canonical identity cannot hold two live values. `normalize_metadata`
+refuses an unknown field or status and a window whose end is not after its
+start.
 
-`memory_events` is the third table and the interesting one: `event_type`,
-`memory_type`, `memory_key`, **`old_value`, `new_value`**, `source`,
-`created_at`. Both sides of a change, and — for the auditable reject codes — the
-value that was refused, in `new_value`, with nothing written to `memory_key` for
-an episodic reject because there is no key to write.
+`memory_revisions` carries `record_id`, `revision`,
+`base_revision`, `status` (`accepted` or `conflict`), `operation`, `source`,
+`before_json`, `after_json` and metadata. V1 keeps the latest 20 accepted
+snapshots per record and deletes older ones in the same transaction; V2 keeps
+all of them.
 
-**Provenance is a `source` string and it carries real authority.** It is not
-decoration: `source != "user_explicit"` is the condition on both the confidence
-gate and the reserved-namespace check. A single string field decides whether a
-write is privileged, which is economical and also means the whole trust model
-rests on every caller passing that string honestly.
+**Provenance is still a `source` string with real authority.** `user_explicit`
+bypasses the confidence floor and alone writes `system.`; in a private store it
+is also what lets a change to an existing fact apply without review. A verified
+correction is the other route: `verified_correction` accepts a change only when
+the user's own latest turn contains an explicit literal replacement — *"replace
+X with Y"*, *"use Y instead of X"*, or the Chinese equivalents — and binds it to
+the pre-extraction revision, leaving *"ambiguous natural language"* as a
+proposal.
 
-**No scope key exists anywhere** — no user, project, workspace or tenant column
-on either table. The design is one workspace per machine, and the read path has
-nothing to filter on. That is coherent for a local single-operator tool and it
-means the schema cannot be multi-tenanted without a migration.
-
-Temporal fields are `created_at`, `updated_at` and `last_accessed_at` — all
-record time. No validity interval.
-
+`valid_from` and `valid_until` are a validity interval checked against the
+current time on every read. No reader asks for an earlier instant — `eligible`
+takes a `now` that every caller leaves at its default — so there is no as-of
+query.
 
 ## 6. Retrieval Mechanics
 
-Episodic search is vector similarity over FAISS with a time-decay factor, falling
-back to FTS5 with a Snowball stemmer when embeddings are unavailable — a
-documented degradation rather than a hard dependency.
+A fresh V1 session reads preferences, projects, decayed daily history, semantic
+memory, query-ranked episodic memory and lessons. V2 session context reads
+essential anchors and query-free scoped lessons; its semantic and episodic
+fragments come only through an explicit `memory_recall` operation, and time
+decay applies only in V1.
 
-The ordering decision is the one worth copying. Relevance admission reads the
-**raw** cosine similarity and the decay factor is applied afterwards, for
-ranking. A comment states it directly: *"Admission reads the raw `cosine_sim`,
-never the decay-adjusted."* Filtering on a decayed score would silently make
-"old" and "irrelevant" the same condition, and an old fragment that answers the
-question exactly would drop below the threshold for having been written last
-year. Separating the admission test from the ranking function is a small change
-that prevents a whole class of quiet recall failure.
+Every structured read now filters on eligibility before ranking and capping:
+`_ineligible_ids` selects the records whose status is not `active` or that carry
+a window, and drops those `eligible` refuses, *"so validity is evaluated again on
+every recall"*.
 
-Thresholds are explicit and tuned: `_EPISODIC_RELEVANCE_THRESHOLD` at 0.55 for
-short texts, relaxed past 300 characters, with the constant commented
-*"(empirical)"* — honest about where the number came from.
+The admission rule from the first reading stands: relevance admission reads the
+**raw** cosine and decay is applied afterwards for ranking (`:3354`). The
+thresholds are 0.55, relaxed to 0.42 past 300 characters, and the constant's
+comment is now more candid than *"(empirical)"*: measured over the real embedder,
+*"the relevant and irrelevant cosine distributions OVERLAP, so no threshold
+separates them"*, and both branches sit looser than the best achievable cut.
 
-Semantic recall is a keyed lookup plus a hybrid formatting path for prompt
-injection (`:818`), so the two stores serve different questions: the key-value
-side answers "what do we know about X", the episodic side answers "what was said
-that resembles this".
-
-The markdown half is read on every message turn through `read_recent_history`,
-behind a 5-second cache keyed on the day, so the decay window shifting at
-midnight invalidates naturally.
-
+**Lessons carry a repository scope, and the gate fails closed.** A lesson may
+store `repo_scope`, a path fragment that identifies a repository by something it
+contains. `get_lessons_context` withholds a scoped lesson unless
+`project_scope_satisfied(scope, project_dir)` holds for the session's active
+project, and *"omitting it withholds every scoped lesson"*. A present but
+unusable scope is withheld rather than treated as global. Unscoped lessons reach
+every session by design. `project_scope.py` states the weakness plainly: a
+fragment many repositories contain — `src`, `docs` — matches all of them, so the
+precision of the boundary is the author's.
 
 ## 7. Write Mechanics
 
-Writes are synchronous and gated. The chain in `validate_semantic` runs in a
-fixed order — key format, allow-list, reserved prefix, confidence, size,
-injection — and returns a `(code, reason)` pair rather than a boolean, so the
-caller and the log both learn *which* rule refused.
+Writes are synchronous and gated as in section 1. Conflict resolution in
+`_write_semantic` is serialized, and a declined overwrite records a
+`conflict_skip` event with both values.
 
-Conflict resolution is a separate step at `_write_semantic`, and it is
-serialized: *"Steps 7-8 (SELECT→conflict-resolve→UPSERT) are serialized"*, with
-a `conflict_skip` event carrying the existing `value_json` as `old_value` and the
-incoming one as `new_value`. So a declined overwrite leaves both values in the
-record, which is more than most systems keep when a write loses.
+**In a private store, a disputed change becomes a proposal.** When the store runs
+the V2 policy, a change to an existing fact's value or metadata from any source
+other than `user_explicit`, and not backed by a verified correction, is persisted
+by `propose_conflict` as a `memory_revisions` row with status `conflict`, the
+current fact is retained, and the caller is told *"Conflicting update saved for
+review"*. The owner's record editor folds any pending proposal ids for the
+record into the signed preview's digest, so *"a proposal arriving after review
+must not be silently dismissed"*, and applying a `set` resolves them. In the
+global V1 store the conflict resolver still simply declines.
 
-Deletion is `is_deleted`, set by the dashboard endpoints. Both tables carry an
-index on that column, so the read path filters rather than compacts.
+**Accepted changes are journaled atomically with the write.** `sync_record`
+appends the before and after snapshots in the caller's transaction and raises on
+invalid metadata or a duplicate active identity, so the physical write rolls back
+with it.
 
-The episodic path additionally screens text length and injection patterns before
-admission, and its dedup threshold is 0.88 cosine.
+**Retirement is bounded and reversible.** When a semantic value changes, V2
+retires at most three episodes whose text asserts the old value against the full
+key (`_MAX_EPISODIC_RETIRED_PER_WRITE`), and marks them `superseded`; nothing
+hard-deletes an episode, `get_retired_episodic` lists retirements with the key
+that caused each, and `restore_episodic` clears the tombstone in place. A user's
+own delete is not offered for restoration.
 
-**The audit table is bounded.** `rotate_events` deletes the oldest rows past
-10,000, so the event log is a rotating window rather than a permanent history.
-For a local tool that is a defensible ceiling; it does mean the record of *why*
-an early memory was refused is the first thing to go, and those are the events
-that would explain how the store came to look the way it does.
-
-Nothing consults `memory_events` before a write. That is the gap section 1
-describes, and it is the difference between a system that refuses a value and one
-that refuses it *again*.
-
+**The audit table is still bounded.** `rotate_events` deletes the oldest
+`memory_events` rows past 10,000; the specification notes it is *"the sole hard
+`DELETE`"* in the module.
 
 ## 8. Agent Integration
 
-The workspace is the product: desktop app, web dashboard, CLI, and Slack and
-Discord bridges that continue the same work from a chat surface. Kiro Crew Apps
-bundle an interface with agents, skills, schedules, integrations and backend
-services.
+Desktop app, dashboard, CLI, Slack, Discord and Telegram, plus Crew Apps. The
+model's authority over structured memory is narrow: allow-listed prefixes, no
+`system.` writes, the 0.8 floor, and in a private store no silent change to an
+existing fact. Private provider startup requires a backend in the private-memory
+MCP allow-list — Kiro, Claude Code and KAS — and an enforced OS sandbox;
+unverifiable internal calls return `403 member_session_unverified` and never fall
+back to the global store.
 
-The model's authority over memory is deliberately narrow. It cannot write outside
-the allow-listed key prefixes, cannot touch the `system.` namespace at all, and
-its writes are held to the 0.8 confidence floor that a user's explicit statement
-is exempt from. What the agent *can* do freely is add episodic fragments, which
-is the lower-stakes half.
-
-The dashboard is a real review surface rather than a viewer: `MemoryTab`,
-`MemoryGraphTab` and `VectorMemoryCard` render the stores, the events feed shows
-refusals including blocked injections, and `api_memory_semantic_delete` and
-`api_memory_episodic_delete` let a person remove an entry. Inspect and adjudicate,
-after the fact rather than as a gate.
-
+The dashboard is a review surface in two senses. It renders every declared
+store's documents, rows and events for the owner, with delete, retired-restore
+and backup routes; and it hosts the record editor, where proposals wait and a
+correction is previewed before it is applied.
 
 ## 9. Reliability, Safety, and Trust
 
-**`audit_log` — earned, with the ceiling stated.** `memory_events` is an explicit
-table in the system's own store recording mutations with `old_value` and
-`new_value`, plus four of the seven refusal codes. `rotate_events` trims past
-10,000 rows, so it is a rotating window rather than a permanent ledger.
+**`trust_state` — earned.** `memory_record_meta.status` is a stored four-value
+field — `active`, `superseded`, `expired`, `forgotten` — moved by supersession
+(`vector_memory.py:2522`), forgetting and the owner's editor, and read on every
+structured recall, where any non-active record is withheld before ranking.
 
-**`human_review` — earned.** The dashboard renders both stores and the event
-feed, and the delete endpoints let a person act on what they see. It adjudicates
-after the fact rather than gating admission, which is the ordinary form of this
-mark.
+**`scope_enforced` — earned, on lessons.** `repo_scope` is stored with the lesson
+and applied on the injection read by `project_scope_satisfied`, failing closed
+when the session has no project; `test/test_lesson_project_scope.py` asserts a
+scoped lesson reaches its repository and is absent outside it and when the
+project is unknown. The member stores are a different kind of boundary — separate
+databases behind a protected binding — which is a partition and would not carry
+the mark on its own. Semantic and episodic rows carry no scope predicate on the
+read, and the `scope` column in `memory_record_meta` is part of a fact's identity,
+not a filter.
 
-**`negative_eval` — earned, and the cases are about the right thing.**
-`test_memory_graph.py` asserts an AWS access key id is absent from a returned
-result's `text` and from its `conversation_id`;
-`test_perf_memory_quickwins.py` asserts an embedding BLOB never leaks into a
-search result, and that a specific memory is absent from a result set. Committed
-cases pinning that particular material stays out of a retrieval, including a
-credential.
+**`audit_log` — earned.** `memory_events` records mutations with both values and
+five refusal codes, rotating at 10,000 rows. `memory_revisions` beside it is the
+fuller journal — every accepted mutation with before and after, and every
+proposal — kept in full for V2 and capped at 20 accepted snapshots per record in
+V1.
 
-**`tombstone` — not earned, and the machinery is one query short.** Refusals are
-typed, audited and carry the refused value in `new_value`. Nothing reads that
-column on the write path, so the same value can be offered indefinitely and is
-re-screened by the same pattern list each time. A system that already records
-what it refused, keyed near enough to the value to match on, is closer to this
-mark than most of the corpus.
+**`human_review` — earned.** The owner reviews and resolves conflict proposals
+in the record editor, previews every bulk or single correction before applying
+it, deletes and restores through the dashboard, and alone chooses when a member
+gets a private store.
 
-**`trust_state` — not earned.** Confidence is a float, `source` is a string, and
-`is_deleted` is a flag. The two-tier hierarchy is real but lives in comparisons
-(`source != "user_explicit"`) rather than in a field, so nothing records what the
-system concluded about a given memory.
+**`negative_eval` — earned.** `test_memory_graph.py` asserts an AWS example key
+id is absent from a graph node title; `test_perf_memory_quickwins.py` asserts an
+embedding BLOB never reaches a search result and a tombstoned row is excluded;
+`test_lesson_project_scope.py:303` asserts a scoped lesson's text is absent from
+context outside its repository beside the in-repository control.
 
-**`scope_enforced` — not found.** No user, project or tenant key on either table.
+**`tombstone` — not earned.** Refusals carry the refused value in `new_value` and
+nothing reads it on the write path; conflict proposals are deduplicated by exact
+value, which prevents a second identical proposal and does not refuse a value.
 
-**`bitemporal` — not found.** `created_at`, `updated_at` and `last_accessed_at`
-are all record time.
+**`bitemporal` — not earned.** The validity window is real and checked on every
+read, but only against the current instant.
 
 Other observations:
 
-- **The injection screen runs on both stores**, semantic and episodic, with the
-  episodic case reasoned about explicitly as persistence of steering
-  instructions across sessions.
-- **The audit snippet is redacted before storage** because the dashboard renders
-  it verbatim — the strongest single piece of security reasoning in this report.
-- **`system.` is a reserved namespace** requiring `user_explicit`, so the
-  agent cannot write the keys that configure its own behaviour.
-- **The whole trust model rests on the `source` string** being passed honestly by
-  every caller. There is no signature, no capability, and no check that a caller
-  claiming `user_explicit` is one.
-- **The event log rotating at 10,000** means a long-running workspace loses its
-  earliest refusals first.
-
+- **The trust boundary for `user_explicit` is still a string** at the store API.
+  The member binding and proof gate decide *which* store a process reaches; they
+  do not verify that a write claiming the privileged source came from the owner.
+- **The injection pattern list is still unmeasured**, and it gates both stores.
+- **V1 history is pruned by design.** An upgrade removes accepted snapshots
+  beyond 20 per record, and the specification advises exporting needed evidence
+  first.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,024 test files and 502,973 lines of test code against 475,988 lines of source —
-more test than source, which at this size is rare and worth stating plainly.
+2,544 files under `test/`, 73 of them memory-named, and nothing was run for this
+review. The names track contracts: `test_member_memory_ownership.py` (distinct
+stores for members sharing a slug, a broken binding never selecting the global
+store), `test_member_memory_denial_audit.py`, `test_memory_lineage_drift.py`,
+`test_memory_edit.py`, `test_episodic_retirement.py`,
+`test_lesson_project_scope.py`, `test_memory_multistore_stress.py`.
 
-Ten memory-named test modules, and the names track real risks rather than
-coverage: `test_vector_memory.py`, `test_memory_graph.py`,
-`test_memory_selfheal.py`, `test_memory_smoke.py`, `test_perf_memory_quickwins.py`,
-`test_session_memory.py`, `test_system_memory.py`,
-`test_dashboard_sessions_memory.py`, `test_ws_and_plan_memory_fixes.py`.
+**There is now a memory benchmark in CI.** `.github/workflows/memory-benchmark.yml`
+runs nightly, driven by `scripts/ci-member-memory-benchmark.py`, and
+`docs/task-specs/2026/09/memory-v2/algorithm-effectiveness-report.md` reports the
+V1-versus-V2 algorithm results. The handoff document beside it is unusually
+careful about what that evidence is: the algorithm corpus *"is synthetic and is
+not a held-out V1/V2 comparison"*, and the committed result JSON *"is an
+integrity fixture… not a new measurement"*.
 
-The negative cases are the strongest part. Asserting that
-`AKIAIOSFODNN7EXAMPLE` — a well-known example AWS key id — does not appear in a
-result's text *or* its `conversation_id` is a redaction test written by someone
-who thought about where else the string could surface. The embedding-leak case is
-the same instinct applied to a performance change.
+**The admission threshold is measured and reported as loose.** The specification
+section *"The admission gate is a loose cut, not a tuned one"* carries the
+harness and the overlap between relevant and irrelevant cosine distributions that
+the constant's comment summarises.
 
-Nothing was run for this review: seven dependency surfaces were inside the
-seven-day cooldown, and the tree carries `AGENTS.md` and `CLAUDE.md` addressed to
-a reading agent, both treated as data.
-
-What is not established: no measurement of the injection pattern list. It is the
-component the whole write gate depends on, and how often it blocks something it
-should not — or misses something it should catch — is not answered anywhere in
-the repository. A pattern list is a classifier with no reported precision.
-
+What is still not established: the injection pattern list's false-positive and
+false-negative rates.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Type your refusals.** `SemanticRejectCode` turns "the write didn't happen"
-  into seven distinct, loggable facts. A gate that returns a boolean is a gate
-  nobody can operate; a gate that returns `allowlist_reject` versus
-  `injection_blocked` is a gate you can build a dashboard on — and they did.
-- **Redact the audit record of hostile input.** If you log what an attacker sent
-  and then render it in a UI, your security log is an injection and exfiltration
-  channel. Scrubbing URLs and credentials from the snippet before it is persisted
-  is the fix, and almost nobody does it.
-- **Make memory a bounded namespace.** An allow-list of key prefixes, with a
-  reserved `system.` namespace only an explicit human source may write, converts
-  "what can the agent remember" from a prompt-level hope into a schema-level
-  rule.
-- **Admit on the raw score, rank on the decayed one.** Filtering on a
-  decay-adjusted similarity makes "old" and "irrelevant" the same condition and
-  silently loses old material that is exactly on point.
-- **Keep a human-editable half.** Three markdown files with comment markers
-  explaining what they are for, beside a database that is the index rather than
-  the authority for them. Correcting a preference is editing a file.
+- **Type your refusals.** Eight named codes turn "the write didn't happen" into
+  distinct, loggable facts a dashboard can count.
+- **Redact the audit record of hostile input, twice.** Scrub the snippet before
+  persisting it, and redact events again before returning them to the UI.
+- **Park a disputed change instead of applying it.** Keep the current fact,
+  journal the proposal against its base revision, dedupe it by value, and make
+  the reviewer's preview fail if a new proposal arrived since.
+- **Accept a correction only when the user said it literally.** Bind it to the
+  revision the model saw, reject it across a newer user turn, and leave
+  paraphrase as a proposal.
+- **Check validity at read time, not in a sweep.** A status and a window
+  evaluated on every recall cannot lag behind a background job.
+- **Fail a scope gate closed when the scope is unknown.** A scoped lesson with no
+  project withheld is the safe default; a present-but-unusable scope withheld is
+  the one people forget.
+- **Admit on the raw score, rank on the decayed one**, and write down when the
+  threshold does not actually separate the distributions.
+- **Make a heuristic deletion reversible and bounded**, and keep a user's own
+  delete out of the restore list.
 
 ### Avoid
 
-- **Recording a refusal you never consult.** Seven kinds of "no" written to a
-  table that no write path reads means the same value can be proposed forever.
-  One query against the refusal log, keyed on the value, converts a screen into a
-  memory.
-- **A trust model made of string comparisons.** `source != "user_explicit"`
-  carries the entire privilege boundary, and nothing verifies that a caller
-  claiming that source is entitled to it.
-- **Rotating the audit log without saying what it costs.** Ten thousand rows is a
-  reasonable ceiling; losing the *earliest* refusals first means losing the ones
-  that explain how the store was shaped.
-- **An unmeasured pattern list at the centre of a gate.** Everything downstream
-  trusts `_contains_injection`, and its precision is unreported.
+- **Recording a refusal you never consult.** The refused value is in
+  `memory_events` and no write reads it.
+- **A privilege boundary made of a source string.** Store isolation is now
+  cryptographic; the `user_explicit` exemption inside a store is not.
+- **A path-fragment scope without a distinctiveness check.** `src` satisfies
+  every repository.
+- **Pruning history on upgrade.** Capping V1 accepted snapshots at 20 is
+  documented, and it still removes evidence an operator may want.
 
 ### Fit
 
-This suits a single operator running a workspace on their own hardware who wants
-memory that is governed rather than accumulated. The gate is the product: if you
-want an agent that cannot quietly learn arbitrary keys about you, this is the
-clearest worked example in the corpus of stopping it at the schema.
-
-It is a whole workspace, not a library. There is no memory package to depend on —
-`vector_memory.py` is 2,764 lines coupled to the app's config loader, metrics and
-platform helpers — so adoption means adopting Kiro Crew, and reuse means porting
-the ideas.
-
-Walk away if you need multi-user or multi-project isolation. There is no scope
-key on either table and the design does not anticipate one; retrofitting it is a
-migration plus an audit of every read.
-
+This suits a single operator running a workspace, now including several members
+with private memories, who wants memory that is governed rather than
+accumulated. It is a whole workspace, not a library: `vector_memory.py` is 7,033
+lines coupled to the app's config, bindings and dashboard, so reuse means porting
+ideas. Walk away if you need semantic or episodic rows filtered by a scope
+predicate inside one store; isolation between members is by separate stores, and
+within a store only lessons are scoped.
 
 ## 12. Open Questions
 
-- **How good is the injection pattern list?** It gates both stores and its false
-  positive and negative rates are unreported. This is the number the design most
-  needs.
-- **Does anything verify a `source` claim?** The privilege boundary is a string
-  comparison; whether a caller can simply assert `user_explicit` was not traced.
-- **What is the conflict resolver's policy?** `conflict_skip` declines a write and
-  records both values; on what basis it decides was not read closely here.
-- **How often does `rotate_events` fire in a real workspace?** It decides how much
-  of the refusal history survives, and nothing reports on it.
-- **Do the markdown half and the structured half ever disagree?** Preferences live
-  in a file a person edits and also, potentially, as `semantic_memory` keys.
-  Nothing was found reconciling them.
-
+- **How good is the injection pattern list?** It gates both stores and its error
+  rates are unreported.
+- **Does anything verify a `user_explicit` claim inside a store?** The binding
+  proof selects the store; the exemption is still a string.
+- **How long do conflict proposals wait in practice**, and does anything surface a
+  backlog to the owner outside the editor?
+- **Will the unowned surfaces move to member stores?** The backlog is pinned in a
+  test; the specification argues several belong on the global store.
+- **Do the markdown half and the structured half ever disagree?** Nothing was
+  found reconciling preferences held in both.
 
 ## Appendix: File Index
 
-**Storage and schema**
-- `src/kiro_crew/vector_memory.py` — schema at `:151`, WAL SQLite, FAISS index
-- `src/kiro_crew/memory.py` — markdown workspace and the FTS5 index
+**Stores and schema**
+- `src/kiro_crew/vector_memory.py` — `VectorMemoryStore`, tables at `:543`-`:559`,
+  FAISS, events
+- `src/kiro_crew/memory.py` — markdown workspace and FTS5
+- `src/kiro_crew/memory_record_metadata.py` — status, validity, revisions,
+  proposals, verified corrections
+- `src/kiro_crew/memory_schema.py`, `memory_stores.py`, `memory_startup.py`
 
 **Write gate**
-- `src/kiro_crew/vector_memory.py:90` — `SemanticRejectCode`,
-  `_AUDITABLE_REJECT_CODES`, `_SECURITY_REJECT_CODES`
-- `:475`–`:513` — the validation chain; `:625` — `_write_semantic` and conflict
-  resolution; `:1066` — episodic injection screening and redacted audit snippet
-- `src/kiro_crew/vector_memory_constants.py` — `_INJECTION_PATTERNS`,
-  `_contains_injection`
+- `src/kiro_crew/vector_memory.py:189`, `:307`, `:1678`, `:1760`, `:2198`,
+  `:2267-2292`, `:3075-3092`
+- `src/kiro_crew/vector_memory_constants.py` — `_contains_injection`
 
-**Retrieval**
-- `src/kiro_crew/vector_memory.py:1335`–`:1600` — admission on raw cosine, decay
-  applied for ranking
+**Read path**
+- `src/kiro_crew/vector_memory.py:2125` eligibility, `:3354` raw-cosine
+  admission, `:5385` lessons and the repository gate
+- `src/kiro_crew/project_scope.py:100`
 
-**Lifecycle**
-- `:937` — `rotate_events`
+**Members and review**
+- `src/kiro_crew/member_memory_auth.py`, `member_memory_backup.py`
+- `src/kiro_crew/memory_edit.py`, `src/kiro_crew/dashboard/handlers/memory_edit.py`,
+  `memory_admin.py`, `memory.py`
 
-**Human surface**
-- `src/kiro_crew/dashboard/handlers/memory.py`,
-  `src/kiro_crew/dashboard/session_memory.py`
-- `website/src/pages/overview/MemoryTab.tsx`, `MemoryGraphTab.tsx`,
-  `VectorMemoryCard.tsx`, `SessionMemoryCard.tsx`
-
-**Tests**
-- `test/test_vector_memory.py`, `test_memory_graph.py`,
-  `test_perf_memory_quickwins.py`, `test_memory_selfheal.py`,
-  `test_session_memory.py`
+**Tests and evaluation**
+- `test/test_memory_graph.py`, `test_perf_memory_quickwins.py`,
+  `test_lesson_project_scope.py`, `test_member_memory_ownership.py`,
+  `test_episodic_retirement.py`, `test_memory_edit.py`
+- `.github/workflows/memory-benchmark.yml`, `scripts/ci-member-memory-benchmark.py`,
+  `docs/task-specs/2026/09/memory-v2/`
+- `docs/system-specs/modules/memory-skills-hooks.md`
 
 ## History
+
+**2026-09-15** — [`534b003ee9550ecfa83b8c8428794323a97ce9d9`](https://github.com/kirodotdev/KiroCrew/commit/534b003ee9550ecfa83b8c8428794323a97ce9d9) — 4,641 commits on, 2026-09-15. Read from a blobless sparse checkout of the memory modules, their tests, the memory specification and the benchmark workflow. The screen ran on that checkout plus the root manifests: one unpinned surface, one dependency surface inside the cooldown, and `AGENTS.md` and `CLAUDE.md` addressed to a reading agent, read as data; build-time execution points were not re-counted, and nothing was installed, built or run. The memory grew from ~3,300 lines to ~15,600 and gained a second generation: private V2 stores per Crew Member behind protected bindings and the OS sandbox, a record-metadata layer with status and validity windows read on every recall, a revision journal, conflict proposals for the owner, bounded reversible episodic retirement, lessons gated by repository scope, an eighth refusal code, and a nightly memory benchmark. The body is rewritten around that. `trust_state` added on the record status; `scope_enforced` added on the lesson repository gate, with member stores noted as a partition; `audit_log`, `human_review` and `negative_eval` kept with evidence records. The redacted-snippet mechanism stands, now through `redact_and_truncate`, with the dashboard redacting events again. Five marks.
 
 **2026-08-06** — [`429cbad8cdb7bfbf4c10f6343374565832b176d2`](https://github.com/kirodotdev/KiroCrew/commit/429cbad8cdb7bfbf4c10f6343374565832b176d2) — first reading. Screened before reading: 0 auto-run surfaces, 7 build-time exec paths, 5 unpinned dependency surfaces with seven inside the seven-day cooldown, plus `AGENTS.md` and `CLAUDE.md` addressed to a reading agent. Both read as data; nothing was installed, built or run. The report covers the memory subsystem, not the desktop app, the scheduler or the Apps platform.

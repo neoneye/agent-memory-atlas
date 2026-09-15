@@ -1498,12 +1498,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need an inspectable store or a memory layer separable from its product. This is Firestore, Pinecone, a worker fleet and a device; the value transplants as design decisions, not as code.
 
 ### [`kirocrew`](../systems/kirocrew/)
-- Best idea: seven typed refusal codes on the memory write path — key format, allow-list, reserved prefix, confidence floor, size, injection, conflict — so "the write didn't happen" is seven distinct loggable facts rather than a boolean, and four of them land in an events table a dashboard renders.
-- Biggest risk: every refusal is recorded and none is consulted. A value blocked as an injection today is re-screened by the same pattern list tomorrow, and that list's precision is unmeasured — so the whole gate rests on a classifier nobody has scored.
-- Most reusable component: redacting exfiltration URLs and credentials from an audit snippet *before* persisting it, because the dashboard renders it verbatim. The only system here that treats its own security log as an attack surface.
-- Maturity impression: 475,988 lines of Python under 502,973 lines of tests across 1,024 files, 1,606 commits since 1 June 2026, Apache-2.0, with a `pysqlite3`-without-`connect` fallback that someone clearly met in the wild.
-- Study when: you want an agent that cannot quietly learn arbitrary things about you — the allow-listed key namespace and the `user_explicit`-only `system.` prefix are the clearest worked example in the corpus of stopping that at the schema.
-- Do not copy when: you need multi-user or multi-project isolation. No scope key exists on either table, and retrofitting one is a migration plus an audit of every read.
+- Best idea: typed refusal codes on the memory write path — key format, allow-list, reserved prefix, confidence floor, empty value, size, injection, conflict — so "the write didn't happen" is eight distinct loggable facts, five of them audited; and, in a private member store, a disputed change to an existing fact parked as a proposal for the owner rather than applied.
+- Biggest risk: every refusal is recorded and none is consulted. A value blocked as an injection today is re-screened by the same pattern list tomorrow, that list's precision is unmeasured, and the `user_explicit` exemption inside a store is a string.
+- Most reusable component: redacting exfiltration URLs and credentials from an audit snippet *before* persisting it, because the dashboard renders it verbatim. The dashboard redacts memory events a second time before returning them.
+- Maturity impression: 6,247 commits since 1 June 2026, Apache-2.0, ~15,600 lines of memory code with 73 memory-named test files, a 4,783-line memory specification that names the test pinning each contract, and a nightly memory benchmark whose own handoff says its corpus is synthetic.
+- Study when: you want an agent that cannot quietly learn arbitrary things about you — the allow-listed key namespace and the `user_explicit`-only `system.` prefix stop that at the schema.
+- Do not copy when: you need semantic or episodic rows filtered by scope inside one store. Members are isolated by separate stores and only lessons carry a scope predicate.
 
 ### [`mnemory`](../systems/mnemory/)
 - Best idea: the consistency check screens stored memories for prompt injection with a regex *before* any LLM stage reads them, and re-screens material that already passed the write-time filter — treating the store as a live attack surface rather than something validated once at the door.

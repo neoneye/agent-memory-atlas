@@ -2083,7 +2083,7 @@ community leaderboard reports. The
 [public leaderboard](https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3/leaderboard)
 carries 2,579 teams, and the top of it reads 5.99, 4.99, 4.67, 3.88, 3.37.
 
-One hundred and three against six, on one metric, is the largest gap this page has had to
+One hundred and four against six, on one metric, is the largest gap this page has had to
 explain, and none of it is the metric's fault. Three rules separate the venues.
 The Kaggle competition runs as a notebook with **internet access disabled** and
 a nine-hour cap, so a harness built on paid frontier-model calls cannot enter —
