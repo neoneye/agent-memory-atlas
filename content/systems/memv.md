@@ -7,10 +7,13 @@ page_kind: system
 source_name: "vstorm-co/memv"
 source_url: https://github.com/vstorm-co/memv
 archive_name: "vstorm-co--memv"
-revision: fd314bac28247df1149edfbf0d1f7881690ef448
-revision_url: https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448
-analyzed_at: 2026-08-09
+revision: 21891376f0bf58c8523895c1bebe29df49125677
+revision_url: https://github.com/vstorm-co/memv/commit/21891376f0bf58c8523895c1bebe29df49125677
+analyzed_at: 2026-09-15
 capabilities: "bitemporal, scope_enforced"
+capability_evidence:
+  bitemporal: "knowledge retrieval — event time and transaction time filtered separately, as of a requested moment | src/memv/retrieval/retriever.py:118 and :127-140 `_passes_temporal_filter`, src/memv/storage/sqlite/_knowledge.py:20 | `semantic_knowledge` stores `valid_at` and `invalid_at` for when a statement is true and `expired_at` for when the store superseded it. `recall(..., at_time=…, include_expired=…)` threads both through to the retriever, which drops a candidate unless it `is_current()` on the transaction timeline — skipped when `include_expired` asks for history — and `is_valid_at(at_time)` on the event timeline. The filter runs in Python over the fused candidates rather than in SQL, and after the `top_k * 3` candidate cut, so an as-of query over mostly-invalid material can return fewer than `top_k` | tests/test_knowledge_store.py:80-97 exercise `get_valid_at` on the store"
+  scope_enforced: "hybrid retrieval — the user id is a required argument applied inside both index searches | src/memv/retrieval/retriever.py:96-101, src/memv/storage/sqlite/_vector_index.py:174 | `retrieve` takes `user_id: str` with no default, and the retriever passes it to `vector_index.search(…, user_id=user_id)` and `text_index.search(…, user_id=user_id)` before fusion, so candidates are selected per user rather than filtered after. The docstring on `recall` states the intent: *Filter results to this user only (required for privacy)*. The knowledge store also exposes `get_current()` and `get_valid_at()`, which carry no `user_id` predicate; neither has a caller outside `tests/` | no committed cross-user test was located"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -313,5 +316,7 @@ count `:108-122`), `src/memv/models.py` (the validity checks `:64`, `:100`,
 `benchmarks/results/` (empty), `benchmarks/data/`
 
 ## History
+
+**2026-09-15** — [`21891376f0bf58c8523895c1bebe29df49125677`](https://github.com/vstorm-co/memv/commit/21891376f0bf58c8523895c1bebe29df49125677) — second reading. One commit since the previous pin, a documentation change raising the stated Python requirement to 3.10 across three files; no source changed. Screened again: two auto-run findings, both contributor tooling in `.claude/` — a hook running `ruff` on edited files and a macOS notification sound, and a committed `settings.local.json` that is a personal permission allowlist rather than configuration anyone else needs; nothing fetches remote code, and nothing was installed or run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The one check that could have gone the other way: the knowledge store's `get_valid_at` and `get_current` apply the temporal predicates with no user filter, and a search for their callers finds only the store's own tests. The retrieval path the library exposes filters by user inside both indexes and applies the temporal check afterwards.
 
 **2026-08-09** — [`fd314bac28247df1149edfbf0d1f7881690ef448`](https://github.com/vstorm-co/memv/commit/fd314bac28247df1149edfbf0d1f7881690ef448) — first reading. Screened before reading; the tree was read, never installed, and the LongMemEval harness was not run.
