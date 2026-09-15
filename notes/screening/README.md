@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 416 of 477 screened at the report's current pin.**
+**Progress: 417 of 478 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 170 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 230 |
-| Repositories with build-time execution (`EXEC`) | 302 |
+| Repositories with an auto-run surface (`RUNS`) | 171 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 231 |
+| Repositories with build-time execution (`EXEC`) | 303 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -82,6 +82,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`gh-aw`](../../content/systems/gh-aw.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.vscode/settings.json` |
 | [`gitmem`](../../content/systems/gitmem.md) | `hooks/`, `server.json` |
 | [`gobii`](../../content/systems/gobii.md) | `server.json` |
+| [`goodmemory`](../../content/systems/goodmemory.md) | `server.json` |
 | [`graphnosis`](../../content/systems/graphnosis.md) | `.githooks/` |
 | [`graymatter`](../../content/systems/graymatter.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`growmos`](../../content/systems/growmos.md) | `.claude/settings.json`, `.mcp.json`, `server.json` |

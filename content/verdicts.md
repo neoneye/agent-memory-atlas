@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 477 reports.**
+**This page covers all 478 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4166,3 +4166,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later, version 2.2.0, 1,129 commits since 5 May 2026, 154,197 lines of TypeScript against 156,194 lines across 747 test files, 146 ordered SurrealDB migrations whose headers name the failure each one fixes, REST plus a native MCP server, and an ABAC row policy with report-only and enforce modes.
 - Study when: you need genuine bitemporal memory per tenant and want a worked example of composing read fences as separate, individually justified clauses.
 - Do not copy when: you need an always-on mutation audit, a reviewer's surface that can act, or an erasure record that stops the value returning.
+
+### [`goodmemory`](../systems/goodmemory/)
+- Best idea: **a tombstone keyed on the content, and a review mode that writes nothing until a person acts.** A writeback candidate's key is a hash of scope, kind and normalised content, so it names the statement rather than a row; marking a written memory a false write deletes the memory and *keeps* the key, and every later propose checks that set first and returns untouched. In review mode candidates sit outside memory entirely until an operator approves or rejects them in the Inspector, with approval reserved before the durable write, released on failure, and requiring operator recovery when a reservation goes stale. Six marks: `tombstone`, `human_review`, `trust_state`, `scope_enforced`, `bitemporal`, `negative_eval`.
+- Biggest risk: **two scope fences with different rules.** `filterRecordsByDefaultRecallScope` compares tenant and workspace with `===`, so an absent field on the scope matches only an absent field on the record; `buildScopeFilter` drops undefined fields before querying, so an absent field is never asked about. A user-only scope therefore returns almost nothing through `recall` and every workspace's memory through the public `exportMemory`. No user boundary is crossed, but workspace separation — the thing the project's own isolation scenario exists to prove — does not hold on the export path.
+- Most reusable component: the benchmark-claims gate — every README number backed by a committed declaration naming command, commit, package version, judge, dataset source and licence, split into a deterministic strict track and a comparable track that re-judges the same stored answers under the benchmark's official protocol, with the gate cross-checking the README tables in both languages.
+- Maturity impression: MIT, version 0.8.0, 1,131 commits since 23 March 2026, 163,939 lines of TypeScript against 392,190 lines across 807 test files, SQLite by default under Bun with Postgres and injected adapters, managed hooks for Codex and Claude Code, a read-only MCP server with opt-in writeback, and a local Inspector web app.
+- Study when: you are adding memory to an installed coding agent and want the write path gated on a person, with rejections that survive re-extraction.
+- Do not copy when: you need one uniform scope rule across every read surface, or a mutation audit that covers library writes rather than host writeback alone.

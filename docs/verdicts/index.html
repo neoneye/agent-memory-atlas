@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 477 reports.</strong></p>
+<p><strong>This page covers all 478 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17206,6 +17206,51 @@ justified clauses.</li>
 <li>Do not copy when: you need an always-on mutation audit, a reviewer's
 surface that can act, or an erasure record that stops the value
 returning.</li>
+</ul>
+<h3 id="goodmemory"><a
+href="../systems/goodmemory/"><code>goodmemory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a tombstone keyed on the content, and a review
+mode that writes nothing until a person acts.</strong> A writeback
+candidate's key is a hash of scope, kind and normalised content, so it
+names the statement rather than a row; marking a written memory a false
+write deletes the memory and <em>keeps</em> the key, and every later
+propose checks that set first and returns untouched. In review mode
+candidates sit outside memory entirely until an operator approves or
+rejects them in the Inspector, with approval reserved before the durable
+write, released on failure, and requiring operator recovery when a
+reservation goes stale. Six marks: <code>tombstone</code>,
+<code>human_review</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>bitemporal</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>two scope fences with different
+rules.</strong> <code>filterRecordsByDefaultRecallScope</code> compares
+tenant and workspace with <code>===</code>, so an absent field on the
+scope matches only an absent field on the record;
+<code>buildScopeFilter</code> drops undefined fields before querying, so
+an absent field is never asked about. A user-only scope therefore
+returns almost nothing through <code>recall</code> and every workspace's
+memory through the public <code>exportMemory</code>. No user boundary is
+crossed, but workspace separation — the thing the project's own
+isolation scenario exists to prove — does not hold on the export
+path.</li>
+<li>Most reusable component: the benchmark-claims gate — every README
+number backed by a committed declaration naming command, commit, package
+version, judge, dataset source and licence, split into a deterministic
+strict track and a comparable track that re-judges the same stored
+answers under the benchmark's official protocol, with the gate
+cross-checking the README tables in both languages.</li>
+<li>Maturity impression: MIT, version 0.8.0, 1,131 commits since 23
+March 2026, 163,939 lines of TypeScript against 392,190 lines across 807
+test files, SQLite by default under Bun with Postgres and injected
+adapters, managed hooks for Codex and Claude Code, a read-only MCP
+server with opt-in writeback, and a local Inspector web app.</li>
+<li>Study when: you are adding memory to an installed coding agent and
+want the write path gated on a person, with rejections that survive
+re-extraction.</li>
+<li>Do not copy when: you need one uniform scope rule across every read
+surface, or a mutation audit that covers library writes rather than host
+writeback alone.</li>
 </ul>
         </article>
       </div>
