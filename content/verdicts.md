@@ -617,7 +617,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`memu`](../systems/memu/)
 - Best idea: rank the slice, return the file — the embed/search unit and the context payload are different sizes, and a file scores as the max of its segments.
-- Biggest risk: no epistemic model at all, and no scope key in a layer that serves seven different hosts from one store.
+- Biggest risk: no epistemic model at all, and scope fields that no read path requires in a layer that serves eight different hosts from one store — the host retrieve passes no filter and no adapter sets a user.
 - Most reusable component: the three-method backend protocol, plus keyset pagination on immutable domain identity so a walk under concurrent writes neither skips nor repeats.
 - Maturity impression: unusually disciplined for its size — schema comments cite the ADRs that produced them, and a denormalized column carries its safety argument; the limit of that discipline is a decision record asserting a telemetry disclosure that is not in the tree.
 - Study when: you want one memory across several coding agents and a read path that is cheap, predictable and model-free.

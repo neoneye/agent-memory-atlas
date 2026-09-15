@@ -7,10 +7,12 @@ page_kind: system
 source_name: NevaMind-AI/memU
 source_url: https://github.com/NevaMind-AI/memU
 archive_name: "NevaMind-AI--memU"
-revision: c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
-revision_url: https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb
-analyzed_at: 2026-08-04
-capabilities: ""
+revision: 08e1ed4cdf4c0cb1fe5387e4a532ea588a8cbe46
+revision_url: https://github.com/NevaMind-AI/memU/commit/08e1ed4cdf4c0cb1fe5387e4a532ea588a8cbe46
+analyzed_at: 2026-09-15
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the write decision — a bridging run must not mine its own session into memory | src/memu/hosts/bridging/transcripts.py:74 and :83 | `prepare_transcripts` takes `skip_sessions`, the ids of the bridging runs' own sessions (ADR 0015), and passes over any file whose session id is in it. `test_own_session_is_skipped_and_does_not_end_the_scan` builds a tree whose newest session is the run itself and asserts `\"bridging-run.jsonl\" not in staged` while the older real session is staged, which is the positive control inside the same test; `test_without_the_skip_the_run_mines_itself` runs the same tree with no skip list and shows the self-session slotted first. The tests predate the 2026-08-04 pin. The later sanitizer tests are a second, narrower case of the same kind: named runtime fields (`cwd`, `toolUseResult`, `model`, `usage`, `thinkingSignature`) must not reach the staged transcript while content and unknown fields are asserted preserved | tests/test_bridging_self_sessions.py:95 and :121; tests/test_host_sessions.py:95, :310, :550, :792"
 stack_storage: "sqlite, postgres, memory, delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -20,8 +22,8 @@ matrix:
   retrieval: "Single-shot, LLM-free: segments ranked by embedding, rolled up to files by max score"
   write: "`commit_results` writes recall files, resources and user state in one call"
   update_delete: "Segments dropped and recreated when a file is re-sliced; no supersession found"
-  scoping: "`where` filters over records; no tenant or project model traced"
-  integration: "Host adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy"
+  scoping: "A configurable user-scope model merged into every record; the read filter is an optional caller-supplied `where`, and the host retrieve passes none"
+  integration: "Host adapters for Claude Code (with Cowork), Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy, Pi"
   background: "Scheduling module; agentic backend for richer flows; a client-event spool flushed on the bridging pair, never on the per-turn hook"
   trust: "Timestamps and track only; no source, actor, or status on a record"
   strengths: "Ranking on segments and returning files, with local/remote ordering parity as an invariant"
@@ -30,10 +32,10 @@ matrix:
 
 ## 1. Executive Summary
 
-memU is an Apache-2.0 Python system of roughly 10,000 lines, positioned as a
+memU is an Apache-2.0 Python system of roughly 15,000 lines, positioned as a
 memory layer that plugs into existing coding agents — it ships host adapters for
-Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola and WorkBuddy, plus a generic
-one.
+Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy and Pi, plus a
+generic one, and reads Claude Cowork through the Claude Code bridge.
 
 The memory model is deliberately small: a `RecallFile` with a `track` of
 `"memory"` or `"skill"`, sliced into `RecallFileSegment` rows, alongside
@@ -85,10 +87,10 @@ returns without ever touching the network.
 
 Reservations: this is a well-engineered retrieval and sync layer with **no
 epistemic model at all** — no trust state, no provenance, no supersession, no
-tombstone, and no scope beyond `where` filters. It knows how to find and move
+tombstone, and no scope beyond an optional `where` filter. It knows how to find and move
 memories, and nothing about whether they are true or whose they are. The
-telemetry inverts that: the system now has a considered account of its own
-operation and still none of its contents, so the only thing memU can tell you it
+telemetry inverts that: the system has a considered account of its own
+operation and none of its contents, so the only thing memU can tell you it
 is unsure about is whether it is installed correctly.
 
 ## 2. Mental Model
@@ -264,7 +266,7 @@ is discarded once delivered, and its destination is a vendor analytics endpoint
 rather than the memory. The
 [append-only memory audit](../../patterns/append-only-memory-audit/) pattern
 separates retrieval telemetry from a mutation record and treats them as two
-halves; memU has now built one half carefully and still has none of the other.
+halves; memU has built one half carefully and has none of the other.
 
 ## 5. Memory Data Model
 
@@ -273,14 +275,24 @@ halves; memU has now built one half carefully and still has none of the other.
 `recall_file_id`, `track`, `text`, `embedding`. `Resource` adds `url`,
 `local_path`, `caption`, `embedding`, `track`.
 
-What is absent is the whole rubric: no trust state, no provenance beyond
-timestamps, no supersession or tombstone, no audit, no human review surface, no
-scope key. The `where` filter is a query facility, not a boundary — nothing in
-the model establishes who a record belongs to.
+What the record model lacks is nearly the whole rubric: no trust state, no
+provenance beyond timestamps, no supersession or tombstone, no audit, no human
+review surface, and no
+enforced scope. There *is* a scope model, and it is a documented decision: ADR
+0003 merges a configurable `UserConfig.model` into every record class
+(`build_scoped_models` in `database/models.py`), and `_normalize_where` in
+`app/service.py` rejects a filter field the scope model does not declare. What
+it does not do is require one. The default scope model is
+`DefaultUserModel(user_id: str | None = None)`, `_normalize_where` returns `{}`
+for an empty filter, and the ADR's own consequences section puts the burden on
+the caller: "callers must keep `where` and `user` payloads aligned". The host
+path takes the option — `hosts/retrieval.py` calls `retrieve(args.query)` with no
+`where`, and no host adapter sets a user.
 
-For a layer that installs into seven different coding agents, the absent scope
-model is the notable one: memories from every host land in the same store, and
-the separation between them is whatever the caller passes in `where`.
+For a layer that installs into eight different coding agents, that is the
+notable gap: the scope fields exist on every row, memories from every host land
+in the same store with them empty, and the separation between them is whatever
+a caller chooses to pass.
 
 ## 6. Retrieval Mechanics
 
@@ -322,7 +334,7 @@ test that arrived with it opens by naming the drift:
 
 That is worth holding against the design's headline invariant — the docstring in
 `agentic_backend.py` requiring local and remote to "stay byte-for-byte the same".
-The invariant is real and stated; what the repository now also demonstrates is
+The invariant is real and stated; what the repository also demonstrates is
 that on a *different* method it did not hold, in three directions at once, and
 that nothing detected it until someone wrote a parametrized test across the
 backends. An invariant asserted in one docstring does not propagate to the
@@ -341,8 +353,8 @@ here improves memory over time.
 
 ## 8. Agent Integration
 
-Adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola and WorkBuddy,
-plus `generic`, with `bridging`, `scheduling`, `templates` and `host_cli.py`
+Adapters for Claude Code, Codex, Cursor, OpenClaw, Hermes, Cola, WorkBuddy and
+Pi, plus `generic`, with Claude Cowork read through the Claude Code bridge, and with `bridging`, `scheduling`, `templates` and `host_cli.py`
 shared between them. This is among the broadest host coverage in the atlas,
 alongside [ai-memory](../ai-memory/).
 
@@ -370,7 +382,8 @@ Strengths:
 Gaps:
 
 - **No trust state, provenance, supersession, tombstone, or audit.**
-- **No scope model**, in a layer that serves seven hosts from one store.
+- **Scope fields no read path requires**, in a layer that serves eight hosts from
+  one store with those fields empty.
 - **Vector-only retrieval**, in a domain full of exact identifiers.
 - **No consolidation**, so memory does not improve and duplicates are not merged.
 - **Skills are unverified files**, with no execution gate.
@@ -400,7 +413,7 @@ What the install guides *did* gain is the opposite direction of the same flow: a
 new closing section instructing the agent to run `report install` or
 `report error --detail`, to "be generous with `--detail`", and to keep
 credentials, absolute paths, DSNs and "the user's memory content, file contents,
-or transcript text" out of what it writes. So the install procedure now asks the
+or transcript text" out of what it writes. So the install procedure asks the
 agent to send a paragraph of prose to the vendor, with the privacy rules aimed at
 the model rather than surfaced to the person.
 
@@ -422,9 +435,24 @@ document, and the difference between them is whether anything executes.
 
 ## 10. Tests, Evals, and Benchmarks
 
-The suite runs in seconds and passes: `uv run pytest` gives **359 passed, 1
-skipped in 2.74s** at this commit, with no service dependencies. There is still no
-retrieval-quality benchmark.
+At `c35060e2` `uv run pytest` gave **359 passed, 1 skipped in 2.74s**, with no
+service dependencies; the suite at this commit defines 505 test functions and was
+not run. There is no retrieval-quality benchmark.
+
+The negative cases that exist guard what goes *into* memory. ADR 0015's rule that
+a bridging run must not mine its own session is a test pair:
+`test_own_session_is_skipped_and_does_not_end_the_scan` asserts the run's session
+is not staged while an older real one is, and
+`test_without_the_skip_the_run_mines_itself` shows the same tree without the skip
+list slotting the self-session first. The Claude Code, Codex, OpenClaw and Pi
+adapters each override `sanitize`, with tests of the same shape — named runtime fields such as `cwd`, `toolUseResult`, `model`
+and `thinkingSignature` must be absent from the staged transcript, with content
+asserted unchanged. Those tests also assert the opposite of the telemetry
+design: the sanitizer is a **denylist**, and each test pins that an unknown field
+(`futureTopLevel`, `futureBlockField`) is *kept*. The client's own events are
+allowlisted per event; a user's transcript is filtered by a list of fields known
+when it was written, so a field a host adds later reaches the memorize input until
+someone names it. Nothing asserts that material must not come back from retrieval.
 
 The skip is the interesting one. `test_postgres_list_segments_deduplicates_cache`
 opens with `pytest.importorskip("pgvector")`, and `pgvector` lives in the optional
@@ -436,7 +464,7 @@ Postgres-only; the two backends whose tests *do* run were already correct. The
 test that covers the fixed line is the one skipped by default, and a green suite
 does not say it passed.
 
-The invariant the design most invites testing is still its own: that the local and
+The invariant the design most invites testing is its own: that the local and
 remote paths order identically. Nothing in the suite covers it — the only
 cross-backend test is `test_recall_file_backfill.py`, which parametrizes over
 `inmemory` and `sqlite` and covers a different method. That is deterministic,
@@ -474,8 +502,8 @@ already had.
 
 ### Avoid
 
-- **Serving many hosts from one store with no scope key.** `where` filters are a
-  query facility, not a boundary, and the difference matters the first time two
+- **Serving many hosts from one store with an optional scope filter.** A scope
+  field no read path requires is a query facility, not a boundary, and the difference matters the first time two
   projects share a store.
 - **Vector-only retrieval for coding agents**, where identifiers are a large
   share of queries.
@@ -496,7 +524,7 @@ no epistemic model here at all, and adding one later means adding a schema this
 one deliberately does not have. Read it as a retrieval and sync layer that is
 honest about being exactly that.
 
-One thing that judgement now has to carry: adopting memU means opting your users
+One thing that judgement has to carry: adopting memU means opting your users
 into vendor telemetry unless you set `MEMU_TELEMETRY=0` yourself, and they will
 not learn it from anything memU shows them. The payload is counts and latency,
 not content, so the exposure is small — but if you install this for other people,
@@ -504,8 +532,8 @@ the disclosure is yours to make, because the install guide will not make it.
 
 ## 12. Open Questions
 
-- What separates two hosts' memories in one store beyond a caller-supplied
-  `where`?
+- What separates two hosts' memories in one store, when no host adapter sets the
+  scope fields?
 - Does anything merge duplicate recall files, or does the store accumulate them?
 - What establishes that a skill-track file works, given there is no execution
   gate?
@@ -537,6 +565,8 @@ the disclosure is yours to make, because the install guide will not make it.
   `tests/test_cache_segment_duplicates.py`.
 
 ## History
+
+**2026-09-15** — [`08e1ed4cdf4c0cb1fe5387e4a532ea588a8cbe46`](https://github.com/NevaMind-AI/memU/commit/08e1ed4cdf4c0cb1fe5387e4a532ea588a8cbe46) — 33 commits on, 2026-09-10. Screened before reading: no auto-executing surface, two build-time execution surfaces, no unpinned surface and one dependency file inside the seven-day cooldown, so nothing was installed or run and the pass count in section 10 is from the previous pin. `negative_eval` is added, and it was missed rather than new: `tests/test_bridging_self_sessions.py` at the previous pin already held a must-not case with its positive control, asserting a bridging run's own session is not staged for memorize (ADR 0015). The transcript sanitizers added since for Claude Code, OpenClaw, Codex and Pi (#677, #680, #681, #675) are a second case of the same kind, and they filter by denylist with unknown fields asserted kept. The scoping row was wrong and is corrected: ADR 0003 merges a configurable user-scope model into every record and validates filter fields against it, but the filter is optional, the default `user_id` is `None`, and the host retrieve passes no `where`, so `scope_enforced` stays withheld on that ground rather than on an absent model. Added since the pin: a Pi adapter, Claude Cowork read through the Claude Code bridge, a split `app/memorize/` package, and `src/memu/trust.py`, which is TLS certificate trust for two stdlib HTTP call sites and unrelated to epistemic trust. The ADR 0016 §11 telemetry disclosure is absent from every `INSTALL.md`, and `MEMU_TELEMETRY` defaults to on.
 
 **2026-08-04** — [`c35060e2a6d35d6c4e155ffa1c6a97a92db964cb`](https://github.com/NevaMind-AI/memU/commit/c35060e2a6d35d6c4e155ffa1c6a97a92db964cb) — eight commits on. The memory core is untouched: `models.py`, `app/agentic.py` and `agentic_backend.py` are byte-identical to the previous pin, so every mechanism claim, every quoted docstring and the capability assessment (`""`) stand, re-verified rather than carried. What changed sits beside it. `events.py` adds opt-out client telemetry to `api.memu.so` — allowlisted payloads, no query text, `DO_NOT_TRACK` honoured — whose own decision record claims a disclosure in `INSTALL.md` Part 1.2 that is not in the tree; `MEMU_TELEMETRY` appears in no user-facing document. `get_or_create_recall_file` gained a documented backfill after the three backends were found to have drifted three different ways, which qualifies the local/remote parity strength this report leads with. A Postgres-only segment-cache duplication bug was fixed, and its regression test is skipped on a default install because `pgvector` is an optional extra. Suite run: 359 passed, 1 skipped.
 
