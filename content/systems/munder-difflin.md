@@ -7,12 +7,12 @@ page_kind: system
 source_name: "chaitanyagiri/munder-difflin"
 source_url: https://github.com/chaitanyagiri/munder-difflin
 archive_name: "chaitanyagiri--munder-difflin"
-revision: 5f7de6e464fda1345ceb6d41548ec72178e7e6d8
-revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8
-analyzed_at: 2026-08-22
+revision: bdf524ecfb319b4f10cebde0c3539a1c75aeea9a
+revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10cebde0c3539a1c75aeea9a
+analyzed_at: 2026-09-15
 capabilities: "audit_log"
 capability_evidence:
-  audit_log: "the hive event log | src/main/hive.ts | log.jsonl is described in the source as an append-only event log and carries memory mutations — condense with oldBytes/newBytes/evicted/kept/hoisted and the backup path, condense-abort with a named reason, plus compact, archive and drop — alongside the messaging events | none"
+  audit_log: "the hive event log | src/main/hive.ts:10, src/main/reflect.ts:246 and :255 | log.jsonl is described in the source as an append-only event log and carries memory mutations — condense with oldBytes/newBytes/evicted/kept/hoisted and the backup path, condense-abort with a named reason, plus compact, archive and drop — alongside the messaging events | none"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -311,6 +311,8 @@ machine and nothing where one agent's material must stay away from another's.
   than evidence
 
 ## History
+
+**2026-09-15** — [`bdf524ecfb319b4f10cebde0c3539a1c75aeea9a`](https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10cebde0c3539a1c75aeea9a) — 285 commits on, 2026-09-14, at v0.4.6; most are blog posts and a wave of merged contributor fixes on 6 September. Screened before reading: no auto-run surface, one build-time execution point, three unpinned surfaces and nothing inside the cooldown; nothing was installed or run. `src/main/memory.ts`, `reflect.ts` and `knowledge.ts` are byte-identical to the previous pin, so the condensation gate, the event log and the document store stand as described. The memory-adjacent changes are operational: malformed outbox JSON lines recovered in the hive, a stale head lock cleared, abnormal agent exits recorded to `log.jsonl` as code, signal and a path to a gitignored crash tail, and transcript usage parsed once per file rather than once per querying agent. `audit_log` unchanged.
 
 **2026-08-22** — [`5f7de6e464fda1345ceb6d41548ec72178e7e6d8`](https://github.com/chaitanyagiri/munder-difflin/commit/5f7de6e464fda1345ceb6d41548ec72178e7e6d8) — re-pinned 253 commits and +358,785 lines on, at v0.4.5. Screened again: no auto-run surface, one build-time execution point, three unpinned surfaces and three files inside the cooldown; nothing was installed and nothing was run. `audit_log` unchanged and it is still the only mark.
 
