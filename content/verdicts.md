@@ -1353,10 +1353,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 
 ### [`agentic-context-engine`](../systems/agentic-context-engine/)
-- Best idea: a `SimilarityDecision` records the pairs the consolidator decided to KEEP separate — the pair, the reasoning, and the similarity at the time — serialised with the skillbook and checked in the detector's inner loop (`detector.py:234`) before the pair is proposed again. The only durable record of a decision *not* to act in this atlas, and the only one that is consulted.
+- Best idea: a `SimilarityDecision` records the pairs the consolidator decided to KEEP separate — the pair, the reasoning, and the similarity at the time — serialised with the skillbook and checked in the detector's inner loop (`detector.py:234`) before the pair is proposed again. A durable record of a decision *not* to act, and one that is consulted.
 - Biggest risk: everything above the storage layer is a model following a prompt, and `similarity_at_decision` — the field that would let a settled pair be re-opened when it drifts closer — is stored and never compared against anything.
 - Most reusable component: the KEEP record itself, under thirty lines including the dataclass, two accessors and one `continue`. It generalises past memory to any pipeline that re-proposes the same merge or match on every pass.
-- Maturity impression: 788 commits since November 2025, 31 test files, a benchmark package with task loaders and four live scripts including a τ-bench retail one — and no committed result, so the claim the project leads with is the one it has built the apparatus to check and not published.
+- Maturity impression: 941 commits since November 2025, 29 test files including a soft-removal test that asserts a retired skill leaves the active listing, a benchmark package with task loaders and four live scripts including a τ-bench retail one — and no committed result, so the claim the project leads with is the one it has built the apparatus to check and not published.
 - Study when: you repeatedly ask a model the same pairwise question, or you want the counter-usage rule — `harmful_count` is explicitly forbidden from being a hard removal trigger because usage and harm correlate.
 - Do not copy when: you need the skillbook's quality to be measurable. The counters gate nothing by design, and removal quality rests entirely on a reflection nothing checks.
 

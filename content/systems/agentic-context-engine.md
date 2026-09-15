@@ -7,10 +7,13 @@ page_kind: system
 source_name: "kayba-ai/agentic-context-engine"
 source_url: https://github.com/kayba-ai/agentic-context-engine
 archive_name: "kayba-ai--agentic-context-engine"
-revision: 96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
-revision_url: https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a
-analyzed_at: 2026-08-02
-capabilities: "trust_state"
+revision: 31f4e11897a93dd9ad90a3d0e2051de66b2255e0
+revision_url: https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0
+analyzed_at: 2026-09-15
+capabilities: "trust_state, negative_eval"
+capability_evidence:
+  trust_state: "the skillbook — `active` withholds a retired skill from every listing and from the prompt | ace/core/skillbook.py:508-525 (`remove_skill`), :546-549 (`skills`), :790 (`as_prompt`), ace/deduplication/detector.py:204 | `remove_skill(soft=True)`, the default and what a `REMOVE` operation applies, sets `active = False` and appends the justifying `InsightSource` to the skill's `occurrences`; `skills()` returns only active skills unless `include_invalid=True`, `as_prompt` renders only active skills per section, and the deduplication detector pairs only active skills. The MCP list handler exposes `include_invalid` to callers | tests/test_ace_core.py:61 (`test_remove_skill_soft`), :370 (`test_apply_remove`)"
+  negative_eval: "the skillbook listing — a soft-removed skill must not be listed as usable | ace/core/skillbook.py:546-549 | `test_remove_skill_soft` adds a skill, removes it softly, asserts it is still retrievable by id and marked inactive, then asserts `len(sb.skills()) == 0` for the active listing while `len(sb.skills(include_invalid=True)) == 1` — the second assertion is the control that shows the record exists and the first is not passing on an empty store. The test predates the 2026-08-02 pin | tests/test_ace_core.py:61-68"
 stack_storage: "files, memory"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -282,20 +285,26 @@ dedup pass running clean.
 
 ## 10. Tests, Evals, and Benchmarks
 
-31 test files, plus `benchmarks/` with a base harness and task loaders and four
-top-level live-test scripts (`test_rr_live.py`, `test_sm_live.py`,
+29 test files under `tests/`, plus `benchmarks/` with a base harness and task
+loaders and four top-level live-test scripts (`test_rr_live.py`, `test_sm_live.py`,
 `test_sm_e2e.py`, `test_sm_tau_retail.py`). The naming suggests the intended
 comparison — a τ-bench retail run — is set up as a live test rather than a
 committed result.
 
 I did not run them, and no committed benchmark result artifact was found, so the
-harness is present and the numbers are not. For a project with 788 commits and an
+harness is present and the numbers are not. For a project with 941 commits and an
 explicit "agents that learn from experience" claim, a committed before-and-after
 on any of its own benchmark tasks is the measurement a reader most wants and the
 one the repository does not contain.
 
-`negative_eval` is withheld: no committed case asserts that particular material
-must not be retrieved.
+The negative case is small and real. `test_remove_skill_soft` retires a skill
+and asserts it is still readable by id and marked inactive, absent from
+`skills()`, and present in `skills(include_invalid=True)` — so the exclusion is
+asserted against a record the same test shows exists, which earns
+`negative_eval`. `test_rr_stress.py` adds concurrency coverage for the recursive
+skill manager: children work on an isolated clone of the skillbook and their
+operations are validated and committed back under the skillbook's reentrant
+lock, so a failed child leaves the parent untouched.
 
 ## 11. For Your Own Build
 
@@ -400,5 +409,7 @@ most of the field.
 | `benchmarks/`, `test_sm_tau_retail.py` | Harness, loaders and live scripts; no committed results |
 
 ## History
+
+**2026-09-15** — [`31f4e11897a93dd9ad90a3d0e2051de66b2255e0`](https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0) — seven commits on, 2026-09-12. Screened before reading: two auto-run surfaces (`.claude/settings.json`, `.gitmodules`), six build-time execution points and three unpinned surfaces, none inside the cooldown; nothing was installed or run. One memory change: recursive `SkillManager` children, which shared the parent's live skillbook and operations list, work on a `Skillbook.clone()` and commit validated operations back atomically under the new `lock` property, with child-local skill ids remapped (#143). `negative_eval` is added and was missed: `test_remove_skill_soft` at the previous pin already asserted a soft-removed skill is absent from the active listing, with the `include_invalid` listing as its control. Both marks now carry evidence records.
 
 **2026-08-02** — [`96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a`](https://github.com/kayba-ai/agentic-context-engine/commit/96f7c9cfea1d7cae74994c391ad7791e6cbf7f6a) — first reading.
