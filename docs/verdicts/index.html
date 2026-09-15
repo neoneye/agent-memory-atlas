@@ -10144,27 +10144,27 @@ workspace's <code>index.sqlite</code> until someone runs
 canonicalizes both the model-supplied path and the memory root, refuses
 anything not under the root, and reads the <em>canonicalized</em> path
 rather than the original with the reason in a comment — "to prevent
-TOCTOU races". That is the containment check on the read path that
-several systems here apply only on the write path, plus the race that
-survives a naive version of it.</li>
-<li>Maturity impression: Apache-2.0, 1.59M lines of Rust synced from a
+TOCTOU races". That is a containment check on the read path, where it is
+often applied only to writes, plus the race that survives a naive
+version of it.</li>
+<li>Maturity impression: Apache-2.0, a Rust workspace synced from a
 monorepo with the source commit recorded at the root; the memory crate
-is ~9,900 lines with <strong>290 tests</strong>, distributed across
-storage, dream, search, lock and index rather than pooled in the easy
-modules. Behind <code>--experimental-memory</code>. The concurrency work
-is serious — a dream lock with stale recovery and rollback, a
-<code>reindex_claim</code> row so two processes cannot reindex at once,
-<code>arc_swap</code> for lock-free dirty tracking — and there is no
-benchmark, no dataset, and nothing measuring the seven weighted ranking
-stages.</li>
+is ~15,300 lines with <strong>368 tests</strong>, distributed across
+storage, dream, search, flush, lock and index rather than pooled in the
+easy modules. Off by default, with a remote feature flag deciding when
+nothing local is set, and an opt-in v2 pipeline whose capture queue has
+no caller yet. The concurrency work is serious — a dream lock with stale
+recovery and rollback, a <code>reindex_claim</code> row so two processes
+cannot reindex at once, <code>arc_swap</code> for lock-free dirty
+tracking — and there is no benchmark, no dataset, and nothing measuring
+the seven weighted ranking stages.</li>
 <li>Study when: you want memory to be files a developer edits with
 search as an accelerator, and you are deciding where injected context
 sits relative to the provider's prompt cache. The injection here is
 persisted into the leading system message and reused verbatim rather
 than re-scored, because "a re-scored block would mutate the
 system-prompt prefix and bust the KV cache for the whole downstream
-conversation" — the most direct answer to that question in the
-atlas.</li>
+conversation".</li>
 <li>Do not copy when: your memory is a set of claims rather than a set
 of documents. There is no fact, no extraction, no supersession, no
 tombstone and no way to mark something disputed; the dream's instruction

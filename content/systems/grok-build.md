@@ -1,16 +1,19 @@
 ---
 title: "Grok Build"
 eyebrow: "A dream that deletes what it read"
-description: "A coding agent whose markdown memory is consolidated by a nightly-style dream pass that overwrites the project memory file with a character-truncated model response and then deletes the session logs it read — beside the most careful read path in the atlas, which stamps every recalled memory with its own age."
+description: "A coding agent whose markdown memory is consolidated by a nightly-style dream pass that overwrites the project memory file with a character-truncated model response and then deletes the session logs it read — beside a read path that stamps every recalled session memory with its own age."
 root: ../..
 page_kind: system
 source_name: "xai-org/grok-build"
 source_url: https://github.com/xai-org/grok-build
 archive_name: "xai-org--grok-build"
-revision: eb267feff13129e568df38fb6fdf0ceb65f735d6
-revision_url: https://github.com/xai-org/grok-build/commit/eb267feff13129e568df38fb6fdf0ceb65f735d6
-analyzed_at: 2026-08-14
+revision: 37949780c144e37df692e3d669051a21fec24f20
+revision_url: https://github.com/xai-org/grok-build/commit/37949780c144e37df692e3d669051a21fec24f20
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the per-workspace index read and memory_get | crates/codegen/xai-grok-memory/src/index.rs:431, crates/codegen/xai-grok-memory/src/storage.rs:340 | each workspace has its own directory and index.sqlite, and the FTS query filters `c.source IN (…)` on the stored source column so a caller's allowed sources reach the SQL; memory_get canonicalizes the requested path and the memory roots, refuses anything not under them and reads the canonical path | crates/codegen/xai-grok-memory/src/storage_v2_tests.rs:18 (v2 sources follow global and workspace scope), :195 (a symlinked workspace root is refused)"
+  negative_eval: "search exclusions with a proven positive first | crates/codegen/xai-grok-memory/src/search.rs, crates/codegen/xai-grok-memory/src/index.rs | the content-free MEMORY.md stub is asserted to be a raw FTS candidate before it is asserted absent from results at min_score 0.0; an indexed token is asserted findable, its file deleted, the orphan sweep run and the search asserted empty; in v2 a symlink planted under topics/ pointing at a markdown file outside the scope is asserted absent from the rendered manifest | crates/codegen/xai-grok-memory/src/search.rs:1174, crates/codegen/xai-grok-memory/src/index.rs:1209, crates/codegen/xai-grok-memory/src/v2_tests.rs:223"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -18,10 +21,10 @@ matrix:
   memory_unit: "A markdown chunk with a blake3 content hash, a source of global, workspace or session, and created_at, updated_at, access_count and last_accessed"
   storage: "Markdown files under ~/.grok/memory/ as the source of truth, with a derived per-workspace index.sqlite carrying FTS5 and an optional sqlite-vec table"
   retrieval: "BM25 and vector KNN merged by weight, then temporal decay on session chunks only, source weights, an access-count boost, MMR diversity and a content-free filter"
-  write: "Session logs append during the turn; the dream pass consolidates on gates of hours elapsed and session count, under a lock, and overwrites the workspace MEMORY.md"
+  write: "A flush turn appends a model summary to the session log before compaction, when idle, on /flush and at session end; the dream pass consolidates on gates of hours elapsed and session count, under a lock, and overwrites the workspace MEMORY.md"
   update_delete: "The dream overwrites MEMORY.md with a response truncated at 16,000 characters and then deletes the session logs it actually read; there is no version, diff or backup of the file it replaced"
   scoping: "A per-workspace directory named slug-blake3(cwd)[..8] with its own index; memory_get canonicalizes both sides and fails closed outside the memory root; FTS filters on a stored source column"
-  integration: "memory_search and memory_get, both is_read_only; writes come from session logging and the /flush and /dream slash commands, never from a model tool"
+  integration: "memory_search and memory_get, both is_read_only; legacy writes come from harness-run flush and dream turns, never from a model tool; opt-in v2 lets the model edit topic and inbox files through a path-checked access policy"
   background: "The dream pass, gated and locked, plus a file watcher that reindexes on external edits and purges chunks for deleted files"
   trust: "No state on a record. Retrieved session memory is annotated with its own age and an instruction to verify, computed at render time and suppressed for curated sources"
   strengths: "Every injected memory carries its age and a verify hint, and the injection is written to preserve the provider's prompt-prefix cache"
@@ -30,11 +33,13 @@ matrix:
 
 ## 1. Executive Summary
 
-Grok Build (`grok`) is SpaceXAI's terminal coding agent — 1.59 million lines of
-Rust across 2,586 files, Apache-2.0, synced periodically from a monorepo whose
-commit is recorded in a `SOURCE_REV` file at the root. Its memory is one crate
-of that, `crates/codegen/xai-grok-memory`, about 9,900 lines carrying **290
-tests**, and it is gated behind `--experimental-memory` or `GROK_MEMORY=1`.
+Grok Build (`grok`) is SpaceXAI's terminal coding agent — a Rust workspace,
+Apache-2.0, synced periodically from a monorepo whose commit is recorded in a
+`SOURCE_REV` file at the root. Its memory is one crate of that,
+`crates/codegen/xai-grok-memory`, about 15,300 lines carrying **368 tests**. It is
+off by default; `GROK_MEMORY`, `--experimental-memory` or `[memory] enabled`
+turns it on, and when none of those is set a server-delivered feature flag
+decides.
 
 The design is [memory as an editing surface](../../patterns/memory-as-an-editing-surface/)
 with a derived index. Markdown files under `~/.grok/memory/` are the source of
@@ -43,8 +48,7 @@ named `{slug}-{blake3(cwd)[..8]}`, and dated session logs beneath it — and a
 per-workspace `index.sqlite` carries FTS5 and, when sqlite-vec loads, a vector
 table. Nothing is stored that a person cannot open in an editor.
 
-**Two things here are better than anything comparable in this atlas, and both
-are on the read path.** Retrieved session memory is annotated with its own age
+**Two things here are worth taking, and both are on the read path.** Retrieved session memory is annotated with its own age
 before the model sees it — `**Stale (4 months):** Verify current state before
 relying on this.` — computed from `created_at` and suppressed for curated
 sources, which are treated as evergreen. And the injection is written to
@@ -52,9 +56,9 @@ preserve the provider's prompt-prefix cache: the memory block is persisted into
 the leading system message and reused verbatim on later turns rather than
 re-scored, with the reason in the code — *"a re-scored block would mutate the
 system-prompt prefix and bust the KV cache for the whole downstream
-conversation."* That is the most direct answer in this corpus to a question
-[the report format](../../methodology/per-repo-report-format/) asks every system
-and almost none answers.
+conversation."* That answers a question
+[the report format](../../methodology/per-repo-report-format/) asks of every
+system.
 
 **The consolidation pass is where it gets dangerous, and the danger is a
 compound of three reasonable decisions.** A `dream` — the crate's word — fires
@@ -78,6 +82,21 @@ The second finding is a deletion gap. `grok memory clear --global` removes
 holds the content verbatim. The clear command never opens an index. The text
 survives, and stays searchable, in every workspace not running a live session at
 that moment, until someone runs `grok memory reindex`.
+
+**A second pipeline sits beside the first, off unless configured.**
+`[memory] mode = "v2"` switches a session to an isolated tree under
+`memory-v2/`: per scope, `topics/`, an `observations/_inbox/` of immutable
+observation files, a generated manifest of at most 8 KiB and 64 entries, and a
+state database. Both manifests are injected at session start and after
+compaction; the model reads and writes the files through `V2MemoryAccessPolicy`,
+which refuses relative, traversing, symlinked and out-of-scope paths, allows
+writes only to topic and inbox markdown, and requires an unchanged snapshot from
+an earlier read before replacing a file. In v2 the legacy flush, dream, session
+save and memory archive upload are all off. The durable capture queue in
+`v2_capture.rs` — leases, crash reconciliation of observation files by job id
+and hash — is 1,344 lines with 25 tests and no caller in the shell crate; at this
+pin v2 memory changes only when the model edits a file. The legacy pipeline
+below is the default and is what the marks rest on.
 
 ## 2. Mental Model
 
@@ -148,23 +167,28 @@ flowchart TB
 
 ## 3. Architecture
 
-The memory crate is fifteen modules:
+The memory crate's modules:
 
-- **`storage.rs`** (1,862 lines, 81 tests) — the file layer. `MemoryScope`,
+- **`storage.rs`** (2,037 lines, 82 tests) — the file layer. `MemoryScope`,
   `MemoryStorage`, workspace hashing, `write_daily_log`, `write_long_term`,
   `append_to_memory`, `read_file`, `list_memory_files`, `clear_workspace`,
   `clear_global`, `gc`.
-- **`backend.rs`** (1,616 lines) — `MemoryBackendImpl`, the seam the tools call,
+- **`backend.rs`** (1,536 lines) — `MemoryBackendImpl`, the seam the tools call,
   which owns the index handle, the watcher sync and the embedding glue.
-- **`dream.rs`** (1,471 lines, 51 tests) — gates, prompt, response processing,
+- **`dream.rs`** (1,196 lines, 45 tests) — gates, prompt, response processing,
   cleanup, `execute_dream`.
-- **`dream_lock.rs`** (488 lines, 20 tests) — lock lifecycle, rollback,
+- **`dream_lock.rs`** (673 lines, 24 tests) — lock lifecycle, rollback,
   `last_consolidated_at`, `sessions_since`.
-- **`index.rs`** (1,286 lines) — SQLite schema, `reindex_file`, `delete_path`,
+- **`index.rs`** (1,299 lines) — SQLite schema, `reindex_file`, `delete_path`,
   `all_indexed_paths`, the reindex claim.
-- **`search.rs`** (1,349 lines, 31 tests) — the ranking pipeline.
+- **`search.rs`** (1,296 lines, 31 tests) — the ranking pipeline.
+- **`flush.rs`** (566 lines, 19 tests) — when a flush runs and how its response
+  is accepted.
 - **`mmr.rs`**, **`query_expansion.rs`**, **`chunker.rs`**, **`embedding.rs`**,
-  **`watcher.rs`**, **`archive.rs`**, **`schema.rs`**, **`text_utils.rs`**.
+  **`watcher.rs`**, **`archive.rs`**, **`schema.rs`**, **`text_utils.rs`**,
+  **`observation.rs`**.
+- **`v2.rs`**, **`v2_access.rs`**, **`v2_capture.rs`**, **`storage_v2.rs`** and
+  their test files — the opt-in v2 pipeline, about 4,700 lines with tests.
 
 Three tables: `meta` (schema version, embedding dimensions, a `reindex_claim`),
 `chunks` with a unique text `id` and indexes on `path` and `hash`, and a
@@ -180,7 +204,9 @@ slash commands and the automatic session log.
 
 - **Nothing extra has to be running.** SQLite is embedded, the index is a file
   in the workspace memory directory, and markdown is markdown.
-- **Memory is off unless asked for**: `--experimental-memory` or `GROK_MEMORY=1`.
+- **Memory is off by default**: `GROK_MEMORY`, `--experimental-memory` or
+  `[memory] enabled` turns it on, and an unset local choice defers to a remote
+  feature flag.
 - **Semantic search is optional and degrades cleanly.** Without sqlite-vec the
   system is FTS-only by design, not by breakage, and the fallback is tested.
 - **The store is human-readable and hand-repairable** — that is the point of it —
@@ -193,8 +219,8 @@ slash commands and the automatic session log.
 
 **One thing leaves the machine, conditionally.** `archive.rs` tars the global
 `MEMORY.md`, the workspace `MEMORY.md` and every session log into
-`memory.tar.gz`, and `upload_memory_state` in `xai-grok-shell/src/upload/trace.rs`
-sends it to GCS. The gate is
+`memory.tar.gz`, and `upload_memory_state` in `xai-grok-shell/src/upload/memory.rs`
+sends it to GCS under every restorable turn's prefix, skipping v2 stores. The gate is
 `self.session_registry_local.or(remote).unwrap_or(false)` plus
 `auth.is_xai_auth()`. Precisely: off by default; never for a non-xAI credential;
 an explicit local setting wins in both directions — and if the local flag is
@@ -203,11 +229,6 @@ unset, a server-delivered remote setting decides. The comment on
 inject it into a Docker image "for full replay fidelity". Anyone whose
 `MEMORY.md` accumulates work context should set the local flag deliberately
 rather than leave it unset.
-
-The screen of this checkout found no auto-run surfaces, 102 dependency surfaces
-inside the seven-day cooldown, 7 build-time `build.rs` execution points and one
-unpinned npm manifest, with `Cargo.lock` present. Nothing was installed and
-nothing was run.
 
 ## 4. Essential Implementation Paths
 
@@ -282,8 +303,8 @@ chunks_fts MATCH ?1 AND c.source IN (…)`. And `read_file`, which is what
 `memory_get` calls with a model-supplied path, canonicalizes both the target and
 the memory root, refuses anything not `starts_with` the root, and then reads the
 *canonicalized* path rather than the original, with the reason in a comment:
-"to prevent TOCTOU races". That is the containment check on the read path that
-several systems in this atlas apply only on the write path.
+"to prevent TOCTOU races". That is a containment check on the read path, where
+it is often applied only to writes.
 
 `created_at` and `updated_at` are record time; nothing tracks when content was
 true, so `bitemporal` is withheld. There is no version chain, no supersession
@@ -349,8 +370,15 @@ MMR's redundancy penalty pushing one of them out.
 
 Three write paths, and only one of them is on the agent's turn.
 
-**Session logging** appends during the session. **`/flush`** writes the current
-session's content on demand. **The dream** is the consolidation, and it is the
+**The flush** writes session logs. It is a model turn that summarizes recent
+conversation and appends the result to the day's session file through
+`write_daily_log`, and it fires before an automatic compaction (on by default,
+once per compaction cycle, 4,000 tokens below the threshold), after 300 seconds
+idle, on `/flush`, and at session end unless `[memory.session] save_on_end` is
+false. `process_flush_response` accepts only a response with `##` headers and
+cuts it at 8,000 characters with `chars().take()`; a semantic-duplicate check
+against existing chunks runs only when a threshold is configured, and none is
+by default. **The dream** is the consolidation, and it is the
 only path from a raw session log into curated memory.
 
 The dream is gated cheapest-first — `enabled`, then hours since the last
@@ -396,8 +424,10 @@ non-`tmp` workspaces only when they are **both** empty and older than
 
 Two tools, both read-only by declaration: `memory_search` and `memory_get`. The
 model can search and read; it cannot save, edit or forget. Writing is the
-harness's job — the session log accrues as a consequence of what happened, and
-consolidation is a scheduled pass, not a decision the model makes.
+harness's job — the flush turn summarizes into the session log on the harness's
+triggers, and consolidation is a scheduled pass, not a decision the model makes.
+That holds for the default legacy mode; in v2 the model edits memory files
+directly.
 
 That is the same split [Zep](../zep/) has under MCP and the opposite of most
 memory servers, and here it comes with a compensating affordance: the
@@ -424,9 +454,9 @@ Verify this is still current.` past `STALE_NOTE_DAYS` and `**Stale (…):** Veri
 current state before relying on this.` past `VERY_STALE_DAYS`. It runs in both
 the tool output and the automatic injection. Nothing is stored, nothing can be
 filtered on it, and no query can ask for "only fresh memories" — so it is not
-`trust_state`. What it is, is the hedge arriving where the hedge is used. Most
-systems in this atlas inject a retrieved memory as a bare assertion and leave
-the model to guess whether a months-old note about a build system still holds.
+`trust_state`. What it is, is the hedge arriving where the hedge is used. A
+retrieved memory is usually injected as a bare assertion, leaving the model to
+guess whether a months-old note about a build system still holds.
 
 **The thresholds are one day and seven days**, which is aggressive enough to be
 worth arguing about. A session memory acquires "Verify this is still current"
@@ -475,14 +505,15 @@ once, `arc_swap` for lock-free dirty-path tracking in the watcher, and
 
 ## 10. Tests, Evals, and Benchmarks
 
-**290 tests inside the memory crate**, distributed sensibly rather than
-concentrated in the easy modules: 81 in `storage.rs`, 51 in `dream.rs`, 31 in
-`search.rs`, 27 in `backend.rs`, 24 in `index.rs`, 20 in `dream_lock.rs`, 15 in
-`mmr.rs`, 14 in `query_expansion.rs`. For a subsystem this size that is a
+**368 tests inside the memory crate**, distributed sensibly rather than
+concentrated in the easy modules: 82 in `storage.rs`, 45 in `dream.rs`, 31 in
+`search.rs`, 29 in `backend.rs`, 24 in `dream_lock.rs`, 23 in `index.rs`, 19 in
+`flush.rs`, 15 in `mmr.rs`, 14 in `query_expansion.rs`, and 60 across the v2
+test files. For a subsystem this size that is a
 strong ratio, and the tests read as written against specific failures rather
 than for coverage.
 
-Two of them earn the `negative_eval` mark, and both are built the right way —
+Two legacy tests earn the `negative_eval` mark, and both are built the right way —
 by establishing that the material *would* be returned before asserting that it
 is not:
 
@@ -522,8 +553,8 @@ happened once, months ago" without needing a trust field.
 **Decide where injected memory sits with the provider's prompt cache in mind.**
 Persisting the memory block into the leading system message and reusing it
 verbatim, rather than re-scoring per turn, keeps the prefix stable. Whichever
-way you choose, choose it — most systems here re-inject fresh context every turn
-and none of them mentions the cost.
+way you choose, choose it — re-injecting fresh context every turn has a cache
+cost that is rarely written down.
 
 **Scope by containment first, and canonicalize on the read path anyway.** A
 per-workspace directory with its own index makes cross-workspace reads
@@ -571,8 +602,8 @@ This suits a reader building a coding agent who wants the memory layer to be
 files a developer edits, with search as an accelerator rather than the interface.
 The crate is unusually well engineered for something behind an experimental flag
 — the concurrency work, the graceful sqlite-vec degradation, the operator
-tooling and the test density are all above what this atlas normally sees at this
-stage — and the read path is worth studying whatever you are building.
+tooling and the test density — and the read path is worth studying whatever you
+are building.
 
 Walk away if your memory needs to be a set of claims rather than a set of
 documents. There is no fact, no extraction, no supersession and no way to
@@ -590,8 +621,6 @@ unset for a remote setting to decide.
 - What happens when a dream's output exceeds 16,000 characters in practice? The
   truncation is unconditional and the sources are deleted afterwards; nothing in
   the tree bounds how often the cap is hit.
-- Is the `lib.rs` claim of `blake3(cwd)[..16]` a stale comment, or did the
-  layout change and leave the doc behind?
 - Does anything reconcile the index against `list_memory_files` at session
   start, or is `grok memory reindex` the only orphan sweep? Only the manual path
   is visible here.
@@ -633,8 +662,19 @@ unset for a remote setting to decide.
 - `crates/codegen/xai-grok-memory/src/watcher.rs` — the `notify` watcher and dirty-path tracking.
 - `crates/codegen/xai-grok-memory/src/backend.rs` — watcher sync, embedding glue.
 - `crates/codegen/xai-grok-pager/src/memory_cmd.rs` — `grok memory clear`.
-- `crates/codegen/xai-grok-memory/src/archive.rs` and `crates/codegen/xai-grok-shell/src/upload/trace.rs` — the archive and its upload gate.
+- `crates/codegen/xai-grok-memory/src/flush.rs` and `crates/codegen/xai-grok-shell/src/session/acp_session_impl/memory_dream.rs` — `should_flush`, `process_flush_response`, `run_memory_flush`.
+- `crates/codegen/xai-grok-config-types/src/memory.rs` — `MemoryMode`, `resolve_settings` and the enable precedence.
+
+**The v2 pipeline (opt-in)**
+
+- `crates/codegen/xai-grok-memory/src/v2.rs` — scope layout, manifest rendering and budget.
+- `crates/codegen/xai-grok-memory/src/v2_access.rs` — `V2MemoryAccessPolicy`, path classes, snapshot-checked writes.
+- `crates/codegen/xai-grok-memory/src/v2_capture.rs` — the capture queue, unreferenced by the shell at this pin.
+- `crates/codegen/xai-grok-shell/src/session/helpers/memory_context.rs` — `format_v2_memory_context`.
+- `crates/codegen/xai-grok-memory/src/archive.rs`, `crates/codegen/xai-grok-shell/src/upload/memory.rs` and `crates/codegen/xai-grok-shell/src/agent/mvp_agent/agent_ops.rs` (`build_registry_config`) — the archive and its upload gate.
 
 ## History
+
+**2026-09-15** — [`37949780c144e37df692e3d669051a21fec24f20`](https://github.com/xai-org/grok-build/commit/37949780c144e37df692e3d669051a21fec24f20) — fifteen monorepo syncs on, 2026-09-09, `SOURCE_REV` `c4ea71cfdbcdb21e32e41bc25a0043d7d4836714`. Read from a blobless sparse checkout of the memory, tools, shell and config crates; the screen ran on that checkout — the root manifests, every crate's `Cargo.toml` and the crates read — and found 34 dependency surfaces inside the cooldown and no auto-run surface, so the `build.rs` count from the first reading was not re-taken. Nothing was installed, built or run. The legacy pipeline stands as described: the dream still truncates at 16,000 characters, overwrites `MEMORY.md` and deletes the session logs it read, `clear_global` still removes one file without opening any index, and the staleness thresholds are still one and seven days. What moved: an opt-in v2 pipeline with a path-checked file access policy and a capture queue that has no caller yet; memory enablement now defers to a remote feature flag when nothing local is set; the memory archive uploads per turn. Section 7 now describes the flush, which writes every session log as a model summary on four triggers. `scope_enforced` and `negative_eval` kept, with evidence records.
 
 **2026-08-14** — [`eb267feff13129e568df38fb6fdf0ceb65f735d6`](https://github.com/xai-org/grok-build/commit/eb267feff13129e568df38fb6fdf0ceb65f735d6) — first reading, at a commit dated 13 August 2026 whose `SOURCE_REV` records monorepo commit `e6a67a5408288c98380cd13f3b1fe1fbc01c9f1f`. Screened before opening: no auto-run surfaces, 102 dependency surfaces inside the seven-day cooldown, 7 build-time `build.rs` execution points, one unpinned npm manifest, `Cargo.lock` present. Nothing was installed and nothing was built or run; the deletion gap in section 9 was established by reading the clear path, the index location and the watcher, not by observing a store.

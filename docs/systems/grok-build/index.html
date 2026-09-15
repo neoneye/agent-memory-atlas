@@ -7,8 +7,8 @@
     <meta name="description" content="A coding agent whose markdown
 memory is consolidated by a nightly-style dream pass that overwrites the
 project memory file with a character-truncated model response and then
-deletes the session logs it read — beside the most careful read path in
-the atlas, which stamps every recalled memory with its own age.">
+deletes the session logs it read — beside a read path that stamps every
+recalled session memory with its own age.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
@@ -16,9 +16,8 @@ the atlas, which stamps every recalled memory with its own age.">
     <meta property="og:description" content="A coding agent whose
 markdown memory is consolidated by a nightly-style dream pass that
 overwrites the project memory file with a character-truncated model
-response and then deletes the session logs it read — beside the most
-careful read path in the atlas, which stamps every recalled memory with
-its own age.">
+response and then deletes the session logs it read — beside a read path
+that stamps every recalled session memory with its own age.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Grok
@@ -26,9 +25,8 @@ Build — Agent Memory Atlas">
     <meta name="twitter:description" content="A coding agent whose
 markdown memory is consolidated by a nightly-style dream pass that
 overwrites the project memory file with a character-truncated model
-response and then deletes the session logs it read — beside the most
-careful read path in the atlas, which stamps every recalled memory with
-its own age.">
+response and then deletes the session logs it read — beside a read path
+that stamps every recalled session memory with its own age.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Grok Build — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -50,7 +48,7 @@ its own age.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Grok Build",
-      "description": "A coding agent whose markdown memory is consolidated by a nightly-style dream pass that overwrites the project memory file with a character-truncated model response and then deletes the session logs it read \u2014 beside the most careful read path in the atlas, which stamps every recalled memory with its own age.",
+      "description": "A coding agent whose markdown memory is consolidated by a nightly-style dream pass that overwrites the project memory file with a character-truncated model response and then deletes the session logs it read \u2014 beside a read path that stamps every recalled session memory with its own age.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -109,22 +107,22 @@ its own age.">
           <p class="document-deck">A coding agent whose markdown memory
 is consolidated by a nightly-style dream pass that overwrites the
 project memory file with a character-truncated model response and then
-deletes the session logs it read — beside the most careful read path in
-the atlas, which stamps every recalled memory with its own age.</p>
+deletes the session logs it read — beside a read path that stamps every
+recalled session memory with its own age.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/xai-org/grok-build">
               <span>Source</span>
               <strong>xai-org/grok-build</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/xai-org/grok-build/commit/eb267feff13129e568df38fb6fdf0ceb65f735d6" title="eb267feff13129e568df38fb6fdf0ceb65f735d6">
+            <a class="meta-pill revision-pill" href="https://github.com/xai-org/grok-build/commit/37949780c144e37df692e3d669051a21fec24f20" title="37949780c144e37df692e3d669051a21fec24f20">
               <span>Analyzed revision</span>
-              <code>eb267fef…</code>
+              <code>37949780…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/xai-org--grok-build" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -149,12 +147,14 @@ the atlas, which stamps every recalled memory with its own age.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>Grok Build (<code>grok</code>) is SpaceXAI's terminal coding agent —
-1.59 million lines of Rust across 2,586 files, Apache-2.0, synced
-periodically from a monorepo whose commit is recorded in a
-<code>SOURCE_REV</code> file at the root. Its memory is one crate of
-that, <code>crates/codegen/xai-grok-memory</code>, about 9,900 lines
-carrying <strong>290 tests</strong>, and it is gated behind
-<code>--experimental-memory</code> or <code>GROK_MEMORY=1</code>.</p>
+a Rust workspace, Apache-2.0, synced periodically from a monorepo whose
+commit is recorded in a <code>SOURCE_REV</code> file at the root. Its
+memory is one crate of that,
+<code>crates/codegen/xai-grok-memory</code>, about 15,300 lines carrying
+<strong>368 tests</strong>. It is off by default;
+<code>GROK_MEMORY</code>, <code>--experimental-memory</code> or
+<code>[memory] enabled</code> turns it on, and when none of those is set
+a server-delivered feature flag decides.</p>
 <p>The design is <a
 href="../../patterns/memory-as-an-editing-surface/">memory as an editing
 surface</a> with a derived index. Markdown files under
@@ -164,9 +164,9 @@ directory named <code>{slug}-{blake3(cwd)[..8]}</code>, and dated
 session logs beneath it — and a per-workspace <code>index.sqlite</code>
 carries FTS5 and, when sqlite-vec loads, a vector table. Nothing is
 stored that a person cannot open in an editor.</p>
-<p><strong>Two things here are better than anything comparable in this
-atlas, and both are on the read path.</strong> Retrieved session memory
-is annotated with its own age before the model sees it —
+<p><strong>Two things here are worth taking, and both are on the read
+path.</strong> Retrieved session memory is annotated with its own age
+before the model sees it —
 <code>**Stale (4 months):** Verify current state before relying on this.</code>
 — computed from <code>created_at</code> and suppressed for curated
 sources, which are treated as evergreen. And the injection is written to
@@ -174,10 +174,9 @@ preserve the provider's prompt-prefix cache: the memory block is
 persisted into the leading system message and reused verbatim on later
 turns rather than re-scored, with the reason in the code — <em>"a
 re-scored block would mutate the system-prompt prefix and bust the KV
-cache for the whole downstream conversation."</em> That is the most
-direct answer in this corpus to a question <a
-href="../../methodology/per-repo-report-format/">the report format</a>
-asks every system and almost none answers.</p>
+cache for the whole downstream conversation."</em> That answers a
+question <a href="../../methodology/per-repo-report-format/">the report
+format</a> asks of every system.</p>
 <p><strong>The consolidation pass is where it gets dangerous, and the
 danger is a compound of three reasonable decisions.</strong> A
 <code>dream</code> — the crate's word — fires when config, hours elapsed
@@ -205,6 +204,23 @@ the content verbatim. The clear command never opens an index. The text
 survives, and stays searchable, in every workspace not running a live
 session at that moment, until someone runs
 <code>grok memory reindex</code>.</p>
+<p><strong>A second pipeline sits beside the first, off unless
+configured.</strong> <code>[memory] mode = "v2"</code> switches a
+session to an isolated tree under <code>memory-v2/</code>: per scope,
+<code>topics/</code>, an <code>observations/_inbox/</code> of immutable
+observation files, a generated manifest of at most 8 KiB and 64 entries,
+and a state database. Both manifests are injected at session start and
+after compaction; the model reads and writes the files through
+<code>V2MemoryAccessPolicy</code>, which refuses relative, traversing,
+symlinked and out-of-scope paths, allows writes only to topic and inbox
+markdown, and requires an unchanged snapshot from an earlier read before
+replacing a file. In v2 the legacy flush, dream, session save and memory
+archive upload are all off. The durable capture queue in
+<code>v2_capture.rs</code> — leases, crash reconciliation of observation
+files by job id and hash — is 1,344 lines with 25 tests and no caller in
+the shell crate; at this pin v2 memory changes only when the model edits
+a file. The legacy pipeline below is the default and is what the marks
+rest on.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <strong>markdown chunk</strong>: text, a blake3 hash of
 its content, a <code>path</code> and line range, a <code>source</code>
@@ -270,29 +286,31 @@ flowchart TB
     Write -.-&gt;|&quot;source = workspace: evergreen,&lt;br/&gt;no decay, no staleness note&quot;| Read[&quot;read path&quot;]
     Log -.-&gt;|&quot;source = session: decays,&lt;br/&gt;stamped with its age on injection&quot;| Read</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
-<p>The memory crate is fifteen modules:</p>
+<p>The memory crate's modules:</p>
 <ul>
-<li><strong><code>storage.rs</code></strong> (1,862 lines, 81 tests) —
+<li><strong><code>storage.rs</code></strong> (2,037 lines, 82 tests) —
 the file layer. <code>MemoryScope</code>, <code>MemoryStorage</code>,
 workspace hashing, <code>write_daily_log</code>,
 <code>write_long_term</code>, <code>append_to_memory</code>,
 <code>read_file</code>, <code>list_memory_files</code>,
 <code>clear_workspace</code>, <code>clear_global</code>,
 <code>gc</code>.</li>
-<li><strong><code>backend.rs</code></strong> (1,616 lines) —
+<li><strong><code>backend.rs</code></strong> (1,536 lines) —
 <code>MemoryBackendImpl</code>, the seam the tools call, which owns the
 index handle, the watcher sync and the embedding glue.</li>
-<li><strong><code>dream.rs</code></strong> (1,471 lines, 51 tests) —
+<li><strong><code>dream.rs</code></strong> (1,196 lines, 45 tests) —
 gates, prompt, response processing, cleanup,
 <code>execute_dream</code>.</li>
-<li><strong><code>dream_lock.rs</code></strong> (488 lines, 20 tests) —
+<li><strong><code>dream_lock.rs</code></strong> (673 lines, 24 tests) —
 lock lifecycle, rollback, <code>last_consolidated_at</code>,
 <code>sessions_since</code>.</li>
-<li><strong><code>index.rs</code></strong> (1,286 lines) — SQLite
+<li><strong><code>index.rs</code></strong> (1,299 lines) — SQLite
 schema, <code>reindex_file</code>, <code>delete_path</code>,
 <code>all_indexed_paths</code>, the reindex claim.</li>
-<li><strong><code>search.rs</code></strong> (1,349 lines, 31 tests) —
+<li><strong><code>search.rs</code></strong> (1,296 lines, 31 tests) —
 the ranking pipeline.</li>
+<li><strong><code>flush.rs</code></strong> (566 lines, 19 tests) — when
+a flush runs and how its response is accepted.</li>
 <li><strong><code>mmr.rs</code></strong>,
 <strong><code>query_expansion.rs</code></strong>,
 <strong><code>chunker.rs</code></strong>,
@@ -300,7 +318,13 @@ the ranking pipeline.</li>
 <strong><code>watcher.rs</code></strong>,
 <strong><code>archive.rs</code></strong>,
 <strong><code>schema.rs</code></strong>,
-<strong><code>text_utils.rs</code></strong>.</li>
+<strong><code>text_utils.rs</code></strong>,
+<strong><code>observation.rs</code></strong>.</li>
+<li><strong><code>v2.rs</code></strong>,
+<strong><code>v2_access.rs</code></strong>,
+<strong><code>v2_capture.rs</code></strong>,
+<strong><code>storage_v2.rs</code></strong> and their test files — the
+opt-in v2 pipeline, about 4,700 lines with tests.</li>
 </ul>
 <p>Three tables: <code>meta</code> (schema version, embedding
 dimensions, a <code>reindex_claim</code>), <code>chunks</code> with a
@@ -319,8 +343,10 @@ to 1.0.</p>
 <li><strong>Nothing extra has to be running.</strong> SQLite is
 embedded, the index is a file in the workspace memory directory, and
 markdown is markdown.</li>
-<li><strong>Memory is off unless asked for</strong>:
-<code>--experimental-memory</code> or <code>GROK_MEMORY=1</code>.</li>
+<li><strong>Memory is off by default</strong>: <code>GROK_MEMORY</code>,
+<code>--experimental-memory</code> or <code>[memory] enabled</code>
+turns it on, and an unset local choice defers to a remote feature
+flag.</li>
 <li><strong>Semantic search is optional and degrades cleanly.</strong>
 Without sqlite-vec the system is FTS-only by design, not by breakage,
 and the fallback is tested.</li>
@@ -338,8 +364,8 @@ build with a pinned toolchain and DotSlash for hermetic tools.</li>
 <code>archive.rs</code> tars the global <code>MEMORY.md</code>, the
 workspace <code>MEMORY.md</code> and every session log into
 <code>memory.tar.gz</code>, and <code>upload_memory_state</code> in
-<code>xai-grok-shell/src/upload/trace.rs</code> sends it to GCS. The
-gate is
+<code>xai-grok-shell/src/upload/memory.rs</code> sends it to GCS under
+every restorable turn's prefix, skipping v2 stores. The gate is
 <code>self.session_registry_local.or(remote).unwrap_or(false)</code>
 plus <code>auth.is_xai_auth()</code>. Precisely: off by default; never
 for a non-xAI credential; an explicit local setting wins in both
@@ -349,11 +375,6 @@ the archive exists so a reconstruct pipeline can inject it into a Docker
 image "for full replay fidelity". Anyone whose <code>MEMORY.md</code>
 accumulates work context should set the local flag deliberately rather
 than leave it unset.</p>
-<p>The screen of this checkout found no auto-run surfaces, 102
-dependency surfaces inside the seven-day cooldown, 7 build-time
-<code>build.rs</code> execution points and one unpinned npm manifest,
-with <code>Cargo.lock</code> present. Nothing was installed and nothing
-was run.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <ul>
@@ -446,9 +467,8 @@ column and FTS applies it —
 a model-supplied path, canonicalizes both the target and the memory
 root, refuses anything not <code>starts_with</code> the root, and then
 reads the <em>canonicalized</em> path rather than the original, with the
-reason in a comment: "to prevent TOCTOU races". That is the containment
-check on the read path that several systems in this atlas apply only on
-the write path.</p>
+reason in a comment: "to prevent TOCTOU races". That is a containment
+check on the read path, where it is often applied only to writes.</p>
 <p><code>created_at</code> and <code>updated_at</code> are record time;
 nothing tracks when content was true, so <code>bitemporal</code> is
 withheld. There is no version chain, no supersession link, and no
@@ -512,10 +532,19 @@ at read time beyond MMR's redundancy penalty pushing one of them
 out.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Three write paths, and only one of them is on the agent's turn.</p>
-<p><strong>Session logging</strong> appends during the session.
-<strong><code>/flush</code></strong> writes the current session's
-content on demand. <strong>The dream</strong> is the consolidation, and
-it is the only path from a raw session log into curated memory.</p>
+<p><strong>The flush</strong> writes session logs. It is a model turn
+that summarizes recent conversation and appends the result to the day's
+session file through <code>write_daily_log</code>, and it fires before
+an automatic compaction (on by default, once per compaction cycle, 4,000
+tokens below the threshold), after 300 seconds idle, on
+<code>/flush</code>, and at session end unless
+<code>[memory.session] save_on_end</code> is false.
+<code>process_flush_response</code> accepts only a response with
+<code>##</code> headers and cuts it at 8,000 characters with
+<code>chars().take()</code>; a semantic-duplicate check against existing
+chunks runs only when a threshold is configured, and none is by default.
+<strong>The dream</strong> is the consolidation, and it is the only path
+from a raw session log into curated memory.</p>
 <p>The dream is gated cheapest-first — <code>enabled</code>, then hours
 since the last consolidation, then the count of sessions since — and
 none of those is a token cost until they all pass. It takes a
@@ -561,9 +590,11 @@ touched.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>Two tools, both read-only by declaration: <code>memory_search</code>
 and <code>memory_get</code>. The model can search and read; it cannot
-save, edit or forget. Writing is the harness's job — the session log
-accrues as a consequence of what happened, and consolidation is a
-scheduled pass, not a decision the model makes.</p>
+save, edit or forget. Writing is the harness's job — the flush turn
+summarizes into the session log on the harness's triggers, and
+consolidation is a scheduled pass, not a decision the model makes. That
+holds for the default legacy mode; in v2 the model edits memory files
+directly.</p>
 <p>That is the same split <a href="../zep/">Zep</a> has under MCP and
 the opposite of most memory servers, and here it comes with a
 compensating affordance: the <code>memory_search</code> description is
@@ -595,9 +626,9 @@ past <code>VERY_STALE_DAYS</code>. It runs in both the tool output and
 the automatic injection. Nothing is stored, nothing can be filtered on
 it, and no query can ask for "only fresh memories" — so it is not
 <code>trust_state</code>. What it is, is the hedge arriving where the
-hedge is used. Most systems in this atlas inject a retrieved memory as a
-bare assertion and leave the model to guess whether a months-old note
-about a build system still holds.</p>
+hedge is used. A retrieved memory is usually injected as a bare
+assertion, leaving the model to guess whether a months-old note about a
+build system still holds.</p>
 <p><strong>The thresholds are one day and seven days</strong>, which is
 aggressive enough to be worth arguing about. A session memory acquires
 "Verify this is still current" after a single day and the stronger
@@ -651,17 +682,18 @@ and <code>busy_timeout</code> and journal-mode pragmas chosen on the
 open path by filesystem.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>290 tests inside the memory crate</strong>, distributed
-sensibly rather than concentrated in the easy modules: 81 in
-<code>storage.rs</code>, 51 in <code>dream.rs</code>, 31 in
-<code>search.rs</code>, 27 in <code>backend.rs</code>, 24 in
-<code>index.rs</code>, 20 in <code>dream_lock.rs</code>, 15 in
-<code>mmr.rs</code>, 14 in <code>query_expansion.rs</code>. For a
+<p><strong>368 tests inside the memory crate</strong>, distributed
+sensibly rather than concentrated in the easy modules: 82 in
+<code>storage.rs</code>, 45 in <code>dream.rs</code>, 31 in
+<code>search.rs</code>, 29 in <code>backend.rs</code>, 24 in
+<code>dream_lock.rs</code>, 23 in <code>index.rs</code>, 19 in
+<code>flush.rs</code>, 15 in <code>mmr.rs</code>, 14 in
+<code>query_expansion.rs</code>, and 60 across the v2 test files. For a
 subsystem this size that is a strong ratio, and the tests read as
 written against specific failures rather than for coverage.</p>
-<p>Two of them earn the <code>negative_eval</code> mark, and both are
-built the right way — by establishing that the material <em>would</em>
-be returned before asserting that it is not:</p>
+<p>Two legacy tests earn the <code>negative_eval</code> mark, and both
+are built the right way — by establishing that the material
+<em>would</em> be returned before asserting that it is not:</p>
 <ul>
 <li><code>test_content_free_chunk_excluded_from_search</code> writes the
 auto-generated <code>MEMORY.md</code> stub and a real file that both
@@ -699,9 +731,9 @@ months ago" without needing a trust field.</p>
 <p><strong>Decide where injected memory sits with the provider's prompt
 cache in mind.</strong> Persisting the memory block into the leading
 system message and reusing it verbatim, rather than re-scoring per turn,
-keeps the prefix stable. Whichever way you choose, choose it — most
-systems here re-inject fresh context every turn and none of them
-mentions the cost.</p>
+keeps the prefix stable. Whichever way you choose, choose it —
+re-injecting fresh context every turn has a cache cost that is rarely
+written down.</p>
 <p><strong>Scope by containment first, and canonicalize on the read path
 anyway.</strong> A per-workspace directory with its own index makes
 cross-workspace reads impossible rather than filtered; canonicalizing
@@ -745,8 +777,8 @@ layer to be files a developer edits, with search as an accelerator
 rather than the interface. The crate is unusually well engineered for
 something behind an experimental flag — the concurrency work, the
 graceful sqlite-vec degradation, the operator tooling and the test
-density are all above what this atlas normally sees at this stage — and
-the read path is worth studying whatever you are building.</p>
+density — and the read path is worth studying whatever you are
+building.</p>
 <p>Walk away if your memory needs to be a set of claims rather than a
 set of documents. There is no fact, no extraction, no supersession and
 no way to express that something is disputed; a contradiction is
@@ -763,8 +795,6 @@ decide.</p>
 <li>What happens when a dream's output exceeds 16,000 characters in
 practice? The truncation is unconditional and the sources are deleted
 afterwards; nothing in the tree bounds how often the cap is hit.</li>
-<li>Is the <code>lib.rs</code> claim of <code>blake3(cwd)[..16]</code> a
-stale comment, or did the layout change and leave the doc behind?</li>
 <li>Does anything reconcile the index against
 <code>list_memory_files</code> at session start, or is
 <code>grok memory reindex</code> the only orphan sweep? Only the manual
@@ -835,11 +865,53 @@ lifecycle, <code>sessions_since</code>.</li>
 sync, embedding glue.</li>
 <li><code>crates/codegen/xai-grok-pager/src/memory_cmd.rs</code> —
 <code>grok memory clear</code>.</li>
-<li><code>crates/codegen/xai-grok-memory/src/archive.rs</code> and
-<code>crates/codegen/xai-grok-shell/src/upload/trace.rs</code> — the
-archive and its upload gate.</li>
+<li><code>crates/codegen/xai-grok-memory/src/flush.rs</code> and
+<code>crates/codegen/xai-grok-shell/src/session/acp_session_impl/memory_dream.rs</code>
+— <code>should_flush</code>, <code>process_flush_response</code>,
+<code>run_memory_flush</code>.</li>
+<li><code>crates/codegen/xai-grok-config-types/src/memory.rs</code> —
+<code>MemoryMode</code>, <code>resolve_settings</code> and the enable
+precedence.</li>
+</ul>
+<p><strong>The v2 pipeline (opt-in)</strong></p>
+<ul>
+<li><code>crates/codegen/xai-grok-memory/src/v2.rs</code> — scope
+layout, manifest rendering and budget.</li>
+<li><code>crates/codegen/xai-grok-memory/src/v2_access.rs</code> —
+<code>V2MemoryAccessPolicy</code>, path classes, snapshot-checked
+writes.</li>
+<li><code>crates/codegen/xai-grok-memory/src/v2_capture.rs</code> — the
+capture queue, unreferenced by the shell at this pin.</li>
+<li><code>crates/codegen/xai-grok-shell/src/session/helpers/memory_context.rs</code>
+— <code>format_v2_memory_context</code>.</li>
+<li><code>crates/codegen/xai-grok-memory/src/archive.rs</code>,
+<code>crates/codegen/xai-grok-shell/src/upload/memory.rs</code> and
+<code>crates/codegen/xai-grok-shell/src/agent/mvp_agent/agent_ops.rs</code>
+(<code>build_registry_config</code>) — the archive and its upload
+gate.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/xai-org/grok-build/commit/37949780c144e37df692e3d669051a21fec24f20"><code class="commit-id" title="37949780c144e37df692e3d669051a21fec24f20">37949780…</code></a>
+— fifteen monorepo syncs on, 2026-09-09, <code>SOURCE_REV</code>
+<code class="commit-id" title="c4ea71cfdbcdb21e32e41bc25a0043d7d4836714">c4ea71cf…</code>. Read from a
+blobless sparse checkout of the memory, tools, shell and config crates;
+the screen ran on that checkout — the root manifests, every crate's
+<code>Cargo.toml</code> and the crates read — and found 34 dependency
+surfaces inside the cooldown and no auto-run surface, so the
+<code>build.rs</code> count from the first reading was not re-taken.
+Nothing was installed, built or run. The legacy pipeline stands as
+described: the dream still truncates at 16,000 characters, overwrites
+<code>MEMORY.md</code> and deletes the session logs it read,
+<code>clear_global</code> still removes one file without opening any
+index, and the staleness thresholds are still one and seven days. What
+moved: an opt-in v2 pipeline with a path-checked file access policy and
+a capture queue that has no caller yet; memory enablement now defers to
+a remote feature flag when nothing local is set; the memory archive
+uploads per turn. Section 7 now describes the flush, which writes every
+session log as a model summary on four triggers.
+<code>scope_enforced</code> and <code>negative_eval</code> kept, with
+evidence records.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/xai-org/grok-build/commit/eb267feff13129e568df38fb6fdf0ceb65f735d6"><code class="commit-id" title="eb267feff13129e568df38fb6fdf0ceb65f735d6">eb267fef…</code></a>
 — first reading, at a commit dated 13 August 2026 whose
