@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 470 reports.**
+**This page covers all 471 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4110,3 +4110,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 1.1.21, 1,124 commits since 6 May 2026, 272 test files, an installer that registers two MCP servers into twenty coding tools, a session mesh and team sync over git; the memory server is about 5,500 lines of TypeScript inside a much larger runtime.
 - Study when: several AI coding tools on one machine should share project state per branch and coordinate edits.
 - Do not copy when: decisions and lessons must stay within their project, or history must be encrypted at rest like the state it sits beside.
+
+### [`projectmem`](../systems/projectmem/)
+- Best idea: **a debugging notebook as memory.** Issues, attempts with their outcomes, fixes, decisions and notes are appended to one JSONL log per repository; a revision supersedes rather than edits, and the retired set is computed at read time; precheck warns before a commit that touches a file where an approach already failed, and staleness asks a person to confirm or retire a decision once its cited file has changed three times. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **supersession stops at the repository.** Failed attempts and lesson-prefixed decisions are promoted into a machine-wide gotcha store without their event id, and promotion skips any text sharing more than 60% of its words with a stored gotcha, so a correction worded like the lesson it retires is dropped and other projects keep inheriting the retired one. The MCP `search_events` tool returns retired events untagged, outside the test that pins every other view to the filter.
+- Most reusable component: read-time supersession over an append-only log, with a test that lists each agent-facing module and fails when one stops filtering retired events.
+- Maturity impression: MIT, version 0.3.3, 74 commits since 9 May 2026, about 15,100 lines of Python and 241 tests, one MCP server for every registered project, git-hook capture, HTML dashboards, and a paper ([arXiv:2606.12329](https://arxiv.org/abs/2606.12329)) reporting a dogfooding study whose events are not in the tree.
+- Study when: coding agents keep repeating failed approaches in a repository and you want warnings at commit time from memory you can read as text.
+- Do not copy when: lessons shared across projects must follow their corrections, or every change to shared memory needs a record.

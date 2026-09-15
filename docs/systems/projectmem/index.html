@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Python memory for
+coding agents in which every issue, attempt, fix, decision and note is a
+line appended to one JSONL file per repository, superseded rather than
+edited, surfaced as pre-commit warnings and staleness flags, and
+promoted into a machine-wide store of library gotchas that other
+projects inherit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="projectmem — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Python memory
+for coding agents in which every issue, attempt, fix, decision and note
+is a line appended to one JSONL file per repository, superseded rather
+than edited, surfaced as pre-commit warnings and staleness flags, and
+promoted into a machine-wide store of library gotchas that other
+projects inherit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="projectmem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Python
+memory for coding agents in which every issue, attempt, fix, decision
+and note is a line appended to one JSONL file per repository, superseded
+rather than edited, surfaced as pre-commit warnings and staleness flags,
+and promoted into a machine-wide store of library gotchas that other
+projects inherit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>projectmem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "projectmem",
+      "description": "A local-first Python memory for coding agents in which every issue, attempt, fix, decision and note is a line appended to one JSONL file per repository, superseded rather than edited, surfaced as pre-commit warnings and staleness flags, and promoted into a machine-wide store of library gotchas that other projects inherit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An event log that remembers what failed</p>
+          <h1>projectmem</h1>
+          <p class="document-deck">A local-first Python memory for
+coding agents in which every issue, attempt, fix, decision and note is a
+line appended to one JSONL file per repository, superseded rather than
+edited, surfaced as pre-commit warnings and staleness flags, and
+promoted into a machine-wide store of library gotchas that other
+projects inherit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/riponcm/projectmem">
+              <span>Source</span>
+              <strong>riponcm/projectmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/riponcm/projectmem/commit/e8d73137acde6f091ef6196f88ba5eccf6eb0e8a" title="e8d73137acde6f091ef6196f88ba5eccf6eb0e8a">
+              <span>Analyzed revision</span>
+              <code>e8d73137…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/riponcm--projectmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>riponcm--projectmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>projectmem is a local-first memory for AI coding agents, published on
+PyPI as version 0.3.3, MIT, 74 commits since 9 May 2026, about 15,100
+lines of Python and 241 tests, with a paper at <a
+href="https://arxiv.org/abs/2606.12329">arXiv:2606.12329</a> describing
+a 207-event dogfooding study. One MCP server serves every registered
+repository, beside a <code>pjm</code> CLI and git hooks.</p>
+<p>Its model is a debugging notebook rather than a fact store. An agent
+or a person logs an issue, the hypotheses and attempts made against it
+with their outcomes, the fix, and the decisions and notes that came out
+of it. Each is one JSON line appended to
+<code>.projectmem/events.jsonl</code> in the repository. Nothing is
+edited: a revised decision names the event it supersedes, and every
+reader computes the retired set when it reads.</p>
+<p>The log is put to work in three ways:</p>
+<ul>
+<li><strong>Precheck</strong> compares staged files with the log and
+warns before a commit that touches a file where an approach already
+failed.</li>
+<li><strong>Staleness</strong> flags a decision, fix or note whose cited
+file has changed in three or more commits since, or has disappeared, for
+a person to confirm or retire.</li>
+<li><strong>Global promotion</strong> copies a failed attempt, or a
+decision or note that opens with <code>gotcha:</code>,
+<code>lesson:</code>, <code>never</code> and similar, into a
+machine-wide store of library gotchas when it names a library the
+project uses. Projects with the same stack inherit it.</li>
+</ul>
+<p>Supersession is careful inside a repository, and a test pins every
+agent-facing module to the retired-event filter. It does not reach the
+global store. A promoted gotcha keeps no link to its event. Promotion
+also skips a new entry that shares more than 60% of its words with one
+already stored, so a correction worded like the lesson it retires is
+dropped as a duplicate, and other projects go on inheriting the retired
+one. The MCP <code>search_events</code> tool, outside the pinned
+modules, returns retired events untagged.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A repository's memory is a sequence of <strong>cases</strong>. An
+issue opens one; attempts record what was tried and whether it worked; a
+fix closes it. Decisions and notes sit beside cases.
+<code>summary.md</code> and the per-issue files are views regenerated
+from the log.</p>
+<p><strong>Retirement</strong> is a pointer, not a status. An event with
+<code>supersedes: evt_…</code> retires that event.
+<code>superseded_ids</code> collects every pointer, and each view drops
+the retired ids (<code>models.py:186-192</code>).</p>
+<p><strong>Automatic events</strong> arrive from git hooks (post-commit,
+post-revert, post-merge), a churn detector and a CI parser, each with a
+capture source and a confidence.</p>
+<p><strong>Global memory</strong> is machine-wide: gotchas keyed by
+library, patterns and stack preferences. It is inherited by a new
+project whose detected stack matches, and served to agents through
+<code>get_global_gotchas</code>.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the project log is append-only with supersession computed on read; promotion into the global store neither follows nor records it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the project log is append-only with supersession computed on read; promotion into the global store neither follows nor records it
+flowchart TB
+    AGENT[&quot;agent (MCP) or person (pjm)&quot;] --&gt; APPEND[&quot;append event&lt;br/&gt;secrets redacted&quot;]
+    HOOKS[&quot;git hooks, churn detector, CI parser&quot;] --&gt; APPEND
+    APPEND --&gt; LOG[(&quot;events.jsonl&lt;br/&gt;append-only&quot;)]
+    LOG --&gt; RETIRED[&quot;superseded_ids&lt;br/&gt;computed at read&quot;]
+    RETIRED --&gt; VIEWS[&quot;summary.md, context, brief,&lt;br/&gt;precheck, export&quot;]
+    LOG --&gt; MCPSEARCH[&quot;MCP search_events&lt;br/&gt;no retired filter&quot;]
+    LOG --&gt; STALE[&quot;staleness: cited file changed&lt;br/&gt;3+ commits, or gone&quot;]
+    STALE --&gt;|&quot;person confirms or retires&quot;| APPEND
+    APPEND --&gt;|&quot;failed attempt, or gotcha: prefix,&lt;br/&gt;names a project library&quot;| PROMOTE{&quot;similar gotcha&lt;br/&gt;already stored?&quot;}
+    PROMOTE --&gt;|&quot;no&quot;| GLOBAL[(&quot;~/.projectmem/global&lt;br/&gt;library_gotchas.jsonl&quot;)]
+    PROMOTE --&gt;|&quot;yes, &gt;60% shared words&quot;| SKIP[&quot;not promoted&quot;]
+    GLOBAL --&gt; INHERIT[&quot;other projects with the library:&lt;br/&gt;get_global_gotchas, inherited instructions&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>models.py</code></td>
+<td><code>Event</code>, validation, timestamps, locations,
+<code>superseded_ids</code>, event references</td>
+</tr>
+<tr>
+<td><code>storage.py</code></td>
+<td>Paths, initialisation, <code>read_events</code>,
+<code>append_event</code> with redaction and global promotion,
+instruction text</td>
+</tr>
+<tr>
+<td><code>summary.py</code>, <code>commands/context.py</code>,
+<code>commands/brief.py</code>, <code>commands/export.py</code></td>
+<td>Views over the log, each filtering retired events</td>
+</tr>
+<tr>
+<td><code>commands/precheck.py</code>, <code>staleness.py</code></td>
+<td>Warnings on staged files and staleness from git history</td>
+</tr>
+<tr>
+<td><code>commands/auto_capture.py</code>,
+<code>commands/hooks.py</code>, <code>commands/watch.py</code></td>
+<td>Automatic capture</td>
+</tr>
+<tr>
+<td><code>global_memory.py</code>,
+<code>commands/global_cmd.py</code></td>
+<td>Stack detection, the global store, promotion and inheritance</td>
+</tr>
+<tr>
+<td><code>mcp_server.py</code>, <code>project_registry.py</code>,
+<code>resolver.py</code></td>
+<td>The multi-project MCP server</td>
+</tr>
+<tr>
+<td><code>commands/score.py</code>, <code>commands/visualize.py</code>,
+<code>commands/dashboard.py</code></td>
+<td>The prevention score and HTML dashboards</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong> <code>pip install projectmem</code>,
+<code>pjm doctor --fix</code> to register existing projects, one MCP
+entry for all of them, <code>pjm init</code> per repository.</li>
+<li><strong>Storage:</strong> JSONL and Markdown inside the repository's
+<code>.projectmem/</code>, added to <code>.gitignore</code> by default,
+plus <code>~/.projectmem/</code> for the registry and global store;
+<code>PROJECTMEM_HOME</code> relocates both.</li>
+<li><strong>Hand-repairable:</strong> yes. Every file is text, and the
+log can be read with <code>jq</code>.</li>
+<li><strong>No network</strong> except an opt-in version check.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, one build-time
+execution point (<code>tests/conftest.py</code>), one unpinned surface
+and <code>pyproject.toml</code> inside the seven-day cooldown. Nothing
+was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Append</strong> — <code>storage.py:532-584</code>: redact
+secret patterns, write one sorted JSON line, then attempt global
+promotion for attempts, decisions and notes.</li>
+<li><strong>Decision with supersession</strong> —
+<code>commands/decision.py:13-35</code>: resolve the referenced event by
+id or unique prefix, append, regenerate the summary; the MCP tool
+<code>add_decision</code> calls it
+(<code>mcp_server.py:656-698</code>).</li>
+<li><strong>Retired set</strong> — <code>models.py:186-192</code>, read
+by <code>summary.py:89</code>, <code>staleness.py:125</code>,
+<code>commands/context.py:117</code>, <code>brief.py:163</code>,
+<code>export.py:59</code>, <code>precheck.py:419</code> and the CLI
+<code>search.py:42</code>.</li>
+<li><strong>MCP search</strong> — <code>mcp_server.py:374-414</code>:
+substring match over every event.</li>
+<li><strong>Promotion</strong> — <code>global_memory.py:681-786</code>:
+the signal filter, a whole-word match against libraries the project
+declares, the similarity skip at <code>:776-779</code>,
+<code>add_gotcha</code>.</li>
+<li><strong>Global removal</strong> —
+<code>global_memory.py:399-446</code> (<code>remove_entry</code>,
+<code>prune_entries</code>), both rewriting the JSONL file.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Event</code> (<code>models.py:125-183</code>):
+<code>type</code> from six values, <code>summary</code>,
+<code>id</code>, <code>timestamp</code> normalised to UTC,
+<code>issue_id</code>, <code>outcome</code> from worked, failed or
+partial, <code>files</code>, <code>command</code>, <code>notes</code>,
+<code>git_commit</code>, <code>location</code>, the auto-capture fields
+<code>auto_captured</code>, <code>capture_source</code> and
+<code>capture_confidence</code>, <code>git_message</code>, and
+<code>supersedes</code>.</p>
+<p><strong>Supersession</strong> is the only form of change. The retired
+event stays in the log and is shown tagged <code>(superseded)</code> by
+the CLI search. Nothing records a rejected value that later writes are
+checked against, so <code>tombstone</code> is withheld. Outcomes and
+capture confidence describe an attempt or a capture, not belief in a
+claim, so <code>trust_state</code> is withheld. There is one time axis,
+the event timestamp, so <code>bitemporal</code> is withheld.</p>
+<p><strong>The log is the history.</strong> Every change to project
+memory, a supersession included, is a new line, and no code path
+rewrites <code>events.jsonl</code>. The global store is different:
+<code>remove_entry</code> and <code>prune_entries</code> rewrite its
+JSONL files and leave no record of what was removed. Because a mutation
+path in the system's own store goes unrecorded, <code>audit_log</code>
+is withheld.</p>
+<p><strong>Scope.</strong> One log per repository is a partition, and
+the global store is shared by design, so <code>scope_enforced</code> is
+withheld.</p>
+<p><strong>Global gotcha:</strong> <code>id</code>,
+<code>library</code>, <code>gotcha</code> text, <code>tags</code>,
+<code>source_project</code>, <code>version_range</code>,
+<code>discovered</code>. It carries no event id, so a later supersession
+in the source project cannot find it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Context and summary.</strong> <code>generate_context</code>
+builds a Markdown block within a token budget from open issues, recent
+cases, failed attempts and live decisions. <code>summary.md</code> is
+regenerated after each decision, so <code>get_summary</code> reads a
+current view.</p>
+<p><strong>Precheck</strong> collects live events for each staged or
+named file and warns at info, warn or block level. Snoozing silences it
+for a period.</p>
+<p><strong>Staleness</strong> runs one <code>git log</code> count per
+distinct file and oldest event, and flags an event after three commits
+to its file or when the file is gone.</p>
+<p><strong>Search.</strong> The CLI search tags retired events. The MCP
+<code>search_events</code> has no retired filter and no tag
+(<code>mcp_server.py:398-414</code>). An agent searching for a decision
+can read the retired version beside the current one, in log order, with
+nothing to tell them apart. The test that pins the filter lists the
+modules <code>summary</code>, <code>brief</code>, <code>context</code>,
+<code>export</code>, <code>precheck</code> and <code>search</code>
+(<code>tests/test_agent_guidance.py:157-167</code>), and
+<code>mcp_server</code> is not among them.</p>
+<p><strong>Global gotchas</strong> are returned whole or for one
+library.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Redaction</strong> runs before the write and never blocks it:
+a scrubber failure still writes the event, which the comment defends as
+better than losing an event in a tool whose job is logging.</p>
+<p><strong>Promotion and its duplicate check.</strong>
+<code>auto_promote_event</code> passes an event through two filters. The
+signal filter admits failed or partial attempts, and decisions and notes
+that open with a lesson prefix. The library filter requires a whole-word
+match to a library the project declares. Then it compares the text with
+every stored gotcha for the same library and returns without writing
+when more than 60% of the shorter text's words are shared
+(<code>global_memory.py:776-779</code>, <code>_similar</code> at
+<code>:789-796</code>). Supersession plays no part:</p>
+<ul>
+<li><code>gotcha: pydantic validators must be classmethods</code> is
+promoted.</li>
+<li>The project later retires it with
+<code>gotcha: pydantic validators no longer need to be classmethods</code>,
+superseding the first.</li>
+<li>The second shares most of its words with the first and is
+skipped.</li>
+</ul>
+<p>The project's own views now show only the correction. Every other
+project using pydantic inherits only the retired lesson, through
+<code>get_global_gotchas</code> and the instructions written at
+<code>pjm init</code>. Nothing reports the skip, and removing the stale
+gotcha takes a person running <code>pjm global remove</code>.</p>
+<p><strong>Automatic capture</strong> writes from git hooks and CI with
+a confidence, and the watcher and churn detector record repeated
+edits.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>MCP tools:</strong> <code>get_instructions</code>,
+<code>get_summary</code>, <code>get_project_map</code>,
+<code>get_plan</code>, <code>precheck_file</code>,
+<code>get_issue</code>, <code>search_events</code>,
+<code>get_score</code>, <code>get_context</code>,
+<code>get_global_gotchas</code>, <code>log_issue</code>,
+<code>record_attempt</code>, <code>record_fix</code>,
+<code>add_decision</code>, <code>add_note</code>,
+<code>list_projects</code>, <code>current_project</code>, each taking an
+optional project.</li>
+<li><strong>Instruction blocks</strong> in CLAUDE.md and AGENTS.md,
+written for every client because some never read CLAUDE.md, tell the
+agent when to read and write memory and how to supersede.</li>
+<li><strong>The prevention score</strong> grades the log and converts it
+into estimated hours, tokens and dollars saved. These are estimates
+computed from event counts, not measurements.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>History is never lost in the project.</strong> Append-only
+writes and read-time supersession mean a mistaken retirement can be
+undone by superseding again.</p>
+<p><strong>Staleness asks a person.</strong> Rather than decay or
+delete, the system flags memory whose ground has moved and waits for a
+confirmation or a retirement.</p>
+<p><strong>The global store is the weak side.</strong> It is shared
+across projects, written automatically, rewritten by removal and pruning
+without a record, and blind to supersession, as above. The README's
+"projectmem never deletes" holds for the project log.
+<code>pjm global prune</code> deletes global entries older than a
+year.</p>
+<p><strong>Injection.</strong> Summaries and notes are free text an
+agent writes, and promotion can carry one project's text into every
+project with the same library.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>241 tests in 23 files cover the log, supersession on each view,
+staleness performance, precheck, redaction, the multi-project MCP
+server, client configuration discovery, Windows hooks and encoding, and
+the dashboards. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/test_agent_guidance.py:137</code> asserts that a superseded
+decision is absent from the generated context while its successor is
+present, and <code>:148</code> does the same for precheck. That earns
+<code>negative_eval</code>. No test covers <code>search_events</code> or
+global promotion after a supersession.</p>
+<p><strong>Benchmarks.</strong> The paper reports a 207-event dogfooding
+study; no benchmark harness or results are in this tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Supersession computed at read time</strong> over an
+append-only log.</li>
+<li><strong>Warn before the commit,</strong> from the failures already
+recorded for the staged files.</li>
+<li><strong>Staleness from the cited file's git history,</strong> not
+from age.</li>
+<li><strong>A test that lists every agent-facing module</strong> and
+fails if one stops filtering retired events. Include the transport layer
+in the list.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Copying memory into a shared store without its
+identity.</strong> A promoted entry that cannot be traced to its event
+cannot follow a later correction.</li>
+<li><strong>Deduplicating by word overlap alone</strong> when the
+likeliest near-duplicate of a lesson is its correction.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>projectmem suits a developer or small team who wants coding agents to
+stop repeating failed approaches in a repository, with memory they can
+read in a text editor and a review step when code moves under a
+decision. The global store is worth enabling only with the understanding
+that it does not follow corrections at this commit.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should a promoted gotcha record its source event</strong> so
+that a supersession retires it globally?</li>
+<li><strong>Should <code>search_events</code> tag or drop retired
+events</strong> like the CLI search?</li>
+<li><strong>Will the dogfooding study's events be published</strong>
+beside the paper?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>src/projectmem/models.py</code>, <code>storage.py</code>,
+<code>summary.py</code>, <code>staleness.py</code>,
+<code>global_memory.py</code>, <code>mcp_server.py</code></li>
+<li><code>src/projectmem/commands/decision.py</code>,
+<code>context.py</code>, <code>brief.py</code>,
+<code>precheck.py</code>, <code>search.py</code>,
+<code>export.py</code>, <code>global_cmd.py</code></li>
+<li><code>tests/test_agent_guidance.py</code>,
+<code>tests/test_v014_features.py</code>,
+<code>tests/test_global_mcp.py</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "superseded_ids" src</code> — seven modules; not
+<code>mcp_server.py</code> or <code>global_memory.py</code></li>
+<li><code>grep -n "supersed" src/projectmem/global_memory.py</code> — no
+matches</li>
+<li><code>grep -rn "events_path" src</code> — read in four places,
+appended in one; nothing rewrites the log</li>
+<li><code>grep -n "_write_jsonl" src/projectmem/global_memory.py</code>
+— <code>remove_entry</code> and <code>prune_entries</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/riponcm/projectmem/commit/e8d73137acde6f091ef6196f88ba5eccf6eb0e8a"><code class="commit-id" title="e8d73137acde6f091ef6196f88ba5eccf6eb0e8a">e8d73137…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: no auto-run surface, one build-time execution point, one
+unpinned surface, and one dependency file inside the cooldown. Nothing
+was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

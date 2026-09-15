@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 470 reports.</strong></p>
+<p><strong>This page covers all 471 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16973,6 +16973,39 @@ project state per branch and coordinate edits.</li>
 <li>Do not copy when: decisions and lessons must stay within their
 project, or history must be encrypted at rest like the state it sits
 beside.</li>
+</ul>
+<h3 id="projectmem"><a
+href="../systems/projectmem/"><code>projectmem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a debugging notebook as memory.</strong> Issues,
+attempts with their outcomes, fixes, decisions and notes are appended to
+one JSONL log per repository; a revision supersedes rather than edits,
+and the retired set is computed at read time; precheck warns before a
+commit that touches a file where an approach already failed, and
+staleness asks a person to confirm or retire a decision once its cited
+file has changed three times. Two marks: <code>human_review</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>supersession stops at the repository.</strong>
+Failed attempts and lesson-prefixed decisions are promoted into a
+machine-wide gotcha store without their event id, and promotion skips
+any text sharing more than 60% of its words with a stored gotcha, so a
+correction worded like the lesson it retires is dropped and other
+projects keep inheriting the retired one. The MCP
+<code>search_events</code> tool returns retired events untagged, outside
+the test that pins every other view to the filter.</li>
+<li>Most reusable component: read-time supersession over an append-only
+log, with a test that lists each agent-facing module and fails when one
+stops filtering retired events.</li>
+<li>Maturity impression: MIT, version 0.3.3, 74 commits since 9 May
+2026, about 15,100 lines of Python and 241 tests, one MCP server for
+every registered project, git-hook capture, HTML dashboards, and a paper
+(<a href="https://arxiv.org/abs/2606.12329">arXiv:2606.12329</a>)
+reporting a dogfooding study whose events are not in the tree.</li>
+<li>Study when: coding agents keep repeating failed approaches in a
+repository and you want warnings at commit time from memory you can read
+as text.</li>
+<li>Do not copy when: lessons shared across projects must follow their
+corrections, or every change to shared memory needs a record.</li>
 </ul>
         </article>
       </div>
