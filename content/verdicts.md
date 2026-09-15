@@ -1952,6 +1952,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`mem9`](../systems/mem9/)
 
+- Scope, precisely: a tenant is a separate database resolved by middleware from the route, which is a strong boundary of a kind this atlas does not mark. Inside a tenant, `agent_id`, `session_id` and `app_id` enter the `WHERE` only under `if f.AgentID != ""`, and the handler reads that value from the request body rather than from the authenticated principal — so a search naming no agent returns every agent's memories in that tenant.
 - Best idea: `e2e/crdt-e2e-tests.sh` asks the three right questions about what "deleted" means under concurrency — delete is invisible to reads, repeated delete is idempotent, and a causally-dominating write *revives* the tombstone. It is the opposite position from Noosphere's refusal and YantrikDB's restore-no-resurrect, argued deliberately.
 - Biggest risk: none of it is in the published server. `clock`, `write_id`, `tombstone`, `space_token` and `/api/spaces` appear in no Go, TypeScript or SQL file in the repository. A committed suite is normally the most trustworthy documentation a repo has; this one specifies code that is not here, so the multi-agent convergence story cannot be assessed from this tree.
 - Most reusable component: a `paused` state beside `active`, `archived` and `deleted` — withheld from recall without being archived, which is what a user actually wants when a memory is wrong *for now*.

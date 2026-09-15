@@ -7,10 +7,10 @@ page_kind: system
 source_name: "mem9-ai/mem9"
 source_url: https://github.com/mem9-ai/mem9
 archive_name: "mem9-ai--mem9"
-revision: ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
-revision_url: https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f
-analyzed_at: 2026-08-09
-capabilities: "scope_enforced"
+revision: 5af03a68c072651e9c64d1b8b1265e36b7354671
+revision_url: https://github.com/mem9-ai/mem9/commit/5af03a68c072651e9c64d1b8b1265e36b7354671
+analyzed_at: 2026-09-15
+capabilities: ""
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -20,7 +20,7 @@ matrix:
   retrieval: "Hybrid recall over pgvector with tag and state filters, surfaced through a dashboard"
   write: "HTTP handlers into a service layer; version increments and updated_by are recorded"
   update_delete: "state moves to deleted and superseded_by points at the replacement; no rejected-value record"
-  scoping: "tenant_id, agent_id, session_id and app_id, each indexed, applied in the repository queries"
+  scoping: "A database per tenant, resolved from the route by middleware; inside it `agent_id`, `session_id` and `app_id` are optional filters taken from the request body"
   integration: "Plugins for OpenClaw, Claude Code, OpenCode and Codex, plus a CLI, a dashboard and webhooks"
   background: "Webhook dispatch with a signer, runtime-usage outbox and metering"
   trust: "None epistemic — state is lifecycle and version is a counter"
@@ -85,8 +85,9 @@ from this repository.
 
 What *is* here is a conventional multi-tenant memory service. A memory carries
 content, tags, metadata, a 1536-dimension embedding, a `memory_type`
-(`pinned`, `insight`, `session`), and four identity keys — `agent_id`,
-`session_id`, `app_id` and the tenant — each with its own index.
+(`pinned`, `insight`, `session`), and three identity columns — `agent_id`,
+`session_id` and `app_id` — each with its own index. The tenant is not among
+them: it is the database the row lives in.
 
 `MemoryState` is `active | paused | archived | deleted`. `paused` is the
 unusual one and it is a good idea: a memory temporarily withheld from recall
@@ -130,9 +131,10 @@ A dashboard, a CLI, four editor plugins and a marketing site complete the tree.
 **Write** — handler → service → repository, incrementing `version` and stamping
 `updated_by`.
 
-**Read** — repository queries filtered by tenant and by `state`, with the
-indexes on `memory_type`, `source`, `state`, `agent_id`, `session_id`, `app_id`
-and `updated_at` matching the filters.
+**Read** — repository queries filtered by `state`, with the indexes on
+`memory_type`, `source`, `state`, `agent_id`, `session_id`, `app_id` and
+`updated_at` matching the filters. The identity columns enter the `WHERE` only
+when the caller supplies them.
 
 **Webhook** — `internal/webhook/`: a `service`, a `store`, a `dispatcher` and a
 `signer`, so an outbound notification is signed rather than trusted.
@@ -163,11 +165,41 @@ inferring a conclusion from it.
 Hybrid recall over pgvector with the state and identity filters above, and a
 dashboard for inspection.
 
-**Scope is real and is the mark this report awards.** `tenant_id` is a predicate
-in the repository queries across all three backends, and the four identity
-columns are indexed. For a service that provisions agents into shared
-workspaces, that layering — tenant, then app, then agent, then session — is the
-right shape.
+**Scope is real between tenants and absent within one.** Those are two different
+mechanisms and the distinction decides the mark.
+
+Between tenants the isolation is a **separate database**. `handler.go:264`
+labels the routes *"Tenant-scoped routes — tenantMW resolves {tenantID} to DB
+connection"*, and `service/tenant.go:340` resolves a tenant to a DSN and a
+pooled `*sql.DB`. That is a strong boundary — no query can reach another
+tenant's rows because no query runs against their database — and it is a
+physical partition, which this atlas's definition of `scope_enforced`
+excludes. There is no `tenant_id` column on `memories` at all; the `tenant_id`
+predicates in the repository are on `upload_tasks` and `tenant_activity`.
+
+Inside a tenant the three identity columns are **optional filters supplied by
+the caller**:
+
+```go
+if f.AgentID != "" {
+    conds = append(conds, fmt.Sprintf("agent_id = $%d", paramIdx))
+    ...
+}
+if f.SessionID != "" { ... }
+if f.AppID != nil { ... }
+```
+
+Omit `agent_id` and the search returns every agent's memories in that tenant.
+Nothing requires it: `handler/memory.go:72` reads `agentID := req.AgentID`, from
+the request body rather than from the authenticated principal, so the value is
+the caller's to choose or to leave out. For a single-tenant deployment that is
+unremarkable; for the shared-workspace case the layering is *documented* — tenant,
+then app, then agent, then session — rather than enforced below the tenant.
+
+The mark is withheld on that basis. What would earn it is small: derive
+`agent_id` from the API key the way the tenant is derived from the route, or
+reject a search that names no agent, the way [MemoraX](../memorax-code/) refuses
+a scope it cannot resolve.
 
 ## 7. Write Mechanics
 
@@ -303,5 +335,7 @@ Test 5 tombstone delete `:198-226`, Test 6 tombstone revival `:228-258`, Test 7
 `codex-plugin/`, `cli/`, `dashboard/`, `skills/`
 
 ## History
+
+**2026-09-15** — [`5af03a68c072651e9c64d1b8b1265e36b7354671`](https://github.com/mem9-ai/mem9/commit/5af03a68c072651e9c64d1b8b1265e36b7354671) — second reading, 11 commits on, almost all of them the marketing site and an OpenAPI contract test. Screened again: one auto-run finding, the `.claude-plugin/` marketplace manifest; three build-time execution points; seven unpinned manifests; nothing inside the cooldown. Nothing was installed and nothing was run. **`scope_enforced` is withdrawn**, and the code did not change — the previous reading read the wrong table. `tenant_id` is a predicate on `upload_tasks` and `tenant_activity`; the `memories` table has no `tenant_id` column, because a tenant is a separate database resolved by middleware from the route (`handler/handler.go:264`, `service/tenant.go:340`). That is a physical partition, which this atlas's definition excludes. Inside a tenant, `agent_id`, `session_id` and `app_id` enter the `WHERE` only under `if f.AgentID != ""` and its siblings (`repository/postgres/memory.go:511-525`), and `handler/memory.go:72` takes the value from the request body rather than from the authenticated principal — so omitting it returns every agent's memories in that tenant. The report now carries no marks, and section 6 states what would earn one back.
 
 **2026-08-09** — [`ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f`](https://github.com/mem9-ai/mem9/commit/ee12da17e6475f1b384a7e6ab4b18d96e99dbd4f) — first reading. Screened before reading; the tree was read, never installed, and no test was run. The CRDT end-to-end suite was read, not executed, and the endpoints it drives were not found in the published server.

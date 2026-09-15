@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 363 of 457 screened at the report's current pin.**
+**Progress: 364 of 457 screened at the report's current pin.**
 
 8 further record(s) describe a revision the report has since moved
-off, and 86 report(s) have no record at all.
+off, and 85 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 147 |
+| Repositories with an auto-run surface (`RUNS`) | 148 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 188 |
-| Repositories with build-time execution (`EXEC`) | 268 |
+| Repositories with build-time execution (`EXEC`) | 269 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -99,6 +99,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
 | [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`mem0`](../../content/systems/mem0.md) | `.gitmodules` |
+| [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |

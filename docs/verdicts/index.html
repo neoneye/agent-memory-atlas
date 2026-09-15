@@ -6482,6 +6482,14 @@ so.</li>
 </ul>
 <h3 id="mem9"><a href="../systems/mem9/"><code>mem9</code></a></h3>
 <ul>
+<li>Scope, precisely: a tenant is a separate database resolved by
+middleware from the route, which is a strong boundary of a kind this
+atlas does not mark. Inside a tenant, <code>agent_id</code>,
+<code>session_id</code> and <code>app_id</code> enter the
+<code>WHERE</code> only under <code>if f.AgentID != ""</code>, and the
+handler reads that value from the request body rather than from the
+authenticated principal — so a search naming no agent returns every
+agent's memories in that tenant.</li>
 <li>Best idea: <code>e2e/crdt-e2e-tests.sh</code> asks the three right
 questions about what "deleted" means under concurrency — delete is
 invisible to reads, repeated delete is idempotent, and a
