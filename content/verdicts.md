@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 463 reports.**
+**This page covers all 464 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4054,3 +4054,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: BSL 1.1 converting to Apache-2.0 in 2030, version 0.7.3, 188 commits since 7 May 2026, about 39,000 lines of Rust and 365 tests; pre-1.0 with a schema that may change, and benchmarks kept in a separate repository.
 - Study when: an agent's long analytical work needs its structure — hypotheses, verdicts, provenance, trails — kept and reread across sessions.
 - Do not copy when: you need facts extracted for you, embeddings, isolation between users, or a valid-time axis.
+
+### [`altk-evolve`](../systems/altk-evolve/)
+- Best idea: **dose the lessons, don't dump the playbook.** Guidelines extracted from completed trajectories carry a support count; each task gets the core guidelines that recurred across many tasks plus the few whose source task most resembles the current one, minus duplicates of the core. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **correction is deletion.** LLM conflict resolution updates or deletes entities by id and the server keeps no revision or audit of what it replaced; the Lite plugins' append-only audit log records publishing, syncing and retention but not the guidelines `learn` saves, and Lite's Stop hook runs the learn skill after every task on the user's model.
+- Most reusable component: hook-wrapped template methods on the backend base class — reads, writes, deletes and namespace deletes fire policy hooks before a protected implementation, so secret scanning, two PII redactors and a legal hold cannot be skipped by a backend override.
+- Maturity impression: Apache-2.0 from IBM Research, 246 commits since 12 December 2025, about 17,000 lines and 1,319 test functions, three storage backends, a retention engine with scheduled jobs, and a paper ([arXiv:2603.10600](https://arxiv.org/abs/2603.10600)) reporting an AppWorld gain from 50.0% to 58.9% scenario goal completion, with the runs not committed.
+- Study when: agents repeat task families and should accumulate procedural lessons, and you want a worked answer to how much of that memory to inject.
+- Do not copy when: you need factual user memory, a history of corrections, or isolation finer than one table per namespace.

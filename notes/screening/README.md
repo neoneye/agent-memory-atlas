@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 402 of 463 screened at the report's current pin.**
+**Progress: 403 of 464 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 163 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 220 |
-| Repositories with build-time execution (`EXEC`) | 290 |
+| Repositories with an auto-run surface (`RUNS`) | 164 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 221 |
+| Repositories with build-time execution (`EXEC`) | 291 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -41,6 +41,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |
 | [`aipass`](../../content/systems/aipass.md) | `.claude/hooks/`, `.claude/settings.json`, `.claude/settings.local.json` |
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
+| [`altk-evolve`](../../content/systems/altk-evolve.md) | `.claude-plugin/` |
 | [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
