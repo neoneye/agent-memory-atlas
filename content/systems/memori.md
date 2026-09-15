@@ -7,10 +7,13 @@ page_kind: system
 source_name: "MemoriLabs/Memori"
 source_url: https://github.com/MemoriLabs/Memori
 archive_name: "MemoriLabs--Memori"
-revision: 538b61f245295aa1a43df8033879f8293627f74d
-revision_url: https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d
-analyzed_at: 2026-07-29
-capabilities: "scope_enforced"
+revision: 10d65015007131a69b2597fa5130da58da24a0c2
+revision_url: https://github.com/MemoriLabs/Memori/commit/10d65015007131a69b2597fa5130da58da24a0c2
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "local recall, by entity | memori/memory/recall.py:176-188 _resolve_entity_id, :359-371 search_facts; memori/storage/drivers/sqlite/_driver.py:326-333 get_embeddings, and the same WHERE entity_id predicate in the postgresql, mysql and oceanbase drivers | recall resolves the configured external entity id to its row and aborts when none is configured; the candidate embeddings a similarity search ranks are selected WHERE entity_id = ?, and every memory table hangs off entity_id or process_id with ON DELETE CASCADE. entity_id is the only boundary; there is no organization or project layer | tests/storage/drivers/"
+  negative_eval: "recall injection, by relevance | memori/llm/pipelines/recall_injection.py, memori/memory/recall.py:50 _score_for_recall_threshold | with recall returning a fact at similarity 0.9 and one at 0.05, the injected system message is asserted to contain the relevant fact and not the irrelevant one; the store is mocked, so the case covers the injection filter rather than the query | tests/llm/test_llm_base.py:640"
 stack_storage: "mongo"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -38,8 +41,7 @@ drivers for SQLite, PostgreSQL, MySQL, Oracle, OceanBase and MongoDB, a schema
 that models entities, processes, sessions, conversations, messages, facts and a
 subject–predicate–object graph, and — rarest of all — a
 `memori_entity_fact_mention` join table that records **which conversations
-mentioned which fact**. Very little in this atlas can answer "why do you believe
-that?" with a foreign key. Memori can.
+mentioned which fact**, so "why do you believe that?" has a foreign-key answer.
 
 The defect: facts are deduplicated on a content-addressable key,
 `generate_uniq`, which normalizes by keeping only ASCII alphanumerics before
@@ -197,13 +199,13 @@ Start with what is good, because it is genuinely good.
 because `memori_conversation_message` retains the source text. A fact in this
 system can name the conversations it came from, and those conversations still
 exist. That is [evidence before belief](../../patterns/evidence-before-belief/)
-with an actual foreign key rather than a hopeful `source` string, and only a
-handful of systems in this atlas manage it.
+with an actual foreign key rather than a hopeful `source` string.
 
 Scoping is likewise structural. Every memory table hangs off `entity_id` or
 `process_id` with `ON DELETE CASCADE`, and every read carries `WHERE entity_id =
 ?`. `memori_entity.external_id` is your application's user identifier, uniquely
-constrained. Deleting an entity really does remove its memory.
+constrained, and recall aborts when no entity is configured
+(`memory/recall.py:176-188`). Deleting an entity really does remove its memory.
 
 Now the defect.
 
@@ -324,8 +326,8 @@ is no "forget this one thing" — the granularity of forgetting is the person.
 - **Synchronous?** The turn write is; the augmentation is not.
 - **Lag?** Until the hosted augmentation returns and the Rust worker drains its
   queue. Unmeasured here.
-- **Whole-store passes?** None. Cost scales with turns, not with corpus size —
-  a better shape than the nightly-rewrite designs elsewhere in this atlas.
+- **Whole-store passes?** None. Cost scales with turns, not with corpus size, which
+  avoids a nightly rewrite of the whole store.
 - **Read path?** Bounded by a resolved limit and a score threshold. Because
   extraction is a remote metered call, the recurring cost is a vendor bill rather
   than a token bill, which is a different thing to budget for.
@@ -371,8 +373,7 @@ path to having any facts.
 
 ## 10. Tests, Evals, and Benchmarks
 
-153 files under `tests/`, which is the largest suite of any system reviewed in
-this round, plus per-driver test modules and a TypeScript suite under
+153 files under `tests/`, plus per-driver test modules and a TypeScript suite under
 `memori-ts/tests/`. The coverage is real: drivers, storage calls, search, config,
 network.
 
@@ -390,6 +391,12 @@ README, and the project's marketing links to a hosted benchmark page. **No score
 results are committed to this repository**, so the numbers are claims rather than
 artifacts. The survey that prompted this review lists Memori with an empty
 evaluation column.
+
+One case asserts exclusion: `tests/llm/test_llm_base.py::test_inject_recalled_facts_filters_by_relevance`
+feeds recall a fact at similarity 0.9 and one at 0.05 and asserts the injected
+context carries the first and not the second. The store is mocked, so it pins the
+injection threshold rather than the query, and it is what the `negative_eval` mark
+rests on.
 
 The tests I would want: `generate_uniq("用户住在柏林") != generate_uniq("用户喜欢咖啡")`,
 and a round-trip asserting that two distinct non-ASCII facts produce two rows.
@@ -433,8 +440,7 @@ and a round-trip asserting that two distinct non-ASCII facts produce two rows.
 
 Memori suits a team that wants a portable, auditable memory schema across an
 unusual range of databases, is happy to depend on a vendor for extraction, and
-whose users write in Latin scripts. Within that envelope it is one of the
-better-engineered systems in this atlas — the migrations are legible, the
+whose users write in Latin scripts. Within that envelope it is well engineered — the migrations are legible, the
 provenance is real, the capture path degrades correctly, and the Rust core with
 three SDKs is more portability than most projects attempt.
 
@@ -490,9 +496,11 @@ is not local.
 **Integrations** — `integrations/claude-code/`, `integrations/hermes/`,
 `integrations/openclaw/`, `memori-ts/`
 
-**Tests/benchmarks** — `tests/test_utils.py`, `tests/storage/drivers/`,
+**Tests/benchmarks** — `tests/test_utils.py`, `tests/llm/test_llm_base.py`, `tests/storage/drivers/`,
 `memori-ts/tests/`, `benchmarks/`
 
 ## History
+
+**2026-09-15** — [`10d65015007131a69b2597fa5130da58da24a0c2`](https://github.com/MemoriLabs/Memori/commit/10d65015007131a69b2597fa5130da58da24a0c2) — two commits on, 2026-09-03, both adding a Memori Enterprise section to the README; no code changed. Screened before reading: no auto-run surface, twelve build-time execution points and fourteen unpinned surfaces; nothing was installed or run. The non-ASCII collapse in `generate_uniq` (`memori/_utils.py:46`) stands, and `tests/` still contains no non-ASCII input. Evidence records added: `scope_enforced` on the entity-scoped recall and embedding reads, and `negative_eval`, missed at the first reading, on the injection test that asserts a below-threshold fact is left out beside the relevant one. Two marks.
 
 **2026-07-29** — [`538b61f245295aa1a43df8033879f8293627f74d`](https://github.com/MemoriLabs/Memori/commit/538b61f245295aa1a43df8033879f8293627f74d) — first reading.

@@ -1049,7 +1049,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: provenance as a real join table, so a fact resolves back to the conversations that produced it — and a capture path that survives extraction failure, because the durable write is required and the smart write optional.
 - Biggest risk: the dedupe key strips all non-ASCII, so facts in Chinese, Japanese, Korean, Arabic, Hebrew, Russian, Greek or Thai collide into one row.
 - Most reusable component: the required-durable/optional-smart write split, and giving the agent its own memory subject rather than filing everything under the user.
-- Maturity impression: 153 test files plus per-driver modules and a TypeScript suite — the largest suite of any system in its review round — with legible migrations and a Rust core behind three SDKs.
+- Maturity impression: 153 test files plus per-driver modules and a TypeScript suite, with legible migrations and a Rust core behind three SDKs — and not one non-ASCII input anywhere in the tests.
 - Study when: you want a portable, auditable schema across an unusual range of databases and are happy to depend on a vendor for extraction.
 - Do not copy when: your users write in non-Latin scripts. That is a statement about one function rather than the design — the fix is a few lines — but verify it against your own data before storing anything you would miss.
 
