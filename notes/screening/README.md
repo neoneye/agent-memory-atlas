@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 412 of 473 screened at the report's current pin.**
+**Progress: 413 of 474 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 168 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 226 |
-| Repositories with build-time execution (`EXEC`) | 298 |
+| Repositories with an auto-run surface (`RUNS`) | 169 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 227 |
+| Repositories with build-time execution (`EXEC`) | 299 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -188,6 +188,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`trilium`](../../content/systems/trilium.md) | `.envrc`, `.mcp.json`, `.vscode/settings.json` |
 | [`trueforge`](../../content/systems/trueforge.md) | `.cursor/rules/` |
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
+| [`velesdb`](../../content/systems/velesdb.md) | `.githooks/`, `server.json`, `smithery.yaml` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |

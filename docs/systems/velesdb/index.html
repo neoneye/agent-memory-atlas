@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust vector, graph and columnar
+database whose velesdb-memory MCP server stores atomic facts with no
+model on the write path, links them into a graph that returns the
+evidence trail behind a recall, and compiles an agent's context under a
+token budget; forgetting a fact removes it and its hubs, while the
+entity attributes and relations it stated stay behind.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="VelesDB — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust vector, graph and
+columnar database whose velesdb-memory MCP server stores atomic facts
+with no model on the write path, links them into a graph that returns
+the evidence trail behind a recall, and compiles an agent's context
+under a token budget; forgetting a fact removes it and its hubs, while
+the entity attributes and relations it stated stay behind.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VelesDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust vector, graph and
+columnar database whose velesdb-memory MCP server stores atomic facts
+with no model on the write path, links them into a graph that returns
+the evidence trail behind a recall, and compiles an agent's context
+under a token budget; forgetting a fact removes it and its hubs, while
+the entity attributes and relations it stated stay behind.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>VelesDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "VelesDB",
+      "description": "A Rust vector, graph and columnar database whose velesdb-memory MCP server stores atomic facts with no model on the write path, links them into a graph that returns the evidence trail behind a recall, and compiles an agent's context under a token budget; forgetting a fact removes it and its hubs, while the entity attributes and relations it stated stay behind.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Links that explain an answer</p>
+          <h1>VelesDB</h1>
+          <p class="document-deck">A Rust vector, graph and columnar
+database whose velesdb-memory MCP server stores atomic facts with no
+model on the write path, links them into a graph that returns the
+evidence trail behind a recall, and compiles an agent's context under a
+token budget; forgetting a fact removes it and its hubs, while the
+entity attributes and relations it stated stay behind.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/cyberlife-coder/VelesDB">
+              <span>Source</span>
+              <strong>cyberlife-coder/VelesDB</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/cyberlife-coder/VelesDB/commit/614722aa72f1740b2d5079eb4d3567ed1e709f6a" title="614722aa72f1740b2d5079eb4d3567ed1e709f6a">
+              <span>Analyzed revision</span>
+              <code>614722aa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cyberlife-coder--VelesDB" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>cyberlife-coder--VelesDB</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>VelesDB is a Rust database that fuses vectors, a graph and a column
+store behind one query language. It is published under the VelesDB Core
+License 1.0, a source-available licence adapted from the Elastic License
+2.0, with 4,620 commits since 17 December 2025 across more than 400,000
+lines of Rust. This report reads its agent memory: the
+<code>velesdb-memory</code> crate, version 0.14.2, about 35,800 lines of
+non-test Rust with 1,296 tests. It ships as an MCP server with 27 tools
+in the default build, plus Node, Python and WASM bindings.</p>
+<p>The design argument is that a vector store returns text that looks
+like the question, while the answer to "why did we do this?" is usually
+a fact that shares no words with it. So:</p>
+<ul>
+<li><strong>Facts connect.</strong> <code>remember</code> stores one
+atomic fact with typed links and metadata, calling no model.
+<code>why</code> walks the links and returns the nodes and edges behind
+an answer, and <code>recall_fused</code> blends vector and graph
+reach.</li>
+<li><strong>Entities are extracted optionally.</strong> A local model
+can read facts into entity hubs with attributes
+(<code>Theo is 15</code>) and relations
+(<code>Camille sister of Theo</code>), and <code>entity</code> returns
+everything known about a name from both directions.</li>
+<li><strong>Context is compiled.</strong> A deterministic compiler
+shrinks an agent's prompt under a hard token budget with no model call;
+the README reports 82.5% smaller context on a committed coding
+session.</li>
+</ul>
+<p>The engineering is careful and documents its own limits. The loopback
+HTTP daemon refuses a non-loopback bind without an explicit override. A
+<code>forget</code> racing the asynchronous graph wiring wins.
+Scaffolding never leaks into recall, through any predicate.</p>
+<p>The gap is in retraction through the entity layer.
+<code>forget</code> deletes the fact and its edges, and deletes an
+entity hub only when no surviving fact still mentions it. The attributes
+and hub-to-hub relations an extraction wrote carry no record of the fact
+that stated them. <code>wire_attributes</code> merges them into the
+hub's metadata (<code>service.rs:490-514</code>), and
+<code>wire_relations</code> adds hub-to-hub edges
+(<code>service_graph_wiring.rs:599-620</code>). Forget "Theo is 15"
+while "Theo has a sister" is stored, and <code>entity("theo")</code>
+still reports age 15. The <code>forget</code> tool tells the agent to
+use deletion "to retract or correct stored knowledge".</p>
+<p>One mark: <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>store</strong> is one directory held by one process.
+Several clients share it through the HTTP daemon.</p>
+<p>A <strong>fact</strong> is a short sentence with an embedding. It may
+carry:</p>
+<ul>
+<li><strong>links</strong> to other facts, with a relation name;</li>
+<li><strong>metadata</strong> in the column store, which
+<code>recall_where</code> filters with typed comparisons — the caller
+decides the fields, such as <code>project</code>, <code>status</code> or
+a numeric <code>ts</code> date;</li>
+<li>a <strong>confidence</strong> that <code>feedback</code> moves up or
+down and that recall blends into ranking;</li>
+<li>a <strong>TTL</strong>.</li>
+</ul>
+<p>An <strong>entity hub</strong> is a reserved record for a name,
+created by extraction. Facts point at it with <code>mentions</code>. Its
+attributes live in its own metadata, and relations between entities are
+edges between hubs.</p>
+<p><strong>Working contexts</strong> and <strong>compiled
+sources</strong> are the context compiler's artefacts, kept out of
+recall.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — forget removes the fact, its edges and orphaned hubs; attributes and hub relations written by the same extraction carry no link back to the fact</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: forget removes the fact, its edges and orphaned hubs; attributes and hub relations written by the same extraction carry no link back to the fact
+flowchart TB
+    REM[&quot;remember(fact, links, metadata)&lt;br/&gt;no model call&quot;] --&gt; FACT[(&quot;fact&lt;br/&gt;embedding, metadata, confidence&quot;)]
+    EXT[&quot;remember_extracted / autograph worker&lt;br/&gt;local model&quot;] --&gt; FACT
+    EXT --&gt; HUB[(&quot;entity hub &#39;theo&#39;&lt;br/&gt;metadata: age = 15&quot;)]
+    FACT --&gt;|&quot;mentions&quot;| HUB
+    EXT --&gt;|&quot;wire_relations&quot;| HUBREL[&quot;hub → hub edge&lt;br/&gt;camille sister of theo&quot;]
+    FACT2[(&quot;fact: &#39;Theo has a sister&#39;&quot;)] --&gt;|&quot;mentions&quot;| HUB
+    FORGET[&quot;forget(&#39;Theo is 15&#39;)&quot;] --&gt; DEL[&quot;delete fact and its edges&quot;]
+    DEL --&gt; ORPH{&quot;hub still mentioned&lt;br/&gt;by a live fact?&quot;}
+    ORPH --&gt;|&quot;yes (FACT2)&quot;| KEEP[&quot;hub kept&lt;br/&gt;age = 15 still in metadata&quot;]
+    ORPH --&gt;|&quot;no&quot;| GONE[&quot;hub deleted&quot;]
+    ENTITY[&quot;entity(&#39;theo&#39;)&quot;] --&gt; KEEP
+    Q[&quot;recall / recall_where / recall_fused&quot;] --&gt; FILTER[&quot;hubs and compiler artefacts excluded&lt;br/&gt;confidence re-order&quot;]
+    FACT --&gt; FILTER
+    WHY[&quot;why(query)&quot;] --&gt; TRAIL[&quot;nodes + edges behind the answer&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Crate or area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/velesdb-core</code></td>
+<td>The database: HNSW index, graph, column store, VelesQL, persistence,
+and an <code>agent</code> module with episodic, semantic and procedural
+memory types</td>
+</tr>
+<tr>
+<td><code>crates/velesdb-memory</code></td>
+<td>The agent memory service and MCP server: <code>service.rs</code>,
+<code>service_graph.rs</code>, <code>service_graph_wiring.rs</code>,
+<code>reinforce.rs</code>, <code>fused_recall.rs</code>,
+<code>extract.rs</code>, <code>context/</code>, <code>mcp/</code>,
+<code>http.rs</code>, <code>daemon_*</code>,
+<code>migration/</code></td>
+</tr>
+<tr>
+<td><code>crates/velesdb-server</code>, <code>velesdb-cli</code>,
+<code>velesdb-node</code>, <code>velesdb-python</code>,
+<code>velesdb-wasm</code>, <code>velesdb-mobile</code>,
+<code>tauri-plugin-velesdb</code></td>
+<td>The general database surfaces</td>
+</tr>
+<tr>
+<td><code>integrations/agent-hooks</code>, <code>skills</code></td>
+<td>Hooks for Claude Code, Codex and Windsurf, and agent skills</td>
+</tr>
+<tr>
+<td><code>benchmarks</code>, <code>conformance</code>,
+<code>crates/velesdb-memory/examples</code></td>
+<td>Harnesses, including <code>bench_multihop</code>,
+<code>locomo</code>, <code>timeqa</code> and
+<code>context_savings</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong> <code>cargo install velesdb-memory</code>
+or the Node package, then <code>claude mcp add velesdb-memory</code>;
+installers wire the HTTP daemon and hooks per client.</li>
+<li><strong>Embeddings:</strong> a deterministic offline embedder by
+default, which the README says matches surface form rather than meaning;
+a real model is one environment variable (Ollama, OpenAI-compatible
+HTTP).</li>
+<li><strong>Extraction:</strong> off unless built with
+<code>extractor-http</code> and pointed at a local model.</li>
+<li><strong>Hand-repairable:</strong> no. The store is binary;
+<code>list_memories</code>, export and the migration tools are the
+inspection surfaces.</li>
+</ul>
+<p>The screen of this checkout found three auto-run surfaces
+(<code>.githooks/</code>, <code>server.json</code>,
+<code>smithery.yaml</code>), eight build-time execution points,
+seventeen unpinned surfaces and fifty dependency files inside the
+seven-day cooldown, and read <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> as data. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Remember</strong> — <code>mcp.rs:301-327</code> →
+<code>MemoryService::remember_with_ttl</code>: size cap, embed, store
+with links, metadata and TTL.</li>
+<li><strong>Recall</strong> — <code>service.rs:622-728</code>: vector
+search, exclusion of hubs and compiler artefacts, re-order by learned
+confidence (<code>:656</code>); <code>recall_where</code>
+(<code>:729</code>) applies typed column predicates with the same
+exclusions.</li>
+<li><strong>Feedback</strong> — <code>reinforce.rs:73-110</code>:
+success and failure counts, a fixed-rate confidence update stored under
+reserved keys.</li>
+<li><strong>Extraction wiring</strong> —
+<code>service_graph_wiring.rs:302-420</code> (asynchronous, with the
+forget race handled at <code>:330-360</code>),
+<code>wire_relations</code> (<code>:599-620</code>),
+<code>service.rs:490-514</code> <code>wire_attributes</code>.</li>
+<li><strong>Forget</strong> — <code>service_graph.rs:144-156</code>:
+read the fact's hubs, delete the fact, collect hubs no live fact
+mentions (<code>:180-230</code>).</li>
+<li><strong>Entity profile</strong> —
+<code>service_graph_wiring.rs:497-540</code>: the hub's metadata as
+attributes, and relations in both directions.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><strong>Facts</strong> are points in the core store with content,
+embedding and metadata. Reserved <code>_veles_</code> keys hold TTL,
+confidence counters, hub markers and compiler provenance, and are
+stripped from caller-facing metadata.</p>
+<p><strong>Confidence</strong> is a float updated by feedback and
+blended into recall order. It is a weight, not a discrete status, so
+<code>trust_state</code> is withheld.</p>
+<p><strong>Time</strong> is whatever the caller stores in metadata.
+<code>recall_where</code> compares it and <code>dated_context</code>
+renders a timeline from it. Nothing models when a fact held apart from
+when it was stored, so <code>bitemporal</code> is withheld.</p>
+<p><strong>Deletion is final.</strong> <code>forget</code> removes the
+row with no record kept, and nothing consults deleted values on a later
+write, so <code>tombstone</code> and <code>audit_log</code> are
+withheld. The migration journal captures dirty keys only while an online
+embedding migration runs.</p>
+<p><strong>Scope.</strong> A store is a directory, and metadata
+predicates are optional, so <code>scope_enforced</code> is withheld.</p>
+<p><strong>Entity attributes have no provenance.</strong>
+<code>wire_attributes</code> groups extracted
+<code>entity.key = value</code> pairs and calls
+<code>update_metadata</code> on the hub. The key is overwritten by a
+later value, but nothing records which fact supplied it. Hub-to-hub
+relation edges likewise carry only the predicate. The
+<code>mentions</code> edges from facts to hubs are the only provenance,
+and they decide only whether the hub itself survives.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Vector recall</strong> returns the raw similarity as
+<code>score</code> while ordering by a blend with learned confidence,
+and says so in the tool description.</p>
+<p><strong>Column-filtered recall</strong> uses typed comparisons with
+no coercion, so a date stored as a string never matches a numeric
+filter. The tool description warns about exactly that.</p>
+<p><strong>Fused recall and <code>why</code>.</strong>
+<code>recall_fused</code> walks the graph from vector hits for a number
+of hops, with a boost and a candidate pool, and fuses the rankings.
+<code>why</code> returns the evidence graph behind a query with
+truncation flags.</p>
+<p><strong>Entity lookup</strong> answers questions about a thing rather
+than a sentence, reading both outgoing and incoming relations, because
+"who is Theo's sister" is answerable only from Camille's side.</p>
+<p><strong>What <code>entity</code> returns after a forget.</strong> The
+profile is the hub's metadata plus its edges. When the fact that stated
+an attribute or relation is forgotten and the hub survives because
+another fact mentions it, the profile still carries that attribute and
+relation. <code>tests/forget_orphan_hubs_bdd.rs:46</code> asserts the
+hub survives. No test checks what the surviving hub still says.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>No model on the write path.</strong> <code>remember</code>
+embeds and stores. The README makes this a promise, and extraction is a
+separate, opt-in call or worker.</p>
+<p><strong>Asynchronous autograph.</strong> With the worker active, a
+remember returns immediately and edges land later. A <code>forget</code>
+issued in between must win, and the wiring re-checks the fact before
+writing and handles the remaining window explicitly.</p>
+<p><strong>Size limits are refusals.</strong> A fact over the embedder's
+context is rejected with its size, and metadata is capped at 64 KiB.</p>
+<p><strong>Context compiler.</strong> <code>compile_context</code> and
+<code>compile_transcript</code> chunk, classify, deduplicate and budget
+content without a model, store sources for retrieval, and record
+compilation events. The README reports savings of 10.9% to 21.9% on a
+real billed session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>MCP tools:</strong> <code>remember</code>,
+<code>recall</code>, <code>recall_where</code>,
+<code>recall_fused</code>, <code>relate</code>, <code>unrelate</code>,
+<code>forget</code>, <code>entity</code>, <code>why</code>,
+<code>feedback</code>, <code>remember_extracted</code>,
+<code>extraction_status</code>, <code>memory_status</code>,
+<code>list_memories</code>, migration tools, the compiler tools and
+working contexts.</li>
+<li><strong>Hooks</strong> for Claude Code (including tool-result
+replacement), Codex (session resume, recall before opted-in patches,
+save at stop) and Windsurf.</li>
+<li><strong>Transport:</strong> stdio, or a loopback HTTPS daemon with
+locally generated certificates for several clients sharing one
+store.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Exposure is refused by default.</strong> The HTTP transport
+has no authentication, binds loopback, and refuses a non-loopback bind
+unless explicitly allowed.</p>
+<p><strong>Claims are gated.</strong> A promise contract pins README
+figures to committed harnesses and fails CI when they drift.</p>
+<p><strong>Retraction is incomplete at the entity layer,</strong> as
+above. An agent that forgets a mistaken fact to correct it keeps seeing
+the mistake through <code>entity</code>.</p>
+<p><strong>Ingestion is allowlisted.</strong> Path ingestion is off
+unless <code>VELESDB_MEMORY_INGEST_ROOTS</code> names the roots.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The memory crate has 1,296 tests, many written as behaviour
+specifications, across recall and filters, scaffolding exclusion, forget
+and orphan collection, the asynchronous extraction race, entity
+profiles, the context compiler, the HTTP transport and binding parity.
+None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/extract_bdd.rs:105</code> asserts that recall for a word
+that is also an entity hub returns facts and never the hub, and the
+scaffolding suites assert compiler artefacts never return through any
+predicate. That earns <code>negative_eval</code>.</p>
+<p><strong>Benchmarks.</strong> <code>examples/bench_multihop</code>
+reports on controlled data that a real embedder recovers a third of
+multi-hop answers and the graph all of them.
+<code>examples/locomo</code> runs vector against vector-plus-graph on
+LoCoMo with a local model as extractor, answerer and judge.
+<code>examples/context_savings</code> measures the compiler on a
+committed corpus. The README ties each figure to its harness; the LoCoMo
+run's outputs are regenerated by the harness rather than committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Keep the model off the write path,</strong> and make
+extraction a separate, opt-in step.</li>
+<li><strong>Return the evidence trail,</strong> not only the hits.</li>
+<li><strong>Refuse oversize input with its size</strong> rather than
+truncating it.</li>
+<li><strong>Pin published figures to harnesses in CI.</strong></li>
+<li><strong>Make a forget win the race</strong> against asynchronous
+derivation.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Derived attributes without provenance.</strong> Record which
+fact set each attribute and relation, and retract them with it.</li>
+<li><strong>A default embedder that looks like semantic recall and is
+not,</strong> unless every entry point says so.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>velesdb-memory suits an agent builder who wants a local, explainable
+memory with a graph that answers "why", a context compiler that saves
+tokens, and no model calls unless extraction is switched on. Where
+corrections must propagate to everything derived from a fact, the entity
+layer needs provenance first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should <code>forget</code> remove the attributes and
+relations a fact's extraction wrote,</strong> by storing the source fact
+beside each?</li>
+<li><strong>Will stores gain a scope key</strong> for several users or
+projects behind one daemon?</li>
+<li><strong>Will the LoCoMo outputs be committed</strong> beside the
+harness?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>crates/velesdb-memory/src/service.rs</code>,
+<code>service_graph.rs</code>, <code>service_graph_wiring.rs</code>,
+<code>reinforce.rs</code>, <code>fused_recall.rs</code>,
+<code>extract.rs</code>, <code>dated_context.rs</code>,
+<code>mcp.rs</code>, <code>mcp/dto.rs</code>,
+<code>daemon_serve.rs</code>, <code>http.rs</code></li>
+<li><code>crates/velesdb-memory/tests/extract_bdd.rs</code>,
+<code>memory_service_bdd.rs</code>,
+<code>forget_orphan_hubs_bdd.rs</code>,
+<code>recall_where_scaffolding_bdd.rs</code></li>
+<li><code>crates/velesdb-memory/README.md</code>,
+<code>crates/velesdb-memory/examples/</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -n "fn wire_attributes" -A25 crates/velesdb-memory/src/service.rs</code>
+— <code>update_metadata</code> on the hub, no source id</li>
+<li><code>grep -n "attribute\|relations" crates/velesdb-memory/tests/forget_orphan_hubs_bdd.rs</code>
+— no match</li>
+<li><code>grep -rn "tenant\|namespace" crates/velesdb-memory/src/service.rs</code>
+— no match</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/cyberlife-coder/VelesDB/commit/614722aa72f1740b2d5079eb4d3567ed1e709f6a"><code class="commit-id" title="614722aa72f1740b2d5079eb4d3567ed1e709f6a">614722aa…</code></a>
+— first reading, at a commit dated 14 September 2026, scoped to the
+<code>velesdb-memory</code> crate and the core it calls. Screened before
+opening: three auto-run surfaces, eight build-time execution points,
+seventeen unpinned surfaces, fifty dependency files inside the cooldown,
+and two agent-instruction files read as data. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

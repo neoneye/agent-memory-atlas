@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 473 reports.**
+**This page covers all 474 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4134,3 +4134,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.13.3, 220 commits since 20 February 2026, about 33,400 lines of Go and 670 tests, about 50 MCP tools, Claude Code hooks, a RAG index with source classification, Homebrew and Docker packaging, and a changelog that records measured regressions such as age decay cutting Hit@5 from 0.72 to 0.19.
 - Study when: engineering agents need decisions, runbooks and incidents remembered beside the repository's documents, with maintenance a person can review.
 - Do not copy when: you need to ask what was true at a past date, or every change to memory needs a record.
+
+### [`velesdb`](../systems/velesdb/)
+- Best idea: **memory that explains itself without a model on the write path.** `remember` stores an atomic fact with typed links and metadata and calls no model, `why` returns the nodes and edges behind an answer, fused recall blends vector and graph reach, and a deterministic compiler shrinks an agent's context under a token budget, with the README's figures pinned to committed harnesses by a CI contract. One mark: `negative_eval`.
+- Biggest risk: **retraction stops short of the entity layer.** Extraction merges attributes into an entity hub's metadata and adds hub-to-hub relations without recording which fact stated them; `forget` deletes the fact and any hub no surviving fact mentions, so while another fact still names the entity, `entity()` keeps reporting the attribute and relation the forgotten fact introduced — though the tool tells the agent to forget in order to correct knowledge.
+- Most reusable component: the forget-wins handling of asynchronous graph wiring, and hub garbage collection that counts live references in both directions without letting two hubs keep each other alive.
+- Maturity impression: VelesDB Core License 1.0 (source-available, adapted from ELv2), 4,620 commits since 17 December 2025, a Rust database of more than 400,000 lines; the `velesdb-memory` crate is version 0.14.2, about 35,800 lines with 1,296 tests, 27 MCP tools, loopback HTTPS daemon, Node, Python and WASM bindings, and multi-hop, LoCoMo and context-savings harnesses.
+- Study when: an agent needs local memory that can answer why, not only what, and you want the write path free of model calls.
+- Do not copy when: corrections must propagate to everything derived from a fact, or several users share one store.
