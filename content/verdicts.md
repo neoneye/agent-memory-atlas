@@ -237,9 +237,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`cognee`](../systems/cognee/)
 - Best idea: source-preserving, ontology-aware graph/vector pipelines with provenance rollback behind a small remember/recall API.
-- Biggest risk: probabilistic extraction and a large adapter/configuration surface create cross-store consistency and policy burden.
+- Biggest risk: probabilistic extraction and a large adapter/configuration surface create cross-store consistency and policy burden, and the correction machinery added since is written beside the facts rather than applied to retrieval — `contradicts` edges and `superseded` tags are opt-in and no retriever reads them, and `valid_to` has no live writer.
 - Most reusable component: permanent `remember()` as add-plus-cognify, dataset authorization, and pipeline-run rollback.
-- Maturity impression: substantial platform with broad tests and transparent but preliminary BEAM artifacts.
+- Maturity impression: substantial platform, 684 test files including a cross-user permission test with a grant as its control, an opt-in hash-chained provenance ledger that records cognify's writes but not forgetting, and transparent but preliminary BEAM artifacts.
 - Study when: agents need multimodal ingestion, typed knowledge graphs, ontologies, dataset permissions, and backend choice.
 - Do not copy when: a small local evidence store and lexical/vector retrieval satisfy the requirement.
 
