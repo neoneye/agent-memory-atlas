@@ -1094,12 +1094,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: memory must accumulate unattended, or the same facts recur often enough that answering the same question repeatedly becomes the product.
 
 ### [`openhuman`](../systems/openhuman/)
-- Best idea: memories are labelled by **what they may cause**, not only by how sure the system is. A taint lattice governs consequence, and sanitization deliberately cannot launder provenance — a redacted memory keeps its taint.
-- Biggest risk: taint is binary, assigned once and never re-evaluated; much of the core is re-exported from a separate crate that cannot be read here; and nothing records a rejected value.
-- Most reusable component: failing closed on unknown enum values from the database, and two-tier extraction with a free first tier.
-- Maturity impression: about 12,548 test functions repository-wide and 1,278 inside the memory modules — the most heavily tested system in this atlas by count, pinning the fail-closed taint parser and wire-format round-trips rather than padding.
-- Study when: you are building a desktop agent that ingests a user's real data and therefore has a genuine injection problem rather than a theoretical one.
-- Do not copy when: your requirement is corrective memory, or you want a library — twelve modules, an unreadable companion crate, a Tauri shell and GPL-3.0 make this a codebase you join rather than a dependency you add.
+- Best idea: a policy guard that is the only memory handle product code holds. `MemoryGuard` decorates the bound driver, re-reads the security tier on every call, stamps taint upward only, refuses untrusted external drivers, and intersects a turn's source allowlist with any explicit scope rather than letting the argument replace it; a ratchet test fails when a new bypass call appears.
+- Biggest risk: the controls read as more wired than they are. The approval gate's refusal of external-effect tools for a turn with externally synced memory in context lost its only producer when the subconscious module was removed in `9d18b93`, so taint now only fences auto-recalled notes; and the profile source allowlist reaches chunk and tree reads but not namespace recall, whose tool comment says it does. Nothing records a rejected value, and a deleted source re-ingests on the next sync.
+- Most reusable component: the ordered write gate — reject secret-shaped identifiers, canonicalize PII-bearing keys instead of rejecting them, redact content, and carry provenance taint through untouched — together with the fail-closed taint parse.
+- Maturity impression: GPL-3.0 across three repositories pinned inside each other — about 43,000 non-test host lines over a tinymemory contract and module of about 80,000 and a tinycortex engine of about 55,000 — with 990 host memory tests, 2,013 in tinymemory and 1,606 in tinycortex, and a conformance suite every driver must pass.
+- Study when: you are building a desktop agent over a user's real email, documents and chat and want the write gate, the guard and scope intersection done carefully.
+- Do not copy when: you need corrective memory, or you were counting on taint to stop external content from driving actions — at this commit nothing turns it into a refusal.
 
 ### [`pydantic-ai-harness`](../systems/pydantic-ai-harness/)
 - Best idea: a scope key the model can neither name nor see — `{namespace}/{agent_name}` is composed from run context, appears in no tool signature, and is kept out of the injected block by a separate `heading` field, with committed tests asserting the storage segment is absent from a populated block and from the rendered instructions.

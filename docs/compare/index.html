@@ -150,10 +150,10 @@ See <a
 href="#the-layer-below-delete-what-the-storage-engine-does-with-the-vector">the
 layer below delete</a>.</li>
 <li><strong>Scope is the most implemented mechanism and the
-shallowest.</strong> 231 of 457 apply a scope key as a filter on the
+shallowest.</strong> 230 of 457 apply a scope key as a filter on the
 read path. It is also the mark most often satisfied by a single
 predicate that a background job then ignores.</li>
-<li><strong>Negative evidence is almost never tested.</strong> 226 of
+<li><strong>Negative evidence is almost never tested.</strong> 227 of
 457 commit a case asserting that particular material must <em>not</em>
 appear — the assertion every scope, deletion and correction claim
 ultimately rests on. The mark spans two strengths and does not
@@ -325,8 +325,8 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-forty-four tombstones, two hundred and twenty-six negative-eval suites —
-are counts <em>over inspectable code</em>, and a closed system could
+forty-four tombstones, two hundred and twenty-seven negative-eval suites
+— are counts <em>over inspectable code</em>, and a closed system could
 hold any of these mechanisms without this method ever knowing. And a
 mechanism's absence here is weaker evidence about the field than its
 presence: finding a tombstone proves someone built one, while not
@@ -353,7 +353,7 @@ discard the source cannot.</li>
 <li><strong>Whether scope is identity or decoration.</strong> Three
 levels, and the atlas's <code>scope_enforced</code> mark only certifies
 the middle one. A scope <em>tag</em> stored beside the memory is a hope.
-A scope <em>key applied as a filter on the read path</em> is what 231 of
+A scope <em>key applied as a filter on the read path</em> is what 230 of
 457 systems here have, and is what the mark means. A scope
 <em>boundary</em> — authenticated identity, grants, and a filter that a
 caller cannot widen by passing a different argument — is rarer than the
@@ -1559,22 +1559,20 @@ vocabulary is also the one place tiers are load-bearing, and the tier
 filter in <code>memory_search</code> carries a <code>NOTE</code>
 admitting that asking for <code>reflection</code> or <code>graph</code>
 returns semantic results instead.</p>
-<p><strong>OpenHuman is the largest memory subsystem in the atlas —
-twelve modules, some 76,000 lines, about 1,278 memory tests — and it
-earns its place on one field.</strong> <code>MemoryTaint</code> labels
-every entry <code>Internal</code> or <code>ExternalSync</code>, fails
-closed to the restrictive value for unknown or corrupt columns, and
-gates which memories may drive external-effect tools. Every other trust
-mechanism here answers <em>is this memory true?</em>; this one answers
-<em>what may this memory be allowed to cause?</em>, which is the
-question that matters once the store is an injection surface. It is not
-a trust state — provenance is assigned at ingest, never narrowed by
-corroboration, and a user's mistaken belief is <code>Internal</code>
-like any other — so the mark is withheld and the near-miss recorded
-instead, because the axis it opens is one this atlas does not currently
-count. Its companion decision is as good: the secret and PII scrubbers
-deliberately leave the taint untouched, since redaction must not launder
-provenance.</p>
+<p><strong>OpenHuman stamps a provenance taint on every synced write,
+and at its current pin nothing turns that taint into a refusal.</strong>
+<code>MemoryTaint</code> labels a note <code>Internal</code> or
+<code>ExternalSync</code>, fails closed on unknown column values, and
+survives secret and PII redaction. Its consumer was the subconscious
+engine, which ran a turn with external memory in context under an origin
+the approval gate denied external-effect tools for; that module was
+removed on 22 August 2026, and the gate's deny arm now has no producer,
+so taint only decides whether auto-recall fences a note as untrusted.
+The memory engine itself moved into two pinned submodules, tinymemory
+and tinycortex, behind a <code>MemoryGuard</code> that is the only
+handle product code holds and that intersects a turn's source allowlist
+with any explicit scope — on chunk and tree reads, though not on
+namespace recall.</p>
 <p><strong>OpenSRE answers a question three other systems here only
 patched.</strong> The failure is the harness's own output re-entering as
 evidence, and the atlas has recorded three fixes for it: <a
@@ -18721,37 +18719,42 @@ every session afterwards</td>
 </tr>
 <tr>
 <td><code>openhuman</code></td>
-<td><code>MemoryEntry</code> — id, key, content, namespace, category,
-timestamp, session, score and a <code>MemoryTaint</code> provenance
-label; plus chunks, tree summaries and extracted <code>event_log</code>
+<td>A <code>memory_docs</code> row — namespace, key, content, category,
+session and a <code>taint</code> column — plus tree chunks keyed by
+source and owner, tree summaries, <code>event_log</code> claims and
+profile facets</td>
+<td>SQLite and on-disk markdown in the workspace, served by the
+TinyMemory module over TinyBus: a namespace and document tier beside
+TinyCortex's chunk, vector, tree and queue tables, with a git repository
+as a derived diff ledger</td>
+<td>Namespace recall over documents, hybrid and vector chunk search, a
+summary-tree walk, and a lexically gated pre-turn auto-recall of facts
+about the user</td>
+<td>Reject secret-shaped identifiers, canonicalize PII keys, redact
+content, stamp taint; ingest source to canonical markdown to chunks to
+scores; event extraction by regex always and a local LLM on segment
+close</td>
+<td>Upsert by (namespace, key); forget, clear-namespace and
+delete-by-source hard-delete rows and clear the source ingest gate, so a
+still-connected source re-ingests; tombstones only for unembeddable
 rows</td>
-<td>SQLite plus on-disk markdown across seven primitives — raw, chunks,
-entities, trees, vectors, kv, contacts — with FTS5 and a git repository
-used as a derived diff ledger</td>
-<td>Hybrid vector and FTS5 search, an agentic tree walk, and
-cross-session episodic recall that is off by default and carries source
-session ids when on</td>
-<td>Sanitize for secrets and PII, then ingest source to canonical
-markdown to chunks to scores; extraction is two-tier — regex always,
-local LLM on segment close</td>
-<td>Snapshot diffing against a git ledger, tree bucket-seal and flush,
-operational tombstones for unembeddable rows; no rejected-value
-record</td>
-<td>Namespace applied in SQL on the read path, plus session scoping and
-a cross-session flag defaulting to off</td>
-<td>RPC namespace, agent tools per module, MCP sync pipelines, Composio
-and workspace connectors</td>
-<td>Ingestion and extraction queues, re-embed backfill, tree
-summarisation, and a goals reflection agent fired on segment close</td>
-<td><code>MemoryTaint</code> — Internal or ExternalSync, failing closed
-to the restrictive value, gating which memories may drive
-external-effect tools</td>
-<td>A taint lattice that governs consequence rather than belief;
-sanitization that deliberately cannot launder provenance; ~1,278 memory
-tests</td>
-<td>Much of the core is re-exported from a separate unread crate;
-nothing records a rejected value; taint is binary and never
-re-evaluated</td>
+<td>A namespace the model names on recall, defaulting to 'global'; an
+agent profile's source allowlist narrows chunk and tree reads through
+the guard, and namespace recall does not apply it</td>
+<td>One collapsed <code>memory</code> tool dispatching eleven actions,
+goals and tree tools, memory RPC families behind a policy guard,
+Composio and workspace sync</td>
+<td>Ingestion and re-embed queues, tree summarisation, and a goals
+reflection agent spawned when a conversation is summarised</td>
+<td><code>MemoryTaint</code> — Internal or ExternalSync, failing closed;
+stamped by sync paths and raised under a source scope, and read only by
+auto-recall to fence notes as untrusted</td>
+<td>A policy guard that is the only memory handle product code holds,
+with a ratchet test on bypasses; scopes that intersect rather than
+replace; a taint that survives redaction</td>
+<td>The external-effect refusal that consumed taint lost its producer
+when the subconscious module was removed; profile source allowlists do
+not reach namespace recall; nothing records a rejected value</td>
 </tr>
 <tr>
 <td><code>openkb</code></td>
@@ -24466,7 +24469,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>231 of 457:</em> <a
+<p><em>230 of 457:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/agent-framework/"><code>agent-framework</code></a>, <a
@@ -24633,7 +24636,6 @@ href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
 href="../systems/opencompany/"><code>opencompany</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
 href="../systems/openhands-sdk/"><code>openhands-sdk</code></a>, <a
-href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/openmake-llm/"><code>openmake-llm</code></a>, <a
 href="../systems/openmemory/"><code>openmemory</code></a>, <a
@@ -24879,7 +24881,7 @@ href="../systems/yourmemory/"><code>yourmemory</code></a></p>
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>135 of 457:</em> <a
+<p><em>136 of 457:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -24969,6 +24971,7 @@ href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 <a href="../systems/openclaw/"><code>openclaw</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
+href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openkb/"><code>openkb</code></a>, <a
 href="../systems/openmasq/"><code>openmasq</code></a>, <a
 href="../systems/opensre/"><code>opensre</code></a>, <a
@@ -25019,7 +25022,7 @@ href="../systems/windie-sandbox/"><code>windie-sandbox</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>226 of 457:</em> <a
+<p><em>227 of 457:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -25179,6 +25182,7 @@ href="../systems/open-second-brain/"><code>open-second-brain</code></a>,
 href="../systems/opencode-mem/"><code>opencode-mem</code></a>, <a
 href="../systems/opencompany/"><code>opencompany</code></a>, <a
 href="../systems/openexecutive/"><code>openexecutive</code></a>, <a
+href="../systems/openhuman/"><code>openhuman</code></a>, <a
 href="../systems/openlore/"><code>openlore</code></a>, <a
 href="../systems/openmasq/"><code>openmasq</code></a>, <a
 href="../systems/opensre/"><code>opensre</code></a>, <a
@@ -25268,7 +25272,7 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong> Two
-hundred and twenty-six repositories of four hundred and fifty-seven
+hundred and twenty-seven repositories of four hundred and fifty-seven
 assert that particular material must <em>not</em> be retrieved — the
 assertion every scope, deletion and correction claim in this document
 ultimately rests on. Read together rather than one at a time, they split
@@ -30114,7 +30118,7 @@ one build-time exec, nothing installed or run</li>
 <li><a
 href="https://github.com/tinyhumansai/openhuman">tinyhumansai/openhuman</a>
 at <a
-href="https://github.com/tinyhumansai/openhuman/commit/e213bc5fc4000e9ad599c977a560113cc018c554"><code class="commit-id" title="e213bc5fc4000e9ad599c977a560113cc018c554">e213bc5f…</code></a></li>
+href="https://github.com/tinyhumansai/openhuman/commit/c833323a5b4c1e40dd4e1e958c71018244186c95"><code class="commit-id" title="c833323a5b4c1e40dd4e1e958c71018244186c95">c833323a…</code></a></li>
 <li><a href="https://github.com/google/adk-python">google/adk-python</a>
 at <a
 href="https://github.com/google/adk-python/commit/322e3bf0ae4896f44ce4589926c1daa930c781b5"><code class="commit-id" title="322e3bf0ae4896f44ce4589926c1daa930c781b5">322e3bf0…</code></a></li>
