@@ -1,25 +1,25 @@
 ---
 title: Pi
 eyebrow: Branchable session substrate
-description: A coding-agent harness with no memory model at all — a JSONL session tree that forks and clones, deterministic file manifests on compaction, and a rich event API that memory plugins must build on themselves.
+description: "A coding-agent harness with no memory model at all — a session of named branches over an entry tree, typed durable values with a written fork policy, deterministic file manifests on compaction, and an event API that memory plugins must build on themselves."
 root: ../..
 page_kind: system
 source_name: earendil-works/pi
 source_url: https://github.com/earendil-works/pi
 archive_name: "earendil-works--pi"
-revision: a597371bda2af70372d1323d550483b5f4a0ae36
-revision_url: https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36
-analyzed_at: 2026-07-27
+revision: f9bcd351dc3cedf989bc5fc0f8aa012db5737df2
+revision_url: https://github.com/earendil-works/pi/commit/f9bcd351dc3cedf989bc5fc0f8aa012db5737df2
+analyzed_at: 2026-09-15
 capabilities: ""
-stack_storage: "files, memory"
+stack_storage: "files, sqlite, memory"
 stack_retrieval: ""
 stack_source: "seeded"
 matrix:
-  memory_unit: "None — session-tree entry, not a memory record"
-  storage: "JSONL session tree (`id`/`parentId`), swappable in-memory backend"
-  retrieval: "None; context is the tree walked to root plus discovered resource files"
+  memory_unit: "None — a session entry (message, compaction, branch summary or application custom entry), or a typed durable value or list under an application namespace, not a memory record"
+  storage: "A session is an entry tree plus typed values and lists, behind JSONL, node:sqlite and in-memory backends"
+  retrieval: "None; context is a branch walked to its root, custom entries projected by registered projectors, and discovered resource files; a session search interface ships without an implementation"
   write: "Append to session; compaction replaces a range"
-  update_delete: "None; no durable claim exists"
+  update_delete: "None for memory; application values can be replaced or deleted and lists deleted whole, and a written fork policy decides which state a fork carries"
   scoping: "None"
   integration: "Own CLI/TUI/SDK; 20+ extension events, none memory-shaped"
   background: "Compaction and branch summarization"
@@ -30,15 +30,17 @@ matrix:
 
 ## 1. Executive Summary
 
-Pi is an MIT-licensed, actively developed TypeScript agent toolkit: a unified LLM API (`pi-ai`), an agent runtime (`pi-agent`), a coding-agent CLI (`pi-coding-agent`), a TUI, storage, and a server.
+Pi is an MIT-licensed, actively developed TypeScript agent toolkit: a unified LLM API (`pi-ai`), an agent runtime (`pi-agent`), a coding-agent CLI (`pi-coding-agent`), a TUI, session backends, a protocol, a client and a server.
 
 **It has no memory system.** Searching its SDK documentation for "memory" returns `SessionManager.inMemory()` and `InMemoryCredentialStore` — storage backends, not agent memory. There is no memory record, no retrieval, no extraction, and no memory-provider interface.
 
-That is precisely why it belongs here. Pi is the third host runtime in the atlas after [Hermes Agent](../hermes-agent/) and [OpenClaw](../openclaw/), and it is the strongest form of the argument in the [pluggable memory provider](../../patterns/pluggable-memory-provider/) pattern. Hermes and OpenClaw at least define memory contracts that happen to lack deletion hooks and scope parameters. Pi defines no memory contract at all: its `ExtensionAPI` exposes more than twenty lifecycle events, and memory plugins such as [Magic Context](../magic-context/) build everything themselves on top of `context`, `session_start`, and `session_before_compact`. There is nowhere for a deletion request or a scope to live, even in principle.
+That is precisely why it belongs here. Pi is a host runtime beside [Hermes Agent](../hermes-agent/) and [OpenClaw](../openclaw/), and it is the strongest form of the argument in the [pluggable memory provider](../../patterns/pluggable-memory-provider/) pattern. Hermes and OpenClaw at least define memory contracts that happen to lack deletion hooks and scope parameters. Pi defines no memory contract at all: its `ExtensionAPI` exposes more than twenty lifecycle events, and memory plugins such as [Magic Context](../magic-context/) build everything themselves on top of `context`, `session_start`, and `session_before_compact`. There is nowhere for a deletion request or a scope to live, even in principle.
 
-What Pi does provide is a **substrate**, and two parts of it are genuinely novel for this atlas.
+What Pi does provide is a **substrate**, and three parts of it matter for memory.
 
-**Sessions are a tree, not a log.** Entries carry `id` and `parentId`, and the runtime supports forking, cloning, and branch summarization. Every other system here treats a session as a linear stream. A branchable session raises a question nothing in the atlas has had to answer: when you fork a conversation, what memory does the fork inherit? Magic Context has a `clone-inheritance.ts` specifically for this.
+**Sessions are a tree, not a log.** Entries carry `id` and `parentId`; a session holds named **branches**, each a movable tip over the shared tree, and the runtime supports forking and branch summarization. A branchable session raises a question a linear log never does: when you fork a conversation, what does the fork inherit? Magic Context has a `clone-inheritance.ts` specifically for this.
+
+**Pi answers that question for its own state, and leaves memory to the answer's edges.** A session also holds typed durable **values** (replaceable) and **lists** (append-only) at `(namespace, key)` addresses; `pi.*` namespaces are reserved and applications define their own. `session/fork-policy.ts` is one closed policy over every namespace: the session name copies, entry labels follow the entries they label, branch tips and lane state are rebuilt, pending operations and results are dropped, and **application namespaces follow the fork's scope** — carried whole on a tree fork, dropped on a branch fork. A memory plugin that keeps its state in values therefore has a defined inheritance rule it did not have to write, and one it cannot refine per key.
 
 **Compaction carries a deterministic file manifest.** `CompactionDetails` records `readFiles` and `modifiedFiles`, extracted from tool calls by `extractFileOpsFromMessage` rather than produced by the summarizing model. The LLM writes the prose; the code writes the file list. This is the same instinct as [claude-mem](../claude-mem/), which replaces its observer's modified-file list with paths derived deterministically from tool calls, and it is the right way to keep the checkable part of a summary out of the model's hands.
 
@@ -46,22 +48,26 @@ Read this report for the substrate and the negative space. The memory itself is 
 
 ## 2. Mental Model
 
-There is no memory unit. The persistence unit is a session-tree entry:
+There is no memory unit. The persistence units are a session-tree entry and a typed value:
 
 ```typescript
-SessionTreeEntryBase {
+EntryBase {
   id: string
   parentId: string | null      // the tree
-  ...
+  seq: number
+  timestamp: number
+  type: "message" | "compaction" | "branch_summary" | "custom"
+  customType?: string
 }
 
 // entry variants
 MessageEntry
-ThinkingLevelChangeEntry
-ModelChangeEntry
-ActiveToolsChangeEntry
-CompactionEntry<T>       // carries CompactionDetails
-BranchSummaryEntry<T>
+CompactionEntry          // summary, retainedTail, details
+BranchSummaryEntry       // fromId, summary, details
+CustomEntry              // application-defined; an EntryProjector may turn it into model context
+
+value<T>(namespace, key)   // one replaceable durable value
+list<T>(namespace, key)    // one append-only durable list
 ```
 
 ```typescript
@@ -71,25 +77,28 @@ interface CompactionDetails {
 }
 ```
 
-Persistence is JSONL on disk (`jsonl-storage.ts`, `jsonl-repo.ts`) with an in-memory alternative (`memory-storage.ts`, `memory-repo.ts`) for tests and embedded use.
+Persistence is JSONL on disk (`session/jsonl/`, with a reader for the previous v3 format), a `node:sqlite` backend in `packages/session-backends/sqlite-node` with one database file per session, and an in-memory backend (`session/memory.ts`) that the backends share a conformance suite with.
 
 Context assembly comes from three places, none of them a memory store:
 
 ```text
 resource files (AGENTS.md / SYSTEM.md, auto-discovered by resource-loader.ts)
-  + session tree walked from the current leaf to the root
+  + the branch walked from its tip to the root
+  + custom entries turned into messages by registered entry projectors
   + whatever extensions inject via the `context` event
 -> provider request
 ```
 
 ## 3. Architecture
 
-Packages: `ai`, `agent`, `coding-agent`, `tui`, `storage`, `server`, `evals`.
+Packages: `ai`, `agent`, `coding-agent`, `tui`, `session-backends`, `protocol`, `client`, `server`, `telemetry`, `chord`, `evals`.
 
-The parts that matter for memory are small and legible:
+The parts that matter for memory are legible, and the session layer grew with the runtime around it:
 
-- `packages/agent/src/harness/session/` — `session.ts` (359 lines), `jsonl-storage.ts` (376), `jsonl-repo.ts` (179), `memory-storage.ts` (189), `memory-repo.ts` (50), `repo-utils.ts` (51).
-- `packages/agent/src/harness/compaction/` — `compaction.ts` (880), `branch-summarization.ts` (275), `utils.ts` (132).
+- `packages/agent/src/harness/session/` — `session.ts` (475 lines), `types.ts` (602), `values.ts` (195), `fork-policy.ts` (67), `fork.ts` (119), `commit.ts` (116), `context.ts` (64), `memory.ts` (453, the in-memory backend), and `jsonl/` (`storage.ts`, `repo.ts`, `fork.ts`, `legacy-v3.ts`).
+- `packages/session-backends/sqlite-node/` — the SQLite session backend.
+- `packages/agent/src/harness/compaction/` — `compaction.ts` (865), `branch-summarization.ts` (300), `utils.ts` (132).
+- `packages/agent/src/search/index.ts` — a `SessionSearchService` interface with no implementation in the tree.
 - `packages/coding-agent/src/core/resource-loader.ts` — `AGENTS.md` / `SYSTEM.md` discovery.
 - `packages/coding-agent/src/core/extensions/types.ts` — the `ExtensionAPI`, including the event surface.
 
@@ -113,11 +122,11 @@ flowchart LR
 
 ### The session tree (`harness/session/`)
 
-Entries form a tree through `parentId`, and the type system distinguishes messages from model changes, thinking-level changes, active-tool changes, compaction entries, and branch summaries. Building a context means walking from the current leaf toward the root (`buildSessionContext`).
+Entries form a tree through `parentId`, and the type system distinguishes messages, compaction entries, branch summaries and application custom entries. Model, thinking-level and tool configuration live on the branch's lane rather than as entries. Building a context means walking from a branch tip toward the root (`buildSessionContext` in `session/context.ts`), with each custom entry offered to the projector registered for its `customType`.
 
-Forking is a first-class operation with its own error code (`invalid_fork_target`) and its own extension event (`session_before_fork`), and `branch-summarization.ts` can summarize a branch rather than a linear range.
+Forking is a first-class operation with its own extension event (`session_before_fork`). A fork is scoped to one branch — optionally from a named entry, before or at it — or to the whole tree, and `fork-policy.ts` decides what state crosses: application namespaces cross on a tree fork and not on a branch fork. `branch-summarization.ts` can summarize a branch rather than a linear range.
 
-The memory consequence is unexplored territory for this atlas. Every retrieval-and-correction story here assumes one linear history per scope. In a tree, two branches can hold contradictory facts that were both true on their own path, a memory extracted on one branch may be nonsense on a sibling, and "forget that" has to mean something specific about which branches are affected. Pi provides the mechanism; nothing in the atlas has worked out the semantics.
+The memory consequence is mostly open. Retrieval-and-correction stories usually assume one linear history per scope. In a tree, two branches can hold contradictory facts that were both true on their own path, a memory extracted on one branch may be nonsense on a sibling, and "forget that" has to mean something specific about which branches are affected. Pi's fork policy settles only the coarse case — all of an application's state, or none of it — and leaves the per-memory question to the plugin.
 
 ### Compaction with a deterministic manifest (`harness/compaction/`)
 
@@ -153,15 +162,15 @@ For memory this is more than sufficient as *mechanism* and completely absent as 
 
 None. The session tree is conversation history with structured entry types, not a belief store: there is no memory record, no status, no verification, no importance, no provenance beyond entry lineage, and no deletion semantics beyond removing session files.
 
-`packages/storage/` provides storage primitives, and `SessionManager.inMemory()` an ephemeral backend, but neither is a memory abstraction.
+The typed values and lists are the nearest thing to a memory abstraction: durable, namespaced, and carried or dropped by a fork policy. They are storage — no status, no scope beyond the session, no search — and `SessionManager.inMemory()` remains an ephemeral backend rather than memory.
 
 ## 6. Retrieval Mechanics
 
-None. Context is assembled by walking the session tree and adding discovered resource files. There is no search over past sessions, no embedding, no ranking, and no cross-session recall — which is exactly the gap plugins like [Magic Context](../magic-context/) exist to fill, and why Magic Context has to build its own message index and FTS tables over Pi's history rather than querying anything Pi provides.
+None. Context is assembled by walking a branch, projecting custom entries, and adding discovered resource files. `packages/agent/src/search/index.ts` declares a `SessionSearchService` — `searchSessions`, `searchEntries`, `sync`, `notify`, `remove` — and nothing in the tree implements it; the SQLite backend's README says search is a separate projection. There is no embedding, no ranking, and no cross-session recall — which is exactly the gap plugins like [Magic Context](../magic-context/) exist to fill, and why Magic Context has to build its own message index and FTS tables over Pi's history rather than querying anything Pi provides.
 
 ## 7. Write Mechanics
 
-Sessions append to JSONL as the conversation proceeds. Compaction replaces a range with a summary entry plus its deterministic manifest. Forking creates a new branch from an existing entry.
+Sessions append entries and write values through atomic commits as the conversation proceeds. Compaction replaces a range with a summary entry plus its deterministic manifest. Forking creates a new branch from an existing entry.
 
 There is no notion of a durable claim, so there is no write gate, dedupe, conflict detection, or correction path — none of it applies.
 
@@ -181,14 +190,15 @@ Strengths, as a substrate:
 - A typed session tree that distinguishes message, model-change, tool-change, compaction, and branch-summary entries rather than flattening everything into text.
 - Extension events with result types, so handlers can veto rather than only observe.
 - A `project_trust` event, indicating trust is modeled somewhere in the harness.
-- Swappable JSONL and in-memory session backends.
+- Swappable JSONL, SQLite and in-memory session backends with a shared conformance suite.
+- A closed fork policy over every state namespace, so what a fork carries is written down rather than accidental.
 - MIT licensed and actively developed.
 
 Gaps, for memory specifically:
 
 - **No memory contract**, so no scope parameter, no deletion hook, no capability negotiation, and no way for the host to ask a plugin anything.
 - **No built-in cross-session recall**, so every memory plugin reimplements indexing over the same history.
-- **Fork semantics for memory are undefined** — the mechanism exists, the meaning does not.
+- **Fork semantics stop at the namespace** — an application's state crosses a tree fork whole and a branch fork not at all, with no per-key or per-memory rule.
 - **Human-authored resource files are the only built-in durable context**, which is a documentation mechanism rather than a memory one.
 
 ## 10. Tests, Evals, and Benchmarks
@@ -208,7 +218,7 @@ There is no memory benchmark, because there is no memory. Compaction quality —
 
 ### Avoid
 
-- **A rich lifecycle API with no memory contract** — the strongest instance in the atlas of the pluggable-provider gap, since here there is not even a partial contract to extend.
+- **A rich lifecycle API with no memory contract** — the pluggable-provider gap in its plainest form, since here there is not even a partial contract to extend.
 - **Every plugin reimplements history indexing**, with no shared abstraction and no way for two memory plugins to coexist coherently.
 - **Branching without memory semantics**, which will produce contradictions across branches that nothing is positioned to reconcile.
 
@@ -226,15 +236,18 @@ Do not copy:
 
 ## 12. Open Questions
 
-- What should a forked session inherit from its parent's memory, and should memory written on a branch be visible on siblings?
+- Is namespace-level fork inheritance enough for memory, or does a plugin need a hook to decide per memory what a branch fork keeps?
 - Should Pi define a minimal memory contract — scope in, forget out — given that a serious memory ecosystem is already forming around it?
 - How much is lost across repeated compactions, and does the deterministic manifest survive compaction-of-compactions?
-- Should the harness offer a shared history index, so every memory plugin does not rebuild one?
+- Will the declared `SessionSearchService` get an implementation in the harness, so every memory plugin does not rebuild a history index?
 
 ## Appendix: File Index
 
-- Session tree and storage: `packages/agent/src/harness/session/session.ts`, `jsonl-storage.ts`, `jsonl-repo.ts`, `memory-storage.ts`, `memory-repo.ts`.
-- Entry types including `SessionTreeEntryBase`, `CompactionEntry`, `BranchSummaryEntry`: `packages/agent/src/harness/types.ts`.
+- Session tree, values and storage: `packages/agent/src/harness/session/session.ts`, `types.ts`, `values.ts`, `commit.ts`, `memory.ts`, `jsonl/`; `packages/session-backends/sqlite-node/`.
+- Fork policy: `packages/agent/src/harness/session/fork-policy.ts`, `fork.ts`.
+- Context assembly and entry projectors: `packages/agent/src/harness/session/context.ts`.
+- Session search interface: `packages/agent/src/search/index.ts`.
+- Harness design document: `packages/agent/docs/harness.md`.
 - Compaction and deterministic manifests: `packages/agent/src/harness/compaction/compaction.ts`, `utils.ts` (`extractFileOpsFromMessage`, `computeFileLists`), `branch-summarization.ts`.
 - Resource-file discovery: `packages/coding-agent/src/core/resource-loader.ts`.
 - Extension API and events: `packages/coding-agent/src/core/extensions/types.ts`.
@@ -242,5 +255,7 @@ Do not copy:
 - SDK documentation: `packages/coding-agent/docs/sdk.md`.
 
 ## History
+
+**2026-09-15** — [`f9bcd351dc3cedf989bc5fc0f8aa012db5737df2`](https://github.com/earendil-works/pi/commit/f9bcd351dc3cedf989bc5fc0f8aa012db5737df2) — 1,226 commits on, 2026-09-14. Screened before reading: no auto-run surface, twelve build-time execution points, eight unpinned surfaces and eleven dependency surfaces inside the cooldown; nothing was installed or run. Still no memory model; the session layer under it was rebuilt. A session is now an entry tree with named branches and agent lanes, plus typed durable values and lists at namespaced addresses; `fork-policy.ts` decides which state a fork carries, application namespaces crossing a tree fork and not a branch fork — a partial answer to the open question the first reading ended on. Custom entries can be projected into model context. Storage gained a `node:sqlite` backend beside JSONL and in-memory ones, `packages/storage` is gone, and a session search interface is declared without an implementation. Corpus-ranking sentences were rewritten. No mark changes.
 
 **2026-07-27** — [`a597371bda2af70372d1323d550483b5f4a0ae36`](https://github.com/earendil-works/pi/commit/a597371bda2af70372d1323d550483b5f4a0ae36) — first reading.

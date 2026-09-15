@@ -454,9 +454,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`pi`](../systems/pi/)
 - Best idea: deterministic `readFiles`/`modifiedFiles` manifests attached to compaction entries, derived from tool calls rather than from the summarizing model.
 - Biggest risk: no memory contract at all, so scope and deletion have nowhere to live and every plugin reinvents indexing.
-- Most reusable component: the typed session-entry model and the result-returning extension events.
+- Most reusable component: the typed session-entry model, the result-returning extension events, and a closed fork policy that says which namespaced state a fork carries.
 - Maturity impression: actively developed, well-factored harness; memory is deliberately out of scope.
-- Study when: designing a host runtime, or thinking about what branchable sessions mean for memory.
+- Study when: designing a host runtime, or deciding what a forked session should inherit — Pi's answer is per namespace, whole or nothing, by fork scope.
 - Do not copy when: you expect third-party memory — define scope and deletion in the interface before plugins exist.
 
 ### [`hipporag`](../systems/hipporag/)

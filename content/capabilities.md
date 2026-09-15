@@ -239,7 +239,7 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
 | Files on disk | 221 | 146 | | Lexical | 280 | 190 |
-| SQLite | 213 | 128 | | Vector | 275 | 163 |
+| SQLite | 214 | 128 | | Vector | 275 | 163 |
 | Postgres | 88 | 51 | | Graph | 105 | 65 |
 | Delegated to the adopter | 39 | 18 | | No arm named in the review | 85 | 35 |
 | Graph database | 27 | 17 | |  |  |  |
