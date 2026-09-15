@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **466 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **467 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -582,6 +582,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## W
 
 <ul class="az">
+<li><a class="az-row" href="../systems/waggle/"><span class="az-id">Waggle</span><span class="az-what">Governed corrections, ungoverned defaults</span><code class="az-repo">Abhigyan-Shekhar/Waggle-mcp</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/waku-agent/"><span class="az-id">Waku Agent</span><span class="az-what">Gated memory</span><code class="az-repo">ShenSeanChen/waku-agent</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/wax/"><span class="az-id">Wax</span><span class="az-what">SIGKILL the writer, then count the frames</span><code class="az-repo">christopherkarani/Wax</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/weave/"><span class="az-id">Weave</span><span class="az-what">Default-deny on claim status</span><code class="az-repo">Sidharth-Singh10/weave</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></a></li>

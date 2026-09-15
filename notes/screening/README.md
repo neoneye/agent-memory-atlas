@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 405 of 466 screened at the report's current pin.**
+**Progress: 406 of 467 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 164 |
+| Repositories with an auto-run surface (`RUNS`) | 165 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 221 |
-| Repositories with build-time execution (`EXEC`) | 292 |
+| Repositories with build-time execution (`EXEC`) | 293 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -189,6 +189,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
+| [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |

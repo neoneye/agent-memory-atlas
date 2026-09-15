@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 466 reports.**
+**This page covers all 467 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4078,3 +4078,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, standard-library Python, 200 commits since 22 August 2026, about 14,800 lines with 878 tests written largely as escape attempts, a write-ahead log with quarantine, and a DeepSeek Harness plugin; the retention score of 1.0 on ten planted facts is reported in the README without result files.
 - Study when: an agent's own assertions must not become its memory, and you want recall by recognition from one index read by a model instead of embeddings.
 - Do not copy when: stores of different trust share a process, the index will outgrow one prompt, or the journal's attribution of who said what cannot be trusted.
+
+### [`waggle`](../systems/waggle/)
+- Best idea: **a correction applies only the text a person approved.** A browser agent proposes a replacement; the proposal stores the target's content and version; a person approves or edits the exact value; apply refuses any content from the applier, writes the approved text as a new node with an `updates` edge and a hash of the approved content, closes the old node's validity, audits both steps, and marks the proposal stale if the target moved. Four marks: `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`.
+- Biggest risk: **the defaults bypass the governance.** `query_graph` defaults to hybrid retrieval, whose printed hits are never filtered by `valid_to` or `as_of`, so superseded decisions reach agents that follow the documented policy. On a remote server the MCP route requires an API key while the REST routes Graph Studio uses take the tenant from the query string when no key is sent, and a read-scoped key can edit and delete nodes over MCP because the write-scope list omits those tools.
+- Most reusable component: verbatim-first observation — the turn is stored before extraction and its failure fails the call, extraction errors are non-fatal, and every extracted node carries evidence records with session, turn, speaker and character span.
+- Maturity impression: Apache-2.0, version 0.1.25, 945 commits since 12 April 2026, about 39,800 lines of Python plus a vendored RLM, 1,030 test functions, SQLite and Neo4j backends, and integrations for Claude Code, Codex, Claude Desktop, VS Code, Cursor and WebMCP; no retrieval-quality results are committed.
+- Study when: you want a local project memory across coding clients with a graph a person can edit, or a worked human-approval flow for memory corrections.
+- Do not copy when: agents must not read superseded decisions through the default query, or several tenants share one HTTP server.
