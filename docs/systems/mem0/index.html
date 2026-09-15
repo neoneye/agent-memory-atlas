@@ -106,14 +106,14 @@ retrieval.</p>
               <strong>mem0ai/mem0</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150" title="31cec11a790868f88c9acafb8b70eb25071f2150">
+            <a class="meta-pill revision-pill" href="https://github.com/mem0ai/mem0/commit/c7ee362aff94a369af70f13f2b4f853f6793ff4c" title="c7ee362aff94a369af70f13f2b4f853f6793ff4c">
               <span>Analyzed revision</span>
-              <code>31cec11a…</code>
+              <code>c7ee362a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-26</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mem0ai--mem0" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -524,6 +524,33 @@ backends?</li>
 <li>Rerankers: <code>mem0/mem0/reranker/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/mem0ai/mem0/commit/c7ee362aff94a369af70f13f2b4f853f6793ff4c"><code class="commit-id" title="c7ee362aff94a369af70f13f2b4f853f6793ff4c">c7ee362a…</code></a>
+— second reading, 213 commits on. Screened again: two auto-run findings,
+a Claude Code plugin manifest and a <code>.gitmodules</code>; twelve
+build-time execution points; eighteen dependency surfaces inside the
+cooldown. Nothing was installed and nothing was run. Both marks were
+re-tested at the producer and hold, and each now carries the evidence
+record it had been asserted without. The addition worth recording sits
+in the memory package itself. <code>mem0/memory/notices.py</code> grew
+into a remotely configured notice system: it fetches
+<code>oss_notices_config.json</code> from
+<code>raw.githubusercontent.com/mem0ai/mem0/main</code> with an
+hour-long cache, falls back to the bundled copy, and assigns users to a
+notice or a holdout by a <code>variant_split</code> of 0.5 — a
+feature-flag evaluation its own docstring describes as a drop-in for
+PostHog's. The entries are named <code>temporal_stub</code>,
+<code>temporal_usage</code>, <code>decay_stub</code> and
+<code>decay_usage</code>, and <code>main.py</code> feeds them detectors
+that run regular expressions over a search query for relative-time
+phrases and ISO dates, inspect filters for date ranges, and watch
+<code>delete</code> and <code>delete_all</code>. The notice events carry
+the detector's classification — trigger source and reason — rather than
+the query text. Everything is gated on <code>MEM0_TELEMETRY</code>,
+which defaults to on, and every notice in the bundled config at this
+commit is <code>enabled: false</code> with empty copy: the machinery to
+tell an open-source user that their query looked temporal is shipped,
+remotely switchable, and switched off.</p>
 <p><strong>2026-07-30</strong> — <code>audit_log</code> added, at the
 same pin. The mark had been withheld for two months and was recovered by
 an accident of coverage: reviewing the C# reimplementation <a

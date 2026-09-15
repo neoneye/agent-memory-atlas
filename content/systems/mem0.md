@@ -7,10 +7,13 @@ page_kind: system
 source_name: mem0ai/mem0
 source_url: https://github.com/mem0ai/mem0
 archive_name: "mem0ai--mem0"
-revision: 31cec11a790868f88c9acafb8b70eb25071f2150
-revision_url: https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150
-analyzed_at: 2026-07-26
+revision: c7ee362aff94a369af70f13f2b4f853f6793ff4c
+revision_url: https://github.com/mem0ai/mem0/commit/c7ee362aff94a369af70f13f2b4f853f6793ff4c
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced, audit_log"
+capability_evidence:
+  scope_enforced: "every memory operation — at least one session identifier is required and composed into the vector-store filter | mem0/memory/main.py:370-397 | `_build_filters_and_metadata` copies `user_id`, `agent_id` and `run_id` into `effective_query_filters` and raises `Mem0ValidationError` with `VALIDATION_001` — *At least one of 'user_id', 'agent_id', or 'run_id' must be provided* — when none is given, so an unscoped search or add is refused rather than widened. The filter is applied by whichever of the vector-store adapters is configured; this reading checked the builder and not each adapter's translation of it. Supplying only `run_id` scopes to a run without a user, which is permitted by design | tests/ covers the validation error"
+  audit_log: "the history store — one row per memory event with the value before and after | mem0/memory/storage.py:108-121 (schema), :168 and :199 (writes) | `history` records `memory_id`, `old_memory`, `new_memory`, `event`, `actor_id`, `role`, `is_deleted` and timestamps, so an update is recoverable as a before/after pair and attributed to an actor. Rows are written with `INSERT`; the only removal is `reset()` at `storage.py:326`, which drops the table as part of an explicit full reset of the memory rather than pruning individual events | tests/ covers history on add, update and delete"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -331,6 +334,8 @@ This design is appropriate for product personalization and high-throughput memor
 - Rerankers: `mem0/mem0/reranker/`.
 
 ## History
+
+**2026-09-15** — [`c7ee362aff94a369af70f13f2b4f853f6793ff4c`](https://github.com/mem0ai/mem0/commit/c7ee362aff94a369af70f13f2b4f853f6793ff4c) — second reading, 213 commits on. Screened again: two auto-run findings, a Claude Code plugin manifest and a `.gitmodules`; twelve build-time execution points; eighteen dependency surfaces inside the cooldown. Nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The addition worth recording sits in the memory package itself. `mem0/memory/notices.py` grew into a remotely configured notice system: it fetches `oss_notices_config.json` from `raw.githubusercontent.com/mem0ai/mem0/main` with an hour-long cache, falls back to the bundled copy, and assigns users to a notice or a holdout by a `variant_split` of 0.5 — a feature-flag evaluation its own docstring describes as a drop-in for PostHog's. The entries are named `temporal_stub`, `temporal_usage`, `decay_stub` and `decay_usage`, and `main.py` feeds them detectors that run regular expressions over a search query for relative-time phrases and ISO dates, inspect filters for date ranges, and watch `delete` and `delete_all`. The notice events carry the detector's classification — trigger source and reason — rather than the query text. Everything is gated on `MEM0_TELEMETRY`, which defaults to on, and every notice in the bundled config at this commit is `enabled: false` with empty copy: the machinery to tell an open-source user that their query looked temporal is shipped, remotely switchable, and switched off.
 
 **2026-07-30** — `audit_log` added, at the same pin. The mark had been withheld
 for two months and was recovered by an accident of coverage: reviewing the C#
