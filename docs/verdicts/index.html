@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 460 reports.</strong></p>
+<p><strong>This page covers all 461 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16644,6 +16644,39 @@ honestly, with receipts, before choosing one.</li>
 <li>Do not copy when: you need a memory store — whole-file prompt
 injection and model-decided writes are sized for the synthetic cases,
 not for real histories.</li>
+</ul>
+<h3 id="dsh-mneme"><a
+href="../systems/dsh-mneme/"><code>dsh-mneme</code></a></h3>
+<ul>
+<li>Best idea: <strong>a receipt for every automated rewrite.</strong>
+Each autoDream consolidation run stores its input snapshot and hash, the
+model's raw decisions and the per-id outcome, and each committed merge,
+conflict or update gets a content-addressed digest with winner, loser
+and counts before and after; decisions apply under a snapshot
+compare-and-set, replay is tested to be idempotent, and a policy epoch
+retires old verdicts when the rules change. Three marks:
+<code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the protections ship switched off.</strong>
+Conflict freezing, scope labelling, strict scope and epistemic weighting
+are implemented, tested and <code>false</code> by default, so out of the
+box the model settles contradictions and every agent sees every memory;
+under strict scope only explicitly declared rows are walled, and the
+model's own saves and deletes never reach the receipt tables.</li>
+<li>Most reusable component: the Markdown mirror edit-back — a digest
+distinguishes a person's edit from a stale machine render, the edit
+wins, and the machine value is archived in the row's history as
+<code>human_override</code>.</li>
+<li>Maturity impression: MIT, version 0.8.1, 372 commits since 13 August
+2026, about 15,000 lines of JavaScript and about 1,000 test cases across
+72 files, including replay, compare-and-set, mirror generation fences
+and a verified local embedding runtime.</li>
+<li>Study when: your memory runs a background consolidation and you need
+to be able to say afterwards exactly what it changed and why.</li>
+<li>Do not copy when: you need isolation or human adjudication by
+default — enable <code>scopeEnabled</code>, <code>strictScope</code> and
+<code>conflictFreezeEnabled</code> first, and declare scopes
+explicitly.</li>
 </ul>
         </article>
       </div>

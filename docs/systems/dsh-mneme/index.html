@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A cross-session memory plugin for
+DeepSeek Harness on SQLite and Markdown mirrors, whose background
+consolidation writes a replayable receipt for every run and every merge,
+conflict and update — with conflict freezing, strict scope and trust
+weighting all shipped and all off by default.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="dsh-mneme — Agent Memory Atlas">
+    <meta property="og:description" content="A cross-session memory
+plugin for DeepSeek Harness on SQLite and Markdown mirrors, whose
+background consolidation writes a replayable receipt for every run and
+every merge, conflict and update — with conflict freezing, strict scope
+and trust weighting all shipped and all off by default.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dsh-mneme — Agent Memory Atlas">
+    <meta name="twitter:description" content="A cross-session memory
+plugin for DeepSeek Harness on SQLite and Markdown mirrors, whose
+background consolidation writes a replayable receipt for every run and
+every merge, conflict and update — with conflict freezing, strict scope
+and trust weighting all shipped and all off by default.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>dsh-mneme — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "dsh-mneme",
+      "description": "A cross-session memory plugin for DeepSeek Harness on SQLite and Markdown mirrors, whose background consolidation writes a replayable receipt for every run and every merge, conflict and update \u2014 with conflict freezing, strict scope and trust weighting all shipped and all off by default.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Consolidation with receipts</p>
+          <h1>dsh-mneme</h1>
+          <p class="document-deck">A cross-session memory plugin for
+DeepSeek Harness on SQLite and Markdown mirrors, whose background
+consolidation writes a replayable receipt for every run and every merge,
+conflict and update — with conflict freezing, strict scope and trust
+weighting all shipped and all off by default.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/modusensus/dsh-mneme">
+              <span>Source</span>
+              <strong>modusensus/dsh-mneme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/modusensus/dsh-mneme/commit/00c67eaf5daa7b038f0249653ba3a5946a4a9758" title="00c67eaf5daa7b038f0249653ba3a5946a4a9758">
+              <span>Analyzed revision</span>
+              <code>00c67eaf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/modusensus--dsh-mneme" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>modusensus--dsh-mneme</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>dsh-mneme is a cross-session memory plugin for DeepSeek Harness, the
+agent harness this atlas reviews as <a
+href="../deepseek-harness/">DeepSeek Harness</a>. MIT, version 0.8.1,
+372 commits since 13 August 2026 from three principal authors, about
+15,000 lines of JavaScript in <code>dsh-mneme/src/</code> with a
+compiled copy in <code>lib/</code>, and 72 test files holding about
+1,000 cases.</p>
+<p>It stores memories in SQLite, mirrors them to Markdown a person can
+edit, injects relevant ones into the system prompt, gives the model nine
+tools, and runs a background consolidation it calls autoDream. The part
+worth reading is how that consolidation is held to account:</p>
+<ul>
+<li><strong>Every run leaves a receipt.</strong> <code>dream_runs</code>
+stores the exact input snapshot and its hash, the model's raw decision
+list, the per-id outcome and a receipt.</li>
+<li><strong>Every mutation leaves one too.</strong>
+<code>receipt_chain</code> records each committed merge, conflict or
+update with a content-addressed input digest, winner and loser, and the
+record count before and after, so replaying a decision must reproduce
+the same result — and the tests replay it.</li>
+<li><strong>Decisions are applied under a snapshot
+compare-and-set.</strong> A decision computed from state that changed
+since the snapshot is skipped and reported, not applied.</li>
+<li><strong>Rule changes age old verdicts.</strong> A
+<code>policy_epoch</code> on runs and receipts turns earlier decisions
+into historical evidence when the adjudication rules change.</li>
+</ul>
+<p>Beside that, human edits are privileged: a Markdown file changed by
+hand flows back over the machine value, and the machine value is kept in
+<code>content_history</code> as <code>human_override</code>.</p>
+<p>The design's weakness is its defaults. Conflict freezing (park
+contradictions for a person), scope labelling, strict scope, and trust
+weighting by epistemic status are all implemented, tested, and set to
+<code>false</code> in <code>src/config.js</code>. Out of the box,
+consolidation adjudicates contradictions itself, every memory is visible
+to every agent and workspace, and <code>epistemic_status</code> is inert
+data. Even with strict scope on, only rows whose scope was explicitly
+declared are walled; automatically labelled rows stay visible, by
+design.</p>
+<p>Three marks: <code>audit_log</code>, <code>human_review</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is typed (<code>preference</code>, <code>project</code>,
+<code>decision</code>, <code>summary</code> and others), carries an
+importance of 1 to 5, and an <code>epistemic_status</code>:
+<code>observation</code>, <code>inferred</code> or
+<code>subjective</code>, inferred on save by regular expressions over
+the text (<code>src/store.js:269-306</code>) unless declared. It can be
+forgotten or archived by flag, or deleted.</p>
+<p>It changes state in three ways:</p>
+<ul>
+<li><strong>The model</strong> saves, updates, forgets, archives or
+deletes through tools.</li>
+<li><strong>A person</strong> edits the Markdown mirror or the
+panel.</li>
+<li><strong>autoDream</strong> reads a snapshot and asks a model for
+decisions from a closed set — <code>keep</code>, <code>merge</code>,
+<code>archive</code>, <code>conflict</code>, <code>update</code>,
+<code>create</code>, <code>supersede</code>, <code>differentiate</code>
+(<code>src/dream/decisions.js:7</code>) — then applies them.</li>
+</ul>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how consolidation changes memory under a receipt, and where a person can intervene</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how consolidation changes memory under a receipt, and where a person can intervene
+flowchart TB
+    TOOLS[&quot;model tools&lt;br/&gt;save, update, forget, archive, delete&quot;] --&gt; MEM[(&quot;memories&quot;)]
+    MD[&quot;Markdown mirror&lt;br/&gt;edited by a person&quot;] --&gt;|&quot;edit-back wins,&lt;br/&gt;old value to content_history&quot;| MEM
+    MEM --&gt;|&quot;schedule or idle&quot;| SNAP[&quot;autoDream snapshot&lt;br/&gt;+ snapshot hash&quot;]
+    SNAP --&gt; LLM[&quot;model decisions:&lt;br/&gt;merge, supersede, conflict, update, archive&quot;]
+    LLM --&gt; CAS{&quot;targets unchanged&lt;br/&gt;since snapshot?&quot;}
+    CAS --&gt;|&quot;no&quot;| SKIP[&quot;skipped, reported&quot;]
+    CAS --&gt;|&quot;yes, conflict and freeze on&quot;| PEND[&quot;conflict_pending&quot;]
+    PEND --&gt;|&quot;panel: keep A, keep B, mark&quot;| APPLY
+    CAS --&gt;|&quot;yes&quot;| APPLY[&quot;apply in a transaction&quot;]
+    APPLY --&gt; MEM
+    APPLY --&gt; RC[(&quot;receipt_chain&lt;br/&gt;digest, winner, loser, counts&quot;)]
+    SNAP --&gt; DR[(&quot;dream_runs&lt;br/&gt;input, decisions, outcome, receipt&quot;)]</code></pre></details></figure>
+<p>What it does not have: a status that withholds a memory from use
+because it is unverified. <code>epistemic_status</code> multiplies a
+search score by 1.0, 0.85 or 0.7 (<code>src/service.js:32</code>,
+<code>:774</code>) and ranks consolidation winners, only when
+<code>trustEpistemicWeighting</code> is on, and nothing filters on it,
+so <code>trust_state</code> is withheld. <code>forgotten</code> rows are
+excluded from reads but nothing consults them on save, so
+<code>tombstone</code> is withheld. Entity attributes carry
+<code>valid_from</code> and <code>valid_until</code>, but every read
+takes the current row (<code>valid_until IS NULL</code>,
+<code>src/store.js:1898</code>, <code>:1955</code>), so
+<code>bitemporal</code> is withheld.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>store.js</code> (2,307 lines)</td>
+<td>SQLite schema, migrations, CRUD, audit and receipt tables,
+entities</td>
+</tr>
+<tr>
+<td><code>service.js</code> (2,055)</td>
+<td>Search fusion, injection selection, mirror sync, conflict
+resolution, failure recording</td>
+</tr>
+<tr>
+<td><code>api.js</code> (1,306), <code>api-standalone.js</code></td>
+<td>Panel and standalone HTTP routes</td>
+</tr>
+<tr>
+<td><code>dream.js</code> (1,205), <code>dream/decisions.js</code>,
+<code>dream/sleep.js</code>, <code>dream/clustering.js</code></td>
+<td>Consolidation, its decision application, and the idle sleep
+cycle</td>
+</tr>
+<tr>
+<td><code>tools.js</code></td>
+<td>Nine model tools</td>
+</tr>
+<tr>
+<td><code>inject.js</code></td>
+<td>System-prompt injection</td>
+</tr>
+<tr>
+<td><code>summarize.js</code></td>
+<td>Session summarization</td>
+</tr>
+<tr>
+<td><code>search/bm25.js</code>, <code>search/adaptive.js</code>,
+<code>reranker.js</code>, <code>vector-index.js</code>,
+<code>local-embedder.js</code></td>
+<td>Retrieval</td>
+</tr>
+<tr>
+<td><code>scope.js</code></td>
+<td>Write-side scope resolution from the session header</td>
+</tr>
+<tr>
+<td><code>mirror.js</code></td>
+<td>Markdown mirrors with a generation fence</td>
+</tr>
+<tr>
+<td><code>runtime/</code></td>
+<td>Download, verification and loading of the local embedding
+runtime</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> DeepSeek Harness with the plugin
+installed
+(<code>dsh plugin --profile web add @modusensus/dsh-mneme</code>). A
+standalone HTTP API exists for use outside the harness.</li>
+<li><strong>Offline:</strong> switch <code>embedProvider</code> from its
+<code>openai</code> default to <code>local</code>; the plugin downloads
+and verifies a local embedding runtime against
+<code>runtime-manifest.json</code>.</li>
+<li><strong>Hand-repairable:</strong> yes, deliberately — the Markdown
+mirror is the editing surface, with a digest check that tells a human
+edit from a stale machine render.</li>
+</ul>
+<p>The screen of this checkout found no auto-running configuration, one
+build-time execution point (a root <code>package.json</code> lifecycle
+script), one unpinned surface, and three manifests changed inside the
+seven-day cooldown. Nothing was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema</strong> — <code>src/store.js:5-260</code>:
+<code>memories</code>, <code>dream_runs</code>,
+<code>recall_runs</code>, <code>recall_evals</code>,
+<code>failure_memories</code>, <code>receipt_chain</code>,
+<code>conflict_pending</code>, <code>scope_changes</code>,
+<code>llm_audit_logs</code>, <code>entities</code>,
+<code>entity_attrs</code>, <code>entity_relations</code>,
+<code>mirror_state</code>.</li>
+<li><strong>Consolidation</strong> — <code>src/dream.js</code>, applying
+decisions through <code>applyDecisions</code> in
+<code>src/dream/decisions.js</code> with the compare-and-set guard
+(<code>:261</code>, <code>:313-318</code>); run rows at
+<code>store.js:1321</code>, per-record receipts at
+<code>:1396</code>.</li>
+<li><strong>Conflict freeze</strong> — <code>conflict_pending</code>
+inserts at <code>store.js:1732</code>;
+<code>service.resolveConflictPending</code> reuses the conflict branch
+of <code>applyDecisions</code>; routes at
+<code>api.js:1047-1100</code>.</li>
+<li><strong>Human edit-back</strong> —
+<code>service.js:1340-1377</code>: a mirror digest match means the file
+is an untouched machine render and is skipped; otherwise the edit is
+applied and the prior content archived as
+<code>human_override</code>.</li>
+<li><strong>Correction mining</strong> — <code>store.saveFailure</code>,
+called at <code>service.js:1836</code> and <code>:1947</code>, records
+what a memory was and what the user changed it to.</li>
+<li><strong>Scope</strong> — <code>scope.js</code> resolves
+<code>agent_scope</code> from the session header's agent preset and
+<code>workspace_scope</code> from the workspace registry or
+<code>cwd</code>; the visibility predicate applies in search, list,
+count, get and injection.</li>
+<li><strong>Defaults</strong> — <code>config.js:270</code>
+<code>conflictFreezeEnabled</code>, <code>:366</code>
+<code>trustEpistemicWeighting</code>, <code>:454</code>
+<code>scopeEnabled</code>, <code>:461</code> <code>strictScope</code>,
+all <code>false</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> (<code>store.js:5-22</code>, widened by
+migrations): <code>id</code>, <code>type</code>, <code>title</code>,
+<code>content</code>, <code>tags</code>, <code>importance</code>,
+<code>forgotten</code>, <code>archived</code>, <code>source</code>,
+<code>content_history</code> (the newest twenty prior versions with
+their source: <code>auto_merge</code>, <code>human_override</code> or
+<code>overwrite</code>), <code>embedding</code>,
+<code>epistemic_status</code>, <code>last_accessed_at</code>,
+<code>_full_content</code>, timestamps, and later
+<code>quality_score</code> and the scope columns
+<code>agent_scope</code>, <code>workspace_scope</code> with a source of
+<code>explicit</code> or <code>auto</code>.</p>
+<p><strong>Scope</strong> has two strengths. With
+<code>scopeEnabled</code>, saves are labelled automatically from the
+session, and search re-weights rows from another scope down while
+keeping them visible. With <code>strictScope</code> as well, a row whose
+scope was declared explicitly — by a <code>scope</code> argument to
+<code>memory_save</code> or <code>memory_update</code>, or in the panel
+— is invisible outside that scope, and an anonymous session sees none of
+them; auto-labelled and legacy rows remain visible
+(<code>test/scope-strict.test.js:41-66</code>). Every change to a row's
+scope is recorded in <code>scope_changes</code> with the actor, tool or
+panel. Because the hard wall covers only declared rows and the whole
+feature is off by default, <code>scope_enforced</code> is withheld.</p>
+<p><strong>Provenance</strong> is a <code>source</code> string and the
+receipts: a memory produced by a merge can be traced to its inputs
+through <code>receipt_chain.sources</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three recall paths are fused: a <code>LIKE</code> keyword scan, BM25
+over a tokenizer that keeps identifiers whole and splits CJK runs into
+bigrams (<code>search/bm25.js</code>), and vector search against a
+query-adaptive threshold — 0.5 for entity prefixes and decisive heads,
+0.7 for very short queries, 0.6 for long ones, 0.65 otherwise
+(<code>search/adaptive.js</code>). A reranker orders the fused set.</p>
+<p>Injection is semantic-first: the injector takes the latest user
+message from the session event log, recalls against it, and fills the
+prompt with summaries, preferences and matched items, falling back to
+rule-based selection when there is no query. Forgotten and archived rows
+never inject.</p>
+<p>Every retrieval can be recorded in <code>recall_runs</code> with the
+query, mode, top-k, threshold and exact candidates, and
+<code>recall_evals</code> stores operator-labelled precision, recall and
+MRR checks separately so tests do not inflate the production trail.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The model writes through <code>memory_save</code> and friends,
+synchronously into SQLite; embedding is scheduled fire-and-forget, so a
+memory is keyword-retrievable at once and vector-retrievable when its
+embedding lands. A quality filter scores saves. Session summarization
+compresses conversations into <code>summary</code> memories. Entity
+extraction is optional and off by default.</p>
+<p>Consolidation is the heavy pass and runs out of band: on its
+schedule, and in a sleep mode triggered by idleness with a minimum gap
+between runs, which tiers memories by heat — keeping frequently read
+ones, compressing stale ones to summaries, archiving the oldest. Model
+calls for consolidation and summarization are logged in
+<code>llm_audit_logs</code> with tokens, cost and duration, purged after
+<code>retentionDays</code> (default 90).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Nine tools — <code>memory_save</code>, <code>memory_search</code>,
+<code>memory_list</code>, <code>memory_get</code>,
+<code>memory_update</code>, <code>memory_delete</code>,
+<code>memory_forget</code>, <code>memory_archive</code>,
+<code>memory_runtime</code> — plus automatic injection, slash commands,
+and a web panel in the harness with a conflict queue, settings and
+memory browsing. The model can declare a scope on save and update, which
+is how a strict wall is created.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Automated change is accountable.</strong> Consolidation is
+where memory systems most often lose information silently, and here it
+cannot: the input, the decisions, the outcome and a per-record digest
+are written, replay is tested to be idempotent, a decision against
+changed state is skipped, a failed receipt write never breaks a run, and
+a summary failure still records the applied decisions.</p>
+<p><strong>Human authority is explicit.</strong> A person's Markdown
+edit wins and the machine value is kept; a person can resolve a frozen
+conflict through the same code path consolidation uses.</p>
+<p><strong>The safe settings are not the default.</strong> With the
+defaults, a contradiction is resolved by the model, scopes do not
+isolate, and epistemic status does not affect ranking. An operator has
+to know to turn each on.</p>
+<p><strong>Ordinary writes are not in the audit trail.</strong> A
+model's <code>memory_save</code>, <code>memory_update</code> or
+<code>memory_delete</code> outside consolidation leaves no event row;
+the update does leave the prior content in the row's capped history, and
+a delete leaves nothing.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>72 test files and about 1,000 <code>test(</code> cases under
+<code>node:test</code>, covering the store, consolidation decisions,
+receipts and replay (<code>audit.test.js</code>,
+<code>receipt-chain.test.js</code>, <code>policy-epoch.test.js</code>),
+conflict freezing, the mirror's digest and generation fences, scope
+storage, retrieval and strict visibility, search fusion, the reranker,
+the local runtime's download and verification, and a stress test. None
+was run for this report.</p>
+<p>The negative case is <code>scope-strict.test.js:68</code>: five rows
+share a needle, and under strict scope the explicitly foreign row is
+asserted absent while the global, own, auto-foreign and legacy rows are
+asserted present — a populated result with the exclusion and its
+controls in one assertion. <code>:96</code> asserts the same wall on
+list and count totals.</p>
+<p><code>benchmark.test.js</code> runs a seeded retrieval benchmark and
+asserts the fused configuration never trails the legacy one on Recall@5;
+no benchmark result is committed, and no paper is cited.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give consolidation a receipt per run and per
+mutation.</strong> Snapshot hash, raw decisions, per-id outcome,
+content-addressed input digest, and counts before and after make an
+automated rewrite replayable and diffable.</li>
+<li><strong>Apply model decisions under compare-and-set.</strong> A
+decision computed against a snapshot must not land on state that
+moved.</li>
+<li><strong>Version the adjudication rules.</strong> A policy epoch
+turns old verdicts into history instead of silently re-interpreting
+them.</li>
+<li><strong>Let the human-editable mirror win, with a digest</strong> to
+tell a person's edit from a stale render, and keep the value it
+replaced.</li>
+<li><strong>Record scope changes with the actor.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shipping protections off.</strong> Conflict freezing and
+scope isolation that must be discovered and enabled protect only the
+operators who already knew to worry.</li>
+<li><strong>A strict wall with a soft door.</strong> Rows labelled
+automatically stay visible across scopes under strict mode, so the
+wall's coverage depends on whether the model remembered to declare a
+scope.</li>
+<li><strong>Auditing only the background writer.</strong> The model's
+own writes are the other half of the mutation surface.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits DeepSeek Harness users who want memory that improves in
+the background and can be inspected afterwards — a single developer or a
+small team on one machine, comfortable reading configuration. For
+several agents sharing one store, turn on <code>scopeEnabled</code>,
+<code>strictScope</code> and <code>conflictFreezeEnabled</code> from the
+start, and expect to declare scopes explicitly where isolation matters.
+It is a harness plugin, not a library for another runtime.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Why are conflict freezing and scope isolation off by
+default?</strong> Both carry tests and a UI.</li>
+<li><strong>Would auto-labelled rows ever be promoted to the strict
+wall?</strong></li>
+<li><strong>Is <code>epistemic_status</code> inference by regular
+expression accurate enough to weight ranking?</strong> The regexes are
+Chinese and English keyword lists.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>dsh-mneme/src/store.js</code> — schema, audit tables,
+entities</li>
+<li><code>dsh-mneme/src/service.js</code> — search, injection, mirror
+edit-back, conflict resolution</li>
+<li><code>dsh-mneme/src/dream.js</code>,
+<code>src/dream/decisions.js</code>, <code>src/dream/sleep.js</code>,
+<code>src/dream/clustering.js</code></li>
+<li><code>dsh-mneme/src/api.js</code> — conflict queue routes</li>
+<li><code>dsh-mneme/src/scope.js</code>, <code>src/config.js</code>,
+<code>src/tools.js</code>, <code>src/inject.js</code></li>
+<li><code>dsh-mneme/src/search/bm25.js</code>,
+<code>src/search/adaptive.js</code>, <code>src/reranker.js</code>,
+<code>src/local-embedder.js</code></li>
+<li><code>dsh-mneme/test/audit.test.js</code>,
+<code>receipt-chain.test.js</code>,
+<code>conflict-freeze.test.js</code>, <code>scope-strict.test.js</code>,
+<code>mirror-edit-digest.test.js</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>rg -n "DELETE FROM (dream_runs|receipt_chain)|UPDATE (dream_runs|receipt_chain)" dsh-mneme/src</code></li>
+<li><code>rg -n "epistemic_status" dsh-mneme/src</code> — weights and
+priorities, no filter</li>
+<li><code>rg -n "valid_until IS NULL|valid_from &lt;=" dsh-mneme/src</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/modusensus/dsh-mneme/commit/00c67eaf5daa7b038f0249653ba3a5946a4a9758"><code class="commit-id" title="00c67eaf5daa7b038f0249653ba3a5946a4a9758">00c67eaf…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening: no auto-running configuration, one build-time execution point,
+one unpinned surface, three manifests inside the seven-day cooldown.
+Nothing was installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

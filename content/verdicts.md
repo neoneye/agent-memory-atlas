@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 460 reports.**
+**This page covers all 461 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4030,3 +4030,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 1,752 commits since 9 September 2025, fifteen language editions of the book beside ten chapters of runnable projects; the memory code is a few thousand lines of readable teaching Python with regression tests for specific fixes.
 - Study when: you want to learn how to compare memory representations honestly, with receipts, before choosing one.
 - Do not copy when: you need a memory store — whole-file prompt injection and model-decided writes are sized for the synthetic cases, not for real histories.
+
+### [`dsh-mneme`](../systems/dsh-mneme/)
+- Best idea: **a receipt for every automated rewrite.** Each autoDream consolidation run stores its input snapshot and hash, the model's raw decisions and the per-id outcome, and each committed merge, conflict or update gets a content-addressed digest with winner, loser and counts before and after; decisions apply under a snapshot compare-and-set, replay is tested to be idempotent, and a policy epoch retires old verdicts when the rules change. Three marks: `audit_log`, `human_review`, `negative_eval`.
+- Biggest risk: **the protections ship switched off.** Conflict freezing, scope labelling, strict scope and epistemic weighting are implemented, tested and `false` by default, so out of the box the model settles contradictions and every agent sees every memory; under strict scope only explicitly declared rows are walled, and the model's own saves and deletes never reach the receipt tables.
+- Most reusable component: the Markdown mirror edit-back — a digest distinguishes a person's edit from a stale machine render, the edit wins, and the machine value is archived in the row's history as `human_override`.
+- Maturity impression: MIT, version 0.8.1, 372 commits since 13 August 2026, about 15,000 lines of JavaScript and about 1,000 test cases across 72 files, including replay, compare-and-set, mirror generation fences and a verified local embedding runtime.
+- Study when: your memory runs a background consolidation and you need to be able to say afterwards exactly what it changed and why.
+- Do not copy when: you need isolation or human adjudication by default — enable `scopeEnabled`, `strictScope` and `conflictFreezeEnabled` first, and declare scopes explicitly.
