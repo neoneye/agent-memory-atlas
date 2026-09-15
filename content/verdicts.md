@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 467 reports.**
+**This page covers all 468 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4086,3 +4086,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.1.25, 945 commits since 12 April 2026, about 39,800 lines of Python plus a vendored RLM, 1,030 test functions, SQLite and Neo4j backends, and integrations for Claude Code, Codex, Claude Desktop, VS Code, Cursor and WebMCP; no retrieval-quality results are committed.
 - Study when: you want a local project memory across coding clients with a graph a person can edit, or a worked human-approval flow for memory corrections.
 - Do not copy when: agents must not read superseded decisions through the default query, or several tenants share one HTTP server.
+
+### [`kektordb`](../systems/kektordb/)
+- Best idea: **memories that evolve instead of being overwritten, on an engine built to survive crashes.** `evolve_memory` writes a new version, copies incoming edges and links it back with `superseded_by`; edges are soft-deleted with timestamps so traversal can run as of a moment; and the store underneath is HNSW over mmap arenas with a CRC-framed append-only file that resyncs past corruption. One mark: `negative_eval`.
+- Biggest risk: **the flag that hides superseded memories is read by one retrieval tool.** Evolution and gardener consolidation leave the old vectors indexed with `_is_historical` or `_archived`; `recall_memory` excludes them, while `adaptive_retrieve`, `scoped_recall` and `search_with_scores` do not, and `recall_memory` itself loses the exclusion for all but the last layer when two layers are requested, because the filter language splits on OR before AND. A person resolving a reflection in the dashboard changes no memory.
+- Most reusable component: the persistence layer — batched AOF with CRC-framed records, resync past a corrupt region and snapshot-mode compaction — and per-layer decay models configured on the index.
+- Maturity impression: Apache-2.0, version 0.6.1, 374 commits since 5 September 2025, about 46,000 lines of Go with 537 test functions, REST, MCP, Go library and RAG proxy modes, and vector benchmarks against Qdrant and ChromaDB from version 0.5; no agent-memory benchmark is committed.
+- Study when: you want an embeddable Go vector store with graph edges, decay and versioned memories, and will own the retrieval policy.
+- Do not copy when: every retrieval path must hide superseded or consolidated memories, or several users share one index.

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 467 reports.</strong></p>
+<p><strong>This page covers all 468 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -16875,6 +16875,40 @@ with a graph a person can edit, or a worked human-approval flow for
 memory corrections.</li>
 <li>Do not copy when: agents must not read superseded decisions through
 the default query, or several tenants share one HTTP server.</li>
+</ul>
+<h3 id="kektordb"><a
+href="../systems/kektordb/"><code>kektordb</code></a></h3>
+<ul>
+<li>Best idea: <strong>memories that evolve instead of being
+overwritten, on an engine built to survive crashes.</strong>
+<code>evolve_memory</code> writes a new version, copies incoming edges
+and links it back with <code>superseded_by</code>; edges are
+soft-deleted with timestamps so traversal can run as of a moment; and
+the store underneath is HNSW over mmap arenas with a CRC-framed
+append-only file that resyncs past corruption. One mark:
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the flag that hides superseded memories is
+read by one retrieval tool.</strong> Evolution and gardener
+consolidation leave the old vectors indexed with
+<code>_is_historical</code> or <code>_archived</code>;
+<code>recall_memory</code> excludes them, while
+<code>adaptive_retrieve</code>, <code>scoped_recall</code> and
+<code>search_with_scores</code> do not, and <code>recall_memory</code>
+itself loses the exclusion for all but the last layer when two layers
+are requested, because the filter language splits on OR before AND. A
+person resolving a reflection in the dashboard changes no memory.</li>
+<li>Most reusable component: the persistence layer — batched AOF with
+CRC-framed records, resync past a corrupt region and snapshot-mode
+compaction — and per-layer decay models configured on the index.</li>
+<li>Maturity impression: Apache-2.0, version 0.6.1, 374 commits since 5
+September 2025, about 46,000 lines of Go with 537 test functions, REST,
+MCP, Go library and RAG proxy modes, and vector benchmarks against
+Qdrant and ChromaDB from version 0.5; no agent-memory benchmark is
+committed.</li>
+<li>Study when: you want an embeddable Go vector store with graph edges,
+decay and versioned memories, and will own the retrieval policy.</li>
+<li>Do not copy when: every retrieval path must hide superseded or
+consolidated memories, or several users share one index.</li>
 </ul>
         </article>
       </div>

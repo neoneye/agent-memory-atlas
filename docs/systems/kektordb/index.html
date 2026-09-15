@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go vector database with an HNSW
+index, BM25, a property graph with soft-deleted edges and a background
+LLM gardener that consolidates, archives and reflects on memories,
+exposed to agents as 57 MCP tools; superseded and consolidated memories
+are hidden from one recall tool and returned by the others.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="KektorDB — Agent Memory Atlas">
+    <meta property="og:description" content="A Go vector database with
+an HNSW index, BM25, a property graph with soft-deleted edges and a
+background LLM gardener that consolidates, archives and reflects on
+memories, exposed to agents as 57 MCP tools; superseded and consolidated
+memories are hidden from one recall tool and returned by the others.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KektorDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go vector database with
+an HNSW index, BM25, a property graph with soft-deleted edges and a
+background LLM gardener that consolidates, archives and reflects on
+memories, exposed to agents as 57 MCP tools; superseded and consolidated
+memories are hidden from one recall tool and returned by the others.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>KektorDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "KektorDB",
+      "description": "A Go vector database with an HNSW index, BM25, a property graph with soft-deleted edges and a background LLM gardener that consolidates, archives and reflects on memories, exposed to agents as 57 MCP tools; superseded and consolidated memories are hidden from one recall tool and returned by the others.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A vector database that gardens its
+memories</p>
+          <h1>KektorDB</h1>
+          <p class="document-deck">A Go vector database with an HNSW
+index, BM25, a property graph with soft-deleted edges and a background
+LLM gardener that consolidates, archives and reflects on memories,
+exposed to agents as 57 MCP tools; superseded and consolidated memories
+are hidden from one recall tool and returned by the others.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sanonone/kektordb">
+              <span>Source</span>
+              <strong>sanonone/kektordb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sanonone/kektordb/commit/addc5f0c4891c185fa584bac4ccb3f209291a7c1" title="addc5f0c4891c185fa584bac4ccb3f209291a7c1">
+              <span>Analyzed revision</span>
+              <code>addc5f0c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sanonone--kektordb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sanonone--kektordb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>KektorDB is a vector database written in Go that presents itself as
+"the cognitive memory layer for AI agents". It is Apache-2.0, version
+0.6.1, with 374 commits since 5 September 2025, about 46,000 lines of
+non-test Go and 537 test functions in 113 files, with a Rust library
+under <code>native/compute</code> beside it. It runs as a REST server,
+an embedded Go library, an MCP server, or a RAG proxy in front of a chat
+model.</p>
+<p>Underneath is a real storage engine:</p>
+<ul>
+<li>HNSW indexes over memory-mapped arenas, with vacuum and connection
+refinement</li>
+<li>roaring-bitmap metadata filters, B-trees for numeric fields and BM25
+postings</li>
+<li>a batched append-only file with CRC-framed records, corruption
+resync and snapshot-based compaction</li>
+</ul>
+<p>Above it sit a property graph whose edges carry created and deleted
+timestamps, so traversals can be run as of a moment, and a background
+<strong>gardener</strong> that calls an LLM to consolidate clusters of
+similar memories, summarise episodic memories into semantic ones, and
+write <em>reflections</em> about contradictions, preference changes and
+knowledge gaps.</p>
+<p>Memory change is recorded as flags on the memory.
+<code>evolve_memory</code> writes a new version and marks the old one
+<code>_is_historical</code>. The gardener marks consolidated and
+summarised memories <code>_archived</code> and leaves them in the vector
+index. <code>recall_memory</code> excludes both flags.
+<code>adaptive_retrieve</code>, <code>scoped_recall</code> and
+<code>search_with_scores</code> apply no such filter, so an agent using
+them reads superseded versions and the originals of consolidated
+clusters as current. The filter in <code>recall_memory</code> also stops
+applying to all but the last requested layer when a caller asks for two
+or more layers.</p>
+<p>One mark: <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>index</strong> is a namespace: vectors, their metadata,
+the text and filter indexes, and a graph. MCP tools default to
+<code>mcp_memory</code>.</p>
+<p>A <strong>memory</strong> is a vector with metadata. The memory layer
+decides decay (per-layer half-life and model: exponential, linear, step
+or Ebbinghaus) and whether it is pinned by default. Reading a memory can
+reinforce it.</p>
+<p><strong>Change</strong> happens through flags and edges rather than
+overwrites:</p>
+<ul>
+<li><code>evolve_memory</code> → new node, <code>superseded_by</code> /
+<code>evolves_from</code> edges, old node
+<code>_is_historical</code></li>
+<li>gardener consolidation → master node, <code>consolidated_into</code>
+edges, originals <code>_archived</code></li>
+<li><code>resolve_conflict</code> with a discard id → loser
+<code>_archived</code> and deleted from the index</li>
+</ul>
+<p><strong>Reflections</strong> are memories of type
+<code>reflection</code> the gardener writes about what it noticed, with
+a status, severity and suggested resolution, linked to the memories
+involved.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession and consolidation are flags on memories that stay in the index; only recall_memory reads the flags</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession and consolidation are flags on memories that stay in the index; only recall_memory reads the flags
+flowchart TB
+    SAVE[&quot;save_memory&quot;] --&gt; MEM[(&quot;vector + metadata&lt;br/&gt;layer, tags, session, user&quot;)]
+    MEM --&gt;|&quot;evolve_memory&quot;| NEW[(&quot;new version&quot;)]
+    MEM -.-&gt;|&quot;superseded_by edge&quot;| NEW
+    MEM --&gt; HIST[&quot;old: _is_historical = true&lt;br/&gt;stays in HNSW&quot;]
+    GARD[&quot;gardener think cycle&quot;] --&gt; CONS[&quot;consolidate similar cluster&lt;br/&gt;LLM summary → master&quot;]
+    CONS --&gt; ARCH[&quot;originals: _archived = true&lt;br/&gt;stays in HNSW&quot;]
+    GARD --&gt; REFL[(&quot;reflection&lt;br/&gt;status unresolved&quot;)]
+    REFL --&gt;|&quot;person: Resolve in dashboard&quot;| NOTE[&quot;status resolved + note&lt;br/&gt;no memory changed&quot;]
+    Q1[&quot;recall_memory&quot;] --&gt; F1{&quot;filter: not historical&lt;br/&gt;and not archived&quot;}
+    Q2[&quot;adaptive_retrieve / scoped_recall&lt;br/&gt;search_with_scores&quot;] --&gt; F2[&quot;no flag filter&quot;]
+    HIST --&gt; F2
+    ARCH --&gt; F2
+    HIST -.-&gt;|&quot;excluded&quot;| F1</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pkg/core</code></td>
+<td>The database: indexes, metadata filters, BM25, graph adjacency with
+time filtering, KV store</td>
+</tr>
+<tr>
+<td><code>pkg/core/hnsw</code>, <code>pkg/storage/mmap</code></td>
+<td>HNSW index, optimizer and refinement; memory-mapped arenas and
+compaction</td>
+</tr>
+<tr>
+<td><code>pkg/persistence</code></td>
+<td>Lazy AOF writer, framing, snapshot and rewrite</td>
+</tr>
+<tr>
+<td><code>pkg/engine</code></td>
+<td>Operations (<code>VAdd</code>, <code>VSearch</code>,
+<code>VEvolve</code>, <code>VDelete</code>, <code>VLink</code>), fusion
+search with decay, recovery, epistemic assessment, events</td>
+</tr>
+<tr>
+<td><code>pkg/cognitive</code></td>
+<td>The gardener and its detectors, consolidation, user profiling</td>
+</tr>
+<tr>
+<td><code>pkg/compiler</code></td>
+<td>Knowledge artifacts from templates, cached and recompiled by a
+watcher</td>
+</tr>
+<tr>
+<td><code>pkg/rag</code>, <code>pkg/proxy</code></td>
+<td>Document pipeline, adaptive retriever, OpenAI-compatible RAG
+gateway</td>
+</tr>
+<tr>
+<td><code>pkg/auth</code></td>
+<td>ES256 JWT keys with roles and allowed indexes, revocation list</td>
+</tr>
+<tr>
+<td><code>internal/mcp</code>, <code>internal/server</code>,
+<code>internal/tui</code></td>
+<td>MCP service, REST handlers and dashboard, terminal UI</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> the <code>kektordb</code> binary,
+as REST, MCP (<code>--mcp --tools=agent</code>) or proxy;
+<code>kektordb setup opencode</code> writes client configuration.</li>
+<li><strong>Models:</strong> a built-in ONNX MiniLM embedder for
+memories; the gardener, profiling and artifact compilation call an LLM
+(an OpenAI-compatible endpoint or Gemini) when the cognitive
+configuration enables them.</li>
+<li><strong>Hand-repairable:</strong> no. The AOF and arenas are binary;
+the dashboard, TUI and REST API are the inspection surfaces.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, three
+build-time execution points (<code>Makefile</code>, the Python client's
+<code>setup.py</code> and its test <code>conftest.py</code>), one
+unpinned surface, and eight dependency files changed within the
+seven-day cooldown, including <code>go.mod</code>, <code>go.sum</code>
+and the Rust lockfile. Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Save</strong> —
+<code>internal/mcp/service.go:188-275</code>: embed, metadata with
+layer, tags, session and user ids, <code>VAdd</code>, manual and session
+links.</li>
+<li><strong>Recall</strong> — <code>service.go:358-422</code>: optional
+layer filter joined to <code>defaultMemoryFilter</code>
+(<code>:42</code>,
+<code>_is_historical != 'true' AND _archived != 'true'</code>),
+<code>VSearch</code> with alpha 0.5, optional layer weights, optional
+reinforcement.</li>
+<li><strong>Filter evaluation</strong> —
+<code>pkg/core/core.go:1785-1840</code>: split on <code>OR</code> first,
+then on <code>AND</code> inside each block, no parentheses;
+<code>!=</code> is all ids minus the matches.</li>
+<li><strong>Scoped and adaptive retrieval</strong> —
+<code>service.go:424-554</code> (graph filter from a root, empty
+metadata filter) and <code>pkg/rag/adaptive_retriever.go:107</code>
+(<code>VSearch</code> with an empty filter, then graph expansion).</li>
+<li><strong>Evolution</strong> —
+<code>pkg/engine/ops.go:843-895</code>.</li>
+<li><strong>Consolidation</strong> —
+<code>pkg/cognitive/gardener.go:1110-1124</code> and
+<code>:1286-1298</code>; episodic archiving at
+<code>:1682-1698</code>.</li>
+<li><strong>Conflict resolution</strong> —
+<code>service.go:1053-1092</code> (MCP) and
+<code>internal/server/http_handlers.go:1482-1528</code> (REST).</li>
+<li><strong>Edge time filtering</strong> —
+<code>pkg/core/graph.go:251</code> onward, comparing
+<code>CreatedAt</code> and <code>DeletedAt</code> with
+<code>atTime</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A vector's metadata is an open map. Strings go to the inverted index
+and BM25, numbers to B-trees, booleans to the inverted index as
+<code>"true"</code> or <code>"false"</code>, arrays element by element
+(<code>core.go:1489-1600</code>). Reserved keys begin with an
+underscore: <code>_created_at</code>, <code>_access_count</code>,
+<code>_pinned</code>, <code>_is_historical</code>,
+<code>_archived</code>, <code>_consolidated_into</code>.</p>
+<p><strong>Edges</strong> (<code>pkg/core/graph.go:20-26</code>) carry a
+target, <code>CreatedAt</code>, <code>DeletedAt</code>, a weight and
+properties, with a lighter reverse-edge list for incoming traversal.
+Unlinking sets <code>DeletedAt</code>; traversal with
+<code>atTime &gt; 0</code> returns edges that existed then. Both
+timestamps are the system clock at write
+(<code>pkg/engine/graph.go:75</code>), and no field records when a
+relation held in the world, so <code>bitemporal</code> is withheld.</p>
+<p><strong>Epistemic state</strong> — crystallized, stable, volatile or
+contested — is computed on demand by <code>assess_belief</code> from
+consensus, stability and friction over the nearest memories
+(<code>pkg/engine/epistemic.go</code>), and is not stored on memories.
+The flags that recall reads mark supersession and consolidation, a
+lifecycle rather than a belief, so <code>trust_state</code> is
+withheld.</p>
+<p><strong>Scope.</strong> JWT keys carry a role and a list of allowed
+index names checked in the REST middleware
+(<code>pkg/auth/rbac.go:113-135</code>). That is a partition by index.
+<code>user_id</code> and <code>session_id</code> are stored in metadata
+and read by profiling and session tools, but no recall tool filters on
+them, so <code>scope_enforced</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Fusion search</strong> (<code>ops.go:896</code> onward) runs
+HNSW and BM25 when there is a text query, fuses them with
+<code>alpha</code>, restricts candidates with the metadata filter and an
+optional graph scope, and multiplies by a decay factor derived from last
+access, per-layer half-life and model; pinned memories skip decay.</p>
+<p><strong>The flag filter is on one tool.</strong>
+<code>recall_memory</code> passes <code>defaultMemoryFilter</code>. The
+others that return memories to an agent do not:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Filter on <code>_is_historical</code> / <code>_archived</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>recall_memory</code></td>
+<td>yes, with the precedence problem below</td>
+</tr>
+<tr>
+<td><code>assess_belief</code></td>
+<td>yes (<code>service.go:2236</code>)</td>
+</tr>
+<tr>
+<td><code>scoped_recall</code></td>
+<td>no — a graph filter only (<code>service.go:457</code>)</td>
+</tr>
+<tr>
+<td><code>adaptive_retrieve</code></td>
+<td>no — <code>VSearch</code> with <code>""</code>
+(<code>adaptive_retriever.go:107</code>)</td>
+</tr>
+<tr>
+<td><code>search_with_scores</code></td>
+<td>no — <code>VSearchWithScores</code>
+(<code>service.go:2345</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Evolution and gardener consolidation set flags and leave the vectors
+indexed (<code>ops.go:885</code>, <code>gardener.go:1118-1124</code>),
+so those three tools return a superseded version beside its successor
+and the originals of a consolidated cluster beside the master. Only a
+conflict resolution with a discard id deletes the loser from the
+index.</p>
+<p><strong>Operator precedence in <code>recall_memory</code>.</strong>
+With <code>layers: ["episodic", "semantic"]</code> the filter string
+becomes
+<code>memory_layer='episodic' OR memory_layer='semantic' AND _is_historical != 'true' AND _archived != 'true'</code>
+(<code>service.go:379-392</code>). The evaluator splits on
+<code>OR</code> first and on <code>AND</code> within each block
+(<code>core.go:1785-1797</code>), so the exclusion attaches only to the
+last layer. Every historical or archived episodic memory is eligible.
+The gardener archives episodic memories after summarising them
+(<code>gardener.go:1682-1698</code>), so that is the population this
+reaches. The filter tests cover single-clause and
+<code>AND</code>-joined expressions, not the combination
+<code>recall_memory</code> builds.</p>
+<p><strong>Adaptive retrieval</strong> seeds with a vector search, then
+expands along edges with a density filter up to a token budget, labelled
+as the default strategy <code>graph</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Saving</strong> is direct: no extraction, no dedup at write.
+The gardener finds near-duplicates later, asks an LLM for a merged
+summary, creates a master memory, transfers incoming edges and archives
+the cluster.</p>
+<p><strong>Contradictions</strong> are detected by the gardener with an
+LLM over similar memories and written as reflections. In advanced mode
+it may resolve minor ones itself. An agent resolves one with
+<code>resolve_conflict</code>, optionally naming a memory to discard,
+which is archived and deleted.</p>
+<p><strong>Evolution</strong> keeps history. The old node remains
+readable through <code>get_memory_evolution</code> along
+<code>superseded_by</code> edges.</p>
+<p><strong>Persistence</strong> writes each operation to the AOF before
+applying it, batched with periodic fsync. Compaction rewrites the AOF
+from a snapshot. The AOF is a recovery log, not a history, and the event
+bus (<code>pkg/engine/events.go</code>) feeds the dashboard and TUI over
+server-sent events without storing them, so <code>audit_log</code> is
+withheld.</p>
+<p><strong>Tombstones.</strong> Nothing records a discarded value that
+later writes are checked against. A memory archived as the loser of a
+conflict can be saved again and recalled.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>MCP</strong> — 49 tools in the <code>agent</code> profile
+and 57 with <code>--tools=all</code>: memory CRUD, graph traversal and
+paths, sessions with summaries, <code>check_subconscious</code> for
+reflections, user profiles, knowledge artifacts, index and KV
+administration, snapshots and AOF compaction.</li>
+<li><strong>Setup plugins</strong> for OpenCode and Hermes write client
+configuration; the Hermes setup also installs the skill in
+<code>skills/kektordb</code>.</li>
+<li><strong>REST</strong> mirrors most operations and serves a dashboard
+with memories, a graph view, a reflection feed and admin pages.</li>
+<li><strong>RAG proxy</strong> sits between a chat UI and an
+OpenAI-compatible model, retrieving from an index and injecting
+context.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Crash safety is the strongest part.</strong> CRC-framed AOF
+records, resync past a corrupt region, snapshot-mode compaction and
+recovery tests.</p>
+<p><strong>A person's review changes no memory.</strong> The dashboard's
+reflection feed
+(<code>internal/server/ui/static/js/cognitive.js:177-189</code>) posts a
+free-text resolution that sets the reflection's status to resolved. The
+request carries no discard id, and <code>check_subconscious</code> lists
+reflections without filtering on status
+(<code>service.go:995-1050</code>), so resolving in the UI neither
+changes the memories involved nor removes the reflection from what the
+agent is shown. The dashboard adds memories and deletes whole indexes;
+it has no per-memory edit or delete. <code>human_review</code> is
+withheld.</p>
+<p><strong>Authorization is per index.</strong> A read key for
+<code>mcp_memory</code> reads every user's and session's memories in it.
+The MCP server takes no credentials.</p>
+<p><strong>Injection.</strong> Saved content, document chunks and
+gardener summaries are all memories; an LLM-written consolidation
+replaces the originals in <code>recall_memory</code> without keeping
+their wording beside it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>537 Go test functions across the core, HNSW, persistence and
+recovery, filters, graph time travel, the gardener, compiler, auth and
+MCP handlers, plus Python and TypeScript client tests. None was run for
+this report.</p>
+<p><code>pkg/engine/roaring_filters_test.go:172</code> asserts that the
+<code>_is_historical</code> filter keeps a historical memory out while
+returning a current one, and
+<code>internal/mcp/p2_expansion_test.go:214</code> asserts a historical
+reflection is left out of <code>list_reflections</code>. That earns
+<code>negative_eval</code>. No test exercises <code>recall_memory</code>
+with more than one layer, or asserts that <code>adaptive_retrieve</code>
+or <code>scoped_recall</code> exclude superseded memories.</p>
+<p><strong>Benchmarks.</strong> <code>BENCHMARKS.md</code> reports
+recall@10 and QPS against Qdrant and ChromaDB on GloVe and SIFT,
+measured on version 0.5.x, and engine micro-benchmarks for 0.6. No
+agent-memory benchmark is committed. <code>test-app-results.json</code>
+and <code>test-plan-results.json</code> at the root hold acceptance and
+load runs.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Evolve instead of overwrite,</strong> with incoming edges
+copied to the new version and a typed link back to the old one.</li>
+<li><strong>Soft-deleted edges with timestamps</strong> give traversal
+as of a moment almost for free.</li>
+<li><strong>Per-layer decay models and pinning</strong> as index
+configuration rather than code.</li>
+<li><strong>CRC-framed append-only records with resync</strong> so a
+torn write loses one record, not the file.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A visibility flag honoured by one read tool.</strong> Put
+the exclusion in the engine's default, or delete superseded vectors from
+the ANN index.</li>
+<li><strong>A filter language without grouping,</strong> composed by
+string concatenation.</li>
+<li><strong>A review button that changes nothing</strong> the agent
+reads.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>KektorDB suits a builder who wants an embeddable Go vector store with
+graph edges, decay and crash-safe persistence, and is prepared to own
+the memory policy on top. Its agent-memory layer is broad but uneven at
+this commit. Where agents must not read superseded or consolidated
+memories through every retrieval tool, the flag handling needs to move
+into the engine first.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should historical and archived vectors leave the HNSW
+index,</strong> or should <code>VSearch</code> exclude them unless
+asked?</li>
+<li><strong>Is a dashboard resolution meant to feed back into the
+gardener,</strong> for example as a rule for future contradiction
+checks?</li>
+<li><strong>Will <code>user_id</code> become a recall filter</strong>
+for multi-user deployments?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>internal/mcp/service.go</code>,
+<code>internal/mcp/server.go</code></li>
+<li><code>pkg/engine/ops.go</code>, <code>pkg/engine/graph.go</code>,
+<code>pkg/engine/epistemic.go</code>,
+<code>pkg/engine/events.go</code></li>
+<li><code>pkg/core/core.go</code>, <code>pkg/core/graph.go</code>,
+<code>pkg/core/hnsw/</code></li>
+<li><code>pkg/cognitive/gardener.go</code>,
+<code>pkg/rag/adaptive_retriever.go</code></li>
+<li><code>pkg/auth/rbac.go</code>,
+<code>internal/server/http_handlers.go</code>,
+<code>internal/server/ui/static/js/cognitive.js</code></li>
+<li><code>pkg/engine/roaring_filters_test.go</code>,
+<code>internal/mcp/p2_expansion_test.go</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -rn "defaultMemoryFilter" internal pkg</code> —
+<code>service.go:389</code>, <code>:391</code> and <code>:2236</code>
+only</li>
+<li><code>grep -n "historical\|archived\|Filter" pkg/rag/adaptive_retriever.go</code>
+— no flag filter</li>
+<li><code>grep -rn "_archived" pkg/cognitive/gardener.go</code> — set by
+flag, no <code>VDelete</code> beside it</li>
+<li><code>grep -rn "user_id" internal/mcp/service.go</code> — written on
+save, read by profiling and sessions</li>
+<li><code>grep -rln -i audit pkg internal</code> — comments and tool
+descriptions only</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/sanonone/kektordb/commit/addc5f0c4891c185fa584bac4ccb3f209291a7c1"><code class="commit-id" title="addc5f0c4891c185fa584bac4ccb3f209291a7c1">addc5f0c…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: no auto-run surface, three build-time execution points, one
+unpinned surface, and eight dependency files inside the seven-day
+cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
