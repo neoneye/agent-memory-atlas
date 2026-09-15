@@ -133,7 +133,7 @@ which one you skipped and why, in the same message as the work you did instead.
 ## One item, not five
 
 Finish one and stop, unless the user asked to keep going. Each item is a full
-reading: a clone, a screen, a report, a count sweep, a build and a push. Batching
+reading: a clone, a screen, a report, the integration edits, a build and a push. Batching
 them produces one enormous commit nobody can review and one context window that
 runs out halfway through the third.
 

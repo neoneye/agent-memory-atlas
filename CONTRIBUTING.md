@@ -56,7 +56,7 @@ npm run build && npm run test
 ```
 
 The suite is the review. It checks pins against the analyzed revision, every
-relative link and anchor, spelled mechanism counts against the live corpus,
+relative link and anchor, that corpus counts are written as `PLACEHOLDER_*` tokens,
 capability marks against their evidence records, History ordering, Mermaid
 syntax that only fails at render time, pattern stance against the patterns
 index, and that every report carries a diagram.

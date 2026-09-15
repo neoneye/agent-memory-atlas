@@ -36,35 +36,34 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_homepage import _number_words  # noqa: E402
 from generate_matrix import CAPABILITIES, read_capabilities  # noqa: E402
+from placeholders import TOKEN, counts as placeholder_counts, mark_token  # noqa: E402
 
-#: `_number_words` starts at ten, because below that a spelled number in this
-#: atlas is usually a capability count that the homepage check has no business
-#: guessing about. Here it is the opposite: the small numbers are the whole
-#: point — the mechanisms worth counting are the rare ones.
-WORDS = {
-    **_number_words(10, 999),
-    **{
-        "one": 1, "two": 2, "three": 3, "four": 4,
-        "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
-    },
-}
-#: First-match-wins alternation: "one hundred and five" must be offered before
-#: "one hundred", or the long form is read as 100 and reported stale against a
-#: live 105.
+#: Corpus counts are written as placeholders (`PLACEHOLDER_TOTAL_COUNT`,
+#: `PLACEHOLDER_PATTERN_TOMBSTONE_COUNT`, ...) and filled in at build time — see
+#: `placeholders.py`. What is left to check is a count written by hand: in digits,
+#: or as one of the small spelled numbers a sentence may still open with. The
+#: spelled range used to run to 999, and an alternation of a thousand phrases,
+#: applied to every page, is what made this check take minutes.
+_UNITS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+_TEENS = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+          "seventeen", "eighteen", "nineteen"]
+_TENS = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+WORDS = {w: i + 1 for i, w in enumerate(_UNITS)}
+WORDS.update({w: i + 10 for i, w in enumerate(_TEENS)})
+for _t, _tens in enumerate(_TENS, start=2):
+    WORDS[_tens] = _t * 10
+    WORDS.update({f"{_tens}-{u}": _t * 10 + i + 1 for i, u in enumerate(_UNITS)})
+#: Longest first, so "forty-four" is not read as "forty".
 WORDS_BY_LENGTH = sorted(WORDS, key=len, reverse=True)
-#: Spaces inside a spelled number match a space *or* a newline. Prose wraps, and
-#: *"two hundred and\nninety"* with a literal-space alternation matches only
-#: "two hundred" — the long form losing to a prefix, which is the exact failure
-#: the length sort above exists to prevent, arriving through the line wrap
-#: instead. It read a live 290 as a claimed 200 and reported a correct sentence
-#: stale.
-#:
-#: One character, not `\s+`: a quantifier makes each of the ~1,000 alternatives
-#: ambiguous about where it ends, and the `\s+` separators around it in `CLAIM`
-#: re-split the same whitespace. A wrap leaves exactly one whitespace character.
-NUMBER = rf"(?:{'|'.join(w.replace(' ', '[ \n]') for w in WORDS_BY_LENGTH)}|\d{{1,3}})"
+#: Factored rather than a flat alternation of all 99 spellings: the tens carry an
+#: optional unit, so each position is tried against a couple of dozen branches.
+_SMALL = sorted(_UNITS + _TEENS, key=len, reverse=True)
+NUMBER = (
+    rf"(?:PLACEHOLDER_[A-Z0-9_]+|\d{{1,3}}"
+    rf"|(?:{'|'.join(_TENS)})(?:-(?:{'|'.join(_UNITS)}))?"
+    rf"|(?:{'|'.join(_SMALL)}))"
+)
 NOUNS = r"(?:memory\s+)?(?:systems?|repositories|repository|reports?)"
 
 #: A claim is a number that either qualifies a countable atlas noun, or names a
@@ -115,7 +114,7 @@ MECHANISM_NOUN_CLAIM = re.compile(
 #: when it is counting across reports.
 CORPUS_MARKER = re.compile(
     r"\batlas\b|\bcorpus\b|systems here|reports here|headline counts"
-    r"|of\s+(?:the\s+)?(?:\d{2,3}|one hundred and [a-z-]+)",
+    r"|of\s+(?:the\s+)?(?:\d{2,3}|PLACEHOLDER_TOTAL_COUNT)",
     re.I,
 )
 
@@ -223,7 +222,8 @@ def normalize(text: str) -> str:
     """
     for match in GENERATED.finditer(text):
         text = blank(text, match.span())
-    return re.sub(r"[*_`\[\]]", " ", text)
+    # An underscore between capitals is part of a PLACEHOLDER_* token, not emphasis.
+    return re.sub(r"[*`\[\]]|(?<![A-Z0-9])_|_(?![A-Z0-9])", " ", text)
 
 
 def live_counts(root: Path) -> tuple[dict[str, int], int, int]:
@@ -304,12 +304,22 @@ def bind(ahead: str, behind: str, subject: str | None = None) -> str | None:
     return subject
 
 
+#: Live values of every placeholder, set by `check` before any claim is read.
+LIVE: dict[str, int] = {}
+
+
 def value(token: str) -> int:
-    # A spelled number may have wrapped mid-phrase, so collapse whitespace
-    # before the lookup — `NUMBER` matches across the newline and `WORDS` is
-    # keyed on single spaces.
     token = " ".join(token.split())
+    if token.startswith("PLACEHOLDER_"):
+        return LIVE.get(token, -1)
     return int(token) if token.isdigit() else WORDS[token.lower()]
+
+
+def wrong_placeholder(token: str, flag: str) -> str | None:
+    """A placeholder bound to a mechanism must be that mechanism's token."""
+    if token.startswith("PLACEHOLDER_") and token != mark_token(flag):
+        return f"{token} is bound to {LABELS[flag]}; write {mark_token(flag)}"
+    return None
 
 
 #: Below this, a count of atlas nouns is a finding rather than a denominator —
@@ -397,6 +407,8 @@ def corpus_total(noun: str | None, reports: int, repos: int) -> int | None:
 
 def check(root: Path, show_list: bool) -> int:
     counts, total_reports, total_repos = live_counts(root)
+    LIVE.clear()
+    LIVE.update(placeholder_counts(root))
     problems: list[str] = []
     listed: list[str] = []
     bound = 0
@@ -444,7 +456,10 @@ def check(root: Path, show_list: bool) -> int:
                 listed.append(
                     f"{where}:{line}: '{claim}' — {LABELS[flag]}, said {said}, live {counts[flag]}"
                 )
-            if said != counts[flag]:
+            mismatch = wrong_placeholder(match.group("num"), flag)
+            if mismatch:
+                problems.append(f"{where}:{line}: '{claim}' — {mismatch}")
+            elif said != counts[flag]:
                 problems.append(
                     f"{where}:{line}: '{claim}' — {LABELS[flag]} is carried by "
                     f"{counts[flag]} of {total_reports}, not {said}"
@@ -529,7 +544,10 @@ def check(root: Path, show_list: bool) -> int:
                 listed.append(
                     f"{where}:{line}: '{claim}' — {LABELS[flag]}, said {said}, live {counts[flag]}"
                 )
-            if said != counts[flag]:
+            mismatch = wrong_placeholder(match.group("num"), flag)
+            if mismatch:
+                problems.append(f"{where}:{line}: '{claim}' — {mismatch}")
+            elif said != counts[flag]:
                 problems.append(
                     f"{where}:{line}: '{claim}' — {LABELS[flag]} is carried by "
                     f"{counts[flag]} of {total_reports}, not {said}"
@@ -606,26 +624,34 @@ def self_test() -> int:
             0,
             "mechanism noun: a within-system count is not a corpus claim",
         ),
-        # A spelled denominator that wraps mid-phrase. Read as "two hundred"
-        # this is a correct claim reported stale; the whole number has to match
-        # across the newline.
+        # Placeholders are filled at build time, so the check binds the token
+        # to its mechanism rather than trusting whatever number it resolves to.
         (
-            "One system of two hundred and\nninety carries a rejected-value tombstone.\n",
+            "PLACEHOLDER_PATTERN_TOMBSTONE_COUNT systems of PLACEHOLDER_TOTAL_COUNT carry a "
+            "rejected-value tombstone.\n",
             0,
-            "wrapped denominator: the long form survives a line break",
+            "placeholder: the mechanism's own token passes",
+            "page.md",
+            290,
+        ),
+        (
+            "PLACEHOLDER_PATTERN_BITEMPORAL_COUNT systems of PLACEHOLDER_TOTAL_COUNT carry a "
+            "rejected-value tombstone.\n",
+            1,
+            "placeholder: another mechanism's token fails",
             "page.md",
             290,
         ),
         # The external-corpus escape, which was paragraph-scoped and swallowed
         # this atlas's own headline count six lines above an arXiv link.
         (
-            "Two systems of one hundred carry a rejected-value tombstone.\n"
+            "Two systems of 100 carry a rejected-value tombstone.\n"
             "The vocabulary is borrowed from arXiv:2605.26252.\n",
             1,
             "external escape: a citation in a later sentence does not excuse the count",
         ),
         (
-            "A survey at arXiv:2605.26252 found two systems of four hundred "
+            "A survey at arXiv:2605.26252 found two systems of 400 "
             "carrying a rejected-value tombstone.\n\n"
             # A bound, correct claim beside it: an excused claim on its own
             # leaves nothing bound, which is its own failure by design.
@@ -636,22 +662,22 @@ def self_test() -> int:
         # A pattern page names its mechanism with a pronoun. Both of the
         # tombstone page's headline counts were unbound for this reason.
         (
-            "One system of two hundred and ninety carries it.\n",
+            "One system of 290 carries it.\n",
             0,
             "page subject: correct pronoun census passes",
             "patterns/rejected-value-tombstone.md",
             290,
         ),
         (
-            "Two systems of two hundred and ninety carry it.\n",
+            "Two systems of 290 carry it.\n",
             1,
             "page subject: wrong pronoun census fails",
             "patterns/rejected-value-tombstone.md",
             290,
         ),
         (
-            "Two systems of two hundred and ninety arrived at it independently.\n\n"
-            "One system of two hundred and ninety carries it.\n",
+            "Two systems of 290 arrived at it independently.\n\n"
+            "One system of 290 carries it.\n",
             0,
             "page subject: a non-carriage sentence on the page is not a census",
             "patterns/rejected-value-tombstone.md",

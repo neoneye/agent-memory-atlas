@@ -181,8 +181,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Rejected-value tombstone | 44 of 469 |
 <!-- END GENERATED SPREAD -->
 
-Read the bottom two rows as what they are. A mechanism present in thirty-eight
-systems of four hundred and sixty-nine — or in nineteen — is **not a best
+Read the bottom two rows as what they are. A mechanism present in 38 systems of PLACEHOLDER_TOTAL_COUNT — or in 19 — is **not a best
 practice**. There is no consensus behind it, no library that gives it to you, and nobody to
 ask when your implementation has a hole.
 Adopting it means building it.
@@ -346,8 +345,7 @@ No system in the atlas has all four. Filter the
 [homepage](../#systems) by tombstone and scope to see how quickly the corpus
 thins out.
 
-**And be clear about what that thinning means.** Forty-four of four hundred and sixty-nine systems carry a
-tombstone, so this stack describes almost nobody. Two readings are available and
+**And be clear about what that thinning means.** PLACEHOLDER_PATTERN_TOMBSTONE_COUNT of PLACEHOLDER_TOTAL_COUNT systems carry a tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
 failure it will pay for later, or the cost genuinely exceeds the benefit for most
 products and the three holders are unusual rather than ahead. The

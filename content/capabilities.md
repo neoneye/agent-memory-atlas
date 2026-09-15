@@ -90,15 +90,14 @@ capability their design deliberately does not need.
 Three things the counts show that the reports individually do not:
 
 **Read-path scoping is common; correction is not.** Over half the atlas applies a
-scope key when retrieving. Forty-four systems of 469 carry a value-level tombstone. That gap
+scope key when retrieving. PLACEHOLDER_PATTERN_TOMBSTONE_COUNT systems of PLACEHOLDER_TOTAL_COUNT carry a value-level tombstone. That gap
 is the atlas's central finding, and it is visible here in one column pair.
 
 **Trust is usually a number, not a state.** Most systems collapse "how sure am I"
 into "how findable is this" — see
 [decay and reinforcement](../patterns/decay-and-reinforcement/).
 
-**Negative evidence is almost never tested.** Two hundred and thirty-seven repositories of four hundred and sixty-nine
-assert that particular material must *not* appear — the assertion every
+**Negative evidence is almost never tested.** PLACEHOLDER_PATTERN_NEGATIVE_EVAL_COUNT repositories of PLACEHOLDER_TOTAL_COUNT assert that particular material must *not* appear — the assertion every
 scope, deletion and correction claim in this atlas ultimately rests on. Read together
 rather than one at a time, they split cleanly, and the split says more
 than the count. A [full re-score](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-08-08-what-the-negative-eval-mark-actually-counts.md)

@@ -333,31 +333,30 @@ Add one card to `site/index.html` that matches the existing card structure:
 - Link to `./systems/<slug>/`.
 - Include useful search terms in `data-search`.
 
-Update nearby statistics, spelled-out counts, comparison copy, and the conceptual memory map when the new system materially changes a family. Search the repository for old counts rather than assuming they occur in one place:
+Update comparison copy and the conceptual memory map when the new system materially changes a family.
 
-```sh
-current_count="$(find content/systems -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
-rg -n "\\b${current_count}\\b|repositories traced|across all|Expected [0-9]+|Validated [0-9]+|system_count" \
-  README.md content site scripts templates
-```
+**Corpus counts are placeholders, not numbers.** Prose outside the generated blocks never states the corpus
+total, the repository count, the pattern count or a mark count as digits or words. It writes a token, and
+`npm run build` fills it in from report frontmatter (`scripts/placeholders.py --list` prints them all):
 
-The `rg` line above finds digits. It does not find the two forms that actually go stale, so sweep for both:
+| Token | Value |
+| --- | --- |
+| `PLACEHOLDER_TOTAL_COUNT` | reports in `content/systems/` |
+| `PLACEHOLDER_REPOSITORY_COUNT` | distinct `source_url` values |
+| `PLACEHOLDER_DESIGN_PATTERN_COUNT` | pattern pages |
+| `PLACEHOLDER_MARKED_SYSTEM_COUNT` | reports carrying at least one mark |
+| `PLACEHOLDER_PATTERN_<MARK>_COUNT` | reports carrying that mark, e.g. `PLACEHOLDER_PATTERN_TOMBSTONE_COUNT` |
 
-```sh
-rg -n -i 'one hundred and [a-z-]+|of (the )?[0-9]{2,3}\b' README.md content site
-```
-
-Spelled-out counts ("one hundred and twenty-three") appear in prose across the homepage, the overview, the
-capability pages and several pattern pages, and they are case-sensitive — `One hundred` and `one hundred` are
-separate replacements. The `N of M` form ("69 of 123") is worse, because the numerator changes only when a
-mark moves and the denominator changes on every addition, so the two drift apart silently.
+So adding a report or moving a mark needs no count edits anywhere. `check_homepage.py` fails the build on a
+corpus count written by hand ("469 systems", "44 of 469", "four hundred and sixty-nine") or an unknown token,
+and `check_claim_counts.py` fails a mark token bound to the wrong mechanism. Other numbers are written as
+digits.
 
 **Never put a corpus count in a report body.** A sentence like "eighteen systems here carry `audit_log`" is
 stale the next time anything is added, and it makes an unrelated report a required edit forever. Write the
 comparison without the number — "in every other system here that carries `audit_log`…" — and let
-`content/patterns/index.md` hold the counts, where they are generated.
-
-Review every match. Do not mechanically change unrelated section numbers or commit IDs.
+`content/patterns/index.md` hold the counts, where they are generated. Placeholders are for the site's
+synthesis pages; a report body names no corpus count at all.
 
 `scripts/test_site.sh` derives its expected report and pattern counts from `content/`, so it needs no count edits; only touch it when adding a new required file or invariant.
 

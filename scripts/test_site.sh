@@ -209,6 +209,17 @@ fi
 
 # The homepage is hand-written while the reports are not, so its cards and
 # statistics drift silently as systems are added.
+# Every PLACEHOLDER_* token must be filled by the build; one left in the site is
+# a count the reader sees as a variable name.
+if leftover="$(grep -rl "PLACEHOLDER_" "$project_dir/docs" 2>/dev/null)"; then
+  echo "Unfilled PLACEHOLDER_* tokens in the built site:" >&2
+  echo "$leftover" >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_homepage.py" --self-test; then
+  echo "check_homepage.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
 if ! python3 "$project_dir/scripts/check_homepage.py" "$project_dir"; then
   echo "Homepage is out of step with content/systems." >&2
   exit 1

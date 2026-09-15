@@ -1,7 +1,6 @@
 # Working in this repository
 
-A code-grounded field guide to agent memory systems: 469 reports, each read at a
-pinned commit, plus 21 design patterns extracted from them.
+A code-grounded field guide to agent memory systems: one report per system, each read at a pinned commit, plus design patterns extracted from them.
 
 There are two jobs here, and they use different parts of the repo.
 
@@ -69,14 +68,12 @@ you are borrowing.
 - **Never cite stars, downloads or adoption** as evidence about a mechanism.
   This project has a standing rule against it and a note explaining what it cost
   to learn.
-- **Counts are generated.** Anything of the form "9 of 238" comes from report
-  frontmatter. Do not hand-copy a count into new prose; link to the
-  [capability index](content/capabilities.md) instead. If you copy one anyway,
-  `scripts/check_claim_counts.py` catches it when it goes stale *only* if the
-  sentence binds — a number beside a rubric mechanism and an atlas noun. A
-  free-form restatement binds to nothing and drifts silently, which is how a pair
-  of tombstone counts sat ten behind the corpus; the script's `--list` output
-  shows what bound and what did not.
+- **Counts are placeholders.** A corpus or mark count in prose is written as a
+  token — `PLACEHOLDER_TOTAL_COUNT`, `PLACEHOLDER_PATTERN_TOMBSTONE_COUNT` — and
+  the build fills it in from report frontmatter (`scripts/placeholders.py --list`
+  prints every token). Never write the number itself: `scripts/check_homepage.py`
+  fails a corpus count written by hand, and `scripts/check_claim_counts.py` fails
+  a mark token placed beside the wrong mechanism. Other numbers are digits.
 
 ---
 

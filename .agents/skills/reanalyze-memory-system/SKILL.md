@@ -247,7 +247,8 @@ belongs and leave the rest alone.
 - The homepage card in `site/index.html` when the headline finding changed, and
   its `data-search` terms when new mechanism names appeared.
 - Pattern pages citing this system as evidence, when the evidence changed.
-- Counts, if a mark moved — see the count discipline in `add-memory-system`.
+- Nothing for counts: corpus and mark counts are `PLACEHOLDER_*` tokens filled at
+  build time (see `add-memory-system`).
 
 Line numbers in the existing report are pinned to the old commit and are the
 thing most likely to be silently wrong after a re-pin. Re-verify every one you

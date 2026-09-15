@@ -188,4 +188,9 @@ while IFS= read -r -d '' page; do
                  {"<code class=\"commit-id\" title=\"$1\">".substr($1,0,8)."\xe2\x80\xa6</code>"}gex' "$page"
 done < <(find "$output_dir" -name "index.html" -print0)
 
+# Corpus counts are written in the source as PLACEHOLDER_* tokens and filled in
+# here, from the same frontmatter the generators read, so a count stated in prose
+# is as current as the generated tables beside it. An unknown token fails the build.
+python3 "$project_dir/scripts/placeholders.py" --fill "$output_dir"
+
 echo "Built Agent Memory Atlas into $output_dir"
