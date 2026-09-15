@@ -2466,19 +2466,21 @@ href="../systems/adk-python/"><code>adk-python</code></a></h3>
 <ul>
 <li>Best idea: scope in the signature rather than in the query.
 <code>app_name</code> and <code>user_id</code> are required keyword
-arguments on every read and write, so a scope bug is a
-<code>TypeError</code> rather than a leak.</li>
+arguments on every read and write, so a forgotten scope is a
+<code>TypeError</code> rather than a leak — though the in-memory service
+still leaked across a slash in either value until it keyed on a
+tuple.</li>
 <li>Biggest risk: the contract has no removal method. Every application
 written against it inherits the gap, and no provider can fix it — only a
 breaking interface change can.</li>
 <li>Most reusable component: the <code>BaseMemoryService</code>
-signature itself, minus the omissions. It is the interface most agents
-are written against and the one to diff your own against.</li>
-<li>Maturity impression: 61 memory test functions across three service
-implementations, a default in-memory service whose docstring says
-"prototyping purpose only", and an <code>add_memory</code> that raises
-<code>NotImplementedError</code> naming the alternatives rather than
-faking it.</li>
+signature itself, minus the omissions. It is an interface many agents
+are written against and a good one to diff your own against.</li>
+<li>Maturity impression: 80 memory test functions across three service
+implementations, including user-isolation cases, a default in-memory
+service whose docstring says "prototyping purpose only", and an
+<code>add_memory</code> that raises <code>NotImplementedError</code>
+naming the alternatives rather than faking it.</li>
 <li>Study when: you are designing a provider interface and want the
 scope handling to copy verbatim.</li>
 <li>Do not copy when: deletion is a compliance requirement — at this

@@ -820,10 +820,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: your tasks end ambiguously — the gate never fires and you have deployed a queue, a sandbox and a Postgres for nothing — or you need conversational or preference memory, which it has no unit for.
 
 ### [`adk-python`](../systems/adk-python/)
-- Best idea: scope in the signature rather than in the query. `app_name` and `user_id` are required keyword arguments on every read and write, so a scope bug is a `TypeError` rather than a leak.
+- Best idea: scope in the signature rather than in the query. `app_name` and `user_id` are required keyword arguments on every read and write, so a forgotten scope is a `TypeError` rather than a leak — though the in-memory service still leaked across a slash in either value until it keyed on a tuple.
 - Biggest risk: the contract has no removal method. Every application written against it inherits the gap, and no provider can fix it — only a breaking interface change can.
-- Most reusable component: the `BaseMemoryService` signature itself, minus the omissions. It is the interface most agents are written against and the one to diff your own against.
-- Maturity impression: 61 memory test functions across three service implementations, a default in-memory service whose docstring says "prototyping purpose only", and an `add_memory` that raises `NotImplementedError` naming the alternatives rather than faking it.
+- Most reusable component: the `BaseMemoryService` signature itself, minus the omissions. It is an interface many agents are written against and a good one to diff your own against.
+- Maturity impression: 80 memory test functions across three service implementations, including user-isolation cases, a default in-memory service whose docstring says "prototyping purpose only", and an `add_memory` that raises `NotImplementedError` naming the alternatives rather than faking it.
 - Study when: you are designing a provider interface and want the scope handling to copy verbatim.
 - Do not copy when: deletion is a compliance requirement — at this commit the framework will not help, and the answer will be provider-specific code that outlives your abstraction.
 

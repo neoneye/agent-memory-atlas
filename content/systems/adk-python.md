@@ -7,24 +7,27 @@ page_kind: system
 source_name: "google/adk-python"
 source_url: https://github.com/google/adk-python
 archive_name: "google--adk-python"
-revision: 6bab08fc803d26853417c4d6e71704b1a72e035e
-revision_url: https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e
-analyzed_at: 2026-07-29
-capabilities: "scope_enforced"
+revision: 322e3bf0ae4896f44ce4589926c1daa930c781b5
+revision_url: https://github.com/google/adk-python/commit/322e3bf0ae4896f44ce4589926c1daa930c781b5
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "every search_memory implementation, keyed on app_name and user_id | src/google/adk/memory/base_memory_service.py (keyword-only app_name, user_id), in_memory_memory_service.py _user_key and search_memory, vertex_ai_memory_bank_service.py:543-550 search_memory and :599-620 retrieve_profiles, vertex_ai_rag_memory_service.py:55-84 display names and search_memory | the in-memory store is keyed by the (app_name, user_id) tuple and searches only that bucket; Memory Bank retrieval sends scope={app_name, user_id}; RAG search restricts ranking to corpus files whose encoded display name names the caller, and filters returned contexts by the same parse | tests/unittests/memory/test_in_memory_memory_service.py:312, :338; test_vertex_ai_rag_memory_service.py:158"
+  negative_eval: "user isolation on search, with a present control | tests/unittests/memory/test_in_memory_memory_service.py:312 test_search_memory_is_scoped_by_user, :338 test_search_memory_does_not_collide_on_slash_in_identifiers; tests/unittests/memory/test_vertex_ai_rag_memory_service.py:158, :226 | a secret stored for another user is asserted absent from the caller's search and present in the owner's; an app name containing a slash is asserted unable to alias another app and user pair; RAG search is asserted to return only the caller's memory and to skip retrieval when the caller owns no files | test_in_memory_memory_service.py:325, :331-334, :365"
 stack_storage: "sqlite, memory"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "`MemoryEntry` — a `types.Content` plus optional id, author, timestamp and custom metadata; the unit written is usually a whole session's events"
   storage: "Interface only. Ships an in-process dict, a Vertex AI Memory Bank client and a Vertex AI RAG client; sessions additionally have SQLite and database backends"
-  retrieval: "`search_memory(app_name, user_id, query)` — keyword set-intersection in the default implementation, hosted similarity search in Memory Bank"
+  retrieval: "`search_memory(app_name, user_id, query)` — Unicode-aware keyword matching ranked by matched words and capped at ten in the default implementation, hosted similarity search in Memory Bank, and RAG retrieval ranked inside the caller's own files"
   write: "`add_session_to_memory`, `add_events_to_memory`, `add_memory`; Memory Bank generates memories from events server-side"
   update_delete: "None. The contract has no delete, no update and no expiry, and no implementation adds one"
   scoping: "`app_name` and `user_id` are required keyword arguments on every write and on search, and travel to Memory Bank as a `scope` dict"
   integration: "`LoadMemoryTool` for the agent, `Runner` wiring, and a plugin surface; the memory service is chosen by the app author"
   background: "Memory Bank does generation and ingestion server-side; the local implementations do none"
   trust: "Author and timestamp on an entry; no provenance chain, trust state or confidence anywhere"
-  strengths: "Scope keys mandatory in the signature; session and memory cleanly separated; 61 memory tests"
+  strengths: "Scope keys mandatory in the signature and carried into every implementation's read; session and memory cleanly separated; 80 memory tests, including isolation cases"
   risks: "Deletion exists on the session service and not on the memory service, so the durable half of a user's data has no removal path"
 ---
 
@@ -33,16 +36,19 @@ matrix:
 ADK is Google's agent framework, and its memory layer is a **contract** rather
 than a store: `BaseMemoryService`, three shipped implementations, and an
 ecosystem of applications that will only ever be able to do what that interface
-permits. That makes it the most consequential entry in this atlas's
+permits. That makes it a consequential member of the
 [pluggable memory provider](../../patterns/pluggable-memory-provider/) family —
-not because the code is the most interesting, but because it is the interface the
-most agents are written against.
+not for the code, but because many agents are written against the interface.
 
-Two things it gets right, and they are the two most commonly got wrong here.
+Two things it gets right.
 **Scope is not optional.** `app_name` and `user_id` are required keyword
 arguments on every write path and on `search_memory`, and the Memory Bank client
 forwards them as a `scope` dict on retrieval — so a memory service in this
-framework cannot quietly forget which user it is serving. And **session and
+framework cannot quietly forget which user it is serving. A signature is
+necessary rather than sufficient: at the first reading the in-memory service
+composed the two into the string `"{app_name}/{user_id}"`, so an app named
+`app/other-user` and a user `user` shared a bucket with app `app` and user
+`other-user/user`; a tuple key replaced it on 5 August 2026, with a test. And **session and
 memory are cleanly separated**: `BaseSessionService` owns the live conversation,
 `BaseMemoryService` owns what outlives it, and `add_session_to_memory` is the
 explicit hand-off between them.
@@ -64,7 +70,7 @@ replaceable by an implementation that supports it.
 
 ## 2. Mental Model
 
-ADK distinguishes two things most systems in this atlas conflate.
+ADK distinguishes two things that are often conflated.
 
 A **session** is the live conversation: an ordered list of `Event`s plus a
 `State` dict, owned by `BaseSessionService`, created and deleted explicitly.
@@ -173,21 +179,32 @@ as "when the original content of this memory happened" and noted as forwarded to
 the model.
 
 **Default write and read.** `memory/in_memory_memory_service.py` —
-`_user_key(app_name, user_id)` builds `"{app_name}/{user_id}"`; events without
-`content.parts` are dropped; search lowercases and intersects word sets; a
-`threading.Lock` guards the dict.
+`_user_key(app_name, user_id)` returns the `(app_name, user_id)` tuple; events
+without `content.parts` are dropped; search extracts words Unicode-aware —
+including a Latin word embedded in unspaced script — ranks entries by the number
+of matching words and returns at most ten; a `threading.Lock` guards the dict.
 
 **Hosted write.** `memory/vertex_ai_memory_bank_service.py` —
-`_add_events_to_memory_from_events` (line 314),
-`_add_events_to_memory_via_ingest` (367), `_add_memories_via_create` (456),
-`_add_memories_via_generate_direct_memories_source` (490). Feature-detection
+`_add_events_to_memory_from_events` (line 332),
+`_add_events_to_memory_via_ingest` (385), `_add_memories_via_create` (474),
+`_add_memories_via_generate_direct_memories_source` (509). A `MemoryEntry.id`
+is now forwarded as the Memory Bank `memory_id`, and generation can be limited to
+`allowed_topics`. Feature-detection
 helpers (`_should_use_generate_memories`, `_supports_create_memory_metadata`,
 `_get_create_memory_config_keys`) negotiate which server-side path is available.
 
-**Hosted read.** `search_memory` (line 524) calls
+**Hosted read.** `search_memory` (line 543) calls
 `agent_engines.memories.retrieve` with `scope={'app_name': ..., 'user_id': ...}`
 and `similarity_search_params={'search_query': query}`. `retrieve_profiles`
-(line 575) is a second read surface carrying the same scope dict.
+(line 599) is a second read surface carrying the same scope dict; `search_memory`
+now returns each memory's `custom_metadata`.
+
+**RAG read.** `memory/vertex_ai_rag_memory_service.py` — `search_memory` lists
+the corpus, keeps the files whose encoded display name names the requesting app
+and user, and ranks only inside them; with no such files it returns nothing. If
+the listing fails or the corpus exceeds about a thousand files it retrieves
+unscoped and filters the returned contexts, which the commit message describes as
+a recall and data-transfer fix rather than a disclosure one.
 
 **Agent surface.** `tools/load_memory_tool.py` — `load_memory` as a
 `FunctionTool` with a generated declaration, plus `process_llm_request` to wire
@@ -197,7 +214,7 @@ it into a turn.
 `create_session`, `get_session`, `list_sessions`, **`delete_session`**,
 `get_user_state`, `append_event`, `flush`.
 
-**Tests.** `tests/unittests/memory/` — 61 test functions across the three
+**Tests.** `tests/unittests/memory/` — 80 test functions across the three
 services, plus `tests/unittests/tools/test_load_memory_tool.py`.
 
 ## 5. Memory Data Model
@@ -219,11 +236,12 @@ blob. What that means in practice:
 **Scoping is the strong part and it is structural.** `app_name` and `user_id` are
 keyword-only *required* arguments on `add_events_to_memory`, `add_memory` and
 `search_memory`; the in-memory service composes them into its dict key; the
-Memory Bank service forwards them as a `scope` dict on both write and retrieve.
-A memory service in this framework cannot be written that ignores the user
-boundary without deliberately discarding arguments it was handed. That earns
-`scope_enforced`, and it is the cleanest instance of the mark in the atlas
-precisely because it is enforced by a signature rather than by a query.
+Memory Bank service forwards them as a `scope` dict on both write and retrieve;
+the RAG service encodes them into each file's display name and filters on it. A
+memory service in this framework cannot be written that ignores the user boundary
+without deliberately discarding arguments it was handed. That earns
+`scope_enforced` — with the caveat the slash collision taught, that each
+implementation still has to key on both values without ambiguity.
 
 ## 6. Retrieval Mechanics
 
@@ -233,7 +251,8 @@ predicate, no ranking hints, and no scores on the way back —
 `SearchMemoryResponse` is a pydantic model with exactly one field,
 `memories: list[MemoryEntry]`, and nothing alongside it to rank on.
 
-The default implementation is a word-set intersection, honestly labelled. The
+The default implementation is keyword matching, honestly labelled, now ranked by
+the number of matching words and capped at ten results. The
 Memory Bank implementation delegates to hosted similarity search whose ranking,
 thresholds and chunking are not visible in this repository.
 
@@ -332,9 +351,9 @@ them. Reaching them means dropping to the provider's own API — Vertex's
 exists to prevent.
 
 This atlas's [pluggable memory provider](../../patterns/pluggable-memory-provider/)
-page records that of the provider contracts reviewed, one carries scope and none
-carries deletion. ADK is the largest instance of that finding: it carries scope
-better than any of them, and still no deletion.
+page records that the provider contracts reviewed carry scope more often than
+deletion. ADK is an instance of that finding: scope in every signature, and still
+no deletion.
 
 **Multi-tenancy** is otherwise handled well — see §5. **Concurrency**: the
 in-memory service takes a `threading.Lock`; the hosted service inherits whatever
@@ -343,7 +362,7 @@ which is documented rather than hidden.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**61 memory test functions** across `test_in_memory_memory_service.py`,
+**80 memory test functions** across `test_in_memory_memory_service.py`,
 `test_vertex_ai_memory_bank_service.py` and
 `test_vertex_ai_rag_memory_service.py`, plus a tool test. For an interface
 package that is proportionate: the tests exercise scope-key composition, event
@@ -353,11 +372,12 @@ error handling.
 No memory benchmarks, and none would mean much — there is no retrieval pipeline
 here to score, only a delegation.
 
-No test asserts that particular material must *not* be retrieved, so
-`negative_eval` is withheld. Given how strong the scope story is, that is the
-cheap missing test: the composition of `_user_key` is covered, the isolation it
-produces is not, and a case proving user A's search cannot surface user B's
-memory would convert a signature-level guarantee into a checked one.
+`negative_eval` is earned on the isolation cases. `test_search_memory_is_scoped_by_user`
+stores a secret for one user, asserts another user's search returns nothing, and
+asserts the owner's search returns it; it was present at the first reading, which
+missed it. `test_search_memory_does_not_collide_on_slash_in_identifiers` pins the
+August fix, and the RAG suite asserts search returns only the caller's memory and
+skips retrieval when the caller owns no files.
 
 **What I would want before trusting it in a regulated deployment:** a deletion
 method on the contract, and a test that it cascades.
@@ -369,7 +389,7 @@ method on the contract, and a test that it cascades.
 - **Put scope in the signature, not the query.** Required keyword arguments for
   `app_name` and `user_id` on every read and write make a scope bug a
   `TypeError` rather than a leak. This is the cheapest correct thing in the
-  system, and most of this atlas does it with a `WHERE` clause instead.
+  system — and key the store on the pair as a tuple, not a joined string.
 - **Separate the session service from the memory service.** Two interfaces and
   one explicit hand-off means "what is live" and "what persists" cannot quietly
   become the same object — a confusion several systems here never escape.
@@ -465,6 +485,8 @@ methods it is missing.
 - `tests/unittests/tools/test_load_memory_tool.py`
 
 ## History
+
+**2026-09-15** — [`322e3bf0ae4896f44ce4589926c1daa930c781b5`](https://github.com/google/adk-python/commit/322e3bf0ae4896f44ce4589926c1daa930c781b5) — 762 commits on, 2026-09-15; eleven touched `memory/`. Screened before reading: no auto-run surface, five build-time execution points, seven unpinned surfaces, one dependency surface inside the cooldown and an agent-instruction file read as data; nothing was installed or run. `BaseMemoryService` is unchanged: still no delete, update or expiry, so the headline stands. What moved in the implementations: the in-memory store is keyed by an `(app_name, user_id)` tuple after a slash in either value could alias another pair (5 August), its search became Unicode-aware, ranked and capped at ten; Vertex RAG search ranks inside the caller's own files instead of the whole corpus; Memory Bank gained `memory_id`, `allowed_topics`, injected credentials and returned `custom_metadata`. `negative_eval` added: the user-isolation test with its positive control was present at the first reading, which said no such test existed. `scope_enforced` kept with an evidence record. Two marks.
 
 **2026-08-31** — [`6bab08fc803d26853417c4d6e71704b1a72e035e`](https://github.com/google/adk-python/commit/6bab08fc803d26853417c4d6e71704b1a72e035e) — count and citation audit at the same pin. Two claims were wrong, both understating how thin the contract is. §4 called `add_events_to_memory` concrete with a working default; it raises `NotImplementedError` at `base_memory_service.py:92` exactly as `add_memory` does at :117, so `add_session_to_memory` is the only guaranteed write — §7's layering is corrected to match. And `SearchMemoryResponse` was described as a bare `list[MemoryEntry]`; it is a pydantic model with a single `memories` field. The substance of both, that no scores come back and that the required methods are two, is unchanged. No capability mark changed.
 
