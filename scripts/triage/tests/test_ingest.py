@@ -175,6 +175,20 @@ class IdentityTests(unittest.TestCase):
             "unassessed",
         )
 
+    def test_an_old_name_that_now_resolves_to_another_candidate_is_a_duplicate(self):
+        old = find(self.h.connection, name="example/memory-project")
+        self.h.connection.execute(
+            "INSERT INTO candidate(canonical_name, display_name, first_seen_at, last_seen_at) "
+            "VALUES ('example/renamed', 'example/renamed', '2026-09-11', '2026-09-11')")
+        holder = find(self.h.connection, name="example/renamed")
+        outcome = bind_repo_id(self.h.connection, int(old["id"]), 555, "example/renamed")
+        self.assertEqual(outcome, "duplicate")
+        self.assertIsNone(find(self.h.connection, repo_id=555))
+        self.assertEqual(find(self.h.connection, name="example/renamed")["id"], holder["id"])
+        self.assertEqual(bind_repo_id(self.h.connection, int(holder["id"]), 555, "example/renamed"),
+                         "bound")
+        self.assertEqual(find(self.h.connection, repo_id=555)["id"], holder["id"])
+
 
 if __name__ == "__main__":
     unittest.main()

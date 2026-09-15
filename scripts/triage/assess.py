@@ -390,6 +390,18 @@ def collect_metadata(config: Config, connection: sqlite3.Connection, client: Cli
                         f"different candidate; treated as a separate project"
                     )
                     continue
+                elif outcome == "duplicate":
+                    run.notes.append(
+                        f"{row['canonical_name']} now resolves to {facts['full_name']}, which is "
+                        f"already a separate candidate; set aside as a duplicate import"
+                    )
+                    connection.execute(
+                        "UPDATE candidate SET triage_status = 'deferred', triage_reason = ?, "
+                        "next_assessment_at = ? WHERE id = ?",
+                        (truncate(f"duplicate import of {facts['full_name']}", 500),
+                         iso(plus(utc_now(), days=365)), row["id"]),
+                    )
+                    continue
             # Dated by the oldest response it was built from, so a cache hit can
             # never make a measurement look newer than GitHub's answer was.
             observed = min(collector.observed, key=parse_iso, default=None) or iso(utc_now())

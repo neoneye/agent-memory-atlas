@@ -158,7 +158,7 @@ def bind_repo_id(connection: sqlite3.Connection, candidate_id: int, repo_id: int
                  full_name: str) -> str:
     """Attach the numeric id, and handle the three things that can mean.
 
-    Returns one of `bound`, `renamed`, or `reused`.
+    Returns one of `bound`, `renamed`, `reused`, or `duplicate`.
 
     `reused` is the interesting one: the name we imported now resolves to a
     repository id already held by a *different* candidate. That is a name
@@ -180,6 +180,17 @@ def bind_repo_id(connection: sqlite3.Connection, candidate_id: int, repo_id: int
             (key, int(existing["id"]), now),
         )
         return "reused"
+
+    holder = connection.execute(
+        "SELECT id FROM candidate WHERE canonical_name = ? AND id <> ?", (key, candidate_id)
+    ).fetchone()
+    if holder is not None:
+        # The repository was imported twice: once under an old name, which we
+        # followed here, and once under the name it now has. `canonical_name`
+        # is unique, so this candidate cannot take the name. The holder is
+        # measured under its own name and binds the id itself; this one is
+        # left unbound for the caller to set aside.
+        return "duplicate"
 
     row = connection.execute("SELECT * FROM candidate WHERE id = ?", (candidate_id,)).fetchone()
     outcome = "bound"
