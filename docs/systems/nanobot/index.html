@@ -106,14 +106,14 @@ that refuses to advance when its own tools failed.</p>
               <strong>HKUDS/nanobot</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2" title="b99e0f937e828504e0f93dbe35dfd6b1540e20b2">
+            <a class="meta-pill revision-pill" href="https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f" title="1c3c68262f194cc66651c9ee9d415db5b0ef5f3f">
               <span>Analyzed revision</span>
-              <code>b99e0f93…</code>
+              <code>1c3c6826…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/HKUDS--nanobot" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -465,8 +465,11 @@ most of the design's correctness.</li>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
 <li>Memory implementation: <code>nanobot/agent/memory.py</code> —
-<code>MemoryStore</code>, <code>DreamRunProgress</code>, cursor
-handling, git integration, legacy migration.</li>
+<code>MemoryStore</code>, <code>MemoryArchiver</code> (transcript
+batches into <code>history.jsonl</code>, with a raw checkpoint
+fallback), <code>Consolidator</code> (<code>summarize_transcript</code>,
+<code>summarize_provider_compaction</code>), cursor handling, git
+integration, legacy migration.</li>
 <li>Durable files: <code>SOUL.md</code>, <code>USER.md</code>,
 <code>memory/MEMORY.md</code> (template at
 <code>nanobot/templates/memory/MEMORY.md</code>).</li>
@@ -477,6 +480,24 @@ handling, git integration, legacy migration.</li>
 <code>docs/guides/ai-agent-memory.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f"><code class="commit-id" title="1c3c68262f194cc66651c9ee9d415db5b0ef5f3f">1c3c6826…</code></a>
+— second reading, 725 commits on. Screened again: no auto-run surface,
+three build-time execution points, three dependency surfaces inside the
+cooldown; nothing was installed and nothing was run.
+<code>nanobot/agent/memory.py</code> was restructured — 511 lines added
+and 487 removed — without changing what the report measures: memory is
+still one workspace's files, and no mark is earned in either direction.
+<code>DreamRunProgress</code> is gone. Archiving moved into a new
+<code>MemoryArchiver</code>, whose docstring draws its boundary by what
+it cannot import — <em>it may read a captured transcript batch and
+append to history.jsonl, but it cannot mutate provider continuation
+state or advance a session watermark</em> — and which writes a raw
+checkpoint of the transcript when the provider cannot resume its
+conversation state, so a failed summarisation degrades to the
+unsummarised batch rather than to a gap. <code>Consolidator</code>
+gained a path that summarises a provider's own compaction output into
+the journal.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2"><code class="commit-id" title="b99e0f937e828504e0f93dbe35dfd6b1540e20b2">b99e0f93…</code></a>
 — first reading.</p>

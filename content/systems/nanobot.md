@@ -7,9 +7,9 @@ page_kind: system
 source_name: HKUDS/nanobot
 source_url: https://github.com/HKUDS/nanobot
 archive_name: "HKUDS--nanobot"
-revision: b99e0f937e828504e0f93dbe35dfd6b1540e20b2
-revision_url: https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2
-analyzed_at: 2026-07-27
+revision: 1c3c68262f194cc66651c9ee9d415db5b0ef5f3f
+revision_url: https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -260,12 +260,14 @@ Do not copy:
 
 ## Appendix: File Index
 
-- Memory implementation: `nanobot/agent/memory.py` — `MemoryStore`, `DreamRunProgress`, cursor handling, git integration, legacy migration.
+- Memory implementation: `nanobot/agent/memory.py` — `MemoryStore`, `MemoryArchiver` (transcript batches into `history.jsonl`, with a raw checkpoint fallback), `Consolidator` (`summarize_transcript`, `summarize_provider_compaction`), cursor handling, git integration, legacy migration.
 - Durable files: `SOUL.md`, `USER.md`, `memory/MEMORY.md` (template at `nanobot/templates/memory/MEMORY.md`).
 - Evidence archive: `memory/history.jsonl`; cursors `memory/.cursor` and `memory/.dream_cursor`.
 - Memory policy: workspace `prompts/dream.md`.
 - Documentation: `docs/memory.md`, `docs/guides/ai-agent-memory.md`.
 
 ## History
+
+**2026-09-15** — [`1c3c68262f194cc66651c9ee9d415db5b0ef5f3f`](https://github.com/HKUDS/nanobot/commit/1c3c68262f194cc66651c9ee9d415db5b0ef5f3f) — second reading, 725 commits on. Screened again: no auto-run surface, three build-time execution points, three dependency surfaces inside the cooldown; nothing was installed and nothing was run. `nanobot/agent/memory.py` was restructured — 511 lines added and 487 removed — without changing what the report measures: memory is still one workspace's files, and no mark is earned in either direction. `DreamRunProgress` is gone. Archiving moved into a new `MemoryArchiver`, whose docstring draws its boundary by what it cannot import — *it may read a captured transcript batch and append to history.jsonl, but it cannot mutate provider continuation state or advance a session watermark* — and which writes a raw checkpoint of the transcript when the provider cannot resume its conversation state, so a failed summarisation degrades to the unsummarised batch rather than to a gap. `Consolidator` gained a path that summarises a provider's own compaction output into the journal.
 
 **2026-07-27** — [`b99e0f937e828504e0f93dbe35dfd6b1540e20b2`](https://github.com/HKUDS/nanobot/commit/b99e0f937e828504e0f93dbe35dfd6b1540e20b2) — first reading.
