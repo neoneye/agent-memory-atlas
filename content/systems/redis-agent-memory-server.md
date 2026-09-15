@@ -7,10 +7,12 @@ page_kind: system
 source_name: redis/agent-memory-server
 source_url: https://github.com/redis/agent-memory-server
 archive_name: "redis--agent-memory-server"
-revision: 886437963dc02289e828872f0ae21fdaa734c337
-revision_url: https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337
-analyzed_at: 2026-07-27
-capabilities: "scope_enforced"
+revision: 8683648f4756dd5ee5c0e600f5c22be4625f43dc
+revision_url: https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc
+analyzed_at: 2026-09-15
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the working-memory session index — a deleted session must not be listed | V0/agent_memory_server/working_memory.py (`delete_working_memory`, `list_sessions`) | `test_delete_working_memory_removes_session_from_search_index` writes a session, asserts it appears in `list_sessions` for its namespace, deletes it, and asserts `session_id not in sessions_after` with the message `Session should be removed from index after delete`. The first listing is the positive control on the same query. The test predates the 2026-07-27 pin | V0/tests/test_working_memory.py:789 and :826"
 stack_storage: "redis, delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -20,7 +22,7 @@ matrix:
   retrieval: "Vector search plus metadata filters, reranked by recency with dual half-lives"
   write: "Debounced trailing extraction via swappable strategies, then layered dedupe"
   update_delete: "Exact delete; composite forgetting policy; no tombstones"
-  scoping: "Namespace, `user_id`, `session_id`, with auth"
+  scoping: "Namespace, user_id and session_id as optional caller-supplied filters and key segments; the authenticated user never constrains a query, auth is off by default, and an empty namespace-filtered semantic search is retried without the namespace"
   integration: "REST, MCP, CLI, SDKs; backs the OpenClaw Redis plugin"
   background: "Debounced extraction, compaction, dedupe, forgetting sweeps"
   trust: "Session linkage and per-message extraction flags; no trust state"
@@ -169,7 +171,23 @@ Note what this is: a deletion policy. There is no tombstone, so a forgotten memo
 
 `MemoryRecord` carries id, text, `memory_type`, namespace, `user_id`, `session_id`, topics, entities, `created_at`, `last_accessed`, and `pinned`. Vector storage is abstracted behind `memory_vector_db.py` and `memory_vector_db_factory.py`, so Redis is the reference backend rather than a hard requirement.
 
-Scope is namespace + `user_id` + `session_id`, enforced through `filters.py` and `auth.py`. `migrations.py` gives the index a versioned upgrade path — a detail many systems in the atlas lack entirely.
+Scope is namespace + `user_id` + `session_id`, and none of the three is a
+boundary. They are key segments and search filters the caller chooses to send.
+`SearchRequest.get_filters` adds each only when it is not `None`; the search
+endpoint takes `current_user` from `get_current_user` and never uses it to
+constrain the query; and `disable_auth` defaults to `True`, in which case
+`get_current_user` returns a default user. Two paths go further and relax a scope
+the caller did send. When a semantic search with filters returns nothing,
+`search_long_term_memory` in `api.py` pops `namespace` — with topics, entities,
+memory type, extraction strategy and event date — and runs the search again,
+appending the dropped values to the query text as a hint, so a namespace with no
+match returns the nearest records from other namespaces; `user_id` and
+`session_id` are kept. And `get_working_memory` resolves a session stored under a
+user and namespace when the caller supplies neither, through
+`_resolve_working_memory_key_via_index`, which `test_issue_235.py` pins as the
+fix for a 404.
+
+`migrations.py` gives the index a versioned upgrade path — a detail many systems in the atlas lack entirely.
 
 Absent from the model:
 
@@ -217,6 +235,10 @@ Gaps:
 
 - **No epistemic state or tombstones** — deletion is not durable against re-extraction.
 - **No evidence linkage** below session granularity.
+- **Scope is optional and relaxable.** Namespace and user filters are sent by the
+  caller, the authenticated user does not constrain queries, auth is off by
+  default, and a namespace-filtered semantic search that finds nothing is retried
+  without the namespace.
 - **Recency reinforcement** through `last_accessed`.
 - **`PromptValidator` is a denylist**, and pattern lists are never complete.
 - **LLM merging can still lose nuance** even when the cohesion gate passes.
@@ -226,7 +248,12 @@ Gaps:
 
 The suite is substantial — roughly 27,000 lines across `V0/tests/`, including `test_forgetting.py`, `test_extraction.py`, `test_extraction_logic_fix.py`, `test_working_memory_strategies.py`, `test_working_memory_reconstruction.py`, `test_contextual_grounding.py` and its integration counterpart, `test_client_strategy_support.py`, `test_filters.py`, `test_auth.py`, plus `tests/integration/` and a `tests/benchmarks/` directory with Docker Compose definitions for real-backend runs.
 
-The suites were not run for this review. Coverage is unusually well aligned with the risky logic — forgetting, extraction, strategies, and contextual grounding all have dedicated files, which is exactly where a memory service accumulates silent bugs. No committed end-to-end recall-quality benchmark result was found; the `benchmarks` directory provides harness scaffolding rather than published numbers.
+The suites were not run for this review. The committed negative case is
+`test_delete_working_memory_removes_session_from_search_index`, which lists a
+session, deletes it, and asserts it is absent from the same listing. The scope
+behaviour is tested in the other direction: `test_issue_235.py` asserts that a
+session written with `user_id="alice"` and `namespace="demo"` is found by a GET
+that supplies neither. Coverage is unusually well aligned with the risky logic — forgetting, extraction, strategies, and contextual grounding all have dedicated files, which is exactly where a memory service accumulates silent bugs. No committed end-to-end recall-quality benchmark result was found; the `benchmarks` directory provides harness scaffolding rather than published numbers.
 
 ## 11. For Your Own Build
 
@@ -248,6 +275,9 @@ The suites were not run for this review. Coverage is unusually well aligned with
 - **No verification tier** between extraction and durable memory.
 - **Access-driven reinforcement** that makes popular memories both more visible and harder to forget.
 - **Denylist prompt validation.**
+- **Relaxing a scope filter because it matched nothing.** An empty result inside a
+  namespace is information; retrying without the namespace turns it into another
+  namespace's memories.
 - **Cognitive type taxonomy standing in for a trust model.**
 - **Open reference implementation adjacent to a managed product**, where the visible code may not describe the hosted behaviour.
 
@@ -274,6 +304,8 @@ Do not copy:
 - How does `_semantic_merge_group_is_cohesive` behave on genuinely adjacent facts — is its precision measured anywhere?
 - How much do the recency weights and dual half-lives matter in practice? They are configurable but undefended by published evaluation.
 - How far has the managed Redis offering diverged from `V0/`?
+- Is the soft-filter fallback meant to cross namespaces, or only topics and
+  entities? The namespace sits in the same pop list as the descriptive filters.
 
 ## Appendix: File Index
 
@@ -289,5 +321,7 @@ Do not copy:
 - Tests: `V0/tests/test_forgetting.py`, `test_extraction*.py`, `test_working_memory_*.py`, `test_contextual_grounding*.py`, `V0/tests/integration/`.
 
 ## History
+
+**2026-09-15** — [`8683648f4756dd5ee5c0e600f5c22be4625f43dc`](https://github.com/redis/agent-memory-server/commit/8683648f4756dd5ee5c0e600f5c22be4625f43dc) — two commits on, 2026-08-18, both documentation: the published Pages site was retired and restored as an Agent Memory landing, and README links point at `V0/docs/`. Screened before reading: one auto-run surface (`.devcontainer/devcontainer.json`), three build-time execution points and two unpinned surfaces; nothing was installed or run. The code is unchanged, so this reading is a producer test of the first reading's marks at the new pin. `scope_enforced` is withdrawn: namespace and user filters are optional and caller-supplied, the authenticated user never constrains a query, auth defaults off, and an empty namespace-filtered semantic search is retried without the namespace. `negative_eval` is added and was missed: a committed test asserts a deleted session is absent from the listing it was present in.
 
 **2026-07-27** — [`886437963dc02289e828872f0ae21fdaa734c337`](https://github.com/redis/agent-memory-server/commit/886437963dc02289e828872f0ae21fdaa734c337) — first reading.

@@ -309,7 +309,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`redis-agent-memory-server`](../systems/redis-agent-memory-server/)
 - Best idea: TTL-native working memory promoting into deduplicated long-term memory, with retention expressed as a real policy.
-- Biggest risk: forgetting is deletion without tombstones, so anything forgotten can be re-extracted.
+- Biggest risk: forgetting is deletion without tombstones, so anything forgotten can be re-extracted; and scope is a filter the caller may omit — the authenticated user never constrains a query, auth defaults off, and a namespace-filtered semantic search that finds nothing is retried without the namespace.
 - Most reusable component: `select_ids_for_forgetting`, the three-layer dedupe chain, and `_semantic_merge_group_is_cohesive`.
 - Maturity impression: vendor-neutral reference implementation with unusually well-targeted tests on the risky logic.
 - Study when: you want the working/long-term split done carefully, or a retention policy you can defend to a user.
