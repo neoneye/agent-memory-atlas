@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A transparent LLM proxy that
+distils sessions into versioned knowledge entries a person approves
+before they reach a team, deletes by appending an immutable death
+certificate that two import lanes consult before recreating anything,
+and detects contradictions without ever resolving them — while the
+approval status that decides team sharing is itself excluded from
+sync.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lore — Agent Memory Atlas">
+    <meta property="og:description" content="A transparent LLM proxy
+that distils sessions into versioned knowledge entries a person approves
+before they reach a team, deletes by appending an immutable death
+certificate that two import lanes consult before recreating anything,
+and detects contradictions without ever resolving them — while the
+approval status that decides team sharing is itself excluded from
+sync.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lore — Agent Memory Atlas">
+    <meta name="twitter:description" content="A transparent LLM proxy
+that distils sessions into versioned knowledge entries a person approves
+before they reach a team, deletes by appending an immutable death
+certificate that two import lanes consult before recreating anything,
+and detects contradictions without ever resolving them — while the
+approval status that decides team sharing is itself excluded from
+sync.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lore — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lore",
+      "description": "A transparent LLM proxy that distils sessions into versioned knowledge entries a person approves before they reach a team, deletes by appending an immutable death certificate that two import lanes consult before recreating anything, and detects contradictions without ever resolving them \u2014 while the approval status that decides team sharing is itself excluded from sync.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A death certificate the importer reads</p>
+          <h1>Lore</h1>
+          <p class="document-deck">A transparent LLM proxy that distils
+sessions into versioned knowledge entries a person approves before they
+reach a team, deletes by appending an immutable death certificate that
+two import lanes consult before recreating anything, and detects
+contradictions without ever resolving them — while the approval status
+that decides team sharing is itself excluded from sync.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/BYK/loreai">
+              <span>Source</span>
+              <strong>BYK/loreai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/BYK/loreai/commit/3e19619a6774074bd18dc4363aa984b0c5ea5472" title="3e19619a6774074bd18dc4363aa984b0c5ea5472">
+              <span>Analyzed revision</span>
+              <code>3e19619a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BYK--loreai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>BYK--loreai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lore is a transparent LLM proxy that turns sessions into durable
+project knowledge. It sits between a coding harness and the model,
+distils what happened, and injects the relevant facts into the next
+session. The monorepo is 200,458 lines of TypeScript against 229,044
+lines across 487 test files, with 1,624 commits since 20 February 2026,
+published as a gateway, an OpenCode plugin, a Pi extension and a core
+engine. It is licensed FSL-1.1 with an Apache-2.0 conversion —
+source-available now rather than open source — and its README calls it
+experimental.</p>
+<p>The design idea it states up front is distillation rather than
+summarisation: coding agents need "file paths, error messages, and exact
+decisions rather than narrative summaries that lose the details agents
+need to keep working." It credits Sanity's Nuum architecture and
+Mastra's observational-memory research, the latter already read here as
+<a href="../mastra-observational-memory/">Mastra</a>.</p>
+<p>Three mechanisms are worth the visit.</p>
+<p><strong>Deletion leaves a record that later writes must
+read.</strong> There is no physical DELETE.
+<code>appendVersion(..., { isDeleted: true })</code> writes what the
+code calls an immutable death certificate as the new current version.
+The important half is the read: <code>findTombstonedByTitle</code>
+queries the base <code>knowledge</code> table rather than the
+<code>knowledge_current</code> view precisely so it can see those rows,
+and returns true only when the sole same-title match in scope is a death
+certificate with no live row beside it. The structured-import lane calls
+it and skips the entry with <code>reason: "tombstoned"</code>; the
+agents-file lane carries the id-keyed equivalent. A memory the user
+threw away does not come back through an import.</p>
+<p><strong>Contradiction detection refuses to resolve.</strong> An idle
+worker embeds the project's entries, pairs them by cosine similarity —
+on the reasoning that opposing rules are topically close, so similarity
+is a cheap prefilter — and asks a worker model whether each pair
+genuinely opposes. Its header states the boundary: "Detection ONLY —
+never merges, never deletes. The user picks the survivor (or keeps both)
+on the dashboard." A judged pair is recorded <code>open</code> or
+<code>cleared</code> so the cost stays bounded and a cleared pair is
+never re-judged. The consolidation prompt carries the matching
+invariant: opposing rules "are NEVER duplicates — never merge them."</p>
+<p><strong>Team sharing is a conjunction a person completes.</strong> In
+a project bound to a team scope under a <code>manual</code> policy, a
+new entry lands <code>pending</code>, and
+<code>teamScopeForContent</code> returns a team only when the entry is
+<code>approved</code> <em>and</em> its project is bound. Approval
+records <code>approved_by</code> and is copied forward by
+<code>appendVersion</code>, so editing an entry's content does not
+quietly re-share it.</p>
+<p>The gap sits underneath that last mechanism. The comment above the
+approval functions says the status "is a LOCAL, mutable metadata field
+(not synced; not content)". The field that decides whether knowledge
+reaches a team is the one field excluded from the sync that carries
+knowledge between machines. On a second machine the same logical entry
+can hold a different approval state, and nothing in the model reconciles
+them.</p>
+<p>Five marks: <code>tombstone</code>, <code>human_review</code>,
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>logical entry</strong> has one <code>logical_id</code> and
+many immutable <strong>versions</strong>. Only one version is
+<code>is_current</code>. An edit appends; a delete appends a death
+certificate; nothing is overwritten.</p>
+<p>A <strong>metric register</strong> (<code>knowledge_meta</code>,
+keyed by <code>logical_id</code>) holds the two mutable numbers —
+<code>confidence</code> and <code>last_reinforced_at</code> — so the
+version rows stay immutable. A pure relevance touch deliberately does
+not bump the register's clock, keeping injection "sync-silent".</p>
+<p>A <strong>scope</strong> is a tenant, a project, and an optional
+cross-project flag. A <strong>team scope</strong> is something a project
+is bound to, carrying a promotion policy of <code>auto</code> or
+<code>manual</code> that a per-project override can change.</p>
+<p>An <strong>approval</strong> is <code>auto</code>,
+<code>pending</code>, <code>approved</code> or <code>rejected</code>.
+Only <code>approved</code> reaches a team.</p>
+<p><strong><code>.lore.md</code></strong> is the curated output:
+version-controlled Markdown at the repo root, so the diff arrives in a
+pull request.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a delete appends a death certificate that both import lanes read before recreating anything; team sharing needs approval AND a bound project, and the approval itself is excluded from sync</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a delete appends a death certificate that both import lanes read before recreating anything; team sharing needs approval AND a bound project, and the approval itself is excluded from sync
+flowchart TB
+    PROXY[&quot;transparent LLM proxy&lt;br/&gt;sees the session&quot;] --&gt; DIST[&quot;distillation&lt;br/&gt;paths, errors, decisions&quot;]
+    DIST --&gt; GRAD[&quot;gradient context manager&quot;]
+    GRAD --&gt; CUR[&quot;knowledge curator&quot;]
+    CUR --&gt; CREATE[&quot;ltm.create()&quot;]
+    CREATE --&gt; POL{&quot;project bound to a team?&quot;}
+    POL --&gt;|&quot;no&quot;| AUTO[(&quot;approval_status = &#39;auto&#39;&lt;br/&gt;personal&quot;)]
+    POL --&gt;|&quot;policy auto&quot;| APPR[(&quot;approval_status = &#39;approved&#39;&quot;)]
+    POL --&gt;|&quot;policy manual&quot;| PEND[(&quot;approval_status = &#39;pending&#39;&quot;)]
+    PEND --&gt; QUEUE[&quot;listPendingTeamPromotions&quot;]
+    QUEUE --&gt; PERSON{&quot;person approves / rejects&quot;}
+    PERSON --&gt;|&quot;approve&quot;| APPR
+    PERSON --&gt;|&quot;reject&quot;| REJ[(&quot;rejected&quot;)]
+    APPR --&gt; TEAMQ{&quot;teamScopeForContent&quot;}
+    AUTO --&gt; TEAMQ
+    TEAMQ --&gt;|&quot;approved AND project bound&quot;| TEAM[&quot;shared with the team&quot;]
+    TEAMQ --&gt;|&quot;either missing&quot;| PERSONAL[&quot;stays personal&quot;]
+    EDIT[&quot;content edit&quot;] --&gt; AV[&quot;appendVersion&lt;br/&gt;copies approval forward&quot;]
+    AV --&gt; VER[(&quot;immutable version chain&lt;br/&gt;is_current = 1 on one row&quot;)]
+    DEL[&quot;delete&quot;] --&gt; CERT[(&quot;death certificate&lt;br/&gt;is_deleted = 1, is_current = 1&lt;br/&gt;no physical DELETE&quot;)]
+    IMP[&quot;structured import / agents-file&quot;] --&gt; GUARD{&quot;findTombstonedByTitle&lt;br/&gt;reads base table, not the view&quot;}
+    CERT --&gt; GUARD
+    GUARD --&gt;|&quot;death cert, no live row&quot;| SKIP[&quot;skipped, reason: tombstoned&quot;]
+    GUARD --&gt;|&quot;otherwise&quot;| CREATE
+    IDLE[&quot;idle contradiction worker&quot;] --&gt; PAIR[&quot;embed → pair by cosine → judge&quot;]
+    PAIR --&gt; OPEN[(&quot;status &#39;open&#39; — surfaced&lt;br/&gt;never merged, never deleted&quot;)]
+    OPEN --&gt; DASH[&quot;user picks the survivor&quot;]
+    SYNC[&quot;cross-machine sync&quot;] -.-&gt;|&quot;approval_status excluded&quot;| APPR</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/ltm.ts</code></td>
+<td>The knowledge store: versions, the metric register, approval and
+team promotion, tombstones</td>
+</tr>
+<tr>
+<td><code>packages/core/src/distillation.ts</code>,
+<code>gradient.ts</code>, <code>curator.ts</code></td>
+<td>The pipeline the README describes as one continuous problem</td>
+</tr>
+<tr>
+<td><code>packages/core/src/contradiction.ts</code></td>
+<td>Idle-time detection that surfaces rather than resolves</td>
+</tr>
+<tr>
+<td><code>packages/core/src/scope.ts</code>, <code>tenant.ts</code></td>
+<td>Scope binding, promotion policy, tenant resolution</td>
+</tr>
+<tr>
+<td><code>packages/core/src/import/</code></td>
+<td>Structured import from other memory formats, with the resurrection
+guard</td>
+</tr>
+<tr>
+<td><code>packages/core/src/agents-file.ts</code></td>
+<td><code>.lore.md</code> read and write, and the id-keyed import
+guard</td>
+</tr>
+<tr>
+<td><code>packages/core/src/embedding*</code>, <code>vector-*</code>,
+<code>db/vec-store</code></td>
+<td>Embedding and vector workers</td>
+</tr>
+<tr>
+<td><code>packages/gateway</code>, <code>packages/opencode</code>,
+<code>packages/pi</code>, <code>packages/hermes</code></td>
+<td>The proxy and the host integrations</td>
+</tr>
+<tr>
+<td><code>quality</code>, <code>stryker.config.mjs</code>,
+<code>vitest.mutation.config.ts</code></td>
+<td>Mutation testing configuration alongside the unit and eval
+suites</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>packages/core/src/ltm.ts:113-155</code> — the entry shape and
+why two tables exist.</li>
+<li><code>:425-500</code> — <code>appendVersion</code>, the death
+certificate, the forward copy.</li>
+<li><code>:594-702</code> — the approval gate, the review queue, approve
+and reject.</li>
+<li><code>:989-1030</code> — <code>findTombstonedByTitle</code> and the
+view-versus-table subtlety.</li>
+<li><code>packages/core/src/import/structured.ts:172-198</code> — the
+resurrection guard in use.</li>
+<li><code>packages/core/src/contradiction.ts:1-24</code> — the
+detection-only boundary.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An entry carries its own provenance: <code>created_by</code>,
+<code>updated_by</code>, <code>source_user_id</code>,
+<code>source_entry_id</code>, and — added later —
+<code>worker_provider_id</code> and <code>worker_model_id</code>, so the
+model that produced a memory is recorded beside it. Sensitivity is a
+three-value field. Confidence lives on the metric register with
+<code>last_reinforced_at</code>, and a decay pass ages out entries
+nothing has reinforced; the comment is explicit that reinforcement
+counts an injection, a recall or a curator reconfirmation.</p>
+<p>The split between immutable version rows and a mutable register is
+the design decision worth noting: it lets the store keep an append-only
+history without rewriting a row every time relevance is touched.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid vector and lexical search over the current versions, with
+entries injected at session start and re-injected after the first turn.
+The gradient context manager sits between distillation and the curator,
+so context management and long-term memory are one pipeline rather than
+two subsystems — the README argues this explicitly.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The curator writes; imports write; edits append.
+<code>ltm.create()</code> applies an exact-title dedup as a backstop,
+and the import lanes apply the tombstone guard before reaching it.
+Deletion never removes a row.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A standalone gateway proxy for any harness, plus an OpenCode plugin
+and a Pi extension. Because it is a proxy rather than a tool, the agent
+needs no awareness of it — which is the product argument and also the
+thing to be deliberate about, since every prompt and response passes
+through it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The team gate is local state.</strong>
+<code>approval_status</code> is documented as "a LOCAL, mutable metadata
+field (not synced; not content)". Everything else about an entry moves
+between machines; the field that decides whether it is shared with a
+team does not. That makes approval a property of the machine where
+someone happened to click, on a system whose stated purpose is memory
+that follows a team. Nothing observed here reconciles two machines that
+disagree, and the sync-silent design of the metric register shows the
+authors think carefully about what should and should not travel — which
+makes this worth asking about rather than assuming it is an
+oversight.</p>
+<p><strong>The proxy is in the path.</strong> Lore reads every prompt
+and response by construction. The mitigations are real and visible —
+<code>.lore.md</code> is human-readable Markdown reviewed in a pull
+request, sensitivity is a stored field, and the curated file is the
+thing the team actually shares — but the capture surface is the whole
+session.</p>
+<p><strong>The licence is FSL-1.1 converting to Apache-2.0.</strong> At
+this pin the source is available rather than open, which matters for
+anyone planning to fork or vendor it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>487 test files, more lines of test than of source, plus a separate
+eval config and a Stryker mutation-testing configuration — a suite that
+checks whether the tests would notice a change, which few projects in
+this corpus run.</p>
+<p><code>packages/core/test/scope-selection.test.ts</code> is the file
+to read: twelve cases named for properties, including the conjunction
+test, the pre-existing-<code>auto</code> review-queue case, and
+"relation: team iff BOTH endpoints resolve to the same team".
+<code>ltm-tombstone-by-title.test.ts</code> covers the resurrection
+guard including the contested case where a live row shares the
+title.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Query the base table, not the current view, when you need to
+see a deletion.</strong> The bug this avoids is invisible: a guard that
+reads the convenience view can never find the thing it is guarding
+against.</li>
+<li><strong>Put the resurrection guard in every import lane, keyed to
+what that lane has.</strong> One lane has ids, the other only titles;
+both are covered, and the code says which is which and why.</li>
+<li><strong>Detect contradictions without resolving them.</strong>
+Recording <code>open</code> and <code>cleared</code> bounds the cost and
+keeps a false alarm from becoming a silent merge; the consolidation
+prompt carries the same invariant from the other side.</li>
+<li><strong>Copy an approval forward across an edit.</strong> Otherwise
+editing content is a way to launder unapproved knowledge into a shared
+scope.</li>
+<li><strong>Split immutable versions from a mutable metric
+register.</strong> It is what makes an append-only history affordable
+when relevance is touched on every read.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Excluding the sharing decision from the thing that
+shares.</strong> If approval governs team visibility, approval is team
+state.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want memory that follows an agent across tools
+without changing the harness, and you are comfortable with a proxy in
+the path and a source-available licence. Look elsewhere if approval must
+hold identically across every machine on the team today.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>approval_status</code> intended to stay local once Folk
+Lore ships team sync, and if so what reconciles two machines that
+disagree about the same <code>logical_id</code>?</li>
+<li>Does the decay pass interact with approval — can an approved team
+entry age out of relevance while still being shared?</li>
+<li>The contradiction worker judges precision-first and never re-judges
+a <code>cleared</code> pair. What re-opens one when an entry's content
+later changes?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/ltm.ts</code></td>
+<td>The store: versions, register, approval, tombstones</td>
+</tr>
+<tr>
+<td><code>packages/core/src/contradiction.ts</code></td>
+<td>Detection-only contradiction handling</td>
+</tr>
+<tr>
+<td><code>packages/core/src/import/structured.ts</code></td>
+<td>The resurrection guard on a real write path</td>
+</tr>
+<tr>
+<td><code>packages/core/src/agents-file.ts</code></td>
+<td><code>.lore.md</code> and the id-keyed import guard</td>
+</tr>
+<tr>
+<td><code>packages/core/src/scope.ts</code></td>
+<td>Scope binding and promotion policy</td>
+</tr>
+<tr>
+<td><code>packages/core/test/scope-selection.test.ts</code></td>
+<td>Twelve property-named scope and approval cases</td>
+</tr>
+<tr>
+<td><code>packages/core/test/ltm-tombstone-by-title.test.ts</code></td>
+<td>The tombstone guard, including the contested title</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/BYK/loreai/commit/3e19619a6774074bd18dc4363aa984b0c5ea5472"><code class="commit-id" title="3e19619a6774074bd18dc4363aa984b0c5ea5472">3e19619a…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: twenty files, no auto-run surfaces, two
+build-time execution points, seven unpinned surfaces, ten dependency
+files inside the cooldown, and <code>AGENTS.md</code> read as data.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

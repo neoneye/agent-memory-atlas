@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 480 reports.**
+**This page covers all 481 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4190,3 +4190,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, release v2.6.2, 441 commits since 13 April 2026, 274,786 lines of Go across 608 test files, PostgreSQL with pgvector as the only durable authority and Redis for coordination, 113 migrations, MCP at `/mcp` with administration on a separate control portal, and evaluation tools compiled behind a build tag into a separate image with no runtime switch to expose them in production.
 - Study when: you need governed point-in-time answers from a self-hosted knowledge graph and want a worked example of putting memory invariants in the schema.
 - Do not copy when: a person must sign off before a claim becomes recallable, or you cannot depend on an external embedding and verifier provider at startup.
+
+### [`loreai`](../systems/loreai/)
+- Best idea: **a deletion that leaves a record every later write must read.** There is no physical DELETE: `appendVersion(..., { isDeleted: true })` appends an immutable death certificate as the new current version, and `findTombstonedByTitle` queries the base `knowledge` table rather than the `knowledge_current` view precisely so it can see those rows, returning true only when the sole same-title match in scope is a death certificate with no live row beside it. The structured-import lane skips such an entry with `reason: "tombstoned"` and the agents-file lane carries the id-keyed equivalent, so a memory the user threw away does not return through an import. Five marks: `tombstone`, `human_review`, `trust_state`, `scope_enforced`, `negative_eval`.
+- Biggest risk: **the sharing decision is excluded from sync.** The comment above the approval functions says `approval_status` "is a LOCAL, mutable metadata field (not synced; not content)". Everything else about an entry travels between machines; the one field that decides whether it reaches a team does not, so approval is a property of whichever machine someone clicked on, and nothing observed reconciles two machines that disagree about the same `logical_id`.
+- Most reusable component: the contradiction worker, which embeds entries, pairs them by cosine similarity on the reasoning that opposing rules are topically close, asks a model whether each pair genuinely opposes, and then stops — *"Detection ONLY — never merges, never deletes. The user picks the survivor (or keeps both) on the dashboard"* — recording `open` and `cleared` so a cleared pair is never re-judged.
+- Maturity impression: FSL-1.1 converting to Apache-2.0, so source-available rather than open at this pin, and the README calls it experimental; 1,624 commits since 20 February 2026, 200,458 lines of TypeScript against 229,044 lines across 487 test files, with a Stryker mutation-testing configuration beside the unit and eval suites; published as a gateway proxy, an OpenCode plugin, a Pi extension and a core engine.
+- Study when: you want memory that follows an agent across tools without changing the harness, and a curated file a team reviews in a pull request.
+- Do not copy when: approval must hold identically across every machine on a team today, or a proxy in the path of every prompt and response is unacceptable.

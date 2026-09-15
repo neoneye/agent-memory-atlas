@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 480 reports.</strong></p>
+<p><strong>This page covers all 481 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17347,6 +17347,52 @@ invariants in the schema.</li>
 <li>Do not copy when: a person must sign off before a claim becomes
 recallable, or you cannot depend on an external embedding and verifier
 provider at startup.</li>
+</ul>
+<h3 id="loreai"><a
+href="../systems/loreai/"><code>loreai</code></a></h3>
+<ul>
+<li>Best idea: <strong>a deletion that leaves a record every later write
+must read.</strong> There is no physical DELETE:
+<code>appendVersion(..., { isDeleted: true })</code> appends an
+immutable death certificate as the new current version, and
+<code>findTombstonedByTitle</code> queries the base
+<code>knowledge</code> table rather than the
+<code>knowledge_current</code> view precisely so it can see those rows,
+returning true only when the sole same-title match in scope is a death
+certificate with no live row beside it. The structured-import lane skips
+such an entry with <code>reason: "tombstoned"</code> and the agents-file
+lane carries the id-keyed equivalent, so a memory the user threw away
+does not return through an import. Five marks: <code>tombstone</code>,
+<code>human_review</code>, <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>the sharing decision is excluded from
+sync.</strong> The comment above the approval functions says
+<code>approval_status</code> "is a LOCAL, mutable metadata field (not
+synced; not content)". Everything else about an entry travels between
+machines; the one field that decides whether it reaches a team does not,
+so approval is a property of whichever machine someone clicked on, and
+nothing observed reconciles two machines that disagree about the same
+<code>logical_id</code>.</li>
+<li>Most reusable component: the contradiction worker, which embeds
+entries, pairs them by cosine similarity on the reasoning that opposing
+rules are topically close, asks a model whether each pair genuinely
+opposes, and then stops — <em>"Detection ONLY — never merges, never
+deletes. The user picks the survivor (or keeps both) on the
+dashboard"</em> — recording <code>open</code> and <code>cleared</code>
+so a cleared pair is never re-judged.</li>
+<li>Maturity impression: FSL-1.1 converting to Apache-2.0, so
+source-available rather than open at this pin, and the README calls it
+experimental; 1,624 commits since 20 February 2026, 200,458 lines of
+TypeScript against 229,044 lines across 487 test files, with a Stryker
+mutation-testing configuration beside the unit and eval suites;
+published as a gateway proxy, an OpenCode plugin, a Pi extension and a
+core engine.</li>
+<li>Study when: you want memory that follows an agent across tools
+without changing the harness, and a curated file a team reviews in a
+pull request.</li>
+<li>Do not copy when: approval must hold identically across every
+machine on a team today, or a proxy in the path of every prompt and
+response is unacceptable.</li>
 </ul>
         </article>
       </div>
