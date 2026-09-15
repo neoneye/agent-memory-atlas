@@ -7,10 +7,14 @@ page_kind: system
 source_name: "rohitg00/agentmemory"
 source_url: https://github.com/rohitg00/agentmemory
 archive_name: "rohitg00--agentmemory"
-revision: d60652a7058773fa9428fa720eda38942f12f014
-revision_url: https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014
-analyzed_at: 2026-08-06
-capabilities: "scope_enforced, audit_log"
+revision: e04ba88819c365c9acf9d6661ea802143e728bd6
+revision_url: https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6
+analyzed_at: 2026-09-15
+capabilities: "audit_log, human_review, negative_eval"
+capability_evidence:
+  audit_log: "the governance and deletion paths | src/functions/audit.ts:8, :34 recordAudit; src/functions/governance.ts:11 mem::governance-delete | a written policy that every structural deletion of a memory, observation, session or semantic row calls recordAudit before the delete, and recordAudit inserts an AuditEntry — id, timestamp, operation, user, function, target ids, details — under a fresh id in its own KV.audit keyspace; governance deletion records the reason | none"
+  human_review: "the viewer's memories table | src/viewer/index.html:2692, :2760 deleteMemory; src/triggers/api.ts:1833 DELETE /agentmemory/governance/memories | a person browses stored memories — title, type, strength, version, updated, with rows expanding to the full record — deletes one behind a confirmation, and the call goes through mem::governance-delete with the reason `Deleted via viewer`, which the audit tab lists; the surface adjudicates by removal only, with no approve or reject state | none"
+  negative_eval: "agent isolation on search and project scope on export | src/functions/search.ts:369-430, src/functions/export-import.ts | with isolated scope and AGENT_ID agent_a, a search for a marker both agents' observations contain returns results and none of them is agent_b's; a wildcard call returns both, and isolated scope with no agent id throws; a project-scoped mesh export excludes another project's memories | test/agent-isolation-search.test.ts:149 (positive control :165), test/mesh-export-project-scope.test.ts:75"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -20,12 +24,12 @@ matrix:
   retrieval: "BM25 + optional vector + graph arms, weighted RRF, query expansion, rerank, source diversity"
   write: "Hooks call `mem::observe`; explicit `mem::remember`; optional compression and consolidation"
   update_delete: "Delete/TTL; similarity-based version supersession; rebuildable indexes"
-  scoping: "Project, session, working directory; shared or isolated agent mode"
+  scoping: "Optional project and working-directory filters; agent isolation opt-in, and a caller's explicit or wildcard agentId overrides it"
   integration: "Hooks, MCP, HTTP, CLI, iii functions"
   background: "Optional compression, graph extraction, consolidation, decay, repair"
   trust: "Source observation IDs, versions, audit; no candidate/verified/rejected state"
   strengths: "Cheap synchronous capture and compact-first hybrid search"
-  risks: "Very broad surface; shared scope default; fuzzy supersession can hide conflicts"
+  risks: "Very broad surface; every scope filter is optional or caller-liftable — shared agent scope by default, an explicit or wildcard agentId overrides isolation, and project and cwd filters apply only when passed; fuzzy supersession can hide conflicts"
 ---
 
 ## 1. Executive Summary
@@ -53,7 +57,7 @@ This is an operational memory system, not a verified knowledge system. Memories
 have provenance and version fields, but no first-class candidate, rejected, or
 verified state.
 
-The inspected package version is `0.9.28` (2026-07-25).
+The inspected package version is `0.9.29` (2026-08-16), at a commit of 23 August 2026.
 
 ## 2. Mental Model
 
@@ -190,8 +194,23 @@ claim.
 ## 6. Retrieval Mechanics
 
 The basic `mem::search` path is BM25. Results are filtered by project, working
-directory, and agent scope after retrieval. In isolated mode, missing agent
-identity fails closed.
+directory, and agent scope after retrieval, and each filter is the caller's to
+set. `project` and `cwd` apply only when passed. Agent scope applies only when
+`AGENTMEMORY_AGENT_SCOPE=isolated`; even then an explicit `agentId` in the call
+pins the filter to that agent and `agentId: "*"` removes it
+(`src/functions/search.ts:397-430`), and only a call with neither and no
+`AGENT_ID` in the environment fails closed. That is a real boundary against an
+agent that does not know to widen it, and not one against a caller that does, so
+`scope_enforced` is not carried.
+
+The graph carries a second clock in one module. `temporal-graph.ts` stamps
+edges with `tcommit`, `tvalid` and `tvalidEnd`, closes a superseded edge's
+validity, keeps the old version in an edge-history keyspace, and
+`mem::temporal-query` answers an entity's relations `asOf` an instant by
+filtering on both commit and validity time, with a test for it. Neither
+`mem::temporal-graph-extract` nor `mem::temporal-query` has a caller, an HTTP
+route or an MCP tool; the production extractor is `mem::graph-extract` in
+`graph.ts`, which writes no validity time. `bitemporal` is withheld on that.
 
 `HybridSearch` adds:
 
@@ -250,7 +269,15 @@ That breadth covers capture, retrieval, graph, reflection, governance, teams,
 and diagnostics, but makes tool selection and policy review more demanding.
 
 Agent scope defaults to shared. Setting `AGENTMEMORY_AGENT_SCOPE=isolated` with
-an agent identity creates a stricter boundary.
+an agent identity filters recall to that agent unless the call names another
+agent or the wildcard.
+
+The viewer is the person's surface. Its memories tab lists every stored memory
+with title, type, strength, version and last update, a row expands to the full
+record, and a delete button asks for confirmation before calling
+`DELETE /agentmemory/governance/memories` with the reason *"Deleted via
+viewer"*; the audit tab lists what governance operations removed. Review here
+means deletion — there is no approve, reject or pending state.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -273,12 +300,14 @@ Strengths:
   quality score — into its own `KV.audit` keyspace under a freshly generated id,
   so the log is insert-only.
 - Non-loopback viewer access requires an API secret and allowed hosts.
-- Isolated-agent retrieval fails closed when identity is absent.
+- Isolated-agent retrieval fails closed when identity is absent, and
+  `test/agent-isolation-search.test.ts` asserts another agent's observation is
+  absent from an isolated search beside a wildcard call that returns both.
 
 Limitations:
 
 - API authentication is optional when no secret is configured.
-- Shared agent scope is the default.
+- Shared agent scope is the default, and a caller can widen an isolated one.
 - Redaction is regex-based and cannot guarantee secret removal.
 - Similarity-based supersession lacks a candidate/rejected review state.
 - Retrieved memory is wrapped for context, but remembered content is still
@@ -288,8 +317,13 @@ Limitations:
 
 ## 10. Tests, Evals, and Benchmarks
 
-The repository contains a large test tree covering functions, state, hooks,
-search, graph behavior, privacy, and maintenance. Project documentation reports
+The repository contains a large test tree — 163 files under `test/` — covering
+functions, state, hooks, search, graph behavior, privacy, and maintenance. Two
+carry exclusion cases with a present control: isolated search omits another
+agent's observation while a wildcard call returns it, and a project-scoped mesh
+export omits another project's memories (`test/mesh-export-project-scope.test.ts`,
+added 15 August 2026). `test/remember-supersede-recall.test.ts` asserts a
+superseded memory leaves the search index. Project documentation reports
 more than 1,400 tests. The source test suite was not run for this atlas review.
 
 The published LongMemEval-S figures are retrieval-only: the documented setup
@@ -312,7 +346,8 @@ benchmark-harness CI as future work.
 - Per-session result caps for source diversity.
 - Source observation IDs on synthesized memories.
 - Separate immediate capture from optional consolidation.
-- Fail-closed identity behavior in isolated scope.
+- Fail-closed identity behavior in isolated scope — and do not let the caller
+  override it.
 - Audited structural deletion and rebuildable projections.
 
 ### Avoid
@@ -320,7 +355,8 @@ benchmark-harness CI as future work.
 - Treating fuzzy content similarity as authority to supersede a memory.
 - Shipping a very large tool surface without a correspondingly small default
   policy surface.
-- Defaulting multi-agent installations to shared memory.
+- Defaulting multi-agent installations to shared memory, and letting a call
+  argument lift the isolation that replaces it.
 - Presenting retrieval metrics as if they measured end-to-end memory quality.
 - Accumulating many derived stores without explicit consistency contracts.
 - Encoding confidence without a first-class verification or rejection state.
@@ -366,11 +402,16 @@ rather than relying on the shared default.
 - `src/functions/privacy.ts`: redaction.
 - `src/functions/governance.ts`: deletion and administration.
 - `src/functions/audit.ts`: audit behavior.
+- `src/functions/temporal-graph.ts`: the as-of edge query, registered with no caller.
+- `src/viewer/index.html`: the memories table and the delete confirmation.
+- `test/agent-isolation-search.test.ts`, `test/mesh-export-project-scope.test.ts`: exclusion cases.
 - `src/hooks/`: coding-agent lifecycle hooks.
 - `benchmark/LONGMEMEVAL.md`: retrieval benchmark methodology.
 - `docs/benchmarks/2026-05-20-coding-agent-life-v1.md`: small synthetic eval.
 
 ## History
+
+**2026-09-15** — [`e04ba88819c365c9acf9d6661ea802143e728bd6`](https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6) — 8 commits on, 2026-08-23, at 0.9.29. Screened before reading: one auto-run surface, three unpinned surfaces and an `AGENTS.md` addressed to a reading agent, read as data; nothing was installed or run. The commits add Devin and Cursor adapters, content-hashed dedup for hook events that had collapsed onto one key, a single summarize per stop, a viewer that expands memory rows, a WebSocket frame guard, and project-scope parity across capture surfaces with a project-scoped export test. Four mark decisions changed on code that predates the first reading. `scope_enforced` withdrawn: project and cwd filters are optional, agent isolation is opt-in, and a call's explicit or wildcard `agentId` overrides it. `negative_eval` added on the isolated-search exclusion test (7 June 2026) and the project-scoped export test. `human_review` added on the viewer's memories table, where a person deletes through the audited governance path. `bitemporal` withheld with the reason now written in section 6: the as-of edge query and its validity stamps sit in a registered module nothing calls. Three marks.
 
 **2026-08-06** — [`d60652a7058773fa9428fa720eda38942f12f014`](https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014) — 8 commits on, and one published position was wrong at the previous pin rather than overtaken by it.
 

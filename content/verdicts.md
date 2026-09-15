@@ -221,7 +221,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`agentmemory`](../systems/agentmemory/)
 - Best idea: zero-LLM hook capture plus compact-first hybrid search and explicit expansion.
-- Biggest risk: a large optional surface and similarity-based supersession without an epistemic review state.
+- Biggest risk: a large optional surface, similarity-based supersession without an epistemic review state, and scope filters a caller can omit or widen — agent isolation is opt-in and an explicit or wildcard `agentId` overrides it.
 - Most reusable component: `mem::observe`, `HybridSearch`, and `mem::smart-search`.
 - Maturity impression: ambitious, heavily tested coding-agent runtime with many operational paths.
 - Study when: hooks, local capture, hybrid recall, and later consolidation need to coexist.
