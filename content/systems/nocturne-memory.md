@@ -7,10 +7,12 @@ page_kind: system
 source_name: "dataojitori/nocturne_memory"
 source_url: https://github.com/dataojitori/nocturne_memory
 archive_name: "dataojitori--nocturne_memory"
-revision: 7cd214ff9107ae722555ed8c2688a6922d719e9e
-revision_url: https://github.com/dataojitori/nocturne_memory/commit/7cd214ff9107ae722555ed8c2688a6922d719e9e
-analyzed_at: 2026-08-09
+revision: ffb5c709ba9785977b48a974082e330d70410f74
+revision_url: https://github.com/dataojitori/nocturne_memory/commit/ffb5c709ba9785977b48a974082e330d70410f74
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the graph read path — a namespace carried in a ContextVar and applied to path queries by default | backend/db/graph.py:117 and :186-188, backend/db/namespace.py, backend/mcp_server.py:370, :482, :591, :693, :713 | `Path` and the glossary tables carry a `namespace` column, and every MCP read passes `namespace=get_namespace()`. The graph queries add `Path.namespace == namespace` unless the caller sets `search_all_namespaces=True`; that flag is used internally for incoming-path counts and by `api/review.py` for the human review screen, not by the agent-facing tools. Two limits: `get_namespace()` reads a ContextVar whose default is the `NAMESPACE` environment variable or the empty string, and in SSE/HTTP mode the middleware sets it per request from the `X-Namespace` header — so the boundary holds between well-behaved agents and is caller-asserted rather than authenticated | backend/tests/mcp/test_mcp_tools.py"
 stack_storage: "graph"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -299,5 +301,7 @@ the session-id workaround `:1-21`), `backend/db/glossary.py` (`:90`, `:126`,
 `docs/`
 
 ## History
+
+**2026-09-15** — [`ffb5c709ba9785977b48a974082e330d70410f74`](https://github.com/dataojitori/nocturne_memory/commit/ffb5c709ba9785977b48a974082e330d70410f74) — second reading, 10 commits on. Screened again: no auto-run surface, one build-time execution point, four unpinned manifests, nothing inside the cooldown; nothing was installed and nothing was run. `scope_enforced` was re-tested and holds, and now carries the evidence record it had been asserted without, including where the namespace comes from: a ContextVar defaulting to an environment variable or the empty string, set per request from an `X-Namespace` header in HTTP mode. `update_memory` gained block matching, with a regression test named for the bug it fixes. The addition with operational weight is `backend/frontend_builder.py`, 834 lines: the web app's startup lifespan calls `ensure_built_background()`, which shells out to `npm install` and `npm run build` in `frontend/` when no build is present. Starting the backend therefore installs third-party npm dependencies without a command being typed — an execution surface this atlas's repository screen does not detect, because it is a Python server invoking npm at runtime rather than a manifest hook.
 
 **2026-08-09** — [`7cd214ff9107ae722555ed8c2688a6922d719e9e`](https://github.com/dataojitori/nocturne_memory/commit/7cd214ff9107ae722555ed8c2688a6922d719e9e) — first reading. Screened before reading; the tree was read, never run, and the committed `demo.db` was not opened.
