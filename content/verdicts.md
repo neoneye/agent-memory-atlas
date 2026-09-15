@@ -1033,8 +1033,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: provenance that actually resolves — the source is kept and cited, so a support engineer has something to look at when a user says the assistant believes something false.
 - Biggest risk: deletion is acknowledged before it happens, and a duplicated method silently drops error handling on the delete path.
 - Most reusable component: a one-way ingestion watermark, a constrained extractor vocabulary with a test on the constraint, and reserved metadata keys rejected by prefix.
-- Maturity impression: 1,978 test functions across 112 files mirroring the source tree — among the most thoroughly tested repositories here — with migrations, four vector backends and incident-shaped HNSW tests.
-- Study when: your obligation is to *explain* a memory rather than merely produce one. This is the strongest starting point in the atlas for that.
+- Maturity impression: about 1,980 test functions across 112 files mirroring the source tree, with migrations, four vector backends and incident-shaped HNSW tests.
+- Study when: your obligation is to *explain* a memory rather than merely produce one. Citations that resolve to kept episodes are the starting point for that.
 - Do not copy when: you want a library — the smallest useful deployment is a server, a database and a model provider — or your correctness bar includes "a deleted thing is provably gone", or you are separating tenants who do not trust each other. Scope is real and reaches the query, but the key is a composed string: `mem_{set_type}_org_{org_id}[_project_{project_id}]_...`, with the identifiers interpolated unescaped between underscores. A set-type discriminator and a hash of the metadata keys close collisions *between* set types; nothing closes one *within* a type, so an org of `acme_project_x` with project `y` composes the same set id as an org of `acme` with project `x_project_y`. No validator for either identifier exists in the tree, and `org_id` arrives on the MCP request model as a bare `str = Field(default="")`.
 
 ### [`memobase`](../systems/memobase/)

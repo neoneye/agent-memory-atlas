@@ -7,11 +7,12 @@ page_kind: system
 source_name: "MemMachine/MemMachine"
 source_url: https://github.com/MemMachine/MemMachine
 archive_name: "MemMachine--MemMachine"
-revision: 2d28c1c1e57d1026335c4a829b1a9b0a918c114f
-revision_url: https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f
-analyzed_at: 2026-08-19
-capabilities: "scope_enforced"
+revision: da7de4cbb0e1f35eba5f9f9b16d97cf561175f5c
+revision_url: https://github.com/MemMachine/MemMachine/commit/da7de4cbb0e1f35eba5f9f9b16d97cf561175f5c
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
+  negative_eval: "semantic storage deletion by set id — one user's set removed and asserted empty while the other is asserted intact | packages/server/server_tests/memmachine_server/semantic_memory/storage/test_semantic_storage.py:280 test_delete_feature_set_by_set_id, :688 test_delete_history_set_removes_target_set | features are seeded for set ids user1 and user2 and both are read back first as the positive control; after delete_feature_set on user1, a user1 query is asserted == [] and user2's values are asserted unchanged; the history test does the same for set alpha against beta | packages/server/server_tests/memmachine_server/semantic_memory/storage/test_semantic_storage.py:313, :705"
   scope_enforced: "semantic memory — org, project and session composed into the set id that every read is filtered by | packages/server/src/memmachine_server/semantic_memory/semantic_session_manager.py | `_org_set_id` builds `org_{org_id}` or `org_{org_id}_project_{project_id}`, `_generate_set_id` prefixes a set-type discriminator and a hash of the metadata keys, and search passes the resulting set ids down to storage rather than filtering after the fact | packages/server/server_tests/memmachine_server/semantic_memory/test_semantic_session_manager.py::test_search_passes_set_ids_and_filters"
 stack_storage: "sqlite, postgres, graph, qdrant, milvus, memory"
 stack_retrieval: "vector"
@@ -365,8 +366,7 @@ the work is on the integrator's side.
 ## 9. Reliability, Safety, and Trust
 
 **Provenance is the strength.** Citations resolve. That sentence is worth more
-than the rest of this section, and it is true here and false for most of this
-atlas.
+than the rest of this section.
 
 **Uncertainty cannot be represented.** There is no confidence field on a
 feature, no candidate state, no trust level. Something is a feature or it is
@@ -433,10 +433,15 @@ it.
 and the reserved-key guard described in section 7 specifically to stop callers
 forging cross-session identity.
 
+**Short-term memory serialises readers and writers, and one deadlock was found
+in it.** A query arriving while a summary was being generated could wait behind a
+writer queued on the same read gate; #1517 (20 August 2026) released it, and
+`test_query_completes_when_write_waits_during_summary` holds a reader and a
+queued writer across a blocked summary and asserts both finish.
+
 ## 10. Tests, Evals, and Benchmarks
 
-**1,978 test functions across 112 files**, which is among the most thoroughly
-tested repositories in this atlas. The suite mirrors the source tree, under
+**About 1,980 test functions across 112 test files.** The suite mirrors the source tree, under
 `server_tests/memmachine_server/{semantic_memory,episodic_memory,common,server,main}`.
 
 The standout is `common/vector_store/vector_search_engine/test_hnswlib_engine.py`:
@@ -451,13 +456,18 @@ vocabulary collision that will mislead anyone grepping this atlas's terms.
 There is real coverage of the semantic path too:
 `test_semantic_ingestion.py` runs to at least 890 lines and includes the
 invented-tag assertion quoted above and
-`test_user_tags_preserved_after_ingestion_and_consolidation`. Deletion has
+`test_user_tags_preserved_after_ingestion_and_consolidation`. The semantic store's deletion is tested with a control:
+`test_delete_feature_set_by_set_id` seeds features for `user1` and `user2`,
+reads both back, deletes `user1`'s set, and asserts `user1` returns `[]` while
+`user2` is unchanged — a delete-then-prove case that earns `negative_eval` — and
+`test_delete_history_set_removes_target_set` does the same for history
+associations. Session deletion has
 `test_memmachine_delete_session.py`, which mocks `_cleanup_semantic_history`
 directly — and, because it mocks it, cannot detect that two definitions exist.
 
 `evaluation/` holds harnesses for LoCoMo and BEAM plus a `longmemeval_test.py`,
 with `data/locomo10.json` and `data/wikimultihop.json` committed. The design is
-better than most: `evaluation/README.md` documents three test targets —
+careful: `evaluation/README.md` documents three test targets —
 MemMachine alone, MemMachine with the retrieval agent, and a **pure LLM baseline
 given the full session content**. A baseline that is handed everything is a
 strong baseline, which is the opposite of the usual complaint on the
@@ -607,6 +617,8 @@ like work before the first memory exists.
 - `evaluation/README.md`, `evaluation/retrieval_agent/`, `evaluation/data/locomo10.json`
 
 ## History
+
+**2026-09-15** — [`da7de4cbb0e1f35eba5f9f9b16d97cf561175f5c`](https://github.com/MemMachine/MemMachine/commit/da7de4cbb0e1f35eba5f9f9b16d97cf561175f5c) — two commits on, 2026-09-04: a short-term-memory deadlock fix with its test, and the compose script substituting the retrieval agent's model. Screened before reading: no auto-run surface, seven build-time execution points, twelve unpinned surfaces and an agent-instruction file read as data; nothing was installed or run. The deletion findings in section 9 stand; `main/memmachine.py` is unchanged. `negative_eval` added: the semantic storage suite deletes one set id and asserts it empty beside an intact second set, a case present at both earlier readings. Two marks.
 
 **2026-08-19** — [`2d28c1c1e57d1026335c4a829b1a9b0a918c114f`](https://github.com/MemMachine/MemMachine/commit/2d28c1c1e57d1026335c4a829b1a9b0a918c114f) — re-read two commits on. The mechanism this report describes is unchanged and the criticisms all still hold; what moved is retrieval, and what this reading adds is a limit on the one capability mark.
 
