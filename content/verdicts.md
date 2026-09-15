@@ -1623,7 +1623,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: an offline eval with hand-labelled gold that measured the composite ranking stack against the raw channel score, found raw cosine at MRR 0.912 against the composite's 0.307, and shipped the negative result as the default — metadata now breaks exact ties and nothing else.
 - Biggest risk: `invalidated_at` is a hard predicate on both retrieval legs with no query-time signal, so a wrong contradiction verdict removes a document from search with nothing to lead a user to look; the project documents this and ships the mechanism disarmed.
 - Most reusable component: `resolveEffectiveContradictionPolicy` — twenty lines that downgrade a destructive supersede to a non-destructive link when no audited judge is configured, loudly and with an audit event.
-- Maturity impression: 34,000 lines of TypeScript across 55 files, 84 unit test files, a 22-column migration ladder on the central table, four integration surfaces, and committed eval artifacts for three judge configurations.
+- Maturity impression: 34,000 lines of TypeScript across 55 files, 85 unit test files including route-by-route assertions that internal observations stay out of default retrieval, a 22-column migration ladder on the central table, four integration surfaces, and committed eval artifacts for three judge configurations.
 - Study when: you have built a composite relevance score and never checked it against the raw channel score.
 - Do not copy when: you need a memory two people can share — the isolation boundary is "use a different vault file".
 

@@ -7,10 +7,14 @@ page_kind: system
 source_name: "yoloshii/clawmem"
 source_url: https://github.com/yoloshii/clawmem
 archive_name: "yoloshii--clawmem"
-revision: 264cea726748ce975f6ae566409996e8146b7438
-revision_url: https://github.com/yoloshii/clawmem/commit/264cea726748ce975f6ae566409996e8146b7438
-analyzed_at: 2026-08-09
-capabilities: "bitemporal, scope_enforced, audit_log"
+revision: ba09cb83050867c54f4e05a7050c874171c47cd8
+revision_url: https://github.com/yoloshii/clawmem/commit/ba09cb83050867c54f4e05a7050c874171c47cd8
+analyzed_at: 2026-09-15
+capabilities: "bitemporal, audit_log, negative_eval"
+capability_evidence:
+  bitemporal: "the entity-triple store — validity time held apart from record time and queried as of a date | src/store.ts:2083 (close), :2102 and :2119 (as-of reads) | `entity_triples` carries `valid_from`, `valid_to` and `created_at`; a new assertion for an existing subject and predicate closes the open interval with `UPDATE entity_triples SET valid_to = ?` instead of overwriting, and both triple queries add `(t.valid_from IS NULL OR t.valid_from <= ?) AND (t.valid_to IS NULL OR t.valid_to >= ?)` when given a date, behind an MCP tool that asks what was true about an entity on a date. Documents have no validity axis | tests/unit/spo-triples.test.ts:84 and :95 (invalidation)"
+  audit_log: "the judge and graph-mutation journals | src/store.ts:936 (`causal_run_events`), :1277 (`maintenance_runs`), :1314 (`judge_runs`), :1338 (`judge_events`), src/judge-audit.ts:199-235 | a judge run records model, endpoint, prompt version, a SHA-256 of the response, the outcome and admitted, rejected, duplicate and inconsistent counts, with a provider fallback written as a second row linked by `fallback_from_run_id` before the heuristic verdict is used; events carry per-verdict reason codes and `score_before`/`score_after`; `causal_run_events` records each write-scope graph mutation. No `UPDATE` touches these tables; the one `DELETE` is retention pruning of root runs with their fallback pairs | tests/unit/judge-audit.test.ts, tests/unit/causal-writer.test.ts"
+  negative_eval: "every MCP retrieval route — the system's own derived observations must not surface unless asked for | src/mcp.ts:128 (`resolveExcludedCollections`) | `mcp-routes.test.ts` runs `search` for material that exists only in `_clawmem` and asserts no `_clawmem/` path is returned, then asserts the same query with `includeInternal: true` and with `collection: _clawmem` does return it — the control on the same query. Sibling cases assert the exclusion for `vsearch`, hybrid `query`, `query_plan`, `memory_retrieve` in keyword, semantic and causal modes, and `find_similar`. These predate the 2026-08-09 pin | tests/unit/mcp-routes.test.ts:207, :216, :242, :250, :257, :267, :273"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -20,7 +24,7 @@ matrix:
   retrieval: "Two regimes — raw BM25 or raw cosine by default, composite metadata blend only when the query reads as recency-seeking"
   write: "Files indexed by a watcher; hooks extract observations through a local GGUF model; both land as ordinary documents"
   update_delete: "invalidated_at removes a row from both retrieval legs; superseded_by links the replacement; nothing blocks re-assertion"
-  scoping: "The internal _clawmem collection is excluded from the candidate pool by default on every retrieval route"
+  scoping: "None across users — one vault file each; an optional collection filter on user content, and the internal _clawmem collection excluded by default on every retrieval route unless the caller opts in"
   integration: "Claude Code hooks, an MCP server, an OpenClaw plugin and a Hermes MemoryProvider, all against the same vault"
   background: "A consolidation worker, an optional quiet-window heavy lane, an embed daemon and a filesystem watcher"
   trust: "A confidence float that erodes on contradiction, and a contradiction judge that must be configured before anything can be deactivated"
@@ -198,11 +202,11 @@ Beside `documents` sit a graph and an audit tier. `entity_triples` is the
 graph's typed layer and carries `valid_from`, `valid_to`, `confidence`,
 `source_doc_id` and `created_at` — **validity time held separately from record
 time**, with the read path filtering `(valid_from IS NULL OR valid_from <= ?)
-AND (valid_to IS NULL OR valid_to >= ?)` (`src/store.ts:2101`, `:2118`) and an
+AND (valid_to IS NULL OR valid_to >= ?)` (`src/store.ts:2102`, `:2119`) and an
 MCP tool whose description is literally "what was true about X on date Y?". A
 new assertion for an existing `(subject, predicate, object)` closes the old
 interval with `UPDATE entity_triples SET valid_to = ?` rather than overwriting
-it (`:2082`). That earns `bitemporal`, and it is worth being precise that it is
+it (`:2083`). That earns `bitemporal`, and it is worth being precise that it is
 earned by the triple store: `documents` has no validity axis of its own.
 
 ## 6. Retrieval Mechanics
@@ -308,15 +312,15 @@ in a Claude Code session is a row, and the other two runtimes query rows.
 
 ## 9. Reliability, Safety, and Trust
 
-**Scope.** `_clawmem` is excluded from the candidate pool on every retrieval
-route unless the caller passes `includeInternal: true`
-(`resolveExcludedCollections`, `src/mcp.ts:128`). That is a stored scope key
-applied as a read-path filter, deny-by-default, in the SQL — it earns
-`scope_enforced`. Be precise about what boundary it draws: it separates the
-system's own derived observations from the user's notes so the agent does not
-retrieve its own reasoning as evidence. It is a visibility boundary, not
-tenancy. Cross-user isolation is "use a different vault file", and the
-`collection` filter on user content is an optional parameter, not a floor.
+**Visibility, not scope.** `_clawmem` is excluded from the candidate pool on
+every retrieval route unless the caller passes `includeInternal: true`
+(`resolveExcludedCollections`, `src/mcp.ts:128`), deny-by-default, in the SQL. It
+separates the system's own derived observations from the user's notes so the
+agent does not retrieve its own reasoning as evidence, and the MCP route tests
+assert it on every route. It is a data-class boundary a caller can lift, not a
+user, project, agent or tenant boundary, so it is not `scope_enforced`.
+Cross-user isolation is "use a different vault file", and the `collection`
+filter on user content is an optional parameter, not a floor.
 
 **Audit.** `judge_runs` and `judge_events` exist because, in the header's own
 words, "interactive hosts do not persist hook stderr, so these rows are the only
@@ -356,7 +360,7 @@ handling as newly-effective rather than newly-fixed.
 tree; the README cites other people's papers (A-MEM, MAGMA, QMD, SAME, Engram)
 as sources for its mechanisms.
 
-84 unit test files plus `tests/e2e`, `tests/hooks`, `tests/integration` and a
+85 unit test files plus `tests/e2e`, `tests/hooks`, `tests/integration` and a
 smoke test. **I did not run them** — the screen flagged `package.json` and
 `src/openclaw/package.json` as changed within the seven-day cooldown, so this
 tree was read, not installed.
@@ -372,12 +376,21 @@ That harness is what produced the section 6 numbers.
 three judge configurations (two Haiku runs, one Sonnet). Committed JSON, not a
 summary table — which means a reader can check the claim rather than take it.
 
-What is absent is a negative case. `goldExampleSchema` (`src/eval/gold.ts`) is a
-`z.strictObject` with `gold_evidence` and no counterpart field, so the harness
-can assert what recall *should* return and has no way to express what it must
-not. In a system whose correction path silently removes documents from search,
-the eval that would prove the removal worked is exactly the one that cannot be
-written.
+What the offline harness lacks is a negative case. `goldExampleSchema`
+(`src/eval/gold.ts`) is a `z.strictObject` with `gold_evidence` and no
+counterpart field, so the harness can assert what recall *should* return and has
+no way to express what it must not. In a system whose correction path silently
+removes documents from search, the eval that would prove the removal worked is
+exactly the one that cannot be written.
+
+The unit suite has the negative cases the harness cannot express, for the
+internal collection rather than for invalidation. `tests/unit/mcp-routes.test.ts`
+seeds material that exists only in `_clawmem`, asserts `search` returns no
+`_clawmem/` path by default, and asserts the same query returns it with
+`includeInternal: true` and with an explicit `collection` — so the exclusion is
+checked against a result the test shows exists. The same shape repeats for
+`vsearch`, the hybrid `query`, `query_plan`, all three `memory_retrieve` modes
+and `find_similar`. That earns `negative_eval`.
 
 ## 11. For Your Own Build
 
@@ -492,5 +505,7 @@ migrations `:425`, `entity_triples` `:1107`, `retired_causal_edges` `:1006`,
 `src/validation.ts`, `src/limits.ts`
 
 ## History
+
+**2026-09-15** — [`ba09cb83050867c54f4e05a7050c874171c47cd8`](https://github.com/yoloshii/clawmem/commit/ba09cb83050867c54f4e05a7050c874171c47cd8) — one commit on, v0.37.0 on 2026-08-19. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface and nothing inside the cooldown; nothing was installed or run. The release makes a reachable-but-wrong inference endpoint trip the LLM down-cache — 405 and 501 at once, other non-2xx after three consecutive failures — adds a `doctor` probe of the completion endpoint's response shape, and reports attempted versus stored enrichment notes on every index run; the memory model and retrieval are unchanged. Marks: `scope_enforced` is withdrawn — the `_clawmem` exclusion it rested on is a data-class visibility rule a caller can lift, not a user, project, agent or tenant boundary, and user content has only an optional collection filter. `negative_eval` is added and was missed: the MCP route tests at the previous pin already asserted `_clawmem` material is absent from every route by default with `includeInternal` as the control. `bitemporal` and `audit_log` stand, now with evidence records.
 
 **2026-08-09** — [`264cea726748ce975f6ae566409996e8146b7438`](https://github.com/yoloshii/clawmem/commit/264cea726748ce975f6ae566409996e8146b7438) — first reading. Screened before reading: no auto-run surface, two dependency manifests inside the seven-day cooldown, so the tree was read and never installed and no test was run.
