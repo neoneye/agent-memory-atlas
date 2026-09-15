@@ -7,10 +7,12 @@ page_kind: system
 source_name: "block/buzz"
 source_url: https://github.com/block/buzz
 archive_name: "block--buzz"
-revision: 24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
-revision_url: https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb
-analyzed_at: 2026-07-29
+revision: 7c789dee09d198469bded1cb5be902eaf5562ad9
+revision_url: https://github.com/block/buzz/commit/7c789dee09d198469bded1cb5be902eaf5562ad9
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the relay read path for agent engrams — a filter is served only to the agent that wrote it or the owner it is addressed to | crates/buzz-relay/src/handlers/req.rs:1355-1400 `engram_filters_authorized`, crates/buzz-core/src/engram.rs:136-150 | engrams are addressed by `d_tag = HMAC(conversation_key, slug)`, so the storage key is per agent-owner pair, and the relay adds an authorization gate on top: any filter that can match `KIND_AGENT_ENGRAM` is refused unless every `authors` entry equals the authenticated pubkey or every `#p` entry does. The docstring gives the reason the content being encrypted is not enough — the public `#p` and timestamps *leak who-pairs-with-whom plus write-activity patterns*. One exemption is recorded rather than hidden: filters naming explicit `ids` bypass the gate, on the reasoning that knowing an engram id implies authorization | crates/buzz-core/src/engram.rs carries the addressing tests; the gate itself was not located under test"
 stack_storage: ""
 stack_retrieval: ""
 stack_source: "seeded"
@@ -500,5 +502,7 @@ it decides to write, or the store stays empty.
 - `desktop/src/features/agent-memory/lib/buildMemoryGraph.test.mjs`
 
 ## History
+
+**2026-09-15** — [`7c789dee09d198469bded1cb5be902eaf5562ad9`](https://github.com/block/buzz/commit/7c789dee09d198469bded1cb5be902eaf5562ad9) — second reading, 694 commits on. Screened again: one auto-run finding, `.vscode/settings.json`, which sets a rust-analyzer target directory and runs nothing; three build-time execution points; five dependency surfaces inside the cooldown. Nothing was installed and nothing was run. `crates/buzz-core/src/engram.rs` did not change. `scope_enforced` was re-tested and holds, and is recorded against the relay's `engram_filters_authorized` gate, which was present at the previous pin and restricts enumeration to the engram's author or its `#p` owner. The addition since then is in `kind.rs`: author-only kinds, shared-gated kinds and `RESULT_GATED_KINDS`, whose comment states that *even a reader who knows an event id MUST match the event's `#p` tag*, closing the `{ids:[…]}` read path for events *whose existence must not be leaked*. Engrams are not in that list, and their gate keeps the explicit-`ids` exemption — so the relay closes the id path for DM visibility and turn metrics while leaving it open for the kind whose own docstring says its `#p` and timestamps leak pairing. The content stays encrypted either way; what an id holder can read is the metadata the gate was written to protect.
 
 **2026-07-29** — [`24d90d1280a9325c6cbcf8eea30ac54db5afd2cb`](https://github.com/block/buzz/commit/24d90d1280a9325c6cbcf8eea30ac54db5afd2cb) — first reading.
