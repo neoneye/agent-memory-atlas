@@ -926,8 +926,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`ecc`](../systems/ecc/)
 - Best idea: the schema says out loud that its memory is never authoritative — `trust` is an enum of exactly one value, `unreviewed`, because verified knowledge is promoted into a governed artifact elsewhere rather than upgraded in place.
 - Biggest risk: the read path filters a status the write path cannot produce, so `rejected` and `superseded` are reachable only by hand-editing frontmatter.
-- Most reusable component: `sourceHarness` and `targetHarnesses` on every record, with scope enforced by path containment and every enum validated at load.
-- Maturity impression: four memory-specific test files inside a large repository-wide suite, the notable one asserting the shape of the unified memory surface.
+- Most reusable component: `sourceHarness` and `targetHarnesses` on every record, with the MCP server filtering every read to its own startup-fixed harness, vault roots contained by a required boundary policy, and every enum validated at load.
+- Maturity impression: memory tests inside a large repository-wide suite that pin the unified surface, a superseded record's absence from search, other-harness invisibility with a visible control, and fail-closed reads on an incomplete vault walk.
 - Study when: you move between several agent harnesses and want one Markdown vault of deliberate notes all of them can read.
 - Do not copy when: you expect extraction, consolidation or correction. Treat it as a shared notebook with a schema, and expect to open a text editor when something in it turns out to be wrong.
 

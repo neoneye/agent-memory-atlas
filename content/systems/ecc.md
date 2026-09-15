@@ -7,10 +7,13 @@ page_kind: system
 source_name: "affaan-m/ECC"
 source_url: https://github.com/affaan-m/ECC
 archive_name: "affaan-m--ECC"
-revision: 591ab5cbd3f2f65860ea91c226e410b1502c8e2e
-revision_url: https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e
-analyzed_at: 2026-07-29
-capabilities: "scope_enforced"
+revision: 8321021c54d670126ce3b2969d5deb880b4b0c2a
+revision_url: https://github.com/affaan-m/ECC/commit/8321021c54d670126ce3b2969d5deb880b4b0c2a
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "the MCP server's read tools — the harness identity of the server filters every search, read and doctor call | scripts/memory-mcp.mjs:174-197 and :296-331, scripts/lib/memory-vault.js:630-635 and :679-683 | `resolveServiceSecurity` takes the harness from `ECC_MEMORY_HARNESS`, refusing to start without a slug, and `memory_search`, `memory_read` and the backlink walk pass `targetHarness: security.harness` into the vault, which keeps only records whose `targetHarnesses` include that harness or `all`. The search input schema does not accept `targetHarness`, and a caller-supplied one is rejected with -32602. Scope roots are selected per call from `project` and `team` by default, with `user` refused unless the server sets `ECC_MEMORY_ALLOW_USER_SCOPE=1`; the roots themselves are separate directories, which the atlas does not count on their own. The CLI path takes `targetHarness` as an option and applies no filter without it | tests/scripts/memory-mcp.test.js:560, :620"
+  negative_eval: "vault search and MCP retrieval — superseded records and other harnesses' records must not be returned | scripts/lib/memory-vault.js:628 and :631-635 | `tests/lib/memory-vault.test.js` writes an active decision, a Hermes-targeted note and a `status: superseded` note that all match `authentication`, asserts search returns exactly the two active ids, then asserts a Claude-targeted search returns only the decision. `memory-mcp.test.js` saves a Hermes-only handoff from a Claude server and asserts search returns nothing and read fails, and in the backlink test asserts twenty Hermes-only backlinks are excluded while the one Claude backlink is returned, so the visible record is the control. Both files carried these cases at the 2026-07-29 pin | tests/lib/memory-vault.test.js:715, tests/scripts/memory-mcp.test.js:560 and :620"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -20,7 +23,7 @@ matrix:
   retrieval: "Index and lexical search over the vault, filtered to `status === 'active'`, with scope selecting the root"
   write: "Create-only through the `ecc memory` CLI or the `memory_save` MCP tool; every write sets `trust: unreviewed` and `status: active`"
   update_delete: "Neither. Writes are create-only, and no code path sets `rejected` or `superseded`"
-  scoping: "`project | team | user`, each a separate vault root with a configured boundary policy asserted on read"
+  scoping: "`project | team | user` vault roots chosen per call, user refused unless the MCP server grants it; on the MCP path every read is filtered to records targeting the server's harness"
   integration: "A CLI, an MCP server, and harness skills for Claude Code, Codex, OpenCode and Cursor, plus session hooks"
   background: "Session hooks that persist memory at lifecycle boundaries"
   trust: "`trust` is an enum of exactly one value, `unreviewed`, and the design says so — verified knowledge is promoted out of the vault, not within it"
@@ -53,14 +56,17 @@ The finding sits directly beside it. `status` is a validated enum of
 `active | rejected | superseded`, and both read paths filter it:
 `memory-vault.js:602` and `:663` keep only `status === 'active'`. So the
 retrieval half of a correction mechanism is implemented and working. The write
-half is not — line 294 sets `status: 'active'` on every create, and **no code
+half is not — line 308 of `scripts/lib/memory-vault.js` sets `status: 'active'` on every create, and **no code
 path anywhere sets `rejected` or `superseded`.** Because the vault is Markdown
 with frontmatter, hand-editing a file *would* be honoured by the filter, which
 makes rejection an operator gesture the tooling neither performs nor documents.
 
-Scope is real: `project | team | user` are separate vault roots, each requiring a
-configured boundary policy, with `assertWithinTrustedRoot` on every read — so a
-traversal out of a scope is an exception rather than a leak.
+Scope has two layers. `project | team | user` are separate vault roots, each
+requiring a configured boundary policy, with `assertWithinTrustedRoot` on every
+read — so a traversal out of a scope is an exception rather than a leak. And on
+the MCP server, the harness the server was started as filters every read: a
+memory targeted at Hermes is invisible to a Claude server, and the caller cannot
+name a different harness.
 
 ## 2. Mental Model
 
@@ -191,8 +197,10 @@ and the MCP tool.
 **`sourceHarness` and `targetHarnesses`** deserve a mention. A memory records
 which harness produced it and which are meant to consume it, so in a toolkit
 whose premise is one developer moving between four agent tools, provenance
-becomes routing. That is the cleanest expression of cross-harness memory here
-after [ai-memory](../ai-memory/)'s handoffs.
+becomes routing. On the MCP path the routing is enforced: the server's own
+`ECC_MEMORY_HARNESS` is passed as `targetHarness` to search, read and the
+backlink walk, and records not addressed to it or to `all` are dropped before
+ranking and before the response cap.
 
 Missing: no validity interval (not bi-temporal), no confidence, no evidence link
 beyond a free `links` array, and no tombstone.
@@ -259,10 +267,24 @@ retrieval. The mechanism exists end to end except for a verb — and nothing in 
 CLI, the MCP tool or the skill mentions that the file can be edited to that
 effect.
 
-**Scope is enforced by containment.** Separate roots per scope, a *required*
-boundary policy per scope, and `assertWithinTrustedRoot` on reads. A path
-traversal is an exception rather than a cross-scope read, which is a stronger
-guarantee than a `WHERE` clause and earns `scope_enforced`.
+**Scope is enforced on the harness, and contained on the roots.** Separate roots
+per scope, a *required* boundary policy per scope, and `assertWithinTrustedRoot`
+on reads make a path traversal an exception rather than a cross-scope read — a
+real boundary, and a partition, which on its own is not what `scope_enforced`
+counts. The mark rests on the MCP server's harness filter: a stored
+`targetHarnesses` key compared on every read against an identity the server
+fixes at startup and the caller cannot override. The `user` root is refused on
+that server unless `ECC_MEMORY_ALLOW_USER_SCOPE=1`. The CLI applies the harness
+filter only when given `--target-harness`.
+
+**Reads fail closed when the vault walk is incomplete.** If a directory cannot
+be opened or read, the walk hits the 5,000-file cap, or any file fails
+validation, `readMemoryById` raises `ECC_MEMORY_INCOMPLETE` and the MCP tool
+answers `MEMORY_READ_INCOMPLETE` rather than reporting a record missing that may
+simply have been unreadable. The same-file identity check, which compares the
+inode and device of the opened descriptor against the path, compares the device
+only when both stats report one, because some Node 22 and 24 releases on
+Windows leave it unset on path-based stats.
 
 **No mutation audit.** Files are created and never updated, so the file tree is
 its own history in the way a git log is — by this atlas's rule a different
@@ -273,19 +295,29 @@ in the first release.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Four memory-specific test files inside a large repository-wide suite:
+Memory-specific tests inside a large repository-wide suite:
 `tests/scripts/memory.test.js`, `memory-mcp.test.js`,
-`tests/ci/unified-memory-surface.test.js` and `tests/hooks/observer-memory.test.js`.
+`tests/lib/memory-vault.test.js`, `memory-schema.test.js`,
+`memory-read-completeness.test.js`, `tests/ci/unified-memory-surface.test.js`,
+`tests/hooks/observer-memory.test.js`, and an example evidence validator under
+`examples/unified-memory/` with its own test.
 The surface test is the notable one — asserting the shape of the unified memory
 API is what stops four harness integrations drifting apart.
 
 No memory benchmarks, and none would be meaningful for a lexical vault of
 deliberate notes.
 
-No test asserts that particular material must not be retrieved, so
-`negative_eval` is withheld — though the cheapest valuable test here is obvious:
-write a file with `status: rejected` and assert search does not return it. It
-would pin the one mechanism that has no other way to be exercised.
+The negative cases are there, and they earn `negative_eval`.
+`memory-vault.test.js` writes three records matching `authentication` — an
+active decision, a Hermes-targeted note, and a hand-written `status: superseded`
+note — and asserts search returns exactly the two active ids, then that a
+Claude-targeted search returns only the decision; a backlink test asserts a
+`status: rejected` follow-up is left out of a record's backlinks while the active
+one is kept. `memory-mcp.test.js` saves a Hermes-only handoff from a Claude
+server and asserts search returns nothing and read fails, and asserts twenty
+Hermes-only backlinks are filtered before the response cap while the one Claude
+backlink survives. The `status` filter is therefore pinned by tests even though
+no tool can set the statuses it filters.
 
 ## 11. For Your Own Build
 
@@ -339,8 +371,8 @@ expect to open a text editor when something in it turns out to be wrong.
   documentation names the policy without naming the destination.
 - **Does the index honour a hand-edited `status` immediately**, or is there a
   cache that would keep a rejected memory retrievable until reindex?
-- **Do `targetHarnesses` affect retrieval?** The field is recorded; whether any
-  read path filters on it was not determined.
+- **Should the CLI apply a harness filter by default?** The MCP server always
+  does; the CLI does only when given a target harness.
 - **What do the per-scope boundary policies look like in a real deployment**,
   particularly for team scope?
 
@@ -372,5 +404,7 @@ expect to open a text editor when something in it turns out to be wrong.
 - `tests/hooks/observer-memory.test.js`
 
 ## History
+
+**2026-09-15** — [`8321021c54d670126ce3b2969d5deb880b4b0c2a`](https://github.com/affaan-m/ECC/commit/8321021c54d670126ce3b2969d5deb880b4b0c2a) — 365 commits on, 2026-09-12; eight touch memory. Screened before reading: eight auto-run surfaces (`.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json`), two build-time execution points, seven unpinned surfaces and seven dependency surfaces inside the seven-day cooldown; nothing was installed or run. `negative_eval` is added and was missed: at the previous pin `memory-vault.test.js` already asserted a superseded record and an other-harness record are absent from search beside the active ones, and `memory-mcp.test.js` already asserted Hermes-only memories are invisible to a Claude server with a visible backlink as control. `scope_enforced` stands on a corrected basis: the first reading rested it on separate vault roots, which is containment the atlas does not count alone, and left open whether `targetHarnesses` affected retrieval — on the MCP server it filters every read against a harness identity fixed at startup. Since the pin: reads raise `ECC_MEMORY_INCOMPLETE` instead of reporting a record missing when the vault walk is truncated, unreadable or finds an invalid file; the same-file identity check compares device numbers only when both stats have one (a Windows libuv workaround); the MCP server accepts the reserved `_meta` parameter; and an example evidence validator was added.
 
 **2026-07-29** — [`591ab5cbd3f2f65860ea91c226e410b1502c8e2e`](https://github.com/affaan-m/ECC/commit/591ab5cbd3f2f65860ea91c226e410b1502c8e2e) — first reading.

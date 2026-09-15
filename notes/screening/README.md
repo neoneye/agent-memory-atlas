@@ -64,7 +64,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
-| [`ecc`](../../content/systems/ecc.md) | `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json` |
+| [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`empirica`](../../content/systems/empirica.md) | `.cursorrules`, `.github/copilot-instructions.md`, `.gitmodules` |
 | [`engram`](../../content/systems/engram.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json` |
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
