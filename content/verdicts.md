@@ -1659,10 +1659,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: `fact_key` — correction keyed on what a memory is *about*, derived from category plus text when the extractor does not supply one, with a scoped collision scan that supersedes the previous value instead of accumulating statements.
 - Biggest risk: the `pending` state was written out of existence. Four extractor sites set `state: "confirmed"` with the comment "write confirmed to unblock auto-recall", so an LLM admission score is the only filter, and a rejected candidate leaves no record to be judged against next time.
 - Most reusable component: `computeTier1Patch` — three unconfirmed injections suppress a memory from auto-recall for thirty minutes, and a day without an injection resets the counter, in three integers and no model call.
-- Maturity impression: ~39,700 lines of TypeScript with 171 test files often named after the bug they pin, an unusually strict scope filter that denies null-scope rows — and no committed benchmark, no evaluation harness, and no LICENSE file despite an MIT badge.
+- Maturity impression: ~33,000 lines of TypeScript under `src/` with 186 test files often named after the bug they pin, including ones asserting a retired fact stays out of the current query, a scope filter that denies null-scope rows and treats an empty scope list as deny-all — and no committed benchmark, no evaluation harness, and no LICENSE file despite an MIT badge.
 - Study when: your memory is facts about subjects rather than documents, and you want updates to replace rather than pile up.
 - Do not copy when: you need to know whether the ranking works; nothing here is measured.
-
 ### [`weave`](../systems/weave/)
 
 - Best idea: **recall is default-deny on claim status.** `vector_search_claims` filters `AND c.status = 'active'` and widens to `IN ('active','contradicted')` only when a caller passes `include_contradicted` — so a forgetful caller gets the conservative behaviour, and the exception is labelled: an admitted contradicted claim is rendered `[CONTRADICTED]` in the context block. Five CHECK-constrained statuses (`active`, `contradicted`, `superseded`, `rejected`, `quarantined`) all have writers, held apart from a `confidence` float, which is the split the rubric asks for.

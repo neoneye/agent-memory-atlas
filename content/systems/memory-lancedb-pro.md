@@ -7,10 +7,14 @@ page_kind: system
 source_name: "CortexReach/memory-lancedb-pro"
 source_url: https://github.com/CortexReach/memory-lancedb-pro
 archive_name: "CortexReach--memory-lancedb-pro"
-revision: f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
-revision_url: https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7
-analyzed_at: 2026-08-09
-capabilities: "bitemporal, scope_enforced"
+revision: 93899f88fd262e47165e949cb655974a7327ba13
+revision_url: https://github.com/CortexReach/memory-lancedb-pro/commit/93899f88fd262e47165e949cb655974a7327ba13
+analyzed_at: 2026-09-15
+capabilities: "bitemporal, scope_enforced, negative_eval"
+capability_evidence:
+  bitemporal: "fact records — validity kept apart from the row timestamp and queried as of a caller's date | src/smart-metadata.ts:285 (`isMemoryActiveAt`), src/tools.ts:289-291 (`serializeFactEntry`) | `valid_from`, `invalidated_at` and `valid_until` live in the row's metadata beside its insertion `timestamp`; `isMemoryActiveAt(meta, at)` takes an arbitrary instant, and `memory_fact_query` threads a caller-supplied `atMs` through to return `activeAt` and `validFrom` per fact, with `includeHistory` returning retired versions. `valid_from` falls back to the insertion time when extraction supplies no date | test/memory-fact-query.test.mjs:87 (`returns the fact active at the requested date`), test/temporal-facts.test.mjs"
+  scope_enforced: "every store read — a row outside the resolved scopes is not returned, and an empty scope list denies all | src/store.ts:373-387 (`isExplicitDenyAllScopeFilter`, `isRowScopeAccessible`), src/scopes.ts:498 (`resolveScopeFilter`), src/tools.ts:527-535 | `list`, `vectorSearch`, `bm25Search`, `stats`, `getById`, `update` and `delete` return nothing or refuse when the filter is `[]`, and otherwise admit a row only when its real scope is in the filter; a NULL-scope row is denied against any real filter. Tools resolve the filter from the agent id through the scope manager; a reserved system-bypass id resolves to no filter. The fact-key supersede scan re-checks scope itself | test/store-empty-scope-filter.test.mjs:18, test/clawteam-scope.test.mjs:124"
+  negative_eval: "fact query and the store's live-only reads — retired facts must not be returned as current | src/tools.ts:371, src/store.ts (`excludeInactive`), src/retriever.ts:823, :907, :1220 | `memory_fact_query hides expired facts unless history is requested` asserts the current query returns zero facts and the `includeHistory` query returns the expired one, the control on the same data; this predates the 2026-08-09 pin. `store-excludeinactive-default.test.mjs` (added with the consolidate command) stores a live and a superseded fact against a real LanceDB table and asserts `vectorSearch`, `bm25Search` and `list` return the superseded row only when `excludeInactive` is not set, and never with it — the flag every retriever call passes | test/memory-fact-query.test.mjs:126, test/store-excludeinactive-default.test.mjs:68 and :98"
 stack_storage: "lancedb, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -32,7 +36,7 @@ matrix:
 
 memory-lancedb-pro is an OpenClaw plugin: LanceDB for storage, an LLM for
 extraction and admission, `before_prompt_build` hooks for injection, and about
-39,700 lines of TypeScript across 54 source files. It captures preferences,
+33,000 lines of TypeScript in 55 files under `src/`. It captures preferences,
 decisions and project context automatically and recalls them into later
 sessions.
 
@@ -238,8 +242,9 @@ through to `serializeFactEntry`, returning `activeAt` and `validFrom` per row.
 The qualification: `valid_from` falls back to the insertion timestamp, so the
 two axes coincide unless the extractor supplies a date.
 
-**Scope enforced — awarded**, and it is one of the stricter implementations in
-this atlas for the reasons in section 6.
+**Scope enforced — awarded**, for the reasons in section 6: an empty scope list
+denies every read rather than meaning "no filter", a NULL-scope row is denied
+against any real filter, and the supersede scan re-checks scope itself.
 
 **Trust state — withheld, and the near-miss is the report's headline.** A
 three-value `state` field consulted on the read path is exactly the shape the
@@ -255,15 +260,22 @@ but there is no append-only record of mutations to the memory store itself.
 **Human review — no.** No approval surface; the `state` field's approval-shaped
 vocabulary has no operator behind it.
 
-**Tombstone — no**, and this is the closest miss in the batch. `fact_key` is a
+**Tombstone — no**, and it is a close miss. `fact_key` is a
 value-derived key, the collision scan already runs on the write path, and
 `invalidated_at` already exists. What is absent is a record that a *value* was
 rejected: superseding writes the new fact and retires the old one, so
 re-asserting the retired value simply supersedes back. The machinery to refuse
 it is in the file.
 
-**Negative eval — no.** 171 test files, none asserting that particular material
-must not be retrieved.
+**Negative eval — awarded.** `memory_fact_query hides expired facts unless
+history is requested` asserts that the current query returns no facts while the
+history query returns the expired one, and
+`store-excludeinactive-default.test.mjs` asserts against a real LanceDB table
+that a superseded row is absent from `vectorSearch`, `bm25Search` and `list`
+under `excludeInactive` while the live row is returned. The header of that file
+says superseded rows must be invisible *by default*; its assertions pin the
+opposite — the store's default returns them, and the retriever passes the
+flag on every call.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -272,18 +284,26 @@ or BibTeX block, and no committed evaluation harness or result file — no
 LoCoMo, LongMemEval or retrieval-quality number anywhere in the tree. Every
 quality claim in the README is qualitative.
 
-171 test files under `test/`, almost all `.mjs`, and they are unusually
-well-targeted at the mechanisms this report cares about:
+186 test files under `test/`, almost all `.mjs`, and they are well-targeted at
+the mechanisms this report cares about:
 `admission-utility-veto`, `admission-control-batch-utility`,
 `autocapture-fallback-gating`, `clawteam-scope`, `agentid-validation`,
 `batch-dedup`, `auto-recall-timeout`, `cjk-recursion-regression`. Several are
 named after the bug they pin rather than the feature they cover, which is a
 good sign about how they were written.
 
-**I did not run them.** The screen flagged both `package.json` and
-`package-lock.json` as changed within the last day — inside the seven-day
-cooldown, where `npm ci` would faithfully reproduce a pin however new it is —
-so this tree was read and never installed.
+**I did not run them**, and nothing was installed.
+
+**Consolidation is a planned, confirmed batch.** `src/consolidate.ts`, behind
+`memory-pro consolidate`, clusters duplicate and superseded memories across the
+write lanes and asks a model for one verdict per cluster — `skip`, `merge`,
+`supersede` or `contradict`, the last leaving both rows active. Without
+`--apply` the CLI prints the plan and writes nothing unless the operator types
+`YES`; with `--apply` it executes immediately. Before each cluster executes, its
+rows are re-read and compared with the plan-time snapshot, so a row changed in
+between is skipped, and a write that fails inside a cluster leaves the row active
+for a rerun. Audit entries go to the Markdown mirror when one is configured, not
+to a store of their own.
 
 Two artifacts at the repository root are worth a reader's notice because they
 are not part of the product: `commit_msg.txt` and `restore_files.py`.
@@ -398,10 +418,14 @@ checks. The mechanisms are the reason to read this; the tuning is unverified.
 **Integration** — `openclaw.plugin.json`, `cli.ts`, `index.ts`,
 `src/openclaw-memory-capability.ts`, `skills/`
 
-**Tests** — `test/` (171 files; `admission-utility-veto.test.mjs`,
+**Consolidation** — `src/consolidate.ts`, `cli.ts` (`consolidate`).
+
+**Tests** — `test/` (186 files; `memory-fact-query.test.mjs`, `store-excludeinactive-default.test.mjs`, `store-empty-scope-filter.test.mjs`, `admission-utility-veto.test.mjs`,
 `clawteam-scope.test.mjs`, `batch-dedup.test.mjs`,
 `autocapture-fallback-gating.test.mjs`)
 
 ## History
+
+**2026-09-15** — [`93899f88fd262e47165e949cb655974a7327ba13`](https://github.com/CortexReach/memory-lancedb-pro/commit/93899f88fd262e47165e949cb655974a7327ba13) — nine commits on, 2026-09-13, adding about 14,000 lines, half of them tests. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface and one dependency file inside the cooldown; nothing was installed or run. `negative_eval` is added and was missed: `memory_fact_query hides expired facts unless history is requested` already asserted at the previous pin that a retired fact is absent from the current query with the history query as control; the consolidate release added a real-LanceDB test of the same exclusion on the store's live-only reads. Since the pin: a `consolidate` command that plans model verdicts over duplicate and superseded clusters and applies them only on confirmation or `--apply`, with a snapshot check before each cluster; reflection-derived rows routed through the same dedup and merge pipeline as extracted ones; the reflection distiller's input rendered as speaker-tagged blocks instead of a code fence a transcript's own code block could close; an opt-in transport through the host model runtime; and a noise-bank validation gate. The `pending` state is still produced by no writer. The line count is measured under `src/` only; all three marks carry evidence records.
 
 **2026-08-09** — [`f6e63af3450be7fb3bb8cdb4898e5010afcb87a7`](https://github.com/CortexReach/memory-lancedb-pro/commit/f6e63af3450be7fb3bb8cdb4898e5010afcb87a7) — first reading. Screened before reading: no auto-run surface, but `package.json` and `package-lock.json` both changed within a day, inside the seven-day cooldown. The tree was read, never installed, and no test was run.
