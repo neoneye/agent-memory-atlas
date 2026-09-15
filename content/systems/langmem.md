@@ -7,10 +7,12 @@ page_kind: system
 source_name: langchain-ai/langmem
 source_url: https://github.com/langchain-ai/langmem
 archive_name: "langchain-ai--langmem"
-revision: 7c7ebf36b5e1697001f92eed77c43e3d541decd7
-revision_url: https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7
-analyzed_at: 2026-08-06
+revision: 9d033b47d9ce53e37e92c92241b0496c0278932e
+revision_url: https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the memory tools — a namespace template resolved from run configuration before every store read, failing rather than widening when a key is missing | src/langmem/utils.py:60-91 `NamespaceTemplate.__call__`, src/langmem/knowledge/tools.py:433-445 | a namespace such as `(\"memories\", \"{user_id}\")` is filled from the `configurable` field of the `RunnableConfig`, and a template variable absent from that config raises `errors.ConfigurationError` instead of leaving the placeholder or dropping the segment. The search tool resolves `namespacer()` on each call and passes the result to `store.asearch(namespace, …)`, so a read is confined to the namespace the run is configured for. The isolation is as strong as the configuration: the value is whatever the caller put in `configurable` | tests/ covers namespace substitution"
 stack_storage: "delegated"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -298,6 +300,8 @@ LangMem is best when you are already building on LangGraph and want memory primi
 - Tests: `langmem/tests/`.
 
 ## History
+
+**2026-09-15** — [`9d033b47d9ce53e37e92c92241b0496c0278932e`](https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e) — second reading, eight commits on: dependency modernisation, a tornado bump, Dependabot alert fixes and documentation formatting. `src/` did not change. Screened again: no auto-run surface, two build-time execution points, nothing inside the cooldown; nothing was installed and nothing was run. `scope_enforced` was re-tested at the producer and holds, and now carries the evidence record it had been asserted without — including that a namespace template with a missing configuration key raises rather than widening.
 
 **2026-08-06** — [`7c7ebf36b5e1697001f92eed77c43e3d541decd7`](https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7) — 10 commits on, and the entire diff is `uv.lock`: 155 insertions, 153 deletions, one file. No Python changed. The mechanism is unchanged and no published claim is stale. Screened again: `uv.lock` moved within the seven-day cooldown, so nothing was installed; 2 build-time exec paths.
 

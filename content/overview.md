@@ -7209,7 +7209,7 @@ Privacy/deletion:
 ### Repos Inspected
 
 - [mem0ai/mem0](https://github.com/mem0ai/mem0) at [`c7ee362aff94a369af70f13f2b4f853f6793ff4c`](https://github.com/mem0ai/mem0/commit/c7ee362aff94a369af70f13f2b4f853f6793ff4c) — read only at the second pin; eighteen dependency surfaces inside the cooldown, nothing installed or run. The memory package now fetches a remotely switchable notice config and classifies search queries as temporal, gated on telemetry that defaults on
-- [langchain-ai/langmem](https://github.com/langchain-ai/langmem) at [`7c7ebf36b5e1697001f92eed77c43e3d541decd7`](https://github.com/langchain-ai/langmem/commit/7c7ebf36b5e1697001f92eed77c43e3d541decd7)
+- [langchain-ai/langmem](https://github.com/langchain-ai/langmem) at [`9d033b47d9ce53e37e92c92241b0496c0278932e`](https://github.com/langchain-ai/langmem/commit/9d033b47d9ce53e37e92c92241b0496c0278932e)
 - [plastic-labs/honcho](https://github.com/plastic-labs/honcho) at [`be54355545b64ddb10203829d323861f52423685`](https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685) — read only; four dependency files were inside the seven-day cooldown, so nothing was installed
 - [Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram) at [`fa222a060a34668048222d18011fe12c7d9140ab`](https://github.com/Gentleman-Programming/engram/commit/fa222a060a34668048222d18011fe12c7d9140ab)
 - [MemPalace/mempalace](https://github.com/MemPalace/mempalace) at [`a9f345cc63254eb4dea7abad36963b85c9f8453a`](https://github.com/MemPalace/mempalace/commit/a9f345cc63254eb4dea7abad36963b85c9f8453a)
