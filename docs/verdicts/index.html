@@ -7496,8 +7496,12 @@ original string, with nothing rejecting <code>$(…)</code>, backticks or
 redirection — so an argument the validator approved can be syntax the
 shell expands. It matters here because an LLM composes the commands and,
 in the named production deployment, the repository holds text the
-operator did not author. None of the 22 test files covers the
-router.</li>
+operator did not author. Behind it, the resolver runs the plan's own
+<code>git_cmd</code> with <code>shell=True</code> after checking only a
+<code>git </code> prefix, pointer paths are not held to the user's
+worktree, and <code>awk</code>, <code>find</code> and <code>sed</code>
+on the allowlist can execute or write. None of the 22 test files covers
+the router or the resolver.</li>
 <li>Most reusable component: the pluggable executor — endpoints build a
 thunk closing over the real writer or consolidator call and hand it to
 <code>submit_write</code>, so the queue backend and the memory internals
