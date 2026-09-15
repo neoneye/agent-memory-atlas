@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A C++ and Python agent memory with
+a sleep-cycle consolidation engine whose supersession phase fires only
+when two similar memories carry different numeric tokens, demotes the
+older one by half a point rather than filtering it, and reads its edges
+through a validity window the memory rows themselves never had.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mazemaker — Agent Memory Atlas">
+    <meta property="og:description" content="A C++ and Python agent
+memory with a sleep-cycle consolidation engine whose supersession phase
+fires only when two similar memories carry different numeric tokens,
+demotes the older one by half a point rather than filtering it, and
+reads its edges through a validity window the memory rows themselves
+never had.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mazemaker — Agent Memory Atlas">
+    <meta name="twitter:description" content="A C++ and Python agent
+memory with a sleep-cycle consolidation engine whose supersession phase
+fires only when two similar memories carry different numeric tokens,
+demotes the older one by half a point rather than filtering it, and
+reads its edges through a validity window the memory rows themselves
+never had.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mazemaker — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mazemaker",
+      "description": "A C++ and Python agent memory with a sleep-cycle consolidation engine whose supersession phase fires only when two similar memories carry different numeric tokens, demotes the older one by half a point rather than filtering it, and reads its edges through a validity window the memory rows themselves never had.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Validity on the edges, none on the
+claims</p>
+          <h1>Mazemaker</h1>
+          <p class="document-deck">A C++ and Python agent memory with a
+sleep-cycle consolidation engine whose supersession phase fires only
+when two similar memories carry different numeric tokens, demotes the
+older one by half a point rather than filtering it, and reads its edges
+through a validity window the memory rows themselves never had.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/itsXactlY/mazemaker">
+              <span>Source</span>
+              <strong>itsXactlY/mazemaker</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/itsXactlY/mazemaker/commit/25b4064114bb9bfc8a9d5fd45fec6bc9f353f126" title="25b4064114bb9bfc8a9d5fd45fec6bc9f353f126">
+              <span>Analyzed revision</span>
+              <code>25b40641…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/itsXactlY--mazemaker" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>itsXactlY--mazemaker</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mazemaker calls itself an operating system for AI agents: a C++ core
+— Hopfield associative recall, vector-symbolic algebra, an LSTM, kNN,
+SIMD primitives — under a Python client, with a sleep-cycle
+consolidation engine and a knowledge graph an agent walks rather than
+searches. It is dual-licensed AGPL-3.0 or PolyForm Noncommercial 1.0.0,
+with commercial use outside either requiring a separate licence; 17,511
+lines of Python and 5,387 lines of C++ and headers arrived across 15
+commits since 9 April 2026, and the repository ships a paper alongside
+the code.</p>
+<p>Its README opens by dismissing the category it belongs to: "Most AI
+'memory' systems are retrieval wrappers. They store chunks. Embed text.
+Run cosine similarity." The claim it makes for itself is memory
+<em>formation</em> — background consolidation and conflict supersession
+— so that is what this report tests.</p>
+<p>The consolidation engine is real and carefully built. Five named
+phases run over a mixed sampler that deliberately reaches old and
+low-salience slices rather than only recent ones, because "cross-session
+supersessions live in the older slices". The supersedes phase is
+idempotent, and its docstring records a fix worth copying: the previous
+implementation reached for a raw connection and SQLite-style
+<code>?</code> placeholders, "which made the supersedes phase a silent
+no-op under PG" — a phase that appeared to run and did nothing on one
+backend, now routed through a backend-agnostic accessor.</p>
+<p>The correction mechanism underneath it is narrower than the pitch. A
+pair is a supersession candidate only when both memories contain at
+least one numeric, dollar or quantity token <em>and</em> those tokens
+differ. "The deploy target moved from staging to production" contains no
+number, so this phase will never notice it. What it catches is a changed
+figure.</p>
+<p>And a supersession does not change what a memory <em>is</em>. It
+writes a directed edge from older to newer, and at recall time the
+traversal demotes the older result's score by 0.5, raises the newer one
+to at least the older one's pre-demotion score, pulls the newer one in
+if it was not already a hit, and tags the older with
+<code>superseded_by</code>. The stale memory still reaches the model,
+ranked lower and labelled. That is a defensible design — the label is
+present, which is more than several systems here manage — but it is a
+ranking nudge, not a filter, so no mark for a trust state.</p>
+<p>The temporal story has the same shape. The <code>connections</code>
+table carries <code>event_time</code>, <code>ingestion_time</code>,
+<code>valid_from</code> and <code>valid_to</code>, and
+<code>get_connections(node_id, at_time=…)</code> gates
+<code>valid_from</code>/<code>valid_to</code> against a requested
+instant. The <code>memories</code> table carries <code>created_at</code>
+and <code>last_accessed</code> and nothing else — no validity, no
+status, no owner. So an edge's validity is representable and a claim's
+is not. <code>ingestion_time</code> is written, migrated, selected and
+returned in the row dictionary, and never appears in a
+<code>WHERE</code> clause anywhere in the tree, so the knowledge-time
+column exists without a knowledge-time read.</p>
+<p>Within a single recall the two traversals disagree about time. The
+neighbour walk calls
+<code>get_connections(mem_id, at_time=at_time)</code>; the supersedes
+traversal forty lines later calls <code>get_connections(mid)</code> with
+no instant, so an expired supersedes edge still demotes its source on a
+time-travelled query.</p>
+<p>No marks.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> is a row: label, content, embedding,
+salience, timestamps. That is the whole unit — there is no state on it
+to correct.</p>
+<p>A <strong>connection</strong> is a typed, weighted edge —
+<code>similar</code>, <code>bridge</code>, <code>supersedes</code> and
+others — and it is where the temporal columns live.</p>
+<p>A <strong>scope</strong> is a string the caller passes to
+<code>recall</code>. <code>None</code>, <code>all</code> and
+<code>*</code> return everything; <code>curated</code> and
+<code>auto</code> match named label prefixes; anything else is an
+fnmatch glob over the label. It narrows a result set on request; it is
+not a key the store enforces.</p>
+<p>A <strong>dream</strong> is a run of phases: <code>nrem</code>
+consolidates, <code>supersedes</code> looks for changed numbers,
+<code>rem</code> recombines, <code>insight</code> derives,
+<code>afe</code> runs the affective pass.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession needs differing numeric tokens, writes an edge rather than a state, and demotes rather than filters; the validity window lives on edges and the memory row has none</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession needs differing numeric tokens, writes an edge rather than a state, and demotes rather than filters; the validity window lives on edges and the memory row has none
+flowchart TB
+    REM[&quot;remember(text, label)&quot;] --&gt; MEM[(&quot;memories&lt;br/&gt;label, content, embedding,&lt;br/&gt;salience, created_at,&lt;br/&gt;last_accessed, access_count&lt;br/&gt;— no status, no validity&quot;)]
+    REM --&gt; ING{&quot;detect_supersedes&lt;br/&gt;at ingest&quot;}
+    ING --&gt;|&quot;similar + numbers differ&quot;| EDGE
+    DREAM[&quot;dream engine&quot;] --&gt; PH{&quot;phase&quot;}
+    PH --&gt; NREM[&quot;nrem: consolidate&quot;]
+    PH --&gt; SUP[&quot;supersedes&quot;]
+    PH --&gt; REMP[&quot;rem / insight / afe&quot;]
+    SUP --&gt; SAMP[&quot;mixed sampler:&lt;br/&gt;recent + random old + low salience&quot;]
+    SAMP --&gt; NUM{&quot;both contain numeric tokens&lt;br/&gt;AND the numbers differ?&quot;}
+    NUM --&gt;|&quot;no&quot;| NOTHING[&quot;no supersession&lt;br/&gt;a wordless correction is invisible&quot;]
+    NUM --&gt;|&quot;yes&quot;| EDGE[(&quot;connections&lt;br/&gt;edge_type = &#39;supersedes&#39;&lt;br/&gt;event_time, ingestion_time,&lt;br/&gt;valid_from, valid_to&quot;)]
+    Q[&quot;recall(query, scope, at_time)&quot;] --&gt; FUSE[&quot;fusion + MMR rerank&quot;]
+    FUSE --&gt; WALK[&quot;neighbour walk&lt;br/&gt;get_connections(id, at_time=at_time)&quot;]
+    FUSE --&gt; TRAV[&quot;supersedes traversal&lt;br/&gt;get_connections(id) — no at_time&quot;]
+    EDGE --&gt; TRAV
+    EDGE --&gt; WALK
+    TRAV --&gt; DEMOTE[&quot;older score x0.5&lt;br/&gt;newer raised, pulled in&lt;br/&gt;older tagged superseded_by&quot;]
+    DEMOTE --&gt; OUT[&quot;both returned to the model&quot;]
+    SCOPE[&quot;scope glob over label&lt;br/&gt;default None = everything&quot;] --&gt; FUSE
+    IGN[&quot;ingestion_time&quot;] -.-&gt;|&quot;written, returned,&lt;br/&gt;never in a WHERE&quot;| EDGE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory</code></td>
+<td>The C++ core: <code>hopfield.cpp</code>, <code>vsa.cpp</code>,
+<code>lstm.cpp</code>, <code>knn.cpp</code>,
+<code>consolidation.cpp</code>, <code>memory_manager.cpp</code></td>
+</tr>
+<tr>
+<td><code>src/core</code>, <code>include</code>,
+<code>src/simd</code></td>
+<td>The C API, headers and SIMD primitives</td>
+</tr>
+<tr>
+<td><code>python/memory_client.py</code></td>
+<td>The store, the schema, <code>remember</code>, <code>recall</code>,
+ingest-time supersession and the traversals</td>
+</tr>
+<tr>
+<td><code>python/dream_engine.py</code></td>
+<td>The sleep phases, the samplers and the backend abstraction</td>
+</tr>
+<tr>
+<td><code>python/access_logger.py</code></td>
+<td>Every recall event recorded for LSTM training and co-occurrence
+analysis</td>
+</tr>
+<tr>
+<td><code>python/import_hindsight.py</code>,
+<code>import_honcho.py</code></td>
+<td>Importers from two other memory systems</td>
+</tr>
+<tr>
+<td><code>hermes-plugin</code>, <code>python/mcp_schemas.py</code></td>
+<td>Host integration</td>
+</tr>
+<tr>
+<td><code>benchmarks</code>, <code>paper</code></td>
+<td>Performance harnesses and the accompanying paper</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>python/memory_client.py:97-120</code> — the two tables, and
+the asymmetry between them.</li>
+<li><code>:1118-1132</code> — <code>get_connections</code> and the only
+as-of filter in the tree.</li>
+<li><code>:2504-2560</code> — supersession at ingest.</li>
+<li><code>:3492-3506</code> — <code>_scope_matches</code>.</li>
+<li><code>:3748-3760</code> — the neighbour walk, which passes
+<code>at_time</code>.</li>
+<li><code>:3879-3925</code> — the supersedes traversal, which does
+not.</li>
+<li><code>python/dream_engine.py:1666-1740</code> — the supersedes phase
+and its numeric rule.</li>
+<li><code>:269-275</code> — the note about the phase that was a silent
+no-op under Postgres.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> row is deliberately thin: an id, a label,
+content, an embedding, a salience, and access bookkeeping. Everything
+else Mazemaker knows lives on edges or in the dream engine's own tables.
+That is a coherent choice for a system whose thesis is that structure
+beats chunk retrieval, and it has a cost the report should state
+plainly: there is no field on a claim that says whether it is still
+believed, who it belongs to, or when it was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Six modes, from <code>semantic</code> through <code>skynet</code> to
+the cost-reduced <code>lean</code> and <code>trim</code>. A scope
+multiplies the fetch limit by four before filtering, on the reasoning
+that a narrow scope over a corpus dominated by other labels would
+otherwise return fewer than <code>k</code> hits — a good instinct, and
+one many post-filter designs get wrong.</p>
+<p>The supersedes traversal is the correction surface, and it rescores
+rather than removes.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember</code> optionally runs conflict detection,
+auto-connection and supersedes detection at ingest, each behind a
+default-true flag. Ingest-time supersession scans only the most recent N
+nodes because "supersedes is temporally local"; the dream phase exists
+to catch what that misses, which is a sensible division as long as the
+dream runs.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python client, an MCP schema, a Hermes plugin and an embedding
+server, with importers that read Hindsight and Honcho exports — an
+unusual courtesy, and a sign the author expects people to arrive from
+another system.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The correction rule is lexical.</strong> Requiring differing
+numeric tokens makes the supersedes pass cheap and precise, and it means
+the class of corrections it detects is "a number changed". Preferences,
+decisions, ownership and deploy targets — the things coding agents most
+often get stale — carry no digits.</p>
+<p><strong>Nothing filters.</strong> A superseded memory is demoted and
+tagged, never withheld, so a model that ignores rank order sees the old
+value beside the new one. The tag makes that recoverable, which is why
+this is a design note rather than a defect, but there is no read path
+that returns only current memory.</p>
+<p><strong>The validity window is on the wrong table for the
+claim.</strong> Edges carry four time columns and an as-of read;
+memories carry two and none. And of those four,
+<code>ingestion_time</code> is never filtered on, so the store records
+when it learned something and cannot answer a question about it.</p>
+<p><strong>The two traversals in one recall disagree.</strong> One
+passes <code>at_time</code>, the other does not. On a present-time query
+the difference is invisible; on a time-travelled one it is not.</p>
+<p><strong>Scope is advisory.</strong> The default matches everything
+and the key is a free-text label, so scope is a convenience for the
+caller rather than a boundary the store holds. No
+<code>scope_enforced</code>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Seven Python test files — <code>test_suite.py</code>,
+<code>test_integration.py</code>, <code>test_skynet_features.py</code>
+and a <code>test_license.py</code> that checks the dual-licence headers
+— plus a <code>benchmarks</code> directory and a committed paper.
+Nothing found here asserts that a superseded or out-of-scope memory is
+absent from a recall, which is what a <code>negative_eval</code> would
+need.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Sample old and low-salience slices in a consolidation
+pass.</strong> The comment is the argument: cross-session supersessions
+live in the parts of the corpus a recency-biased sampler never
+visits.</li>
+<li><strong>Record when a background phase was silently inert.</strong>
+The docstring naming the Postgres no-op is more useful to a reader than
+a clean fix would have been, and it is the kind of note that stops the
+bug returning.</li>
+<li><strong>Widen the fetch before a post-filter.</strong> Multiplying
+the limit by four when a scope is present is a small correction for a
+failure mode — a narrow scope returning almost nothing — that
+post-filtering designs hit constantly.</li>
+<li><strong>Ship importers from the systems people are leaving.</strong>
+Hindsight and Honcho readers make the first hour cheap.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Tying a correction rule to a surface feature of the
+text.</strong> If supersession requires a digit, the corrections that
+carry no digit are permanently invisible, and nothing in the system
+reports that gap.</li>
+<li><strong>Putting the validity window on the edge and not on the
+claim.</strong> The question users ask is "what was true then", and that
+needs a column on the thing that carries the assertion.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want a local associative-memory engine with a
+real consolidation cycle and are content to do belief and scope
+yourself. Look elsewhere if you need current-only reads, per-user
+scoping, or corrections that are not about numbers — and check the dual
+licence against your use.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the numeric-token rule intended as the whole of supersession, or
+as the cheap first pass with a semantic one to follow?</li>
+<li>Should the supersedes traversal take <code>at_time</code> like the
+neighbour walk beside it?</li>
+<li><code>ingestion_time</code> is stored on every edge and filtered
+nowhere. Is a knowledge-time read planned, or should the column go?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>python/memory_client.py</code></td>
+<td>The schema, recall, both traversals, ingest supersession</td>
+</tr>
+<tr>
+<td><code>python/dream_engine.py</code></td>
+<td>The five phases, the samplers, the backend seam</td>
+</tr>
+<tr>
+<td><code>python/access_logger.py</code></td>
+<td>What is recorded about every recall</td>
+</tr>
+<tr>
+<td><code>src/memory/</code></td>
+<td>Hopfield, VSA, LSTM, kNN, consolidation in C++</td>
+</tr>
+<tr>
+<td><code>LICENSE</code>, <code>NOTICE</code></td>
+<td>The AGPL / PolyForm-NC choice and the commercial carve-out</td>
+</tr>
+<tr>
+<td><code>paper/</code></td>
+<td>The accompanying write-up</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/itsXactlY/mazemaker/commit/25b4064114bb9bfc8a9d5fd45fec6bc9f353f126"><code class="commit-id" title="25b4064114bb9bfc8a9d5fd45fec6bc9f353f126">25b40641…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: two files, no auto-run surfaces, no
+build-time execution points, one unpinned surface and one dependency
+file inside the cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

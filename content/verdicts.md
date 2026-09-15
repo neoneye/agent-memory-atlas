@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 481 reports.**
+**This page covers all 482 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4198,3 +4198,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: FSL-1.1 converting to Apache-2.0, so source-available rather than open at this pin, and the README calls it experimental; 1,624 commits since 20 February 2026, 200,458 lines of TypeScript against 229,044 lines across 487 test files, with a Stryker mutation-testing configuration beside the unit and eval suites; published as a gateway proxy, an OpenCode plugin, a Pi extension and a core engine.
 - Study when: you want memory that follows an agent across tools without changing the harness, and a curated file a team reviews in a pull request.
 - Do not copy when: approval must hold identically across every machine on a team today, or a proxy in the path of every prompt and response is unacceptable.
+
+### [`mazemaker`](../systems/mazemaker/)
+- Best idea: **a consolidation pass that samples the slices a recency bias never reaches.** The dream engine's supersedes phase uses the same mixed sampler as its NREM phase — recent, random-old and low-salience — with the reason written down: cross-session supersessions live in the older slices. Its docstring also records that the previous implementation reached for SQLite-style placeholders and so "made the supersedes phase a silent no-op under PG", which is the kind of note that stops a bug returning.
+- Biggest risk: **the correction rule is lexical, and it does not filter.** A pair is a supersession candidate only when both memories carry numeric, dollar or quantity tokens *and* those numbers differ, so a correction with no digit in it — a changed deploy target, a reversed decision, a new owner — is never detected. When one is detected it writes a directed edge rather than a state, and recall demotes the older result by 0.5, tags it `superseded_by` and returns it anyway.
+- Most reusable component: widening the fetch limit fourfold when a scope is present, because a narrow scope post-filtered over a corpus dominated by other labels would otherwise return fewer than `k` hits — a correction most post-filter designs skip.
+- Maturity impression: dual-licensed AGPL-3.0 or PolyForm Noncommercial 1.0.0 with commercial use outside either requiring a separate licence; 17,511 lines of Python and 5,387 of C++ and headers across 15 commits since 9 April 2026, a C++ core with Hopfield, VSA, LSTM and kNN over SIMD, seven Python test files, a benchmarks directory and a committed paper.
+- Study when: you want a local associative-memory engine with a real consolidation cycle and intend to model belief and scope yourself.
+- Do not copy when: you need current-only reads, per-user scoping, or corrections that are not about numbers.
