@@ -7,10 +7,14 @@ page_kind: system
 source_name: "thedotmack/claude-mem"
 source_url: https://github.com/thedotmack/claude-mem
 archive_name: "thedotmack--claude-mem"
-revision: 132b46343e60ecf4057c427736c57b08f7615dfe
-revision_url: https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe
-analyzed_at: 2026-07-27
-capabilities: "scope_enforced"
+revision: 40be934a846cca6d2038f1d9800428a4f4d5136f
+revision_url: https://github.com/thedotmack/claude-mem/commit/40be934a846cca6d2038f1d9800428a4f4d5136f
+analyzed_at: 2026-09-15
+capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "server observation reads, by the API key's team and project | src/server/routes/v1/ServerV1PostgresRoutes.ts:929-950 (/v1/search: requireTeamId, ensureProjectAllowed), :1201, :1305, src/storage/postgres/observations.ts:128, :154-170 | every server read resolves the team from the authenticated key, refuses a project the key is not scoped to with 403 or a not-found, and queries observations WHERE project_id AND team_id; locally, context and search are filtered by project, worktree lineage and platform source | tests/server/runtime/server-mcp-routes.test.ts:232, tests/server/runtime/server-session-routes.test.ts:216"
+  audit_log: "the server audit_log table | src/storage/postgres/schema.ts:134-147, src/storage/postgres/auth.ts:94-130 createAuditLog, src/server/generation/processGeneratedResponse.ts:352 (observation.created), src/server/routes/v1/ServerV1PostgresRoutes.ts:1096 (observation.deleted) | an insert-only table of action, resource, actor, API key, team, project and JSON details, written when an observation is generated or deleted and on generation-job transitions and reads; an insert failure is logged and does not fail the request. Local SQLite mode has no equivalent | tests/server"
+  negative_eval: "platform-scoped search and context, and cross-tenant reads | tests/server/runtime/server-session-routes.test.ts:398-450, tests/server/runtime/server-mcp-routes.test.ts:232-246 | observations from a Codex session and a Cursor session share a project; a search filtered to Cursor is asserted to return exactly the Cursor observation, and the context built for Cursor is asserted to contain it and not the Codex one; a search against a project under another team is asserted to fail with 403 | server-session-routes.test.ts:432-449"
 stack_storage: "sqlite, chroma"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -20,7 +24,7 @@ matrix:
   retrieval: "FTS/filter search or Chroma semantic search; file-only metadata/semantic intersection; recent timeline context"
   write: "Lifecycle hooks queue work; observer generates structured XML; SQLite commit before acknowledgement"
   update_delete: "Exact row deletion with synchronized tombstones; project-wide server forget paths"
-  scoping: "Project/worktree, session, platform source; team/server scope emerging"
+  scoping: "Local: project, worktree lineage and platform source filters. Server: the API key's team and project on every observation read and delete"
   integration: "Coding-agent hooks, HTTP, MCP, UI, multiple adapters"
   background: "Durable queue, provider retries, vector/cloud projection, repair"
   trust: "Session/tool metadata and deterministic file evidence; generated claims have no trust state"
@@ -198,7 +202,8 @@ throws, the orchestrator wraps the failure as `ChromaUnavailableError` rather
 than transparently falling back.
 
 SQLite supplies FTS5 indexes for observations, summaries, and prompts. Search
-supports project, platform, type, concept, file, and date filters.
+supports project, platform, type, concept, file, and date filters, and answers
+Chinese and Japanese queries by substring rather than tokenized match.
 
 Automatic session-start context uses a different path. `ContextBuilder` reads
 recent project-scoped observations and summaries, filters configured types and
@@ -262,7 +267,11 @@ Strengths:
 - Context reads open SQLite read-only with a busy timeout.
 - Synchronized deletion refuses to strand acknowledged replicas when cloud
   identity is unavailable.
-- Project, worktree lineage, and platform source constrain most reads.
+- Project, worktree lineage, and platform source constrain most local reads;
+  on the server, every observation read and delete is bound to the API key's
+  team and project, refusing another project with 403 or a not-found.
+- The server keeps an insert-only `audit_log` of observation creation and
+  deletion, generation-job transitions and reads, with actor and API key.
 
 Limitations:
 
@@ -279,7 +288,7 @@ Limitations:
 
 ## 10. Tests, Evals, and Benchmarks
 
-The inspected tree contains 237 TypeScript test files. Coverage includes hook
+The inspected tree contains 339 TypeScript test files. Coverage includes hook
 lifecycle, transcript adapters, queue recovery, context rendering, privacy,
 schema migration, foreign keys, Chroma synchronization, cloud sync, API
 endpoints, provider error classification, installer behavior, and server
@@ -289,6 +298,13 @@ The source suite was not run for this atlas review because it requires Bun and
 several optional services. No committed end-to-end memory-quality benchmark was
 found. Token-economics telemetry measures compression and context volume; it
 does not establish recall correctness or factual accuracy.
+
+Two server suites carry exclusion cases. `server-session-routes.test.ts` stores a
+Codex and a Cursor observation in one project and asserts a Cursor-filtered search
+returns only the Cursor one and the Cursor context does not contain the Codex
+text; `server-mcp-routes.test.ts` asserts a search against another team's project
+is refused with 403. Both were present at the first reading, which credited
+neither.
 
 The test breadth supports an operational-maturity claim. It does not validate
 the observer's facts, the ideal context mix, or general retrieval quality.
@@ -367,6 +383,8 @@ consistency.
 - `docs/server-storage-boundary.md`: active/future schema boundary.
 
 ## History
+
+**2026-09-15** — [`40be934a846cca6d2038f1d9800428a4f4d5136f`](https://github.com/thedotmack/claude-mem/commit/40be934a846cca6d2038f1d9800428a4f4d5136f) — 325 commits on, 2026-09-13, at version 13.24.23. Screened on a sparse checkout of the storage, server, search, context and test trees plus the root and plugin manifests: one auto-run surface, one build-time execution point, two unpinned surfaces, two dependency surfaces inside the cooldown and an agent-instruction file read as data; nothing was installed or run. Mostly observer hardening — quota and signed-out failures classified, empty mid-stream chunks no longer confirming a batch, image payloads stripped from the observation prompt, credential leak paths closed (#3985), and the observer denied SendMessage and ListAgents — plus project names anchored to the Claude project directory, CJK substring search and server-beta fixes. Reading the server tier the first reading summarized as emerging: it binds every observation read and delete to the API key's team and project, and keeps an insert-only `audit_log` of observation creation and deletion since May 2026, so `audit_log` is added; its platform-scoped context test and cross-tenant 403 test predate the first reading, so `negative_eval` is added. `human_review` stays withheld: delete endpoints exist but the viewer does not call them. Three marks.
 
 **2026-08-31** — [`132b46343e60ecf4057c427736c57b08f7615dfe`](https://github.com/thedotmack/claude-mem/commit/132b46343e60ecf4057c427736c57b08f7615dfe) — same pin, one correction, in the direction of crediting the system with a table it does not have. Section 5 listed `observation_feedback` as part of the active local model. The identifier appears nowhere under `src/` at this commit — no `CREATE TABLE`, no migration step, no read, no write — only in `CHANGELOG.md:1730`, where a v11.0.0 release note announced it, and in `docs/architecture-overview.md:125`, which lists it beside the five tables that do exist. It was taken from documentation rather than from the schema, which the rubric forbids. The divergence itself is the finding and section 5 states it, over a migration chain verified in its place: `initializeSchema` at `SessionStore.ts:922-991` plus thirty-two PRAGMA-guarded steps at `:91-122`, of which `createUserPromptsTable` and `createPendingMessagesTable` are the only two that add tables, and `observations_fts` / `session_summaries_fts` come from `SessionSearch.ts:78,116` instead. No mark moved; `human_review` was re-checked in the other direction and no approval surface over observation content exists at this pin.
 

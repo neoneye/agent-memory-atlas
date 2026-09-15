@@ -269,7 +269,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: durable hook queue, canonical SQLite commit, then best-effort semantic/cloud projections and bounded timeline injection.
 - Biggest risk: generated observations become active without epistemic review, and ordinary text search does not fuse its FTS and Chroma capabilities.
 - Most reusable component: `pending_messages` lifecycle plus `ResponseProcessor` commit/acknowledgement ordering.
-- Maturity impression: operationally mature coding-agent sidecar with broad failure-path tests; memory quality is not benchmarked.
+- Maturity impression: operationally mature coding-agent sidecar with broad failure-path tests and a server tier that binds every read to an API key's team and project and audits observation changes; memory quality is not benchmarked.
 - Study when: cross-session coding context must be captured automatically without blocking the agent.
 - Do not copy when: explicit writes are sufficient, hooks are unavailable, or high-stakes facts require verification before use.
 

@@ -18,7 +18,7 @@ Neither counts as screened.
 | Result | Count |
 | --- | ---: |
 | Repositories with an auto-run surface (`RUNS`) | 160 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 212 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 213 |
 | Repositories with build-time execution (`EXEC`) | 284 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -49,7 +49,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
-| [`claude-mem`](../../content/systems/claude-mem.md) | `.claude/settings.json`, `.github/copilot-instructions.md` |
+| [`claude-mem`](../../content/systems/claude-mem.md) | `.claude-plugin/` |
 | [`claude-self-reflect`](../../content/systems/claude-self-reflect.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json` |
 | [`claude-total-memory`](../../content/systems/claude-total-memory.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
