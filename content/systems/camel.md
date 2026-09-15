@@ -1,26 +1,26 @@
 ---
 title: "CAMEL"
 eyebrow: "Message store with vector recall"
-description: "A multi-agent framework whose memory unit is the message rather than the fact, where every record carries an agent_id that no read path consults, and the class called ScoreBasedContextCreator no longer scores or filters."
+description: "A multi-agent framework whose memory unit is the message rather than the fact, where every record carries an agent_id that no core read path consults, and the class called ScoreBasedContextCreator no longer scores or filters."
 root: ../..
 page_kind: system
 source_name: "camel-ai/camel"
 source_url: https://github.com/camel-ai/camel
 archive_name: "camel-ai--camel"
-revision: ec48f997f3c2a700ae5a4cf0280792838fea81f8
-revision_url: https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8
-analyzed_at: 2026-07-30
+revision: 8c791b7b9cf7deab56cb5a92818c34499af9097f
+revision_url: https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "qdrant, redis, kv, files, memory"
 stack_retrieval: "vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "A `MemoryRecord` — a chat message plus its backend role, a UUID, a timestamp, an `extra_info` dict and an `agent_id`. Nothing is derived from the transcript"
-  storage: "Key-value backends for chat history (in-memory, JSON file, Redis, Mem0 cloud) and a vector backend for recall (Qdrant by default)"
+  storage: "Key-value backends for chat history (in-memory, JSON file, Redis, Mem0 cloud) and a vector backend for recall (Qdrant by default); an optional Memanto-backed memory that archives turns to a remote agent store"
   retrieval: "Chat history returns the stored list, optionally windowed; the vector block embeds the last user message and takes the top `k` by similarity with no filter"
   write: "`write_records` on every turn — no extraction, no summarisation, no consolidation. The transcript is the memory"
   update_delete: "`pop_records(count)` and `remove_records_by_indices(indices)` on chat history; both raise `NotImplementedError` on the vector store, where `clear()` is the only removal"
-  scoping: "`agent_id` is stored on every record and serialised both ways, and is applied on no read path. Isolation comes from giving each agent its own storage object"
+  scoping: "`agent_id` is stored on every record and applied on no core read path; the Memanto memory routes by it in the URL, and the Mem0 adapter filters on `user_id` equal to it. Isolation comes from giving each agent its own storage object"
   integration: "`AgentMemory` ABC consumed by `ChatAgent`; a `MemoryToolkit` for save/load; role-playing and workforce runtimes on top"
   background: "None"
   trust: "None. A record is a message that was sent; there is no status, confidence, source or provenance beyond the backend role"
@@ -31,13 +31,14 @@ matrix:
 ## 1. Executive Summary
 
 CAMEL is a multi-agent framework — role-playing, workforce, society — and its
-memory module is small: roughly 1,350 lines across `camel/memories/`, Apache-2.0.
+memory module is small: roughly 1,600 lines across `camel/memories/`, Apache-2.0.
 The contract is three parts and it is genuinely clean. A `MemoryBlock` stores and
 retrieves; an `AgentMemory` wraps a block and adds `retrieve`, `write_records`,
 `clear` and a context creator; a `BaseContextCreator` turns retrieved records
 into the messages that go to the model. Three implementations ship:
 `ChatHistoryMemory` over a key-value store, `VectorDBMemory` over a vector store,
-and `LongtermAgentMemory` composing both.
+and `LongtermAgentMemory` composing both. A fourth, `MemantoMemory`, extends
+chat history with a remote [Memanto](../memanto/) store.
 
 **The unit is a message, not a fact.** `MemoryRecord` holds a `BaseMessage`, the
 role it played at the backend, a UUID, a timestamp and an `extra_info` dict.
@@ -59,7 +60,16 @@ nothing that reads. Isolation in CAMEL comes from *handing each agent its own
 storage object*, a separate JSON file or Qdrant collection, so the moment two
 agents share a backend they share its memories. This is the exact case the atlas
 rubric names — storing a boundary is not enforcing one — and it is unusually
-legible here because the key is present, correct, and inert.
+legible here because the key is present, correct, and inert in the core.
+
+Two adapters do send it somewhere, and neither changes that. `MemantoMemory`
+puts the agent id in the URL of every call, `/api/v2/agents/{agent_id}/recall`,
+so its recall is scoped by the Memanto server rather than by anything in CAMEL.
+And `Mem0Storage.load` builds its `get_all` filter as
+`{"AND": [{"user_id": self.agent_id}]}` — the agent id placed under `user_id` —
+while `save` sends `agent_id` and `user_id` as separate fields, so read from the
+code the key the load filters on is not the key the save wrote unless the two ids
+are configured equal; a configured `user_id` replaces the agent filter outright.
 
 **`ScoreBasedContextCreator` no longer scores.** Its docstring describes "a
 context creation strategy that orders records chronologically", and its
@@ -116,6 +126,8 @@ OpenAI's — an API key to store anything at all.
   query.
 - `camel/memories/context_creators/score_based.py` (169) — the chronological
   creator with the vestigial name.
+- `camel/memories/memanto.py` (227) — chat history plus a Memanto REST client
+  for `remember` and `recall`.
 
 ## 5. Memory Data Model
 
@@ -148,12 +160,20 @@ whichever three records happen to sit nearest to it.
 
 There is no fusion, no reranking, no recency weighting and no scope filter.
 
+`MemantoMemory.retrieve` takes the chat-history window, finds the latest USER
+message in it, and posts that text to Memanto's `recall` with a limit of three by
+default; each hit comes back as a USER-role record prefixed *"Recalled memory
+(historical context):"*, with a stable UUID derived from the Memanto id, inserted
+after the leading system and developer messages; a hit tagged with a record
+already in the window is skipped, so recall does not repeat the visible turns. The query is the same last-user-message key the vector
+block uses.
+
 ## 7. Write Mechanics
 
 Writes block and are trivial: `write_records` appends to the key-value store, or
 embeds and upserts to the vector store, on every turn. Empty-content records are
 filtered out before embedding. There is no extraction, no consolidation, no
-background pass and no compaction, so the store grows monotonically with the
+background pass and no compaction in CAMEL itself, so the store grows monotonically with the
 conversation and the only bound on what reaches the model is the context
 creator's ordering plus whatever window the caller passes.
 
@@ -170,7 +190,11 @@ No marks are earned, and the interesting part is which near-misses exist.
 
 **Scope**: described above. The field is there; nothing filters on it.
 
-**Deletion**: `ChatHistoryMemory` can `pop_records(count)` from the end or
+**Deletion**: `MemantoMemory` states the gap in its own docstring — *"Clearing
+or rolling back this memory only changes chat history. Archived Memanto memories
+survive agent initialization and conversation resets"* — so every user and
+assistant turn it has written stays in the remote store after `clear()`.
+`ChatHistoryMemory` can `pop_records(count)` from the end or
 `remove_records_by_indices(indices)` — positional operations on a list, not
 addressed removal, even though every record has a UUID that could address it.
 `VectorDBMemory` raises `NotImplementedError` for both, with the message
@@ -186,7 +210,8 @@ with a transcript store.
 
 ## 10. Tests, Evals, and Benchmarks
 
-868 lines across four files in `test/memories/`, none run here. They cover
+1,152 lines across five files in `test/memories/`, none run here; twelve of the
+tests are the Memanto memory's, against a mocked HTTP client. They cover
 round-tripping records, windowing, the composed memory, and the
 `NotImplementedError` paths. No test asserts that particular material must not
 be retrieved — which follows: with no scope filter and no deletion on the vector
@@ -256,8 +281,12 @@ Do not use it multi-tenant without adding a filter yourself, and do not use
 | `camel/memories/records.py` | 195 | `MemoryRecord`, `ContextRecord`, serialisation |
 | `camel/memories/context_creators/score_based.py` | 169 | Chronological ordering; the name is vestigial |
 | `camel/memories/blocks/vectordb_block.py` | 111 | Embed, write, and the unfiltered query |
-| `test/memories/` | 868 | Round-trips, windowing, the `NotImplementedError` paths |
+| `camel/memories/memanto.py` | 227 | Chat history plus remote Memanto remember and recall |
+| `camel/storages/key_value_storages/mem0_cloud.py` | — | Mem0 adapter; `load` filters `user_id` on the agent id |
+| `test/memories/` | 1,152 | Round-trips, windowing, the `NotImplementedError` paths |
 
 ## History
+
+**2026-09-15** — [`8c791b7b9cf7deab56cb5a92818c34499af9097f`](https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f) — 33 commits on, 2026-09-07, mostly model-provider fixes, toolkits and generated documentation. Screened before reading: no auto-run surface, three build-time execution points and ten unpinned surfaces, none inside the cooldown; nothing was installed or run. One memory change: `MemantoMemory` (#4175), a chat-history memory that archives user and assistant turns to a Memanto server under the agent id and recalls from it with the last user message, and whose remote copies survive `clear()`. The vector-store changes are docstrings. A scope claim from the first reading was too broad and is narrowed to the core: the Mem0 key-value adapter, present at the previous pin, does send the agent id as a load filter, under `user_id` rather than the `agent_id` field its `save` writes. No mark changes.
 
 **2026-07-30** — [`ec48f997f3c2a700ae5a4cf0280792838fea81f8`](https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8) — first reading.

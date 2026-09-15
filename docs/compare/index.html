@@ -9021,7 +9021,9 @@ maintaining one over time is unexercised end to end</td>
 a UUID, a timestamp, an <code>extra_info</code> dict and an
 <code>agent_id</code>. Nothing is derived from the transcript</td>
 <td>Key-value backends for chat history (in-memory, JSON file, Redis,
-Mem0 cloud) and a vector backend for recall (Qdrant by default)</td>
+Mem0 cloud) and a vector backend for recall (Qdrant by default); an
+optional Memanto-backed memory that archives turns to a remote agent
+store</td>
 <td>Chat history returns the stored list, optionally windowed; the
 vector block embeds the last user message and takes the top
 <code>k</code> by similarity with no filter</td>
@@ -9031,9 +9033,10 @@ summarisation, no consolidation. The transcript is the memory</td>
 <code>remove_records_by_indices(indices)</code> on chat history; both
 raise <code>NotImplementedError</code> on the vector store, where
 <code>clear()</code> is the only removal</td>
-<td><code>agent_id</code> is stored on every record and serialised both
-ways, and is applied on no read path. Isolation comes from giving each
-agent its own storage object</td>
+<td><code>agent_id</code> is stored on every record and applied on no
+core read path; the Memanto memory routes by it in the URL, and the Mem0
+adapter filters on <code>user_id</code> equal to it. Isolation comes
+from giving each agent its own storage object</td>
 <td><code>AgentMemory</code> ABC consumed by <code>ChatAgent</code>; a
 <code>MemoryToolkit</code> for save/load; role-playing and workforce
 runtimes on top</td>
@@ -30093,7 +30096,7 @@ href="https://github.com/pydantic/pydantic-ai-harness">pydantic/pydantic-ai-harn
 at <a
 href="https://github.com/pydantic/pydantic-ai-harness/commit/5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221"><code class="commit-id" title="5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221">5dd1e0e3…</code></a></li>
 <li><a href="https://github.com/camel-ai/camel">camel-ai/camel</a> at <a
-href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8"><code class="commit-id" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">ec48f997…</code></a></li>
+href="https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f"><code class="commit-id" title="8c791b7b9cf7deab56cb5a92818c34499af9097f">8c791b7b…</code></a></li>
 <li><a
 href="https://github.com/microsoft/agent-framework">microsoft/agent-framework</a>
 at <a

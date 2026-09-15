@@ -895,9 +895,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: a three-part contract — block, memory, context creator — small enough that a custom store satisfies it in an afternoon, with the system message pinned through truncation.
 - Biggest risk: the retrieval query is whatever the last user message happened to say, and `LongtermAgentMemory` cannot delete a single record from its vector store.
 - Most reusable component: the `AgentMemory` ABC as a seam — swapping one of this atlas's fact-level systems in behind it is a day's work.
-- Maturity impression: 868 lines across four test files covering round-tripping, windowing and the `NotImplementedError` paths, with no negative retrieval assertion — which follows from having no scope filter to assert about.
+- Maturity impression: 1,152 lines across five test files covering round-tripping, windowing, the `NotImplementedError` paths and a mocked Memanto client, with no negative retrieval assertion — which follows from having no scope filter to assert about.
 - Study when: you are already using CAMEL and your agents are short-lived, single-tenant, and their memory is genuinely their transcript.
-- Do not copy when: you are multi-tenant without adding a filter yourself, or a user can ask you to delete something.
+- Do not copy when: you are multi-tenant without adding a filter yourself, or a user can ask you to delete something — the Memanto-backed memory keeps every archived turn remotely after `clear()`.
 
 ### [`cortex`](../systems/cortex/)
 - Best idea: the gate is on the **read**, not the write. A secret-classified hit needs a supervisor decision and then a human yes, and a denial returns an error rather than a quietly redacted result.

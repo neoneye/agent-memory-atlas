@@ -6,23 +6,23 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A multi-agent framework whose
 memory unit is the message rather than the fact, where every record
-carries an agent_id that no read path consults, and the class called
-ScoreBasedContextCreator no longer scores or filters.">
+carries an agent_id that no core read path consults, and the class
+called ScoreBasedContextCreator no longer scores or filters.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="CAMEL — Agent Memory Atlas">
     <meta property="og:description" content="A multi-agent framework
 whose memory unit is the message rather than the fact, where every
-record carries an agent_id that no read path consults, and the class
-called ScoreBasedContextCreator no longer scores or filters.">
+record carries an agent_id that no core read path consults, and the
+class called ScoreBasedContextCreator no longer scores or filters.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CAMEL — Agent Memory Atlas">
     <meta name="twitter:description" content="A multi-agent framework
 whose memory unit is the message rather than the fact, where every
-record carries an agent_id that no read path consults, and the class
-called ScoreBasedContextCreator no longer scores or filters.">
+record carries an agent_id that no core read path consults, and the
+class called ScoreBasedContextCreator no longer scores or filters.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>CAMEL — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +44,7 @@ called ScoreBasedContextCreator no longer scores or filters.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "CAMEL",
-      "description": "A multi-agent framework whose memory unit is the message rather than the fact, where every record carries an agent_id that no read path consults, and the class called ScoreBasedContextCreator no longer scores or filters.",
+      "description": "A multi-agent framework whose memory unit is the message rather than the fact, where every record carries an agent_id that no core read path consults, and the class called ScoreBasedContextCreator no longer scores or filters.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,7 +102,7 @@ called ScoreBasedContextCreator no longer scores or filters.">
           <h1>CAMEL</h1>
           <p class="document-deck">A multi-agent framework whose memory
 unit is the message rather than the fact, where every record carries an
-agent_id that no read path consults, and the class called
+agent_id that no core read path consults, and the class called
 ScoreBasedContextCreator no longer scores or filters.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/camel-ai/camel">
@@ -110,14 +110,14 @@ ScoreBasedContextCreator no longer scores or filters.</p>
               <strong>camel-ai/camel</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">
+            <a class="meta-pill revision-pill" href="https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f" title="8c791b7b9cf7deab56cb5a92818c34499af9097f">
               <span>Analyzed revision</span>
-              <code>ec48f997…</code>
+              <code>8c791b7b…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-15</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/camel-ai--camel" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -142,7 +142,7 @@ ScoreBasedContextCreator no longer scores or filters.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>CAMEL is a multi-agent framework — role-playing, workforce, society —
-and its memory module is small: roughly 1,350 lines across
+and its memory module is small: roughly 1,600 lines across
 <code>camel/memories/</code>, Apache-2.0. The contract is three parts
 and it is genuinely clean. A <code>MemoryBlock</code> stores and
 retrieves; an <code>AgentMemory</code> wraps a block and adds
@@ -151,7 +151,9 @@ and a context creator; a <code>BaseContextCreator</code> turns retrieved
 records into the messages that go to the model. Three implementations
 ship: <code>ChatHistoryMemory</code> over a key-value store,
 <code>VectorDBMemory</code> over a vector store, and
-<code>LongtermAgentMemory</code> composing both.</p>
+<code>LongtermAgentMemory</code> composing both. A fourth,
+<code>MemantoMemory</code>, extends chat history with a remote <a
+href="../memanto/">Memanto</a> store.</p>
 <p><strong>The unit is a message, not a fact.</strong>
 <code>MemoryRecord</code> holds a <code>BaseMessage</code>, the role it
 played at the backend, a UUID, a timestamp and an
@@ -176,8 +178,19 @@ in CAMEL comes from <em>handing each agent its own storage object</em>,
 a separate JSON file or Qdrant collection, so the moment two agents
 share a backend they share its memories. This is the exact case the
 atlas rubric names — storing a boundary is not enforcing one — and it is
-unusually legible here because the key is present, correct, and
-inert.</p>
+unusually legible here because the key is present, correct, and inert in
+the core.</p>
+<p>Two adapters do send it somewhere, and neither changes that.
+<code>MemantoMemory</code> puts the agent id in the URL of every call,
+<code>/api/v2/agents/{agent_id}/recall</code>, so its recall is scoped
+by the Memanto server rather than by anything in CAMEL. And
+<code>Mem0Storage.load</code> builds its <code>get_all</code> filter as
+<code>{"AND": [{"user_id": self.agent_id}]}</code> — the agent id placed
+under <code>user_id</code> — while <code>save</code> sends
+<code>agent_id</code> and <code>user_id</code> as separate fields, so
+read from the code the key the load filters on is not the key the save
+wrote unless the two ids are configured equal; a configured
+<code>user_id</code> replaces the agent filter outright.</p>
 <p><strong><code>ScoreBasedContextCreator</code> no longer
 scores.</strong> Its docstring describes "a context creation strategy
 that orders records chronologically", and its <code>token_limit</code>
@@ -234,6 +247,9 @@ key-value storage, windowing, system-message preservation.</li>
 write, unfiltered query.</li>
 <li><code>camel/memories/context_creators/score_based.py</code> (169) —
 the chronological creator with the vestigial name.</li>
+<li><code>camel/memories/memanto.py</code> (227) — chat history plus a
+Memanto REST client for <code>remember</code> and
+<code>recall</code>.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>MemoryRecord</code> is the whole model: message,
@@ -265,14 +281,23 @@ process the first retrieval embeds the empty string and returns
 whichever three records happen to sit nearest to it.</p>
 <p>There is no fusion, no reranking, no recency weighting and no scope
 filter.</p>
+<p><code>MemantoMemory.retrieve</code> takes the chat-history window,
+finds the latest USER message in it, and posts that text to Memanto's
+<code>recall</code> with a limit of three by default; each hit comes
+back as a USER-role record prefixed <em>"Recalled memory (historical
+context):"</em>, with a stable UUID derived from the Memanto id,
+inserted after the leading system and developer messages; a hit tagged
+with a record already in the window is skipped, so recall does not
+repeat the visible turns. The query is the same last-user-message key
+the vector block uses.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes block and are trivial: <code>write_records</code> appends to
 the key-value store, or embeds and upserts to the vector store, on every
 turn. Empty-content records are filtered out before embedding. There is
-no extraction, no consolidation, no background pass and no compaction,
-so the store grows monotonically with the conversation and the only
-bound on what reaches the model is the context creator's ordering plus
-whatever window the caller passes.</p>
+no extraction, no consolidation, no background pass and no compaction in
+CAMEL itself, so the store grows monotonically with the conversation and
+the only bound on what reaches the model is the context creator's
+ordering plus whatever window the caller passes.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p><code>ChatAgent</code> holds an <code>AgentMemory</code> and the
 <code>agent_id</code> setter propagates the identifier down to it. A
@@ -286,7 +311,12 @@ Trust</h2>
 exist.</p>
 <p><strong>Scope</strong>: described above. The field is there; nothing
 filters on it.</p>
-<p><strong>Deletion</strong>: <code>ChatHistoryMemory</code> can
+<p><strong>Deletion</strong>: <code>MemantoMemory</code> states the gap
+in its own docstring — <em>"Clearing or rolling back this memory only
+changes chat history. Archived Memanto memories survive agent
+initialization and conversation resets"</em> — so every user and
+assistant turn it has written stays in the remote store after
+<code>clear()</code>. <code>ChatHistoryMemory</code> can
 <code>pop_records(count)</code> from the end or
 <code>remove_records_by_indices(indices)</code> — positional operations
 on a list, not addressed removal, even though every record has a UUID
@@ -303,11 +333,12 @@ by similarity, indefinitely.</p>
 absent, and consistent with a transcript store.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>868 lines across four files in <code>test/memories/</code>, none run
-here. They cover round-tripping records, windowing, the composed memory,
-and the <code>NotImplementedError</code> paths. No test asserts that
-particular material must not be retrieved — which follows: with no scope
-filter and no deletion on the vector side, there is no boundary to
+<p>1,152 lines across five files in <code>test/memories/</code>, none
+run here; twelve of the tests are the Memanto memory's, against a mocked
+HTTP client. They cover round-tripping records, windowing, the composed
+memory, and the <code>NotImplementedError</code> paths. No test asserts
+that particular material must not be retrieved — which follows: with no
+scope filter and no deletion on the vector side, there is no boundary to
 assert about. No memory benchmark and no retrieval quality measurement
 exists in the repository, and none is claimed.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
@@ -411,14 +442,40 @@ serialisation</td>
 <td>Embed, write, and the unfiltered query</td>
 </tr>
 <tr>
+<td><code>camel/memories/memanto.py</code></td>
+<td>227</td>
+<td>Chat history plus remote Memanto remember and recall</td>
+</tr>
+<tr>
+<td><code>camel/storages/key_value_storages/mem0_cloud.py</code></td>
+<td>—</td>
+<td>Mem0 adapter; <code>load</code> filters <code>user_id</code> on the
+agent id</td>
+</tr>
+<tr>
 <td><code>test/memories/</code></td>
-<td>868</td>
+<td>1,152</td>
 <td>Round-trips, windowing, the <code>NotImplementedError</code>
 paths</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f"><code class="commit-id" title="8c791b7b9cf7deab56cb5a92818c34499af9097f">8c791b7b…</code></a>
+— 33 commits on, 2026-09-07, mostly model-provider fixes, toolkits and
+generated documentation. Screened before reading: no auto-run surface,
+three build-time execution points and ten unpinned surfaces, none inside
+the cooldown; nothing was installed or run. One memory change:
+<code>MemantoMemory</code> (#4175), a chat-history memory that archives
+user and assistant turns to a Memanto server under the agent id and
+recalls from it with the last user message, and whose remote copies
+survive <code>clear()</code>. The vector-store changes are docstrings. A
+scope claim from the first reading was too broad and is narrowed to the
+core: the Mem0 key-value adapter, present at the previous pin, does send
+the agent id as a load filter, under <code>user_id</code> rather than
+the <code>agent_id</code> field its <code>save</code> writes. No mark
+changes.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/camel-ai/camel/commit/ec48f997f3c2a700ae5a4cf0280792838fea81f8"><code class="commit-id" title="ec48f997f3c2a700ae5a4cf0280792838fea81f8">ec48f997…</code></a>
 — first reading.</p>
