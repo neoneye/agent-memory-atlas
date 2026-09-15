@@ -7,23 +7,24 @@ page_kind: system
 source_name: "drephantom/memory-garden"
 source_url: https://github.com/drephantom/memory-garden
 archive_name: "drephantom--memory-garden"
-revision: f8171c471aaf7c321addc0557c010619fbad2bfb
-revision_url: https://github.com/drephantom/memory-garden/commit/f8171c471aaf7c321addc0557c010619fbad2bfb
-analyzed_at: 2026-09-11
-capabilities: "trust_state, human_review"
+revision: d7fdb1c7c354e3eafdead896ed64941a049755ac
+revision_url: https://github.com/drephantom/memory-garden/commit/d7fdb1c7c354e3eafdead896ed64941a049755ac
+analyzed_at: 2026-09-15
+capabilities: "trust_state, human_review, negative_eval"
 capability_evidence:
-  trust_state: "the discovery lifecycle | src/memory_garden/db.py:161-184 (`discoveries.status`, `review_verdict`), src/memory_garden/cognitive.py:140-150 (`DiscoveryService.run_scan`) | a proposed change in the user's view is written as `status='candidate'`; a person's review moves it to `reviewed` with a verdict of `accurate`, `partly_accurate`, `no_change`, `not_my_view`, `insufficient_evidence` or `defer`. The rejecting verdicts filter: `run_scan` skips any pair already reviewed `no_change` or `not_my_view`, and a reviewed or negatively-reacted candidate leaves the pending list, while a confirmed interpretation is what the `user_verdicts` tool hands the agent as the user's own position | tests/test_cognitive.py:20-31, tests/test_snapshots.py:95-108"
-  human_review: "the review surfaces over discovery candidates and answers | src/memory_garden/web.py:352 (`/api/verdict`), :408 (`/api/discover/react`), :418 (`/api/discover/review`), src/memory_garden/cli.py:74 (`review`), src/memory_garden/cognitive.py:204-270 | a scan proposes candidate changes; a person reviews each from the web workspace or the CLI with one of six verdicts, an optional revision in their own words and the atoms they accept or reject, and the verdict is persisted as the only confirmed cognition the system holds — the schema's own comment says the user is the only writer of confirmed views. Answers carry the same verdict form | tests/test_cognitive.py:20-45, tests/test_agent.py:54-68"
+  trust_state: "the discovery lifecycle and the long-term memory item | src/memory_garden/db.py:162-174 (discoveries.status), :211-223 (memory_items.status), src/memory_garden/cognitive.py:135-154 run_scan, src/memory_garden/memory.py:153, :184, :200 | a proposed change is written as status='candidate' and a person's review moves it to reviewed with one of six verdicts, and run_scan skips a pair already reviewed no_change or not_my_view; a saved verdict produces a memory item that is active, superseded, needs_review or revoked, and recall serves only an item and verdict both active whose cited sources are still present and searchable | tests/test_memory_lifecycle.py:44, :71"
+  human_review: "the review surfaces over candidates, answers and memory | src/memory_garden/web.py:492 (/api/verdict), :548 (/api/discover/react), :558 (/api/discover/review), :474 (/api/memory/{memory_id}/revoke), src/memory_garden/cli.py:72-75 (review), src/memory_garden/memory.py:112 record_verdict | a scan proposes candidates and a person reviews each from the web workspace or the CLI; only a saved user verdict can produce a long-term memory, and the person can revoke one from the workspace | tests/test_cognitive.py, tests/test_memory_lifecycle.py:36"
+  negative_eval: "recall after revocation and after a source is withdrawn | tests/test_memory_lifecycle.py:44 test_edit_then_revoke_never_resurrects_earlier_judgment, :71 test_withdrawn_source_is_not_recalled_as_long_term_memory, tests/test_memory_source_closure.py:43 | a verdict is saved, corrected and asserted recalled with the corrected statement, then revoked and context_for_topic asserted == [] with the superseded earlier verdict not returned; a memory citing an atom is asserted recalled, its source made unsearchable, and recall asserted empty; the source-closure case repeats this per evidence role and asserts the model's interpretation text is absent from the rendered context | tests/test_memory_lifecycle.py:50-55, :77-80, tests/test_memory_source_closure.py:52-60"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "A source atom — a paragraph of a note with line range, record time, explicit event time and authorship — plus derived stance snapshots, discovery candidates, and the user's verdicts"
-  storage: "One SQLite database with FTS5 (trigram), per-model vector rows, sources with revision history, and the discovery, verdict and reaction tables"
+  storage: "One SQLite database per vault with FTS5 (trigram), per-model vector rows, sources with revision history, the discovery, verdict and reaction tables, and user-authorized memory items"
   retrieval: "Switchable BM25, character hashing, embedding or RRF-fused hybrid over atoms, filterable by authorship and a date window, through eight read-only tools"
   write: "Read-only sync from the vault; offline stance extraction, deterministic or by a model in batches; discovery scans that write candidates; the person's verdicts and reactions"
-  update_delete: "Notes change in the vault and are re-synced as new revisions; a denied change pair is skipped on later scans; nothing the person writes is deleted"
-  scoping: "None — one person's vault and one database"
+  update_delete: "Notes change in the vault and are re-synced as new revisions; a denied change pair is skipped on later scans; a memory item is superseded by a later verdict or revoked by the person, and neither is deleted"
+  scoping: "None inside a vault — each vault is its own workspace with its own application and database"
   integration: "A single-agent harness over an OpenAI-compatible model, a local web workspace, a CLI, and an MCP server exposing the same read-only tools"
   background: "None scheduled; discovery scans and snapshot extraction run when invoked"
   trust: "Candidate, reviewed-and-confirmed and reviewed-and-denied states set by the person; authorship separates the user's own words from quotes and AI drafts; the harness refuses a final answer until its evidence plan is complete"
@@ -33,11 +34,11 @@ matrix:
 
 ## 1. Executive Summary
 
-Memory Garden is a personal *cognitive retrospection* agent written in Chinese: it reads a person's Obsidian vault, looks for places where what they wrote about a topic at one time differs from what they wrote later, and asks them whether that is a real change. MIT-licensed, five commits by one author between 31 August and 7 September 2026, 7,619 lines of Python with 2,413 lines of tests and evaluation.
+Memory Garden is a personal *cognitive retrospection* agent written in Chinese: it reads a person's Obsidian vault, looks for places where what they wrote about a topic at one time differs from what they wrote later, and asks them whether that is a real change. MIT-licensed, one author, about 10,500 lines of Python in the package beside 32 test files; the published history restarts at a single squashed commit on 12 September 2026.
 
 The notes are the evidence, not the memory. The memory is what the system and the person build on top of them: stance snapshots extracted offline from each paragraph, *discovery candidates* that pair an earlier and a later snapshot as a possible change, and the person's *verdicts* on those candidates and on the agent's answers. The design's rule, stated in the schema's own comment, is that **the only writer of confirmed cognition is the user**. A candidate is a candidate until the person rules on it; the most recent note is labelled `latest_memory_candidate` rather than assumed to be current; and events inside a time interval are marked `within_interval` rather than offered as causes, with the harness refusing a final answer that skips the interval and counter-evidence steps.
 
-That rule earns two of the atlas's marks. `trust_state`: a discovery is `candidate`, then `reviewed` with a verdict, and the rejecting verdicts are filters — a pair the person denied is skipped on every later scan. `human_review`: the web workspace and the CLI are where that ruling happens, over candidates the scans write.
+That rule earns three marks. `trust_state`: a discovery is `candidate`, then `reviewed` with a verdict, and the rejecting verdicts are filters — a pair the person denied is skipped on every later scan. `human_review`: the web workspace and the CLI are where that ruling happens, over candidates the scans write. `negative_eval`: a *long-term memory* layer added since the first reading turns only a saved user verdict into a remembered position, and its tests assert a revoked memory, an earlier superseded verdict and a memory whose source was withdrawn are all absent from recall after being present.
 
 The weak point is the key. A denied pair is remembered by the ids of its two source atoms, and an atom's id is a hash of its file's whole-content revision, the importer version and its position in the file. Edit an unrelated line in either note, or upgrade the importer, and every atom in that file gets a new id — and the pair the person denied is eligible to be proposed again. The rejection is consulted; it is keyed on the file revision rather than on the statement, which is why `tombstone` is withheld.
 
@@ -81,8 +82,11 @@ A local Python application. `importer.py` syncs the vault read-only into SQLite,
 | `discoveries` | candidate change pairs with change type, confidence, status, review verdict, shown count |
 | `verdicts` | the person's rulings by topic, with revision, confirmed interpretation, missing event, accepted and rejected atom ids |
 | `candidate_reactions` | lightweight feedback feeding ranking |
+| `memory_items` | one long-term memory per saved verdict: topic, verbatim statement, evidence, and a status of active, superseded, needs_review or revoked |
 
-`rejected_atom_ids_json` on a verdict is written on every review, and `VerdictService.rejected_atom_ids` (`cognitive.py:102-107`) reads it into a set — and has no caller. The atoms a person rejected as evidence are recorded and never consulted.
+`rejected_atom_ids_json` on a verdict is written on every review and handed to the agent with the verdict (`agent.py:636`), so the atoms a person rejected as evidence reach the model as part of the ruling; no retrieval path filters on them.
+
+`memory_items` (`db.py:211-223`) is the long-term layer: one row per saved verdict, with the topic, a statement taken verbatim from the person's revision or confirmed interpretation, the evidence, and a status of `active`, `superseded`, `needs_review` or `revoked`. The module states the rule: *"Only a saved user verdict can produce a memory."* A `defer` verdict produces none, a later verdict on the same answer supersedes the earlier memory, and `revoke` marks both the item and its verdict revoked rather than deleting them.
 
 ## 6. Retrieval Mechanics
 
@@ -100,19 +104,23 @@ The harness drives an OpenAI-compatible model through the eight read-only tools,
 
 **The denial decays with editing.** The discovery-level rejection is keyed on the pair of atom ids, and atom ids change whenever their file's content hash changes. A vault is a living set of notes; the people this is for are the people who go back and edit. The topic-level denial survives edits — it is keyed on `topic_key` and forces `no_clear_change` on the next answer — but it shapes answers, not scans, so a scan after an edit can write the denied pair back into the candidate list. Keying the scan's check on the normalised text of the two quotes would keep it.
 
-**Rejected evidence is recorded and ignored.** The atoms a person marks as rejected on a verdict are stored and never read, as above.
+**Rejected evidence reaches the agent, not the retriever.** The atoms a person marks as rejected travel with the verdict into the agent's context; retrieval does not exclude them.
+
+**A memory is only as recallable as its sources.** `verdict_available_for_recall` and `list_items` (`memory.py:153-200`) serve a memory only while its item and verdict are active and every cited atom still belongs to a present, searchable source, so hiding or removing a note withdraws the memories that rest on it.
 
 **The authorship boundary is the design's best defence, and it holds at retrieval.** Quotes and AI drafts are imported with their authorship and filtered out of the person's positions, and the agent evaluation's `quoted-view` and `ai-generated` cases require the agent to abstain.
 
-**No scope,** by design: one person, one vault, one database.
+**No scope inside a vault,** by design. `workspaces.py` lets one installation switch between vaults, each owning *"a complete app and database"* — a partition, not a filter.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Thirteen test files and two evaluation suites. I did not run them; there is no CI configuration committed, and the manifests are inside the seven-day cooldown.
+Thirty-two test files and two evaluation suites. Nothing was run for this review.
 
 The unit tests are careful about the behaviours that define the product: review sinks into verdict memory and marks the discovery reviewed (`test_cognitive.py:20-31`); a prior denial forces `no_clear_change` on the next answer (`test_agent.py:54-68`); a reaction of `wrong` drops a candidate from the pending list and records the reaction (`test_snapshots.py:95-108`); event time is taken only from an explicit declaration and never from dates in the body (`test_importer.py:27-40`); interval events are constrained to their dates; a final answer is refused until the evidence plan is complete; a dismissal does not become a belief verdict.
 
-**`negative_eval` is withheld, on three near-misses that are each one assertion from counting.** `test_authorship_filter_excludes_quoted_and_ai` asserts `authorships <= {"user"}`, which an empty result satisfies. `test_dismissal_does_not_become_a_belief_verdict` asserts `all(...)` over the second scan's candidates, which is true of none. And the discovery evaluation (`evaluation.py:396-474`) names an `excluded_pairs` entry — a wording drift that must not become a candidate — and computes `excluded_pair_leak`, but its test (`test_cli.py:18-30`) asserts only that snapshots were extracted and candidates returned. Asserting the leak is zero beside the expected-pair recall it already computes would make it the case the mark asks for.
+**`negative_eval` is earned on the memory layer.** `test_edit_then_revoke_never_resurrects_earlier_judgment` saves a denial, corrects it to an accepted revision, asserts the memory recalls the corrected statement, revokes it, and asserts `context_for_topic` returns `[]` and the verdict tools return nothing — so neither the revoked memory nor the superseded earlier judgment comes back. `test_withdrawn_source_is_not_recalled_as_long_term_memory` asserts a memory is recalled, makes its cited note unsearchable, and asserts recall is empty; `test_memory_source_closure.py` repeats that per evidence role and asserts the model's own interpretation text is absent from the rendered context.
+
+**Three earlier near-misses remain one assertion from counting.** `test_authorship_filter_excludes_quoted_and_ai` asserts `authorships <= {"user"}`, which an empty result satisfies. `test_dismissal_does_not_become_a_belief_verdict` asserts `all(...)` over the second scan's candidates, which is true of none. And the discovery evaluation (`evaluation.py:396-474`) names an `excluded_pairs` entry — a wording drift that must not become a candidate — and computes `excluded_pair_leak`, but its test (`test_cli.py:18-30`) asserts only that snapshots were extracted and candidates returned. Asserting the leak is zero beside the expected-pair recall it already computes would make it the case the mark asks for.
 
 The agent evaluation (`evals/agent_cases.json`) is gated: twelve cases across true change, wording drift, quoted and AI-generated material, missing endpoints, adjacency without causality, a prior denial and event-versus-record time, and `test_cli.py` asserts a pass rate of 1.0. Its abstention cases would also pass against a retriever that returned nothing for their query, which is why they are not counted either.
 
@@ -126,15 +134,16 @@ No paper and no external benchmark.
 - **Authorship as a column, filtered at retrieval.** A quotation is not an opinion and an AI draft is not a diary entry; recording which is which at import is cheap and prevents a whole class of misattribution.
 - **A harness that refuses the causal shortcut.** Requiring the interval, the supporting and the challenging evidence before a final answer, in code, is how the design keeps its "adjacent is not causal" promise.
 - **Recording whether private data left the machine**, per run.
+- **Tie a memory's recall to the presence of its sources.** A remembered position that silently outlives the note it came from is a belief without evidence; checking every cited atom at recall time withdraws it.
 
 ### Avoid
 
 - **Keying a rejection on an identifier derived from the whole file.** Key it on the normalised text of the statements, so an unrelated edit does not reopen a question the person already answered.
-- **Storing rejected evidence nobody reads.** Either consult `rejected_atom_ids` when building the next answer, or stop collecting it.
+- **Telling the model about rejected evidence instead of excluding it.** Passing `rejected_atom_ids` to the agent leaves the exclusion to the model; filtering them from the next retrieval would not.
 
 ### Fit
 
-A thoughtful design for one person who keeps a long-running notes vault and wants help noticing how their thinking has moved, without a model deciding what they believe. It is not a general agent memory — it remembers judgements about change, not facts to act on — and at five commits it is a well-argued prototype rather than something to depend on.
+A thoughtful design for one person who keeps a long-running notes vault and wants help noticing how their thinking has moved, without a model deciding what they believe. It is not a general agent memory — it remembers judgements about change, not facts to act on — and it is still a young, single-author project rather than something to depend on.
 
 ## 12. Open Questions
 
@@ -160,5 +169,7 @@ ls .github                                                       # absent: no CI
 ```
 
 ## History
+
+**2026-09-15** — [`d7fdb1c7c354e3eafdead896ed64941a049755ac`](https://github.com/drephantom/memory-garden/commit/d7fdb1c7c354e3eafdead896ed64941a049755ac) — the history was republished. The pinned commit no longer resolves from the default branch; fetched by its full sha it is intact, and no commit on the new branch shares its tree. The new history starts at [`4e23b3e44f27c12a599027ba3750ce3d785f3026`](https://github.com/drephantom/memory-garden/commit/4e23b3e44f27c12a599027ba3750ce3d785f3026) (2026-09-12, *"Memory Garden: local notes, conversations, and memory"*), six commits later reaching 2026-09-14, and differs from the old pin by about 4,500 lines of source and 2,700 of tests. Screened before reading: no auto-run surface, one `conftest.py` executing on collection, and two manifests inside the cooldown; nothing was installed or run. Added since the first reading: a long-term memory layer that only a saved user verdict can populate and the person can revoke, recall gated on the presence of cited sources, chat import and a local chat, context budgeting and compaction, a global graph view, and per-vault workspaces. The denial on atom ids and the event-time-as-record-time window stand. `negative_eval` added on the revoke and source-withdrawal recall tests; `trust_state` and `human_review` kept with records extended to the memory items. Three marks.
 
 **2026-09-11** — [`f8171c471aaf7c321addc0557c010619fbad2bfb`](https://github.com/drephantom/memory-garden/commit/f8171c471aaf7c321addc0557c010619fbad2bfb) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration, one `conftest.py`, two manifests inside the seven-day cooldown and no unpinned surface. Nothing was installed or run.
