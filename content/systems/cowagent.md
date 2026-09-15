@@ -7,10 +7,12 @@ page_kind: system
 source_name: zhayujie/CowAgent
 source_url: https://github.com/zhayujie/CowAgent
 archive_name: "zhayujie--CowAgent"
-revision: fe88751ccb24e9b2991b6a35a2dcc538f7a38761
-revision_url: https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761
-analyzed_at: 2026-07-27
+revision: 3bf04290550b00d18a63736315671923027fbc09
+revision_url: https://github.com/zhayujie/CowAgent/commit/3bf04290550b00d18a63736315671923027fbc09
+analyzed_at: 2026-09-15
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "chunk retrieval on every arm — FTS5, trigram, LIKE and the vector backend | agent/memory/storage.py:741-760 and :855-900, agent/memory/vector_backend.py:186-199 | each chunk stores `user_id` and a `scope` of `shared`, `user` or `session`. Every search arm builds the same predicate: with a `user_id`, `scope IN (…) AND (scope = 'shared' OR user_id = ?)`; without one, the scope list defaults to `[\"shared\"]` and `user` is only appended when a user is present, so an anonymous search sees shared chunks and never another user's. The vector backend added since the previous pin repeats the clause. One edge is latent rather than live: an explicit `scopes=[\"user\"]` passed with no `user_id` would take the no-user branch and match every user's user-scoped rows, and no caller in `agent/` passes `scopes` explicitly | no committed test was located for the cross-user case"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -267,5 +269,7 @@ Do not copy:
 - Documentation: `docs/memory/{index,context,deep-dream,self-evolution}.mdx`.
 
 ## History
+
+**2026-09-15** — [`3bf04290550b00d18a63736315671923027fbc09`](https://github.com/zhayujie/CowAgent/commit/3bf04290550b00d18a63736315671923027fbc09) — second reading, 520 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. The memory package moved by 2,298 lines. `storage.py` was reworked around a new `vector_backend.py`, which carries the same scope clause as the SQL arms, and `conversation_store.py` grew by 1,477 lines into a runs table, session pinning and an `agent_id`-keyed composite key — run bookkeeping beside the chunk memory rather than a change to it. `scope_enforced` was re-tested on all four retrieval arms and holds, and now carries the evidence record it had been asserted without, including the one latent edge: an explicit user-scope request with no user id would widen, and nothing passes one.
 
 **2026-07-27** — [`fe88751ccb24e9b2991b6a35a2dcc538f7a38761`](https://github.com/zhayujie/CowAgent/commit/fe88751ccb24e9b2991b6a35a2dcc538f7a38761) — first reading.
