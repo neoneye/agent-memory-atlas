@@ -113,7 +113,9 @@ or four facts of one kind, a strict quota is the mechanism standing in the way â
 which is why every implementation here needs an escape hatch, and why
 [LlamaIndex](../../systems/llamaindex/)'s per-block `atruncate` returning
 `Optional` is a good shape: a block may decline to shrink and be dropped whole
-rather than emit something misleading.
+rather than emit something misleading. The shape needs an implementation
+behind it â€” none of LlamaIndex's shipped blocks overrides the default, so the
+only behaviour that ships is the drop.
 
 ## Tests to require
 

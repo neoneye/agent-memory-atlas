@@ -348,10 +348,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need the deletion half of the governance story, which is absent, or an adjudication that acts on what it adjudicates.
 
 ### [`llamaindex`](../systems/llamaindex/)
-- Best idea: one token budget split between chat history and blocks, with each block truncating itself to fit.
-- Biggest risk: no provenance, correction, or scope, and long-term capture is triggered by conversation length rather than importance.
+- Best idea: one token budget split between chat history and blocks, with overflow flushed into the blocks and an `atruncate` contract through which each block could shrink itself.
+- Biggest risk: the contract is empty — no shipped block implements `atruncate` and blocks default to never-truncate — and the vector block's `session_id` filter is written into the block instance on first use, so a block reused by a second session retrieves the first session's messages.
 - Most reusable component: the `BaseMemoryBlock` contract — `aget`, `aput`, `atruncate` — and the explicit budget split.
-- Maturity impression: a widely deployed framework whose newer block API is a real memory layer, shipped alongside an older window-management API of the same name.
+- Maturity impression: a block API that is a real memory layer, shipped alongside an older window-management API of the same name, with block tests that never exercise two sessions or a truncation.
 - Study when: you need a memory component contract, or a budget that several contributors must share.
 - Do not copy when: facts must be traceable, correctable, or scoped — those are left to the application.
 

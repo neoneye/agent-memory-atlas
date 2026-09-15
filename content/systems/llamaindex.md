@@ -7,30 +7,31 @@ page_kind: system
 source_name: run-llama/llama_index
 source_url: https://github.com/run-llama/llama_index
 archive_name: "run-llama--llama_index"
-revision: 199e9b5b130bbde72639358a08935b913e7132c0
-revision_url: https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0
-analyzed_at: 2026-07-27
+revision: 0f43c00baa2f68970cb86a732aefd59f1e6fbee7
+revision_url: https://github.com/run-llama/llama_index/commit/0f43c00baa2f68970cb86a732aefd59f1e6fbee7
+analyzed_at: 2026-09-15
 capabilities: ""
 stack_storage: "delegated"
 stack_retrieval: "vector"
 stack_source: "seeded"
 matrix:
   memory_unit: "Block-owned content; no memory record"
-  storage: "Application-chosen; vector store via the framework's abstractions"
+  storage: "Chat history in any `AsyncDBChatStore`, SQLAlchemy by default; blocks hold their own state — a vector store for the vector block, an in-instance list for facts"
   retrieval: "Per-block: vector retrieval, extracted facts, static text — composed, not fused"
   write: "Short-term history overflow flushes `token_flush_size` into blocks"
   update_delete: "Condensation rewrites the fact list wholesale; no tombstone"
-  scoping: "None; application-owned"
+  scoping: "`session_id` keys the chat store and is stamped on flushed vector nodes and filtered on vector retrieval, but the filter is written into the block instance and kept for later sessions; fact and static blocks ignore it"
   integration: "LlamaIndex agents and workflows; custom blocks via `BaseMemoryBlock`"
   background: "None; extraction runs on flush"
   trust: "None — extracted facts record no source"
-  strengths: "Self-truncating blocks and one explicit budget split"
-  risks: "No provenance, correction, or scope; capture depends on conversation length"
+  strengths: "One explicit budget split, flush-on-overflow into composable blocks, and a condense prompt that states its full-replacement contract"
+  risks: "No shipped block implements truncation and blocks default to never-truncate; a vector block reused across sessions keeps the first session filter; facts carry no source or scope"
 ---
 
 ## 1. Executive Summary
 
-LlamaIndex is one of the two Python agent frameworks most teams actually evaluate; the atlas already covers the other's memory layer as [langmem](../langmem/). Its `llama-index-core/llama_index/core/memory/` is about 2,350 lines, and it clears this atlas's scope bar where [BeeAI](../../compare/) does not: `FactExtractionMemoryBlock` extracts durable facts that survive the conversation, rather than only deciding which messages stay in the window.
+LlamaIndex is a Python framework for retrieval and agents, and its
+`llama-index-core/llama_index/core/memory/` is about 2,330 lines, and it clears this atlas's scope bar where [BeeAI](../../compare/) does not: `FactExtractionMemoryBlock` extracts durable facts that survive the conversation, rather than only deciding which messages stay in the window.
 
 The architecture is a **single token budget split between two tiers, with flow between them**:
 
@@ -45,11 +46,11 @@ Memory(
 
 Short-term chat history gets 70% of the budget by default. When it overflows, `token_flush_size` worth of messages are flushed **into the memory blocks**, which own the remaining share. Long-term memory is therefore fed by short-term pressure rather than by a separate capture path — the two tiers are one pipeline, not two systems.
 
-Blocks are the composable part. `BaseMemoryBlock` is generic over its content type and declares three operations: `aget` (contribute to context), `aput` (receive flushed messages), and — the interesting one — **`atruncate(content, tokens_to_truncate)`**, so each block knows how to shrink *itself* when the budget is tight. An orchestrator that truncates blindly cuts wherever the string ends; a block that truncates itself can drop its least valuable content. Very little else in the atlas pushes budget enforcement down to the component that understands the content.
+Blocks are the composable part. `BaseMemoryBlock` is generic over its content type and declares three operations: `aget` (contribute to context), `aput` (receive flushed messages), and **`atruncate(content, tokens_to_truncate)`**, a hook through which a block could shrink *itself* when the budget is tight. The hook is a contract with no implementation behind it: the base method returns `None`, which drops the block's whole contribution, none of the three shipped blocks overrides it, and a block's `priority` defaults to `0`, which the orchestrator reads as *never truncate*. With default blocks, memory content is never cut, and the budget holds only if chat history absorbs the overrun.
 
 Three blocks ship: `StaticMemoryBlock` (fixed content), `VectorMemoryBlock` (retrieval over past messages), and `FactExtractionMemoryBlock` (LLM-extracted facts with a `max_facts` cap).
 
-The reservation is the familiar framework one: these are primitives, and memory *policy* is left to the application. There is no trust state, no provenance, no correction path, and no scope key — the same limitation the atlas records for langmem.
+The reservation is the familiar framework one: these are primitives, and memory *policy* is left to the application. There is no trust state, no provenance and no correction path, and the one scope key, `session_id`, is applied only by the vector block — through a filter the block writes into its own `query_kwargs` on the first call and keeps for every later one, so a vector block instance reused by a second session goes on retrieving the first session's messages.
 
 ## 2. Mental Model
 
@@ -83,16 +84,16 @@ class BaseMemoryBlock(BaseModel, Generic[T]):
     async def atruncate(content: T, tokens_to_truncate: int) -> Optional[T]
 ```
 
-Returning `Optional[T]` from `atruncate` matters: a block may decline to shrink and be dropped entirely rather than emit something misleading when cut in half.
+Returning `Optional[T]` from `atruncate` lets a block decline to shrink and be dropped rather than emit something misleading when cut in half — and since no shipped block overrides it, dropping is the only behaviour that ships.
 
 ## 3. Architecture
 
-- `memory/memory.py` (870 lines) — `Memory`, `BaseMemoryBlock`, `InsertMethod`, budget arithmetic.
+- `memory/memory.py` (873 lines) — `Memory`, `BaseMemoryBlock`, `InsertMethod`, budget arithmetic. `Memory` accepts any `AsyncDBChatStore` through `chat_store`, falling back to a `SQLAlchemyChatStore` built from its own parameters.
 - `memory/memory_blocks/` — `static.py` (39), `fact.py` (182), `vector.py` (201).
 - Legacy surfaces retained: `chat_memory_buffer.py` (168), `chat_summary_memory_buffer.py` (340), `vector_memory.py` (206), `simple_composable_memory.py` (163).
 - `memory/types.py` (152) — base types.
 
-The legacy modules are the conversation-window family the atlas excludes from scope; the newer `Memory` plus blocks is what makes LlamaIndex reviewable here. Both ship, which is worth knowing when reading the docs — "memory" in LlamaIndex means two quite different things depending on which API you land on.
+The legacy modules are the conversation-window family the atlas excludes from scope; the `Memory` plus blocks API is what makes LlamaIndex reviewable here. Both ship, which is worth knowing when reading the docs — "memory" in LlamaIndex means two quite different things depending on which API you land on.
 
 ```mermaid
 %% caption: the same budget split seen from the flush side — overflowing messages become static, vector and fact blocks before reassembly
@@ -117,9 +118,21 @@ Validation clamps the configuration rather than trusting it: if `token_flush_siz
 
 ### Self-truncating blocks
 
-`atruncate(content, tokens_to_truncate)` is the design's best idea. When the assembled context exceeds budget, each block is asked to give back a specific number of tokens and decides how. A vector block can drop its lowest-scoring result; a fact block can drop its least important fact; a static block can decline and be omitted.
+`atruncate(content, tokens_to_truncate)` is the right contract and an empty one.
+When memory blocks plus chat history exceed `token_limit`,
+`_truncate_memory_blocks` walks the blocks sorted by `priority` ascending, skips
+every block at `0`, and asks each of the rest to give back tokens; whatever is
+still over is then removed block by block in the same order. The base
+`atruncate` returns `None`, and `StaticMemoryBlock`, `VectorMemoryBlock` and
+`FactExtractionMemoryBlock` inherit it, so a truncated block loses everything —
+the vector block does not drop its lowest-scoring node and the fact block does
+not drop a fact. Two details make the defaults worse than that. `priority`
+defaults to `0`, so an application that does not set it gets blocks that are
+never truncated at all. And the field's description — *"0 = never truncate, 1 =
+highest priority"* — is the reverse of the order truncation walks, which reaches
+priority `1` first; `aget` sorts the other way, by `-priority`.
 
-Compare how the rest of the atlas handles this. [Hermes Agent](../hermes-agent/) refuses the write and makes the model consolidate. [Voyager](../voyager/) concatenates its entire skill library with no budget at all. [GenericAgent](../genericagent/) caps its index at thirty lines by policy. LlamaIndex is the only one that delegates the *how* of shrinking to the component holding the content.
+Compare how other systems handle an over-budget context. [Hermes Agent](../hermes-agent/) refuses the write and makes the model consolidate. [Voyager](../voyager/) concatenates its entire skill library with no budget at all. [GenericAgent](../genericagent/) caps its index at thirty lines by policy. LlamaIndex designs for delegating the *how* of shrinking to the component holding the content, and ships no component that does it.
 
 ### Fact extraction and condensation
 
@@ -144,14 +157,23 @@ The consequences are the ones the atlas records for every framework primitive la
 - **No status, confidence, or verification.** An extracted fact is a line in a list.
 - **No provenance.** A fact does not record the messages it came from, even though those messages were in hand at extraction time.
 - **No correction.** Facts change only by condensation rewriting the whole list.
-- **No scope.** Multi-user or multi-project separation is the application's problem.
-- **No tombstone**, so a fact a user removed will be re-extracted from the same conversation.
+- **Scope only on the vector path.** Flushed messages carry `session_id` into the
+  vector node's metadata, and `VectorMemoryBlock._aget` adds a `session_id`
+  `MetadataFilter` — but only if no `session_id` filter is already in its
+  `query_kwargs`, which it has just mutated on the previous call, so the first
+  session's filter sticks to the block instance. `FactExtractionMemoryBlock`
+  keeps `facts` as a list on the instance, so a fact block shared by two sessions
+  shares its facts. No test in `tests/memory/blocks/` exercises two sessions.
+- **No per-fact removal and no tombstone.** The list changes only through
+  extraction and condensation; flushed messages are archived in the chat store,
+  so a conversation is not re-extracted, but a fact condensed away can be
+  extracted again from a later conversation.
 
 That is a reasonable position for a framework — [langmem](../langmem/) makes the same choice — but it means "LlamaIndex has memory" and "LlamaIndex has a memory system" are different claims.
 
 ## 6. Retrieval Mechanics
 
-`VectorMemoryBlock` retrieves over past messages using the framework's vector-store abstractions, so any LlamaIndex-supported backend applies. There is no fusion with a lexical arm inside the block, and no reranking in the memory layer — both available elsewhere in the framework, neither wired in by default.
+`VectorMemoryBlock` retrieves over past messages using the framework's vector-store abstractions, so any LlamaIndex-supported backend applies. The query is the last `retrieval_context_window` messages joined, and each flush becomes one node holding the whole flushed batch. There is no fusion with a lexical arm inside the block, and no reranking in the memory layer — both available elsewhere in the framework, neither wired in by default.
 
 Because blocks compose, hybrid behaviour is achievable by stacking blocks rather than by fusing scores inside one retriever. That is a different composition model from the weighted-fusion approach most of the atlas uses, and it has a real property: each block's contribution to the final context is separately visible and separately budgeted, which makes the assembled prompt easier to reason about than a single fused ranking.
 
@@ -163,14 +185,14 @@ Coupling long-term capture to short-term overflow is elegant but has a consequen
 
 ## 8. Agent Integration
 
-`Memory` plugs into LlamaIndex agents and workflows. Custom blocks are the extension point — subclass `BaseMemoryBlock`, implement three async methods, add it to the list. That is a genuinely low-friction way to add a memory kind, and lower-friction than any provider contract in the atlas.
+`Memory` plugs into LlamaIndex agents and workflows. Custom blocks are the extension point — subclass `BaseMemoryBlock`, implement three async methods, add it to the list. That is a genuinely low-friction way to add a memory kind.
 
 ## 9. Reliability, Safety, and Trust
 
 Strengths:
 
 - **One budget, explicitly split**, rather than two subsystems with independent limits.
-- **Self-truncating blocks**, delegating shrinkage to the component that understands the content.
+- **A self-truncation contract** that would delegate shrinkage to the component that understands the content, if a block implemented it.
 - **Configuration clamping** on flush size.
 - **An explicit full-replacement contract** in the condense prompt.
 - **An anti-inference instruction** in the extract prompt.
@@ -179,21 +201,23 @@ Strengths:
 
 Gaps:
 
-- **No trust, provenance, correction, or scope** — application-owned by design.
-- **No tombstone**, so removed facts return.
+- **No trust, provenance or correction** — application-owned by design.
+- **No shipped truncation.** Blocks default to never-truncate, and a truncated block is dropped whole.
+- **A session filter that sticks to the block instance**, so reusing a vector block across sessions retrieves the first session's messages.
+- **No tombstone**, so a condensed-away fact can return from a later conversation.
 - **Write depends on conversation length**, not importance.
 - **Condensation is a wholesale rewrite** guarded by prompt wording rather than verification.
 - **Two coexisting "memory" APIs**, one of which is conversation-window management, which invites confusion about what the framework actually provides.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Tests accompany the core memory modules; nothing was run for this review, and no memory-quality benchmark was found. For a framework this widely deployed, the absent measurement is whether the default `chat_history_token_ratio` of 0.7 is a good split — it silently determines how much of every prompt is recent conversation versus durable memory, and no evidence for it appears in the repository.
+`llama-index-core/tests/memory/` holds 85 test functions across ten files, three of them for the shipped blocks; nothing was run for this review, and no memory-quality benchmark was found. No test asserts that one session's vector memory is absent from another's retrieval, and none exercises truncation of a non-zero-priority block. For a framework this widely deployed, the absent measurement is whether the default `chat_history_token_ratio` of 0.7 is a good split — it silently determines how much of every prompt is recent conversation versus durable memory, and no evidence for it appears in the repository.
 
 ## 11. For Your Own Build
 
 ### Steal
 
-- **Self-truncating components.** Ask each contributor to give back N tokens and let it choose how, instead of cutting the assembled string. Allowing a component to decline and be dropped is the right escape hatch.
+- **Self-truncating components.** Ask each contributor to give back N tokens and let it choose how, instead of cutting the assembled string. Allowing a component to decline and be dropped is the right escape hatch — and ship at least one component that implements the shrink, or the contract is only a drop.
 - **One budget with an explicit split**, rather than independent caps per subsystem that can jointly overflow.
 - **Overflow as the capture trigger.** Coupling long-term writes to short-term pressure keeps the two tiers in one pipeline — provided you accept that quiet conversations write nothing.
 - **State the replacement contract in the prompt.** If a condensation pass replaces rather than appends, say so in the instruction; the default model behaviour is to return a delta.
@@ -207,12 +231,13 @@ Tests accompany the core memory modules; nothing was run for this review, and no
 - **Memory formation gated by conversation length.**
 - **Wholesale condensation** without a loss check.
 - **Two APIs sharing the word "memory"** with very different guarantees.
+- **Writing a per-call filter into long-lived component state.** Build the query's filters per call; a mutation that is correct once is wrong for every later caller.
 
 ### Fit
 
 Borrow:
 
-- The `atruncate` contract and the budget split — both are small, general, and better than what most systems here do.
+- The `atruncate` contract and the budget split, with an implementation per block.
 - The block interface as the shape of a pluggable memory component.
 - The explicit full-replacement wording in any condensation prompt.
 
@@ -229,6 +254,7 @@ Do not copy:
 - What happens to a user-corrected fact when the next condensation runs?
 - Should a short conversation be able to write long-term memory without an overflow?
 - How do multiple blocks divide the long-term budget among themselves when several want more room?
+- Is the priority order meant to truncate `1` first, as `_truncate_memory_blocks` does, or last, as the field description implies?
 
 ## Appendix: File Index
 
@@ -238,5 +264,7 @@ Do not copy:
 - Legacy window-management APIs: `memory/chat_memory_buffer.py`, `chat_summary_memory_buffer.py`, `vector_memory.py`, `simple_composable_memory.py`.
 
 ## History
+
+**2026-09-15** — [`0f43c00baa2f68970cb86a732aefd59f1e6fbee7`](https://github.com/run-llama/llama_index/commit/0f43c00baa2f68970cb86a732aefd59f1e6fbee7) — 63 commits on, 2026-09-14; two touch memory: `Memory` accepts any `AsyncDBChatStore` (#22541) and `SimpleChatStore` persists non-ASCII unescaped (#22538). Read from a sparse checkout of the memory package, the chat stores and their tests; the screen covered the repository root and `llama-index-core` manifests — two build-time `Makefile`s, nothing auto-run, unpinned or inside the cooldown — and not the integration packages. Nothing was installed or run. The block code is unchanged since the previous pin, and three claims from the first reading did not survive it. `atruncate` is not implemented by any shipped block, so the self-truncation described as the design's best idea is a hook that drops a block whole, and default `priority` `0` exempts blocks from truncation. The report said there was no scope key; `session_id` is stamped on vector nodes and filtered on vector retrieval, through a filter mutated into the block instance that sticks to the first session. And removed facts returning from the same conversation was not possible as described: flushed messages are archived. No mark changes.
 
 **2026-07-27** — [`199e9b5b130bbde72639358a08935b913e7132c0`](https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0) — first reading.

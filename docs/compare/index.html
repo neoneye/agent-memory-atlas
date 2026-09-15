@@ -547,9 +547,9 @@ is not being able to reject a value. <strong>Cognee</strong> is the
 outlier in surface area — a knowledge pipeline platform with ontologies,
 dataset permissions, and provenance rollback behind a small
 remember/recall API. <strong>LlamaIndex</strong> composes memory from
-pluggable blocks that each truncate themselves to budget.
-<strong>A-MEM</strong> is a compact Zettelkasten research sketch whose
-linked-note evolution idea outruns its implementation.
+pluggable blocks behind a truncation contract that no shipped block
+implements. <strong>A-MEM</strong> is a compact Zettelkasten research
+sketch whose linked-note evolution idea outruns its implementation.
 <strong>Memori</strong> ships a Rust core with Python and TypeScript
 bindings over seven backends, and is the atlas's sharpest illustration
 of the family's tradeoff taken one step further: the schema, the drivers
@@ -14110,21 +14110,27 @@ is told</td>
 <tr>
 <td><code>llamaindex</code></td>
 <td>Block-owned content; no memory record</td>
-<td>Application-chosen; vector store via the framework's
-abstractions</td>
+<td>Chat history in any <code>AsyncDBChatStore</code>, SQLAlchemy by
+default; blocks hold their own state — a vector store for the vector
+block, an in-instance list for facts</td>
 <td>Per-block: vector retrieval, extracted facts, static text —
 composed, not fused</td>
 <td>Short-term history overflow flushes <code>token_flush_size</code>
 into blocks</td>
 <td>Condensation rewrites the fact list wholesale; no tombstone</td>
-<td>None; application-owned</td>
+<td><code>session_id</code> keys the chat store and is stamped on
+flushed vector nodes and filtered on vector retrieval, but the filter is
+written into the block instance and kept for later sessions; fact and
+static blocks ignore it</td>
 <td>LlamaIndex agents and workflows; custom blocks via
 <code>BaseMemoryBlock</code></td>
 <td>None; extraction runs on flush</td>
 <td>None — extracted facts record no source</td>
-<td>Self-truncating blocks and one explicit budget split</td>
-<td>No provenance, correction, or scope; capture depends on conversation
-length</td>
+<td>One explicit budget split, flush-on-overflow into composable blocks,
+and a condense prompt that states its full-replacement contract</td>
+<td>No shipped block implements truncation and blocks default to
+never-truncate; a vector block reused across sessions keeps the first
+session filter; facts carry no source or scope</td>
 </tr>
 <tr>
 <td><code>llm-wiki-cli</code></td>
@@ -29857,7 +29863,7 @@ gating an outward cloud fetch was read at its defaults</li>
 <li><a
 href="https://github.com/run-llama/llama_index">run-llama/llama_index</a>
 at <a
-href="https://github.com/run-llama/llama_index/commit/199e9b5b130bbde72639358a08935b913e7132c0"><code class="commit-id" title="199e9b5b130bbde72639358a08935b913e7132c0">199e9b5b…</code></a></li>
+href="https://github.com/run-llama/llama_index/commit/0f43c00baa2f68970cb86a732aefd59f1e6fbee7"><code class="commit-id" title="0f43c00baa2f68970cb86a732aefd59f1e6fbee7">0f43c00b…</code></a></li>
 <li><a
 href="https://github.com/AtomicBot-ai/atomic-agent">AtomicBot-ai/atomic-agent</a>
 at <a
