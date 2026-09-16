@@ -7,9 +7,9 @@ page_kind: system
 source_name: "vshulcz/deja-vu"
 source_url: https://github.com/vshulcz/deja-vu
 archive_name: "vshulcz--deja-vu"
-revision: 22d6acccf24a83312ce99bcf1726db5935f06e07
-revision_url: https://github.com/vshulcz/deja-vu/commit/22d6acccf24a83312ce99bcf1726db5935f06e07
-analyzed_at: 2026-09-10
+revision: 6a33ce289d0553b69ba9772da753cb447501f4d7
+revision_url: https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "a narrowing test whose vacuity guard is a separate named test with the reason written into its comment | internal/search/session_scope_test.go:20-70, internal/redact/env_key_test.go:13-40, internal/search/regex_empty_match_test.go:25 | `TestSearchWithinASession` asserts a scoped search returns exactly one hit and that it is the right session; the very next test, `TestSearchWithoutSessionSeesBoth`, runs the same fixture without the flag and asserts both sessions answer, under the comment *\"Without the flag both sessions answer, so the test above is measuring the flag rather than a fixture that only had one match.\"* `TestSearchWithAnUnknownSessionFindsNothing` pins the fail-closed direction — *\"An id that names nothing answers with nothing rather than falling back to the whole store.\"* The redaction suite is built the same way: `TestEnvVarKeyIsRedacted` beside `TestLowercaseKeyNamesAreLeftAlone`, and `TestKVGateNeverHidesAMatch` | the same files, inside 4,361 committed test functions"
@@ -444,4 +444,6 @@ rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs 
 
 ## History
 
-**2026-09-10** — [`22d6acccf24a83312ce99bcf1726db5935f06e07`](https://github.com/vshulcz/deja-vu/commit/22d6acccf24a83312ce99bcf1726db5935f06e07) — first reading, at the head of `main`, the last commit of 10 September 2026. Screened before reading: three auto-run surfaces, six manifests inside the seven-day cooldown, one build-time execution path, five unpinned dependency surfaces, and `GEMINI.md` and the other agent instruction files treated as data; nothing was installed or run, and the read was made from a full clone. One mark. The reading covered the session model and its derived fields, the indexing and redaction path, the narrowing and scoring in search, the lifecycle handling, and the hook injection surface; the peer sync, the blame surface and the per-harness parsers were read as context rather than as subject.
+**2026-09-17** — [`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7) — re-pinned after 108 commits. All three anchored test files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-10** — [`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7) — first reading, at the head of `main`, the last commit of 10 September 2026. Screened before reading: three auto-run surfaces, six manifests inside the seven-day cooldown, one build-time execution path, five unpinned dependency surfaces, and `GEMINI.md` and the other agent instruction files treated as data; nothing was installed or run, and the read was made from a full clone. One mark. The reading covered the session model and its derived fields, the indexing and redaction path, the narrowing and scoring in search, the lifecycle handling, and the hook injection surface; the peer sync, the blame surface and the per-harness parsers were read as context rather than as subject.

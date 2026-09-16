@@ -7,12 +7,12 @@ page_kind: system
 source_name: "tenequm/pond"
 source_url: https://github.com/tenequm/pond
 archive_name: "tenequm--pond"
-revision: e75182a41964754acec493696581806118b2b9f0
-revision_url: https://github.com/tenequm/pond/commit/e75182a41964754acec493696581806118b2b9f0
-analyzed_at: 2026-09-10
+revision: 3507b50a59b617cea9aea39ed918904c7fa3e164
+revision_url: https://github.com/tenequm/pond/commit/3507b50a59b617cea9aea39ed918904c7fa3e164
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
-  negative_eval: "a committed case asserting an injected part contributes nothing to the searchable text, with the conversational control in the same test | packages/pond/src/sessions.rs:4461-4470, :6300-6329 | `search_text` walks a message's parts and skips any whose provenance is not `Conversational`, under a comment citing the project's own spec — *\"only conversational parts contribute to the indexed text; harness-injected scaffolding is excluded from search.\"* The test drives the real function twice on the same message shape: a `Conversational` part yields `Some(\"real human prompt\")` and an `Injected` part carrying a `<task-notification>` payload yields `None`, asserted with the message *\"a message whose only part is injected has null search_text.\"* The present control precedes the absence in the same test body, so neither can pass on an empty fixture | the same file; 307 test attributes across the crate"
+  negative_eval: "a committed case asserting an injected part contributes nothing to the searchable text, with the conversational control in the same test | packages/pond/src/sessions.rs:4940-4946, :6931-6960 | `search_text` walks a message's parts and skips any whose provenance is not `Conversational`, under a comment citing the project's own spec — *\"only conversational parts contribute to the indexed text; harness-injected scaffolding is excluded from search.\"* The test drives the real function twice on the same message shape: a `Conversational` part yields `Some(\"real human prompt\")` and an `Injected` part carrying a `<task-notification>` payload yields `None`, asserted with the message *\"a message whose only part is injected has null search_text.\"* The present control precedes the absence in the same test body, so neither can pass on an empty fixture | the same file; 307 test attributes across the crate"
 stack_storage: "lancedb"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -429,4 +429,6 @@ rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs 
 
 ## History
 
-**2026-09-10** — [`e75182a41964754acec493696581806118b2b9f0`](https://github.com/tenequm/pond/commit/e75182a41964754acec493696581806118b2b9f0) — first reading, at the head of `main`, the last commit of 9 September 2026. Screened before reading: one auto-run surface, two manifests inside the seven-day cooldown, two build-time execution paths, four unpinned dependency surfaces, and agent instruction files treated as data; nothing was installed, built or run, and the read was made from a full clone. One mark. The reading covered the Lance schemas, the ingest and upsert path, the provenance split and what it excludes, the two retrieval arms and their hydration, and the optional filters; the SQL surface, the snapshot machinery, the scheduler and the per-harness adapters were read as context rather than as subject.
+**2026-09-17** — [`3507b50a59b617cea9aea39ed918904c7fa3e164`](https://github.com/tenequm/pond/commit/3507b50a59b617cea9aea39ed918904c7fa3e164) — re-read after 30 commits. `sessions.rs` moved and both anchors were re-derived: `search_text` still skips any part whose provenance is not `Conversational`, now at `:4940-4946`, and the committed case asserting an injected part contributes nothing is still there as `search_text_excludes_injected_parts` at `:6931`. The mark holds. Nothing was installed, built or run.
+
+**2026-09-10** — [`3507b50a59b617cea9aea39ed918904c7fa3e164`](https://github.com/tenequm/pond/commit/3507b50a59b617cea9aea39ed918904c7fa3e164) — first reading, at the head of `main`, the last commit of 9 September 2026. Screened before reading: one auto-run surface, two manifests inside the seven-day cooldown, two build-time execution paths, four unpinned dependency surfaces, and agent instruction files treated as data; nothing was installed, built or run, and the read was made from a full clone. One mark. The reading covered the Lance schemas, the ingest and upsert path, the provenance split and what it excludes, the two retrieval arms and their hydration, and the optional filters; the SQL surface, the snapshot machinery, the scheduler and the per-harness adapters were read as context rather than as subject.

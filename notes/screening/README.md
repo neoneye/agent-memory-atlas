@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 506 of 560 screened at the report's current pin.**
+**Progress: 508 of 560 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 54 report(s) have no record at all.
+off, and 52 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 219 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 308 |
-| Repositories with build-time execution (`EXEC`) | 370 |
+| Repositories with an auto-run surface (`RUNS`) | 221 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 309 |
+| Repositories with build-time execution (`EXEC`) | 372 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -79,6 +79,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
+| [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
 | [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/` |
 | [`dense-mem`](../../content/systems/dense-mem.md) | `.githooks/` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
@@ -195,6 +196,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`people-context`](../../content/systems/people-context.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
+| [`pond`](../../content/systems/pond.md) | `.envrc`, `server.json` |
 | [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |

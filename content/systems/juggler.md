@@ -7,9 +7,9 @@ page_kind: system
 source_name: "juggler-ai/juggler"
 source_url: https://github.com/juggler-ai/juggler
 archive_name: "juggler-ai--juggler"
-revision: 1e570ec310cf38f02b943dcf1e6865ef9c0aa6df
-revision_url: https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df
-analyzed_at: 2026-09-11
+revision: 7d8a860df9e8f5815108869f8868eaa961061e38
+revision_url: https://github.com/juggler-ai/juggler/commit/7d8a860df9e8f5815108869f8868eaa961061e38
+analyzed_at: 2026-09-17
 capabilities: "human_review"
 capability_evidence:
   human_review: "the memory pin | web/extensions/juggler-core/pins/memory-pin.js:172-190 | a per-entry delete control that calls `removeEntry` on an exact date-and-text match, re-reading the file before each write so a concurrent change is preserved | web/extensions/juggler-core/_tests/memory-pin-test.js"
@@ -272,6 +272,8 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`1e570ec310cf38f02b943dcf1e6865ef9c0aa6df`](https://github.com/juggler-ai/juggler/commit/1e570ec310cf38f02b943dcf1e6865ef9c0aa6df) — re-read, 1,348 files and 210,633 insertions past the previous pin in a single commit; the memory paths took about a thousand of those. **`human_review` re-verified and its basis strengthened.** The previous edition's *"nothing records what it removed"* is stale: `removeMatching` collects the text of every entry it drops and `memory-context-item.js:385` returns it as `removed` alongside the match string, so a substring `forget` that takes three unrelated facts says so in the transcript. The substring semantics are unchanged, so the reach is still the model's choice; what changed is that the over-reach is visible at the moment it happens. **A precise deletion path was added beside the fuzzy one**: `pins/memory-pin.js` renders the file as a card with a per-entry delete that calls `removeEntry`, matching date *and* exact text, and re-reads the file before each write under a comment giving the reason — *"so it preserves changes made since the card was drawn."* For a memory that is a file two processes and a person can all edit, that is the right amount of care, and it is where the mark now rests. Screened before reading: ten findings; nothing was installed or run.
+**2026-09-17** — [`7d8a860df9e8f5815108869f8868eaa961061e38`](https://github.com/juggler-ai/juggler/commit/7d8a860df9e8f5815108869f8868eaa961061e38) — re-read after 48 commits. `memory-pin.js` is byte-identical, so the mark rests on unchanged code — the per-entry delete control still calls `removeEntry` on an exact match at `:182`. Only its test file moved. Nothing was installed, built or run.
+
+**2026-09-11** — [`7d8a860df9e8f5815108869f8868eaa961061e38`](https://github.com/juggler-ai/juggler/commit/7d8a860df9e8f5815108869f8868eaa961061e38) — re-read, 1,348 files and 210,633 insertions past the previous pin in a single commit; the memory paths took about a thousand of those. **`human_review` re-verified and its basis strengthened.** The previous edition's *"nothing records what it removed"* is stale: `removeMatching` collects the text of every entry it drops and `memory-context-item.js:385` returns it as `removed` alongside the match string, so a substring `forget` that takes three unrelated facts says so in the transcript. The substring semantics are unchanged, so the reach is still the model's choice; what changed is that the over-reach is visible at the moment it happens. **A precise deletion path was added beside the fuzzy one**: `pins/memory-pin.js` renders the file as a card with a per-entry delete that calls `removeEntry`, matching date *and* exact text, and re-reads the file before each write under a comment giving the reason — *"so it preserves changes made since the card was drawn."* For a memory that is a file two processes and a person can all edit, that is the right amount of care, and it is where the mark now rests. Screened before reading: ten findings; nothing was installed or run.
 
 **2026-07-30** — [`bf81e61087a6e6af24e5ffd225d66c74135a4faa`](https://github.com/juggler-ai/juggler/commit/bf81e61087a6e6af24e5ffd225d66c74135a4faa) — first reading.

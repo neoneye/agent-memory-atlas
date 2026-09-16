@@ -7,9 +7,9 @@ page_kind: system
 source_name: "haagndaazer/vibe-cognition"
 source_url: https://github.com/haagndaazer/vibe-cognition
 archive_name: "haagndaazer--vibe-cognition"
-revision: 09126b69a91f1a3f5691159a4785b35691b70658
-revision_url: https://github.com/haagndaazer/vibe-cognition/commit/09126b69a91f1a3f5691159a4785b35691b70658
-analyzed_at: 2026-09-09
+revision: 208e7d2ec8eb402edede7b8b255012b712007a66
+revision_url: https://github.com/haagndaazer/vibe-cognition/commit/208e7d2ec8eb402edede7b8b255012b712007a66
+analyzed_at: 2026-09-17
 capabilities: "audit_log"
 capability_evidence:
   audit_log: "two append-only journals, one per store | src/vibe_cognition/cognition/storage.py:309,347,376,404,443,456,942, src/vibe_cognition/cognition/people_facts.py | every graph mutation calls `_append_journal(action, data)` — add_node, add_edge, update_node, remove_node and both remove_edge paths — so the record is written by the mutating method rather than by a caller who might forget, and a `remove_node` appends a tombstone rather than deleting the history. Env facts are a second store with a second delta journal, and the module states why it is separate: the main journal's `update_node` convention writes the entire metadata dict per call, so accumulating per-fact history there would be O(n squared), and the delta shape makes that structurally impossible rather than merely avoided. The mark covers both stores, by two mechanisms | no committed case asserts that a mutation without a journal line fails"
@@ -330,7 +330,9 @@ delegates `:179,188`), `cognition/journal_io.py`,
 
 ## History
 
-**2026-09-09** — [`09126b69a91f1a3f5691159a4785b35691b70658`](https://github.com/haagndaazer/vibe-cognition/commit/09126b69a91f1a3f5691159a4785b35691b70658) — second reading, 51 commits on: 106 files, 9,653 insertions, of which the appendix paths take 61 lines. Screened before reading; nothing was installed and no suite was run.
+**2026-09-17** — [`208e7d2ec8eb402edede7b8b255012b712007a66`](https://github.com/haagndaazer/vibe-cognition/commit/208e7d2ec8eb402edede7b8b255012b712007a66) — re-read after 37 commits. Both anchored files moved and the producer was re-counted rather than assumed: `_append_journal` is defined once and called from exactly six mutation sites, matching the add, update and remove paths the evidence record names, so every graph mutation still writes the journal. The mark holds. Nothing was installed, built or run.
+
+**2026-09-09** — [`208e7d2ec8eb402edede7b8b255012b712007a66`](https://github.com/haagndaazer/vibe-cognition/commit/208e7d2ec8eb402edede7b8b255012b712007a66) — second reading, 51 commits on: 106 files, 9,653 insertions, of which the appendix paths take 61 lines. Screened before reading; nothing was installed and no suite was run.
 
 The journal is unchanged and its anchors are re-derived: `_append_journal` moved from `:883` to `:942`, and its six call sites are now listed rather than left implicit, so a reader can check that every mutating method writes its own record instead of trusting a caller to.
 
