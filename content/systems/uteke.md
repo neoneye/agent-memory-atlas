@@ -7,9 +7,9 @@ page_kind: system
 source_name: "codecoradev/uteke"
 source_url: https://github.com/codecoradev/uteke
 archive_name: "codecoradev--uteke"
-revision: 3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e
-revision_url: https://github.com/codecoradev/uteke/commit/3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e
-analyzed_at: 2026-09-11
+revision: c0573a42b72d87f33d99300c362598e892ce5918
+revision_url: https://github.com/codecoradev/uteke/commit/c0573a42b72d87f33d99300c362598e892ce5918
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "memory recall: vector, FTS5, hybrid and fusion | crates/uteke-core/src/memory/fts5.rs:92-104, crates/uteke-core/src/operations.rs:514-519, crates/uteke-core/src/lib.rs:2147-2148 | every memory row carries a `namespace` (default `default`); the FTS5 arm puts `m.namespace = ?2` in SQL, the vector arm drops candidates from other namespaces before scoring and re-widens its pool up to three times, and the default MCP recall resolves an omitted namespace to `default`. The key is chosen by the caller and bound to no token, an HTTP `/recall` without one reads every namespace, and documents carry no namespace predicate at all | crates/uteke-core/src/memory/fts5.rs:327-345"
@@ -205,4 +205,6 @@ python3 scratchpad/uteke-check/lme.py   # recall_any@5 = 492/500 from default-50
 
 ## History
 
-**2026-09-11** — [`3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e`](https://github.com/codecoradev/uteke/commit/3b93b34de2ff5a61ae8e9d4ab8847ab1a9e5097e) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; every manifest reads as inside the seven-day cooldown because the depth-1 clone dates each file to the pinned commit; three unpinned surfaces in benchmark and docs tooling (a Python requirements file with `>=` ranges, a VitePress `package.json` with floating ranges and a GitHub-sourced theme); `AGENT.md` and `AGENTS.md` read as data. Nothing was built or run. The LongMemEval figures were recomputed from the committed raw outputs, and the foreign-key failure reproduced against the tree's DDL in Python's `sqlite3`, not by running Uteke.
+**2026-09-17** — [`c0573a42b72d87f33d99300c362598e892ce5918`](https://github.com/codecoradev/uteke/commit/c0573a42b72d87f33d99300c362598e892ce5918) — re-pinned after 18 commits. All three anchored files are byte-identical at both commits — the core library, the FTS5 memory module carrying both the scope predicate and the negative-eval case, and the operations module — so both marks stand on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-11** — [`c0573a42b72d87f33d99300c362598e892ce5918`](https://github.com/codecoradev/uteke/commit/c0573a42b72d87f33d99300c362598e892ce5918) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; every manifest reads as inside the seven-day cooldown because the depth-1 clone dates each file to the pinned commit; three unpinned surfaces in benchmark and docs tooling (a Python requirements file with `>=` ranges, a VitePress `package.json` with floating ranges and a GitHub-sourced theme); `AGENT.md` and `AGENTS.md` read as data. Nothing was built or run. The LongMemEval figures were recomputed from the committed raw outputs, and the foreign-key failure reproduced against the tree's DDL in Python's `sqlite3`, not by running Uteke.

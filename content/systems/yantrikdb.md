@@ -7,12 +7,12 @@ page_kind: system
 source_name: "yantrikos/yantrikdb-server"
 source_url: https://github.com/yantrikos/yantrikdb-server
 archive_name: "yantrikos--yantrikdb-server"
-revision: 45d052ec1dc47ca16c2a42aa938be9e6d176b711
-revision_url: https://github.com/yantrikos/yantrikdb-server/commit/45d052ec1dc47ca16c2a42aa938be9e6d176b711
-analyzed_at: 2026-09-11
+revision: 36dca9accd8ccf188cd28184a24b97a313441c12
+revision_url: https://github.com/yantrikos/yantrikdb-server/commit/36dca9accd8ccf188cd28184a24b97a313441c12
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, audit_log"
 capability_evidence:
-  scope_enforced: "recall, on the namespace predicate rather than the tenant partition | crates/yantrikdb-server/src/handler.rs:158-194, engine crates/yantrikdb-core/src/engine/recall.rs:1854 at tag v0.22.0 | both `db.recall` call sites forward `namespace.as_deref()` into SQL that appends `AND m.namespace = ?N`; a tenant is a separate `yantrik.db` file from `TenantPool::get_engine`, which is a partition, not a predicate | crates/yantrikdb-server/tests/http_integration.rs"
+  scope_enforced: "recall, on the namespace predicate rather than the tenant partition | crates/yantrikdb-server/src/handler.rs:158-194, engine crates/yantrikdb-core/src/engine/recall.rs:1860, :1876, :1946 at tag v0.23.0 | both `db.recall` call sites forward `namespace.as_deref()` into SQL that appends `AND m.namespace = ?N`; a tenant is a separate `yantrik.db` file from `TenantPool::get_engine`, which is a partition, not a predicate | crates/yantrikdb-server/tests/http_integration.rs"
   audit_log: "the per-tenant commit log | crates/yantrikdb-server/src/commit/local.rs:315 | `INSERT INTO memory_commit_log` is the only statement that writes the table and no `UPDATE` or `DELETE` against it exists in the tree; four production callers (`remember`, `remember_batch`, `forget`, `relate`) | crates/yantrikdb-server/src/commit/local.rs:565-600 (idempotency and per-tenant index tests)"
 stack_storage: "sqlite"
 stack_retrieval: "vector, graph"
@@ -590,7 +590,7 @@ What is open:
 ## Appendix: File Index
 
 Two repositories. Paths without a prefix are `yantrikos/yantrikdb-server` at
-`45d052ec1dc47ca16c2a42aa938be9e6d176b711`; paths marked **engine** are
+`36dca9accd8ccf188cd28184a24b97a313441c12`; paths marked **engine** are
 `yantrikos/yantrikdb` at tag `v0.22.0`, the version this commit pins.
 
 **The correction** — `CORRECTIONS.md` (what was wrong `:11`, where it was cited
@@ -660,7 +660,7 @@ records four engine releases and no relicence)
 ## Appendix: Searches
 
 Run from a checkout of `yantrikos/yantrikdb-server` at
-`45d052ec1dc47ca16c2a42aa938be9e6d176b711` unless marked **engine**, which is
+`36dca9accd8ccf188cd28184a24b97a313441c12` unless marked **engine**, which is
 `yantrikos/yantrikdb` at tag `v0.22.0`. Each one backs a statement above that
 says something is absent.
 
@@ -712,6 +712,8 @@ says something is absent.
 
 ## History
 
-**2026-09-11** — [`45d052ec1dc47ca16c2a42aa938be9e6d176b711`](https://github.com/yantrikos/yantrikdb-server/commit/45d052ec1dc47ca16c2a42aa938be9e6d176b711) — re-read. Screened again: no auto-run surface, no build-time execution, ten dependency manifests three days old inside the seven-day cooldown including `Cargo.lock` and `uv.lock`. The tree was read, never built, and no test or benchmark was run. Twenty-nine files changed since the previous pin: the licence moved from AGPL-3.0-only to Apache-2.0 with a `NOTICE` added, the engine dependency moved from tag `v0.13.1` to `v0.22.0`, and RFC 032 added HTTP routes for six MCP tool families with eight cluster-global write operations returning a 501 that names the missing replication path. Marks unchanged at `scope_enforced` and `audit_log`; `capability_evidence` records added for both, and the scope record now names the namespace predicate rather than the per-tenant file. Four corrections to the first reading, all of them things the first reading could have checked: `correct` updates the row in place under the same `rid` and files the prior state in `record_revisions` rather than tombstoning and minting a new memory; the memory row has a status field, a valid-time interval and a supersedes edge, none of which the first reading found because it never opened the engine crate the server depends on; `RaftCommitter` is a name in thirteen comments and no type, openraft having been removed before either pin; and the crypto-shred's "no encryption layer" is wrong — there is an AES-256-GCM at-rest layer on one server-wide master key, which is not the per-tenant DEK the shredder destroys. The retention watermark and its four contributors are constructed nowhere outside their own tests and the compactor that would read them does not exist, so restore-no-resurrect holds because nothing trims the log. Section 9 records the two withheld marks that came closest: a claim-grounding gate seeded `shadow` on every install, and a valid-time axis the server passes `None` for at both recall call sites.
+**2026-09-17** — [`36dca9accd8ccf188cd28184a24b97a313441c12`](https://github.com/yantrikos/yantrikdb-server/commit/36dca9accd8ccf188cd28184a24b97a313441c12) — re-pinned after 4 commits. Every anchored file in this repository is byte-identical: the request handler, the local commit log and the HTTP integration test. The change that matters is a dependency: `deps: engine v0.22.0 -> v0.23.0`, so the engine crate this report cites by tag moved a release. The engine was cloned at the new tag and `recall.rs` re-read rather than assumed — the file grew to 6,768 lines and the namespace predicate is still appended in the recall SQL, now at `:1860`, `:1876` and `:1946`. The evidence record names the new tag and the new anchors. Both marks hold. A report that cites a pinned dependency by tag has two pins to advance, and only one of them shows up as drift on this repository. Nothing was installed, built or run.
+
+**2026-09-11** — [`36dca9accd8ccf188cd28184a24b97a313441c12`](https://github.com/yantrikos/yantrikdb-server/commit/36dca9accd8ccf188cd28184a24b97a313441c12) — re-read. Screened again: no auto-run surface, no build-time execution, ten dependency manifests three days old inside the seven-day cooldown including `Cargo.lock` and `uv.lock`. The tree was read, never built, and no test or benchmark was run. Twenty-nine files changed since the previous pin: the licence moved from AGPL-3.0-only to Apache-2.0 with a `NOTICE` added, the engine dependency moved from tag `v0.13.1` to `v0.22.0`, and RFC 032 added HTTP routes for six MCP tool families with eight cluster-global write operations returning a 501 that names the missing replication path. Marks unchanged at `scope_enforced` and `audit_log`; `capability_evidence` records added for both, and the scope record now names the namespace predicate rather than the per-tenant file. Four corrections to the first reading, all of them things the first reading could have checked: `correct` updates the row in place under the same `rid` and files the prior state in `record_revisions` rather than tombstoning and minting a new memory; the memory row has a status field, a valid-time interval and a supersedes edge, none of which the first reading found because it never opened the engine crate the server depends on; `RaftCommitter` is a name in thirteen comments and no type, openraft having been removed before either pin; and the crypto-shred's "no encryption layer" is wrong — there is an AES-256-GCM at-rest layer on one server-wide master key, which is not the per-tenant DEK the shredder destroys. The retention watermark and its four contributors are constructed nowhere outside their own tests and the compactor that would read them does not exist, so restore-no-resurrect holds because nothing trims the log. Section 9 records the two withheld marks that came closest: a claim-grounding gate seeded `shadow` on every install, and a valid-time axis the server passes `None` for at both recall call sites.
 
 **2026-08-09** — [`f8378f98bb0d25128f473ab4e7c5cac829c22773`](https://github.com/yantrikos/yantrikdb-server/commit/f8378f98bb0d25128f473ab4e7c5cac829c22773) — first reading. Screened before reading: no auto-run surface, no build-time execution, ten dependency manifests inside the seven-day cooldown including `Cargo.lock` and `uv.lock`. The tree was read, never built, and no test or benchmark was run.

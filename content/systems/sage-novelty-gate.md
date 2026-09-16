@@ -7,9 +7,9 @@ page_kind: system
 source_name: "swang1024/SAGE"
 source_url: https://github.com/swang1024/SAGE
 archive_name: "swang1024--SAGE"
-revision: be5893e170278dc739235d109a4fb1259c8f00e9
-revision_url: https://github.com/swang1024/SAGE/commit/be5893e170278dc739235d109a4fb1259c8f00e9
-analyzed_at: 2026-09-09
+revision: 01466cd1cc571b2794bdaf71865a2a6c9f7679ae
+revision_url: https://github.com/swang1024/SAGE/commit/01466cd1cc571b2794bdaf71865a2a6c9f7679ae
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, audit_log"
 capability_evidence:
   scope_enforced: "the mem0 core's filter, inherited — and a second use of the same key inside the gate | mem0/memory/main.py:171-230,413-420, and the vector-store search call in `_search_vector_store` | `_build_filters_and_metadata` puts `user_id`, `agent_id` and `run_id` into `effective_query_filters`, and the search passes `filters=filters` into `vector_store.search(...)` rather than filtering results afterwards. That half is unchanged base mem0 and this report claims no credit for it on SAGE's behalf. What the fork adds is a second use of the same key: `_scope_key` joins the three ids into one string, and the novelty gate keeps a separate KDE per scope, so a candidate is scored only against memories in its own scope. The boundary therefore reaches the write decision as well as the read | tests/memory/test_novelty_gate.py exercises per-scope add, update and removal; no committed case asserts that one scope's search misses another's rows"
@@ -269,7 +269,9 @@ for arm in ("mem0", "sage"):
 
 ## History
 
-**2026-09-09** — [`be5893e170278dc739235d109a4fb1259c8f00e9`](https://github.com/swang1024/SAGE/commit/be5893e170278dc739235d109a4fb1259c8f00e9) — first reading, at the head of `main`, Apache 2.0. Screened before anything was read: no auto-run surface, three build-time execution points, one unpinned requirements file, and a `poetry.lock` unchanged for 88 days so the tree sits outside the seven-day cooldown; nothing was installed and no suite was run.
+**2026-09-17** — [`01466cd1cc571b2794bdaf71865a2a6c9f7679ae`](https://github.com/swang1024/SAGE/commit/01466cd1cc571b2794bdaf71865a2a6c9f7679ae) — re-pinned after 1 commit. Both anchored source files and the novelty-gate test are byte-identical at both commits, so both marks stand on unchanged code and every line number here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-09** — [`01466cd1cc571b2794bdaf71865a2a6c9f7679ae`](https://github.com/swang1024/SAGE/commit/01466cd1cc571b2794bdaf71865a2a6c9f7679ae) — first reading, at the head of `main`, Apache 2.0. Screened before anything was read: no auto-run surface, three build-time execution points, one unpinned requirements file, and a `poetry.lock` unchanged for 88 days so the tree sits outside the seven-day cooldown; nothing was installed and no suite was run.
 
 Two marks, both inherited from the mem0 core this forks rather than contributed by the gate, and the evidence records say so. `scope_enforced` rests on the base filter reaching `vector_store.search` — with the observation that the fork puts the same three ids to a second use, partitioning the novelty index so a candidate is scored only within its own scope. `audit_log` rests on the base `history` table, with the limit that matters here stated: a candidate the gate refuses never reaches a path that writes to it. `tombstone`, `trust_state`, `bitemporal`, `human_review` and `negative_eval` are absent — a NOOP is a log line and a `continue`, a routing decision is a write-time genre rather than a state a fact carries, and no committed case asserts anything about what a search returns.
 
