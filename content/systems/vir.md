@@ -7,9 +7,9 @@ page_kind: system
 source_name: "djolex999/vir"
 source_url: https://github.com/djolex999/vir
 archive_name: "djolex999--vir"
-revision: ab867c022d90fa73d19dbf999ce22089653b9c2e
-revision_url: https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e
-analyzed_at: 2026-09-10
+revision: 0356783a96fa74fa67b328b7936e83aa0fc14481
+revision_url: https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481
+analyzed_at: 2026-09-17
 capabilities: "trust_state, human_review"
 capability_evidence:
   trust_state: "a person's verdict on a note is stamped in its frontmatter and one value withholds the note from every read | src/cli/review.ts:95-122, :129-133, src/search/retriever.ts:18, :60, :229, src/mcp/server.ts:256-287 | `vir review` walks the new distilled notes and takes approve, edit or reject. Approving writes `verified: true` with a `reviewed_at`; rejecting writes `rejected_at` and moves the file into `.rejected/` — recoverable rather than deleted, as its own comment says. The retriever's `SKIP_DIRS` holds `summaries`, `.rejected` and `archived`, so a rejected note is absent from search rather than ranked down, and `writer.ts` keeps `verified`, `reviewed_at` and `rejected_at` across a rewrite so a later pipeline pass cannot erase the verdict. A verified note takes a `VERIFIED_BOOST` of 0.2 in both the embedding and TF-IDF paths, and the MCP `search` tool exposes `verified_only`, which drops every unverified hit and over-fetches five times the page so the filter can still fill it. The precision worth keeping: the durable record is the frontmatter field and the exclusion is carried by the file's placement, both written by the same function | src/cli/review.test.ts, src/mcp/server.test.ts"
@@ -236,6 +236,50 @@ of the additions and removals and waits before anything enters the agent's
 standing instructions. Combined with the marker delimiters, the second is the
 most careful implementation in this atlas of writing into a file the user owns.
 
+**Three failures of silence were found and closed in this window, all of them
+measured on the author's own vault.** They are worth reading together, because
+each is a different way for a memory system to be wrong without anything
+reporting an error.
+
+*A correct record that nobody read in time.* `run.ts` writes an error row per
+failed distill and logs it — which the commit calls correct and also invisible,
+because the daemon runs unattended and nobody reads `daemon.log`. Fourteen
+sessions died inside one `fetch failed` window on 11 June 2026 and were found
+three months later, by which point the harness had deleted the transcripts and
+the knowledge was unrecoverable; twenty-seven such rows exist in that vault and
+none are retryable. The repair is deliberately two-sided, because either half
+alone leaves the hole: `failureNotice` fires a desktop notification at the end of
+any run that errored, which reaches the user the same day while `vir reconcile`
+can still act, and a `doctor` row carries the standing state — how many failed,
+how many remain recoverable, and when the last one was. A durable record is not a
+notification, and the gap between them is measured here in months.
+
+*An empty section that reads as a fact.* With no embedding provider
+`computeNoteEmbedding` returns null, so the writer computed zero neighbours and
+rendered an empty Related section — indistinguishable from a note that genuinely
+has none. One `vir run --rewrite-only` pass with the local embedder down would
+have stripped Related from every note in the vault silently, and the self-heal
+sweep would not have restored it, because it stores embeddings rather than
+rewriting notes. The path matters: it is what a user reaches for immediately
+after `vir prune --apply`. `write()` now falls back to
+`preservedRelatedSection` (`src/pipeline/writer.ts:170-178`, `:548-566`), which
+carries the existing block forward verbatim, under a comment that states the
+principle better than this report could — *"carry forward what this pass cannot
+regenerate rather than emitting an empty section that reads as a fact."*
+
+*Debris that only one retrieval path can see.* `vir lint --strays` reports note
+files with no live database row, left behind when a retitle writes a new slug and
+the old file stays — thirty-two of them in the reference vault, one session
+accounting for five. They are not inert: the embedding path never surfaces them
+because `getEmbeddings` builds the file path from the *current* topic, but the
+TF-IDF walk indexes every category directory, so with the embedder down a single
+session is cited twice under two titles, which is observable in that vault's
+query log. The check's design note is the transferable part — it deliberately
+does not judge on the content column, because a session awaiting reconcile has
+empty content while its file on disk holds the only copy of the text, and a
+one-off cleanup script that judged on content would have demoted a real note. The
+test pins that case.
+
 **Trust state is earned on the rejection, not on the approval.** A rejected note
 is stamped `rejected_at` and moved into `.rejected/`, which the retriever's
 `SKIP_DIRS` excludes — so a person's *no* removes the note from every search
@@ -377,6 +421,8 @@ counterexample `:6-13`, the OpenAI pattern `:14-17`), `scrubber.test.ts`
 
 ## History
 
-**2026-09-10** — [`ab867c022d90fa73d19dbf999ce22089653b9c2e`](https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e) — read again, 75 commits past the previous pin. `trust_state` is earned where it was not: `vir review` takes approve, edit or reject per note, a rejection stamps `rejected_at` and moves the file into `.rejected/`, and the retriever's `SKIP_DIRS` excludes that directory — so a person's refusal removes a note from every search while leaving it recoverable on disk. Approval stamps `verified: true`, which buys a 0.2 score boost applied before the top-K slice and becomes a hard filter under the MCP tool's `verified_only`. `tombstone` is withheld on a single missing lookup: nothing on the write path reads `.rejected/`, so re-running the pipeline over the same transcript re-derives the note. Retrieval gained MMR reranking, an `excludedMismatched` count for rows whose stored vector came from a superseded embedding model, a `degraded` flag separating an embedder failure from a clean miss, and a rotating query log with a failure marker. The absence claims were re-run and hold: no paper, no benchmark — the project has made that a stated position rather than an omission — no committed evaluation of distillation faithfulness, and `confidence` is still consulted by no read path. Test files went from 46 to 50. Screened before reading: no auto-run surface, three dependency manifests inside the seven-day cooldown, one build-time execution path and two unpinned surfaces; nothing was installed or run.
+**2026-09-17** — [`0356783a96fa74fa67b328b7936e83aa0fc14481`](https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481) — re-read after 27 commits, through v0.17.8. `src/cli/review.test.ts` and `src/search/retriever.ts` are byte-identical, so the rejection path behind both marks is exact; `review.ts`, `cli.ts` and `mcp/server.ts` moved and were re-derived, with `cli.ts` gaining the lint subcommand options. Both marks hold. The window is three separate failures of silence, all measured on the author's own vault and all written up in section 9: distill errors recorded correctly in a log nobody reads, found three months later with the source transcripts already deleted; a rewrite with no embedder rendering an empty Related section that is indistinguishable from a note with no relatives, which one pass with the local embedder down would have applied to every note; and retitle debris invisible to the embedding path but indexed by the lexical one, so a session is cited twice under two titles. Nothing was installed, built or run.
+
+**2026-09-10** — [`0356783a96fa74fa67b328b7936e83aa0fc14481`](https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481) — read again, 75 commits past the previous pin. `trust_state` is earned where it was not: `vir review` takes approve, edit or reject per note, a rejection stamps `rejected_at` and moves the file into `.rejected/`, and the retriever's `SKIP_DIRS` excludes that directory — so a person's refusal removes a note from every search while leaving it recoverable on disk. Approval stamps `verified: true`, which buys a 0.2 score boost applied before the top-K slice and becomes a hard filter under the MCP tool's `verified_only`. `tombstone` is withheld on a single missing lookup: nothing on the write path reads `.rejected/`, so re-running the pipeline over the same transcript re-derives the note. Retrieval gained MMR reranking, an `excludedMismatched` count for rows whose stored vector came from a superseded embedding model, a `degraded` flag separating an embedder failure from a clean miss, and a rotating query log with a failure marker. The absence claims were re-run and hold: no paper, no benchmark — the project has made that a stated position rather than an omission — no committed evaluation of distillation faithfulness, and `confidence` is still consulted by no read path. Test files went from 46 to 50. Screened before reading: no auto-run surface, three dependency manifests inside the seven-day cooldown, one build-time execution path and two unpinned surfaces; nothing was installed or run.
 
 **2026-08-09** — [`49451ee8edf3747f81df6548411f0439c4378c6c`](https://github.com/djolex999/vir/commit/49451ee8edf3747f81df6548411f0439c4378c6c) — first reading. Screened before reading; the tree was read, never installed, and no pass was run. The 243-and-20 figures are the author's, reported from one machine.

@@ -107,14 +107,14 @@ on the author's machine, about 20 were.</p>
               <strong>djolex999/vir</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e" title="ab867c022d90fa73d19dbf999ce22089653b9c2e">
+            <a class="meta-pill revision-pill" href="https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481" title="0356783a96fa74fa67b328b7936e83aa0fc14481">
               <span>Analyzed revision</span>
-              <code>ab867c02…</code>
+              <code>0356783a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/djolex999--vir" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -345,6 +345,55 @@ additions and removals and waits before anything enters the agent's
 standing instructions. Combined with the marker delimiters, the second
 is the most careful implementation in this atlas of writing into a file
 the user owns.</p>
+<p><strong>Three failures of silence were found and closed in this
+window, all of them measured on the author's own vault.</strong> They
+are worth reading together, because each is a different way for a memory
+system to be wrong without anything reporting an error.</p>
+<p><em>A correct record that nobody read in time.</em>
+<code>run.ts</code> writes an error row per failed distill and logs it —
+which the commit calls correct and also invisible, because the daemon
+runs unattended and nobody reads <code>daemon.log</code>. Fourteen
+sessions died inside one <code>fetch failed</code> window on 11 June
+2026 and were found three months later, by which point the harness had
+deleted the transcripts and the knowledge was unrecoverable;
+twenty-seven such rows exist in that vault and none are retryable. The
+repair is deliberately two-sided, because either half alone leaves the
+hole: <code>failureNotice</code> fires a desktop notification at the end
+of any run that errored, which reaches the user the same day while
+<code>vir reconcile</code> can still act, and a <code>doctor</code> row
+carries the standing state — how many failed, how many remain
+recoverable, and when the last one was. A durable record is not a
+notification, and the gap between them is measured here in months.</p>
+<p><em>An empty section that reads as a fact.</em> With no embedding
+provider <code>computeNoteEmbedding</code> returns null, so the writer
+computed zero neighbours and rendered an empty Related section —
+indistinguishable from a note that genuinely has none. One
+<code>vir run --rewrite-only</code> pass with the local embedder down
+would have stripped Related from every note in the vault silently, and
+the self-heal sweep would not have restored it, because it stores
+embeddings rather than rewriting notes. The path matters: it is what a
+user reaches for immediately after <code>vir prune --apply</code>.
+<code>write()</code> now falls back to
+<code>preservedRelatedSection</code>
+(<code>src/pipeline/writer.ts:170-178</code>, <code>:548-566</code>),
+which carries the existing block forward verbatim, under a comment that
+states the principle better than this report could — <em>"carry forward
+what this pass cannot regenerate rather than emitting an empty section
+that reads as a fact."</em></p>
+<p><em>Debris that only one retrieval path can see.</em>
+<code>vir lint --strays</code> reports note files with no live database
+row, left behind when a retitle writes a new slug and the old file stays
+— thirty-two of them in the reference vault, one session accounting for
+five. They are not inert: the embedding path never surfaces them because
+<code>getEmbeddings</code> builds the file path from the
+<em>current</em> topic, but the TF-IDF walk indexes every category
+directory, so with the embedder down a single session is cited twice
+under two titles, which is observable in that vault's query log. The
+check's design note is the transferable part — it deliberately does not
+judge on the content column, because a session awaiting reconcile has
+empty content while its file on disk holds the only copy of the text,
+and a one-off cleanup script that judged on content would have demoted a
+real note. The test pins that case.</p>
 <p><strong>Trust state is earned on the rejection, not on the
 approval.</strong> A rejected note is stamped <code>rejected_at</code>
 and moved into <code>.rejected/</code>, which the retriever's
@@ -502,8 +551,26 @@ the OpenAI pattern <code>:14-17</code>),
 <code>src/search/</code>, <code>src/state/</code>,
 <code>src/lint/</code>, <code>src/diagnostics/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481"><code class="commit-id" title="0356783a96fa74fa67b328b7936e83aa0fc14481">0356783a…</code></a>
+— re-read after 27 commits, through v0.17.8.
+<code>src/cli/review.test.ts</code> and
+<code>src/search/retriever.ts</code> are byte-identical, so the
+rejection path behind both marks is exact; <code>review.ts</code>,
+<code>cli.ts</code> and <code>mcp/server.ts</code> moved and were
+re-derived, with <code>cli.ts</code> gaining the lint subcommand
+options. Both marks hold. The window is three separate failures of
+silence, all measured on the author's own vault and all written up in
+section 9: distill errors recorded correctly in a log nobody reads,
+found three months later with the source transcripts already deleted; a
+rewrite with no embedder rendering an empty Related section that is
+indistinguishable from a note with no relatives, which one pass with the
+local embedder down would have applied to every note; and retitle debris
+invisible to the embedding path but indexed by the lexical one, so a
+session is cited twice under two titles. Nothing was installed, built or
+run.</p>
 <p><strong>2026-09-10</strong> — <a
-href="https://github.com/djolex999/vir/commit/ab867c022d90fa73d19dbf999ce22089653b9c2e"><code class="commit-id" title="ab867c022d90fa73d19dbf999ce22089653b9c2e">ab867c02…</code></a>
+href="https://github.com/djolex999/vir/commit/0356783a96fa74fa67b328b7936e83aa0fc14481"><code class="commit-id" title="0356783a96fa74fa67b328b7936e83aa0fc14481">0356783a…</code></a>
 — read again, 75 commits past the previous pin. <code>trust_state</code>
 is earned where it was not: <code>vir review</code> takes approve, edit
 or reject per note, a rejection stamps <code>rejected_at</code> and

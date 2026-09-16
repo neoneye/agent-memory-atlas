@@ -7,13 +7,13 @@ page_kind: system
 source_name: "alibaizhanov/mengram"
 source_url: https://github.com/alibaizhanov/mengram
 archive_name: "alibaizhanov--mengram"
-revision: 08d8c79cbd202625d20b7bcbefb2aea50a54bea2
-revision_url: https://github.com/alibaizhanov/mengram/commit/08d8c79cbd202625d20b7bcbefb2aea50a54bea2
-analyzed_at: 2026-09-11
+revision: e90a8caa819f5f75fdb3cecb262e1b5071de894b
+revision_url: https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b
+analyzed_at: 2026-09-17
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
-  trust_state: "procedure retrieval | cloud/store/_profile.py:447,:487,:490 | `is_current = TRUE` as a predicate on every current-procedure read, with `metadata.status` of `needs_review` holding a revision out | benchmark/procinterfere"
-  scope_enforced: "procedure reads | cloud/store/_profile.py:487 | `WHERE user_id = %s` with `sub_user_id` beside it as arguments to every procedure read | unknown"
+  trust_state: "procedure retrieval | cloud/store/_profile.py:455, :495, :498, cloud/store/_procedures.py:585 | `is_current = TRUE` as a predicate on every current-procedure read, with `metadata.status` of `needs_review` holding a revision out | benchmark/procinterfere"
+  scope_enforced: "procedure reads | cloud/store/_profile.py:495 | `WHERE user_id = %s` with `sub_user_id` beside it as arguments to every procedure read | unknown"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -399,6 +399,8 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`08d8c79cbd202625d20b7bcbefb2aea50a54bea2`](https://github.com/alibaizhanov/mengram/commit/08d8c79cbd202625d20b7bcbefb2aea50a54bea2) — re-read, 97 files and 21,231 insertions past the previous pin in a single commit. Both marks re-verified, with `capability_evidence` records added where the report had none. **The quarantine criticism is half closed.** The previous edition's *"nothing surfaces the quarantine queue"* is no longer true on the local path: `local/evolve.py` writes a refused revision to `.mengram/quarantine.json` under a docstring stating where it goes and where it does not — *"for a human, never to the agent"* — and `read_quarantine` feeds the map view a person reads. What has not changed is the exit: `evolve` returns `promoted`, `revised_in_place`, `quarantined` or a failure, and no verb moves a revision out of the third state. A queue a person can read and cannot empty is a slower dead end than one nobody can see, and the Avoid bullet is rewritten to say that. The benchmark case count is corrected from 18 to 20 — twelve breaking, eight safe — and the report's assessment of that table as a specification check rather than evidence of generalisation stands: the two baselines are literally `return False`, so the comparison measures the definition of "does no check". Screened before reading: twenty-seven findings across twenty-eight files; nothing was installed or run.
+**2026-09-17** — [`e90a8caa819f5f75fdb3cecb262e1b5071de894b`](https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b) — re-pinned after 51 commits. `cloud/store/_profile.py` gained 11 net lines and both predicates were re-derived rather than assumed: `is_current = TRUE` still guards every current-procedure read and `WHERE user_id = %s` still carries `sub_user_id` beside it, at `:455`, `:495` and `:498`. The `needs_review` quarantine the trust-state record cites is written at `cloud/store/_procedures.py:585`, which the evidence record now names explicitly rather than attributing to the profile module; two committed tests exercise it. Both marks hold. Nothing was installed, built or run.
+
+**2026-09-11** — [`e90a8caa819f5f75fdb3cecb262e1b5071de894b`](https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b) — re-read, 97 files and 21,231 insertions past the previous pin in a single commit. Both marks re-verified, with `capability_evidence` records added where the report had none. **The quarantine criticism is half closed.** The previous edition's *"nothing surfaces the quarantine queue"* is no longer true on the local path: `local/evolve.py` writes a refused revision to `.mengram/quarantine.json` under a docstring stating where it goes and where it does not — *"for a human, never to the agent"* — and `read_quarantine` feeds the map view a person reads. What has not changed is the exit: `evolve` returns `promoted`, `revised_in_place`, `quarantined` or a failure, and no verb moves a revision out of the third state. A queue a person can read and cannot empty is a slower dead end than one nobody can see, and the Avoid bullet is rewritten to say that. The benchmark case count is corrected from 18 to 20 — twelve breaking, eight safe — and the report's assessment of that table as a specification check rather than evidence of generalisation stands: the two baselines are literally `return False`, so the comparison measures the definition of "does no check". Screened before reading: twenty-seven findings across twenty-eight files; nothing was installed or run.
 
 **2026-08-09** — [`99bfd824c374d85f021290f6f78de357243ebf9a`](https://github.com/alibaizhanov/mengram/commit/99bfd824c374d85f021290f6f78de357243ebf9a) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The gate described as unbuilt in the repository's own spec was found implemented and wired into `evolve_procedure`.

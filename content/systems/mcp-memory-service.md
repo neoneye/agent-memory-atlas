@@ -7,9 +7,9 @@ page_kind: system
 source_name: "doobidoo/mcp-memory-service"
 source_url: https://github.com/doobidoo/mcp-memory-service
 archive_name: "doobidoo--mcp-memory-service"
-revision: 63801ca5e3f2f02f392c34d395fc62adc9049796
-revision_url: https://github.com/doobidoo/mcp-memory-service/commit/63801ca5e3f2f02f392c34d395fc62adc9049796
-analyzed_at: 2026-09-10
+revision: 236ef182ce60bed203f896dba7edc4177960d0a8
+revision_url: https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8
+analyzed_at: 2026-09-17
 capabilities: "trust_state, negative_eval"
 capability_evidence:
   negative_eval: "a committed retrieval case asserting an out-of-window memory is absent from a non-empty result that contains the in-window one | tests/test_time_filter_vector_search.py:112-128, tests/test_semantic_search.py:98-108 | the time-filter case stores an old memory mentioning PostgreSQL and a recent one mentioning Redis, runs a semantic `search_memories` with an `after` bound set one day back, then asserts three things in order: `result[\"total\"] >= 1`, `any(\"Redis\" in c for c in contents)` and `not any(\"PostgreSQL\" in c for c in contents)`. The non-empty assertion and the present control both precede the absence check, so the case cannot pass over an empty result. The semantic-search case pairs `\"machine learning\" in results[0]` with `\"bicycle\" not in results[0]` on the top hit | the same files, inside a suite of 3,067 test functions"
@@ -478,4 +478,6 @@ rg -n 'not in' tests --glob '*.py' | rg -i 'result|memories'            # the tw
 
 ## History
 
-**2026-09-10** — [`63801ca5e3f2f02f392c34d395fc62adc9049796`](https://github.com/doobidoo/mcp-memory-service/commit/63801ca5e3f2f02f392c34d395fc62adc9049796) — first reading, at the head of `main`, the last commit of 10 September 2026. Screened before reading: four auto-run surfaces, seven build-time execution paths, eight unpinned dependency surfaces, two manifests inside the seven-day cooldown, and an uninstalled `pre-commit` hook payload noted as inert until something copies it; nothing was installed or run, and the read was made from a full clone. One mark. The reading covered the memory model, the four storage backends, the write and retrieval paths, and the consolidation package with its belief, contradiction and quarantine modules; the web, OAuth, sync, ingestion and harvest surfaces were read as context rather than as subject.
+**2026-09-17** — [`236ef182ce60bed203f896dba7edc4177960d0a8`](https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8) — re-pinned after 52 commits. Every anchored file is byte-identical at both commits: the belief model and its service behind `trust_state`, the memory handler and server implementation that read it, and both cited test files behind `negative_eval`. Both marks stand on unchanged code and every line number and quotation here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-10** — [`236ef182ce60bed203f896dba7edc4177960d0a8`](https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8) — first reading, at the head of `main`, the last commit of 10 September 2026. Screened before reading: four auto-run surfaces, seven build-time execution paths, eight unpinned dependency surfaces, two manifests inside the seven-day cooldown, and an uninstalled `pre-commit` hook payload noted as inert until something copies it; nothing was installed or run, and the read was made from a full clone. One mark. The reading covered the memory model, the four storage backends, the write and retrieval paths, and the consolidation package with its belief, contradiction and quarantine modules; the web, OAuth, sync, ingestion and harvest surfaces were read as context rather than as subject.
