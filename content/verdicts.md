@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 540 reports.**
+**This page covers all 541 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4670,3 +4670,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Rust, version 0.3.0, 13,173 lines over 28 files, one SQLite file with FTS5 and a vec0 table, thirty-six integration test files, five scored eval suites plus a holdout "nothing is tuned against", and hook bundles for eight agent harnesses. Three auto-run surfaces at this pin, all of them plugin and hook manifests.
 - Study when: you have a now-read and an as-of-read written separately, or you store expiry and error in one column.
 - Do not copy when: you need namespace isolation the caller cannot forget. Four marks: bitemporal, trust state, review, negative evals.
+
+### [`re-call`](../systems/re-call/)
+- Best idea: **the negative set was inside the corpus, and it was measured rather than assumed.** RE-call's off-topic query pool — subjects a search must abstain on — lived as Python literals, and RE-call indexes code, including its own tree: "[t]hese subjects are DATA, and as Python literals they were also CORPUS", so a corpus rooted at the repository ingested the list "and then disqualified every one of its 25 subjects". None of twenty-five survived against a repository-rooted corpus, eleven of twenty-five against a third-party corpus of the same size, so the fault was self-ingestion rather than a small pool. The pool moved to JSON, which the wizard's globs do not match; the distinctive words are never named in prose because naming one re-contaminates the pool; and three committed guards hold it, with a colliding corpus refused rather than silently narrowed.
+- Biggest risk: **two honestly-named escape hatches that still ship.** Development mode retrieves without a certified threshold and stamps `unverified`, and `generation_promoted_unsafe_development` is a real audit event, so a deployment can serve unjudged results and a generation can reach production without the validation that normally gates it. Both are visible only because the code names them. Beside those, `reviewer_id` is a supplied string rather than an authenticated principal, and the decision ledger — the only record of *why* a search abstained on a given day — is off by default and best-effort by design, so the retrieval audit is exactly as complete as the operator configured it.
+- Most reusable component: the `Verdict` vocabulary, where each value is defined against the one it would otherwise be confused with. `unverified` "is not a weaker `ok`: it says the trust gate never ran", kept separate from `low_confidence` because reusing it "would have made 'we measured this and it scored badly' indistinguishable from 'nobody measured anything'"; `ambiguous_supersession` "fails closed rather than being served with a guessed successor". Only `ok` becomes evidence.
+- Maturity impression: Apache-2.0, version 0.13.0, 102,183 lines of Python over 253 modules with 494 test files, PostgreSQL with pgvector under forced row-level security, an MCP server, a Codex plugin and harness hooks, and 162 dated preregistrations with amendments and results filed as separate documents. Three auto-run surfaces and three build-time execution points at this pin, including a `setup.py` that executes at install time; nothing was installed or run.
+- Study when: your evaluation data might live inside the corpus you index, or your statuses are a flat enum nobody argued about.
+- Do not copy when: you cannot run a PostgreSQL. Seven marks: tombstone, trust state, bitemporal, scope enforced, mutation audit, review, negative evals.

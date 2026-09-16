@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 479 of 540 screened at the report's current pin.**
+**Progress: 480 of 541 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 203 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 290 |
-| Repositories with build-time execution (`EXEC`) | 350 |
+| Repositories with an auto-run surface (`RUNS`) | 204 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 291 |
+| Repositories with build-time execution (`EXEC`) | 351 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -190,6 +190,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`qwen-mm-plugins`](../../content/systems/qwen-mm-plugins.md) | `.claude-plugin/` |
 | [`ragflow`](../../content/systems/ragflow.md) | `.github/copilot-instructions.md` |
+| [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `server.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes` |

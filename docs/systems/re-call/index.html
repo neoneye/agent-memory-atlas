@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Agent memory on PostgreSQL with
+pgvector where every hit carries one of eleven verdicts, strict mode
+refuses instead of answering, erasure writes a permanent tombstone the
+builder re-checks, and 162 dated preregistrations record what was going
+to be measured before it was.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RE-call — Agent Memory Atlas">
+    <meta property="og:description" content="Agent memory on PostgreSQL
+with pgvector where every hit carries one of eleven verdicts, strict
+mode refuses instead of answering, erasure writes a permanent tombstone
+the builder re-checks, and 162 dated preregistrations record what was
+going to be measured before it was.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RE-call — Agent Memory Atlas">
+    <meta name="twitter:description" content="Agent memory on PostgreSQL
+with pgvector where every hit carries one of eleven verdicts, strict
+mode refuses instead of answering, erasure writes a permanent tombstone
+the builder re-checks, and 162 dated preregistrations record what was
+going to be measured before it was.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RE-call — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RE-call",
+      "description": "Agent memory on PostgreSQL with pgvector where every hit carries one of eleven verdicts, strict mode refuses instead of answering, erasure writes a permanent tombstone the builder re-checks, and 162 dated preregistrations record what was going to be measured before it was.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The off-topic pool had to be moved out of
+Python, because the code corpus was ingesting it</p>
+          <h1>RE-call</h1>
+          <p class="document-deck">Agent memory on PostgreSQL with
+pgvector where every hit carries one of eleven verdicts, strict mode
+refuses instead of answering, erasure writes a permanent tombstone the
+builder re-checks, and 162 dated preregistrations record what was going
+to be measured before it was.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/GiulioDER/RE-call">
+              <span>Source</span>
+              <strong>GiulioDER/RE-call</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/GiulioDER/RE-call/commit/1994fd256820df7970eac1f1d588a1961da16edf" title="1994fd256820df7970eac1f1d588a1961da16edf">
+              <span>Analyzed revision</span>
+              <code>1994fd25…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GiulioDER--RE-call" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>GiulioDER--RE-call</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RE-call is "[m]emory that abstains instead of guessing" — Apache-2.0,
+version 0.13.0, 102,183 lines of Python across 253 modules with 494 test
+files, running on the caller's own PostgreSQL with pgvector. It stores
+source documents, indexes them, "and keeps validity and lineage attached
+to every hit."</p>
+<p>The pitch is a distinction rather than a feature:</p>
+<blockquote>
+<p>"Plain vector search returns nearby text. RE-call also asks whether
+that text is current, supported, and trustworthy enough for the query. A
+superseded claim comes back marked <code>superseded</code>; a result
+that does not clear the calibrated trust gate becomes
+<code>ABSTAIN</code> with a reason."</p>
+</blockquote>
+<p>That is implemented as a closed vocabulary of eleven verdicts, of
+which exactly one — <code>ok</code> — becomes evidence. The rest stay
+readable and never become the answer. Under a strict policy the gate
+does not degrade quietly; it raises.</p>
+<p><strong>What makes this repository worth a careful read is not the
+retrieval stack but what surrounds it.</strong>
+<code>docs/preregistrations/</code> holds 162 dated markdown documents,
+running from 15 August to 15 September 2026, each stating what was about
+to be measured before the measurement happened. Amendments are separate
+dated files (<code>...-amendment-2.md</code> through
+<code>-amendment-5.md</code> on one canary), and results are separate
+documents again (<code>2026-08-27-checker-ground-truth.md</code> beside
+<code>2026-08-27-checker-ground-truth-result.md</code>). A hypothesis
+and its outcome cannot be reconciled after the fact when both are
+committed under their own dates.</p>
+<p><strong>The single best passage in the tree is about the project's
+own test data.</strong> The off-topic query pool — subjects a search
+must abstain on — was written as Python literals, and RE-call is a
+system people point at code corpora, including its own:</p>
+<blockquote>
+<p>"These subjects are DATA, and as Python literals they were also
+CORPUS. <code>offtopic_subjects_absent_from</code> keeps a subject only
+when none of its content words appear anywhere in the corpus under test,
+so a code corpus that includes recall's own tree ingested this very list
+and then disqualified every one of its 25 subjects."</p>
+</blockquote>
+<p>It was measured, not assumed: none of twenty-five survived against a
+repository-rooted corpus, eleven of twenty-five against a third-party
+corpus of the same size, "so the failure was recall dogfooding itself,
+not the pool being too small." The pool moved to JSON, which the
+wizard's <code>**/*.py</code> and <code>**/*.md</code> globs do not
+match. And the distinctive words are deliberately never written in
+prose, because naming one re-contaminates the pool — a rule the author
+reports breaking twice while fixing it, "once in a comment in
+<code>recall/wizard/queryset.py</code>, caught only because the measured
+survivor count moved the wrong way, and once in THIS paragraph, caught
+in seconds by the guard below."</p>
+<p>Every one of the atlas's seven capabilities is present, and the
+reason is visible in the code rather than in the README: each was built
+as an argument about what a neighbouring design would have got
+wrong.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>hit</strong> carries a verdict, and only <code>ok</code>
+becomes evidence.</p>
+<p>A <strong>verdict</strong> is a member of a closed set, each one
+defined against the one it is most likely to be confused with.</p>
+<p>A <strong>tombstone</strong> is permanent, keyed on the source URI,
+and re-checked mid-build.</p>
+<p>A <strong>tenant</strong> is a Postgres row-level-security policy,
+not a <code>WHERE</code> clause.</p>
+<p>A <strong>preregistration</strong> is what you wrote down before you
+measured.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — retrieval is judged against two independent time axes and a calibrated threshold, only ok hits become evidence, strict mode refuses rather than degrading, and erasure writes a permanent tombstone the builder re-checks inside the ingest</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: retrieval is judged against two independent time axes and a calibrated threshold, only ok hits become evidence, strict mode refuses rather than degrading, and erasure writes a permanent tombstone the builder re-checks inside the ingest
+flowchart TB
+    Q[&quot;a query&quot;] --&gt; LEGS[&quot;dense · sparse · graph legs, fused and reranked&quot;]
+    RLS[(&quot;recall_chunks_v1 —&lt;br/&gt;FORCE ROW LEVEL SECURITY&lt;br/&gt;tenant_id = current_setting(GUC)&quot;)] --&gt; LEGS
+    LEGS --&gt; EV[&quot;trust.evaluate — pure: no DB access, no clock reads&quot;]
+    VT[&quot;now = VALID time:&lt;br/&gt;drives expired, not_yet_valid&lt;br/&gt;from declared valid_from/valid_until&quot;] --&gt; EV
+    TT[&quot;known_as_of = TRANSACTION time:&lt;br/&gt;drives not_yet_known from&lt;br/&gt;first_indexed_at, not indexed_at&quot;] --&gt; EV
+    TT -.-&gt;|&quot;using the LAST write &#39;claimed a memo edited today&lt;br/&gt;had never existed before the edit, so every replay&lt;br/&gt;of an earlier instant reported an empty store&#39;&quot;| FIXED[&quot;a bug found, fixed, written down&quot;]
+    SUPE[&quot;supersession edges are rewound too:&lt;br/&gt;an edge dates from when its&lt;br/&gt;superseding document was written&quot;] --&gt; EV
+    EV --&gt; V{&quot;one of eleven verdicts&quot;}
+    V --&gt;|&quot;ok&quot;| USE[&quot;evidence: trusted = [h for h in hits if h.verdict == &#39;ok&#39;]&quot;]
+    V --&gt;|&quot;superseded · expired · not_yet_valid ·&lt;br/&gt;not_yet_known · low_confidence ·&lt;br/&gt;invalid_metadata · not_entailed ·&lt;br/&gt;dependency_invalidated&quot;| SEEN[&quot;returned and readable —&lt;br/&gt;never the answer&quot;]
+    V --&gt;|&quot;ambiguous_supersession&quot;| CLOSED[&quot;fails closed rather than&lt;br/&gt;guessing a successor&quot;]
+    V --&gt;|&quot;unverified&quot;| DEG[&quot;the DEGRADED-mode verdict:&lt;br/&gt;&#39;not a weaker ok — the trust gate never ran&#39;&quot;]
+    GATE{&quot;strict policy?&quot;} --&gt; EV
+    GATE --&gt;|&quot;strict&quot;| REFUSE[&quot;raise TrustRefusal —&lt;br/&gt;including a deliberate&lt;br/&gt;BROAD-CATCH: fail-closed&quot;]
+    GATE --&gt;|&quot;degraded&quot;| DEG
+    FORGET[&quot;forget(source_uri)&quot;] --&gt; TS[(&quot;recall_source_tombstones&lt;br/&gt;PK (tenant_id, source_uri)&lt;br/&gt;FK → the source_forgotten audit event&quot;)]
+    TS --&gt; BUILD[&quot;every future build calls _is_tombstoned&quot;]
+    BUILD -.-&gt;|&quot;re-checked INSIDE the ingest, because an erasure&lt;br/&gt;arriving mid-build would otherwise land after&lt;br/&gt;the check that would have caught it&quot;| PERM[&quot;permanent: the URI is barred from every future build&quot;]
+    AUD[(&quot;recall_audit_events — appended on the&lt;br/&gt;build&#39;s OWN connection: generation_created,&lt;br/&gt;built, failed, abandoned, validated,&lt;br/&gt;rolled_back, gc, source_forgotten&quot;)] --- BUILD
+    PROP[&quot;a model-extracted proposal&quot;] --&gt; REV{&quot;review_proposal: _require_review_fields&quot;}
+    REV -.-&gt;|&quot;raises without reviewer identity,&lt;br/&gt;timestamp AND a non-blank audit note&quot;| REFUSED[&quot;no promotion&quot;]
+    REV --&gt; PF[&quot;PromotedFact — the only type&lt;br/&gt;downstream writers accept&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>recall/trust.py</code></td>
+<td>The gate: two time axes, the verdicts, and where it refuses</td>
+</tr>
+<tr>
+<td><code>recall/types.py</code></td>
+<td>The verdict vocabulary, each value argued against its neighbour</td>
+</tr>
+<tr>
+<td><code>recall/generations.py</code></td>
+<td>Builds, the audit events, and the tombstone re-checks</td>
+</tr>
+<tr>
+<td><code>recall/migrations/sql/0008_generation_foundation.sql</code></td>
+<td>Forced RLS, the audit table, the tombstone table</td>
+</tr>
+<tr>
+<td><code>recall/promotion.py</code></td>
+<td>The review gate a proposal cannot go around</td>
+</tr>
+<tr>
+<td><code>recall/decision_ledger.py</code></td>
+<td>A witness of retrieval decisions, deliberately not an enforcer</td>
+</tr>
+<tr>
+<td><code>recall/eval/</code>, <code>docs/preregistrations/</code></td>
+<td>The negative sets, and what was written down first</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>recall/trust.py:520-544</code> — the two axes, how they
+compose, and the <code>first_indexed_at</code> bug that made every
+point-in-time replay return an empty store.</p>
+<p><code>recall/types.py:55-81</code> — eleven verdicts, and the
+argument for why <code>unverified</code> is not
+<code>low_confidence</code>.</p>
+<p><code>recall/generations.py:566-570</code> with <code>:810</code>,
+<code>:976</code>, <code>:1005</code> — one tombstone check, called
+three times, for a reason stated in
+<code>generation_store.py:52-58</code>.</p>
+<p><code>recall/migrations/sql/0008_generation_foundation.sql:128-133</code>
+— <code>FORCE ROW LEVEL SECURITY</code> on the chunk table itself.</p>
+<p><code>recall/promotion.py:200-210</code> — a gate that refuses three
+ways.</p>
+<p><code>recall/eval/synthetic.py:75-100</code> — the negative pool that
+was contaminating itself, measured.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Source documents are chunked into <code>recall_chunks_v1</code> with
+declared validity, lineage and supersession attached, all under a tenant
+policy. Beside them, <code>AtomicFact</code> is a structured claim —
+namespace, subject, predicate, object, context, <code>valid_from</code>,
+<code>valid_until</code> — validated on construction and promoted into
+an append-only fact ledger with a current-state projection. Generations
+version the corpus: a build produces a new generation, promotion makes
+it active, and a garbage collector removes superseded ones.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Dense, sparse and graph legs are fused and reranked, then every
+surviving hit is judged by <code>trust.evaluate</code> — a pure function
+with no database access and no clock reads, which is what makes the two
+time axes testable without a database. Calibration supplies the
+threshold, and carries its own certification status, so the system can
+tell a threshold it fitted from one it never had.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A build reads a manifest, skips tombstoned URIs, writes chunks, and
+appends its lifecycle events on the same connection. The corpus
+fingerprint is computed from the manifest minus the tombstoned set, so a
+build whose only change is an erasure is still a distinct generation
+rather than a no-op. Extracted proposals take the other path, through
+review.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server registered as
+<code>io.github.GiulioDER/re-call</code>, a Codex plugin, Claude Code
+hooks, desktop packaging and Docker compose files. Several
+preregistrations measure the integration itself — hook ordering,
+in-process against MCP transport, tool-definition context cost, and
+Claude Code with and without RE-call, calibrated and not.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Fail-closed is the default posture and is written as such, including
+a broad exception catch annotated with its intent. The gaps are the
+configured ones: a development mode that serves <code>unverified</code>
+results, a <code>generation_promoted_unsafe_development</code> path that
+exists, and a decision ledger that is off unless enabled and best-effort
+when it is. The mutation audit is the part that is not optional — it
+commits with the build.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>494 test files, evaluation suites over LoCoMo, LongMemEval, BEIR and
+synthetic corpora, a labelled gap study, and abstention scored as its
+own axis. The preregistration directory is the artifact that
+distinguishes it: hypotheses, amendments and results filed separately
+and dated, including negative results and a holdout-validation
+document.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Write down what you are about to measure, in a dated file, before you
+measure it. Everything else here follows from that habit.</p>
+<p>Check whether your evaluation data is inside your corpus. If your
+system indexes code and your negative examples are Python literals, they
+are corpus, and the failure is silent.</p>
+<p>Re-check your tombstones inside the ingest, not only at the start of
+it.</p>
+<p>Define each status against the one it will be confused with, and say
+so in the type. <code>unverified</code> and <code>low_confidence</code>
+look interchangeable until somebody has to explain a result.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the degraded path should be reachable in a packaged install
+at all. Both escape hatches are honestly named and audited, which is the
+right second-best; the first-best would be that a deployment cannot
+serve an unjudged result.</p>
+<p>Whether <code>reviewer_id</code> should be bound to an authenticated
+identity. The gate is structural and the field is a string, so the
+mechanism is stronger than the attribution it records.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>recall/types.py:55-81</code></td>
+<td>A status vocabulary where each value argues against its
+neighbour</td>
+</tr>
+<tr>
+<td><code>recall/trust.py:520-544</code></td>
+<td>Two time axes that compose, and the replay bug that shaped them</td>
+</tr>
+<tr>
+<td><code>recall/eval/synthetic.py:75-100</code></td>
+<td>Your own repository contaminating your own negative set</td>
+</tr>
+<tr>
+<td><code>recall/generations.py:566-570</code></td>
+<td>A tombstone check placed where the race actually is</td>
+</tr>
+<tr>
+<td><code>recall/promotion.py:200-210</code></td>
+<td>A review gate that refuses without a reviewer, a time and a
+note</td>
+</tr>
+<tr>
+<td><code>docs/preregistrations/</code></td>
+<td>162 dated statements of what was going to be measured</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/GiulioDER/RE-call/commit/1994fd256820df7970eac1f1d588a1961da16edf"><code class="commit-id" title="1994fd256820df7970eac1f1d588a1961da16edf">1994fd25…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: fifteen files scanned, three auto-run
+surfaces, three build-time execution points
+(<code>recall/setup.py</code>, which executes at install time,
+<code>tests/conftest.py</code>, which runs on pytest collection, and the
+<code>Makefile</code> default target), one unpinned dependency surface
+and three dependency files inside the seven-day cooldown.
+<code>uv.lock</code> is present. A <code>hooks/pre-commit</code> payload
+sits in the tree uninstalled and inert. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run, so every claim
+here is read from source rather than observed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
