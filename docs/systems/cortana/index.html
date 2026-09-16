@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first second brain whose
+search query validates each row's ACL shape in SQL before matching it,
+gates every read on a validity window and an active status, and starts
+query-only until each capability is separately authorised.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cortana — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first second brain
+whose search query validates each row's ACL shape in SQL before matching
+it, gates every read on a validity window and an active status, and
+starts query-only until each capability is separately authorised.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cortana — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first second brain
+whose search query validates each row's ACL shape in SQL before matching
+it, gates every read on a validity window and an active status, and
+starts query-only until each capability is separately authorised.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cortana — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cortana",
+      "description": "A local-first second brain whose search query validates each row's ACL shape in SQL before matching it, gates every read on a validity window and an active status, and starts query-only until each capability is separately authorised.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A malformed access list is excluded, not
+treated as empty</p>
+          <h1>Cortana</h1>
+          <p class="document-deck">A local-first second brain whose
+search query validates each row's ACL shape in SQL before matching it,
+gates every read on a validity window and an active status, and starts
+query-only until each capability is separately authorised.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/adea-ai/cortana">
+              <span>Source</span>
+              <strong>adea-ai/cortana</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f" title="6b76a1dbd38a18a32c502e963f0d380f5b92d75f">
+              <span>Analyzed revision</span>
+              <code>6b76a1db…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/adea-ai--cortana" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>adea-ai--cortana</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cortana is "a local-first, agent-native second brain for people and
+the AI agents that work with them" — Apache-2.0, Rust, version 0.58.2,
+138,872 lines with 605 test functions, reachable through a Tauri desktop
+app, an MCP stdio server, a loopback or explicitly secured HTTP API, and
+a local-owner CLI.</p>
+<p>Its product statement is a list of refusals before it is a list of
+features:</p>
+<blockquote>
+<p>"It is not an unrestricted crawler, implicit backup service, agent
+harness, or hosted personal-data warehouse. A new installation starts
+query-only. Source authorization, validation, ingestion, reconciliation,
+recurring synchronization, model use, shared-agent access, and memory
+writes are separate explicit decisions."</p>
+</blockquote>
+<p>Eight capabilities, eight separate decisions, and a default of
+query-only. For a tool whose value proposition is ingesting a person's
+notes, messages, documents, calendars and code, starting with none of
+that enabled is the right default and an uncommon one.</p>
+<p><strong>The search query is where the care shows.</strong> One
+statement gates on the active status, on both ends of a validity window
+against a supplied moment, on project, kind, content type, retention
+tier and scope, on a flag that must be set before owner-global rows are
+reachable at all — and then, before it matches the row's access list, it
+checks that the access list is <em>shaped</em> like one:</p>
+<pre class="sql"><code>AND json_valid(m.acl_json)
+AND json_type(m.acl_json)=&#39;array&#39;
+AND NOT EXISTS (
+  SELECT 1 FROM json_each(m.acl_json) AS memory_acl
+  WHERE memory_acl.type&lt;&gt;&#39;text&#39;
+)</code></pre>
+<p>Only a row that passes all three reaches the branch where an empty
+ACL means unrestricted or a principal match admits it. So a corrupted,
+wrongly-typed or half-written ACL matches nothing rather than falling
+through to public.</p>
+<p>That is the failure direction that matters, and it is the one an
+application-layer check usually gets wrong: a lenient JSON parse turns a
+malformed ACL into an empty list, and an empty list means everyone.
+Putting the shape check in the same statement as the match means there
+is no window in which a row is loaded with an ACL nobody validated.</p>
+<p><strong>Three clocks, kept apart.</strong> <code>observed_at</code>
+is when the thing was observed; <code>valid_from</code> and
+<code>valid_until</code> bound the window it applies in;
+<code>created_at</code> and <code>updated_at</code> are when the row was
+written. The search gates the validity window in both directions against
+the moment it is given, so a memory whose validity has not begun, or has
+ended, is absent from the answer without being removed from the
+store.</p>
+<p><strong>A correction keeps the corrected row.</strong>
+<code>supersedes_id</code> links a new memory to the one it replaces,
+and the superseded row keeps its place while leaving the active set —
+recoverable rather than deleted, which is what makes the supersession
+link worth storing.</p>
+<p><strong>Candidates are staged, with reasons.</strong> An observation
+becomes a <code>memory_candidate</code> carrying a scope, a sensitivity,
+an ACL, a provenance document, an expiry and — if it is turned down — a
+<code>rejection_reason</code>, under a status transition guarded by a
+compare-and-set on <code>pending</code>. Promotion into
+<code>memories</code> takes an approving principal.</p>
+<p>What that queue is not, yet, is a human-review gate: the approving
+principal is a string, and nothing found establishes it as a person
+rather than a label — the same gap this atlas noted in <a
+href="../edda/">Edda</a>'s verdicts. And a rejected candidate's
+<code>dedupe_key</code> is not consulted when the same observation
+arrives again: the rejection is recorded, and re-offering the content
+produces a new candidate rather than meeting the old refusal.</p>
+<p>The remaining caveats are ordinary. <code>confidence</code> and
+<code>importance</code> are continuous and feed the ranking, so a
+low-confidence memory is ranked down rather than withheld;
+<code>provenance_json</code> is carried and not gated on; and the
+surface is broad for a personal store — desktop, MCP, HTTP, CLI, OAuth
+connectors, fleet and community modules — with one auto-run surface and
+three unpinned dependency surfaces at this pin.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>capability</strong> is off until somebody turns it on, one
+at a time.</p>
+<p>A <strong>memory</strong> is active, within its window, and on your
+access list — or it is not in the answer.</p>
+<p>A <strong>malformed access list</strong> protects nothing, so it
+grants nothing.</p>
+<p>A <strong>correction</strong> writes a new row and points back.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one query gates status, both ends of the validity window, scope, the owner-global flag, and the ACL — validating the ACL's shape before matching it, so a malformed list fails closed</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one query gates status, both ends of the validity window, scope, the owner-global flag, and the ACL — validating the ACL&#39;s shape before matching it, so a malformed list fails closed
+flowchart TB
+    OBS[&quot;an observation from an authorised source&quot;] --&gt; CAND[(&quot;memory_candidates: scope · sensitivity ·&lt;br/&gt;acl_json · provenance_json · confidence ·&lt;br/&gt;importance · expires_at · rejection_reason ·&lt;br/&gt;created_by&quot;)]
+    CAND --&gt; DEC{&quot;status transition,&lt;br/&gt;guarded on &#39;pending&#39;&quot;}
+    DEC --&gt;|&quot;rejected&quot;| REJ[&quot;status=&#39;rejected&#39; + a reason&lt;br/&gt;— the dedupe_key is NOT consulted&lt;br/&gt;when the same content returns&quot;]
+    DEC --&gt;|&quot;approved by a principal&quot;| MEM[(&quot;memories: status · scope · acl_json ·&lt;br/&gt;provenance_json · observed_at ·&lt;br/&gt;valid_from · valid_until ·&lt;br/&gt;supersedes_id · created_at&quot;)]
+    CORR[&quot;a correction&quot;] --&gt; NEW[&quot;a new row carrying supersedes_id&quot;]
+    NEW --&gt; MEM
+    NEW -.-&gt;|&quot;the superseded row keeps its place&lt;br/&gt;and leaves the active set&quot;| MEM
+    Q[&quot;search(query, moment, principals, flags)&quot;] --&gt; G1[&quot;m.status = &#39;active&#39;&quot;]
+    G1 --&gt; G2[&quot;m.valid_from &lt;= moment AND&lt;br/&gt;(m.valid_until IS NULL OR valid_until &gt; moment)&quot;]
+    G2 --&gt; G3[&quot;project · kind · content_type ·&lt;br/&gt;retention_tier · scope filters&quot;]
+    G3 --&gt; G4[&quot;?7 OR m.scope &lt;&gt; &#39;owner-global&#39;&lt;br/&gt;— a flag the caller must set to reach&lt;br/&gt;owner-global rows at all&quot;]
+    G4 --&gt; SHAPE{&quot;is the row&#39;s ACL SHAPED like an ACL?&lt;br/&gt;json_valid · json_type=&#39;array&#39; ·&lt;br/&gt;no element whose type is not text&quot;}
+    SHAPE --&gt;|&quot;no&quot;| CLOSED[&quot;excluded — a malformed ACL matches&lt;br/&gt;nothing rather than degrading to&lt;br/&gt;&#39;empty means unrestricted&#39;&quot;]
+    SHAPE --&gt;|&quot;yes&quot;| MATCH{&quot;empty ACL, or a principal match&lt;br/&gt;against the caller&#39;s list (or &#39;*&#39;)&quot;}
+    MATCH --&gt;|&quot;no&quot;| CLOSED
+    MATCH --&gt;|&quot;yes&quot;| RANK[&quot;bm25 × importance × confidence × recency&quot;]
+    POSTURE[&quot;a new installation starts query-only;&lt;br/&gt;eight capabilities are eight separate&lt;br/&gt;explicit decisions&quot;] -.-&gt; OBS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store.rs</code></td>
+<td>The schema, the gated search, the candidate lifecycle (11,171
+lines)</td>
+</tr>
+<tr>
+<td><code>src/api.rs</code>, <code>src/mcp.rs</code></td>
+<td>The HTTP and MCP surfaces</td>
+</tr>
+<tr>
+<td><code>src/consolidation.rs</code>, <code>src/derived.rs</code></td>
+<td>Consolidation jobs and derived state</td>
+</tr>
+<tr>
+<td><code>src/knowledge_graph.rs</code>,
+<code>src/context.rs</code></td>
+<td>The graph and context compilation</td>
+</tr>
+<tr>
+<td><code>src/auth.rs</code>, <code>src/device_identity.rs</code></td>
+<td>Principals and device identity</td>
+</tr>
+<tr>
+<td><code>apps/desktop/</code></td>
+<td>The Tauri application</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/store.rs:2076-2115</code> — one query, and everything it
+refuses to assume.</p>
+<p><code>src/store.rs:366-412</code> — memories and their staging table,
+side by side.</p>
+<p><code>src/store.rs:3273</code> — a rejection that records its reason
+under a compare-and-set.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Both tables carry <code>acl_json</code> and
+<code>provenance_json</code> from the candidate stage onward, so an
+observation's access list and its provenance exist before it is promoted
+rather than being attached afterwards. <code>retention_tier</code> and
+<code>content_type</code> sit beside <code>kind</code>, separating how
+long something is kept from what kind of thing it is — two questions
+frequently collapsed into one field.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 over the FTS index, ordered by score then importance, confidence
+and recency, behind the gates above. The ordering puts the lexical match
+first and uses the stored weights to break ties, which keeps a
+high-importance memory from dominating an unrelated query.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Staged, expiring candidates promoted by an approving principal, with
+corrections writing new rows. The expiry on a candidate is the detail
+worth noting: an observation nobody rules on does not sit in the queue
+indefinitely.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four surfaces, and shared-agent access as one of the eight decisions
+rather than a consequence of installing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The ACL shape check is the strongest single thing here, and the
+query-only default is the posture that makes the rest coherent. The gap
+is the identity behind an approval.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>605 test functions, with an <code>eval/</code> directory beside the
+source. Nothing was built or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Validate the access list's shape where you match it. A lenient parse
+turns a malformed ACL into an empty one, and an empty one usually means
+everybody.</p>
+<p>Gate both ends of a validity window. Checking only the end lets a
+memory that has not started applying answer a question about today.</p>
+<p>Keep the superseded row. A <code>supersedes_id</code> and a status
+change cost one column each and make a correction inspectable.</p>
+<p>Start query-only, and make each capability its own decision. Eight
+decisions is more friction than one; ingesting somebody's calendar
+because they installed a note-taker is worse.</p>
+<p>And expire the candidates nobody ruled on. A review queue without an
+expiry becomes a backlog, and a backlog becomes a default.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether an approving principal is ever established as a person. The
+column and the compare-and-set are there; the identity check was not
+found.</p>
+<p>Whether a rejection is ever consulted again. <code>dedupe_key</code>
+and <code>rejection_reason</code> are both stored and no write path
+reads the pair.</p>
+<p>What <code>provenance_json</code> is used for. It is carried from
+candidate to memory and no read gates on it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store.rs:2076-2115</code></td>
+<td>An ACL validated before it is trusted</td>
+</tr>
+<tr>
+<td><code>src/store.rs:366-412</code></td>
+<td>Three clocks, an ACL, and a staging table</td>
+</tr>
+<tr>
+<td><code>src/store.rs:3273</code></td>
+<td>A rejection with a reason, guarded</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f"><code class="commit-id" title="6b76a1dbd38a18a32c502e963f0d380f5b92d75f">6b76a1db…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: eighteen files scanned, one auto-run
+surface, one build-time execution point, three unpinned surfaces and ten
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

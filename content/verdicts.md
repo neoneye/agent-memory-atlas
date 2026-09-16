@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 536 reports.**
+**This page covers all 537 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4638,3 +4638,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 15,028 lines of Python over local SQLite with reversible migrations carrying `up` and `down`, immutable evidence rows, a write quota whose breaches are themselves logged, a 901-line evaluation harness, and seventeen test modules named for the attacks they cover.
 - Study when: you return an exclusion list, an explain API, or anything else that tells a caller about records it cannot read.
 - Do not copy when: you need the mutation log guaranteed by the database. Two marks: trust state, scope enforced.
+
+### [`cortana`](../systems/cortana/)
+- Best idea: **the search validates a row's access list before matching it.** `json_valid(m.acl_json)`, `json_type(m.acl_json)='array'`, and no element whose type is not text — all in the same statement as the match, so a corrupted or wrongly-typed ACL matches nothing instead of falling through to the empty-means-unrestricted branch. That is the direction a lenient application-layer parse gets wrong, and putting the shape check in the query leaves no window where a row is loaded with an ACL nobody validated.
+- Biggest risk: **the approving principal is a string, and a rejection is never consulted again.** `memory_candidates` carries `created_by`, an expiry, a compare-and-set on `pending` and a `rejection_reason`, and promotion takes an approving principal — but nothing establishes that principal as a person, so the queue is staging and audit rather than a human-review gate. The rejected candidate's `dedupe_key` is stored and no write path reads it, so re-offering the same content produces a new candidate rather than meeting the old refusal. `confidence` and `importance` rank rather than withhold, and `provenance_json` is carried without gating anything.
+- Most reusable component: the search statement in full — status, both ends of a validity window against a supplied moment, scope, an explicit flag before owner-global rows are reachable, the ACL shape check, then the principal match — and beside it the product posture: "[a] new installation starts query-only", with eight capabilities as eight separate decisions.
+- Maturity impression: Apache-2.0, Rust, version 0.58.2, 138,872 lines with 605 test functions and an `eval/` directory, four independent surfaces (Tauri desktop, MCP stdio, loopback HTTP, CLI), OAuth connectors, and candidates that expire so an unruled queue does not become a backlog.
+- Study when: you match an access list you parsed somewhere else, or you gate only the end of a validity window.
+- Do not copy when: you need the approval to establish who approved. Three marks: trust state, bitemporal, scope enforced.

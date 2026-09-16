@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 536 reports.</strong></p>
+<p><strong>This page covers all 537 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20023,6 +20023,46 @@ modules named for the attacks they cover.</li>
 anything else that tells a caller about records it cannot read.</li>
 <li>Do not copy when: you need the mutation log guaranteed by the
 database. Two marks: trust state, scope enforced.</li>
+</ul>
+<h3 id="cortana"><a
+href="../systems/cortana/"><code>cortana</code></a></h3>
+<ul>
+<li>Best idea: <strong>the search validates a row's access list before
+matching it.</strong> <code>json_valid(m.acl_json)</code>,
+<code>json_type(m.acl_json)='array'</code>, and no element whose type is
+not text — all in the same statement as the match, so a corrupted or
+wrongly-typed ACL matches nothing instead of falling through to the
+empty-means-unrestricted branch. That is the direction a lenient
+application-layer parse gets wrong, and putting the shape check in the
+query leaves no window where a row is loaded with an ACL nobody
+validated.</li>
+<li>Biggest risk: <strong>the approving principal is a string, and a
+rejection is never consulted again.</strong>
+<code>memory_candidates</code> carries <code>created_by</code>, an
+expiry, a compare-and-set on <code>pending</code> and a
+<code>rejection_reason</code>, and promotion takes an approving
+principal — but nothing establishes that principal as a person, so the
+queue is staging and audit rather than a human-review gate. The rejected
+candidate's <code>dedupe_key</code> is stored and no write path reads
+it, so re-offering the same content produces a new candidate rather than
+meeting the old refusal. <code>confidence</code> and
+<code>importance</code> rank rather than withhold, and
+<code>provenance_json</code> is carried without gating anything.</li>
+<li>Most reusable component: the search statement in full — status, both
+ends of a validity window against a supplied moment, scope, an explicit
+flag before owner-global rows are reachable, the ACL shape check, then
+the principal match — and beside it the product posture: "[a] new
+installation starts query-only", with eight capabilities as eight
+separate decisions.</li>
+<li>Maturity impression: Apache-2.0, Rust, version 0.58.2, 138,872 lines
+with 605 test functions and an <code>eval/</code> directory, four
+independent surfaces (Tauri desktop, MCP stdio, loopback HTTP, CLI),
+OAuth connectors, and candidates that expire so an unruled queue does
+not become a backlog.</li>
+<li>Study when: you match an access list you parsed somewhere else, or
+you gate only the end of a validity window.</li>
+<li>Do not copy when: you need the approval to establish who approved.
+Three marks: trust state, bitemporal, scope enforced.</li>
 </ul>
         </article>
       </div>
