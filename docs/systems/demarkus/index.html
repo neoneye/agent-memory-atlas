@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Versioned markdown served over
+QUIC as agent memory, where every version is kept in a hash chain, a
+capability token carries path globs and operations the server checks
+fail-closed on every request, and the version-history response reports
+whether the chain actually verified rather than assuming it did.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Demarkus — Agent Memory Atlas">
+    <meta property="og:description" content="Versioned markdown served
+over QUIC as agent memory, where every version is kept in a hash chain,
+a capability token carries path globs and operations the server checks
+fail-closed on every request, and the version-history response reports
+whether the chain actually verified rather than assuming it did.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Demarkus — Agent Memory Atlas">
+    <meta name="twitter:description" content="Versioned markdown served
+over QUIC as agent memory, where every version is kept in a hash chain,
+a capability token carries path globs and operations the server checks
+fail-closed on every request, and the version-history response reports
+whether the chain actually verified rather than assuming it did.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Demarkus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Demarkus",
+      "description": "Versioned markdown served over QUIC as agent memory, where every version is kept in a hash chain, a capability token carries path globs and operations the server checks fail-closed on every request, and the version-history response reports whether the chain actually verified rather than assuming it did.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A history that tells you whether it is
+intact</p>
+          <h1>Demarkus</h1>
+          <p class="document-deck">Versioned markdown served over QUIC
+as agent memory, where every version is kept in a hash chain, a
+capability token carries path globs and operations the server checks
+fail-closed on every request, and the version-history response reports
+whether the chain actually verified rather than assuming it did.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/latebit-io/demarkus">
+              <span>Source</span>
+              <strong>latebit-io/demarkus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/latebit-io/demarkus/commit/dd22c38ad6f2738e5bccf32b31dbd9fc78bb7956" title="dd22c38ad6f2738e5bccf32b31dbd9fc78bb7956">
+              <span>Analyzed revision</span>
+              <code>dd22c38a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/latebit-io--demarkus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>latebit-io--demarkus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Demarkus is versioned markdown served over QUIC, used as agent
+memory: "it records decisions, lessons, and progress as it works and
+recalls them in every later session." The implementation is
+AGPL-3.0-only except <code>plugins/</code>, which is MIT, with the
+protocol specification under CC0-1.0 — a three-way split stated in the
+licence file rather than left to inference. 530 commits since 14
+February 2026, 59,493 lines of Go outside tests against 62,028 lines
+across 211 test files.</p>
+<p>Its architecture note is worth quoting because it explains what this
+report can and cannot find: the servers are "<strong>memory storage
+engines</strong>: deliberately simple, versioned, hash-chained document
+stores", the brokers are "the access tier that turns an engine into a
+service", and "[t]he intelligence (lookup, routing, graph traversal)
+lives in the agent."</p>
+<p>Two mechanisms earn marks.</p>
+<p><strong>The history is hash-chained, and the server says whether the
+chain held.</strong> Serializing a version requires the previous
+version's bytes — the error is literal: "previous version bytes required
+for hash chain". <code>VerifyChain</code> walks the retained versions
+comparing each recorded previous-hash against the computed one and
+raises <code>ErrIntegrity</code> on a missing or mismatched link. The
+part that makes this more than a stored digest is the handler: the
+version-history response calls <code>VerifyChain</code> on the requested
+path and returns <code>chain-valid: true</code>, or
+<code>chain-valid: false</code> with a <code>chain-error</code>, in its
+metadata. A reader is told that the history they are looking at is
+corrupt rather than handed it silently. Separately, the store migration
+tests re-verify every chain in both the source and destination after a
+move.</p>
+<p><strong>Authorization is a capability the server cannot
+replay.</strong> A token entry is
+<code>{hash, paths, operations, expires}</code>, and the comment is
+explicit that <code>Minted</code> "does not contain Raw — the server
+only ever sees the hash." Authorization checks expiry, then the
+operation, then <code>matchesAnyPath</code> over the token's globs, each
+failing to <code>ErrNotPermitted</code>. Patterns allow one recursive
+<code>**</code>, are validated at load time, and are matched with
+<code>path.Match</code> rather than <code>filepath.Match</code> "because
+token paths are URL-style forward slashes, and filepath.Match behavior
+varies by OS" — a portability trap noticed and documented.</p>
+<p>What Demarkus does not have is a model of belief. A document has
+versions; it does not have a status, a validity window, a supersession
+link, or any record that a value was rejected. Correcting a memory means
+publishing over it, and the old text stays in the chain because
+everything does. That is coherent for a protocol whose thesis is that
+intelligence belongs in the agent — but it means the questions this
+atlas asks about trust, time and forgetting are answered outside the
+server, if at all.</p>
+<p>One consequence to weigh: when the chain does not verify, the
+response carries <code>chain-valid: false</code> and still returns the
+history. Reporting rather than refusing is defensible for a store that
+must stay readable, and it puts the decision in the caller's hands —
+provided the caller reads the metadata.</p>
+<p>Two marks: <code>scope_enforced</code>, <code>audit_log</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>document</strong> is markdown at a path. Publishing appends
+a <strong>version</strong>, linked to the previous by hash. Nothing is
+replaced.</p>
+<p>A <strong>capability token</strong> is a hash on the server, a secret
+with the holder, and a set of path globs plus operations with an
+optional expiry.</p>
+<p>A <strong>world</strong> is one store. The <strong>memory
+broker</strong> gives an identity a private world over MCP with OAuth;
+the <strong>knowledge broker</strong> composes worlds into one
+endpoint.</p>
+<p>A <strong>link</strong> between documents is an edge; backlinks are
+queryable, and the graph is traversed by the agent rather than by the
+server.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every publish extends a hash chain; the history read verifies it and reports the result, and a token's globs are checked fail-closed before either</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every publish extends a hash chain; the history read verifies it and reports the result, and a token&#39;s globs are checked fail-closed before either
+flowchart TB
+    AGENT[&quot;agent / plugin / TUI&quot;] --&gt; TOK[&quot;capability token&lt;br/&gt;(raw secret held by caller)&quot;]
+    TOK --&gt; AUTH{&quot;authorize&quot;}
+    AUTH --&gt; E1{&quot;expired?&quot;}
+    E1 --&gt;|&quot;yes&quot;| NP1[&quot;ErrTokenExpired&quot;]
+    E1 --&gt;|&quot;no&quot;| E2{&quot;hasOperation(ops, op)?&quot;}
+    E2 --&gt;|&quot;no&quot;| NP2[&quot;ErrNotPermitted&quot;]
+    E2 --&gt;|&quot;yes&quot;| E3{&quot;matchesAnyPath(globs, path)?&quot;}
+    E3 --&gt;|&quot;no&quot;| NP3[&quot;ErrNotPermitted&quot;]
+    E3 --&gt;|&quot;yes&quot;| OK[&quot;allowed&quot;]
+    STORE[(&quot;tokens: hash only&lt;br/&gt;server never sees the secret&quot;)] --&gt; AUTH
+    OK --&gt; PUB[&quot;publish&quot;]
+    PUB --&gt; SER[&quot;serialize version N&lt;br/&gt;requires version N-1 bytes&quot;]
+    SER --&gt; CHAIN[(&quot;versions v1..vN&lt;br/&gt;each recording previous-hash&quot;)]
+    OK --&gt; HIST[&quot;GET version history&quot;]
+    CHAIN --&gt; VC[&quot;VerifyChain(path)&quot;]
+    VC --&gt;|&quot;link missing or mismatched&quot;| BAD[&quot;ErrIntegrity&lt;br/&gt;meta: chain-valid = false&lt;br/&gt;+ chain-error&lt;br/&gt;history still returned&quot;]
+    VC --&gt;|&quot;ok&quot;| GOOD[&quot;meta: chain-valid = true&quot;]
+    NOTE[&quot;no status, no validity window,&lt;br/&gt;no supersession, no rejected value&quot;] -.-&gt; CHAIN
+    LINKS[&quot;document links → knowledge graph&quot;] --&gt; AGENTQ[&quot;traversal lives in the agent&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>protocol/</code></td>
+<td>The Mark Protocol: requests, responses, auth, tokens, the store
+format and the hash chain</td>
+</tr>
+<tr>
+<td><code>protocol/store/</code></td>
+<td><code>format.go</code> (serialization and the previous-hash link),
+<code>store.go</code> (<code>VerifyChain</code>, pruning, archive
+state)</td>
+</tr>
+<tr>
+<td><code>server/internal/auth/</code></td>
+<td>Token loading, hashing, and the three-step authorization</td>
+</tr>
+<tr>
+<td><code>server/internal/handler/</code></td>
+<td>The request handlers, including the version-history chain
+report</td>
+</tr>
+<tr>
+<td><code>server/internal/filestore/</code>,
+<code>knowledge/bucketstore/</code></td>
+<td>Snapshot locking, per-world quotas</td>
+</tr>
+<tr>
+<td><code>tools/internal/broker/</code></td>
+<td>World provisioning and write-token minting</td>
+</tr>
+<tr>
+<td><code>plugins/</code></td>
+<td>Agent memory plugins, MIT rather than AGPL</td>
+</tr>
+<tr>
+<td><code>client/</code>, <code>docs/</code>, <code>deploy/</code></td>
+<td>TUI and clients, the specification, deployment</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>protocol/store/format.go:26-45</code> — why a version cannot
+be written without its predecessor's bytes.</li>
+<li><code>protocol/store/store.go:1650-1695</code> —
+<code>VerifyChain</code> and the integrity errors.</li>
+<li><code>server/internal/handler/handler.go:644-655</code> — the chain
+report in metadata.</li>
+<li><code>server/internal/auth/auth.go:160-215</code> — the
+authorization sequence and the glob matcher, with the
+<code>path.Match</code> note.</li>
+<li><code>protocol/token/token.go:28-55</code> — the entry, and the
+hash-only guarantee.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A path, a body, and a version chain. Metadata rides on the response
+rather than on a schema of belief. The knowledge graph is derived from
+links in the markdown, which means the memory's structure is the
+author's — human or agent — and not a separate index that can drift from
+it.</p>
+<p>Per-world document quotas (<code>ErrDocumentQuota</code>) bound a
+world's size, which is a small thing most stores in this corpus leave
+unbounded.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Fetch a path, fetch a version, list history, follow links. The server
+does not rank. The README says so directly, and
+<code>demarkus-agent</code> is where aggregation across worlds happens.
+Anyone evaluating this against a retrieval-centric memory should read
+that as a scope boundary rather than a gap.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Publish under a token carrying the <code>publish</code> operation and
+a matching path glob, subject to a per-world publish policy. The write
+extends the chain. The prune path's comment is worth noting for anyone
+implementing one: a pruned chain can be "correct hash chain, just
+created under stale assumptions".</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory plugins for agents, a broker exposing a private world over MCP
+with OAuth for Claude Desktop, ChatGPT and Cursor, a TUI, a reading room
+renderer, and read-only or full-stack installers. The broker tier is
+what turns a single-binary store into something a team shares.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The integrity story is the strongest part and it is honest about its
+own limits: verification happens on the history read, and a failure is
+reported, not enforced. If an operator wants a corrupt chain to fail
+closed, that decision is theirs to add.</p>
+<p>The token design avoids the most common failure in capability systems
+— the server holding something it could replay — by storing only hashes,
+and the glob matcher's OS-portability note suggests someone went looking
+for the difference between <code>path</code> and <code>filepath</code>
+rather than discovering it in production.</p>
+<p>What a reader should not expect is belief. There is no status to set,
+no validity window to query, no supersession edge, and no record that a
+value was rejected. The chain keeps what was written; it does not know
+which of those things is currently true.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>211 test files, more lines of test than of source. The authorization
+suite alone covers loading, the three-step authorize, expiry, recursive
+globs, the matcher in isolation, read-auth requirements, and that the
+token store holds hashes. The migration helper re-verifies every chain
+in both stores after a move, which is the right shape for a format
+change: not "did it copy" but "does the invariant still hold on both
+sides".</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Report integrity on the read.</strong>
+<code>chain-valid</code> in the response metadata costs one call and
+turns a silent corruption into a visible one.</li>
+<li><strong>Require the predecessor's bytes to write a version.</strong>
+Making the chain link a precondition of serialization means a version
+cannot be written that skips it.</li>
+<li><strong>Store only the token hash, and say so in the type.</strong>
+<code>Minted</code> separating <code>Raw</code> from <code>Entry</code>
+makes the guarantee structural rather than a convention.</li>
+<li><strong>Use <code>path.Match</code> for URL-shaped
+patterns</strong>, and write down why — the <code>filepath</code>
+variant changes behaviour by OS, which is a bug that appears only on
+someone else's machine.</li>
+<li><strong>Re-verify after a migration, on both sides.</strong> The
+store-migration test checks every chain in the source and the
+destination.</li>
+<li><strong>Split the licence and say which part is which.</strong> AGPL
+for the implementation, MIT for plugins, CC0 for the specification,
+stated in one file.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Assuming versioning is belief.</strong> A complete history
+answers "what did this say" and never "what is true", and an agent
+asking the second question of a store that only answers the first will
+take the newest text as fact.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want a self-hosted, tamper-evident document
+store with real capability scoping and are content to put ranking,
+routing and belief in your agent. Look elsewhere if you need the store
+to model validity, supersession or forgetting.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should a failed <code>VerifyChain</code> be able to fail closed by
+configuration, rather than always reporting and returning?</li>
+<li>With every version retained, is there a story for a memory that must
+be destroyed rather than superseded — and how does that interact with
+the chain?</li>
+<li>The knowledge broker composes worlds behind one endpoint. Does a
+token's path glob compose across worlds, or is scoping per-world
+only?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>protocol/store/format.go</code></td>
+<td>The serialization and the previous-hash requirement</td>
+</tr>
+<tr>
+<td><code>protocol/store/store.go</code></td>
+<td><code>VerifyChain</code>, integrity errors, pruning</td>
+</tr>
+<tr>
+<td><code>protocol/token/token.go</code></td>
+<td>The capability entry and the hash-only guarantee</td>
+</tr>
+<tr>
+<td><code>server/internal/auth/auth.go</code></td>
+<td>The three-step authorization and the glob matcher</td>
+</tr>
+<tr>
+<td><code>server/internal/handler/handler.go</code></td>
+<td>The chain report in version history</td>
+</tr>
+<tr>
+<td><code>LICENSE</code></td>
+<td>The AGPL / MIT / CC0 split, stated</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/latebit-io/demarkus/commit/dd22c38ad6f2738e5bccf32b31dbd9fc78bb7956"><code class="commit-id" title="dd22c38ad6f2738e5bccf32b31dbd9fc78bb7956">dd22c38a…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: twenty-three files, one auto-run surface
+(a <code>.claude-plugin/</code> directory), one build-time execution
+point, four unpinned surfaces, sixteen dependency files inside the
+cooldown, and <code>CLAUDE.md</code> read as data. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 486 reports.**
+**This page covers all 487 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4238,3 +4238,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 1,185 commits since 20 February 2026, 42,805 lines of JavaScript and Go outside `node_modules` against fifteen test files, a 2,024-line PostgreSQL schema covering actors, agents, keys, permissions, documents, chunks, chat, discussions, mail and MCP sessions, with an MCP server, a REST API, a web UI and self-hosting scripts.
 - Study when: multi-agent deliberation with recorded outcomes is the thing you need, and you will review the permission paths yourself.
 - Do not copy when: you need memory that models belief, validity or correction, or a fence with tests behind it.
+
+### [`demarkus`](../systems/demarkus/)
+- Best idea: **a history that tells you whether it is intact.** Serializing a version requires the previous version's bytes — the error reads "previous version bytes required for hash chain" — and `VerifyChain` walks the retained versions comparing each recorded previous-hash against the computed one. The part that makes it more than a stored digest is the handler: the version-history response calls it and returns `chain-valid: true`, or `chain-valid: false` with a `chain-error`, in its metadata, so a reader is told the history is corrupt rather than handed it silently. The store-migration tests re-verify every chain on both sides after a move. Two marks: `scope_enforced`, `audit_log`.
+- Biggest risk: **versioning is not belief.** A document has versions and no status, no validity window, no supersession link and no record that a value was rejected; correcting a memory means publishing over it, and the old text stays because everything does. An agent asking "what is true" of a store that only answers "what did this say" will take the newest text as fact. Relatedly, a failed chain verification is reported in metadata and the history is still returned — defensible for a store that must stay readable, but only if the caller reads the metadata.
+- Most reusable component: the capability token — `{hash, paths, operations, expires}` where `Minted` separates the raw secret from the persisted entry so "the server only ever sees the hash", authorization checks expiry then operation then path glob each failing closed, and the matcher uses `path.Match` rather than `filepath.Match` with the reason written down: token paths are URL-style and `filepath` behaviour varies by OS.
+- Maturity impression: AGPL-3.0-only for the implementation, MIT for `plugins/`, CC0-1.0 for the protocol specification, each stated in the licence file; 530 commits since 14 February 2026, 59,493 lines of Go outside tests against 62,028 lines across 211 test files; versioned markdown over QUIC with a memory broker exposing a private world over MCP with OAuth and a knowledge broker composing worlds behind one endpoint.
+- Study when: you want a self-hosted, tamper-evident document store with real capability scoping and will put ranking, routing and belief in your agent.
+- Do not copy when: the store itself must model validity, supersession or forgetting.

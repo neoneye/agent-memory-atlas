@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 486 reports.</strong></p>
+<p><strong>This page covers all 487 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17596,6 +17596,51 @@ self-hosting scripts.</li>
 thing you need, and you will review the permission paths yourself.</li>
 <li>Do not copy when: you need memory that models belief, validity or
 correction, or a fence with tests behind it.</li>
+</ul>
+<h3 id="demarkus"><a
+href="../systems/demarkus/"><code>demarkus</code></a></h3>
+<ul>
+<li>Best idea: <strong>a history that tells you whether it is
+intact.</strong> Serializing a version requires the previous version's
+bytes — the error reads "previous version bytes required for hash chain"
+— and <code>VerifyChain</code> walks the retained versions comparing
+each recorded previous-hash against the computed one. The part that
+makes it more than a stored digest is the handler: the version-history
+response calls it and returns <code>chain-valid: true</code>, or
+<code>chain-valid: false</code> with a <code>chain-error</code>, in its
+metadata, so a reader is told the history is corrupt rather than handed
+it silently. The store-migration tests re-verify every chain on both
+sides after a move. Two marks: <code>scope_enforced</code>,
+<code>audit_log</code>.</li>
+<li>Biggest risk: <strong>versioning is not belief.</strong> A document
+has versions and no status, no validity window, no supersession link and
+no record that a value was rejected; correcting a memory means
+publishing over it, and the old text stays because everything does. An
+agent asking "what is true" of a store that only answers "what did this
+say" will take the newest text as fact. Relatedly, a failed chain
+verification is reported in metadata and the history is still returned —
+defensible for a store that must stay readable, but only if the caller
+reads the metadata.</li>
+<li>Most reusable component: the capability token —
+<code>{hash, paths, operations, expires}</code> where
+<code>Minted</code> separates the raw secret from the persisted entry so
+"the server only ever sees the hash", authorization checks expiry then
+operation then path glob each failing closed, and the matcher uses
+<code>path.Match</code> rather than <code>filepath.Match</code> with the
+reason written down: token paths are URL-style and <code>filepath</code>
+behaviour varies by OS.</li>
+<li>Maturity impression: AGPL-3.0-only for the implementation, MIT for
+<code>plugins/</code>, CC0-1.0 for the protocol specification, each
+stated in the licence file; 530 commits since 14 February 2026, 59,493
+lines of Go outside tests against 62,028 lines across 211 test files;
+versioned markdown over QUIC with a memory broker exposing a private
+world over MCP with OAuth and a knowledge broker composing worlds behind
+one endpoint.</li>
+<li>Study when: you want a self-hosted, tamper-evident document store
+with real capability scoping and will put ranking, routing and belief in
+your agent.</li>
+<li>Do not copy when: the store itself must model validity, supersession
+or forgetting.</li>
 </ul>
         </article>
       </div>
