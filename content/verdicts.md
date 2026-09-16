@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 484 reports.**
+**This page covers all 485 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4222,3 +4222,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.0.74, 10,937 commits since 6 June 2026, 483,833 lines of Rust against 125,958 lines of integration tests across per-area suites, local libSQL storage, an MCP server with code-graph tools beside `fact_store`, a daemon, a CLI and a local dashboard.
 - Study when: you want a local code-intelligence graph with a modest fact store and a curator that never acts alone.
 - Do not copy when: rejected memories must stay rejected, or the read path must know a fact has been superseded.
+
+### [`titen`](../systems/titen/)
+- Best idea: **a tombstone enforced by a primary key rather than by a remembered check.** `claim_sources` is keyed `(claim_id, observation_id, relation)`, and before a claim's sources are inserted the write path adds a speculative row for the cited observation *only* `WHERE EXISTS` a `record_history` entry whose `change_kind` is `purge` for it — so citing purged evidence makes the legitimate insert collide and abort the transaction. The rejected value is the purged observation id and the write path consults it by construction, not by convention. Five marks: `trust_state`, `scope_enforced`, `bitemporal`, `tombstone`, `audit_log`.
+- Biggest risk: **the guard emits one row for the first cited source while its `WHERE EXISTS` tests every one**, so the collision depends on the guard row's observation id also appearing in the real insert — a subtler contract than "any purged source aborts". Separately, the hero image's "dependencies empty" does not match `package.json` at this pin, which declares `@simplewebauthn/browser`, `@simplewebauthn/server` and a `sqlite-vec` peer; the substantive claims — no model call, no embedding call, no outbound network on the default path — do hold.
+- Most reusable component: `recordAccessSql`, one SQL fragment resolving organization-visible, private-and-owner, or team-with-a-live-membership, ANDed with an ownership-or-grant clause that respects `revoked_at` and an unexpired `expires_at`, referenced at seventy-five call sites across eighteen files.
+- Maturity impression: Apache-2.0, version 0.10.0, 277 commits since 29 July 2026, 26,504 lines of TypeScript against 11,889 lines across 38 test files, Bun and SQLite with FTS5 and an optional `sqlite-vec` peer, a Cloudflare D1 contract suite, an MCP server serving the reference server's nine tool names so a client can swap without noticing, and a README whose hero image publishes recall@1 falling from 0.880 to 0.246 as the store pools to 19,829 sessions.
+- Study when: you want deterministic self-hosted memory with real per-principal visibility and no provider to configure, and can accept lexical retrieval.
+- Do not copy when: your corpus will pool to tens of thousands of sessions and recall must hold there.

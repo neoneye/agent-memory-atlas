@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 484 reports.</strong></p>
+<p><strong>This page covers all 485 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17512,6 +17512,49 @@ local dashboard.</li>
 fact store and a curator that never acts alone.</li>
 <li>Do not copy when: rejected memories must stay rejected, or the read
 path must know a fact has been superseded.</li>
+</ul>
+<h3 id="titen"><a href="../systems/titen/"><code>titen</code></a></h3>
+<ul>
+<li>Best idea: <strong>a tombstone enforced by a primary key rather than
+by a remembered check.</strong> <code>claim_sources</code> is keyed
+<code>(claim_id, observation_id, relation)</code>, and before a claim's
+sources are inserted the write path adds a speculative row for the cited
+observation <em>only</em> <code>WHERE EXISTS</code> a
+<code>record_history</code> entry whose <code>change_kind</code> is
+<code>purge</code> for it — so citing purged evidence makes the
+legitimate insert collide and abort the transaction. The rejected value
+is the purged observation id and the write path consults it by
+construction, not by convention. Five marks: <code>trust_state</code>,
+<code>scope_enforced</code>, <code>bitemporal</code>,
+<code>tombstone</code>, <code>audit_log</code>.</li>
+<li>Biggest risk: <strong>the guard emits one row for the first cited
+source while its <code>WHERE EXISTS</code> tests every one</strong>, so
+the collision depends on the guard row's observation id also appearing
+in the real insert — a subtler contract than "any purged source aborts".
+Separately, the hero image's "dependencies empty" does not match
+<code>package.json</code> at this pin, which declares
+<code>@simplewebauthn/browser</code>,
+<code>@simplewebauthn/server</code> and a <code>sqlite-vec</code> peer;
+the substantive claims — no model call, no embedding call, no outbound
+network on the default path — do hold.</li>
+<li>Most reusable component: <code>recordAccessSql</code>, one SQL
+fragment resolving organization-visible, private-and-owner, or
+team-with-a-live-membership, ANDed with an ownership-or-grant clause
+that respects <code>revoked_at</code> and an unexpired
+<code>expires_at</code>, referenced at seventy-five call sites across
+eighteen files.</li>
+<li>Maturity impression: Apache-2.0, version 0.10.0, 277 commits since
+29 July 2026, 26,504 lines of TypeScript against 11,889 lines across 38
+test files, Bun and SQLite with FTS5 and an optional
+<code>sqlite-vec</code> peer, a Cloudflare D1 contract suite, an MCP
+server serving the reference server's nine tool names so a client can
+swap without noticing, and a README whose hero image publishes recall@1
+falling from 0.880 to 0.246 as the store pools to 19,829 sessions.</li>
+<li>Study when: you want deterministic self-hosted memory with real
+per-principal visibility and no provider to configure, and can accept
+lexical retrieval.</li>
+<li>Do not copy when: your corpus will pool to tens of thousands of
+sessions and recall must hold there.</li>
 </ul>
         </article>
       </div>
