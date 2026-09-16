@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first personal agent with
+127,873 lines of biologically-framed memory — synaptic tagging,
+reconsolidation, spacing, a dream engine — whose knowledge graph does
+genuine as-of belief revision, and whose chunk store carries two
+lifecycle columns reconciled in one place by a function that maps
+expired to archived while the migration maps forgotten to expired.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="BitterBot
+Desktop — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first personal
+agent with 127,873 lines of biologically-framed memory — synaptic
+tagging, reconsolidation, spacing, a dream engine — whose knowledge
+graph does genuine as-of belief revision, and whose chunk store carries
+two lifecycle columns reconciled in one place by a function that maps
+expired to archived while the migration maps forgotten to expired.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BitterBot
+Desktop — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first personal
+agent with 127,873 lines of biologically-framed memory — synaptic
+tagging, reconsolidation, spacing, a dream engine — whose knowledge
+graph does genuine as-of belief revision, and whose chunk store carries
+two lifecycle columns reconciled in one place by a function that maps
+expired to archived while the migration maps forgotten to expired.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>BitterBot Desktop — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "BitterBot Desktop",
+      "description": "A local-first personal agent with 127,873 lines of biologically-framed memory \u2014 synaptic tagging, reconsolidation, spacing, a dream engine \u2014 whose knowledge graph does genuine as-of belief revision, and whose chunk store carries two lifecycle columns reconciled in one place by a function that maps expired to archived while the migration maps forgotten to expired.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two lifecycle columns whose reconciler is
+not the migration's inverse</p>
+          <h1>BitterBot Desktop</h1>
+          <p class="document-deck">A local-first personal agent with
+127,873 lines of biologically-framed memory — synaptic tagging,
+reconsolidation, spacing, a dream engine — whose knowledge graph does
+genuine as-of belief revision, and whose chunk store carries two
+lifecycle columns reconciled in one place by a function that maps
+expired to archived while the migration maps forgotten to expired.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Bitterbot-AI/bitterbot-desktop">
+              <span>Source</span>
+              <strong>Bitterbot-AI/bitterbot-desktop</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/bc31e5e0f0ea17761b30a18514b1892d32f18775" title="bc31e5e0f0ea17761b30a18514b1892d32f18775">
+              <span>Analyzed revision</span>
+              <code>bc31e5e0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Bitterbot-AI--bitterbot-desktop" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Bitterbot-AI--bitterbot-desktop</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>BitterBot Desktop is a local-first personal agent — MIT, Node ≥ 22,
+version 2026.2.15, 740,633 lines of TypeScript across 1,382 test files,
+of which 127,873 lines and 156 test files are memory. It pitches
+"biological memory, a dream engine, and a P2P skills economy," and
+unlike most projects that reach for that vocabulary, the biology is
+implemented rather than gestured at: <code>synaptic-tagging.ts</code>,
+<code>reconsolidation.ts</code>, <code>spacing-effect.ts</code>,
+<code>somatic-markers.ts</code>, <code>hormonal.ts</code>,
+<code>mood-congruent-boost.ts</code>, each with a citation and a
+mechanism.</p>
+<p>Several of those files announce themselves as the "FIRST
+IMPLEMENTATION in any agent memory system." That claim is not assessed
+here; the mechanisms are.</p>
+<p>Two things in it are genuinely well built.</p>
+<p>The first is the belief layer on the knowledge graph. Relationships
+carry <code>valid_from</code> and <code>valid_until</code> — a
+valid-time interval distinct from the <code>created_at</code> the rows
+are ordered by — and supersession closes the interval rather than
+deleting the edge. <code>beliefHistory(entityId, { validAt })</code>
+deliberately drops the active-only guard that every other read applies,
+with the comment explaining why: so callers can "answer 'what did I
+believe about X as of T?'". The test asserts both halves — a closed edge
+is absent from ordinary traversal and present in the history — which is
+what makes it an eval rather than a demo.</p>
+<p>The second is the canonical facts ledger, and its reasoning is worth
+quoting because it identifies a failure mode most retrieval-gated stores
+have and nobody names: "importance is orthogonal to similarity: a
+canonical fact is short, low-entropy, and shares no embedding mass with
+a cold conversation's first message." So the ledger is addressed by key,
+injected unconditionally, hard-capped, and demoted by a deterministic
+score — "never an LLM prose decision."</p>
+<p>The finding is in the other column.</p>
+<p><code>chunks</code> carries two lifecycle fields,
+<code>lifecycle_state</code> and the newer <code>lifecycle</code>. The
+code knows this: <code>chunk-writer.ts:44</code> heads the section "the
+tangled cluster the audit's C1 bug lived in", and
+<code>setChunkLifecycle</code> is documented as "the single place that
+reconciles the two columns (audit C1)." The write side is genuinely
+fixed.</p>
+<p>The read side is not. <code>skill-version-resolver.ts</code> filters
+both of its version queries with
+<code>AND lifecycle_state != 'expired'</code> — and <code>expired</code>
+is not a value <code>lifecycle_state</code> ever holds.
+<code>deriveLifecycleState</code> maps the <code>expired</code>
+lifecycle to the <code>archived</code> state, so an expired skill has
+<code>lifecycle_state = 'archived'</code>, which satisfies
+<code>!= 'expired'</code> and is returned as a live version. Worse,
+SQL's three-valued logic means a row whose <code>lifecycle_state</code>
+is NULL — the column was added by migration — fails the predicate and is
+excluded. The filter admits exactly what it means to reject and rejects
+rows it has no opinion about.</p>
+<p>And the two mappings are not inverses. The migration maps
+<code>lifecycle_state = 'forgotten'</code> to
+<code>lifecycle = 'expired'</code>; <code>deriveLifecycleState</code>
+maps <code>expired</code> back to <code>archived</code>. A forgotten
+chunk that round-trips becomes an archived one.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>chunk</strong> is the base unit: text, embedding,
+importance, a lifecycle in two columns, hormonal and somatic scalars, a
+provenance chain.</p>
+<p>A <strong>canonical fact</strong> sits above the chunk store,
+addressed by key rather than retrieved, injected into every system
+prompt, hard-capped.</p>
+<p>An <strong>entity</strong> and a <strong>relationship</strong> form
+the graph. A relationship has a validity interval; superseding one
+closes the interval.</p>
+<p>A <strong>dream</strong> is a background cycle that consolidates,
+distils skills, and grades itself on whether its output later gets
+used.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the belief layer closes intervals and offers a real as-of read, while the chunk store's two lifecycle columns are reconciled on write by a function that is not the migration's inverse — and one read filter tests a value its column never holds</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the belief layer closes intervals and offers a real as-of read, while the chunk store&#39;s two lifecycle columns are reconciled on write by a function that is not the migration&#39;s inverse — and one read filter tests a value its column never holds
+flowchart TB
+    subgraph KG[&quot;knowledge graph — the part that works&quot;]
+        E[&quot;entity&quot;] --&gt; R[&quot;relationship&lt;br/&gt;valid_from / valid_until&quot;]
+        SUP[&quot;supersede&quot;] --&gt; CLOSE[&quot;set valid_until —&lt;br/&gt;the edge is NOT deleted&quot;]
+        CLOSE --&gt; R
+        R --&gt; TRAV[&quot;traverseEntity:&lt;br/&gt;valid_until IS NULL&quot;]
+        R --&gt; BH[&quot;beliefHistory(validAt):&lt;br/&gt;includeClosed = true —&lt;br/&gt;&#39;the universal guard is&lt;br/&gt;deliberately dropped here&#39;&quot;]
+        BH --&gt; ASOF[&quot;beliefAsOf(ts):&lt;br/&gt;&#39;what did I believe&lt;br/&gt;about X as of T?&#39;&quot;]
+        TEST[&quot;test asserts BOTH:&lt;br/&gt;traverseEntity → 0,&lt;br/&gt;beliefHistory → ≥1 with&lt;br/&gt;validUntil != null&quot;] -.-&gt; BH
+    end
+    subgraph CH[&quot;chunk store — the tangle&quot;]
+        SET[&quot;setChunkLifecycle —&lt;br/&gt;&#39;the single place that reconciles&lt;br/&gt;the two columns (audit C1)&#39;&quot;]
+        SET --&gt; D[&quot;deriveLifecycleState&quot;]
+        D --&gt;|&quot;expired → archived&quot;| LS[(&quot;lifecycle_state&lt;br/&gt;active | archived |&lt;br/&gt;consolidated | forgotten&quot;)]
+        SET --&gt; LC[(&quot;lifecycle&lt;br/&gt;generated | activated | frozen |&lt;br/&gt;consolidated | archived | expired&quot;)]
+        MIG[&quot;migration CASE&quot;] --&gt;|&quot;forgotten → expired&quot;| LC
+        MIG -.-&gt;|&quot;handles &#39;consolidating&#39;,&lt;br/&gt;which chunk-writer never writes;&lt;br/&gt;&#39;consolidated&#39; falls to ELSE&quot;| GEN[&quot;→ &#39;generated&#39;&quot;]
+        LS --&gt; RET[&quot;retrieval:&lt;br/&gt;lifecycle_state &lt;&gt; &#39;forgotten&#39;&lt;br/&gt;AND lifecycle &lt;&gt; &#39;expired&#39;&quot;]
+        LC --&gt; RET
+        LS --&gt; BAD{&quot;skill-version-resolver:&lt;br/&gt;lifecycle_state != &#39;expired&#39;&quot;}
+        BAD --&gt;|&quot;expired skill has&lt;br/&gt;lifecycle_state = &#39;archived&#39;&quot;| INC[&quot;INCLUDED —&lt;br/&gt;the filter never fires&quot;]
+        BAD --&gt;|&quot;NULL != &#39;expired&#39; is NULL&quot;| EXC[&quot;EXCLUDED —&lt;br/&gt;rows with no state&quot;]
+    end
+    CF[&quot;canonical facts —&lt;br/&gt;addressed by key, injected&lt;br/&gt;unconditionally, hard-capped&lt;br/&gt;&#39;importance is orthogonal&lt;br/&gt;to similarity&#39;&quot;] --&gt; PROMPT[&quot;prompt&quot;]
+    RET --&gt; PROMPT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory/chunk-writer.ts</code></td>
+<td>The lifecycle types, the reconciler, access bumping</td>
+</tr>
+<tr>
+<td><code>src/memory/memory-schema.ts</code></td>
+<td>Tables, indexes, the audit log</td>
+</tr>
+<tr>
+<td><code>src/memory/migrations.ts</code></td>
+<td>Column additions and the lifecycle CASE</td>
+</tr>
+<tr>
+<td><code>src/memory/canonical-facts.ts</code></td>
+<td>The key-addressed ledger and its closed op set</td>
+</tr>
+<tr>
+<td><code>src/memory/conflict-resolver.ts</code></td>
+<td>Supersede-by-similarity before storing</td>
+</tr>
+<tr>
+<td><code>src/memory/knowledge-graph.ts</code></td>
+<td>Entities, relationships, belief history</td>
+</tr>
+<tr>
+<td><code>src/memory/temporal-filter.ts</code></td>
+<td>Both bitemporal vocabularies, and the bridge between them</td>
+</tr>
+<tr>
+<td><code>src/memory/consolidation.ts</code></td>
+<td>Forgetting, merging, and the purge sweep</td>
+</tr>
+<tr>
+<td><code>src/memory/dream-*.ts</code></td>
+<td>The dream engine, its oscillator, and its self-evaluator</td>
+</tr>
+<tr>
+<td><code>src/memory/synaptic-tagging.ts</code>,
+<code>reconsolidation.ts</code>, <code>spacing-effect.ts</code>,
+<code>hormonal.ts</code>, <code>somatic-markers.ts</code></td>
+<td>The biological strengthening machinery</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>chunk-writer.ts:44-108</code>, then
+<code>migrations.ts:56-76</code>, then
+<code>skill-version-resolver.ts:250-260</code>. Read them in that order
+and the whole finding assembles itself: the types, the forward mapping,
+the reverse mapping, and the filter that uses a value from the wrong
+vocabulary.</p>
+<p><code>knowledge-graph.ts:495-567</code> for the belief layer, which
+is the part to copy.</p>
+<p><code>canonical-facts.ts:1-25</code> for the clearest statement in
+this corpus of why a purely similarity-gated store loses its most
+important facts.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>chunks</code> table starts small — id, path, source, line
+span, hash, model, text, embedding, updated_at — and grows by migration
+into something much wider: importance, lifecycle, lifecycle_state,
+parent_id, version, hygiene_done, memory_type, semantic_type, hormonal
+scalars, <code>governance_json</code>, <code>provenance_chain</code>,
+<code>created_at</code>, <code>last_consolidated_at</code>,
+<code>valid_time_start</code>, <code>valid_time_end</code>,
+<code>transaction_time</code>, <code>stable_skill_id</code>,
+<code>skill_version</code>, <code>deprecated</code>,
+<code>lineage_hash</code>, <code>peer_origin</code>.</p>
+<p>That accretion is where the report's finding lives. Two of those
+columns encode the same concept with different vocabularies, and the
+project knows it — the reconciler exists precisely because of an audit
+finding labelled C1. What the reconciler cannot fix is a query written
+against the wrong vocabulary, because nothing type-checks a SQL string
+literal.</p>
+<p>The two exported <code>LifecycleState</code> types make this
+concrete. <code>chunk-writer.ts:46</code> declares
+<code>"active" | "archived" | "consolidated" | "forgotten"</code>.
+<code>memcube.ts:10</code> declares
+<code>"active" | "consolidating" | "archived" | "forgotten"</code>. Same
+name, different fourth member. The migration's CASE has a branch for
+<code>lifecycle_state = 'consolidating'</code> — the
+<code>memcube</code> spelling — and none for <code>consolidated</code>,
+so a chunk the writer marked <code>consolidated</code> falls through to
+<code>ELSE 'generated'</code> and is migrated as though it were freshly
+generated, losing the fact that it had already been consolidated.</p>
+<p>Canonical facts are a separate, much tidier table: key, value,
+statement, category, confidence, <code>first_seen_at</code>,
+<code>last_confirmed_at</code>, <code>valid_from</code>,
+<code>valid_until</code>, source, evidence, status.
+<code>canonical_conflicts</code> holds one unconsumed row per key
+recording a rejected proposal — its own comment explains the cap: "a
+dream-cycle promotion retrying the same rejected pin every cycle must
+not grow the table without bound."</p>
+<p>That conflict row is close to a tombstone and is not one. It is keyed
+on the fact's key, deduplicated on the key rather than the value, and
+exists to be "swept into a user-facing question" — nothing on the write
+path consults it to refuse a re-proposal, so the same rejected value can
+be re-asserted once the row is consumed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid vector and lexical retrieval fused by reciprocal rank, with
+graph expansion, a query planner, recency and mood-congruent boosts, and
+a retrieval trace for diagnosis. The retrieval filter is written
+correctly, checking both columns and both NULL cases:</p>
+<pre><code>AND (lifecycle_state IS NULL OR lifecycle_state &lt;&gt; &#39;forgotten&#39;)
+AND (lifecycle IS NULL OR lifecycle &lt;&gt; &#39;expired&#39;)</code></pre>
+<p>That is the right pattern, and it is what makes the skill resolver's
+version of the same idea stand out as a slip rather than a
+misunderstanding.</p>
+<p>The chunk-vocabulary bitemporal helpers are the other loose end.
+<code>buildTemporalWhereClause</code> and <code>currentFactsOnly</code>
+are exported, documented and tested, and nothing in <code>src</code>
+calls them — <code>conflict-resolver.ts:57</code> writes its own
+<code>valid_time_end IS NULL</code> inline instead. So chunks are
+maintained bitemporally on write and there is no chunk read that takes
+an as-of. The helper also has a trap for whoever wires it up first:
+<code>validAt</code> does not imply
+<code>excludeSuperseded: false</code>, so
+<code>buildTemporalWhereClause({ validAt: t })</code> emits
+<code>valid_time_end IS NULL</code> alongside the interval conditions
+and silently degrades a point-in-time query to a current-facts
+query.</p>
+<p>The relationship variant has none of these problems, and its doc
+comment is explicit about why it exists rather than parameterising the
+column names: "<code>buildTemporalWhereClause</code> above is hardcoded
+to the chunks vocabulary and its callers depend on that, so we do NOT
+parameterize column names there. This sibling is the single explicit
+bridge for the relationships vocabulary."</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The conflict resolver runs before a fact is stored: cosine above 0.95
+is a no-op, above 0.85 supersedes the old chunk by setting
+<code>valid_time_end</code>, below that is a new fact. No extra LLM
+call, and the old row survives.</p>
+<p>The canonical ledger's op set is closed — ADD, STRENGTHEN, SUPERSEDE,
+REJECT — and its invalid-input path is documented as "REJECTED (never a
+silent partial write)". When the cap is reached the demotion is
+score-based, and when it cannot make room it retires nothing and rejects
+the ADD, atomically, with a comment noting that "a rejected write never
+mutates the ledger".</p>
+<p>Consolidation marks chunks <code>forgotten</code> and reparents
+merged ones, logging an audit row; a later sweep hard-deletes from
+<code>chunks_vec</code>, <code>chunks_fts</code> and <code>chunks</code>
+where
+<code>(lifecycle_state = 'forgotten' OR lifecycle = 'expired')</code>
+and the row is older than a threshold. That deletion predicate checks
+both vocabularies correctly.</p>
+<p><code>memory_audit_log</code> is written by
+<code>consolidation.ts</code>, <code>coverage-diagnostics.ts</code>,
+<code>epistemic-directives.ts</code>, <code>governance.ts</code> and
+<code>manager.ts</code>. It is not written by
+<code>chunk-writer.ts</code> — the module that owns the single
+reconciler for lifecycle transitions — so whether a state change is
+audited depends on which caller made it. That is the inverse of the
+pattern worth having: put the record where the mutation is, not in each
+caller.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One gateway process on one port serves the Control UI, the agent, and
+the P2P orchestrator. Channels include WhatsApp; browser automation is
+Playwright; skills are packaged, priced and traded for USDC on a
+marketplace whose code sits in the same directory as the memory
+store.</p>
+<p>That last point is a structural observation rather than a criticism:
+<code>src/memory/</code> contains <code>bounty-*</code>,
+<code>commerce-*</code>, <code>marketplace-*</code>,
+<code>peer-reputation.ts</code> and <code>seller-bond-ledger.ts</code>
+alongside <code>reconsolidation.ts</code> and
+<code>spacing-effect.ts</code>. The skills economy is modelled as memory
+that can be sold, which is a coherent position, and it means the
+directory's line count is not a measure of the memory system alone.</p>
+<p>The Control UI shows dreams and skills. No surface there edits or
+deletes a memory record, and the epistemic directives ask the user
+questions in conversation whose answers return through ordinary
+extraction — so the person is a source, not an approver, and
+<code>human_review</code> is withheld.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The graph has three gates — <code>lineage-gate.ts</code>,
+<code>structural-gate.ts</code> and <code>kg-entity-admission.ts</code>
+— and a <code>governance.ts</code> recording provenance events.
+<code>provenance_chain</code> is a column on every chunk.</p>
+<p>The honest assessment of the trust layer is that its pieces are
+individually sound and collectively unenforced at one point. There is no
+single place that decides what is admissible, the way oh-my-hermes
+routes everything through an admission state or The Librarian through
+one apply rule. Here the gates are per-subsystem, the audit log is
+per-caller, and the lifecycle is the one property with a designated
+reconciler — which is exactly why the lifecycle is also the property
+whose remaining bug is findable.</p>
+<p>The dream engine grading itself on whether its output is later used
+(<code>dream-evaluator.ts</code>, <code>dream-utility.ts</code>) is a
+good idea and rare: a background consolidation process that measures its
+own value by downstream retrieval rather than by volume produced.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>156 memory test files, and a <code>benchmarks/arc-agi-3/</code> tree
+with a Python memory package. The tests are substantive:
+<code>knowledge-graph.sabm.test.ts</code> covers contradiction flagging
+without closing either edge, many-to-many relations deliberately not
+flagged, strengthen audit rows, supersession closing the edge, and the
+two belief-history assertions that earn <code>negative_eval</code>.
+<code>consolidation.purge-expired.test.ts</code> and
+<code>consolidation.pairwise-cap.test.ts</code> pin the forgetting
+path.</p>
+<p>The gap is specific and matches the finding.
+<code>temporal-filter.rel.test.ts</code> tests only the relationship
+helper; the chunk helper has no test asserting that <code>validAt</code>
+produces a point-in-time query, which is why the
+<code>excludeSuperseded</code> interaction survives. And nothing tests
+<code>selectBestVariant</code> against an expired skill — which is why a
+filter naming a value from the wrong column has stayed in two
+queries.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Take the belief layer. Close an interval instead of deleting a row,
+keep one read that deliberately drops the active-only guard, and write
+the test that asserts the closed edge is absent from the ordinary read
+and present in the history. Those two assertions in one test are what
+make a temporal store trustworthy rather than merely temporal.</p>
+<p>Take the canonical ledger's premise. If your retrieval is
+similarity-gated, the facts that matter most are the ones least likely
+to match — short, stable, low-entropy. Address those by key and inject
+them unconditionally rather than hoping the embedding finds them.</p>
+<p>Do not carry two columns for one concept, even with a reconciler. The
+reconciler fixes writes and cannot fix a SQL string, and the failure it
+leaves is silent: a predicate naming a value the column never holds is
+not a type error, not a runtime error, and not a wrong-looking result —
+it is a filter that quietly does nothing. If a migration forces a second
+column, delete the first in the same release, or add a CHECK constraint
+naming the legal values so an impossible comparison becomes visible.</p>
+<p>When you do write such a predicate, write it the way the retrieval
+query does: <code>(col IS NULL OR col &lt;&gt; 'value')</code>. SQL's
+three-valued logic turns a bare <code>!=</code> into a silent exclusion
+of every NULL row, and a column added by migration is full of them.</p>
+<p>Put the audit write where the mutation happens. Five subsystems each
+remembering to log is five places one can be forgotten; the chunk writer
+logging once is one place it cannot.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>lifecycle_state</code> is meant to survive. It is the
+older of the two columns, the reconciler keeps it consistent, and the
+retrieval query still checks it — but every new value in the vocabulary
+is on the <code>lifecycle</code> side.</p>
+<p>Whether <code>buildTemporalWhereClause</code> is waiting for a caller
+or is a leftover. It is exported, documented and typed; the relationship
+sibling that does have a caller was written later and explicitly
+declined to generalise it.</p>
+<p>Whether the "FIRST IMPLEMENTATION in any agent memory system" claims
+on <code>synaptic-tagging.ts</code> and
+<code>epistemic-directives.ts</code> have been checked against prior
+work. They are stated as fact in source comments; no citation of a
+priority search accompanies them, and none was attempted here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memory/chunk-writer.ts:44-108</code></td>
+<td>Two lifecycle types, one reconciler, and the audit it came from</td>
+</tr>
+<tr>
+<td><code>src/memory/migrations.ts:56-76</code></td>
+<td>The forward mapping, and the CASE branch for a spelling the writer
+never emits</td>
+</tr>
+<tr>
+<td><code>src/memory/skill-version-resolver.ts:250-260</code></td>
+<td>A filter on a value its column never holds</td>
+</tr>
+<tr>
+<td><code>src/memory/knowledge-graph.ts:495-567</code></td>
+<td>Belief history and as-of, the part worth copying</td>
+</tr>
+<tr>
+<td><code>src/memory/temporal-filter.ts</code></td>
+<td>Two bitemporal vocabularies, and honesty about why they are not
+merged</td>
+</tr>
+<tr>
+<td><code>src/memory/canonical-facts.ts:1-25</code></td>
+<td>Why importance is orthogonal to similarity</td>
+</tr>
+<tr>
+<td><code>src/memory/knowledge-graph.sabm.test.ts</code></td>
+<td>Both halves of the assertion, in one test</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/bc31e5e0f0ea17761b30a18514b1892d32f18775"><code class="commit-id" title="bc31e5e0f0ea17761b30a18514b1892d32f18775">bc31e5e0…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone; a dependency surface had changed inside
+the seven-day cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

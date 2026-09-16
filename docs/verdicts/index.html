@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 495 reports.</strong></p>
+<p><strong>This page covers all 496 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18043,6 +18043,76 @@ rather than trusted from a log.</li>
 being re-captured — these are keyed on record id and revision, which
 makes them deletion receipts — or when the evidence behind an approval
 has to outlive its retention window.</li>
+</ul>
+<h3 id="bitterbot-desktop"><a
+href="../systems/bitterbot-desktop/"><code>bitterbot-desktop</code></a></h3>
+<ul>
+<li>Best idea: <strong>a belief layer that closes intervals instead of
+deleting rows, with one read that deliberately drops the guard every
+other read applies.</strong> Relationships carry <code>valid_from</code>
+and <code>valid_until</code> — a valid-time axis distinct from the
+<code>created_at</code> the rows are ordered by — and superseding an
+edge closes its interval.
+<code>beliefHistory(entityId, { validAt })</code> passes
+<code>includeClosed: true</code> because, in its own comment, "the
+universal <code>valid_until IS NULL</code> guard used elsewhere is
+deliberately dropped here", so callers can "answer 'what did I believe
+about X as of T?'". The test earns its keep by asserting both halves:
+<code>traverseEntity</code> returns zero for the superseded entity,
+<code>beliefHistory</code> returns at least one with a non-null
+<code>validUntil</code>. Beside it, the canonical facts ledger states
+the premise most similarity-gated stores never examine — "importance is
+orthogonal to similarity: a canonical fact is short, low-entropy, and
+shares no embedding mass with a cold conversation's first message" — and
+answers it by addressing those facts by key and injecting them
+unconditionally under a hard cap with deterministic, "never an LLM prose
+decision" demotion.</li>
+<li>Biggest risk: <strong>one concept, two columns, and a read filter
+written against the wrong vocabulary.</strong> <code>chunks</code>
+carries <code>lifecycle_state</code> and the newer
+<code>lifecycle</code>. The project knows:
+<code>chunk-writer.ts:44</code> heads the section "the tangled cluster
+the audit's C1 bug lived in" and <code>setChunkLifecycle</code> is "the
+single place that reconciles the two columns (audit C1)". The write side
+is genuinely fixed; a read is not.
+<code>skill-version-resolver.ts</code> filters both of its version
+queries with <code>AND lifecycle_state != 'expired'</code>, and
+<code>expired</code> is a <code>lifecycle</code> value that
+<code>deriveLifecycleState</code> maps to the <code>archived</code>
+<em>state</em> — so an expired skill satisfies the predicate and is
+returned as live, while SQL's three-valued logic makes
+<code>NULL != 'expired'</code> exclude every row whose state was never
+set. The two mappings are not inverses either: the migration maps
+<code>lifecycle_state = 'forgotten'</code> to
+<code>lifecycle = 'expired'</code>, and
+<code>deriveLifecycleState</code> maps <code>expired</code> back to
+<code>archived</code>. And two exported types named
+<code>LifecycleState</code> differ by one member —
+<code>consolidated</code> in <code>chunk-writer.ts</code>,
+<code>consolidating</code> in <code>memcube.ts</code> — so a chunk the
+writer marked <code>consolidated</code> hits the migration CASE's
+<code>ELSE</code> and is reclassified as freshly generated.</li>
+<li>Most reusable component: the pair of assertions in
+<code>knowledge-graph.sabm.test.ts</code> — that a closed edge is absent
+from the ordinary read <em>and</em> present in the history read. One
+without the other proves nothing; together they are what makes a
+temporal store trustworthy rather than merely temporal. Copy the shape,
+not just the schema.</li>
+<li>Maturity impression: MIT, Node ≥ 22, version 2026.2.15, 740,633
+lines of TypeScript across 1,382 test files, 156 of them memory, plus an
+ARC-AGI benchmark tree with its own Python memory package.
+<code>src/memory/</code> also holds the bounty, commerce and marketplace
+code, so its line count is not a measure of the memory system alone.
+Several modules declare themselves the "FIRST IMPLEMENTATION in any
+agent memory system"; that claim was not assessed here, and no priority
+search accompanies it in the source.</li>
+<li>Study when: you need bitemporal belief revision you can actually
+query as-of, or you have a similarity-gated store that keeps losing its
+most important short facts.</li>
+<li>Do not copy when: a migration would leave you carrying two columns
+for one concept — the reconciler fixes writes and cannot fix a SQL
+string literal, and a predicate naming a value its column never holds
+fails silently in both directions.</li>
 </ul>
         </article>
       </div>
