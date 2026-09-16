@@ -114,14 +114,14 @@ cannot move a memory's score.</p>
               <strong>orneryd/NornicDB</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706" title="5c03eb157216c421b234202f2a12587a81bd3706">
+            <a class="meta-pill revision-pill" href="https://github.com/orneryd/NornicDB/commit/e917408d61c32eb537082e7c905a6b1c1d4ff951" title="e917408d61c32eb537082e7c905a6b1c1d4ff951">
               <span>Analyzed revision</span>
-              <code>5c03eb15…</code>
+              <code>e917408d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/orneryd--NornicDB" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -367,15 +367,15 @@ makes a compliance claim checkable.</p>
 list implies.</strong> <code>Logger.Log</code> has two live producers:
 the retention manager, which calls
 <code>LogDataAccess("system", "retention-manager", "node", recordID, action, …)</code>
-for every record it acts on (<code>pkg/server/server.go:1839</code>),
+for every record it acts on (<code>pkg/server/server.go:1843</code>),
 and the MCP auth middleware, gated on <code>config.AuditEnabled</code>
 (<code>pkg/mcp/auth.go:688-724</code>). The call sites that would log
 Bolt query execution and authentication are present as commented-out
 code —
 <code>// e.audit.LogDataAccess(user, user, "query", query, "EXECUTE", true, "")</code>
-in <code>pkg/bolt/server.go:732</code>,
+in <code>pkg/bolt/server.go:740</code>,
 <code>// auditLogger.Log(audit.Event{</code> in
-<code>pkg/auth/auth.go:455</code>. The mark is for the mechanism and the
+<code>pkg/auth/auth.go:480</code>. The mark is for the mechanism and the
 retention trail it carries; a reader planning on GDPR Art.15 coverage of
 query access should grep those two files first.</p>
 <p><strong>Scope — awarded</strong>, and the tier is the read path
@@ -584,6 +584,24 @@ mapping <code>:1-13</code>), <code>pattern_detector.go</code>,
 <code>docs/user-guides/historical-reads-mvcc-retention.md</code>,
 <code>docs/user-guides/canonical-graph-ledger.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/orneryd/NornicDB/commit/e917408d61c32eb537082e7c905a6b1c1d4ff951"><code class="commit-id" title="e917408d61c32eb537082e7c905a6b1c1d4ff951">e917408d…</code></a>
+— re-read after 58 commits. The bitemporal anchors are byte-identical at
+both commits, as are <code>pkg/audit/audit.go</code>,
+<code>pkg/mcp/auth.go</code> and the namespaced-storage test, so
+<code>bitemporal</code> needed no re-derivation. All three marks hold.
+<code>pkg/storage/namespaced.go</code> gained 109 lines and deleted
+none: six new read methods for the projected and embedding-free paths
+the search work in this window needed. Each was checked against the
+scope predicate rather than assumed —
+<code>GetNodeWithoutEmbeddings</code> and its batch form prefix the id
+going in and unprefix it coming out, the two prefix streams delegate to
+the already-scoped <code>StreamNodes</code>, and
+<code>StreamNodesByLabelProjected</code> skips any row failing
+<code>hasNodePrefix</code> before it reaches the visitor. A namespaced
+engine that grows a read surface is exactly where a scope mark decays,
+and here it did not. The audit call sites moved a few lines with their
+files and are updated. Nothing was installed, built or run.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706"><code class="commit-id" title="5c03eb157216c421b234202f2a12587a81bd3706">5c03eb15…</code></a>
 — re-read. Screened before reading: a committed

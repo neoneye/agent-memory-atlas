@@ -7,12 +7,12 @@ page_kind: system
 source_name: "EmpiricaAI/empirica"
 source_url: https://github.com/EmpiricaAI/empirica
 archive_name: "EmpiricaAI--empirica"
-revision: 2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
-revision_url: https://github.com/EmpiricaAI/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed
-analyzed_at: 2026-09-11
+revision: a853467f5e95f94987f3378c486ee2c3763d07ec
+revision_url: https://github.com/EmpiricaAI/empirica/commit/a853467f5e95f94987f3378c486ee2c3763d07ec
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, audit_log"
 capability_evidence:
-  trust_state: "artifact resolution | empirica/data/resolution_kind.py:25 | a closed four-value `stale | superseded | retracted | mistyped` vocabulary beside `is_resolved`, which the read paths filter on and `core/derived_confidence.py:89` reads | tests/test_artifact_visibility.py"
+  trust_state: "artifact resolution | empirica/data/resolution_kind.py:25 | a closed four-value `stale | superseded | retracted | mistyped` vocabulary beside `is_resolved`, which the read paths filter on and `empirica/core/derived_confidence.py:89` reads | tests/test_artifact_visibility.py"
   scope_enforced: "the artifact repositories | empirica/data/repositories/breadcrumbs.py | `project_id` as a foreign key on every artifact table and a predicate in the repository queries | unknown"
   audit_log: "artifact mutation | empirica/data/repositories/breadcrumbs.py and the lifecycle audit columns | an append-only record per artifact mutation, with a regression suite added since the previous pin asserting the delete path actually writes it | tests/test_delete_artifacts_qdrant_audit_integrity.py"
 stack_storage: "sqlite, qdrant"
@@ -233,6 +233,37 @@ written — a genuine error, not ageing", persisted in a column, surfaced in the
 CLI, and never coerced. `EpistemicSource` is a second orthogonal vocabulary about
 provenance of belief. Two axes, both closed, both documented at the point of use.
 
+**And the project then measured how often the first one is actually used, which
+is the part worth reading.** `--kind` is optional on `finding-resolve`; omitting
+it stored `NULL` and rendered identically to a classified resolution, so nothing
+ever surfaced the choice. The counts are in the commit and they are from live
+practices, not a fixture: **1,344 of 1,604 resolutions carry no kind at all, and
+`mistyped` has been used zero times across 4,833 findings** — with a second,
+independently run practice measuring not one classified resolution in
+seven hundred and twenty-six, and zero uses of
+`retracted` as well. Two practices, one core-owned vocabulary, the same result;
+the source draws the right conclusion, that this is a mechanism problem rather
+than a discipline one, because *"an optional field that requires a judgement gets
+skipped under momentum."*
+
+The repair is more interesting than the defect, because both obvious fixes are
+rejected in the source with reasons. Making `--kind` required breaks every
+existing caller. Defaulting it is worse: *"defaulting is how a ledger ends up
+reading 1267 `stale` to 1 `retracted` — the practice looks as though it was never
+wrong."* What ships instead is a `resolution_kind_note` on the response, returned
+only when the field is absent, which says the resolution records *that* it closed
+and not *why*, spells out all four values in one line each, and ends with the
+sentence that states the cost: *"a ledger that cannot distinguish its ageing from
+its errors cannot calibrate on either."* It is named at the one moment the
+practitioner still holds the judgement, and a committed test asserts the note is
+surfaced rather than the field merely existing.
+
+This is the failure mode the `trust_state` mark cannot see. The vocabulary is
+stored, closed, filtered on and read — everything the mark asks — and on the
+evidence of two real stores, five in six rows decline to use it. A reader
+adopting a graded status should take the measurement as part of the design:
+count how many rows carry each value before concluding the ladder works.
+
 **Scope — awarded.** `project_id` is a foreign key on every artifact table and a
 predicate in the repositories.
 
@@ -388,6 +419,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find empirica -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py tests/*/*.py \| wc -l` | 217,802 lines; 524 test files |
 
 ## History
+
+**2026-09-16** — [`a853467f5e95f94987f3378c486ee2c3763d07ec`](https://github.com/EmpiricaAI/empirica/commit/a853467f5e95f94987f3378c486ee2c3763d07ec) — re-read after 45 commits, through 1.13.47. `empirica/data/resolution_kind.py` is byte-identical, so the four-value vocabulary behind `trust_state` is exact; the derived-confidence reader, the breadcrumb repository and the visibility test moved and were re-derived, and `empirica/core/derived_confidence.py:89` still reads `is_resolved` and `resolution_kind` together at the same line. All three marks hold. The addition to section 9 is the project's own measurement of how often its trust vocabulary is used — 1,344 of 1,604 resolutions unclassified, `mistyped` used zero times across 4,833 findings, and a second practice with not one classified resolution in seven hundred and twenty-six — together with a repair that refuses both making the field required and defaulting it, and instead names the omission in the response. The evidence record's shorthand path for the derived-confidence reader is corrected to its real location. Nothing was installed, built or run.
 
 **2026-09-13** — the repository was renamed from `nubaeon/empirica` to `EmpiricaAI/empirica`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/EmpiricaAI--empirica` to match.
 

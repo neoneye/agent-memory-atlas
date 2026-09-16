@@ -8,6 +8,12 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-16-the-second-copy-of-the-rule.md](2026-09-16-the-second-copy-of-the-rule.md) —
+  six systems re-read in one pass had drifted for the same reason: a rule
+  governing what may be read, what a row's status is, or whether the store opens
+  was written down twice, and the copy nobody tested was the one that decided.
+  Caura's structural test, SuperLocalMemory's mirror check, MentisDB's odd load
+  site out, and teamai-cli's useful inverse.
 - [2026-09-12-a-paper-derived-ontology-of-the-same-field.md](2026-09-12-a-paper-derived-ontology-of-the-same-field.md) —
   `Haiyoung/AgentMemoryAtlas`, an unrelated project sharing this one's name, maps
   the same field from 148 papers instead of from code. Seven probes against its

@@ -110,14 +110,14 @@ practitioner does not reach for.</p>
               <strong>EmpiricaAI/empirica</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/EmpiricaAI/empirica/commit/2584d2a8dd94ff674fb254f9acd3770ac9ea89ed" title="2584d2a8dd94ff674fb254f9acd3770ac9ea89ed">
+            <a class="meta-pill revision-pill" href="https://github.com/EmpiricaAI/empirica/commit/a853467f5e95f94987f3378c486ee2c3763d07ec" title="a853467f5e95f94987f3378c486ee2c3763d07ec">
               <span>Analyzed revision</span>
-              <code>2584d2a8…</code>
+              <code>a853467f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/EmpiricaAI--empirica" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -335,6 +335,41 @@ a genuine error, not ageing", persisted in a column, surfaced in the
 CLI, and never coerced. <code>EpistemicSource</code> is a second
 orthogonal vocabulary about provenance of belief. Two axes, both closed,
 both documented at the point of use.</p>
+<p><strong>And the project then measured how often the first one is
+actually used, which is the part worth reading.</strong>
+<code>--kind</code> is optional on <code>finding-resolve</code>;
+omitting it stored <code>NULL</code> and rendered identically to a
+classified resolution, so nothing ever surfaced the choice. The counts
+are in the commit and they are from live practices, not a fixture:
+<strong>1,344 of 1,604 resolutions carry no kind at all, and
+<code>mistyped</code> has been used zero times across 4,833
+findings</strong> — with a second, independently run practice measuring
+not one classified resolution in seven hundred and twenty-six, and zero
+uses of <code>retracted</code> as well. Two practices, one core-owned
+vocabulary, the same result; the source draws the right conclusion, that
+this is a mechanism problem rather than a discipline one, because
+<em>"an optional field that requires a judgement gets skipped under
+momentum."</em></p>
+<p>The repair is more interesting than the defect, because both obvious
+fixes are rejected in the source with reasons. Making
+<code>--kind</code> required breaks every existing caller. Defaulting it
+is worse: <em>"defaulting is how a ledger ends up reading 1267
+<code>stale</code> to 1 <code>retracted</code> — the practice looks as
+though it was never wrong."</em> What ships instead is a
+<code>resolution_kind_note</code> on the response, returned only when
+the field is absent, which says the resolution records <em>that</em> it
+closed and not <em>why</em>, spells out all four values in one line
+each, and ends with the sentence that states the cost: <em>"a ledger
+that cannot distinguish its ageing from its errors cannot calibrate on
+either."</em> It is named at the one moment the practitioner still holds
+the judgement, and a committed test asserts the note is surfaced rather
+than the field merely existing.</p>
+<p>This is the failure mode the <code>trust_state</code> mark cannot
+see. The vocabulary is stored, closed, filtered on and read — everything
+the mark asks — and on the evidence of two real stores, five in six rows
+decline to use it. A reader adopting a graded status should take the
+measurement as part of the design: count how many rows carry each value
+before concluding the ladder works.</p>
 <p><strong>Scope — awarded.</strong> <code>project_id</code> is a
 foreign key on every artifact table and a predicate in the
 repositories.</p>
@@ -539,6 +574,24 @@ it</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/EmpiricaAI/empirica/commit/a853467f5e95f94987f3378c486ee2c3763d07ec"><code class="commit-id" title="a853467f5e95f94987f3378c486ee2c3763d07ec">a853467f…</code></a>
+— re-read after 45 commits, through 1.13.47.
+<code>empirica/data/resolution_kind.py</code> is byte-identical, so the
+four-value vocabulary behind <code>trust_state</code> is exact; the
+derived-confidence reader, the breadcrumb repository and the visibility
+test moved and were re-derived, and
+<code>empirica/core/derived_confidence.py:89</code> still reads
+<code>is_resolved</code> and <code>resolution_kind</code> together at
+the same line. All three marks hold. The addition to section 9 is the
+project's own measurement of how often its trust vocabulary is used —
+1,344 of 1,604 resolutions unclassified, <code>mistyped</code> used zero
+times across 4,833 findings, and a second practice with not one
+classified resolution in seven hundred and twenty-six — together with a
+repair that refuses both making the field required and defaulting it,
+and instead names the omission in the response. The evidence record's
+shorthand path for the derived-confidence reader is corrected to its
+real location. Nothing was installed, built or run.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>nubaeon/empirica</code> to <code>EmpiricaAI/empirica</code>,
 upstream of the pinned commit and after the reading below. No

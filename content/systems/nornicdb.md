@@ -7,12 +7,12 @@ page_kind: system
 source_name: "orneryd/NornicDB"
 source_url: https://github.com/orneryd/NornicDB
 archive_name: "orneryd--NornicDB"
-revision: 5c03eb157216c421b234202f2a12587a81bd3706
-revision_url: https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706
-analyzed_at: 2026-09-11
+revision: e917408d61c32eb537082e7c905a6b1c1d4ff951
+revision_url: https://github.com/orneryd/NornicDB/commit/e917408d61c32eb537082e7c905a6b1c1d4ff951
+analyzed_at: 2026-09-16
 capabilities: "audit_log, scope_enforced, bitemporal"
 capability_evidence:
-  audit_log: "the compliance audit logger, beside the graph store rather than inside it | pkg/audit/audit.go:597 (`Logger.Log`), pkg/server/server.go:1839, pkg/mcp/auth.go:688-724 | `Log` appends a structured event; the live producers are the retention manager, which calls `LogDataAccess(\"system\", \"retention-manager\", \"node\", recordID, action, …)` for every record it acts on, and the MCP auth middleware, gated on `config.AuditEnabled`. Several further call sites in `pkg/bolt/server.go:724-732` and `pkg/auth/auth.go:455` are commented out, so the trail covers retention and MCP auth, not Bolt query execution | none"
+  audit_log: "the compliance audit logger, beside the graph store rather than inside it | pkg/audit/audit.go:597 (`Logger.Log`), pkg/server/server.go:1843, pkg/mcp/auth.go:688-724 | `Log` appends a structured event; the live producers are the retention manager, which calls `LogDataAccess(\"system\", \"retention-manager\", \"node\", recordID, action, …)` for every record it acts on, and the MCP auth middleware, gated on `config.AuditEnabled`. Several further call sites in `pkg/bolt/server.go:740-740` and `pkg/auth/auth.go:480` are commented out, so the trail covers retention and MCP auth, not Bolt query execution | none"
   scope_enforced: "the namespaced engine's read methods, over one shared store | pkg/storage/namespaced.go:122-127 (`prefixNodeID`), :350-366 (`GetNodesByLabel`) | the namespace is a key prefix, and twenty-seven read methods filter the inner engine's results with `hasNodePrefix`/`hasEdgePrefix` before returning them — a predicate on a stored key, not a separate database file | pkg/storage/namespaced_test.go, namespaced_extra_test.go"
   bitemporal: "the Cypher temporal procedures over the MVCC graph store | pkg/cypher/call_temporal.go:93-192, dispatched from procedure_registry_builtin.go:256 | `CALL db.temporal.asOf(label, keyProp, keyValue, validFromProp, validToProp, asOf [, systemTime [, systemSequence]])` takes a validity instant and an optional MVCC commit version as separate arguments; with a system version it skips the current-state fast path and reads `GetNodesByLabelVisibleAt(label, version)` before filtering on `[valid_from, valid_to)` | pkg/cypher/temporal_procedures_test.go:120-161 (`TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, then asserts the same validity instant returns nothing without a system time and returns the node with one)"
 stack_storage: "kv"
@@ -257,12 +257,12 @@ name, is what makes a compliance claim checkable.
 **What that trail actually covers is narrower than the clause list implies.**
 `Logger.Log` has two live producers: the retention manager, which calls
 `LogDataAccess("system", "retention-manager", "node", recordID, action, …)` for
-every record it acts on (`pkg/server/server.go:1839`), and the MCP auth
+every record it acts on (`pkg/server/server.go:1843`), and the MCP auth
 middleware, gated on `config.AuditEnabled` (`pkg/mcp/auth.go:688-724`). The call
 sites that would log Bolt query execution and authentication are present as
 commented-out code — `// e.audit.LogDataAccess(user, user, "query", query,
-"EXECUTE", true, "")` in `pkg/bolt/server.go:732`, `// auditLogger.Log(audit.Event{`
-in `pkg/auth/auth.go:455`. The mark is for the mechanism and the retention trail
+"EXECUTE", true, "")` in `pkg/bolt/server.go:740`, `// auditLogger.Log(audit.Event{`
+in `pkg/auth/auth.go:480`. The mark is for the mechanism and the retention trail
 it carries; a reader planning on GDPR Art.15 coverage of query access should
 grep those two files first.
 
@@ -444,6 +444,8 @@ whether the search-path separation blocks what they need.
 `docs/user-guides/canonical-graph-ledger.md`
 
 ## History
+
+**2026-09-16** — [`e917408d61c32eb537082e7c905a6b1c1d4ff951`](https://github.com/orneryd/NornicDB/commit/e917408d61c32eb537082e7c905a6b1c1d4ff951) — re-read after 58 commits. The bitemporal anchors are byte-identical at both commits, as are `pkg/audit/audit.go`, `pkg/mcp/auth.go` and the namespaced-storage test, so `bitemporal` needed no re-derivation. All three marks hold. `pkg/storage/namespaced.go` gained 109 lines and deleted none: six new read methods for the projected and embedding-free paths the search work in this window needed. Each was checked against the scope predicate rather than assumed — `GetNodeWithoutEmbeddings` and its batch form prefix the id going in and unprefix it coming out, the two prefix streams delegate to the already-scoped `StreamNodes`, and `StreamNodesByLabelProjected` skips any row failing `hasNodePrefix` before it reaches the visitor. A namespaced engine that grows a read surface is exactly where a scope mark decays, and here it did not. The audit call sites moved a few lines with their files and are updated. Nothing was installed, built or run.
 
 **2026-09-11** — [`5c03eb157216c421b234202f2a12587a81bd3706`](https://github.com/orneryd/NornicDB/commit/5c03eb157216c421b234202f2a12587a81bd3706) — re-read. Screened before reading: a committed `.githooks/pre-commit` (harmless unless `core.hooksPath` points at it), an `AGENTS.md` addressed to a reading agent, five dependency manifests inside the cooldown, four floating ranges, two build-time execution hooks. The tree was read, never built, and nothing was run. 785 files and 73,886 insertions past the previous pin, most of it a knowledge-policy admin UI and a localization catalogue for storage-validation messages. **`bitemporal` awarded**, and it is a correction rather than drift: `systemSequence` was already in `call_temporal.go` at the previous pin. `CALL db.temporal.asOf` takes a validity instant and, optionally, an MVCC commit timestamp and sequence, as separate arguments; supplying the system version makes the call skip its current-state fast path and read `GetNodesByLabelVisibleAt(label, version)` before filtering the validity window. `TestTemporalAsOf_WithSnapshotVersion` creates a node valid 2024-01-01 to 2024-02-01, records its head version, deletes it, and asserts the validity instant 2024-01-15 returns nothing without a system time and returns the node with one. The previous withholding rested on the README's "search remains current-state focused", which is true of the hybrid and vector arm and not of the Cypher procedure surface — the mark names the read path that carries the predicate, as the scope marks in this corpus do. `audit_log` and `scope_enforced` unchanged. The README's "tritemporal facts" was checked at the same pin: the engine's temporal procedures take one caller-named interval and an MVCC version, and the guide's third clock, `asserted_at`, is a property no engine code writes or reads, so the mark stays `bitemporal`.
 

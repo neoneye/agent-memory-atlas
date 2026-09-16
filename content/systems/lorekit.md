@@ -7,12 +7,12 @@ page_kind: system
 source_name: "mthines/lorekit"
 source_url: https://github.com/mthines/lorekit
 archive_name: "mthines--lorekit"
-revision: f50830a2a9470c3736cbcde2d963768efde9bc49
-revision_url: https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49
-analyzed_at: 2026-09-10
+revision: b325977c959ed2d0d58f1168283973bf27a9c451
+revision_url: https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, human_review"
 capability_evidence:
-  scope_enforced: "the scope key is an equality predicate on every read, and the wider tenant-visibility filter is one module that mirrors a single SQL source of truth under a parity test | packages/mcp-core/src/tools/read.ts:8, :31, packages/mcp-core/src/auth/tenant-scope.ts:1-18, supabase/functions/_shared/auth/tenant-scope.ts | `read` validates the scope against `ScopeSchema` and applies `.eq(\"scope\", input.scope)` to the query, so the stored key reaches the statement rather than trimming its result. Above it the tenant predicate — a caller sees their own rows or any row owned by an org they belong to — is deliberately a filter-shaper only: it *never re-derives membership itself*, taking an already-resolved org-id list so *the predicate can never drift from the SQL side*, whose sole source of truth is `lorekit_member_org_ids()`. The copy the Deno edge functions import is a second file by necessity and the duplication is named rather than accidental, with a parity spec guarding the pair. The known duplication with a test asserting the mirror is the safer of the two answers this corpus keeps finding | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts"
+  scope_enforced: "the scope key is an equality predicate on every read, and the wider tenant-visibility filter is one module that mirrors a single SQL source of truth under a parity test | packages/mcp-core/src/tools/read.ts:8-16, :67, packages/mcp-core/src/scope/scope-precedence.ts, packages/mcp-core/src/auth/tenant-scope.ts:1-18, supabase/functions/_shared/auth/tenant-scope.ts | `read` validates the scope against `ScopeSchema` and, when one is supplied, applies `.eq('scope', input.scope)` to the query, so the stored key reaches the statement rather than trimming its result. The scope argument became optional in this window and an omitted one now resolves the key across every scope the caller can already see, picking one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending; the widening is over the scope-type dimension only and sits inside the tenant predicate, not around it. Above it the tenant predicate — a caller sees their own rows or any row owned by an org they belong to — is deliberately a filter-shaper only: it *never re-derives membership itself*, taking an already-resolved org-id list so *the predicate can never drift from the SQL side*, whose sole source of truth is `lorekit_member_org_ids()`. The copy the Deno edge functions import is a second file by necessity and the duplication is named rather than accidental, with a parity spec guarding the pair. The known duplication with a test asserting the mirror is the safer of the two answers this corpus keeps finding | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts"
   audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. The limit belongs with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
   human_review: "the one operation that destroys is a confirmation a person must give, and it cannot be satisfied by omission | packages/cli/src/commands/purge.mjs:10-27 | The purge command reasons its gate out in the source: the purge RPCs return their count only after deleting and the REST dry-run header returns nothing previewable, so *\"would purge N\" cannot be answered honestly* and *the gate is therefore a confirmation, not a preview* — prompt on an interactive terminal, and require `--yes` when there is nobody to ask, because *an agent loop must not be able to trigger one by omission*. A scoped key is refused server-side and the refusal is passed through verbatim, never retried, split or re-scoped. Beside it the retention-policy path keeps preview and apply honest from the other direction: one candidate function is the single source of truth for what matches, so *a previewed count always equals what a run archives* | packages/cli/test, supabase/migrations/00088_retention_policies.sql"
 stack_storage: "postgres, files"
@@ -304,8 +304,34 @@ saying that it did.
 
 ## 6. Retrieval Mechanics
 
+**An omitted scope now widens instead of failing, and the answer says which
+scope answered.** `memory.read { key }` — the shape an agent reaches for after a
+session-start injection hands it a `scope::key` reference it only half-remembers
+— used to fail with *"scope and key are required"*, as did `memory.list`,
+`memory.list_archived` and `lorekit show`. The source records the patch it
+declined: defaulting the missing scope to `global` *"is worse than the error —
+it turns a loud, recoverable failure into a silent `null` for every repo-scoped
+lesson, indistinguishable from a genuine miss"*, on a store where repo-scoped
+rows outnumber global ones about two to one. So an omitted scope resolves the key
+across every scope the caller can already see and returns one winner.
+
+Three details make the widening safe to copy. Precedence runs over scope *types*
+— project, branch, repo, global, the hook engine's own `readOrder` — rather than
+over the caller's own scopes, because an MCP call has no working directory and
+type specificity is the one ordering every runtime can compute. Ties break by
+`updated_at` descending then scope ascending, and the reason is stated: without a
+total order the winner is whatever order Postgres happened to return, so the same
+call answers differently on consecutive runs. And the result always names the
+scope that answered, with `other_scopes` present only when the key was genuinely
+ambiguous — on an unscoped read the caller has no other way to tell a `global`
+hit from a `repo::…` one. A widening that does not say how wide it went is the
+same defect as a filter that does not say it filtered.
+
+The widening is over the scope-type dimension inside the tenant predicate, not
+around it; the visibility filter is unchanged.
+
 Three tools. `memory.read` fetches one address. `memory.list` returns everything
-at one exact scope. `memory.search` runs `websearch_to_tsquery` against the
+at one exact scope, or across visible scopes when none is named. `memory.search` runs `websearch_to_tsquery` against the
 generated column, with tag filters composed as an `.or()` string and a
 position-based rank assigned because *"Supabase textSearch doesn't return a rank
 score directly"*.
@@ -591,6 +617,8 @@ and `retrospective.md`;
 `org-permissions.spec.ts`.
 
 ## History
+
+**2026-09-16** — [`b325977c959ed2d0d58f1168283973bf27a9c451`](https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451) — re-read after 9 commits. `packages/cli/src/commands/purge.mjs` and `supabase/migrations/00010_audit_log.sql` are byte-identical, so `human_review` and `audit_log` rest on unchanged code; `read.ts` moved. All three marks hold. The change is a scope one and is written up in section 6: the scope argument became optional, and an omitted scope widens across the scopes the caller can already see rather than failing — deliberately not defaulting to `global`, which the source argues would convert a loud error into a silent miss. The mark is unaffected because the widening runs over scope types inside the tenant predicate rather than around it, and the evidence record is updated to say so rather than continuing to describe an unconditional equality filter. Re-screened at this commit: one agent-directed file, one build-time execution path, five floating versions, one manifest inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-10** — [`f50830a2a9470c3736cbcde2d963768efde9bc49`](https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49) — read again, 1,649 commits and 1,355 files past the previous pin, against 214,121 insertions. **The central criticism survives all of it unchanged**: the audit row for a `memory.update` carries `metadata: { scope, key }` and not the value, the `audit_log` columns are untouched, and every migration since has widened the action `CHECK` rather than adding a column. All three marks hold and now carry evidence records; several cited files moved — `scope.ts` into a `scope/` directory, `tenant-scope.ts` under `auth/`, and the webhook signal filter out of `packages/mcp-server` — and the mechanisms they carried survive the moves. One published claim went stale: background work is scheduled, with a rate-limit reaper and a nightly groom sweep registered behind a `pg_cron` guard, and retention policies added as saved rules that auto-archive and are stated never to hard-delete, with one candidate function shared by preview, run-now and the sweep *"so a previewed count always equals what a run archives"*. Two disciplines are worth naming for the first time: `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it disagrees with the TypeScript action set, because `recordAudit` swallows a rejected action and would otherwise leave *"a silent, permanent hole"*; and the purge command argues its own gate — no honest dry run is possible, so it is a confirmation rather than a preview, requiring `--yes` where there is nobody to ask, because *"an agent loop must not be able to trigger one by omission."* At this diff size the reading was targeted rather than exhaustive: the memory tools, the scope and tenant predicates, the audit schema and its vocabulary test, the retention-policy migration and the CLI's destructive paths were read; the web application, the evals package and the plugin surfaces were not. Screened before reading: one auto-run surface, one manifest inside the seven-day cooldown, one build-time execution path and five unpinned dependency surfaces; nothing was installed, built or run.
 

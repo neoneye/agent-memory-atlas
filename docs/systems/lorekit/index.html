@@ -110,14 +110,14 @@ entrenchment doctrine that lives entirely in a skill file.</p>
               <strong>mthines/lorekit</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49" title="f50830a2a9470c3736cbcde2d963768efde9bc49">
+            <a class="meta-pill revision-pill" href="https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451" title="b325977c959ed2d0d58f1168283973bf27a9c451">
               <span>Analyzed revision</span>
-              <code>f50830a2…</code>
+              <code>b325977c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mthines--lorekit" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -426,12 +426,43 @@ because the upsert overwrites in place, a lesson that changed has no
 history at all — only a <code>memory.update</code> audit row saying that
 it did.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>An omitted scope now widens instead of failing, and the
+answer says which scope answered.</strong>
+<code>memory.read { key }</code> — the shape an agent reaches for after
+a session-start injection hands it a <code>scope::key</code> reference
+it only half-remembers — used to fail with <em>"scope and key are
+required"</em>, as did <code>memory.list</code>,
+<code>memory.list_archived</code> and <code>lorekit show</code>. The
+source records the patch it declined: defaulting the missing scope to
+<code>global</code> <em>"is worse than the error — it turns a loud,
+recoverable failure into a silent <code>null</code> for every
+repo-scoped lesson, indistinguishable from a genuine miss"</em>, on a
+store where repo-scoped rows outnumber global ones about two to one. So
+an omitted scope resolves the key across every scope the caller can
+already see and returns one winner.</p>
+<p>Three details make the widening safe to copy. Precedence runs over
+scope <em>types</em> — project, branch, repo, global, the hook engine's
+own <code>readOrder</code> — rather than over the caller's own scopes,
+because an MCP call has no working directory and type specificity is the
+one ordering every runtime can compute. Ties break by
+<code>updated_at</code> descending then scope ascending, and the reason
+is stated: without a total order the winner is whatever order Postgres
+happened to return, so the same call answers differently on consecutive
+runs. And the result always names the scope that answered, with
+<code>other_scopes</code> present only when the key was genuinely
+ambiguous — on an unscoped read the caller has no other way to tell a
+<code>global</code> hit from a <code>repo::…</code> one. A widening that
+does not say how wide it went is the same defect as a filter that does
+not say it filtered.</p>
+<p>The widening is over the scope-type dimension inside the tenant
+predicate, not around it; the visibility filter is unchanged.</p>
 <p>Three tools. <code>memory.read</code> fetches one address.
-<code>memory.list</code> returns everything at one exact scope.
-<code>memory.search</code> runs <code>websearch_to_tsquery</code>
-against the generated column, with tag filters composed as an
-<code>.or()</code> string and a position-based rank assigned because
-<em>"Supabase textSearch doesn't return a rank score directly"</em>.</p>
+<code>memory.list</code> returns everything at one exact scope, or
+across visible scopes when none is named. <code>memory.search</code>
+runs <code>websearch_to_tsquery</code> against the generated column,
+with tag filters composed as an <code>.or()</code> string and a
+position-based rank assigned because <em>"Supabase textSearch doesn't
+return a rank score directly"</em>.</p>
 <p><strong>The narrow-to-broad ladder is not implemented.</strong> The
 README describes an agent reading branch, then repo, then global and
 merging; <code>list.ts</code> does
@@ -725,6 +756,24 @@ have caught a drift or missed one.</li>
 <code>scope.spec.ts</code>, <code>ttl.spec.ts</code>,
 <code>org-permissions.spec.ts</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451"><code class="commit-id" title="b325977c959ed2d0d58f1168283973bf27a9c451">b325977c…</code></a>
+— re-read after 9 commits.
+<code>packages/cli/src/commands/purge.mjs</code> and
+<code>supabase/migrations/00010_audit_log.sql</code> are byte-identical,
+so <code>human_review</code> and <code>audit_log</code> rest on
+unchanged code; <code>read.ts</code> moved. All three marks hold. The
+change is a scope one and is written up in section 6: the scope argument
+became optional, and an omitted scope widens across the scopes the
+caller can already see rather than failing — deliberately not defaulting
+to <code>global</code>, which the source argues would convert a loud
+error into a silent miss. The mark is unaffected because the widening
+runs over scope types inside the tenant predicate rather than around it,
+and the evidence record is updated to say so rather than continuing to
+describe an unconditional equality filter. Re-screened at this commit:
+one agent-directed file, one build-time execution path, five floating
+versions, one manifest inside the cooldown. Nothing was installed, built
+or run.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/mthines/lorekit/commit/f50830a2a9470c3736cbcde2d963768efde9bc49"><code class="commit-id" title="f50830a2a9470c3736cbcde2d963768efde9bc49">f50830a2…</code></a>
 — read again, 1,649 commits and 1,355 files past the previous pin,
