@@ -7,9 +7,9 @@ page_kind: system
 source_name: "smaramwbc/statewave"
 source_url: https://github.com/smaramwbc/statewave
 archive_name: "smaramwbc--statewave"
-revision: f86eb9aa0aec9ac701a88cd55ca62f52f2d846f4
-revision_url: https://github.com/smaramwbc/statewave/commit/f86eb9aa0aec9ac701a88cd55ca62f52f2d846f4
-analyzed_at: 2026-09-10
+revision: 0f7fda8847dcd3cd48a39bd9097b35194a8c2247
+revision_url: https://github.com/smaramwbc/statewave/commit/0f7fda8847dcd3cd48a39bd9097b35194a8c2247
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, trust_state, bitemporal, negative_eval"
 capability_evidence:
   scope_enforced: "a subject key on every row and every query, a tenant key applied when configured, and an AST fitness function that fails CI when a repository helper takes one without the other | server/db/repositories.py:1-60, server/db/tables.py:77-120, server/services/context.py:172-192, tests/test_tenant_scoping_invariant.py:1-40 | every `MemoryRow` and `EpisodeRow` carries `subject_id` and a nullable `tenant_id`; `search_memories`, `list_episodes_by_subject` and the rest key on the subject, and `_tenant_filter` adds `column == tenant_id` whenever a tenant is set. The guard is the interesting part: `test_tenant_scoping_invariant.py` parses `repositories.py` with `ast` and collects every function whose arguments include `subject_id` and not `tenant_id`, failing when the set is non-empty. Its allowlist of accepted gaps is currently empty and the docstring forbids appending to it — the subject-health-cache gap that seeded it was closed by re-keying the table | tests/test_tenant_scoping.py:40-121 (the compiled SQL contains `episodes.tenant_id =` and the tenant value in its params), tests/test_tenant_scoping_invariant.py, tests/test_admin_compiler_trace_tenant_scope.py, tests/test_health_cache_scoping.py"
@@ -484,5 +484,7 @@ rg -n 'tenant_id' tests/test_tenant_scoping.py tests/integration/test_tenant_iso
 ```
 
 ## History
+
+**2026-09-16** — [`0f7fda8847dcd3cd48a39bd9097b35194a8c2247`](https://github.com/smaramwbc/statewave/commit/0f7fda8847dcd3cd48a39bd9097b35194a8c2247) — re-pinned after 3 commits. The whole diff is three lines of `pyproject.toml`: requirement bumps for litellm, ruff and alembic. No source file, test or migration changed, so every anchor, line number and quotation in this report is exact at the new pin and all four marks stand unexamined-but-unchanged. Nothing was installed, built or run.
 
 **2026-09-10** — [`f86eb9aa0aec9ac701a88cd55ca62f52f2d846f4`](https://github.com/smaramwbc/statewave/commit/f86eb9aa0aec9ac701a88cd55ca62f52f2d846f4) — first reading, at the head of `main`, the last commit of 8 September 2026. Screened before reading: no auto-run surface, three build-time execution paths in pytest conftest files, one manifest inside the seven-day cooldown, a `uv.lock` unchanged for 35 days, and an `AGENTS.md` treated as data; nothing was installed or run, and the read was made from a full clone. Four marks. The reading covered the episode and memory model, the compile pipeline, the read-path filters, the TTL and conflict lifecycles, and the receipt and replay machinery; the health, SLA, rate-limiting and backup surfaces were read as operational context rather than as subject.

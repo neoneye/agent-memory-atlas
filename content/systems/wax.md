@@ -7,15 +7,14 @@ page_kind: system
 source_name: "christopherkarani/Wax"
 source_url: https://github.com/christopherkarani/Wax
 archive_name: "christopherkarani--Wax"
-revision: 77778962d25a163bdb32a6319d10b52c323d3036
-revision_url: https://github.com/christopherkarani/Wax/commit/77778962d25a163bdb32a6319d10b52c323d3036
-analyzed_at: 2026-09-11
-capabilities: "bitemporal, audit_log, human_review, negative_eval"
+revision: 9f79b1a6a8d2b7dfb732af7412b2381df8fa5033
+revision_url: https://github.com/christopherkarani/Wax/commit/9f79b1a6a8d2b7dfb732af7412b2381df8fa5033
+analyzed_at: 2026-09-16
+capabilities: "bitemporal, audit_log, negative_eval"
 capability_evidence:
-  bitemporal: "the structured fact tier | Sources/WaxTextSearch/FTS5SearchEngine.swift:413-420 | two independent half-open intervals — `system_from_ms`/`system_to_ms` and `valid_from_ms`/`valid_to_ms` — each filtered against its own caller-supplied instant from `StructuredMemoryAsOf` | unknown"
-  audit_log: "the WAL ring | the single .wax file | an append-only frame log with crash-injection tests asserting recovery invariants | Tests, crash injection"
-  human_review: "promotion | Sources/Wax/Broker/BrokerCommand.swift:338-341 | a promotion proposal a person approves before anything durable is written | unknown"
-  negative_eval: "rerank | the semantic rerank that drops expired entries | committed cases asserting an expired entry is absent from a populated result | unknown"
+  bitemporal: "the structured fact tier | Sources/WaxCore/StructuredMemory/StructuredMemoryAsOf.swift:4-16, Sources/Wax/Broker/BrokerCommand.swift:278, :818, Sources/Wax/Orchestrator/MemoryOrchestrator.swift:1796-1803, Sources/WaxTextSearch/FTS5SearchEngine.swift:413-420 | a structured fact carries two independent half-open intervals, `system_from_ms`/`system_to_ms` and `valid_from_ms`/`valid_to_ms`, and the read filters each against its own instant from a `StructuredMemoryAsOf` carrying a separate `systemTimeMs` and `validTimeMs` — four `WHERE` clauses, two parameters, so *what did we believe in March about what was true in January* is two arguments rather than one. The producer is caller-supplied and agent-reachable: `valid_from` is an optional argument on the broker surface, defaulted to now when omitted, while the system axis is stamped by the writer and never taken from the caller | Sources/WaxTextSearch/FTS5SearchEngine.swift:330-336 rejects an inverted interval on either axis at write time"
+  audit_log: "the broker session event log, which is not the WAL | Sources/Wax/Broker/BrokerSessionPersistence.swift:147-166, :338-348, Sources/Wax/Broker/VirtualSessionStore.swift:640 | `BrokerSessionEvent` is a JSONL record appended by `appendEvent` — encode, newline, `seekToEnd`, write — carrying a session id, an agent id, a run id, a millisecond timestamp, a kind and a payload. Eleven kinds cover the mutations (`remembered`, `promotionWritten`, `handoff`, `checkpoint`, `markdownExported`) alongside `retrievalHit`, and `promotionReviewed` is distinct from `promotionWritten` so a reviewed-but-unwritten promotion is legible afterwards. Nothing in the module truncates, prunes or removes the file. The `.wax` WAL is expressly *not* the basis: `WALRingWriter` is a fixed-size ring that wraps, carries a `wrapCount`, and is reclaimed behind a checkpoint, which makes it a crash-recovery mechanism rather than a durable record of what changed | Tests/WaxTests covering session persistence and promotion events"
+  negative_eval: "text recall under the expiry filter | Tests/WaxIntegrationTests/UnifiedSearchTests.swift:1175-1210 | two frames are written and indexed against the same query text — one stamped `wax.expires_at_ms` one second in the past, one current — and a single `textOnly` search asserts `results.contains(activeID)` beside `!results.contains(expiredID)`. The positive assertion sits in the same result as the negative one, so a filter that returned nothing would fail the test rather than pass it, and the corpus is populated by the test itself | the same file"
 stack_storage: ""
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -239,23 +238,50 @@ with a manifest, an agent ID, a run ID and an event log.
 
 ## 9. Reliability, Safety, and Trust
 
-**Audit log — awarded.** `BrokerSessionEvent` is a JSONL record appended by
+**Audit log — awarded, on the session event log and not on the WAL.** The record
+is `BrokerSessionEvent`, a JSONL line appended by
 `BrokerSessionPersistence.appendEvent` — encode, newline, `seekToEnd`, write —
-carrying session ID, agent ID, run ID and a millisecond timestamp. Its kinds
-cover mutations (`remembered`, `promotionWritten`, `handoff`, `checkpoint`) as
-well as retrieval (`retrievalHit`), and the promotion events record `approved`
-and `written` as separate booleans, so a reviewed-but-not-written promotion is
-distinguishable from an approved one.
+carrying session ID, agent ID, run ID and a millisecond timestamp. Eleven kinds
+cover mutations (`remembered`, `promotionWritten`, `handoff`, `checkpoint`,
+`markdownExported`) as well as retrieval (`retrievalHit`), and
+`promotionReviewed` is a distinct kind from `promotionWritten`, so a
+reviewed-but-unwritten promotion stays legible afterwards. Nothing in the module
+truncates or removes the file.
 
-**Human review — awarded.** `approve` defaults to `false` on `memory_promote`,
-the proposal is rendered for a person with its reasons and duplicate matches, and
-the decision is logged either way. This is a real adjudication surface, and it is
-the *right* place for one: at promotion from scratch to durable.
+Worth stating because the distinction is easy to lose in a project that has
+both: the `.wax` file's WAL is *not* this. `WALRingWriter` is a fixed-size ring
+with a `wrapCount`, reclaimed behind a checkpoint — it exists so an interrupted
+write can be replayed, and it overwrites its own oldest frames by design. A ring
+that wraps cannot answer *what changed last month*, which is the question an
+audit record is for. Durability evidence and audit evidence look alike from a
+distance and are not interchangeable.
 
-**And the alias undoes it by default.** `promote` sets `approve` to `true` when
-absent. An agent reading the command list sees both names with the same
-parameters; one asks and one acts. The mark stands because the reviewed path
-exists and works, but a reader adopting this should change that default.
+**Human review — withheld, and this reverses an earlier reading.** The previous
+reading awarded it on the grounds that `memory_promote` defaults `approve` to
+`false`, returns a proposal with its reasons and duplicate matches, and logs the
+decision either way — noting the `promote` alias as a flaw but keeping the mark
+because *"the reviewed path exists and works"*. That is true and it is not the
+test. The mark asks who is permitted to approve, and nothing here asks. `approve`
+is a plain boolean argument on the broker command surface
+(`Sources/Wax/Broker/BrokerCommandCatalog.swift:280-283`), the MCP tool schemas
+are generated straight from that catalog
+(`Sources/WaxMCPServer/ToolSchemas.swift:37-52`), and its description is handed
+to the model verbatim: *"When true, write the reviewed proposal into durable
+long-term memory."* So an agent holding `memory_promote` can propose and approve
+in one call, and there is no caller-identity check anywhere in the broker — no
+context that must lack an agent id, no loopback or credential gate, no
+interactive confirmation on the CLI path, which forwards to the same verb. The
+proposal is rendered for whoever called, and on this surface that is the agent.
+The `promote` alias, documented as *"OpenClaw-compatible alias for durable
+promotion; writes approved durable memory by default,"* makes the gap wider but
+is not what decides it: even the asking verb hands the model the flag that skips
+the asking. Both verbs appear only under the opt-in `full` MCP profile — the
+default `daily` profile is `remember`, `recall`, `stats` and exposes no promotion
+at all — so the exposure is a deployment choice, which is worth knowing and is
+not a producer test either.
+
+The promotion proposal remains the most reusable thing here, and section 11 still
+recommends it. What it is not is a human-review gate.
 
 **Negative eval — awarded**, section 10.
 
@@ -264,10 +290,18 @@ exists and works, but a reader adopting this should change that default.
 **Trust state — withheld.** Durability is retention, `confidence` is a float, and
 `reviewed` is written but not read at retrieval.
 
-**Bitemporal — no.** `created_at_ms`, `expires_at_ms` and a `source_date`, but no
-separation of when a fact was true from when Wax recorded it. The `Temporal`
-module resolves natural-language dates into a `SearchTimeRange`, which is query
-parsing rather than a validity model.
+**Bitemporal — awarded, on the structured fact tier only.** An earlier draft of
+this section said no, on the grounds that `created_at_ms`, `expires_at_ms` and a
+`source_date` are one clock; that is still true of the *frame* tier, and the
+`Temporal` module's natural-language date resolution is still query parsing
+rather than a validity model. The structured fact tier beside them is a different
+thing: a fact carries `system_from_ms`/`system_to_ms` and
+`valid_from_ms`/`valid_to_ms` as two independent half-open intervals, and the
+read closes each against its own instant from a `StructuredMemoryAsOf` that
+carries a separate `systemTimeMs` and `validTimeMs`. `valid_from` is a caller
+argument defaulted to now; the system axis is stamped by the writer and never
+taken from the caller, which is the direction that has to hold for the record
+axis to mean anything.
 
 **Tombstone — no.**
 
@@ -403,9 +437,15 @@ Run from the root of the checkout at the pinned commit.
 | The two promote verbs disagree on approval | `grep -n "defaultApprove" Sources/Wax/Broker/BrokerCommand.swift` | `:339` `memory_promote` with `false`, `:341` `promote` with `true` — adjacent lines |
 | `reviewed` does not affect ranking | `grep -rn "reviewed" --include="*.swift" Sources \| grep -i rank` | Nothing |
 | The pinned commit is orphaned | `git merge-base --is-ancestor <old-pin> HEAD` | Fails; `c023b7c4` carries the same timestamp and subject with 224 lines removed across three files |
-| Tree and suite size | `find Sources -name "*.swift" \| xargs wc -l \| tail -1`; `find Tests -name "*.swift" \| wc -l` | 64,587 lines; 251 test files |
+| Tree and suite size | `find Sources -name "*.swift" \| xargs wc -l \| tail -1`; `find Tests -name "*.swift" \| wc -l` | 70,668 lines; 272 test files |
 
 ## History
+
+**2026-09-16** — [`9f79b1a6a8d2b7dfb732af7412b2381df8fa5033`](https://github.com/christopherkarani/Wax/commit/9f79b1a6a8d2b7dfb732af7412b2381df8fa5033) — re-read after 52 commits and roughly 17,000 added lines. **One mark is withdrawn: `human_review`.** The previous reading saw the `promote` alias default `approve` to `true` and kept the mark anyway, on the grounds that the reviewed path exists and works. Re-reading the producer rather than the states settles it the other way: `approve` is an ordinary boolean argument in `BrokerCommandCatalog`, the MCP tool schemas are generated from that catalog, and the model is given its description verbatim — so an agent can propose and approve in one call, and no caller-identity check exists anywhere in the broker, on the MCP path or on the CLI path that forwards to the same verb. The mark asks who may approve; nothing here asks. This was true at the previous pin too, so it is a correction rather than a change. The promotion-proposal machinery keeps its place in section 11 as a thing to copy, with the approver check it lacks.
+
+Three evidence records were also wrong or too thin to check, and are rewritten. `audit_log` cited *"the WAL ring | the single .wax file"*; the WAL is a fixed-size ring that wraps behind a checkpoint and cannot answer what changed last month. The real basis is the one section 9 always described — the append-only `BrokerSessionEvent` JSONL, now anchored. `bitemporal` was awarded in the frontmatter while section 9 said *"Bitemporal — no"*; the structured fact tier does carry two independent intervals filtered against separate instants, `valid_from` is a caller argument and the system axis is writer-stamped, so the mark stands and section 9 is corrected. `negative_eval` named no file; it is `UnifiedSearchTests.swift:1175-1210`, where an expired frame is asserted absent from the same populated result that must contain the active one.
+
+Of the two anchored files, `FTS5SearchEngine.swift` is byte-identical at both commits and `BrokerCommand.swift` moved. Counts refreshed: 70,668 lines of Swift across twelve targets, 272 test files. Re-screened at this commit: one agent-directed file read as data, five floating versions, two manifests inside the cooldown. Read on macOS, never built.
 
 **2026-09-11** — [`77778962d25a163bdb32a6319d10b52c323d3036`](https://github.com/christopherkarani/Wax/commit/77778962d25a163bdb32a6319d10b52c323d3036) — re-read. **The previous pin is no longer reachable from the branch**: the history was rewritten, and the commit carrying the same timestamp and subject, [`c023b7c4d09557e550c441b1ec70facc74b60eb2`](https://github.com/christopherkarani/Wax/commit/c023b7c4d09557e550c441b1ec70facc74b60eb2), differs from the orphaned `93cbf51f` by 224 deletions across three files — an internal deploy skill, a `.pi` extension manifest and a todo list. This report cites none of them, so the rewrite costs it nothing; the orphaned commit remains fetchable by full sha and the atlas archive preserves it.
 

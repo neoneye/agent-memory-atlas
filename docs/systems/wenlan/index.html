@@ -108,14 +108,14 @@ value-keyed tombstone on the suggestion layer, not the fact layer.</p>
               <strong>7xuanlu/wenlan</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/7xuanlu/wenlan/commit/82d30581723cc59f806f4c5364fc1e4c225b57b2" title="82d30581723cc59f806f4c5364fc1e4c225b57b2">
+            <a class="meta-pill revision-pill" href="https://github.com/7xuanlu/wenlan/commit/413e18a2f81d2b9dfe2ba7d6653038bff775b91d" title="413e18a2f81d2b9dfe2ba7d6653038bff775b91d">
               <span>Analyzed revision</span>
-              <code>82d30581…</code>
+              <code>413e18a2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/7xuanlu--wenlan" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -625,6 +625,28 @@ the point where it stops being either was not established.</li>
 <code>rank_overlap.rs</code>, <code>goldens/</code>),
 <code>docs/eval/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/7xuanlu/wenlan/commit/413e18a2f81d2b9dfe2ba7d6653038bff775b91d"><code class="commit-id" title="413e18a2f81d2b9dfe2ba7d6653038bff775b91d">413e18a2…</code></a>
+— re-read after 29 commits, through 0.18.8. Six of the eight anchored
+files are byte-identical at both commits, including the page-map module
+behind the tombstone, the refinement queue behind human review, and both
+scoping end-to-end tests. All four marks hold. <code>db.rs</code> and
+<code>repair.rs</code> moved substantially and were re-derived: the
+<code>idx_pmn_fp</code> unique index and the
+<code>ON CONFLICT DO NOTHING</code> insert are intact, and the read
+scope still selects the statement rather than trimming the result, at
+more call sites than before. The work in this window is the repair
+operation's lifecycle — persisted preparation status, safe cancellation,
+authenticated resumption after a cold start, and per-operation
+validators that re-check a review row's action, status and expected
+source ids before applying, so a card built against a row that has since
+drifted refuses with <code>repair_target_stale</code> rather than
+applying to whatever is there now. The durability detail worth borrowing
+sits in <code>pending_verification_manifest_ids</code>: startup restores
+the daemon-owned writer fence from the durable artifacts on disk, and a
+corrupt or mismatched artifact fails closed instead of letting
+background maintenance resume over a half-applied repair. Anchors in
+both moved files are updated. Nothing was installed, built or run.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>7xuanlu/origin</code> to <code>7xuanlu/wenlan</code>, upstream of
 the pinned commit and after the reading below. No re-reading: the pin,

@@ -121,14 +121,14 @@ memory returns its successor unless the caller asks for the history.</p>
               <strong>JanYork/llm-wiki-cli</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/JanYork/llm-wiki-cli/commit/09e922b4c800d52053cac9ef702c15b6982152e0" title="09e922b4c800d52053cac9ef702c15b6982152e0">
+            <a class="meta-pill revision-pill" href="https://github.com/JanYork/llm-wiki-cli/commit/11e869f5f7bfe1aca31deeb3dd7a54f831e43ebe" title="11e869f5f7bfe1aca31deeb3dd7a54f831e43ebe">
               <span>Analyzed revision</span>
-              <code>09e922b4…</code>
+              <code>11e869f5…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JanYork--llm-wiki-cli" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -171,7 +171,7 @@ a memory event is not returned directly.
 edges forward from the hit to the newest event that replaced it, and the
 recall loop keeps the original only if the caller passed
 <code>--include-superseded</code>. Every result is stamped
-<code>current</code> or <code>superseded</code>, and a hit reached
+<code>latest_known</code> or <code>superseded</code>, and a hit reached
 through the chain is labelled
 <code>matched_via: "superseded_event"</code> so a reader can see the
 redirect happened. That is a discrete status deciding what may be
@@ -483,9 +483,9 @@ is a memory store telling its writer what to clean up, which is a more
 useful form of proactivity than surfacing memories unprompted.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>Trust state — awarded.</strong> <code>current</code> versus
-<code>superseded</code>, resolved on every recall and used to drop the
-replaced event rather than to rank it, with an explicit
+<p><strong>Trust state — awarded.</strong> <code>latest_known</code>
+versus <code>superseded</code>, resolved on every recall and used to
+drop the replaced event rather than to rank it, with an explicit
 <code>--include-superseded</code> override for the history and a label
 on every result. The corpus withholds this mark from statuses computed
 per call and stored nowhere, and that objection does not apply here: the
@@ -604,10 +604,22 @@ let recall walk forward. You keep the history, you answer with the
 current fact, and one flag gives a reader the chain. Index the edge on
 its target so the walk is cheap.</li>
 <li><strong>Label the result with the state you filtered on.</strong>
-<code>state: "current"</code> plus
+<code>state: "latest_known"</code> plus
 <code>matched_via: "superseded_event"</code> tells a reader that a
 redirect happened. A filter that leaves no trace is indistinguishable
 from a retrieval miss.</li>
+<li><strong>Name the state for what you can actually check.</strong> The
+same field used to read <code>"current"</code>, and the rename is the
+whole lesson: a memory store can establish that nothing has superseded a
+row, and cannot establish that the row is still true of the world.
+Beside it sit <code>unresolved_conflict</code>, computed per result from
+a <code>contradicts</code> edge with no <code>resolves</code> edge, and
+<code>live_verified</code>, held at <code>false</code> and documented as
+a standing disclaimer rather than a placeholder — <em>"it is not a claim
+about current code."</em> A constant <code>false</code> is usually a
+defect in this corpus; it is the honest value when the verification it
+names has not been built, and saying so in the payload beats leaving the
+reader to assume the stronger claim.</li>
 <li><strong>Let "unresolved" buy protection from eviction.</strong>
 Coupling the open-question genre to the retention predicate means decay
 drops what you have settled and keeps what you have not, which is the
@@ -753,6 +765,28 @@ rg -n &#39;provenance&#39; src/store src/view | rg &#39;filter|WHERE|exclude&#39
 rg -n &#39;DELETE FROM operations|UPDATE operations&#39; src                    # four detail_json amendments; two wholesale clears, both in the changeset lifecycle
 rg -n -i &#39;arxiv|bibtex|@article|@misc|CITATION\.cff|doi\.org&#39; README*.md docs benchmarks   # none: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/JanYork/llm-wiki-cli/commit/11e869f5f7bfe1aca31deeb3dd7a54f831e43ebe"><code class="commit-id" title="11e869f5f7bfe1aca31deeb3dd7a54f831e43ebe">11e869f5…</code></a>
+— re-read after 17 commits, through v0.18.5. Three of the seven anchored
+files are byte-identical, including <code>src/sync.rs</code> and
+<code>src/store/checkpoints.rs</code> behind the audit mark. All four
+marks hold. The change worth recording is in the recall result and is a
+rename plus two fields: the state formerly reported as
+<code>current</code> is now <code>latest_known</code>, and every result
+carries <code>unresolved_conflict</code> — a SQL <code>EXISTS</code> for
+a <code>contradicts</code> edge with no matching <code>resolves</code>
+edge — beside <code>live_verified</code>, pinned to <code>false</code>
+and documented in <code>docs/agent-workflow.md</code> as a standing
+disclaimer rather than an unwired field. The report's trust_state
+evidence, its mental-model paragraph, its section 9 and its build advice
+are updated to the new vocabulary, and the anchors in
+<code>temporal_memory.rs</code> moved with the file.
+<code>parse_memory_capsule</code> also moved from a bare
+<code>serde_json::from_str</code> onto a shared contract parser that
+returns structured error details. Re-screened at this commit: no
+auto-run surface, two build-time execution paths, one floating version,
+three manifests inside the cooldown. Nothing was installed, built or
+run.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/JanYork/llm-wiki-cli/commit/09e922b4c800d52053cac9ef702c15b6982152e0"><code class="commit-id" title="09e922b4c800d52053cac9ef702c15b6982152e0">09e922b4…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 5
