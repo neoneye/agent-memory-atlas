@@ -106,14 +106,14 @@ and defensive recall.</p>
               <strong>amitpatole/verel</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36" title="6cf33f654437f457dc941c46e55bd3cd05b4da36">
+            <a class="meta-pill revision-pill" href="https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942" title="a8cbba27a3fa61baeffa808c5929a273d176c942">
               <span>Analyzed revision</span>
-              <code>6cf33f65…</code>
+              <code>a8cbba27…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-26</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/amitpatole--verel" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -686,6 +686,27 @@ trust tier, because <em>"raw <code>source</code> strings are
 self-asserted, so without an authenticator corroboration NEVER promotes
 — a single caller can't forge <code>VERIFIED</code> by minting two
 source labels."</em></p>
+<p>The same boundary is drawn again where a caller is trusted rather
+than the content. <code>remember_transcript</code> takes a
+<code>source_prior</code>, seeding the initial
+<code>epistemic_confidence</code> of every extracted fact from how much
+the caller trusts that kind of source — <em>"an audit log ≫ a random
+chat message"</em> — and the docstring fences it twice: it <em>"is a
+ranking prior only — it never grants VERIFIED (that still needs
+<code>attest</code> or independent corroboration)"</em>, and it <em>"is
+the caller's authority, never read from the untrusted transcript."</em>
+A prior on the score that cannot reach the tier, supplied by the party
+entitled to have an opinion, is the shape this distinction is for.</p>
+<p><strong>Hostile time is refused at both ends.</strong> Valid-time is
+epoch seconds bounded to <code>[0, 4102444800]</code> — 1970 to 2100 —
+and the comment says what the bound is against: an extracted
+<code>valid_from</code>/<code>valid_to</code> or a caller-supplied
+<code>--as-of</code> must never plant a <em>"valid forever"</em>
+<code>+inf</code> or a pre-epoch instant <em>"that would shadow every
+as-of query."</em> An ISO string is capped before parsing. The note also
+records that this is deliberate redundancy, refusing at ingest the same
+class of interval the <code>_interval_contains</code> fail-safe already
+rejects at query time.</p>
 <p>Set beside the poisoning taxonomy on the <a
 href="../../benchmarks/#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn">benchmarks
 page</a>, this is the implemented answer to the finding recorded there:
@@ -821,6 +842,26 @@ transcripts?</li>
 <code>tests/test_lattice.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942"><code class="commit-id" title="a8cbba27a3fa61baeffa808c5929a273d176c942">a8cbba27…</code></a>
+— re-read at a commit dated 10 September 2026, six commits past the
+previous pin. All seven marks re-tested and held. Two additions extend
+rules the report already describes rather than changing them.
+<code>remember_transcript</code> gained a <code>source_prior</code> that
+seeds a fact's initial <code>epistemic_confidence</code> from the
+caller's trust in the source type, fenced in its own docstring as a
+ranking prior that <em>"never grants VERIFIED"</em> and as <em>"the
+caller's authority, never read from the untrusted transcript"</em> — the
+same separation of score from tier, applied at the point where it would
+be most tempting to leak. And valid-time is now bounded at ingest to
+1970–2100, so neither an extracted interval nor a caller's
+<code>--as-of</code> can plant a <em>"valid forever"</em>
+<code>+inf</code> or a pre-epoch instant <em>"that would shadow every
+as-of query"</em>, refusing at write the class of hostile interval the
+query-time fail-safe already rejected. Screened before reading, from a
+full clone: no auto-run surface, one build-time execution point, one
+unpinned dependency surface and one dependency file inside the seven-day
+cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-08-26</strong> — <a
 href="https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36"><code class="commit-id" title="6cf33f654437f457dc941c46e55bd3cd05b4da36">6cf33f65…</code></a>
 — re-pinned 13 commits on, through v1.9.3, v1.9.4 and v1.10.0. The

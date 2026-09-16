@@ -7,9 +7,9 @@ page_kind: system
 source_name: amitpatole/verel
 source_url: https://github.com/amitpatole/verel
 archive_name: "amitpatole--verel"
-revision: 6cf33f654437f457dc941c46e55bd3cd05b4da36
-revision_url: https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36
-analyzed_at: 2026-08-26
+revision: a8cbba27a3fa61baeffa808c5929a273d176c942
+revision_url: https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "REJECTED as a durable, prune-exempt state that every write path routes through | src/verel/memory/local.py:346, src/verel/memory/pg_backend.py:535, src/verel/memory/review.py:14,:61,:77, src/verel/memory/remember.py:96-115 | rejection is keyed on the record and survives every path that would otherwise revive it: `local.py` refuses to let a demote *\\\"un-reject a tombstone back to a recallable candidate\\\"*, `pg_backend.py` keeps `REJECTED` prune-exempt in `rejected_values` alongside verified rows, and corroboration cannot re-promote a rejected fact. The guard reuses it rather than building a parallel deny-list: a fact whose canonical value carries a taint key from the source scan is written and immediately floored with `contradict(rec.id, delta=1.0)` *\\\"so the backend own contradict path seeds the durable rejected-value tombstone — a later restate can not launder it in.\\\"* `review.py` tells a human the same thing from the other side: a value that is genuinely correct now must be *\\\"written as a new fact\\\"* rather than un-rejected | tests/test_guard_memory.py"
@@ -513,6 +513,25 @@ without granting a trust tier, because *"raw `source` strings are self-asserted,
 so without an authenticator corroboration NEVER promotes — a single caller can't
 forge `VERIFIED` by minting two source labels."*
 
+The same boundary is drawn again where a caller is trusted rather than the
+content. `remember_transcript` takes a `source_prior`, seeding the initial
+`epistemic_confidence` of every extracted fact from how much the caller trusts
+that kind of source — *"an audit log ≫ a random chat message"* — and the
+docstring fences it twice: it *"is a ranking prior only — it never grants
+VERIFIED (that still needs `attest` or independent corroboration)"*, and it *"is
+the caller's authority, never read from the untrusted transcript."* A prior on
+the score that cannot reach the tier, supplied by the party entitled to have an
+opinion, is the shape this distinction is for.
+
+**Hostile time is refused at both ends.** Valid-time is epoch seconds bounded to
+`[0, 4102444800]` — 1970 to 2100 — and the comment says what the bound is
+against: an extracted `valid_from`/`valid_to` or a caller-supplied `--as-of`
+must never plant a *"valid forever"* `+inf` or a pre-epoch instant *"that would
+shadow every as-of query."* An ISO string is capped before parsing. The note
+also records that this is deliberate redundancy, refusing at ingest the same
+class of interval the `_interval_contains` fail-safe already rejects at query
+time.
+
 Set beside the poisoning taxonomy on the [benchmarks
 page](../../benchmarks/#the-poisoning-protocol-that-measures-what-happens-after-the-first-turn),
 this is the implemented answer to the finding recorded there: reducing immediate
@@ -633,6 +652,8 @@ Add consolidation/promotion/replication later.
 - Tests: `tests/test_memory*.py`, `tests/test_consolidation.py`, `tests/test_promotion.py`, `tests/test_lattice.py`.
 
 ## History
+
+**2026-09-16** — [`a8cbba27a3fa61baeffa808c5929a273d176c942`](https://github.com/amitpatole/verel/commit/a8cbba27a3fa61baeffa808c5929a273d176c942) — re-read at a commit dated 10 September 2026, six commits past the previous pin. All seven marks re-tested and held. Two additions extend rules the report already describes rather than changing them. `remember_transcript` gained a `source_prior` that seeds a fact's initial `epistemic_confidence` from the caller's trust in the source type, fenced in its own docstring as a ranking prior that *"never grants VERIFIED"* and as *"the caller's authority, never read from the untrusted transcript"* — the same separation of score from tier, applied at the point where it would be most tempting to leak. And valid-time is now bounded at ingest to 1970–2100, so neither an extracted interval nor a caller's `--as-of` can plant a *"valid forever"* `+inf` or a pre-epoch instant *"that would shadow every as-of query"*, refusing at write the class of hostile interval the query-time fail-safe already rejected. Screened before reading, from a full clone: no auto-run surface, one build-time execution point, one unpinned dependency surface and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-26** — [`6cf33f654437f457dc941c46e55bd3cd05b4da36`](https://github.com/amitpatole/verel/commit/6cf33f654437f457dc941c46e55bd3cd05b4da36) — re-pinned 13 commits on, through v1.9.3, v1.9.4 and v1.10.0. The previous pin was checked for reachability before anything else, given the history below: it is an ancestor of `HEAD` on `main`. Screened again: no auto-run surface, one build-time execution surface, one unpinned surface and one file inside the seven-day cooldown; nothing was installed and nothing was run. **All seven marks hold, and each was re-checked against the code rather than carried forward or taken from the project's own rubric** — `local.py` refuses to let demote un-reject a tombstone, `pg_backend.py` keeps `REJECTED` prune-exempt in `rejected_values`, and `review.py` routes a human rejection through the same contradict path with the instruction that a fact which is *"genuinely correct now"* be written as a new fact rather than un-rejected.
 
