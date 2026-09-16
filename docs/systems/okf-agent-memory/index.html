@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go implementation of the Open
+Knowledge Format that keeps agent memory as markdown in the repository,
+with a change log the MCP write path cannot switch off and a write path
+that treats agent-supplied strings as hostile.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OKF Agent
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Go implementation of the
+Open Knowledge Format that keeps agent memory as markdown in the
+repository, with a change log the MCP write path cannot switch off and a
+write path that treats agent-supplied strings as hostile.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OKF Agent
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go implementation of the
+Open Knowledge Format that keeps agent memory as markdown in the
+repository, with a change log the MCP write path cannot switch off and a
+write path that treats agent-supplied strings as hostile.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OKF Agent Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OKF Agent Memory",
+      "description": "A Go implementation of the Open Knowledge Format that keeps agent memory as markdown in the repository, with a change log the MCP write path cannot switch off and a write path that treats agent-supplied strings as hostile.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Three frontmatter fields look like trust
+state; the one search reads promotes rather than withholds</p>
+          <h1>OKF Agent Memory</h1>
+          <p class="document-deck">A Go implementation of the Open
+Knowledge Format that keeps agent memory as markdown in the repository,
+with a change log the MCP write path cannot switch off and a write path
+that treats agent-supplied strings as hostile.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/okf-memory/okf-agent-memory">
+              <span>Source</span>
+              <strong>okf-memory/okf-agent-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/okf-memory/okf-agent-memory/commit/2649a28213d487fbc764c5d6670ff6216d5f7bfe" title="2649a28213d487fbc764c5d6670ff6216d5f7bfe">
+              <span>Analyzed revision</span>
+              <code>2649a282…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/okf-memory--okf-agent-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>okf-memory--okf-agent-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OKF Agent Memory is "[a] Domain-Neutral, Git-Native Persistent
+Project Memory for AI Agents based on the Open Knowledge Format (OKF)
+v0.2" — MIT, Go with no third-party dependencies, 10,217 lines across 27
+files, and a memory that is markdown files under <code>knowledge/</code>
+in the repository being worked on.</p>
+<p>The positioning is a middle ground, and it is stated plainly: the
+format "bridges the gap between unstructured ad-hoc markdown files
+(<code>CLAUDE.md</code>, <code>AGENTS.md</code>) and complex, black-box
+vector databases." One binary provides a CLI and an MCP server with six
+tools, search is in-memory BM25 over the parsed bundle, and a validator
+checks the bundle's structure in CI.</p>
+<p><strong>The frontmatter is where the interest is, and where the gap
+is.</strong> A concept carries <code>status</code>
+(<code>draft | stable | deprecated</code>), <code>stale_after</code> (a
+date), and <code>governance</code>
+(<code>context | constraint | hold</code>). Two of the three are parsed,
+validated, serialized back, and consulted by nothing on the read path.
+<code>okf search</code> ranks a deprecated concept exactly as it ranks a
+stable one, and a concept whose <code>stale_after</code> has passed —
+which <code>okf validate</code> will warn about — is retrieved at full
+weight.</p>
+<p>The third is read, and it moves the score the other way:</p>
+<pre class="go"><code>func governanceRank(gov string) int {
+    switch strings.ToLower(gov) {
+    case GovernanceHold:
+        return 3</code></pre>
+<p><code>score := float64(governanceRank(gov) * 10)</code>. So the only
+trust field that reaches retrieval is one that
+<strong>promotes</strong>, and the two that could withhold do not.
+<code>hold</code> is documented as "execution freeze / manual signoff
+required", and the freeze is a sentence in a bootstrap prompt —
+<code>IF governance == "hold" =&gt; STOP(...)</code> — addressed to the
+model rather than enforced by the tool. The code ranks the frozen
+subsystem first and asks the agent to stop when it gets there.</p>
+<p><strong>What the project does earn is a mutation record that is not
+git.</strong> The README leads with <code>git diff</code> and
+<code>git log</code>, which is not an audit of what the tool wrote — a
+commit records what somebody chose to stage.
+<code>knowledge/log.md</code> is the real one: <code>SaveConcept</code>
+appends a dated <code>Creation</code> or <code>Update</code> entry
+naming the concept, the CLI can suppress it with <code>--no-log</code>,
+and both MCP handlers pass <code>autoLog</code> as a hardcoded
+<code>true</code>. The agent-facing path cannot write without leaving
+the entry.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>concept</strong> is one markdown file with frontmatter, in
+your repository.</p>
+<p>A <strong>status</strong> is a value the validator checks and the
+search ignores.</p>
+<p>A <strong>governance level</strong> is a ranking multiplier that
+reads like a gate.</p>
+<p>A <strong>log entry</strong> is written by the tool, not by the
+committer.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three frontmatter fields carry epistemic meaning, only governance reaches the ranker and it multiplies the score, while status and stale_after are validated and never consulted on the read path</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three frontmatter fields carry epistemic meaning, only governance reaches the ranker and it multiplies the score, while status and stale_after are validated and never consulted on the read path
+flowchart TB
+    W[&quot;okf create / okf update (CLI)&lt;br/&gt;okf_create / okf_update (MCP)&quot;] --&gt; SAVE[&quot;SaveConcept(bundleDir, c, isNew,&lt;br/&gt;autoLog, autoIndex, actor)&quot;]
+    SAVE --&gt; FILE[(&quot;knowledge/**.md —&lt;br/&gt;YAML frontmatter + markdown body&quot;)]
+    SAVE --&gt; LOG[(&quot;knowledge/log.md — dated&lt;br/&gt;Creation / Update entries&quot;)]
+    W -.-&gt;|&quot;CLI: --no-log can suppress it&lt;br/&gt;MCP: autoLog is hardcoded true&quot;| LOG
+    SEC[&quot;mutate_security_test.go: traversal,&lt;br/&gt;reserved names, external symlinks,&lt;br/&gt;YAML quoting, newline sanitisation,&lt;br/&gt;frontmatter injection&quot;] --&gt; SAVE
+    FILE --&gt; P[&quot;parser: status · stale_after ·&lt;br/&gt;governance · code_refs · generated ·&lt;br/&gt;verified · attestation&quot;]
+    P --&gt; V{&quot;okf validate&quot;}
+    V --&gt;|&quot;status outside the three valid values&quot;| GATE[&quot;a gate finding&quot;]
+    V --&gt;|&quot;stale_after &lt;= today&quot;| WARN[&quot;a warning — and nothing else happens&quot;]
+    P --&gt; S[&quot;okf search: in-memory BM25&lt;br/&gt;+ a code_refs leg&quot;]
+    STATUS[&quot;status&quot;] -.-&gt;|&quot;parsed, validated, serialized back —&lt;br/&gt;NO read path consults it&quot;| NOTHING[&quot;a deprecated concept ranks&lt;br/&gt;exactly like a stable one&quot;]
+    STALE[&quot;stale_after&quot;] -.-&gt;|&quot;a validator warning only&quot;| NOTHING
+    GOV[&quot;governance&quot;] --&gt; RANK[&quot;score = governanceRank(gov) * 10&lt;br/&gt;hold=3 · constraint=2 · context=1&quot;]
+    RANK --&gt; S
+    RANK -.-&gt;|&quot;the one trust field that reaches retrieval&lt;br/&gt;PROMOTES rather than withholds&quot;| UP[&quot;the frozen subsystem ranks first&quot;]
+    HOLD[&quot;governance: hold —&lt;br/&gt;&#39;execution freeze / manual signoff required&#39;&quot;] -.-&gt;|&quot;enforced only by bootstrap prompt text:&lt;br/&gt;IF governance == &#39;hold&#39; =&gt; STOP(...)&lt;br/&gt;an instruction to the model, not a gate&quot;| NOHR[&quot;no review mark&quot;]
+    S --&gt; AGENT[&quot;what the agent is handed&quot;]
+    LINK[&quot;okf agents link — symlinks CLAUDE.md,&lt;br/&gt;AGENTS.md and friends at one source&quot;] -.-&gt;|&quot;which is why frontmatter injection&lt;br/&gt;on the write path is the real threat&quot;| SEC</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pkg/okf/types.go</code></td>
+<td>The concept, its frontmatter, and
+<code>EffectiveGovernance</code></td>
+</tr>
+<tr>
+<td><code>pkg/okf/parser.go</code></td>
+<td>A hand-written frontmatter parser and serializer, round-tripping
+unknown keys</td>
+</tr>
+<tr>
+<td><code>pkg/okf/search.go</code></td>
+<td>BM25, the <code>code_refs</code> leg, and
+<code>governanceRank</code></td>
+</tr>
+<tr>
+<td><code>pkg/okf/validator.go</code></td>
+<td>Status, staleness, graph and structure checks</td>
+</tr>
+<tr>
+<td><code>pkg/okf/mutate.go</code></td>
+<td>Writes, the parent index, and the change log</td>
+</tr>
+<tr>
+<td><code>pkg/okf/aag/</code></td>
+<td>A linter for RFC 2119 modal prefixes in agent instructions</td>
+</tr>
+<tr>
+<td><code>cmd/okf/</code></td>
+<td>One binary: CLI, MCP server, and the tool symlink manager</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>pkg/okf/types.go:29-32</code> — <code>status</code>,
+<code>governance</code> and <code>stale_after</code> declared side by
+side, which is what makes the divergence in how they are used worth
+checking.</p>
+<p><code>pkg/okf/search.go:248-257</code> and <code>:315</code> — the
+only trust field that reaches the ranker, and the direction it moves the
+score.</p>
+<p><code>pkg/okf/validator.go:220-228</code> — where <code>status</code>
+and <code>stale_after</code> are checked, and the fact that a stale
+concept produces a warning rather than a filter.</p>
+<p><code>pkg/okf/bootstrap.go:32</code> — the <code>hold</code> freeze,
+as prompt text.</p>
+<p><code>pkg/okf/mutate.go:355-365</code> — the log entry, and the flag
+that can turn it off.</p>
+<p><code>pkg/okf/mutate_security_test.go:191</code> — frontmatter
+injection, refused.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One markdown file per concept, addressed by its bundle-relative path
+without the extension. Frontmatter carries a required <code>type</code>,
+a title and description, tags, a <code>generated</code> stamp recording
+which agent produced it and when, a list of <code>verified</code>
+entries, <code>status</code>, <code>governance</code>,
+<code>code_refs</code> binding the concept to source paths or globs,
+<code>stale_after</code>, <code>sources</code>, and an optional
+attestation. Unknown keys are preserved through the round trip rather
+than dropped, which is the right call for a format meant to outlive one
+tool.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>In-memory BM25 over titles, descriptions, tags and bodies, with a
+second leg matching a file path against <code>code_refs</code> so a
+concept can be found by the code it constrains rather than by its words.
+Results carry the governance level, and the governance multiplier
+dominates the ranking at ten points per rank against BM25's single-digit
+scores.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through the parser and serializer rather than through text
+editing, so a concept cannot acquire malformed frontmatter by way of an
+edit. <code>SaveConcept</code> optionally updates the parent index and
+appends the log entry. There is no delete in the library: removing a
+concept means removing a file, which is consistent with the git-native
+premise and means erasure leaves no entry in the log that records every
+creation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One binary, six MCP tools — <code>okf_create</code>,
+<code>okf_update</code>, <code>okf_relate</code>,
+<code>okf_search</code>, <code>okf_show</code>,
+<code>okf_validate</code> — and <code>okf agents link</code>, which
+symlinks <code>CLAUDE.md</code>,
+<code>.github/copilot-instructions.md</code> and the other per-tool
+instruction files at a single source of truth so they cannot drift
+apart.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The security posture is the strong part and is unusually complete for
+a project this size: traversal refused on save and on index update,
+reserved filenames refused at root and in subdirectories, symlinks
+refused when they point outside the bundle or at non-markdown, YAML
+values quoted, newlines sanitised in log entries and relations, and
+frontmatter injection refused. The weak part is that none of the
+epistemic fields withhold anything at read time.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A Go test suite covering the parser, the validator, governance,
+scenarios, the security surface and the AAG linter, plus a dogfood test
+that runs the library against this repository's own
+<code>knowledge/</code> bundle and a search benchmark. There are no
+committed cases asserting that particular material must not be
+retrieved, which follows from there being no read path that
+withholds.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>If you add a status field, write down which read path filters on it
+before you add the third value. A vocabulary that only the validator
+consults is documentation with a schema.</p>
+<p>Check the direction of your trust signal. A multiplier that promotes
+constrained material is a reasonable design, but it is not the same
+mechanism as one that withholds superseded material, and a frontmatter
+block can make them look alike.</p>
+<p>Take the injection tests. Memory written by an agent and symlinked at
+<code>CLAUDE.md</code> is an instruction channel, and treating the
+writer as hostile is the only safe posture.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>deprecated</code> is meant to filter. The CLI's own
+example —
+<code>okf update decisions/adr-001 --status deprecated --desc "Superseded by adr-008."</code>
+— reads like a supersession that should take the old decision out of an
+agent's way, and nothing downstream acts on it.</p>
+<p>Whether <code>hold</code> should be enforceable by the tool at all.
+The bootstrap text is the only enforcement, and a model that does not
+read it, or reads it and continues, is unconstrained by a field named
+for a freeze.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pkg/okf/search.go:248-257</code></td>
+<td>The only trust field that reaches the ranker, and its direction</td>
+</tr>
+<tr>
+<td><code>pkg/okf/validator.go:220-228</code></td>
+<td>Two fields checked at validation and nowhere else</td>
+</tr>
+<tr>
+<td><code>pkg/okf/bootstrap.go:32</code></td>
+<td>A freeze that exists as prompt text</td>
+</tr>
+<tr>
+<td><code>pkg/okf/mutate.go:355-365</code></td>
+<td>A change log the MCP path cannot switch off</td>
+</tr>
+<tr>
+<td><code>pkg/okf/mutate_security_test.go:191</code>,
+<code>:266</code></td>
+<td>Injection into frontmatter, and into the log</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/okf-memory/okf-agent-memory/commit/2649a28213d487fbc764c5d6670ff6216d5f7bfe"><code class="commit-id" title="2649a28213d487fbc764c5d6670ff6216d5f7bfe">2649a282…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: eight files scanned, two auto-run
+surfaces, two build-time execution points, no unpinned surfaces and one
+dependency file inside the seven-day cooldown. <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

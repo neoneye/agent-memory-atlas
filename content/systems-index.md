@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **541 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **542 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -450,6 +450,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/octopoda-os/"><span class="az-id">Octopoda</span><span class="az-what">RLS as the trust wall</span><code class="az-repo">RyjoxTechnologies/Octopoda-OS</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/ods/"><span class="az-id">ODS</span><span class="az-what">Forgetting by scheduled reversion</span><code class="az-repo">Osmantic/ODS</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/oh-my-hermes/"><span class="az-id">oh-my-hermes</span><span class="az-what">Approval is a state the record carries, not an event that happened</span><code class="az-repo">rlaope/oh-my-hermes</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/okf-agent-memory/"><span class="az-id">OKF Agent Memory</span><span class="az-what">Three frontmatter fields look like trust state; the one search reads promotes rather than withholds</span><code class="az-repo">okf-memory/okf-agent-memory</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/ollama/"><span class="az-id">Ollama</span><span class="az-what">A procedural memory it removed</span><code class="az-repo">ollama/ollama</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/omega-memory/"><span class="az-id">OMEGA</span><span class="az-what">Local-first cross-model memory</span><code class="az-repo">omega-memory/omega-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/omegaclaw-core/"><span class="az-id">OmegaClaw</span><span class="az-what">The fork that removed the ledger</span><code class="az-repo">singnet/Omega</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>

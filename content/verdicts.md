@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 541 reports.**
+**This page covers all 542 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4678,3 +4678,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.13.0, 102,183 lines of Python over 253 modules with 494 test files, PostgreSQL with pgvector under forced row-level security, an MCP server, a Codex plugin and harness hooks, and 162 dated preregistrations with amendments and results filed as separate documents. Three auto-run surfaces and three build-time execution points at this pin, including a `setup.py` that executes at install time; nothing was installed or run.
 - Study when: your evaluation data might live inside the corpus you index, or your statuses are a flat enum nobody argued about.
 - Do not copy when: you cannot run a PostgreSQL. Seven marks: tombstone, trust state, bitemporal, scope enforced, mutation audit, review, negative evals.
+
+### [`okf-agent-memory`](../systems/okf-agent-memory/)
+- Best idea: **a change log the agent-facing path cannot switch off.** The README leads with `git diff` and `git log`, which records what somebody chose to stage rather than what the tool wrote; `knowledge/log.md` is the real record — `SaveConcept` appends a dated `Creation` or `Update` entry naming the concept, `RelateConcepts` appends its own when it links two, and while the CLI exposes `--no-log`, both MCP write handlers pass `autoLog` as a hardcoded `true`. It lives in the bundle beside the memory it describes, so it travels with a clone and reads without the tool.
+- Biggest risk: **three frontmatter fields read like epistemic state and the only one retrieval consults promotes rather than withholds.** `status` (`draft`, `stable`, `deprecated`) is parsed, validated and serialized back, and no read path filters on it, so `okf search` ranks a deprecated concept exactly as it ranks a stable one. `stale_after` is the same shape: past its date the validator warns and search is unaffected. `governance` is read — as `governanceRank(gov) * 10`, a multiplier that ranks a `hold` concept first. And `hold` is documented as "execution freeze / manual signoff required" while the freeze exists only as bootstrap prompt text telling the model to stop, so the tool promotes the frozen subsystem and asks the agent not to touch it.
+- Most reusable component: `mutate_security_test.go`, which treats the writing agent as hostile — traversal on save and on parent-index update, reserved filenames at root and in subdirectories, symlinks pointing outside the bundle or at non-markdown, YAML quoting, newline sanitisation in log entries and relations, and frontmatter injection. That last one is load-bearing rather than theoretical: `okf agents link` symlinks `CLAUDE.md` and its equivalents at the bundle, so a frontmatter key smuggled through a description would be read as configuration by every tool in the repository.
+- Maturity impression: MIT, Go with no third-party dependencies, 10,217 lines over 27 files, a CLI and an MCP server in one binary, a validator that runs over the project's own bundle in CI, and a linter for RFC 2119 modal prefixes in agent instructions. Two auto-run surfaces and two build-time execution points at this pin.
+- Study when: you are about to add a status vocabulary, or your memory files are symlinked at an agent's instruction file.
+- Do not copy when: you need a deprecated memory to stop being retrieved. One mark: mutation audit.

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 541 reports.</strong></p>
+<p><strong>This page covers all 542 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20246,6 +20246,53 @@ index, or your statuses are a flat enum nobody argued about.</li>
 <li>Do not copy when: you cannot run a PostgreSQL. Seven marks:
 tombstone, trust state, bitemporal, scope enforced, mutation audit,
 review, negative evals.</li>
+</ul>
+<h3 id="okf-agent-memory"><a
+href="../systems/okf-agent-memory/"><code>okf-agent-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a change log the agent-facing path cannot switch
+off.</strong> The README leads with <code>git diff</code> and
+<code>git log</code>, which records what somebody chose to stage rather
+than what the tool wrote; <code>knowledge/log.md</code> is the real
+record — <code>SaveConcept</code> appends a dated <code>Creation</code>
+or <code>Update</code> entry naming the concept,
+<code>RelateConcepts</code> appends its own when it links two, and while
+the CLI exposes <code>--no-log</code>, both MCP write handlers pass
+<code>autoLog</code> as a hardcoded <code>true</code>. It lives in the
+bundle beside the memory it describes, so it travels with a clone and
+reads without the tool.</li>
+<li>Biggest risk: <strong>three frontmatter fields read like epistemic
+state and the only one retrieval consults promotes rather than
+withholds.</strong> <code>status</code> (<code>draft</code>,
+<code>stable</code>, <code>deprecated</code>) is parsed, validated and
+serialized back, and no read path filters on it, so
+<code>okf search</code> ranks a deprecated concept exactly as it ranks a
+stable one. <code>stale_after</code> is the same shape: past its date
+the validator warns and search is unaffected. <code>governance</code> is
+read — as <code>governanceRank(gov) * 10</code>, a multiplier that ranks
+a <code>hold</code> concept first. And <code>hold</code> is documented
+as "execution freeze / manual signoff required" while the freeze exists
+only as bootstrap prompt text telling the model to stop, so the tool
+promotes the frozen subsystem and asks the agent not to touch it.</li>
+<li>Most reusable component: <code>mutate_security_test.go</code>, which
+treats the writing agent as hostile — traversal on save and on
+parent-index update, reserved filenames at root and in subdirectories,
+symlinks pointing outside the bundle or at non-markdown, YAML quoting,
+newline sanitisation in log entries and relations, and frontmatter
+injection. That last one is load-bearing rather than theoretical:
+<code>okf agents link</code> symlinks <code>CLAUDE.md</code> and its
+equivalents at the bundle, so a frontmatter key smuggled through a
+description would be read as configuration by every tool in the
+repository.</li>
+<li>Maturity impression: MIT, Go with no third-party dependencies,
+10,217 lines over 27 files, a CLI and an MCP server in one binary, a
+validator that runs over the project's own bundle in CI, and a linter
+for RFC 2119 modal prefixes in agent instructions. Two auto-run surfaces
+and two build-time execution points at this pin.</li>
+<li>Study when: you are about to add a status vocabulary, or your memory
+files are symlinked at an agent's instruction file.</li>
+<li>Do not copy when: you need a deprecated memory to stop being
+retrieved. One mark: mutation audit.</li>
 </ul>
         </article>
       </div>
