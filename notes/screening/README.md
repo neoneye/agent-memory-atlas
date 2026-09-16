@@ -9,17 +9,17 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 496 of 557 screened at the report's current pin.**
+**Progress: 497 of 557 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
-off, and 59 report(s) have no record at all.
+off, and 58 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 212 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 305 |
-| Repositories with build-time execution (`EXEC`) | 362 |
+| Repositories with an auto-run surface (`RUNS`) | 213 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 306 |
+| Repositories with build-time execution (`EXEC`) | 363 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -213,6 +213,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
+| [`slowave`](../../content/systems/slowave.md) | `server.json` |
 | [`state-memory-mcp`](../../content/systems/state-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |

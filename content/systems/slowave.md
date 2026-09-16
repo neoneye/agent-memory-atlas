@@ -1,23 +1,21 @@
 ---
 title: "Slowave"
-eyebrow: "A human forget that consolidation cannot undo"
-description: "A local memory layer for coding agents whose whole core runs without an LLM call — raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a forget that consolidation is written to respect: a schema a person suppressed is found again by embedding on the next pass and skipped rather than reinforced or recreated."
+eyebrow: "Deleting a memory takes the record of the deletion with it"
+description: "A local memory layer for coding agents whose whole core runs without an LLM call — raw events replayed into latent prototypes and symbolic schemas, a four-stage generalization ladder deciding what may cross a project boundary, and a removal path where a person deletes a schema outright, its dependent rows scrubbed with it and nothing left to say it was ever there."
 root: ../..
 page_kind: system
 source_name: "slowave-ai/slowave"
 source_url: https://github.com/slowave-ai/slowave
 archive_name: "slowave-ai--slowave"
-revision: 281d5cc7682680931ff8d4b3c46040cc6b57096d
-revision_url: https://github.com/slowave-ai/slowave/commit/281d5cc7682680931ff8d4b3c46040cc6b57096d
-analyzed_at: 2026-09-10
-capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
+revision: 8d538b370c37243a39e19e52e4a5fdb35c9527b5
+revision_url: https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5
+analyzed_at: 2026-09-16
+capabilities: "trust_state, scope_enforced, human_review, negative_eval"
 capability_evidence:
-  tombstone: "a schema a person forgot is looked up by embedding on every later consolidation pass and skipped, so neither reinforcement nor a fresh duplicate can undo the forget | slowave/core/consolidation.py:278-292, :335-355, slowave/symbolic/schema_store.py:728-750 | Two guards, and the second is what earns the mark. The prototype lookup is deliberately status-agnostic — *\"a copy that was retired by explicit client feedback is the same engram and must not be recreated as a duplicate\"* — so re-consolidating the same prototype finds the forgotten row and returns `skipped`. Then, because `search_embedding()` excludes non-active rows by default, a second search runs with `include_inactive=True`: a nearest neighbour at or above a 0.92 near-duplicate cosine whose status is `forgotten` also returns `skipped`, under a comment naming both failures it prevents — reinforcing it *\"would silently undo the user's forget\"* and creating a duplicate *\"would defeat it.\"* The key is the claim's embedding, not a normalised string, so a re-derivation in different words inside that radius is caught | tests/regression/test_cli_e2e.py:1170 `test_forget_unforget_lifecycle`"
-  trust_state: "a five-value status where three values withhold a schema from ordinary retrieval, gated per mode, and applied identically on the direct and graph-expansion paths | slowave/symbolic/schema_store.py:29-42, slowave/storage/schema.sql:167-206, slowave/core/services/retrieval.py:406-412, :474-497, :539-543 | `VALID_STATUS` is `active`, `needs_review`, `stale`, `archived`, `forgotten`, with a `stale_reason` of `contradicted`, `superseded`, `outdated`, `unsupported` or `withdrawn` beside it. Retrieval computes a status set per mode — `active` alone by default, plus `needs_review` for a wider profile, plus `stale` only where history is asked for — and never admits `archived` or `forgotten`. The same set gates the `schema_relations` neighbour walk, under a comment saying why: *\"a stale edge can't leak.\"* A separate `is_labile` flag marks a reactivated trace as temporarily uncertain and is kept explicitly distinct from `needs_review` in the schema comment | tests/unit/test_feedback_events.py:75 asserts stale-or-contradicted feedback suppresses an active schema from the current retrieval; tests/unit/test_truth_authority_migration.py:45 pins the legacy status migration"
-  scope_enforced: "a stored scope key filtered in SQL on every candidate path, with cross-scope admission earned through a four-stage generalization ladder applied by one shared gate | slowave/core/services/retrieval.py:376-447, :688-735, slowave/core/scope.py, slowave/storage/schema.sql:566-579 | Every schema carries `scope_id` and `scope_kind`, there is a `scope_registry` table, and the candidate-gathering paths — embedding search, FTS and prototype scoring — filter on the scope unconditionally when one is set. Cross-scope admission is a graduated privilege: `_cross_scope_gate` hard-blocks a stage-0 schema, admits a stage-1 one only within the same scope kind and above a score floor, admits a stage-2 one with its score multiplied by 0.70 and re-checked against the floor, and admits stage 3 without restriction. The gate is deliberately one function shared by the direct-candidate filter and the `schema_relations` expansion — *\"a single source of truth instead of two independently-drifting rules\"* — which is the exact failure this corpus has found in three other stores | tests/unit/test_scope_filter_candidates.py:43, :69, :81; tests/unit/test_generalization_stage.py; tests/unit/test_scope_rejection_filter.py"
-  audit_log: "a durable log of every human forget and unforget carrying the status the schema held beforehand, so the undo is exact rather than a guess | slowave/storage/schema.sql:278-292, slowave/symbolic/schema_store.py:728-780 | `schema_forget_log(id, schema_id, action, prior_status, reason, created_ts)` is described in the schema as the audit log for user-initiated forget and unforget, *\"CLI/dashboard only, never MCP.\"* `forget()` writes the row before overwriting the status and is idempotent, so a repeated call cannot clobber the recorded `prior_status` with `forgotten` itself; `unforget()` reads the most recent `forget` row and restores that exact status — *\"e.g. `superseded`\"* — rather than defaulting to active, and appends its own row. The limit belongs with the mark: this audits the forget lifecycle and not every mutation. Around it sit an append-only `raw_events` store the derived memory is rebuilt from, an append-only `consolidation_debug` trace, and a `feedback_events` table with an accepted-or-rejected status, a rejection reason and a shadow-or-active mutation mode | tests/regression/test_cli_e2e.py:1170"
-  human_review: "forgetting is reachable from the CLI and the dashboard and deliberately not from MCP, on a stated trust-boundary argument, beside a needs-review status and a local inspection dashboard | slowave/symbolic/schema_store.py:36-43, slowave/cli/main.py:809, slowave/dashboard/app.py:1693-1740, slowave/storage/schema.sql:172 | The comment states the rule and its reason: forgetting is *\"deliberately CLI/dashboard-only — not exposed as an MCP tool, since forgetting requires a human looking at a specific schema id, not an agent inferring intent from conversational subtext.\"* The dashboard is a first-class 4,239-line surface for reviewing memories, retrievals, feedback, procedures and activity, and it carries the forget and unforget paths. A `needs_review` status exists as its own value, admitted only under a wider retrieval profile, and `feedback_events.mutation_mode` lets a feedback signal be recorded in shadow without being applied | tests/unit/test_dashboard_lifecycle_v9.py, tests/unit/test_feedback_review_gating.py, tests/unit/test_feedback_authorization.py"
-  negative_eval: "a retrieval-gold contract where a case passes only if the required content is returned and the forbidden or history-only content is not, exercised across the acceptance suite | tests/retrieval_quality/contracts.py:24-26, :94-120, tests/acceptance/test_memory_lifecycle.py:295-337, :120, :160, :245, :283, :379, :683 | `RetrievalGold` carries `required_contents`, `forbidden_contents` and `historical_only_contents`, and `evaluate` sets `passed = not required_missing and not forbidden_found and not historical_found and budget_ok`, so a case cannot pass on an empty result — the required set must be present. The lifecycle case is the sharp one: two decisions differing only in *\"30 days\"* and *\"14 days\"*, the first marked stale with the second named as its replacement, then a fresh retrieval whose gold requires the current wording and forbids the old one as history-only. Six further acceptance cases use `forbidden_contents`, including a distractor case and a cross-scope case | 898 test functions across 134 files, with `tests/acceptance`, `tests/regression`, `tests/retrieval_quality` and `tests/unit` as separate trees"
+  trust_state: "a four-value status gated per retrieval mode and applied identically on the direct and expansion paths, with contradiction and supersession folded into a reason column beside it | slowave/symbolic/schema_store.py:29-34, :690-715, :1424, :1514, :1585, :1934, slowave/core/services/retrieval.py:413-419, :425-426, slowave/storage/schema.sql:167-206 | `VALID_STATUS` is `active`, `needs_review`, `stale`, `archived`. Retrieval computes the admitted set from the mode — `active` alone by default and under `strict_scope`, plus `needs_review` for a broad profile, plus `stale` only in `debug` — and `archived` is admitted by nothing. Underneath that, the store's own candidate queries append `status IN ('active', 'needs_review')` to the lexical search, the graph-expansion walk, the scope-widened path and the sweep that feeds generalization, so the bar is in the SQL rather than in a filter each caller remembers. `update_status` folds `superseded` and `contradicted` into `stale` with a `stale_reason` recording which one it was, keeping the epistemic detail without widening the status set retrieval has to reason about. The qualification belongs with the mark: the same function ends with `status = status if status in VALID_STATUS else "active"`, so a status it does not recognise is silently coerced to the most-trusted value rather than refused | tests/unit/test_retrieval_matching.py exercises the candidate paths against the status filter, and tests/acceptance/test_memory_lifecycle.py drives the stale transition end to end"
+  scope_enforced: "a stored scope key filtered in SQL on every candidate path, with cross-scope admission earned through a generalization stage rather than granted by the caller | slowave/symbolic/schema_store.py:570, :1449, :1517-1518, :1580-1581, :2019-2024, slowave/core/scope.py:79-98, slowave/storage/schema.sql:549-562 | Every schema carries a `scope_id`, and the candidate queries filter on it in SQL rather than after the fact. The widening rule is written into the predicate itself — a row is admitted when its scope matches, or it is unscoped, or it sits in `('global', 'user')`, or its `generalization_stage` has reached 2 — so a memory crosses a project boundary by having earned a stage, not by a caller passing a wider argument. The same shape appears on both the direct-candidate filter and the graph-expansion walk, which is the drift this atlas most often finds between those two paths. `scope.py` holds normalisation, kind and value as one vocabulary so the key written is the key filtered on | tests/unit/test_scope_rejection_filter.py is a regression test that documents the bug it prevents, and the scope predicate is exercised on both the direct and expansion paths"
+  human_review: "deletion is a person's act at a local dashboard, shown exactly what it will destroy before it happens, and no agent-facing tool can reach it | slowave/dashboard/app.py:1750-1790, :1828-1848, slowave/mcp/tools.py:1043, :1165, :1291, :1430, :1584, slowave/storage/schema.sql:172 | The five MCP tools are activate, recall, remember, feedback and commit: an agent can write a memory and send feedback about one, and there is no verb that removes anything. Removal lives on the dashboard, and the surface is built for a person deciding rather than for a script succeeding — `_schema_delete_preview_conn` walks the evidence links, prototype links, relations, co-activations and retrieval evidence that reference the schema and returns the count of each, so the confirmation names the collateral rather than the row. `needs_review` is its own status, admitted alongside `active` on the candidate paths, and the dashboard is a first-class surface for reviewing memories, retrievals, feedback and activity | tests/unit/test_dashboard_delete.py:68 `test_schema_hard_delete_previews_and_removes_dependents` asserts the preview and the cascade together, and tests/unit/test_feedback_authorization.py covers who may act"
+  negative_eval: "a retrieval-gold contract where a case passes only if the required content is returned and the forbidden or history-only content is not, exercised across the acceptance suite | tests/retrieval_quality/contracts.py:20-28, :94-124, tests/acceptance/test_memory_lifecycle.py | `RetrievalGold` carries `required_contents`, `forbidden_contents`, `historical_only_contents` and `expected_empty` in the same case, and `evaluate` makes the negative half load-bearing: `passed` is a conjunction requiring `not required_missing and not forbidden_found and not historical_found` alongside the item budget and the expected-empty check, so a case that returns the right memory and one forbidden neighbour fails. The contract also measures `intrusion_chars` — how much forbidden or history-only text reached the caller — so the failure is graded rather than only flagged. `forbidden` appears in fifteen places across the lifecycle acceptance suite | the same suite pairs each must-not case with a must-return case over one store, so an empty result cannot pass by accident"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -26,13 +24,13 @@ matrix:
   storage: "One local SQLite database, 28 tables, with a `schema.sql` carrying design commentary. Latent prototypes and their edges, symbolic schemas with normalised evidence, relation and co-activation edge tables, sessions and continuities, an append-only `raw_events` spine, retrieval and feedback event tables, replay checkpoints, worker runs, graph-health snapshots, and a scope registry. Embeddings are computed locally through an ONNX encoder"
   retrieval: "Mode-gated hybrid recall with no LLM call. Embedding search, FTS and prototype scoring gather candidates, all scope-filtered in SQL when a scope is set; a status set chosen by mode decides which lifecycle states may appear; `schema_relations` expansion adds neighbours under the same status bar and the same cross-scope gate; `schema_coactivation` supplies usage-based associative edges strengthened when one schema was recalled before another in a session and decayed on a roughly seven-day half-life. A working-memory gate returns a bounded set"
   write: "The agent decides what is durable and calls `slowave_remember`; `slowave_activate` opens a session, `slowave_recall` asks for context, `slowave_feedback` reports whether what came back helped, and `slowave_commit` closes the session. Everything lands first in `raw_events`, and the derived layers are built by replay and consolidation — both zero-LLM, both geometric"
-  update_delete: "Feedback drives the lifecycle: a schema can be reinforced, marked stale with a reason and a named replacement, or flagged for review. Consolidation reinforces an existing engram in place rather than writing a duplicate, keyed on the primary prototype. `dedup_exact` archives exact normalised duplicates into a canonical row. A person can forget a schema from the CLI or dashboard, which suppresses it from every retrieval and blocks its re-derivation, and unforget restores the exact prior status"
+  update_delete: "Feedback drives the lifecycle: a schema can be reinforced, marked stale with a reason and a named replacement, or flagged for review. Consolidation reinforces an existing engram in place rather than writing a duplicate, keyed on the primary prototype, and `dedup_exact` archives exact normalised duplicates into a canonical row. Removal is a hard delete from the dashboard: the schema row goes, and the recall items, feedback events and JSON references naming it are scrubbed in the same transaction"
   scoping: "`scope_id` and `scope_kind` on every schema, a `scope_registry`, and unconditional SQL filtering on the candidate paths when a scope is active. Cross-scope reach is earned rather than granted: a generalization stage from 0 (scoped, hard-blocked) through 1 (portable within the same scope kind, above a score floor) and 2 (contextual, admitted with a 0.70 score multiplier and the floor re-checked) to 3 (global). One gate function serves both the direct and graph-expansion paths"
   integration: "An MCP server with five tools, published on PyPI, with a setup command that configures every detected client — Claude Code, Codex, Cursor, Cline, Windsurf and Devin Desktop, OpenCode, and Claude Desktop — plus a local web dashboard with a Cytoscape graph view. No LLM API key is required for any memory operation"
   background: "A replay engine rebuilds derived memory from `raw_events`, scoped by the `logic_version` each event was ingested under so a code change replays only what it needs, with an optimistic-lease claim so exactly one process rebuilds. Consolidation forms and reinforces schemas geometrically; salience decays; co-activation edges decay on a half-life; a generalization sweep advances or corrects stages; graph-health snapshots and worker runs are recorded"
-  trust: "Five lifecycle statuses, three of which withhold a schema from ordinary retrieval, with a stale reason drawn from contradicted, superseded, outdated, unsupported or withdrawn. Confidence and salience are separate numbers used for ranking, with a shared salience ceiling so two reinforcement paths cannot diverge. `is_labile` marks a reactivated trace as temporarily uncertain, kept explicitly distinct from `needs_review`. Contradiction and supersession are described in the source as client-owned history that the store and consolidation never infer"
-  strengths: "A forget the consolidation pass is written to respect, found by embedding rather than by string so a paraphrase inside the near-duplicate radius is intercepted too; a cross-scope gate that is one function by design because two copies drift; an append-only event store with a logic-version stamp so an algorithm change replays instead of migrating; a retrieval-gold contract with required, forbidden and history-only content in the same case; a schema file that argues for its own decisions; a memory core with no LLM call and no API key anywhere in ingest, consolidation or recall"
-  risks: "No validity time — every timestamp here is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. Dependency manifests changed the day of this reading, so nothing here should be installed yet. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. And the surface is wide for three months of work: 28 tables, a 4,239-line dashboard, and a 2,124-line client-setup module that executes at install time"
+  trust: "Four lifecycle statuses, two of which withhold a schema from every candidate path, with a stale reason drawn from contradicted, superseded, outdated, unsupported or withdrawn. Confidence and salience are separate numbers used for ranking, with a shared salience ceiling so two reinforcement paths cannot diverge. `is_labile` marks a reactivated trace as temporarily uncertain, kept explicitly distinct from `needs_review`. Contradiction and supersession are described in the source as client-owned history that the store and consolidation never infer"
+  strengths: "A cross-scope gate written as one predicate because two copies drift, with the widening rule — same scope, unscoped, global or user, or a generalization stage of 2 — stated in the SQL rather than assembled by callers; an append-only event store with a logic-version stamp so an algorithm change replays instead of migrating; a retrieval-gold contract with required, forbidden and history-only content in the same case, where the negative half is load-bearing in the pass conjunction; a delete preview that counts the evidence links, relations and co-activations a removal will take with it, so the person confirming sees the collateral rather than the row; a schema file that argues for its own decisions; and a memory core with no LLM call and no API key anywhere in ingest, consolidation or recall"
+  risks: "Removal is total and unrecorded. A schema deleted from the dashboard is gone from `schemas`, and the recall items, feedback events and JSON references that named it are scrubbed alongside it, so nothing in the store says the memory existed or that a person removed it — and because the delete is keyed on the row rather than on the claim, the same proposition can be re-derived by the next consolidation pass with nothing to intercept it. A status the store does not recognise is coerced to `active` rather than refused, so the failure direction on a bad write is toward the most-trusted value. There is no validity time — every timestamp is a record time, so nothing can be asked as of a past state of the world. The published benchmark numbers are LLM-judged evidence containment with the raw records kept out of the repository, and the LongMemEval run is an oracle configuration the page itself says is not a distractor test. It is AGPL-3.0-or-later with a separate commercial licence offered, which is a deliberate choice a reader has to plan around. And the surface is wide: 27 tables, a dashboard of over 4,000 lines, and a client-setup module that executes at install time"
 ---
 
 ## 1. Executive Summary
@@ -44,49 +42,62 @@ clustering into latent prototypes, symbolic schemas formed over them, and
 retrieval by hybrid search with graph expansion. The agent supplies judgement;
 the store supplies memory.
 
-AGPL-3.0-or-later with a commercial licence offered separately, and a CLA. 505
-commits between 8 June and 10 September 2026, the last on the day of this
-reading, from two human contributors and a release bot; 32,305 lines of Python
-across 78 files, against 34,348 lines of test in 134 files carrying 898 test
-functions. The screen found no auto-run surface, five build-time execution paths
-— an install-time client-setup module and three pytest `conftest.py` files —
-one unpinned dependency surface, and **two manifests changed the same day**, so
+AGPL-3.0-or-later with a commercial licence offered separately, and a CLA. 517
+commits between 8 June and 14 September 2026 from two human contributors and a
+release bot; version 0.20.3, 32,690 lines of Python across 79 files, against
+34,527 lines of test in 136 files carrying 903 test functions. The screen found
+one auto-run surface, five build-time execution paths — an install-time
+client-setup module and three pytest `conftest.py` files — one unpinned
+dependency surface, and two manifests changed inside the seven-day cooldown, so
 nothing was installed, built or run.
 
-**Six of seven marks, and the tombstone is the one worth the trip.** When a
-person forgets a schema, consolidation is written not to undo it, in two places.
-The prototype lookup is deliberately status-agnostic, so re-consolidating the
-same prototype finds the forgotten row and skips: *"a copy that was retired by
-explicit client feedback is the same engram and must not be recreated as a
-duplicate."* And because the ordinary embedding search excludes non-active rows,
-a second search runs with `include_inactive=True` — a nearest neighbour at or
-above 0.92 cosine whose status is `forgotten` also skips, under a comment naming
-both failures it prevents: reinforcing it *"would silently undo the user's
-forget"*, and creating a duplicate *"would defeat it."* The key is the claim's
-embedding, so a re-derivation in different words inside that radius is caught
-too — which is more than a normalised-string key can do.
+**The removal path is a hard delete, and it takes the record with it.** A person
+removes a schema from the dashboard; the row goes from `schemas`, and the recall
+items, the feedback events naming it as a target or a replacement, and the JSON
+references that mention it are scrubbed in the same transaction. As erasure this
+is thorough — better than most of this corpus, which leaves a memory's id
+scattered across tables that outlive it. As memory it leaves nothing behind. No
+status marks the claim as one a person rejected, no row records that a deletion
+happened, and the key is the schema id rather than the claim, so the same
+proposition arriving from a later session is a new schema with nothing to
+intercept it. The store can forget a memory completely; it cannot remember
+having done so.
+
+The migration that introduced this says what it replaced:
+
+> "Forget/unforget was removed in favour of explicit hard deletion. Preserve
+> previously suppressed schemas by restoring their recorded prior state before
+> removing the obsolete audit table."
+
+`sqlite_db.py` restores every schema whose status is `forgotten` to the status it
+held before — defaulting to `active` where the log has no row for it — and then
+drops the log table. A store upgraded across this boundary returns to ordinary
+retrieval the memories a person had previously suppressed, which is the honest
+reading of "preserve" here: the schemas are preserved, and the decisions about
+them are not.
 
 **Cross-scope reach is earned, not granted.** Every schema carries a scope, the
-candidate paths filter on it in SQL, and a four-stage generalization ladder
-decides what may travel: stage 0 hard-blocked, stage 1 only within the same
-scope kind and above a score floor, stage 2 admitted with its score multiplied
-by 0.70 and the floor re-checked, stage 3 unrestricted. The gate is one function
-serving both the direct-candidate filter and the graph expansion, and the
-docstring says why — *"a single source of truth instead of two
-independently-drifting rules."* This atlas has found exactly that drift in three
-other stores; here it is designed against and commented.
+candidate paths filter on it in SQL, and the widening rule lives in the predicate
+rather than in the callers: a row is admitted when its scope matches, when it is
+unscoped, when it sits in `('global', 'user')`, or when its `generalization_stage`
+has reached 2. The same shape appears on the direct-candidate filter and on the
+graph-expansion walk — the drift this atlas most often finds between exactly
+those two paths.
 
 **The event store is the spine.** `raw_events` is append-only and stamped with
 the `logic_version` under which it was ingested, so when the consolidation
 algorithm changes the fix is to replay the events processed under the old logic
 rather than to migrate derived state — with an optimistic-lease claim so the
-daemon, worker and CLI cannot all rebuild at once.
+daemon, worker and CLI cannot all rebuild at once. It is the reason a store whose
+derived memory carries no mutation log is still reconstructible: the evidence is
+kept even where the decisions are not.
 
-**Forgetting is a person's act by construction.** It is reachable from the CLI
-and the dashboard and deliberately absent from MCP, because *"forgetting requires
-a human looking at a specific schema id, not an agent inferring intent from
-conversational subtext."* The forget log records the status the schema held
-before, so unforget restores `superseded` rather than guessing `active`.
+**Removal is a person's act by construction.** The five MCP tools are activate,
+recall, remember, feedback and commit — an agent can write a memory and send
+feedback about one, and no verb reaches the delete. What a person gets instead
+is a preview: `_schema_delete_preview_conn` walks the evidence links, prototype
+links, relations, co-activations and retrieval evidence that point at the schema
+and returns a count for each, so the confirmation names what else is about to go.
 
 **What it does not have is validity time.** Every timestamp here is a record
 time — first formed, last updated, last touched. There is no world-state
@@ -121,44 +132,47 @@ claim. The source says so twice: contradiction and supersession are
 *"client-owned history and are never inferred by this store or by
 consolidation."*
 
-Forgetting is the one thing an agent cannot ask for. A person opens the CLI or
-the dashboard, looks at a specific schema, and suppresses it — and from then on
-consolidation has to check whether the thing it is about to form is the thing
-somebody deleted.
+Removal is the one thing an agent cannot ask for. A person opens the dashboard,
+looks at a specific schema, sees a count of the evidence links, relations and
+co-activations that point at it, and deletes it. What the pass that runs
+afterwards knows about that decision is nothing: the row is gone, and
+consolidation's identity key is the primary prototype of whatever it is forming
+now.
 
 ```mermaid
-%% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas; consolidation checks both the primary prototype and an inactive-inclusive embedding search so a schema a person forgot is skipped rather than reinforced or duplicated; recall gathers candidates under a scope filter, admits statuses by mode, and expands along relation edges through the same status bar and the same cross-scope gate
+%% caption: session turns are appended to a raw event store stamped with the logic version that ingested them, replayed into episodes and latent prototypes, and consolidated into symbolic schemas keyed on the primary prototype; recall gathers candidates under a scope filter and a status filter applied in the store, expanding along relation edges through the same two predicates; deletion is a dashboard act that removes the schema and scrubs every row naming it, leaving no state the next consolidation pass can consult
 flowchart TB
-    S["agent: activate · remember ·<br/>recall · feedback · commit"]
+    S["agent: activate · remember ·<br/>recall · feedback · commit<br/>— five MCP tools, none of them delete"]
     RE[("raw_events — append-only,<br/>stamped with logic_version")]
     RP["replay engine — rebuilds only<br/>events under an old logic version,<br/>under an optimistic-lease claim"]
     EP[("episodic_memories<br/>+ episode_text provenance")]
     PR[("semantic_prototypes<br/>— latent centroids")]
     C{"consolidation, zero-LLM"}
-    G1{"same primary prototype?<br/>lookup is status-agnostic"}
-    G2{"nearest neighbour ≥ 0.92 cosine<br/>with include_inactive?"}
-    SKIP["skipped — a human forget is<br/>neither reinforced nor duplicated"]
+    G1{"same primary prototype?"}
+    G2{"nearest neighbour at or above<br/>0.92 cosine among ACTIVE rows?"}
     RF["reinforced in place"]
     SCH[("schemas — content, scope_id,<br/>status, stale_reason, confidence,<br/>salience, is_labile,<br/>generalization_stage 0-3")]
-    FL[("schema_forget_log — action,<br/>prior_status, reason, ts;<br/>CLI and dashboard only")]
     Q["recall(query, scope, mode)"]
-    CAND["candidates: embedding · FTS ·<br/>prototype scoring<br/>— scope-filtered in SQL"]
-    ST["status set chosen by mode:<br/>active · +needs_review · +stale"]
-    EXP["relation and co-activation expansion<br/>— same status bar,<br/>same cross-scope gate"]
-    GATE{"_cross_scope_gate<br/>stage 0 blocked · 1 same kind<br/>2 ×0.70 + floor · 3 free"}
+    CAND["candidates: embedding · FTS ·<br/>prototype scoring"]
+    STF["the store appends BOTH predicates:<br/>status IN (active, needs_review)<br/>AND the scope rule"]
+    EXP["relation and co-activation expansion<br/>— same two predicates"]
+    GATE{"scope admitted when:<br/>same scope · unscoped ·<br/>global or user ·<br/>generalization_stage at least 2"}
     OUT["bounded working set"]
+    DEL["dashboard delete"]
+    PREV{"_schema_delete_preview_conn<br/>counts evidence links, prototype links,<br/>relations, co-activations,<br/>retrieval evidence"}
+    SCRUB["DELETE the schema · DELETE its recall items ·<br/>DELETE feedback events naming it as target<br/>OR replacement · scrub JSON references"]
+    GONE["nothing records that the claim<br/>existed or that anyone removed it"]
 
     S --> RE --> RP --> EP --> PR --> C
     C --> G1
-    G1 -->|"forgotten"| SKIP
-    G1 -->|"active"| RF --> SCH
+    G1 -->|"match — status is not consulted"| RF --> SCH
     G1 -->|"no match"| G2
-    G2 -->|"forgotten"| SKIP
+    G2 -->|"yes"| RF
     G2 -->|"no"| SCH
-    SCH -.->|"person forgets<br/>via CLI or dashboard"| FL
-    FL -.-> SCH
-    Q --> CAND --> ST --> EXP --> GATE --> OUT
+    Q --> CAND --> STF --> EXP --> GATE --> OUT
     SCH --> CAND
+    SCH --> DEL --> PREV -->|"a person confirms,<br/>having been shown the collateral"| SCRUB --> GONE
+    GONE -.->|"the delete is keyed on the ROW, not the claim,<br/>so the same proposition re-derived later<br/>is a new schema with nothing to intercept it"| C
 ```
 
 ## 3. Architecture
@@ -174,17 +188,17 @@ retrieval access, feedback, feedback events, consolidation, pattern completion
 and rebuild. Above them, an MCP server with five tools, a CLI, and a dashboard.
 
 The database is the design document. `schema.sql` carries the arguments as well
-as the DDL: why `forgotten` is a distinct status from `archived`, why
+as the DDL: why a stale reason is kept beside the status rather than inside it, why
 `schema_coactivation` is separate from `schema_relations` (usage-based versus
 content-based, with STDP-like directional plasticity so `src → dst` strengthens
 when src was recalled first), why the logic version is on the event rather than
 the schema, and why the facet blobs *"support topical relation diagnostics and
 replay inspection; they do not determine semantic truth."*
 
-The proportions are worth stating plainly. Three months of work has produced 28
-tables, a 4,239-line dashboard, a 2,330-line CLI and a 2,124-line client-setup
-module that runs at install time and writes configuration for eight agent
-clients. That is a lot of surface per commit-month, and the setup module is the
+The proportions are worth stating plainly. Three months of work has produced 27
+tables, a dashboard of over 4,000 lines, a CLI of over 2,000, and a client-setup
+module of similar size that runs at install time and writes configuration for
+eight agent clients. That is a lot of surface per commit-month, and the setup module is the
 part most worth a reader's attention before installing, because it edits files
 outside the project.
 
@@ -193,26 +207,27 @@ outside the project.
 - **Ingest.** the MCP tools append to `raw_events` with an embedding and the
   current `logic_version` → episodes are grouped with their provenance in
   `episode_text` → prototypes are formed or updated in the latent store.
-- **Consolidate.** `core/consolidation.py:278` looks up
-  `find_by_primary_prototype` status-agnostically → a `forgotten` match returns
-  `skipped`, an active one is reinforced in place → otherwise `:309` checks the
-  ordinary nearest neighbour against the 0.92 near-duplicate cosine, and `:344`
-  re-checks with `include_inactive=True` specifically for a `forgotten` match →
-  only then is a new schema written, classified and related.
-- **Recall.** `core/services/retrieval.py:376` normalises the scope → candidates
-  from embedding search, FTS and prototype scoring, each scope-filtered → `:474`
-  computes the status set from the mode → `:485` drops anything outside it →
-  `:492` applies `_cross_scope_gate` → `:539` expands along `schema_relations`
-  under the same status bar and the same gate → the working-memory gate bounds
-  the result.
-- **Cross-scope.** `_cross_scope_gate` at `:688` returns true immediately for a
-  same-scope, unscoped, `global` or `user` schema; otherwise cross-scope is only
-  reachable in `strict_scope` mode, and then by stage — 3 free, 2 discounted by
-  0.70 and floored, 1 same-kind and floored, 0 blocked.
-- **Forget.** `schema_store.forget()` writes `schema_forget_log` with the
-  current status *before* overwriting it, and returns early if the schema is
-  already forgotten so `prior_status` cannot be clobbered → `unforget()` reads
-  the most recent `forget` row and restores that status, appending its own row.
+- **Consolidate.** `core/consolidation.py:282` looks up
+  `find_by_primary_prototype` and reinforces any match in place — the status is
+  not consulted, so a schema in any lifecycle state is reactivated rather than
+  duplicated → otherwise `:300` checks the nearest active neighbour against the
+  0.92 near-duplicate cosine and strengthens it → only then is a new schema
+  written, classified and related.
+- **Recall.** `core/services/retrieval.py:413` computes the status set from the
+  mode — `active` by default, plus `needs_review` when broad, plus `stale` only
+  in debug, and `archived` never → `:425` drops anything outside it → `:430`
+  applies `_cross_scope_gate` → `:505` expands along `schema_relations` through
+  the same gate → the working-memory gate bounds the result.
+- **Cross-scope.** `_cross_scope_gate` at `:629` admits a same-scope, unscoped,
+  `global` or `user` schema immediately; otherwise cross-scope is reachable only
+  in `strict_scope` mode, and then by stage. Underneath it the store's own
+  predicate carries the same rule, admitting a row whose `generalization_stage`
+  has reached 2.
+- **Delete.** `dashboard/app.py:1750` previews what a removal will take —
+  evidence links, prototype links, relations, co-activations and retrieval
+  evidence, counted per kind → `:1828` deletes the recall items, the feedback
+  events naming the schema as target or replacement, the JSON references, and
+  then the row, in one transaction.
 - **Rebuild.** `RebuildService.try_claim` takes an optimistic lease on a
   `logic_versions` row so exactly one of the daemon, worker or CLI replays;
   replay is scoped to events ingested under an older version.
@@ -241,8 +256,6 @@ co-activation carries a decaying weight and a last-touched stamp so decay can be
 applied per row. Note that the store writes only the symmetric `relates_to`
 relation itself: contradiction and supersession are client-owned.
 
-**`schema_forget_log`** — action, prior status, reason, timestamp.
-
 **`raw_events` and `logic_versions`** — the replay spine, with the version stamp
 on the event and the lease on the version.
 
@@ -266,11 +279,11 @@ over content, and prototype scoring — and all three are scope-filtered as they
 are gathered rather than afterwards, which is the ordering that keeps a small
 scope from being starved out of a page.
 
-Status is then applied by mode. The default admits `active` only; a wider
-profile admits `needs_review`; a history-seeking mode admits `stale` as well.
-`archived` and `forgotten` are admitted by nothing. A labile schema that is
-otherwise active is handled specially at `:497`, so a trace the system has
-marked temporarily uncertain does not simply rank like a settled one.
+Status is then applied by mode. The default and `strict_scope` admit `active`
+only; a broad profile admits `needs_review`; `debug` admits `stale` as well.
+`archived` is admitted by nothing. A labile schema that is otherwise active is
+handled specially, so a trace the system has marked temporarily uncertain does
+not simply rank like a settled one.
 
 Graph expansion follows `schema_relations`, and it is held to the same two bars.
 The status check is repeated in the neighbour loop with a comment saying the
@@ -296,17 +309,17 @@ reports what helped, `commit` closes it. Everything lands in `raw_events` first,
 so the derived layers can always be discarded and rebuilt.
 
 Consolidation is the interesting write path, because it has to decide whether
-the thing it is forming already exists. Three answers, in order: the same primary
+the thing it is forming already exists. Two answers, in order: the same primary
 prototype means the same engram, so reinforce in place — *"one schema per primary
-prototype"* — unless it is forgotten, in which case skip; a near-duplicate above
-0.92 cosine means reinforce or, if it is forgotten, skip; otherwise form a new
+prototype"* — and the status is not consulted, so a schema in any lifecycle state
+is reactivated by a match rather than duplicated; a nearest active neighbour at
+or above 0.92 cosine is strengthened instead of copied; otherwise form a new
 schema, classify it, and relate it.
 
 `dedup_exact` handles the other duplicate case: exact normalised duplicates are
 marked `archived` with their salience dropped to 0.05 and related to the
-canonical row, with the reason recorded on the relation. Keeping `archived`
-distinct from `forgotten` is what lets the duplicate-ratio statistics stay
-meaningful while a human forget stays a human forget.
+canonical row, with the reason recorded on the relation. That keeps the
+duplicate-ratio statistics meaningful without removing anything.
 
 Reinforcement is bounded by a shared `SALIENCE_CEILING`, used by both
 `reinforce()` and `adjust_feedback_state()` *"so the two code paths stay bounded
@@ -322,43 +335,57 @@ and Claude Desktop, with a `--dry-run` first. Published on PyPI; no API key
 required for anything.
 
 The tool set encodes the intended rhythm rather than exposing the store. There
-is no MCP verb for forgetting, none for editing a schema's status directly, and
+is no MCP verb for deleting, none for editing a schema's status directly, and
 none for the dashboard's lifecycle operations. What an agent can do is open a
 session, ask, report, and close — and the feedback report is where the lifecycle
 actually moves, which is a defensible place to put it.
 
 The dashboard is the human half: a local web application with a Cytoscape graph
 view over memories, retrievals, feedback, procedures and system activity, and
-the forget and unforget controls.
+the delete controls with their preview.
 
 ## 9. Reliability, Safety, and Trust
 
-**Tombstone — awarded, and it is the strongest form in this reading.** The key
-is an embedding rather than a normalised string, so the guard survives a
-paraphrase within the near-duplicate radius; the check runs on the write path of
-the process most likely to resurrect the claim; and the comment names both wrong
-answers it is avoiding. The bound worth stating: the radius is a 0.92 cosine, so
-a re-derivation *outside* it forms a new schema, and the forget is scoped to the
-schema that was forgotten rather than to the proposition in general.
+**Tombstone — withheld, on a deliberate design choice.** Removal here is a hard
+delete keyed on the schema id. Nothing survives it to be consulted on a later
+write: the row is gone, the rows naming it are scrubbed, and the identity key
+consolidation uses is the primary prototype of whatever it is forming now. A
+person who removes a claim has removed a row, not registered a judgement about
+the claim, so the same proposition re-derived from a later session forms a new
+schema with nothing in the store positioned to intercept it. The trade is real
+and runs the other way too: erasure this thorough is uncommon in this corpus,
+and a store that keeps no record of what it deleted is a store with nothing to
+leak.
 
-**Trust state — awarded.** Five statuses, three of which withhold, gated per
-mode, applied identically on both retrieval paths, with `is_labile` kept
-explicitly distinct from `needs_review` in the schema comment — a distinction
-several systems in this corpus collapse.
+**Trust state — awarded.** Four statuses, gated per mode, applied identically on
+both retrieval paths, with `is_labile` kept explicitly distinct from
+`needs_review` in the schema comment — a distinction several systems in this
+corpus collapse. The weak seam is the write: `update_status` ends with
+`status = status if status in VALID_STATUS else "active"`, so an unrecognised
+value becomes the most-trusted one rather than an error.
 
 **Scope enforced — awarded, in the graduated form.** The generalization ladder is
 the part to steal: a memory earns the right to cross a boundary by demonstrating
 it travels, rather than being marked global at write time by whoever wrote it.
 
-**Audit log — awarded, and narrow.** `schema_forget_log` is a real mutation
-record with the prior status, and it exists so an undo is exact. It covers the
-forget lifecycle; other mutations are traceable through the append-only event
-store and the consolidation trace rather than through a general mutation
-journal.
+**Audit log — withheld.** No table records mutations to the derived memory. The
+schema holds an append-only `raw_events` store and an append-only
+`consolidation_debug` trace, and both are valuable — the first is what makes the
+whole derived layer reconstructible — but they are the evidence the memory is
+built from and a diagnostic of how it was built, not a record of what was
+changed and by whom. `update_status` writes no row beside the status it
+overwrites. `feedback_events` comes closest, carrying an assessment, a stale
+reason, a named replacement and an accepted-or-rejected status, but it is keyed
+to a retrieval and cascades away when that retrieval is deleted, so it is not a
+durable record of the mutations it caused.
 
-**Human review — awarded.** The trust-boundary argument for keeping forget off
-MCP is the clearest statement of that idea in this corpus, and it is enforced by
-the tool list rather than by a flag.
+**Human review — awarded.** A person is the only actor who can remove a memory,
+and this is enforced by the tool list rather than by a flag: the five MCP verbs
+are activate, recall, remember, feedback and commit, and none of them deletes.
+What lifts it above a bare permission split is the preview — the dashboard walks
+the evidence links, prototype links, relations, co-activations and retrieval
+evidence pointing at the schema and counts each before the person confirms, so
+the decision is made against the collateral rather than against a row id.
 
 **Negative evaluation — awarded.** The gold contract requires the required set
 and forbids the forbidden and history-only sets in the same evaluation, so
@@ -422,19 +449,19 @@ No paper: a search of the README and `docs/` for `arxiv`, `bibtex`,
 
 ### Steal
 
-- **Make the forget survive the pass that would recreate it.** A deletion that
-  only changes a status is undone by the next consolidation. Look the claim up
-  by embedding with the inactive rows included, and skip — neither reinforcing
-  (which undoes the person's decision) nor writing a duplicate (which defeats
-  it).
-- **Record the prior status before you overwrite it.** `unforget` restoring
-  `superseded` rather than guessing `active` costs one column, and the
-  idempotence guard that stops a repeated forget from clobbering it costs one
-  early return.
-- **Keep the forget off the agent's tool surface.** *"Forgetting requires a human
-  looking at a specific schema id, not an agent inferring intent from
-  conversational subtext"* is the right reason, and enforcing it by omission from
-  the tool list is the right mechanism.
+- **Show the collateral before the confirmation.** The delete preview counts the
+  evidence links, prototype links, relations, co-activations and retrieval
+  evidence that point at the row, so a person deciding sees what else the
+  deletion takes. It costs one read per referencing table and turns a
+  destructive click into an informed one.
+- **Scrub the references in the same transaction as the row.** The delete clears
+  the recall items, the feedback events naming the schema as target *or* as
+  replacement, and the JSON fields mentioning it, then removes the schema. Most
+  stores in this corpus leave a deleted memory's id behind in tables nobody
+  thought to sweep.
+- **Keep removal off the agent's tool surface.** Five verbs that write and read
+  and none that deletes is a permission boundary enforced by omission rather
+  than by a flag, which is the version of it that cannot be misconfigured.
 - **Let a memory earn its way out of its scope.** Four stages with a hard block
   at the bottom, a same-kind restriction and a score floor in the middle, and a
   discount before admission at stage two, beats a global flag somebody set at
@@ -466,8 +493,8 @@ No paper: a search of the README and `docs/` for `arxiv`, `bibtex`,
 
 Slowave suits someone running several coding agents against the same projects
 who wants one local store, no API key for memory operations, and a per-project
-boundary that holds by default. Read it for the forget guard, the generalization
-ladder and the retrieval-gold contract whatever you end up building. Weigh three
+boundary that holds by default. Read it for the generalization ladder, the
+delete preview and the retrieval-gold contract whatever you end up building. Weigh three
 things before adopting: the AGPL with its commercial-licence path, an install
 that writes configuration into eight clients through a module that executes at
 install time, and three months of very fast growth across a wide surface — wait
@@ -477,9 +504,14 @@ out the dependency cooldown, and read `slowave/cli/setup.py` before running it.
 
 - Is a validity interval planned? The lifecycle answers "what is true now" by
   supersession, and cannot answer "what did we believe in July".
-- What happens to a forgotten schema's evidence? The rows cascade on delete, but
-  a forget is a status change, so the episodes that supported it stay and could
-  in principle re-derive the claim outside the 0.92 radius.
+- What stops a deleted claim coming back? The schema row and its references go,
+  but the `raw_events` and episodes it was derived from are the replay spine and
+  stay, so the next consolidation pass over that evidence can form the claim
+  again with nothing recording that a person removed it.
+- Should a removal leave anything behind at all? Keeping a value-keyed marker
+  would let the store refuse a re-derivation, at the cost of retaining a trace
+  of precisely the content someone asked to be rid of. The project has chosen
+  the erasure side of that trade explicitly.
 - How is the generalization stage advanced? The sweep exists and corrects stale
   high stages; the promotion criteria are the interesting half.
 - Will the raw evaluation records be published? The benchmark page is careful
@@ -490,27 +522,33 @@ out the dependency cooldown, and read `slowave/cli/setup.py` before running it.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `slowave/storage/schema.sql` | 623 | Twenty-eight tables with their design commentary: `schemas` (167-206), `schema_evidence` (208), `schema_relations` and `schema_coactivation` (236-277), `schema_forget_log` (278-292), `raw_events` and `logic_versions` (115-151), `feedback_events` (481-510), `scope_registry` (566) |
-| `slowave/symbolic/schema_store.py` | 2065 | `VALID_STATUS` and the forgotten-versus-archived argument (29-45), the salience ceiling, `forget` and `unforget` (728-780), `dedup_exact` (1677-1755) |
-| `slowave/core/consolidation.py` | — | The status-agnostic prototype lookup and its forgotten skip (278-292), the near-duplicate guard and the inactive-inclusive forgotten check (309-355) |
-| `slowave/core/services/retrieval.py` | 999 | Scope normalisation and candidate filtering (376-447), the mode-gated status sets (474-497), the neighbour walk under the same bar (539-543), `_cross_scope_gate` (688-735) |
-| `slowave/core/services/feedback.py` | 859 | The lifecycle transitions feedback drives, including the forgotten guards |
-| `slowave/dashboard/app.py` | 4239 | The local review surface and the forget/unforget paths (1693-1740) |
+| `slowave/storage/schema.sql` | 606 | Twenty-seven tables with their design commentary: `schemas` (167-206), `schema_evidence` (208), `schema_relations` and `schema_coactivation` (236-275), `raw_events` and `logic_versions` (115-151), `feedback_events` (464-493), `scope_registry` (549) |
+| `slowave/symbolic/schema_store.py` | 2089 | `VALID_STATUS` (29-34), `update_status` with its fold-to-stale and its coercion to `active` (690-715), the status and scope predicates on the candidate paths (1424, 1514-1518, 1580-1585, 1934, 2019-2024) |
+| `slowave/core/consolidation.py` | — | The primary-prototype lookup that reinforces without consulting status (278-293), and the near-duplicate guard over active rows (296-320) |
+| `slowave/core/services/retrieval.py` | 975 | The mode-gated status sets (413-419), the candidate filter (425-435), `_cross_scope_gate` (629) and its two call sites (430, 505) |
+| `slowave/core/services/feedback.py` | 855 | The lifecycle transitions feedback drives |
+| `slowave/dashboard/app.py` | 4436 | The local review surface, the delete preview (1750-1790) and the delete itself (1828-1848) |
+| `slowave/storage/sqlite_db.py` | — | The migration that restores every `forgotten` schema and drops the audit table (304-318) |
 | `slowave/cli/setup.py` | 2124 | Client detection and configuration; executes at install time |
-| `slowave/mcp/tools.py` | 1689 | The five tools — activate, recall, remember, feedback, commit |
-| `tests/retrieval_quality/contracts.py` | — | `RetrievalGold` (24-26) and `evaluate` with its `passed` conjunction (94-120) |
-| `tests/acceptance/test_memory_lifecycle.py` | — | The stale-replacement case (295-337), the present-versus-absent case, and six cases using `forbidden_contents` |
+| `slowave/mcp/tools.py` | 1694 | The five tools — activate, recall, remember, feedback, commit — and no delete |
+| `tests/retrieval_quality/contracts.py` | — | `RetrievalGold` (20-28) and `evaluate` with its `passed` conjunction (94-124) |
+| `tests/acceptance/test_memory_lifecycle.py` | — | The lifecycle cases, with `forbidden` content asserted in fifteen places |
+| `tests/unit/test_dashboard_delete.py` | — | The preview-and-cascade case (68), and the migration case that pins the removal of the audit table (191) |
 | `tests/unit/test_scope_rejection_filter.py` | — | The regression test that documents the bug it prevents |
 | `docs/benchmarks.md` | — | LoCoMo and LongMemEval oracle figures with the judge named and the oracle caveat stated |
 
 Searches behind the absence claims above, run from the repository root:
 
 ```sh
-grep -rn 'valid_from\|valid_to\|valid_until\|effective_' slowave/storage/schema.sql slowave --include='*.py'  # no validity time anywhere; the hits are ports and query strings
+grep -rn 'valid_from\|valid_to\|valid_until\|effective_' slowave/storage/schema.sql slowave --include='*.py'  # no validity time; the hits are an effective_query string and a port helper
 grep -rn -i 'arxiv\|bibtex\|CITATION\.cff\|doi\.org' README.md docs   # nothing: no paper
-grep -rn "'forgotten'" slowave --include='*.py'                        # the consolidation guards, the feedback guards, the store, the CLI and the dashboard — no MCP path
+grep -rn "'forgotten'" slowave --include='*.py'                        # only the migration that removes the status
+grep -rn 'DELETE FROM schemas' slowave --include='*.py'                # one site: the dashboard delete
+grep -rn '_log' slowave/storage/schema.sql                             # no mutation-log table
 ```
 
 ## History
+
+**2026-09-16** — [`8d538b370c37243a39e19e52e4a5fdb35c9527b5`](https://github.com/slowave-ai/slowave/commit/8d538b370c37243a39e19e52e4a5fdb35c9527b5) — re-read at a commit dated 14 September 2026, twelve commits past the previous pin. Forget and unforget were removed in favour of explicit hard deletion: `forgotten` is gone from `VALID_STATUS`, both consolidation guards that protected a forgotten schema were deleted, and a migration restores every previously forgotten schema to its prior status before dropping `schema_forget_log`. The tombstone and mutation-audit marks are withdrawn, the code they rested on being gone; trust state, scope enforcement, human review and negative evaluation are re-tested and hold, with human review re-grounded on the delete preview and the absence of any delete verb among the five MCP tools. Screened before reading: one auto-run surface, five build-time execution points, one unpinned dependency surface and two dependency files inside the seven-day cooldown, with `uv.lock` present. Nothing was installed, built or run.
 
 **2026-09-10** — [`281d5cc7682680931ff8d4b3c46040cc6b57096d`](https://github.com/slowave-ai/slowave/commit/281d5cc7682680931ff8d4b3c46040cc6b57096d) — first reading, at the head of `main`, a commit from the day of the reading. Screened before reading: no auto-run surface, two dependency manifests changed the same day and so inside the seven-day cooldown, five build-time execution paths — the install-time client-setup module and three pytest collection hooks — and one unpinned dependency surface; nothing was installed, built or run, and the read was made from a full clone. Six marks. The reading covered the SQL schema and its commentary, the schema store's lifecycle and forget paths, consolidation's duplicate and forgotten guards, the retrieval service's status and scope gating, the feedback event model, the MCP tool surface, and the acceptance and retrieval-quality test contracts; the latent subsystem's replay, salience and transition modules, the procedural memory, the dashboard implementation and the benchmark harnesses were read as context rather than as subject.
