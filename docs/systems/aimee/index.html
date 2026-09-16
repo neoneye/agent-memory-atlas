@@ -110,14 +110,14 @@ append-only store.</p>
               <strong>RakuenSoftware/aimee</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181" title="6083b85e4664f06abd5275ee5e893388734a6181">
+            <a class="meta-pill revision-pill" href="https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550" title="4831f5bd034f7aa3142b4dc0e5857923a3121550">
               <span>Analyzed revision</span>
-              <code>6083b85e…</code>
+              <code>4831f5bd…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RakuenSoftware--aimee" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -144,7 +144,7 @@ append-only store.</p>
 <p>aimee is a personal-assistant runtime written mostly in C — roughly
 819,000 lines of C and 89,000 lines of headers, with 149,000 lines of
 Go, 113,000 of Python and a small TypeScript frontend beside them,
-across 7,831 commits since 3 June 2026. It is AGPL-3.0. The tree ships
+across 7,986 commits since 3 June 2026. It is AGPL-3.0. The tree ships
 two services: <code>aimee-server</code>, which holds the memory of one
 human, and <code>aimee-kb</code>, which holds a corpus and a team's
 membership graph.</p>
@@ -979,6 +979,28 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550"><code class="commit-id" title="4831f5bd034f7aa3142b4dc0e5857923a3121550">4831f5bd…</code></a>
+— re-read at a commit dated 9 September 2026, 61 commits past the
+previous pin. All seven marks re-tested and held. The change worth
+checking was a new read path:
+<code>server-go/modules/memory/visibility_search.go</code> adds
+<code>SearchVisible</code>, and a new read is where a scope predicate
+usually goes missing. It does not. The query carries
+<code>lifecycle_state='active'</code> and a scope disjunction over
+global, project and workspace, and although an <code>IncludeAll</code>
+flag short-circuits that disjunction, it widens only within the
+row-level security policy on <code>memories</code> —
+<code>p_memories_row_scope</code> gates on
+<code>memory_row_scope_visible(scope_type, scope_value)</code>, which
+reads <code>current_setting('aimee.memory_project')</code> and its
+workspace twin rather than anything the caller passes. The function
+refuses outright when placement is not KB.
+<code>lifecycle_state='active'</code> appears at forty non-test sites
+across six files in the module. Screened before reading: fifteen files
+scanned, one auto-run surface, one build-time execution point, three
+unpinned dependency surfaces and none inside the seven-day cooldown.
+Nothing was installed, built or run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181"><code class="commit-id" title="6083b85e4664f06abd5275ee5e893388734a6181">6083b85e…</code></a>
 — re-pinned 79 commits on, still on <code>testing</code>, and the memory

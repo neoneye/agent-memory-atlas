@@ -7,9 +7,9 @@ page_kind: system
 source_name: "RakuenSoftware/aimee"
 source_url: https://github.com/RakuenSoftware/aimee
 archive_name: "RakuenSoftware--aimee"
-revision: 6083b85e4664f06abd5275ee5e893388734a6181
-revision_url: https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181
-analyzed_at: 2026-09-07
+revision: 4831f5bd034f7aa3142b4dc0e5857923a3121550
+revision_url: https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "memory_rejection_tombstones, consulted before every memory write and backstopped by a database trigger | server-go/modules/memory/domain.go:135-150, server-go/modules/memory/mutations.go:26-77, src/modules/db2/c/schema.sql:144-185, src/modules/db2/c/fact_mutation.c:82-98 | `Reject` inserts the rejected value into `memory_rejection_tombstones` keyed on object kind, memory key, content and scope; a later write consults the active tombstones for the same key and content and fails closed with `write blocked by rejection tombstone`, and the typed-fact path keeps `fm_tombstone_blocks`; the schema trigger backstops both | src/tests/test_fact_lifecycle.c (the tombstoned re-extraction case), scripts/memory-governance-pg-test.sql (both trigger backstops)"
@@ -40,7 +40,7 @@ matrix:
 
 aimee is a personal-assistant runtime written mostly in C — roughly 819,000
 lines of C and 89,000 lines of headers, with 149,000 lines of Go, 113,000 of
-Python and a small TypeScript frontend beside them, across 7,831 commits since
+Python and a small TypeScript frontend beside them, across 7,986 commits since
 3 June 2026. It is AGPL-3.0. The tree ships two services: `aimee-server`, which
 holds the memory of one human, and `aimee-kb`, which holds a corpus and a team's
 membership graph.
@@ -751,6 +751,8 @@ attributes it to the extractor rather than to an adversary.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-09-16** — [`4831f5bd034f7aa3142b4dc0e5857923a3121550`](https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550) — re-read at a commit dated 9 September 2026, 61 commits past the previous pin. All seven marks re-tested and held. The change worth checking was a new read path: `server-go/modules/memory/visibility_search.go` adds `SearchVisible`, and a new read is where a scope predicate usually goes missing. It does not. The query carries `lifecycle_state='active'` and a scope disjunction over global, project and workspace, and although an `IncludeAll` flag short-circuits that disjunction, it widens only within the row-level security policy on `memories` — `p_memories_row_scope` gates on `memory_row_scope_visible(scope_type, scope_value)`, which reads `current_setting('aimee.memory_project')` and its workspace twin rather than anything the caller passes. The function refuses outright when placement is not KB. `lifecycle_state='active'` appears at forty non-test sites across six files in the module. Screened before reading: fifteen files scanned, one auto-run surface, one build-time execution point, three unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`6083b85e4664f06abd5275ee5e893388734a6181`](https://github.com/RakuenSoftware/aimee/commit/6083b85e4664f06abd5275ee5e893388734a6181) — re-pinned 79 commits on, still on `testing`, and the memory module moved languages: `server-go/modules/memory/` (9,989 lines, 80 tests, 178 across the Go tree) holds the store, the recall pipeline, the lifecycle filter, the tombstone check, review and restore, `ValidAt`, scope normalization and placements, while 68 C files under `src/modules/memory/` and `src/modules/db2/c/` were deleted, among them `memory_query.c`, `memory_score_fields.c`, `memory_core_search_*.c` and `memory_core_crud.c`; `fact_recall.c` remains as the ABI to a registered provider and `test_fact_recall.c` is reduced to that ABI, so the paired exclusion cases this report cited are gone and `negative_eval` rests on `fact_recall_test.go:69-100`. Every evidence record is re-pointed and the body's three passages that named deleted files are rewritten; the schema, its row-level security, the rejection-tombstone trigger, the WORM audit store and its triggers, `fact_mutation.c` and `fact_lifecycle.c` are unchanged. Seven marks stand. Screened before reading: one auto-run surface (`.claude/hooks/`), one manifest inside the seven-day cooldown, nothing installed or run.
 
