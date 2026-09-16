@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 217 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 310 |
+| Repositories with an auto-run surface (`RUNS`) | 218 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 313 |
 | Repositories with build-time execution (`EXEC`) | 368 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -34,6 +34,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
 | [`agent-memory-guard`](../../content/systems/agent-memory-guard.md) | `.devcontainer/devcontainer.json` |
 | [`agent-memory-mcp`](../../content/systems/agent-memory-mcp.md) | `server.json` |
+| [`agent-working-memory`](../../content/systems/agent-working-memory.md) | `.claude-plugin/` |
 | [`agentdatabase`](../../content/systems/agentdatabase.md) | `.githooks/` |
 | [`agentic-context-engine`](../../content/systems/agentic-context-engine.md) | `.claude/settings.json`, `.gitmodules` |
 | [`agentictrading`](../../content/systems/agentictrading.md) | `.vscode/settings.json` |

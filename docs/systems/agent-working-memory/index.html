@@ -111,14 +111,14 @@ misinformation persists as a coherent story.</p>
               <strong>CompleteIdeas/agent-working-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da" title="ed854014eae66d2960f50083f92dc9e04d2c93da">
+            <a class="meta-pill revision-pill" href="https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611" title="6b04ba62ac50b3123ab69a3fda2679da9ae9e611">
               <span>Analyzed revision</span>
-              <code>ed854014…</code>
+              <code>6b04ba62…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CompleteIdeas--agent-working-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -320,6 +320,40 @@ discrete field, set with <code>retracted_by</code> and
 memory from being treated as true without destroying it.</p>
 <p><strong>Scope enforced — awarded</strong>, per section 6.</p>
 <p><strong>Negative eval — awarded</strong>, per section 10.</p>
+<p><strong>The store used to live where an upgrade deletes it.</strong>
+This is the most consequential thing in the window since the first
+reading and it is not a capability question. <code>awm setup</code>
+defaulted <code>AWM_DB_PATH</code> to
+<code>&lt;packageRoot&gt;/data/memory.db</code> — inside the installed
+npm package. <code>npm install -g agent-working-memory@latest</code>
+renames that directory aside and deletes it, so an upgrade took every
+memory with it, and <code>npm uninstall -g</code> did the same without a
+word. It surfaced from a real machine as an <code>EBUSY</code> renaming
+<code>memory.db</code>, and the commit is right that the failure was the
+lucky outcome: a running process held the file open and npm aborted,
+where with the client closed the upgrade would have succeeded
+silently.</p>
+<p>Three parts of the fix are worth separating. The default is now
+<code>~/.awm/memory.db</code>, which the plugin and desktop launchers
+already used — the same product had two defaults depending on how it was
+installed and only one was safe, which is the shape of the bug rather
+than a detail of it. Re-running setup <em>rescues</em> rather than
+preserves: <code>isInsidePackage</code> matches a
+<code>node_modules</code> segment, and setup copies the store and its
+<code>-wal</code> and <code>-shm</code> sidecars to the safe path,
+repoints the config, prints a loud notice, and leaves the original where
+it is, so the rescue itself cannot destroy anything
+(<code>src/adapters/common.ts:29-31</code>, <code>:175-199</code>). And
+<code>awm doctor</code> fails on the condition, for the people who
+upgrade without re-running setup — which is the population most
+exposed.</p>
+<p>The reason it shipped is the part that generalises, and the commit
+says it plainly: every clean-room assertion passed
+<code>--db-path</code> explicitly, so nothing ever exercised the
+default. A suite that always configures the thing under test never tests
+the configuration most users run on. The container test now performs a
+setup with no <code>--db-path</code> and asserts the resulting path is
+outside <code>node_modules</code> and under the user's home.</p>
 <p><strong>Audit log — withheld, and the gap is specific.</strong> There
 are three event tables — <code>activation_events</code>,
 <code>staging_events</code> and <code>retrieval_feedback</code> — but
@@ -494,6 +528,24 @@ exclusion case <code>:343-356</code>),
 <code>tests/storage/pglite-engine-integration.test.ts</code>,
 <code>tests/integration/mcp-smoke.test.ts</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611"><code class="commit-id" title="6b04ba62ac50b3123ab69a3fda2679da9ae9e611">6b04ba62…</code></a>
+— re-read after 42 commits, at 0.15.8. The lifecycle integration test is
+byte-identical, and <code>src/storage/pglite.ts</code> changed only
+below line 1020 — percentile stats and a linked-feedback query — so the
+<code>retracted</code> predicate and the agent-scoped read at
+<code>:323</code> and <code>:329</code> are exact at both commits and
+all three marks hold unchanged. What the window contains is a data-loss
+fix, written up in section 9: the default store path was inside the
+installed npm package, where <code>npm install -g</code> deletes it on
+upgrade. The report carries it because where a memory store puts its
+file is a durability property of the memory system, and because the
+reason it shipped — every test passed <code>--db-path</code> explicitly,
+so the default was never exercised — is the generalisable half. The
+provenance tag <code>surface=</code> was also renamed to
+<code>client=</code>. Re-screened at this commit: one auto-run surface,
+one build-time execution path, one floating version, one manifest inside
+the cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da"><code class="commit-id" title="ed854014eae66d2960f50083f92dc9e04d2c93da">ed854014…</code></a>
 — second reading, 51 commits on at <code>0.14.1</code>: 140 files,

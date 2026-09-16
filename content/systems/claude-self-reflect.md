@@ -7,9 +7,9 @@ page_kind: system
 source_name: "ramakay/claude-self-reflect"
 source_url: https://github.com/ramakay/claude-self-reflect
 archive_name: "ramakay--claude-self-reflect"
-revision: e9c18ae74f1d54323953de3a9b289d25f9e8ef64
-revision_url: https://github.com/ramakay/claude-self-reflect/commit/e9c18ae74f1d54323953de3a9b289d25f9e8ef64
-analyzed_at: 2026-09-12
+revision: c8c57558943e1427d058f5c7d1b238d77876b4a9
+revision_url: https://github.com/ramakay/claude-self-reflect/commit/c8c57558943e1427d058f5c7d1b238d77876b4a9
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, human_review"
 capability_evidence:
   scope_enforced: "the project predicate on both chunk arms of `csr_reflect_on_past` | mcp/tools.rs:310-320,:429-438, storage/queries.rs:436,:577-587, search/cross_project.rs:94-109 | `normalize_project_scope` takes the tool's `project` argument, the literal `all`, or the project encoded from `MCP_CLIENT_CWD`; the vector arm materialises `SELECT id FROM chunks WHERE project_name = ?1` into a `HashSet` and hands it to `search_chunks_filtered`, whose HNSW walk admits only ids in the set (search/mod.rs:348), and the FTS arm carries `WHERE chunks_fts MATCH ?1 AND c.project_name = ?2` in SQL; reflections are deliberately exempt from both and take a `* 0.3` multiplier instead, so a cross-project reflection is demoted rather than excluded | storage/queries.rs:2834-2846 (`sessions_for_file_filters_by_project`), whose fixture is proved live only by the sibling `sessions_for_file_none_project_is_unscoped` at :2848-2858; no test exercises the scoped branch of `reflect_on_past`, whose every call site in that file's own test module passes `Some(\"all\")`"
@@ -295,5 +295,7 @@ rg -o '#\[ignore' --glob '*.rs' .                            # 2: an opt-in self
 ```
 
 ## History
+
+**2026-09-16** — [`c8c57558943e1427d058f5c7d1b238d77876b4a9`](https://github.com/ramakay/claude-self-reflect/commit/c8c57558943e1427d058f5c7d1b238d77876b4a9) — re-pinned after 2 commits. Nine of the ten anchored files are byte-identical; the tenth, `storage/queries.rs`, changed only in `bytes_to_vec`, from `chunks_exact(4)` to `as_chunks::<4>()` to satisfy a clippy gate — same bytes in, same floats out. All three marks stand on unchanged code. The other commit skips the HNSW index load and dump for write-only hooks, which is a startup cost rather than a retrieval-semantics change, and adds a hooks integration suite. Nothing was installed, built or run.
 
 **2026-09-12** — [`e9c18ae74f1d54323953de3a9b289d25f9e8ef64`](https://github.com/ramakay/claude-self-reflect/commit/e9c18ae74f1d54323953de3a9b289d25f9e8ef64) — first reading. Screened with `scripts/screen_repo.py` before any file was read: three auto-run surfaces (a `.claude-plugin/plugin.json` marketplace manifest whose `postInstall` runs `csr-engine hook install --apply`, a committed `.githooks/pre-commit` that runs `cargo fmt`, `clippy` and `cargo test --lib` and is inert unless `core.hooksPath` points at it, and an empty `.mcp.json`), one build-time execution path (`npm postinstall` running `installer/postinstall.js`, which downloads a checksum-verified release binary and does not activate without `CSR_AUTO_SETUP=1`), eleven floating ranges in the documentation site's `package.json` against a present lockfile, three lockfiles unchanged for 23 days, and a `CLAUDE.md` addressed to a reading agent, read as data. Nothing was installed, built or run; the tree was read, and the committed `eval-kit/h1/results.json` and `eval-kit/t3/mech_pairs.frozen.csv` were inspected rather than regenerated.

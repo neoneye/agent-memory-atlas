@@ -112,14 +112,14 @@ registry.</p>
               <strong>CloudLLM-ai/mentisdb</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01" title="6e8a1429d233d68b455ceafbc83de0b59a5fea01">
+            <a class="meta-pill revision-pill" href="https://github.com/CloudLLM-ai/mentisdb/commit/4c9b95041da68c5a26dece9f8776ff54b05b910c" title="4c9b95041da68c5a26dece9f8776ff54b05b910c">
               <span>Analyzed revision</span>
-              <code>6e8a1429…</code>
+              <code>4c9b9504…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CloudLLM-ai--mentisdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -498,6 +498,43 @@ is not a background audit that logs a warning; it gates the load and
 returns an error, so a corrupted or edited history fails closed rather
 than serving quietly. This is the property most "append-only" stores in
 the corpus claim and few enforce.</li>
+<li><strong>A <em>derived</em> artifact briefly had the same power,
+which is the bug.</strong> Failing closed is right for the thought log
+and wrong for the vector sidecar, which is rebuildable from it.
+<code>manage_vector_sidecar</code> put the sidecar load error in its
+match scrutinee with <code>?</code>, so a stale or mismatched sidecar
+WAL aborted chain open for every daemon request — the canonical store
+was intact and unreachable because something computed from it would not
+load. The fix matches on the load result, logs the unreadable sidecar
+and falls through to the rebuild arm that the other three sidecar load
+sites already used (<code>src/lib.rs:6822-6840</code>). Three of four
+sites had the right policy; the fourth is the one that decided whether
+the store opened. The rule worth extracting: fail closed on what you
+cannot reconstruct, rebuild what you can, and be sure every load site
+agrees which is which.</li>
+<li><strong>A compaction could leave a snapshot paired with an older
+WAL.</strong> <code>compact_to_path</code> cloned the sidecar, wrote the
+full-corpus digest to the clone and deleted the WAL, leaving the live
+in-memory sidecar on the pre-compaction incremental digest — so the next
+append chained a record to a digest the snapshot no longer carried and
+the first load after a compaction boundary failed on a digest chain
+mismatch. The repair is three separate invariants: rebase the in-memory
+WAL head onto the persisted snapshot digest, clear any sibling WAL
+inside <code>save_to_path</code> before the atomic rename so a full
+snapshot can never be paired with an older one, and flush the snapshot
+writer explicitly rather than relying on <code>drop</code> to surface a
+write error.</li>
+<li><strong>One vocabulary, three hand-maintained copies, and they had
+drifted.</strong> <code>server.rs</code>, <code>llm.rs</code> and
+<code>lib.rs</code> each carried their own <code>ThoughtType</code>
+string table, and the server's copy silently rejected two valid
+variants, <code>Goal</code> and <code>LLMExtracted</code> — a stored
+genre an agent could not name at the boundary that writes it. All three
+now delegate to a canonical <code>FromStr</code> beside a
+<code>ThoughtType::ALL</code> of 31 variants
+(<code>src/lib.rs:1871</code>, <code>:1887</code>), so REST and MCP
+append and traversal accept every type and an unknown-type error lists
+the valid options instead of failing blank.</li>
 <li><strong>Tamper-evidence is detection, not prevention.</strong> An
 actor with write access to the <code>.tcbin</code> file can recompute
 the whole chain's hashes; the whitepaper says so. So the guarantee is
@@ -639,6 +676,24 @@ superseded/invalidated exclusion and <code>as_of</code> tests.</li>
 design.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/CloudLLM-ai/mentisdb/commit/4c9b95041da68c5a26dece9f8776ff54b05b910c"><code class="commit-id" title="4c9b95041da68c5a26dece9f8776ff54b05b910c">4c9b9504…</code></a>
+— re-read after 12 commits, at 0.10.8.53, a release the roadmap records
+as technical debt. <code>tests/invalidation_search_tests.rs</code> is
+byte-identical, so the negative-eval case is exact;
+<code>src/lib.rs</code> moved and the bitemporal and chain anchors were
+re-derived there. All three marks hold. The window is three defects and
+their fixes, added to section 9 because each is about the relationship
+between a canonical store and the things derived from it: an unreadable
+vector sidecar aborted chain open rather than rebuilding, at the one of
+four load sites that had the wrong policy; a compaction left the
+in-memory WAL head on a digest the new snapshot no longer carried, so
+the next load failed on a chain mismatch; and three hand-maintained
+copies of the <code>ThoughtType</code> vocabulary had drifted far enough
+that the server rejected two valid variants. Re-screened at this commit:
+one agent-directed file, one build-time execution path, one floating
+version, two manifests inside the cooldown. Nothing was installed, built
+or run.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01"><code class="commit-id" title="6e8a1429d233d68b455ceafbc83de0b59a5fea01">6e8a1429…</code></a>
 — re-read, four commits past the previous pin across 36 files. All three

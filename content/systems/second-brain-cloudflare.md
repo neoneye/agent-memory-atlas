@@ -7,9 +7,9 @@ page_kind: system
 source_name: "rahilp/second-brain-cloudflare"
 source_url: https://github.com/rahilp/second-brain-cloudflare
 archive_name: "rahilp--second-brain-cloudflare"
-revision: 298864c0dd21e62848ce246a72f390f0eb544345
-revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345
-analyzed_at: 2026-09-11
+revision: 40d1174925a0ce2285b061a0b79216ae64d846ef
+revision_url: https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
   trust_state: "recall and graph expansion | src/memory/status.ts:12-15, src/recall/math.ts:34, src/graph/traverse.ts:119 | `status:` of canonical, draft or deprecated — deprecated filtered out of recall and traversal, canonical raising the recency floor | tests"
@@ -233,6 +233,27 @@ words rather than numbers, is a design choice worth noting.
 
 ## 9. Reliability, Safety, and Trust
 
+**A success guard that enumerated failures reported one it had not met as
+success.** The dashboard's drain of synced integration memories decided it had
+finished with `totals.moved === 0 && totals.missing > 0` — a test written against
+the failure shape someone had already seen. A D1 fault made every `moveEntry`
+call throw, so the run returned `moved: 0, errored: 10` per page and advanced
+forever, and because `missing` was zero the guard did not match: the operator saw
+a green checkmark and *"Nothing left to move"* for a drain that moved nothing and
+failed everything. The replacement asserts progress instead of enumerating
+absences — `totals.moved + totals.alreadyThere === 0` is *nothing productive
+happened* — with the comment stating why: a future counter that means failure has
+to trip this the same way `errored` and `missing` already do. A failure string
+naming the count and the remedy was added beside it.
+
+Two things generalise. A guard phrased as a list of known bad states is only ever
+as complete as the incident history behind it, and the state it does not name
+reads as success; phrased as *did the thing I wanted happen*, an unknown failure
+falls on the safe side by construction. And this is the same defect as a silent
+retrieval filter one layer up — a memory system that cannot distinguish *nothing
+to do* from *nothing worked* teaches its operator to trust a checkmark that means
+neither.
+
 **Trust state — awarded.** `status` is a three-valued enum
 (`canonical` / `draft` / `deprecated`) read on the read path: deprecated entries
 are excluded from search SQL and skipped in graph expansion, canonical raises the
@@ -441,6 +462,8 @@ Run from the root of the checkout at the pinned commit.
 | Nothing hands raw caller tags to `withStatus` | `grep -rn "withStatus(" --include="*.ts" src` | Nine call sites, all on stored or already-normalised tag arrays |
 
 ## History
+
+**2026-09-16** — [`40d1174925a0ce2285b061a0b79216ae64d846ef`](https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef) — re-read after 39 commits, at app and Worker 3.3.0. `src/memory/status.ts`, `src/recall/math.ts` and `src/capture/duplicate.ts` are byte-identical, so the trust-state ladder and the duplicate scope predicate are exact; `graph/traverse.ts`, `capture/share.ts` and `staleness/pass.ts` moved and were re-derived. All three marks hold. The finding added to section 9 is a dashboard success guard that enumerated known failure shapes and so reported an unenumerated one as success — a drain that moved nothing and errored on every page rendered a green checkmark. Re-screened at this commit: one build-time execution path, two floating versions, four manifests inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-11** — [`298864c0dd21e62848ce246a72f390f0eb544345`](https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345) — re-read, 415 files and 82,252 insertions past the previous pin in a single commit. **`scope_enforced` is added.** The previous edition recorded *"one deployment per person in their own Cloudflare account; no key on the read path"*; `entries` now carries a `workspace_id` column with personal and team workspaces above it, and the read paths carry it as a predicate — `share.ts:26`, `duplicate.ts:131`, `staleness/pass.ts:197`. The detail that makes it convincing is the annotation convention: where a read deliberately skips the predicate, the line above it says `// scope-exempt: by-id:` and gives the reason, so the exceptions are enumerable rather than invisible. **The reserved-namespace finding sharpens, and not in the project's favour.** The two defects `volatility.ts` documents are fixed there and repeated in `status.ts`, the namespace that carries this report's `trust_state` mark: `getStatus` stops at the first `status:`-prefixed tag and returns `null` when it is invalid, which is the shadowing the volatility comment describes, and `recall/math.ts:34` raises the recency floor for `status:canonical`, so a caller writing `status:xyz` ahead of a real verdict lowers the entry's floor. The case-sensitivity half is latent — `captureEntry` lowercases before any `status:` reader runs on that path, and unlike `withVolatility` nothing hands `withStatus` raw caller tags — but what protects it is an ordering property in another file that nothing asserts. Screened before reading: eleven findings; nothing was installed or run.
 

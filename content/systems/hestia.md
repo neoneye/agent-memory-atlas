@@ -7,9 +7,9 @@ page_kind: system
 source_name: "thefullnacho/hestia"
 source_url: https://github.com/thefullnacho/hestia
 archive_name: "thefullnacho--hestia"
-revision: 71b9e8610a7e20620c92c0189fd1075742d147fb
-revision_url: https://github.com/thefullnacho/hestia/commit/71b9e8610a7e20620c92c0189fd1075742d147fb
-analyzed_at: 2026-09-13
+revision: be5ce89c9bf884b2ca7d9d6a0d3c0d118747becf
+revision_url: https://github.com/thefullnacho/hestia/commit/be5ce89c9bf884b2ca7d9d6a0d3c0d118747becf
+analyzed_at: 2026-09-16
 capabilities: "human_review, negative_eval"
 capability_evidence:
   human_review: "the review inbox between the note-taker and the live store | brain/note_taker.py, brain/review_notes.py, brain/hestia.py:346 | passively extracted facts *\"land in a review inbox (memory/inbox/*.md), NOT straight into the live memory store\"*, deduplicated against both live memory and the queue before being written as reviewable markdown; `review_notes.py` is the human dispose step — *\"nothing becomes part of the brain's live memory until you promote it here\"* — and `GET /memory/inbox` exposes the queue. No deployment variable can bypass the gate — `note_taker.py:9` states that *\"deployment environment variables cannot bypass this gate\"*, and `test_legacy_autowrite_flag_cannot_bypass_review` sets `HESTIA_NOTETAKER_AUTOWRITE=1`, then asserts the proposal exists, that `mem.recall(\"1080p\") == []`, and that the file landed in the inbox instead | brain/tests/test_memory_inbox.py, brain/tests/test_note_taker.py:104"
@@ -372,6 +372,8 @@ memory has to be correctable after the fact rather than only before it.
 - **Tests and evals:** `brain/tests/test_memory_store.py`, `brain/tests/test_memory_inbox.py`, `brain/eval_keymatch.py`, `benchmarks/`
 
 ## History
+
+**2026-09-16** — [`be5ce89c9bf884b2ca7d9d6a0d3c0d118747becf`](https://github.com/thefullnacho/hestia/commit/be5ce89c9bf884b2ca7d9d6a0d3c0d118747becf) — re-pinned after 1 commit. `brain/note_taker.py`, `brain/review_notes.py` and all three anchored test files are byte-identical, so both marks stand on unchanged code. The single commit adds an NFC tag slug and a rainfall record to the garden domain; the one memory-adjacent file it touches, `brain/hestia.py`, gains a `p` parameter and a watering-position lookup on the capture path, neither of which reaches the inbox or the review flow. Nothing was installed, built or run.
 
 **2026-09-13** — [`71b9e8610a7e20620c92c0189fd1075742d147fb`](https://github.com/thefullnacho/hestia/commit/71b9e8610a7e20620c92c0189fd1075742d147fb) — re-read, 59 commits past the previous pin. Screened again first: no auto-run surface, two dependency files inside the 7-day cooldown and three unpinned surfaces; nothing was installed and the suite was not run. Both marks hold and both gained evidence. The published claim that a `HESTIA_NOTETAKER_AUTOWRITE` bypass exists and is off by default is corrected: the flag no longer bypasses approval, `note_taker.py` states that deployment environment variables cannot bypass the gate, and `test_legacy_autowrite_flag_cannot_bypass_review` sets it to `1` and asserts the fact lands in the inbox rather than live memory. Recall was rewritten from term-overlap counting to BM25 with a stop list, corpus rarity and length normalization; `pinned` moved from a `0.5` score bonus to the second element of the sort key, so it breaks ties and cannot promote an irrelevant record, and `confidence` is no longer read by any ranking while remaining in the context block. Results are capped at twenty. Three recall cases and one gate case were added to the committed negative set, and the propose-then-promote shape now also covers imported recipes through `recipe_drafts.py` and `recipe_review.py`.
 

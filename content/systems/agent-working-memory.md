@@ -7,9 +7,9 @@ page_kind: system
 source_name: "CompleteIdeas/agent-working-memory"
 source_url: https://github.com/CompleteIdeas/agent-working-memory
 archive_name: "CompleteIdeas--agent-working-memory"
-revision: ed854014eae66d2960f50083f92dc9e04d2c93da
-revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da
-analyzed_at: 2026-09-09
+revision: 6b04ba62ac50b3123ab69a3fda2679da9ae9e611
+revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
   trust_state: "the retracted flag, composed into every read query | src/storage/pglite.ts:329,347,370,399,509,538,565,584,672,695, retractEngram :475 | `retracted` is a boolean on the engram and every read path appends `AND retracted = FALSE` to its SQL rather than filtering afterwards. Four of the ten sites gate it behind an explicit `includeRetracted` opt-in, so recovering a retracted memory is possible and is a deliberate act by the caller. A retraction does not delete: `retractEngram` sets the flag and records who retracted it, and the engine writes a correction engram beside it | tests/integration/memory-lifecycle.test.ts"
@@ -219,6 +219,36 @@ memory from being treated as true without destroying it.
 
 **Negative eval — awarded**, per section 10.
 
+**The store used to live where an upgrade deletes it.** This is the most
+consequential thing in the window since the first reading and it is not a
+capability question. `awm setup` defaulted `AWM_DB_PATH` to
+`<packageRoot>/data/memory.db` — inside the installed npm package. `npm install
+-g agent-working-memory@latest` renames that directory aside and deletes it, so
+an upgrade took every memory with it, and `npm uninstall -g` did the same without
+a word. It surfaced from a real machine as an `EBUSY` renaming `memory.db`, and
+the commit is right that the failure was the lucky outcome: a running process
+held the file open and npm aborted, where with the client closed the upgrade
+would have succeeded silently.
+
+Three parts of the fix are worth separating. The default is now
+`~/.awm/memory.db`, which the plugin and desktop launchers already used — the
+same product had two defaults depending on how it was installed and only one was
+safe, which is the shape of the bug rather than a detail of it. Re-running setup
+*rescues* rather than preserves: `isInsidePackage` matches a `node_modules`
+segment, and setup copies the store and its `-wal` and `-shm` sidecars to the
+safe path, repoints the config, prints a loud notice, and leaves the original
+where it is, so the rescue itself cannot destroy anything
+(`src/adapters/common.ts:29-31`, `:175-199`). And `awm doctor` fails on the
+condition, for the people who upgrade without re-running setup — which is the
+population most exposed.
+
+The reason it shipped is the part that generalises, and the commit says it
+plainly: every clean-room assertion passed `--db-path` explicitly, so nothing
+ever exercised the default. A suite that always configures the thing under test
+never tests the configuration most users run on. The container test now performs
+a setup with no `--db-path` and asserts the resulting path is outside
+`node_modules` and under the user's home.
+
 **Audit log — withheld, and the gap is specific.** There are three event tables —
 `activation_events`, `staging_events` and `retrieval_feedback` — but two of them
 are the retrieval half the mark excludes, and the mutation that matters most
@@ -383,6 +413,8 @@ contract `:3-17`), `tests/storage/pglite-engine-integration.test.ts`,
 `tests/integration/mcp-smoke.test.ts`
 
 ## History
+
+**2026-09-16** — [`6b04ba62ac50b3123ab69a3fda2679da9ae9e611`](https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611) — re-read after 42 commits, at 0.15.8. The lifecycle integration test is byte-identical, and `src/storage/pglite.ts` changed only below line 1020 — percentile stats and a linked-feedback query — so the `retracted` predicate and the agent-scoped read at `:323` and `:329` are exact at both commits and all three marks hold unchanged. What the window contains is a data-loss fix, written up in section 9: the default store path was inside the installed npm package, where `npm install -g` deletes it on upgrade. The report carries it because where a memory store puts its file is a durability property of the memory system, and because the reason it shipped — every test passed `--db-path` explicitly, so the default was never exercised — is the generalisable half. The provenance tag `surface=` was also renamed to `client=`. Re-screened at this commit: one auto-run surface, one build-time execution path, one floating version, one manifest inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-09** — [`ed854014eae66d2960f50083f92dc9e04d2c93da`](https://github.com/CompleteIdeas/agent-working-memory/commit/ed854014eae66d2960f50083f92dc9e04d2c93da) — second reading, 51 commits on at `0.14.1`: 140 files, 37,891 insertions. Screened before reading: no auto-run surface, one build-time execution point, one unpinned surface with a lockfile 17 days old; nothing was installed and no suite was run.
 

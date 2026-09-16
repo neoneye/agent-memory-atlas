@@ -109,14 +109,14 @@ becomes a tie-breaker instead of a gate.</p>
               <strong>rahilp/second-brain-cloudflare</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345" title="298864c0dd21e62848ce246a72f390f0eb544345">
+            <a class="meta-pill revision-pill" href="https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef" title="40d1174925a0ce2285b061a0b79216ae64d846ef">
               <span>Analyzed revision</span>
-              <code>298864c0…</code>
+              <code>40d11749…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rahilp--second-brain-cloudflare" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -335,6 +335,30 @@ the person whose memory it is, in words rather than numbers, is a design
 choice worth noting.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>A success guard that enumerated failures reported one it had
+not met as success.</strong> The dashboard's drain of synced integration
+memories decided it had finished with
+<code>totals.moved === 0 &amp;&amp; totals.missing &gt; 0</code> — a
+test written against the failure shape someone had already seen. A D1
+fault made every <code>moveEntry</code> call throw, so the run returned
+<code>moved: 0, errored: 10</code> per page and advanced forever, and
+because <code>missing</code> was zero the guard did not match: the
+operator saw a green checkmark and <em>"Nothing left to move"</em> for a
+drain that moved nothing and failed everything. The replacement asserts
+progress instead of enumerating absences —
+<code>totals.moved + totals.alreadyThere === 0</code> is <em>nothing
+productive happened</em> — with the comment stating why: a future
+counter that means failure has to trip this the same way
+<code>errored</code> and <code>missing</code> already do. A failure
+string naming the count and the remedy was added beside it.</p>
+<p>Two things generalise. A guard phrased as a list of known bad states
+is only ever as complete as the incident history behind it, and the
+state it does not name reads as success; phrased as <em>did the thing I
+wanted happen</em>, an unknown failure falls on the safe side by
+construction. And this is the same defect as a silent retrieval filter
+one layer up — a memory system that cannot distinguish <em>nothing to
+do</em> from <em>nothing worked</em> teaches its operator to trust a
+checkmark that means neither.</p>
 <p><strong>Trust state — awarded.</strong> <code>status</code> is a
 three-valued enum (<code>canonical</code> / <code>draft</code> /
 <code>deprecated</code>) read on the read path: deprecated entries are
@@ -591,6 +615,20 @@ match</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef"><code class="commit-id" title="40d1174925a0ce2285b061a0b79216ae64d846ef">40d11749…</code></a>
+— re-read after 39 commits, at app and Worker 3.3.0.
+<code>src/memory/status.ts</code>, <code>src/recall/math.ts</code> and
+<code>src/capture/duplicate.ts</code> are byte-identical, so the
+trust-state ladder and the duplicate scope predicate are exact;
+<code>graph/traverse.ts</code>, <code>capture/share.ts</code> and
+<code>staleness/pass.ts</code> moved and were re-derived. All three
+marks hold. The finding added to section 9 is a dashboard success guard
+that enumerated known failure shapes and so reported an unenumerated one
+as success — a drain that moved nothing and errored on every page
+rendered a green checkmark. Re-screened at this commit: one build-time
+execution path, two floating versions, four manifests inside the
+cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/rahilp/second-brain-cloudflare/commit/298864c0dd21e62848ce246a72f390f0eb544345"><code class="commit-id" title="298864c0dd21e62848ce246a72f390f0eb544345">298864c0…</code></a>
 — re-read, 415 files and 82,252 insertions past the previous pin in a

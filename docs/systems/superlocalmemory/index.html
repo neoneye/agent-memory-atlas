@@ -109,14 +109,14 @@ audits — and an EU AI Act module that refuses to certify compliance.</p>
               <strong>qualixar/superlocalmemory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/qualixar/superlocalmemory/commit/07a431ed3894ad6b28f144db8a1a8c7d8c839a86" title="07a431ed3894ad6b28f144db8a1a8c7d8c839a86">
+            <a class="meta-pill revision-pill" href="https://github.com/qualixar/superlocalmemory/commit/5bfa47c941b6329b23f93b17f3dce7f6d70a2b9a" title="5bfa47c941b6329b23f93b17f3dce7f6d70a2b9a">
               <span>Analyzed revision</span>
-              <code>07a431ed…</code>
+              <code>5bfa47c9…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/qualixar--superlocalmemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -351,6 +351,63 @@ atlas.</strong> A hash chain from a named genesis,
 that distinguishes it — an independent connection so the audit survives
 corruption of the store. Every operation including reads is logged.</p>
 <p><strong>Scope — awarded</strong>, per section 6.</p>
+<p><strong>The forgetting curve was calibrated for a different store
+than the one it ran on.</strong> Between 4.1.14 and 4.1.17 the project
+found, and fixed, the most instructive defect a decay-based memory can
+have. <code>EbbinghausCurve</code> is parameterised in hours — its
+strongest setting is roughly four days — because it models working
+memory. It was fed real elapsed time from a store that keeps memories
+for years, so anything older than a few days scored as fully forgotten,
+and the rest of the system read that as archived. The measured number is
+the point: <strong>5,546 of 5,561 memories on one real store</strong>.
+Nothing was corrupted and no query failed; the store simply reported
+that it had forgotten almost everything it held.</p>
+<p>The fix is the part worth copying. Rather than inventing a second
+constant, it keeps the curve's <em>shape</em> and takes its time
+constant from the ladder the product already documents —
+<code>ARCHIVE_AFTER_DAYS</code> in <code>core/tier_manager.py</code>,
+365 days without access must reach <code>archive_threshold</code>
+retention — so there is one authority for <em>how long is a long time
+here</em> (<code>core/maintenance.py:116-135</code>). Strength then
+scales that constant, which is the access boost expressed continuously
+instead of as a separate multiplier. The docstring is candid that the
+previous release scaled the seed and left the decay path unscaled, and
+that only measuring caught it. Archived and forgotten also stopped being
+one-way: a memory used again can climb back out, which a decay model
+that only ratchets downward cannot express.</p>
+<p><strong>A recomputed tier was written to the mirror and reverted
+within the same cycle.</strong> The tier lives in two columns, an
+authority and a mirror that a reconcile step syncs one way. The
+maintenance pass wrote its recomputed value to the mirror, and reconcile
+— later in the same cycle — put the old value back, so on a real store
+corrected tiers appeared and vanished before anyone could see them.
+<code>_persist_lifecycle</code>
+(<code>core/maintenance.py:158-163</code>) now writes both together at
+all four sites, and a check fails the build if a new site writes only
+the mirror.</p>
+<p>The existing test is the instructive half.
+<code>test_lifecycle_has_one_authority.py</code> asserted that reconcile
+syncs in the right <em>direction</em>, and it passed throughout: it
+never asserted that a value the maintenance pass had just written was
+still there afterwards. The replacement,
+<code>test_a_recomputed_lifecycle_survives_the_tick.py</code>, asserts
+the outcome rather than the mechanism — a recomputed tier is not
+reverted by reconcile, the authority moves and not just the mirror, and
+a mixed batch keeps each fact in its own tier.</p>
+<p><strong>The vector store grew one version per write and pruned
+none.</strong> Every memory written created a new version and nothing
+removed them: 5,561 memories against a 610 MB database and a <strong>17
+GB vector store holding 50,580 versions</strong>, with every vector
+operation walking that history — which is what had the daemon holding a
+core at over 90% with nothing queued. Writes are now grouped per
+maintenance pass rather than per memory, and versions past a retention
+window are dropped on the maintenance cycle, so a store that has already
+grown heals itself rather than needing a command. The window is seven
+days, tunable through <code>SLM_VECTOR_HISTORY_DAYS</code>
+(<code>core/maintenance_scheduler.py:40</code>). Self-healing is the
+right default here for the same reason the rescue path is in Agent
+Working Memory's setup: the people worst affected are the ones who will
+never read the release note.</p>
 <p><strong>Trust state — withheld, and the distinction matters.</strong>
 <code>trust/</code> scores <em>operations and agents</em>, not memories.
 The gate answers "may this actor write", not "is this fact believed". A
@@ -550,6 +607,25 @@ elsewhere; no content hash</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/qualixar/superlocalmemory/commit/5bfa47c941b6329b23f93b17f3dce7f6d70a2b9a"><code class="commit-id" title="5bfa47c941b6329b23f93b17f3dce7f6d70a2b9a">5bfa47c9…</code></a>
+— re-read after 17 commits, across releases 4.1.15 to 4.1.17. All three
+marks hold; <code>storage/database.py</code> moved and the bitemporal
+and scope predicates were re-derived there. The window is three defects
+the project found on real stores and fixed, and all three are written up
+in section 9 because each is a way a memory system can be wrong without
+erroring: a working-memory decay curve fed real elapsed time from a
+long-lived store, which scored 5,546 of 5,561 memories as fully
+forgotten; a recomputed tier written to a mirrored column and reverted
+by the reconcile step in the same cycle; and a vector store that created
+a version per write and pruned none, reaching 17 GB and 50,580 versions
+against 5,561 memories. Two of the three shipped past a passing test
+that checked the mechanism rather than the outcome, which is worth
+reading beside the same pattern in <a
+href="../agent-working-memory/">Agent Working Memory</a> at this date.
+Re-screened at this commit: one agent-directed file, 21 build-time
+execution paths, ten floating versions, six manifests inside the
+cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/qualixar/superlocalmemory/commit/07a431ed3894ad6b28f144db8a1a8c7d8c839a86"><code class="commit-id" title="07a431ed3894ad6b28f144db8a1a8c7d8c839a86">07a431ed…</code></a>
 — re-read, 857 files and 101,066 insertions past the previous pin in a

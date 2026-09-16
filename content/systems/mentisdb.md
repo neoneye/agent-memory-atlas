@@ -7,13 +7,13 @@ page_kind: system
 source_name: "CloudLLM-ai/mentisdb"
 source_url: https://github.com/CloudLLM-ai/mentisdb
 archive_name: "CloudLLM-ai--mentisdb"
-revision: 6e8a1429d233d68b455ceafbc83de0b59a5fea01
-revision_url: https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01
-analyzed_at: 2026-09-13
+revision: 4c9b95041da68c5a26dece9f8776ff54b05b910c
+revision_url: https://github.com/CloudLLM-ai/mentisdb/commit/4c9b95041da68c5a26dece9f8776ff54b05b910c
+analyzed_at: 2026-09-16
 capabilities: "bitemporal, audit_log, negative_eval"
 capability_evidence:
-  bitemporal: "the thought relation — when a fact was true, apart from when the record was appended | src/lib.rs:2201-2233, tests/invalidation_search_tests.rs:155-162 | `ThoughtRelation` carries `valid_at` and `invalid_at` as optional timestamps, serialised only when set, beside the append-only record's own `timestamp` and chain position. The read side is what makes it bitemporal rather than two spare columns: a point-in-time query takes an `as_of` instant, and `as_of_keeps_thoughts_valid_at_that_time` pins that such a query still surfaces a thought that was valid then even though it was superseded later — so the store answers what it held to be true at a past moment, not only what it holds now | tests/invalidation_search_tests.rs"
-  audit_log: "the thought chain — an append-only record whose every entry hashes its predecessor | src/lib.rs:617, :2678, :3896, :4242 | every appended record carries a `prev_hash`, and the stored hash covers the record contents plus the previous record's hash, so *\"offline tampering\"* of an earlier entry breaks every hash after it. The chain is the store's own write path rather than a sidecar, and the module is explicit that concurrent appends are the case the design has to answer. The guarantee is detection rather than prevention, which the report states where the gate is described | the chain-verification tests in the suite"
+  bitemporal: "the thought relation — when a fact was true, apart from when the record was appended | src/lib.rs:2393-2425, tests/invalidation_search_tests.rs:155-162 | `ThoughtRelation` carries `valid_at` and `invalid_at` as optional timestamps, serialised only when set, beside the append-only record's own `timestamp` and chain position. The read side is what makes it bitemporal rather than two spare columns: a point-in-time query takes an `as_of` instant, and `as_of_keeps_thoughts_valid_at_that_time` pins that such a query still surfaces a thought that was valid then even though it was superseded later — so the store answers what it held to be true at a past moment, not only what it holds now | tests/invalidation_search_tests.rs"
+  audit_log: "the thought chain — an append-only record whose every entry hashes its predecessor | src/lib.rs:617, :2870, :4434, :4468 | every appended record carries a `prev_hash`, and the stored hash covers the record contents plus the previous record's hash, so *\"offline tampering\"* of an earlier entry breaks every hash after it. The chain is the store's own write path rather than a sidecar, and the module is explicit that concurrent appends are the case the design has to answer. The guarantee is detection rather than prevention, which the report states where the gate is described | the chain-verification tests in the suite"
   negative_eval: "default search — a superseded thought must not come back unless the caller asks for it | tests/invalidation_search_tests.rs:33-40, :155-162 | `default_search_excludes_superseded_thoughts` appends a thought, supersedes it, and asserts it is absent from both the default query and ranked search. It is not vacuous by construction: the same test requires the thought to reappear when `include_invalidated` is set, so the row is proven present in the store before the default path is asserted to withhold it, and the point-in-time case beside it requires the same row to surface under an `as_of` that precedes the supersession | tests/invalidation_search_tests.rs, 286 lines"
 stack_storage: "files"
 stack_retrieval: "lexical, vector, graph"
@@ -329,6 +329,36 @@ atlas — with a clearly drawn perimeter.
   audit that logs a warning; it gates the load and returns an error, so a corrupted
   or edited history fails closed rather than serving quietly. This is the property
   most "append-only" stores in the corpus claim and few enforce.
+- **A *derived* artifact briefly had the same power, which is the bug.** Failing
+  closed is right for the thought log and wrong for the vector sidecar, which is
+  rebuildable from it. `manage_vector_sidecar` put the sidecar load error in its
+  match scrutinee with `?`, so a stale or mismatched sidecar WAL aborted chain
+  open for every daemon request — the canonical store was intact and unreachable
+  because something computed from it would not load. The fix matches on the load
+  result, logs the unreadable sidecar and falls through to the rebuild arm that
+  the other three sidecar load sites already used (`src/lib.rs:6822-6840`). Three
+  of four sites had the right policy; the fourth is the one that decided whether
+  the store opened. The rule worth extracting: fail closed on what you cannot
+  reconstruct, rebuild what you can, and be sure every load site agrees which is
+  which.
+- **A compaction could leave a snapshot paired with an older WAL.**
+  `compact_to_path` cloned the sidecar, wrote the full-corpus digest to the
+  clone and deleted the WAL, leaving the live in-memory sidecar on the
+  pre-compaction incremental digest — so the next append chained a record to a
+  digest the snapshot no longer carried and the first load after a compaction
+  boundary failed on a digest chain mismatch. The repair is three separate
+  invariants: rebase the in-memory WAL head onto the persisted snapshot digest,
+  clear any sibling WAL inside `save_to_path` before the atomic rename so a full
+  snapshot can never be paired with an older one, and flush the snapshot writer
+  explicitly rather than relying on `drop` to surface a write error.
+- **One vocabulary, three hand-maintained copies, and they had drifted.**
+  `server.rs`, `llm.rs` and `lib.rs` each carried their own `ThoughtType` string
+  table, and the server's copy silently rejected two valid variants, `Goal` and
+  `LLMExtracted` — a stored genre an agent could not name at the boundary that
+  writes it. All three now delegate to a canonical `FromStr` beside a
+  `ThoughtType::ALL` of 31 variants (`src/lib.rs:1871`, `:1887`), so REST and MCP
+  append and traversal accept every type and an unknown-type error lists the
+  valid options instead of failing blank.
 - **Tamper-evidence is detection, not prevention.** An actor with write access to
   the `.tcbin` file can recompute the whole chain's hashes; the whitepaper says so.
   So the guarantee is "you will know if it was altered by someone who did not
@@ -445,6 +475,8 @@ adapter is a trait waiting for one.
 - `WHITEPAPER.md` — the ledger, tamper-evidence and typing design.
 
 ## History
+
+**2026-09-16** — [`4c9b95041da68c5a26dece9f8776ff54b05b910c`](https://github.com/CloudLLM-ai/mentisdb/commit/4c9b95041da68c5a26dece9f8776ff54b05b910c) — re-read after 12 commits, at 0.10.8.53, a release the roadmap records as technical debt. `tests/invalidation_search_tests.rs` is byte-identical, so the negative-eval case is exact; `src/lib.rs` moved and the bitemporal and chain anchors were re-derived there. All three marks hold. The window is three defects and their fixes, added to section 9 because each is about the relationship between a canonical store and the things derived from it: an unreadable vector sidecar aborted chain open rather than rebuilding, at the one of four load sites that had the wrong policy; a compaction left the in-memory WAL head on a digest the new snapshot no longer carried, so the next load failed on a chain mismatch; and three hand-maintained copies of the `ThoughtType` vocabulary had drifted far enough that the server rejected two valid variants. Re-screened at this commit: one agent-directed file, one build-time execution path, one floating version, two manifests inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-13** — [`6e8a1429d233d68b455ceafbc83de0b59a5fea01`](https://github.com/CloudLLM-ai/mentisdb/commit/6e8a1429d233d68b455ceafbc83de0b59a5fea01) — re-read, four commits past the previous pin across 36 files. All three marks stand and each mechanism was re-checked rather than carried forward: `valid_at` and `invalid_at` remain on the relation type in `src/lib.rs:2201-2233`, `tests/invalidation_search_tests.rs` is intact at 286 lines, and the hash-chained audit gate is unchanged. The skill registry gained a permanent delete and a documented revocation lifecycle, recorded above: revoking resists a re-upload to the same id by design, while deleting frees the id for reuse. `tombstone` stays withheld because the revocation is keyed on the id rather than the content, and the project's own instruction for a corrected skill is to publish it under a new id. Screened again first; nothing was installed and no suite was run.
 
