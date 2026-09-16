@@ -7,9 +7,9 @@ page_kind: system
 source_name: "railstracks/animus"
 source_url: https://github.com/railstracks/animus
 archive_name: "railstracks--animus"
-revision: 63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa
-revision_url: https://github.com/railstracks/animus/commit/63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa
-analyzed_at: 2026-09-01
+revision: 6d0e14fb12d460b71d8cf44e155b0504c5c3a780
+revision_url: https://github.com/railstracks/animus/commit/6d0e14fb12d460b71d8cf44e155b0504c5c3a780
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, audit_log, human_review"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
@@ -1120,5 +1120,7 @@ git log --oneline -- tests/ConsolidationTests.cpp tests/MemorySearchTests.cpp
 ```
 
 ## History
+
+**2026-09-16** — [`6d0e14fb12d460b71d8cf44e155b0504c5c3a780`](https://github.com/railstracks/animus/commit/6d0e14fb12d460b71d8cf44e155b0504c5c3a780) — re-read at a commit dated 12 September 2026, 121 commits past the previous pin. The repository moved 13,193 lines across 132 files and the memory did not: `src/kernel/memory` and `src/kernel/ontology` have identical tree hashes at both commits, and `include/animus_kernel/MemoryStore.h`, `src/kernel/context/ActiveMemoryProvider.cpp` and `admin-ui/src/views/MemoryView.vue` are byte-identical, so every line number and quotation behind the four marks is still exact. The one anchor that changed is the admin route listing a session's turns, and the change is a paging optimisation rather than a review one — it now fetches a page straight from the store instead of hydrating the whole session, so *"[o]pen cost scales with the page, not the session length"*. All four marks hold. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-01** — [`63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa`](https://github.com/railstracks/animus/commit/63c359dd2bbdb4cd4cac52ddb3d5b73292e418fa) — first reading, at 405 commits and 1,427 files, on a docs commit dated 27 August 2026 refreshing `ROADMAP.md` for the 0.4 series. Screened before anything was read: **0 auto-run surfaces, 0 build-time execution paths, 1 unpinned surface** (`admin-ui/package.json`, 12 floating ranges behind a lockfile). `admin-ui/package-lock.json` and `yarn.lock` were both last touched on 12 July 2026, 50 days before this reading and well outside the seven-day cooldown — but nothing was installed, built or run regardless: no `cmake`, no `make`, no `npm`, no Lua, and no binary from the checkout was executed, including the committed `test_hkdf` executable at the tree root. `AGENTS.md` and `AGENTS.orm.md` are both addressed to a reading agent; both were read as data, both are ordinary architecture documents, and nothing in either directed this review — one of their claims (`include/animus_kernel/store/`) does not correspond to a directory in the tree and is recorded in section 3 as a documentation error rather than repeated. Four marks: `trust_state` on a `New`/`Current`/`Deprecated` column that three call sites filter on, `scope_enforced` on the layer's `agent_id` carried into the observation arm's SQL in both dialects, `audit_log` on `ontology_mutations` with full before-and-after row snapshots, and `human_review` on an admin surface that authors, deletes and adjudicates rather than displaying. `tombstone`, `bitemporal` and `negative_eval` were each examined and withheld — the near-misses are named in sections 2, 5 and 10. The four unwired mechanisms in section 1 were each traced from the field back to every assignment, not from the symbol to its callers.
