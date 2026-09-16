@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust knowledge-graph memory
+whose governance rows no query language can reach, whose belief is
+computed and never stored, whose valid time and transaction time are
+separate reads, and whose erasure of a source strips every artifact
+derived from it and blocks the digest from being re-published.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Anda DB — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust knowledge-graph
+memory whose governance rows no query language can reach, whose belief
+is computed and never stored, whose valid time and transaction time are
+separate reads, and whose erasure of a source strips every artifact
+derived from it and blocks the digest from being re-published.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Anda DB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust knowledge-graph
+memory whose governance rows no query language can reach, whose belief
+is computed and never stored, whose valid time and transaction time are
+separate reads, and whose erasure of a source strips every artifact
+derived from it and blocks the digest from being re-published.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Anda DB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Anda DB",
+      "description": "A Rust knowledge-graph memory whose governance rows no query language can reach, whose belief is computed and never stored, whose valid time and transaction time are separate reads, and whose erasure of a source strips every artifact derived from it and blocks the digest from being re-published.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory can describe authority; only the
+other plane can grant it</p>
+          <h1>Anda DB</h1>
+          <p class="document-deck">A Rust knowledge-graph memory whose
+governance rows no query language can reach, whose belief is computed
+and never stored, whose valid time and transaction time are separate
+reads, and whose erasure of a source strips every artifact derived from
+it and blocks the digest from being re-published.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ldclabs/anda-db">
+              <span>Source</span>
+              <strong>ldclabs/anda-db</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de" title="450b48d0a2d6a74a42872d4a3a3f1ca3346513de">
+              <span>Analyzed revision</span>
+              <code>450b48d0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ldclabs--anda-db" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ldclabs--anda-db</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Anda DB is "a modular Rust workspace for building durable AI memory
+systems" — MIT, version 0.13.0, Rust 1.95 or newer, 232,178 lines of
+which 169,548 are Rust across fifteen crates, with 1,642 test functions,
+Python and TypeScript bindings, and a protocol specification of its own.
+The embedded document database with B-Tree, BM25 and HNSW indexes is the
+floor; the subject here is what sits on top of it — KIP 2.0, a
+declarative knowledge protocol, and the Cognitive Nexus runtime that
+makes it a knowledge graph for agents.</p>
+<p>The module worth reading first is not the retrieval engine. It is
+governance, and it opens with four lines:</p>
+<blockquote>
+<p>"Cognitive content may describe authority. Only this plane can grant
+it."</p>
+</blockquote>
+<p>The elaboration is the clearest statement of a problem this atlas has
+been circling for hundreds of reports:</p>
+<blockquote>
+<p>"A Space can hold a Proposition saying <em>Alice is an
+administrator</em>, an Assertion supporting it with high confidence, and
+Evidence for both — and Alice still administers nothing, because
+administering is a <code>GrantRow</code> and a Proposition is a claim.
+Without that separation, any path that can write memory is a path to
+privilege escalation, and every Agent memory system has such a path by
+construction: it is the entire point of the system."</p>
+</blockquote>
+<p>The enforcement matches the claim: grant rows live in the same
+database as cognitive state but "no KML clause reaches them", written
+only by host APIs on the runtime, and a protected operation is denied
+unless something explicitly allows it — "a missing policy must never
+become public access".</p>
+<p>The same module separates three questions that most systems answer
+with one number:</p>
+<blockquote>
+<p>"Epistemic — should I believe this? Governance — am I allowed to
+touch it? Operational — how strongly may it influence what I do?"</p>
+</blockquote>
+<p><strong>Belief is computed, never stored.</strong> The projection
+module says why: storing it "would create a second answer that could
+disagree with the Assertions it came from, and nothing would say which
+one was right". Its three arithmetic rules are a list of the failures
+this atlas most often finds shipped:</p>
+<ul>
+<li>"Absence of support is not rejection." An unasserted Proposition is
+<code>insufficient</code>, and <code>insufficient</code> is the default
+for <code>BeliefStatus</code> because "silence is the absence of a
+basis, never a verdict".</li>
+<li>"Evidence weight is not frequency count … Saying the same thing
+three times is one voice repeated, not three independent voices."</li>
+<li>"Two Assertions that cite the same Evidence are not independent …
+Manufactured corroboration is exactly what an attacker builds, so shared
+Evidence merges two groups even when the actors differ."</li>
+</ul>
+<p>That last rule is the one <a href="../agent-memory-guard/">OWASP's
+guard</a> states as a threat and this engine implements as
+arithmetic.</p>
+<p><strong>Two time axes, named apart.</strong>
+<code>AS OF SEQ 41</code> reads what the store held at a sequence;
+<code>FOR TIME</code> reads what was true in the world. The history
+module says the distinction in its first sentence and then explains the
+mechanism: rows are updated in place, so "every commit appends the
+complete row it wrote to a version log", and a historical read is "the
+greatest version of this element whose sequence is at or before the
+coordinate". The transaction coordinate is a per-Space sequence rather
+than a clock, "because two commits in the same millisecond must still be
+ordered". World time is <code>ValidTime { from, until }</code> on the
+Assertion, documented as "[i]ndependent of
+<code>retention.expires_at</code>, which is storage lifecycle".</p>
+<p>That version log is also the audit record, and it is unskippable:
+<code>apply_commit</code> runs every element write through one macro
+that calls <code>put</code> and <code>record_version</code> together,
+for all five element kinds. The write path is the only code that stamps
+the envelope columns, which the module notes are "non-malleable by
+construction … not because a validator rejects them, but because the
+only code that writes them is this module".</p>
+<p><strong>Erasure propagates and leaves a marker.</strong>
+<code>PURGE</code> is "the one operation here that destroys something",
+and it keeps a digest stub because "a dangling reference does not say
+'this was erased', it says nothing at all, which is worse for an auditor
+and worse for a reader". The part that earns the tombstone mark is
+downstream: an artifact is stored under a key containing its own content
+digest, and when a source element is erased, every artifact whose
+<code>source_refs</code> name it has its content stripped and its state
+set to <code>erased</code>. Re-publishing the same bytes then fails —
+"artifact identity already has a different material binding or erasure
+tombstone" — and reading it fails too. The value's digest is the key,
+and the refusal is consulted on both paths.</p>
+<p>There is one more thing in that erasure validator worth quoting,
+because it is a line most systems would not have written. Checking
+whether a backup was really deleted, the code declines to take the
+plan's word for it: "Backend backups need their own verified deletion
+receipt; a model-authored plan is not such a receipt."</p>
+<p>Six marks. The one withheld is human review. An approval is bound by
+a digest over the Space, permission and element so that "[a]n approval
+for 'purge E-1' therefore does nothing for 'purge E-2'", it is
+"[c]onsumed, not merely counted", and <code>allow_self_approval</code>
+defaults false because "the same Principal proposing and approving is
+the separation-of-duties failure §28.5 names first". All of that is
+excellent — and a Principal is an authenticated identity, not
+necessarily a person, with no review console in the tree. This is
+separation of duties, which is a different guarantee.</p>
+<p>The honest caveat is cost. A reader who wants a memory library will
+find a governed graph database with its own query language,
+change-envelope model and policy engine, at 169,548 lines of Rust,
+mid-migration from KIP 1.x to 2.0. There is no smaller door.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>Proposition</strong> is a claim. An
+<strong>Assertion</strong> is somebody making it, with a stance, a
+confidence, evidence and a window of world time it covers.</p>
+<p><strong>Belief</strong> is not a field. It is the answer a policy
+gives when asked.</p>
+<p>A <strong>Space</strong> is who owns and may touch. A
+<strong>Domain</strong> is what something is about. They are not the
+same word and the code says so.</p>
+<p>A <strong>grant</strong> is not a sentence anyone can write into
+memory.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — cognitive content and governance are separate planes — a Proposition asserting authority is still only a claim, because grants are rows KML cannot reach</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: cognitive content and governance are separate planes — a Proposition asserting authority is still only a claim, because grants are rows KML cannot reach
+flowchart TB
+    KML[&quot;KML clauses — the agent&#39;s write surface&quot;] --&gt; TX[&quot;one transaction path:&lt;br/&gt;stamps version, created_tx, updated_tx,&lt;br/&gt;state, space_seq; advances the Space sequence&quot;]
+    TX --&gt; COMMIT{&quot;apply_commit — one put! macro&lt;br/&gt;per element kind&quot;}
+    COMMIT --&gt; ROW[(&quot;current rows:&lt;br/&gt;Concept · Proposition ·&lt;br/&gt;Assertion · Evidence · Activity&quot;)]
+    COMMIT --&gt; VLOG[(&quot;version log — the complete row,&lt;br/&gt;appended in the same commit&quot;)]
+    KQL[&quot;KQL — the agent&#39;s read surface&quot;] --&gt; CTX[&quot;Context.space, bound when the&lt;br/&gt;session opens; no clause names another&quot;]
+    CTX --&gt; PAT[&quot;every pattern emits&lt;br/&gt;eq_field(&#39;space&#39;, …)&quot;]
+    PAT --&gt; DEF{&quot;does the pattern mention state?&quot;}
+    DEF --&gt;|&quot;no&quot;| ACT[&quot;active elements only&lt;br/&gt;— archived, quarantined, tombstoned,&lt;br/&gt;merged and purged are out of recall&quot;]
+    DEF --&gt;|&quot;yes: {state: &#39;archived&#39;}&quot;| WIDE[&quot;the caller widens, never omits&quot;]
+    ACT &amp; WIDE --&gt; ROW
+    VLOG --&gt; ASOF[&quot;AS OF SEQ n — what this Brain held then&quot;]
+    ROW --&gt; FORT[&quot;FOR TIME t — what was true then,&lt;br/&gt;from ValidTime{from, until} on the Assertion&quot;]
+    ROW --&gt; PROJ[&quot;Epistemic Projection — a view, never stored:&lt;br/&gt;absence of support is not rejection ·&lt;br/&gt;a repeated voice counts once ·&lt;br/&gt;shared Evidence merges two groups&quot;]
+    PROJ --&gt; BS[&quot;accepted | rejected | contested |&lt;br/&gt;uncertain | insufficient (default)&quot;]
+    GOV[(&quot;Governance plane: GrantRow,&lt;br/&gt;ApprovalRow, Principal —&lt;br/&gt;no KML clause reaches them,&lt;br/&gt;host APIs only, default deny&quot;)] --&gt;|&quot;answers &#39;am I allowed to touch it&#39;&quot;| PAT
+    CLAIM[&quot;a Proposition saying&lt;br/&gt;&#39;Alice is an administrator&#39;&quot;] -.-&gt;|&quot;is a claim, not a grant&quot;| GOV
+    PURGE[&quot;PURGE — the one destructive op&quot;] --&gt; STUB[&quot;content erased from the row&lt;br/&gt;AND from every version;&lt;br/&gt;identity, kind, Space and a digest kept&quot;]
+    PURGE --&gt; CASC[&quot;every artifact whose source_refs&lt;br/&gt;name the erased element:&lt;br/&gt;content removed, state=&#39;erased&#39;&quot;]
+    CASC --&gt; REFUSE[&quot;re-publishing those bytes is refused —&lt;br/&gt;the key is the content digest&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anda_cognitive_nexus</code></td>
+<td>The runtime: KQL, KML, projection, governance, history (59,363
+lines)</td>
+</tr>
+<tr>
+<td><code>anda_kip</code></td>
+<td>The protocol: types, parser, wire enums (17,521)</td>
+</tr>
+<tr>
+<td><code>anda_db</code></td>
+<td>The embedded document database (25,612)</td>
+</tr>
+<tr>
+<td><code>anda_db_btree</code>, <code>_hnsw</code>,
+<code>_tfs</code></td>
+<td>Exact, vector and full-text indexes</td>
+</tr>
+<tr>
+<td><code>anda_object_store</code></td>
+<td>Object-store persistence, optional encryption at rest</td>
+</tr>
+<tr>
+<td><code>anda_db_shard_proxy</code></td>
+<td>Many logical databases behind one service</td>
+</tr>
+<tr>
+<td><code>py/</code>, <code>ts/</code>, <code>anda_kip_wasm</code></td>
+<td>Bindings</td>
+</tr>
+</tbody>
+</table></div>
+<p>Inside the nexus, the split that matters is <code>store/</code>,
+<code>governance/</code>, <code>projection/</code> and <code>kql/</code>
++ <code>kml/</code> — respectively what is recorded, who may touch it,
+what is believed, and how either is asked for.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>governance/mod.rs:1-46</code> — read this before anything else
+in the repository.</p>
+<p><code>projection/mod.rs:1-27</code> — three rules and the reason
+belief is not a column.</p>
+<p><code>store/history.rs:1-21</code> — the two time questions, and why
+one of them is a scan.</p>
+<p><code>store/control.rs:114-138</code> — the commit that cannot skip
+its own record.</p>
+<p><code>governance/purge.rs:1-38</code> — what destruction is allowed
+to leave behind.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Five element kinds. The useful distinction is Proposition against
+Assertion: the first is the claim, the second is somebody making it, and
+separating them is what lets two actors disagree about the same sentence
+without the store having to pick a winner at write time.
+<code>Stance</code>, <code>AssertionMode</code>,
+<code>confidence</code>, <code>asserted_at</code>,
+<code>valid_time</code> and a list of <code>EvidenceRef</code> with
+roles hang off the Assertion.</p>
+<p><code>AssertionStatus</code> is <code>active</code>,
+<code>retracted</code>, <code>superseded</code> — and
+<code>expired</code>, which is "[c]omputed, never stored … No statement
+produces it and no Change Envelope carries it". The distinction between
+a state somebody set and a state the clock implies is made at the type
+level, which is the sort of thing that stops a migration inventing
+history.</p>
+<p>Evidence carries a class from a recommended-but-open list —
+<code>observation</code>, <code>user_statement</code>,
+<code>agent_statement</code>, <code>tool_result</code>,
+<code>measurement</code> — so the distinction between what a person said
+and what a model said survives into the projection's weighting.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>KQL patterns narrow with whatever indexes exist, load the survivors,
+and decide the rest against the rendered view. Two defaults are
+load-bearing: the Space predicate a caller cannot drop, and the
+active-only state filter a caller widens by naming the state.</p>
+<p>The reading discipline is stated where it matters: a raw pattern
+"report[s] that a tuple exists and that somebody claimed something; they
+never report that it is true. Belief is projected, and lives in
+<code>BELIEF</code>." A query language that makes you ask for belief in
+different syntax than existence is doing something most of this corpus
+does not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One path, generic over the shared envelope columns, so the three
+invariants hold for every kind without each call site remembering them.
+Every write advances the Space sequence, "so a mutation that skipped it
+would be invisible to both" <code>CHANGES</code> and
+<code>AS OF SEQ</code>. Optimistic concurrency is
+<code>EXPECT VERSION</code> against the same counter.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A server crate, bindings in two other languages, a WASM build of the
+protocol, and a <code>skills/</code> directory. The integration argument
+the workspace makes is that the policy boundary belongs in the engine
+rather than the adapter, which follows from the governance premise: if
+the write surface is the attack surface, an adapter-level check is a
+check the attacker is already past.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Covered throughout. Two more details deserve naming.</p>
+<p>The <code>REFERENCE POLICY</code> default is
+<code>deny_if_referenced</code>, because "in a cognitive history an
+Assertion, an Activity or an Experience may point at the target, and
+erasing the whole dependency chain falsifies history … KIP 1.x made
+destructive cascade ordinary; 2.0 deliberately does not." A default that
+refuses rather than cascades, with the prior version's mistake
+named.</p>
+<p>And the erasure validator checks the <em>claims</em> in an erasure
+plan against the store rather than trusting them, with the backup case
+refused outright: a model-authored plan is not a deletion receipt.
+Several systems in this corpus treat a model's assertion that it deleted
+something as the deletion.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,642 test functions, with the nexus carrying suites named for what
+they check — <code>belief</code>, <code>cognitive_consistency</code>,
+<code>conformance</code>, <code>governance</code>, <code>history</code>,
+<code>traversal</code>, <code>simulation</code>, <code>migrate</code>.
+Test names read as sentences:
+<code>an_archived_element_leaves_ordinary_recall_but_still_exists</code>,
+which is also the one that earns the negative-evaluation mark by putting
+its control three lines under its negative assertion.</p>
+<p>Nothing was built or run for this reading; the counts are from the
+source.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Keep authority out of the content plane. If your memory store can
+hold a sentence saying somebody is an administrator, make sure the path
+that reads that sentence is not the path that decides permissions — and
+be able to point at the code that separates them.</p>
+<p>Do not store what you compute. A stored belief and the evidence
+behind it will disagree eventually, and nothing in the schema will say
+which is right.</p>
+<p>Merge corroboration groups on shared evidence. Two citations of one
+source are one source; an attacker who can write twice is otherwise an
+attacker who can manufacture agreement.</p>
+<p>Make the default the absence of a verdict. <code>insufficient</code>
+as the default belief, rather than accepted or rejected, is one line
+that keeps an unfilled field from reading as an opinion.</p>
+<p>Key an erasure marker on the value. A tombstone keyed on identity can
+be sidestepped by writing the same thing under a new id; one keyed on
+the content digest cannot.</p>
+<p>And if a plan says it deleted something, verify it. A receipt is not
+a plan.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether any host makes approval a human step. The mechanism is
+Principal-signed and the tree ships no console, so it is separation of
+duties unless a host adds one.</p>
+<p>How a historical read behaves on a large Space. The scan is declared
+and budgeted and refuses rather than stalls; the practical ceiling was
+not measured.</p>
+<p>What the migration costs in practice. KIP 1.x to 2.0 is breaking,
+with a migration guide in-tree and a <code>migrate</code> suite, and
+that path was not exercised.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/governance/mod.rs:1-46</code></td>
+<td>Why a claim about authority is not authority</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/projection/mod.rs:1-27</code></td>
+<td>Three rules about evidence, and why belief is a view</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/store/history.rs:1-45</code></td>
+<td>Two time questions, and the log that answers one</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/store/control.rs:114-138</code></td>
+<td>A commit that records itself</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/governance/purge.rs:1-38</code></td>
+<td>Destruction with a stub, and a default that refuses</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/src/tx/durable.rs:125-220</code></td>
+<td>Erasure that propagates, and a plan that is not a receipt</td>
+</tr>
+<tr>
+<td><code>rs/anda_cognitive_nexus/tests/kql.rs:386-425</code></td>
+<td>A negative assertion with its control beside it</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de"><code class="commit-id" title="450b48d0a2d6a74a42872d4a3a3f1ca3346513de">450b48d0…</code></a>
+— first reading, at a commit dated 16 September 2026, the day the 0.13.0
+KIP 2.0 release landed. Screened before opening, from a shallow clone:
+twenty-nine files scanned, no auto-run surfaces, three build-time
+execution points, three unpinned surfaces and twenty-two dependency
+files inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

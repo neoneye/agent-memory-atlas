@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 516 reports.**
+**This page covers all 517 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4478,3 +4478,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-or-later, Python, version 2.31.0 on PyPI, 54,347 lines with 896 test functions across ninety-six files, an MCP server, an HTTP API, a React console, connectors for five sources, and a schema file whose table comments state what each table refuses to do. Comments in English and Turkish.
 - Study when: you are designing an admission filter and have only two outcomes, or you want an example of a decay model where negative feedback weakens stability without resetting the clock.
 - Do not copy when: you need scope enforced by the store — `project` is an optional argument to recall — or a record of what a memory said before an edit. One mark, human review.
+
+### [`anda-db`](../systems/anda-db/)
+- Best idea: **a claim about authority is not authority, and the code draws the line.** "Cognitive content may describe authority. Only this plane can grant it." A Space can hold a Proposition saying Alice is an administrator with a high-confidence Assertion and Evidence behind it, and Alice administers nothing — grants are rows "no KML clause reaches", written by host APIs only, under default deny. The module also separates three questions most systems answer with one number: should I believe this, am I allowed to touch it, how strongly may it influence what I do.
+- Biggest risk: **there is no small door.** 169,548 lines of Rust across fifteen crates implementing a versioned protocol with its own query language, requiring Rust 1.95, mid-migration from KIP 1.x to 2.0 in this release. A reader wanting a memory library finds a governed graph database. Approval is Principal-signed separation of duties — bound by a digest to one operation, consumed rather than counted, self-approval off by default — but nothing requires the approver to be a person and no review console ships, so on an all-agent host `RequireApproval` is a second agent's signature. And projection states its own limit: "Evidence quality is not automatically evaluated."
+- Most reusable component: `projection/mod.rs` in full, or its three rules alone — absence of support is not rejection, a repeated voice counts once, and two Assertions citing the same Evidence merge into one corroboration group because "[m]anufactured corroboration is exactly what an attacker builds". Alongside it, `BeliefStatus::Insufficient` as the `Default`, because "silence is the absence of a basis, never a verdict".
+- Maturity impression: MIT, version 0.13.0, 232,178 lines with 1,642 test functions, suites named for what they check (belief, cognitive_consistency, conformance, governance, history, migrate), Python and TypeScript bindings, a WASM build, twenty-plus design documents and a written migration guide. Module headers throughout state what the module refuses to do and cite the spec section that asked for it.
+- Study when: you are deciding where a memory system's policy boundary lives, or you need a worked separation of valid time from transaction time with a read on each.
+- Do not copy when: you need something embeddable this week. Six marks: tombstone, trust state, bitemporal, scope enforced, audit log, negative eval.
