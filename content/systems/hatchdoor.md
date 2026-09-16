@@ -7,9 +7,9 @@ page_kind: system
 source_name: "BatterWorks/Hatchdoor"
 source_url: https://github.com/BatterWorks/Hatchdoor
 archive_name: "BatterWorks--Hatchdoor"
-revision: e631857685380bb9a7b70840f49606411cdc0bfc
-revision_url: https://github.com/BatterWorks/Hatchdoor/commit/e631857685380bb9a7b70840f49606411cdc0bfc
-analyzed_at: 2026-09-01
+revision: c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d
+revision_url: https://github.com/BatterWorks/Hatchdoor/commit/c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -595,6 +595,23 @@ boundary, no automatic injection. Adapting this for another agent is trivial in
 proportion: it is an HTTP MCP server with a bearer token, and the same surface is
 available as `/api/v1/vaults/…` for a non-MCP integration.
 
+**The vault scope is inside the nearest-neighbour query now, not around it.**
+The default-surface KNN reads
+`WHERE v.embedding MATCH ?1 AND v.k = ?2 AND v.vault_id IN (...)`, so a chunk
+outside the caller's vaults is never scored rather than scored and then dropped
+— which also means the `k` a caller asks for is `k` results from inside the
+scope rather than `k` candidates that might mostly fall outside it. The id list
+is interpolated rather than bound, and safely: `VaultId` is a newtype over
+sixteen bytes rendered as a UUID, so nothing a user types can reach the
+statement.
+
+**And the query lives in one function so a test can EXPLAIN the real one.** The
+comment gives the reason and names the failure it is guarding: the SQL is built
+here *"rather than inline so the plan-guard test EXPLAINs exactly what
+production executes: a copy of this string in the test could drift back to a
+full scan unnoticed, which is the failure the guard exists to catch."* A
+performance assertion against a copy of a query is an assertion about the copy.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths, each with a location:
@@ -901,5 +918,7 @@ rg -n 'MARKER_FILE_NAME|hatchdoor-layer' src/vault/write/ src/handlers/ src/mcp/
 ```
 
 ## History
+
+**2026-09-16** — [`c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d`](https://github.com/BatterWorks/Hatchdoor/commit/c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d) — re-read at a commit dated 2026-09-08, 176 commits past the previous pin. Both marks re-tested and held, and the scope one is stronger: the default-surface KNN now carries `v.vault_id IN (...)` inside the vector query, so an out-of-vault chunk is never scored rather than filtered afterwards, and the interpolated id list can only contain UUIDs because `VaultId` is a newtype over sixteen bytes. The query string was also lifted into one function so the plan-guard test can EXPLAIN production's own SQL, on the stated ground that a copy of it in the test *"could drift back to a full scan unnoticed."* Screened before reading, from a full clone: no auto-run surface, no build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-01** — [`e631857685380bb9a7b70840f49606411cdc0bfc`](https://github.com/BatterWorks/Hatchdoor/commit/e631857685380bb9a7b70840f49606411cdc0bfc) — first reading, at 272 commits and 402 files, on a merge commit dated 18 August 2026 one day after the v2.5.0 release. Screened before anything was read: **0 auto-run surfaces, 0 build-time execution paths, 1 unpinned surface** (`frontend/package.json`, 39 floating ranges, with `frontend/package-lock.json` present so resolution is reproducible today). `Cargo.lock` and `frontend/package-lock.json` had both been unchanged for 14 days, outside the seven-day cooldown — but nothing was installed, built or run regardless: no `cargo build`, no `cargo test`, no `npm ci`, no `just` recipe, no container. `AGENTS.md` is addressed to a reading agent; it was read as data and is an ordinary contributor guide covering the dev server and fixtures, and nothing in it directed this review. Two marks: `scope_enforced` on a Vault key applied in `selected_vaults`, in the `participating` gate and in both retrieval arms' SQL, and `negative_eval` on a committed case that proves two Vaults hold the same slug and the same term and then asserts a scoped search returns exactly one. `tombstone`, `trust_state`, `bitemporal`, `audit_log` and `human_review` were each examined and withheld — the near-misses are named in sections 2, 5 and 9. The 36 committed eval runs were recomputed from their own per-query tables rather than quoted; all four headline metrics reproduce exactly in all 36 once the seven diagnostic-tier queries are excluded, which is what `src/eval/metrics.rs:aggregate` does in code.

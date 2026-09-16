@@ -114,14 +114,14 @@ because a committed 36-run sweep said hybrid lost.</p>
               <strong>BatterWorks/Hatchdoor</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/BatterWorks/Hatchdoor/commit/e631857685380bb9a7b70840f49606411cdc0bfc" title="e631857685380bb9a7b70840f49606411cdc0bfc">
+            <a class="meta-pill revision-pill" href="https://github.com/BatterWorks/Hatchdoor/commit/c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d" title="c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d">
               <span>Analyzed revision</span>
-              <code>e6318576…</code>
+              <code>c2b9861a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-01</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BatterWorks--Hatchdoor" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -760,6 +760,23 @@ session, no compaction boundary, no automatic injection. Adapting this
 for another agent is trivial in proportion: it is an HTTP MCP server
 with a bearer token, and the same surface is available as
 <code>/api/v1/vaults/…</code> for a non-MCP integration.</p>
+<p><strong>The vault scope is inside the nearest-neighbour query now,
+not around it.</strong> The default-surface KNN reads
+<code>WHERE v.embedding MATCH ?1 AND v.k = ?2 AND v.vault_id IN (...)</code>,
+so a chunk outside the caller's vaults is never scored rather than
+scored and then dropped — which also means the <code>k</code> a caller
+asks for is <code>k</code> results from inside the scope rather than
+<code>k</code> candidates that might mostly fall outside it. The id list
+is interpolated rather than bound, and safely: <code>VaultId</code> is a
+newtype over sixteen bytes rendered as a UUID, so nothing a user types
+can reach the statement.</p>
+<p><strong>And the query lives in one function so a test can EXPLAIN the
+real one.</strong> The comment gives the reason and names the failure it
+is guarding: the SQL is built here <em>"rather than inline so the
+plan-guard test EXPLAINs exactly what production executes: a copy of
+this string in the test could drift back to a full scan unnoticed, which
+is the failure the guard exists to catch."</em> A performance assertion
+against a copy of a query is an assertion about the copy.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths, each with a location:</p>
@@ -1117,6 +1134,20 @@ ls CITATION*
 rg -n &#39;run_local_history_git_turn|VaultWorkKind::Git&#39; src/
 rg -n &#39;MARKER_FILE_NAME|hatchdoor-layer&#39; src/vault/write/ src/handlers/ src/mcp/</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/BatterWorks/Hatchdoor/commit/c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d"><code class="commit-id" title="c2b9861a3aac6c9dd1c20d3bc6fbea0f14db4e5d">c2b9861a…</code></a>
+— re-read at a commit dated 2026-09-08, 176 commits past the previous
+pin. Both marks re-tested and held, and the scope one is stronger: the
+default-surface KNN now carries <code>v.vault_id IN (...)</code> inside
+the vector query, so an out-of-vault chunk is never scored rather than
+filtered afterwards, and the interpolated id list can only contain UUIDs
+because <code>VaultId</code> is a newtype over sixteen bytes. The query
+string was also lifted into one function so the plan-guard test can
+EXPLAIN production's own SQL, on the stated ground that a copy of it in
+the test <em>"could drift back to a full scan unnoticed."</em> Screened
+before reading, from a full clone: no auto-run surface, no build-time
+execution point, one unpinned dependency surface and none inside the
+seven-day cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-01</strong> — <a
 href="https://github.com/BatterWorks/Hatchdoor/commit/e631857685380bb9a7b70840f49606411cdc0bfc"><code class="commit-id" title="e631857685380bb9a7b70840f49606411cdc0bfc">e6318576…</code></a>
 — first reading, at 272 commits and 402 files, on a merge commit dated

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "openmasq/openmasq"
 source_url: https://github.com/openmasq/openmasq
 archive_name: "openmasq--openmasq"
-revision: 874608ec6835787a73176723812b29eb41bc1088
-revision_url: https://github.com/openmasq/openmasq/commit/874608ec6835787a73176723812b29eb41bc1088
-analyzed_at: 2026-09-06
+revision: a8d9a9ee3214305bbe0f79e3679d848ae23a7af8
+revision_url: https://github.com/openmasq/openmasq/commit/a8d9a9ee3214305bbe0f79e3679d848ae23a7af8
+analyzed_at: 2026-09-16
 capabilities: "human_review, negative_eval"
 capability_evidence:
   human_review: "the « À revoir » inbox, the merge suggestions and the node panel | packages/ui/src/pages/Memory/useMemoryReview.ts, packages/ui/src/memory/memory.ts:219-233, packages/ui/src/memory/dedupe.ts:58-122, packages/ui/src/pages/Memory/MemoryNodePanel.tsx:155, packages/ui/src/state/memory/useMemory.ts:66-97 | a card the extraction created or rewrote within seven days sits in an inbox until a person clicks Confirmer, which stamps `reviewedAt`, or edits, merges or deletes it; a surface or semantic duplicate is a suggestion the person confirms or dismisses, never an automatic merge; each card's replaced sentences are listed with a Rétablir that swaps them back; a deleted card is restorable for six seconds | packages/ui/src/memory/dedupe.test.ts:21-83 (suggestions, one per pair, surface over semantic), packages/ui/src/memory/factCompaction.test.ts:119 (restore is symmetric), packages/ui/src/pages/Memory/MemoryView.newCard.test.tsx"
@@ -595,5 +595,7 @@ if you need a redacted product to remember.
   (the sync types and `useUserdataSync.ts` only).
 
 ## History
+
+**2026-09-16** — [`a8d9a9ee3214305bbe0f79e3679d848ae23a7af8`](https://github.com/openmasq/openmasq/commit/a8d9a9ee3214305bbe0f79e3679d848ae23a7af8) — re-read at a commit dated 2026-09-14, 71 commits past the previous pin. Each of the eight anchored files has the same blob at both commits, so every mark stands where it was tested and no line number moved. Screened before reading, from a full clone: one auto-run surface, two build-time execution points, 18 unpinned dependency surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-06** — [`874608ec6835787a73176723812b29eb41bc1088`](https://github.com/openmasq/openmasq/commit/874608ec6835787a73176723812b29eb41bc1088) — first reading, at the head of the `dev` default branch, 197 commits in. The screen found a `.githooks/` directory and nineteen manifests inside the seven-day cooldown; nothing was installed or run. Two marks: `human_review` for the inbox, the merge suggestions and the restorable history, `negative_eval` for the injection and recall cases whose positive control sits in the same case. `trust_state` withheld: `reviewedAt` and `source: "auto"` are read by the inbox and by nothing on a read path. `tombstone`, `bitemporal`, `scope_enforced` and `audit_log` withheld: deletion leaves no record, the only time is the last update, the store has no scope key, and `factsLog` is a three-deep history of replaced text rather than a mutation log.
