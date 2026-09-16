@@ -7,13 +7,13 @@ page_kind: system
 source_name: "mastra-ai/mastra"
 source_url: https://github.com/mastra-ai/mastra
 archive_name: "mastra-ai--mastra"
-revision: 4a41ea611732860395104e5af5ebe279ff9a796e
-revision_url: https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e
-analyzed_at: 2026-08-29
+revision: 2f05e3e87221b34c7cfc5389089abf09633d0e2c
+revision_url: https://github.com/mastra-ai/mastra/commit/2f05e3e87221b34c7cfc5389089abf09633d0e2c
+analyzed_at: 2026-09-16
 capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 stack_storage: "delegated"
 capability_evidence:
-  bitemporal: "the knowledge graph — validity time beside record time on every record | packages/core/src/storage/domains/knowledge/base.ts:47-61 | `KnowledgeRecord` carries `capturedAt`, stamped by code when the record is written, and an optional `when` for the time the fact refers to. The capture extractor asks the model for `when` per record and `parseWhen` throws on an unparseable value rather than dropping it silently; `knowledge-tools.ts:60` serialises it back for the curator. It is a point rather than an interval — there is no `valid_to`, no as-of query, and nothing filters on it | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:176-177"
+  bitemporal: "the knowledge graph — validity time beside record time on every record | packages/core/src/storage/domains/knowledge/base.ts:47-61 | `KnowledgeRecord` carries `capturedAt`, stamped by code when the record is written, and an optional `when` for the time the fact refers to. The write tools ask the model for `when` per record under `dateTimeSchema`, a JSON Schema carrying `format: date-time` and an explicit RFC-3339 pattern, so a malformed value is refused as a bad tool argument rather than dropping it silently; `knowledge-tools.ts:60` serialises it back for the curator. It is a point rather than an interval — there is no `valid_to`, no as-of query, and nothing filters on it | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:176-177"
   scope_enforced: "the knowledge graph — a scope key on the read path plus a stamped ceiling on the write path | packages/core/src/storage/domains/knowledge/base.ts:271,:360-378, inmemory.ts:330,:420,:443 | scopes are `org` < `resource` < `thread`; `listKnowledgeAbout`, `listKnowledgeMentioning` and `listKnowledgeRelatedTo` all take a scope and return only records visible in it. Beyond the filter, `maxScope` is stamped on a record and `assertKnowledgeScopeWithinCeiling` re-checks it on append and on every rescope, so a curator cannot widen a thread-ceilinged record to the org | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:180-183, __tests__/scope.test.ts:44"
   audit_log: "the knowledge store — an activity record of every mutation | packages/core/src/storage/domains/knowledge/base.ts:14-21,:471-475, inmemory.ts:132,:235,:313,:315,:346,:400,:411,:423 | a closed seven-value `KnowledgeActivityAction` — node-created, node-updated, node-merged, record-created, record-deleted, record-restored, record-rescoped — written by `#recordActivity` at every mutating call site and read back through `listActivity`, which is `abstract` on the storage base so every adapter must implement it | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:231"
   negative_eval: "the knowledge graph read path | packages/core/src/storage/domains/knowledge/__tests__/base.test.ts:179-183 | one assertion block requires the record to come back for the node it is about in the permitted scope, and requires zero records for a different node and for a sibling scope — `listKnowledgeRelatedTo({node: marco, scope: sibling})` is asserted empty on the same fixture where the same query in `thread` returns the record, so the negative cannot pass on an empty store | this is the test"
@@ -41,7 +41,7 @@ The promising idea is buffered activation. Observation and reflection can run be
 
 The tradeoff is complexity. This is not just a summarizer: it is a threshold state machine with message markers, storage capabilities, resource/thread scopes, in-process locks, buffering cursors, retries, idle/provider-change activation, and processor-step semantics.
 
-**Beside it now sits a second subsystem that is a general factual memory.** The Subconscious is a scoped knowledge graph — nodes, and records of text about them — maintained by four background agents: `capture` and `remind` on the observation side, `curate` and `learn` on the reflection side. Its records carry a scope, a code-stamped capture time, an optional time the fact refers to, and a **ceiling**: the widest scope this record may ever be given, re-checked every time anyone tries to move it. Section 4a describes it, and it is where three of the four marks come from.
+**Beside it now sits a second subsystem that is a general factual memory.** The Subconscious is a scoped knowledge graph — nodes, and records of text about them — maintained by two built-in background observers, `remind` and `curate`. Its records carry a scope, a code-stamped capture time, an optional time the fact refers to, and a **ceiling**: the widest scope this record may ever be given, re-checked every time anyone tries to move it. Section 4a describes it, and it is where three of the four marks come from.
 
 ## 2. Mental Model
 
@@ -106,28 +106,31 @@ The feature lives under `packages/memory/src/processors/observational-memory/`:
 
 ## 4a. The Subconscious knowledge graph
 
-`packages/memory/src/processors/observational-memory/subconscious/` is fifteen
-files; the storage contract it writes through is
+`packages/memory/src/processors/observational-memory/subconscious/` is
+seventeen files; the storage contract it writes through is
 `packages/core/src/storage/domains/knowledge/`, 1,238 lines across an abstract
 base and an in-memory reference implementation.
 
-**Four agents, two phases, and a cursor that will not lie.** `capture` and
-`remind` run as observation extractors; `curate` and `learn` run as reflections.
-Each is bounded by `maxSteps`, and the default is not uniform — `curate` gets
-200 against 50, with the reason written down: *"Curation walks a worklist that
-can reach hundreds of records, and its completion marker is fail-closed: a
-curator that runs out of steps advances no cursor at all."* A background pass
-that half-finishes and advances anyway is how records get silently skipped
-forever; this one refuses to record progress it did not make.
+**Two built-in agents, both observers.** `BUILT_IN_OBSERVATION` is
+`new Set(['remind', 'curate'])`, and there is no reflection set beside it — the
+two-phase split the package once had is gone, along with a `capture` agent and a
+`learn` agent. Each agent is bounded by `maxSteps`, and the default is not
+uniform: `DEFAULT_MAX_STEPS` is 50 while `DEFAULT_MAX_STEPS_BY_AGENT` gives
+`curate` 200, with a hard ceiling of 500 and a validator that refuses a
+non-integer or an out-of-range value outright. The asymmetry is the right shape
+for a pass that walks a worklist rather than a window; what the constant no
+longer carries is a comment saying so.
 
 **A record's scope has a ceiling, and the ceiling is the mechanism.** Scopes are
 ordered `org` < `resource` < `thread`. A `KnowledgeRecord` carries `scope` and
 an optional `maxScope`, and `assertKnowledgeScopeWithinCeiling` runs on append
 (`inmemory.ts:330`) and again on every rescope (`:420`), so a record captured
-under a thread ceiling cannot be promoted to the organisation later. `capture`
-clamps at the source too — `clampScope(level, ceiling)` narrows a model-proposed
-scope rather than rejecting the record — and `pinned.ts` states the bypass it is
-guarding: *"creating a resource-level record under a thread ceiling would bypass
+under a thread ceiling cannot be promoted to the organisation later. The tool surface asserts
+the same rule before the storage layer sees it — `knowledge-write-tools.ts`
+calls `assertKnowledgeScopeWithinCeiling` when the tools are built (`:43`) and
+again on a rescope (`:279`), so a scope above the ceiling is refused at the
+boundary rather than silently narrowed on the way in — and `pinned.ts` states
+the bypass it is guarding: *"creating a resource-level record under a thread ceiling would bypass
 the ceiling."*
 
 Widening the ceiling itself is possible and deliberately awkward: it has its own
@@ -138,9 +141,11 @@ ceiling as a guarantee about what a *curator agent* can do to a record, not as a
 guarantee about what an operator can.
 
 **Validity time is separate from capture time.** `capturedAt` is stamped by code;
-`when` is the time the fact refers to, asked of the capture model per record and
-validated by `parseWhen`, which throws on an unparseable value rather than
-dropping it. Nothing queries on it — the model is told in prose that *"the newer
+`when` is the time the fact refers to, asked of the writing agent per record and
+constrained at the tool boundary rather than after it: `dateTimeSchema` is a
+JSON Schema carrying `format: 'date-time'` and an explicit RFC-3339 pattern,
+`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$`, so a
+malformed value is refused as a bad tool argument instead of reaching a parser. Nothing queries on it — the model is told in prose that *"the newer
 observation supersedes the older one"* — so this is the axis separation without
 the temporal query that would exploit it.
 
@@ -307,9 +312,11 @@ Do not substitute observational summaries for an auditable long-term store when 
 
 ## History
 
+**2026-09-16** — [`2f05e3e87221b34c7cfc5389089abf09633d0e2c`](https://github.com/mastra-ai/mastra/commit/2f05e3e87221b34c7cfc5389089abf09633d0e2c) — re-read at a commit dated 16 September 2026. The monorepo moved 643 commits past the previous pin and the storage domain all four marks rest on did not move at all: `packages/core/src/storage/domains/knowledge` has the identical tree hash `ea9bb6f9` at both commits, so every anchor, line number and quotation in the storage half is exact. The processor beside it is where the work went — `packages/memory/src/processors/observational-memory` gained about 9,700 lines against 3,200 removed — and three published claims moved with it. The Subconscious is no longer four agents in two phases: `BUILT_IN_OBSERVATION` is `remind` and `curate`, there is no reflection set, and neither a `capture` nor a `learn` agent appears anywhere in the package. `parseWhen` and `clampScope` are gone from the tree, replaced at the tool boundary by `dateTimeSchema` — an RFC-3339 pattern on the argument — and by `assertKnowledgeScopeWithinCeiling` called in `knowledge-write-tools.ts`, so a bad time or an over-ceiling scope is refused where it is supplied rather than parsed or silently narrowed afterwards. All four marks hold. Screened before reading, from a clone deepened past the pin so dependency ages are the project's own: three auto-run surfaces, two build-time execution points, 258 unpinned dependency surfaces and 149 dependency files inside the seven-day cooldown — the shape of a monorepo with a manifest in every package, not a finding about the memory code. Nothing was installed, built or run.
+
 **2026-08-29** — [`4a41ea611732860395104e5af5ebe279ff9a796e`](https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e) — re-pinned 1,049 commits on, and the system has grown a second memory subsystem that carries three of its four marks. Marks go from one to four: `scope_enforced` was already held and is now stronger, and `bitemporal`, `audit_log` and `negative_eval` are added.
 
-The Subconscious is a scoped knowledge graph of nodes and records, maintained by four background agents, described in section 4a. `bitemporal` rests on `capturedAt` stamped by code beside an optional `when` supplied per record by the capture model and validated rather than dropped — a point rather than an interval, with nothing querying on it. `audit_log` rests on a closed seven-value activity vocabulary written at every mutating call site, with `listActivity` `abstract` on the storage base. `negative_eval` rests on one assertion block that requires the record in its own scope and zero records in a sibling scope, on the same fixture. `scope_enforced` now covers more than a filter: a per-record `maxScope` ceiling is re-checked on append and on every rescope, and raising it has its own guarded call.
+The Subconscious is a scoped knowledge graph of nodes and records, maintained by two built-in background observers, described in section 4a. `bitemporal` rests on `capturedAt` stamped by code beside an optional `when` supplied per record by the writing agent and constrained by an RFC-3339 pattern on the tool argument rather than parsed afterwards — a point rather than an interval, with nothing querying on it. `audit_log` rests on a closed seven-value activity vocabulary written at every mutating call site, with `listActivity` `abstract` on the storage base. `negative_eval` rests on one assertion block that requires the record in its own scope and zero records in a sibling scope, on the same fixture. `scope_enforced` now covers more than a filter: a per-record `maxScope` ceiling is re-checked on append and on every rescope, and raising it has its own guarded call.
 
 Two mechanisms are worth reading beyond the marks. A rescope enqueues a semantic-index delete for the old scope key and an upsert for the new one, so the vector view follows the permission change rather than answering the old query. And `curate` is given a larger step budget than its siblings with the reason written down — its completion marker is fail-closed, so a curator that runs out of steps advances no cursor at all.
 

@@ -113,14 +113,14 @@ be shared.</p>
               <strong>mastra-ai/mastra</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e" title="4a41ea611732860395104e5af5ebe279ff9a796e">
+            <a class="meta-pill revision-pill" href="https://github.com/mastra-ai/mastra/commit/2f05e3e87221b34c7cfc5389089abf09633d0e2c" title="2f05e3e87221b34c7cfc5389089abf09633d0e2c">
               <span>Analyzed revision</span>
-              <code>4a41ea61…</code>
+              <code>2f05e3e8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-29</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mastra-ai--mastra" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -162,14 +162,13 @@ resource/thread scopes, in-process locks, buffering cursors, retries,
 idle/provider-change activation, and processor-step semantics.</p>
 <p><strong>Beside it now sits a second subsystem that is a general
 factual memory.</strong> The Subconscious is a scoped knowledge graph —
-nodes, and records of text about them — maintained by four background
-agents: <code>capture</code> and <code>remind</code> on the observation
-side, <code>curate</code> and <code>learn</code> on the reflection side.
-Its records carry a scope, a code-stamped capture time, an optional time
-the fact refers to, and a <strong>ceiling</strong>: the widest scope
-this record may ever be given, re-checked every time anyone tries to
-move it. Section 4a describes it, and it is where three of the four
-marks come from.</p>
+nodes, and records of text about them — maintained by two built-in
+background observers, <code>remind</code> and <code>curate</code>. Its
+records carry a scope, a code-stamped capture time, an optional time the
+fact refers to, and a <strong>ceiling</strong>: the widest scope this
+record may ever be given, re-checked every time anyone tries to move it.
+Section 4a describes it, and it is where three of the four marks come
+from.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Three roles share the conversation:</p>
 <ul>
@@ -252,20 +251,21 @@ Paths</h2>
 <h2 id="4a-the-subconscious-knowledge-graph">4a. The Subconscious
 knowledge graph</h2>
 <p><code>packages/memory/src/processors/observational-memory/subconscious/</code>
-is fifteen files; the storage contract it writes through is
+is seventeen files; the storage contract it writes through is
 <code>packages/core/src/storage/domains/knowledge/</code>, 1,238 lines
 across an abstract base and an in-memory reference implementation.</p>
-<p><strong>Four agents, two phases, and a cursor that will not
-lie.</strong> <code>capture</code> and <code>remind</code> run as
-observation extractors; <code>curate</code> and <code>learn</code> run
-as reflections. Each is bounded by <code>maxSteps</code>, and the
-default is not uniform — <code>curate</code> gets 200 against 50, with
-the reason written down: <em>"Curation walks a worklist that can reach
-hundreds of records, and its completion marker is fail-closed: a curator
-that runs out of steps advances no cursor at all."</em> A background
-pass that half-finishes and advances anyway is how records get silently
-skipped forever; this one refuses to record progress it did not
-make.</p>
+<p><strong>Two built-in agents, both observers.</strong>
+<code>BUILT_IN_OBSERVATION</code> is
+<code>new Set(['remind', 'curate'])</code>, and there is no reflection
+set beside it — the two-phase split the package once had is gone, along
+with a <code>capture</code> agent and a <code>learn</code> agent. Each
+agent is bounded by <code>maxSteps</code>, and the default is not
+uniform: <code>DEFAULT_MAX_STEPS</code> is 50 while
+<code>DEFAULT_MAX_STEPS_BY_AGENT</code> gives <code>curate</code> 200,
+with a hard ceiling of 500 and a validator that refuses a non-integer or
+an out-of-range value outright. The asymmetry is the right shape for a
+pass that walks a worklist rather than a window; what the constant no
+longer carries is a comment saying so.</p>
 <p><strong>A record's scope has a ceiling, and the ceiling is the
 mechanism.</strong> Scopes are ordered <code>org</code> &lt;
 <code>resource</code> &lt; <code>thread</code>. A
@@ -274,12 +274,15 @@ mechanism.</strong> Scopes are ordered <code>org</code> &lt;
 <code>assertKnowledgeScopeWithinCeiling</code> runs on append
 (<code>inmemory.ts:330</code>) and again on every rescope
 (<code>:420</code>), so a record captured under a thread ceiling cannot
-be promoted to the organisation later. <code>capture</code> clamps at
-the source too — <code>clampScope(level, ceiling)</code> narrows a
-model-proposed scope rather than rejecting the record — and
-<code>pinned.ts</code> states the bypass it is guarding: <em>"creating a
-resource-level record under a thread ceiling would bypass the
-ceiling."</em></p>
+be promoted to the organisation later. The tool surface asserts the same
+rule before the storage layer sees it —
+<code>knowledge-write-tools.ts</code> calls
+<code>assertKnowledgeScopeWithinCeiling</code> when the tools are built
+(<code>:43</code>) and again on a rescope (<code>:279</code>), so a
+scope above the ceiling is refused at the boundary rather than silently
+narrowed on the way in — and <code>pinned.ts</code> states the bypass it
+is guarding: <em>"creating a resource-level record under a thread
+ceiling would bypass the ceiling."</em></p>
 <p>Widening the ceiling itself is possible and deliberately awkward: it
 has its own call, <code>raiseKnowledgeCeiling</code>, guarded by
 <code>assertKnowledgeCeilingRaised</code>, which refuses to move a
@@ -289,12 +292,16 @@ ceiling as a guarantee about what a <em>curator agent</em> can do to a
 record, not as a guarantee about what an operator can.</p>
 <p><strong>Validity time is separate from capture time.</strong>
 <code>capturedAt</code> is stamped by code; <code>when</code> is the
-time the fact refers to, asked of the capture model per record and
-validated by <code>parseWhen</code>, which throws on an unparseable
-value rather than dropping it. Nothing queries on it — the model is told
-in prose that <em>"the newer observation supersedes the older one"</em>
-— so this is the axis separation without the temporal query that would
-exploit it.</p>
+time the fact refers to, asked of the writing agent per record and
+constrained at the tool boundary rather than after it:
+<code>dateTimeSchema</code> is a JSON Schema carrying
+<code>format: 'date-time'</code> and an explicit RFC-3339 pattern,
+<code>^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$</code>,
+so a malformed value is refused as a bad tool argument instead of
+reaching a parser. Nothing queries on it — the model is told in prose
+that <em>"the newer observation supersedes the older one"</em> — so this
+is the axis separation without the temporal query that would exploit
+it.</p>
 <p><strong>Editing is remove plus append, and removal is one-way for the
 curator.</strong> Knowledge records are immutable;
 <code>pinned.ts</code> says an <em>"edit is remove plus append because
@@ -532,6 +539,34 @@ call site</li>
 <li><code>packages/memory/integration-tests/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/mastra-ai/mastra/commit/2f05e3e87221b34c7cfc5389089abf09633d0e2c"><code class="commit-id" title="2f05e3e87221b34c7cfc5389089abf09633d0e2c">2f05e3e8…</code></a>
+— re-read at a commit dated 16 September 2026. The monorepo moved 643
+commits past the previous pin and the storage domain all four marks rest
+on did not move at all:
+<code>packages/core/src/storage/domains/knowledge</code> has the
+identical tree hash <code>ea9bb6f9</code> at both commits, so every
+anchor, line number and quotation in the storage half is exact. The
+processor beside it is where the work went —
+<code>packages/memory/src/processors/observational-memory</code> gained
+about 9,700 lines against 3,200 removed — and three published claims
+moved with it. The Subconscious is no longer four agents in two phases:
+<code>BUILT_IN_OBSERVATION</code> is <code>remind</code> and
+<code>curate</code>, there is no reflection set, and neither a
+<code>capture</code> nor a <code>learn</code> agent appears anywhere in
+the package. <code>parseWhen</code> and <code>clampScope</code> are gone
+from the tree, replaced at the tool boundary by
+<code>dateTimeSchema</code> — an RFC-3339 pattern on the argument — and
+by <code>assertKnowledgeScopeWithinCeiling</code> called in
+<code>knowledge-write-tools.ts</code>, so a bad time or an over-ceiling
+scope is refused where it is supplied rather than parsed or silently
+narrowed afterwards. All four marks hold. Screened before reading, from
+a clone deepened past the pin so dependency ages are the project's own:
+three auto-run surfaces, two build-time execution points, 258 unpinned
+dependency surfaces and 149 dependency files inside the seven-day
+cooldown — the shape of a monorepo with a manifest in every package, not
+a finding about the memory code. Nothing was installed, built or
+run.</p>
 <p><strong>2026-08-29</strong> — <a
 href="https://github.com/mastra-ai/mastra/commit/4a41ea611732860395104e5af5ebe279ff9a796e"><code class="commit-id" title="4a41ea611732860395104e5af5ebe279ff9a796e">4a41ea61…</code></a>
 — re-pinned 1,049 commits on, and the system has grown a second memory
@@ -540,10 +575,11 @@ four: <code>scope_enforced</code> was already held and is now stronger,
 and <code>bitemporal</code>, <code>audit_log</code> and
 <code>negative_eval</code> are added.</p>
 <p>The Subconscious is a scoped knowledge graph of nodes and records,
-maintained by four background agents, described in section 4a.
-<code>bitemporal</code> rests on <code>capturedAt</code> stamped by code
-beside an optional <code>when</code> supplied per record by the capture
-model and validated rather than dropped — a point rather than an
+maintained by two built-in background observers, described in section
+4a. <code>bitemporal</code> rests on <code>capturedAt</code> stamped by
+code beside an optional <code>when</code> supplied per record by the
+writing agent and constrained by an RFC-3339 pattern on the tool
+argument rather than parsed afterwards — a point rather than an
 interval, with nothing querying on it. <code>audit_log</code> rests on a
 closed seven-value activity vocabulary written at every mutating call
 site, with <code>listActivity</code> <code>abstract</code> on the
