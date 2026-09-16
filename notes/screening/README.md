@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 444 of 505 screened at the report's current pin.**
+**Progress: 445 of 506 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 187 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 257 |
-| Repositories with build-time execution (`EXEC`) | 326 |
+| Repositories with an auto-run surface (`RUNS`) | 188 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 258 |
+| Repositories with build-time execution (`EXEC`) | 327 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -98,6 +98,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`honcho`](../../content/systems/honcho.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`iai-pme`](../../content/systems/iai-pme.md) | `.claude-plugin/` |
 | [`inite-brain`](../../content/systems/inite-brain.md) | `.claude-plugin/`, `server.json` |
+| [`inspeximus`](../../content/systems/inspeximus.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`joplin`](../../content/systems/joplin.md) | `.envrc`, `.vscode/settings.json` |
 | [`juggler`](../../content/systems/juggler.md) | `.gitmodules` |
 | [`kaeru`](../../content/systems/kaeru.md) | `.gitmodules` |

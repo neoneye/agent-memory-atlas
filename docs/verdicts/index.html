@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 505 reports.</strong></p>
+<p><strong>This page covers all 506 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18623,6 +18623,72 @@ true, or you need a hash-chained log that survives rotation.</li>
 index over a repository, with no status on a node, no provenance beyond
 its source file, and no delete or forget path in the core, so fixing
 what it believes means rebuilding it.</li>
+</ul>
+<h3 id="inspeximus"><a
+href="../systems/inspeximus/"><code>inspeximus</code></a></h3>
+<ul>
+<li>Best idea: <strong>a ledger of the values a key has retired,
+consulted on every write.</strong> <code>superseded_sigs</code> is the
+set of object signatures already superseded for the incoming key; when
+the incoming signature matches one and no active record carries it, the
+write is retired on arrival — <code>echo_blocked</code>,
+<code>superseded_by_policy = "echo_guard"</code> — and the current value
+is preserved. That is a durable record of a rejected <em>value</em>,
+keyed on the value, so a restatement cannot silently re-instate it; the
+bypasses are named (<code>reaffirm=True</code>, <code>revert()</code>),
+a companion <code>objectless_guard</code> blocks the write that would
+dodge the signature check by omitting the object, and
+<code>store.last_write</code> tells the caller the write was demoted
+rather than landed — added because <code>remember()</code> returning an
+id either way meant "one defect reached through seven doors, all of them
+'a demoted write reported as a landed one'." The distinction that makes
+it usable is one line above: "[a] record that does not ASSERT A CHANGE
+never retires anything", so agreement is not correction and a subject's
+echoes do not supersede each other.</li>
+<li>Biggest risk: <strong>the guard is object- and text-based, and the
+code says exactly where that ends.</strong> Under "LOAD-BEARING LIMIT
+(measured, not assumed)": paraphrase resistance "comes ONLY from the
+OBJECT being value-preserving", embedding near-duplicate cannot separate
+a same-value paraphrase (cos mean 0.95) from a different-value
+correction (0.84) — "~42% false-block at a 0.9 threshold" — and "an echo
+that OBSCURES the value (coreferent 'her old hobby') is NOT caught." So
+an agent that restates a retired fact indirectly gets through.
+Separately <code>remember(agent_id="*")</code> stores <code>*</code>
+unchecked because <code>_check_agent_id</code> guards the grant path and
+<code>remember()</code> never calls it — a note that corrects an earlier
+version of itself: "An earlier version of this note said the route
+'reaches the SAME validated path it skipped'. That was false and a
+control caught it." And the README's comparison figures against Graphiti
+and mem0 are the project's own measurements at n=30 per system,
+unreproduced here; the fourth column is its own guard disabled at 100%,
+which is the control that makes the other three legible and is rare
+enough to credit.</li>
+<li>Most reusable component: the comment above the guard. It cites its
+own probe, gives comparative stale rates against four named policies,
+states its own defeat condition with the measurement that explains why a
+similarity threshold cannot fix it, and records two shipped bugs — the
+guard defaulting off so "the adapters missed it for ten releases", and a
+documented off-switch that was dead, where "all three of =0, =1 and
+unset produced an identical guarded store. A switch that reports nothing
+when it fails to take effect is worse than no switch."</li>
+<li>Maturity impression: MIT, version 2.35.0, 129,806 lines with 294
+test files and 2,837 test functions, a zero-dependency
+<code>core.py</code> that runs standalone, an MCP server, LangGraph
+packages, and a transparency-log half — Ed25519 attestation, Merkle
+anchoring, COSE/SCITT, witness co-signature, deletion manifests. The
+probes audit the project itself:
+<code>forget_emits_tombstone_probe.py</code> was found "by running the
+published wheel in a clean room and checking the claim 'erasure with
+signed receipts' against what the API actually does."
+<code>_serving_class</code> commits a withheld/served class rather than
+the raw status, to avoid "chain churn proportional to housekeeping, and
+fourteen chances to miss one."</li>
+<li>Study when: you need a correction to stay corrected, or you want the
+worked example of a tombstone keyed on the value rather than the
+row.</li>
+<li>Do not copy when: your values cannot be separated from the sentences
+that state them — none of this works without an explicit object field,
+and the guard says so.</li>
 </ul>
         </article>
       </div>

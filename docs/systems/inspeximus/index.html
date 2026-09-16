@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent memory whose write path
+consults the set of object signatures already superseded for a key and
+retires a matching incoming write on arrival, preserving the current
+value — with the guard's own defeat condition, its measured false-block
+rate and two shipped bugs written into the comment above it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="inspeximus — Agent Memory Atlas">
+    <meta property="og:description" content="An agent memory whose write
+path consults the set of object signatures already superseded for a key
+and retires a matching incoming write on arrival, preserving the current
+value — with the guard's own defeat condition, its measured false-block
+rate and two shipped bugs written into the comment above it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="inspeximus — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent memory whose
+write path consults the set of object signatures already superseded for
+a key and retires a matching incoming write on arrival, preserving the
+current value — with the guard's own defeat condition, its measured
+false-block rate and two shipped bugs written into the comment above
+it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>inspeximus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "inspeximus",
+      "description": "An agent memory whose write path consults the set of object signatures already superseded for a key and retires a matching incoming write on arrival, preserving the current value \u2014 with the guard's own defeat condition, its measured false-block rate and two shipped bugs written into the comment above it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The value that was corrected is refused
+when it comes back</p>
+          <h1>inspeximus</h1>
+          <p class="document-deck">An agent memory whose write path
+consults the set of object signatures already superseded for a key and
+retires a matching incoming write on arrival, preserving the current
+value — with the guard's own defeat condition, its measured false-block
+rate and two shipped bugs written into the comment above it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/DanceNitra/inspeximus">
+              <span>Source</span>
+              <strong>DanceNitra/inspeximus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/DanceNitra/inspeximus/commit/3b9223d8d1b43c68e46b538c135b67844510a5bd" title="3b9223d8d1b43c68e46b538c135b67844510a5bd">
+              <span>Analyzed revision</span>
+              <code>3b9223d8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/DanceNitra--inspeximus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>DanceNitra--inspeximus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>inspeximus is "the agent memory that takes it back" — MIT, Python,
+version 2.35.0, 129,806 lines with 294 test files and 2,837 test
+functions, built around one claim: "Your agent's most expensive failure
+is not forgetting. It is confidently remembering the old answer."</p>
+<p>The mechanism is the clearest tombstone in this corpus, and the
+writing around it is the most rigorous.</p>
+<p>On the write path, <code>remember()</code> builds the set of object
+signatures already superseded for the incoming key:</p>
+<pre><code>superseded_sigs = {self._obj_sig(r) for r in same_key if r.get(&quot;status&quot;) == &quot;superseded&quot;}</code></pre>
+<p>If the incoming record's signature is in that set and no active
+record carries it, the write is retired on arrival — status
+<code>superseded</code>, <code>echo_blocked</code>,
+<code>superseded_by_policy = "echo_guard"</code> — and the current value
+is preserved. That is a durable record of a rejected <em>value</em>,
+keyed on the value, consulted on write so a later assertion cannot
+silently re-instate it. A companion <code>objectless_guard</code> closes
+the obvious hole: a write with no explicit object against a key whose
+values are ledgered is blocked, so an echo cannot slip past the
+signature check by omitting the field it would be matched on.</p>
+<p>The bypass is explicit and named.
+<code>remember(..., reaffirm=True)</code> or <code>revert()</code>,
+"because the guard cannot un-supersede on its own" — and the caller is
+told: <code>store.last_write</code> carries <code>blocked: True</code>,
+the policy, the current record's id, and a note saying to use
+<code>reaffirm=True</code> if the value has genuinely returned. That
+reporting was added for a reason the comment states:
+<code>remember()</code> returns an id whether the write landed or was
+retired, so "a legitimate reversal (A -&gt; B -&gt; A, third write true)
+silently left the store on B while the call looked like a success … one
+defect reached through seven doors, all of them 'a demoted write
+reported as a landed one'."</p>
+<p>What lifts this above a good implementation is the sixteen-line
+comment above it, which does four things almost nothing else here
+does.</p>
+<p>It <strong>cites its own probe</strong> —
+<code>inspeximus/probes/echo_attack_probe_v2.py</code>, on a MemBench
+echo fixture — and gives comparative stale rates for recency, mem0-v1, a
+bi-temporal-Graphiti-faithful policy and a verbatim-hash policy, noting
+that the verbatim-hash policy "holds against verbatim (0.21) but is
+destroyed by paraphrase (1.00)".</p>
+<p>It <strong>states its own defeat condition</strong>, under the
+heading "LOAD-BEARING LIMIT (measured, not assumed)": paraphrase
+resistance "comes ONLY from the OBJECT being value-preserving", because
+embedding near-duplicate cannot separate a same-value paraphrase (cos
+mean 0.95) from a different-value correction (0.84) — they overlap at
+"~42% false-block at a 0.9 threshold" — so the guard is object- and
+text-based, not similarity-based, and "an echo that OBSCURES the value
+(coreferent 'her old hobby') is NOT caught."</p>
+<p>It <strong>records a shipped bug</strong>: the guard was off by
+default, so every product surface had to re-enable it and "the adapters
+missed it for ten releases — a correction made through the CLI was
+undone by a restatement through an adapter, and then the honest
+re-correction was refused as an echo, so the store could not be put
+right through the surface that broke it."</p>
+<p>And it <strong>records a second one</strong>: the documented
+off-switch was dead. <code>INSPEXIMUS_ECHO_GUARD=0</code> was silently
+ignored by a direct API user — "measured, all three of =0, =1 and unset
+produced an identical guarded store. A switch that reports nothing when
+it fails to take effect is worse than no switch."</p>
+<p>A project that writes its own failures into the file, with numbers,
+is giving a reader the thing an atlas normally has to reconstruct.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>record</strong> has a key and, ideally, an explicit
+<code>object</code> — the value, separate from the prose that states
+it.</p>
+<p>A <strong>supersession</strong> retires a value for a key; the
+retired object's signature stays in the ledger.</p>
+<p>An <strong>echo</strong> is a later write of a value that is already
+retired. It is retired on arrival.</p>
+<p>A <strong>reaffirm</strong> is the only way a retired value comes
+back, and it is a different call.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the ledger of superseded object signatures is consulted on every keyed write, so a corrected value cannot be re-instated by restating it — only by a call that names the reversal</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the ledger of superseded object signatures is consulted on every keyed write, so a corrected value cannot be re-instated by restating it — only by a call that names the reversal
+flowchart TB
+    W[&quot;remember(key, text, object=…)&quot;] --&gt; OG{&quot;objectless_guard:&lt;br/&gt;no object, but this key&lt;br/&gt;has ledgered objects?&quot;}
+    OG --&gt;|&quot;yes&quot;| R1[&quot;retired stale-on-arrival&lt;br/&gt;objectless_blocked&quot;]
+    OG --&gt;|&quot;no&quot;| SIG[&quot;new_sig = _obj_sig(rec)&quot;]
+    LED[(&quot;superseded_sigs = object signatures&lt;br/&gt;already superseded FOR THIS KEY&quot;)] --&gt; EG
+    SIG --&gt; EG{&quot;new_sig in superseded_sigs&lt;br/&gt;AND no active record&lt;br/&gt;carries that signature?&quot;}
+    EG --&gt;|&quot;yes&quot;| R2[&quot;status = superseded ·&lt;br/&gt;echo_blocked ·&lt;br/&gt;policy = echo_guard&lt;br/&gt;CURRENT VALUE PRESERVED&quot;]
+    R2 --&gt; LW[&quot;store.last_write = {blocked: true,&lt;br/&gt;policy, current_id, note:&lt;br/&gt;&#39;write it with reaffirm=True&#39;}&quot;]
+    EG --&gt;|&quot;no&quot;| CH{&quot;meta.asserts_change is False?&quot;}
+    CH --&gt;|&quot;yes — a restatement&lt;br/&gt;is not a supersession&quot;| R3[&quot;retires nothing&quot;]
+    CH --&gt;|&quot;no&quot;| SUP[&quot;supersede the active value;&lt;br/&gt;its signature joins the ledger&quot;]
+    SUP --&gt; LED
+    BYP[&quot;reaffirm=True · revert()&quot;] --&gt;|&quot;the only ways back&quot;| SUP
+    LIMIT[&quot;stated in the comment:&lt;br/&gt;paraphrase-resistance comes ONLY from&lt;br/&gt;the OBJECT being value-preserving.&lt;br/&gt;An echo that OBSCURES the value&lt;br/&gt;(&#39;her old hobby&#39;) is NOT caught.&lt;br/&gt;Similarity cannot separate a same-value&lt;br/&gt;paraphrase (0.95) from a different-value&lt;br/&gt;correction (0.84): ~42% false-block at 0.9&quot;] -.-&gt; EG
+    VIEW[&quot;every read passes one view:&lt;br/&gt;tenant filter → _acl_visible&lt;br/&gt;FAIL-CLOSED allow-list&quot;] --&gt; REC[&quot;recall — status allowlist,&lt;br/&gt;include_superseded is the&lt;br/&gt;caller&#39;s explicit widening&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inspeximus/core.py</code></td>
+<td>15,891 lines: the store, the guards, the view, recall, receipts</td>
+</tr>
+<tr>
+<td><code>inspeximus/probes/</code></td>
+<td>Self-audits with committed results, including the tombstone
+probe</td>
+</tr>
+<tr>
+<td><code>inspeximus/merkle.py</code>, <code>cose.py</code>,
+<code>scitt.py</code>, <code>transparency.py</code>,
+<code>witness_*.py</code></td>
+<td>The transparency-log half: signing, anchoring, co-signature</td>
+</tr>
+<tr>
+<td><code>inspeximus/deletion_manifest.py</code>,
+<code>erasure_auditor.py</code>, <code>subject_rights.py</code></td>
+<td>Erasure with receipts</td>
+</tr>
+<tr>
+<td><code>inspeximus/mcp_server.py</code>, <code>integrations/</code>,
+<code>packages/langgraph-*</code></td>
+<td>The surfaces</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>294 files, 2,837 test functions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>core.py:2105-2121</code> — the echo-guard comment. Read it
+before the code; it is the design document, the measurement and the
+post-mortem in one place.</p>
+<p><code>core.py:5924-5962</code> — the two guards on the write path,
+and the caller-facing verdict.</p>
+<p><code>core.py:7940-7958</code> and <code>:8377-8394</code> — the
+single filtered view, and why it is an allow-list.</p>
+<p><code>core.py:239-257</code> — <code>_serving_class</code>, and the
+argument for committing a class rather than a status.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record carries a key, an optional explicit <code>object</code>, a
+status, a tenant, an owning agent, validity timestamps and receipt
+material. The separation of <code>object</code> from text is what the
+whole guard rests on: the object is the value, the text is a way of
+saying it, and only the first can be compared across paraphrases.</p>
+<p><code>_serving_class</code> is worth reading as a design argument.
+Rather than committing the raw <code>status</code> string into the
+receipt chain, it commits a two-value class — <code>withheld</code> or
+<code>served</code> — because status "is written at fourteen call sites,
+most of them mechanical and high-volume … Committing the raw string
+would demand an amendment receipt at every one of them — chain churn
+proportional to housekeeping, and fourteen chances to miss one and raise
+a tamper alarm on an honest store." Only three transitions cross the
+boundary, "each a deliberate, low-volume act by someone vouching for a
+record", and <code>confirmed_by</code> rides in the same hash "so
+stamping a fabricated reviewer onto a record is caught by the same check
+as flipping its status."</p>
+<p>That is a genuinely good answer to a problem every append-only store
+hits: what to commit when most state changes are bookkeeping.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical recall over the filtered view. Two filters matter.</p>
+<p>The view is the scope boundary and it is applied once: tenant, then
+<code>_acl_visible</code> for an agent handle, "so a method added
+tomorrow is access-controlled by construction rather than by review."
+The allow-list is fail-closed in both directions — an unevaluable grant
+authorises nothing, and an agent handle with no usable identity reads
+nothing, because "[r]eturning the rows unfiltered here would be the
+whole feature failing open on a falsy value." ACL records are never
+visible through an agent handle, and <code>can_read(agent, id)</code>
+explains a single decision without having to run a recall.</p>
+<p>The status filter is an allow-list for a reason the code states: "a
+denylist only knows the statuses somebody remembered to add.
+<code>discard_provisional()</code> set status='discarded' and that fell
+straight through to <code>return include_superseded</code> — a REJECTED
+record, surfaced by a flag named for supersession, minutes after the
+denylist above it was written."</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Both write paths — <code>remember()</code> and <code>route()</code> —
+pass the guards. One detail is easy to miss and is the difference
+between a working guard and an unusable one:</p>
+<blockquote>
+<p>"A record that does not ASSERT A CHANGE never retires anything. It is
+the store's only way to tell 'your address remains 742 Birchwood Lane,
+Unit 4A' (agreement, possibly at a different granularity) from 'actually
+it's Unit 3A now' (a correction). Without it, keying the echoes of a
+value makes the echoes supersede each other and the current answer
+disappears from recall."</p>
+</blockquote>
+<p>Agreement is not correction. Most systems that key on a subject treat
+every restatement as a new assertion and lose the current value to its
+own echoes.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A zero-dependency core, an MCP server, one-line installs for five
+coding agents, and LangGraph checkpoint and store packages. The adapter
+story is also where the ten-release default bug lived, which is the
+argument for the resolution rule the comment lands on: one posture,
+resolved in one place, explicit argument beating environment beating
+default.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The second half of the package is a transparency-log system: Ed25519
+attestation, receipt chains, Merkle anchoring, COSE and SCITT, witness
+co-signature, deletion manifests and an erasure auditor. The name is
+explained in the README and the explanation is also a limit: a medieval
+<em>inspeximus</em> "attested that the copy faithfully matched the
+original, not that the original was true. Same guarantee here, and
+<code>provenance()</code> says so in a <code>limits</code> field rather
+than leaving you to find out."</p>
+<p>Two limits are stated plainly and both survive scrutiny. The guard
+cannot catch an echo that obscures the value. And
+<code>remember(agent_id="*")</code> stores <code>*</code> unchecked,
+"because <code>_check_agent_id</code> guards the GRANT path and
+<code>remember()</code> never calls it" — a note that itself corrects an
+earlier version of the same comment: "An earlier version of this note
+said the route 'reaches the SAME validated path it skipped'. That was
+false and a control caught it."</p>
+<p>The probes are self-audits rather than demos.
+<code>forget_emits_tombstone_probe.py</code> opens: "Found by running
+the published wheel in a clean room and checking the claim 'erasure with
+signed receipts' against what the API actually does: the record was
+gone, the bytes were gone, and the receipt count was zero."</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,837 test functions across 294 files, probes with committed result
+JSON, and a "Claims audit" CI workflow beside the ordinary one.</p>
+<p><code>tests/test_core.py:20</code> is the negative eval in a single
+line —
+<code>assert "eu-west" in texts and "us-east" not in texts   # a corrected fact stops being recalled</code>
+— the surviving value and the excluded one asserted together against a
+real <code>recall</code>. The ACL suite does the same for isolation,
+with the failure message "{label} widened the ACL" repeated across
+parameter variations.</p>
+<p>The README's comparison chart should be read as what it is. It
+reports correction-recurrence rates for inspeximus, Graphiti and mem0 at
+n=30 per system, measured by this project, and none of those numbers was
+reproduced here. What distinguishes it from the usual vendor chart is
+the fourth column: inspeximus with its own guard disabled, at 100%.
+Publishing your own ablation beside your own result is the control that
+makes the other three legible, and it is rare.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Key the tombstone on the value, not the record. A deletion marker
+keyed on an id stops that row coming back; a ledger of retired object
+signatures stops the <em>value</em> coming back however it is restated.
+The difference is the whole mechanism.</p>
+<p>Separate the value from the sentence. None of this works without an
+explicit <code>object</code> field, and the guard that blocks objectless
+writes against a ledgered key is what stops callers opting out by
+accident.</p>
+<p>Distinguish agreement from correction. A restatement that asserts no
+change must retire nothing, or a subject's echoes supersede each other
+and the current answer vanishes.</p>
+<p>Tell the caller when a write was demoted. A function that returns an
+id whether the write landed or was retired will produce "a demoted write
+reported as a landed one" in every surface that wraps it.</p>
+<p>And write the limit into the comment. "An echo that OBSCURES the
+value is NOT caught", with the measured overlap that explains why a
+similarity threshold cannot fix it, is worth more to a reader than any
+benchmark — it is the sentence that tells you whether this mechanism
+fits your problem.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>agent_id="*"</code> should be accepted by
+<code>remember()</code>. The code names the gap and explicitly declines
+to answer it in that release.</p>
+<p>How the guard behaves against coreferent echoes in practice. The
+limit is stated; no probe in the tree measures how often real agent
+output takes that form.</p>
+<p>Whether the comparison figures reproduce. The probes are committed
+and the fixtures named, so the question is answerable by anyone who runs
+them; it was not answered here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inspeximus/core.py:2105-2121</code></td>
+<td>The guard's measurement, its defeat condition, and two shipped
+bugs</td>
+</tr>
+<tr>
+<td><code>inspeximus/core.py:5924-5962</code></td>
+<td>The value-keyed ledger consulted on write, and the caller's
+verdict</td>
+</tr>
+<tr>
+<td><code>inspeximus/core.py:239-257</code></td>
+<td>Committing a class rather than a status, and why</td>
+</tr>
+<tr>
+<td><code>inspeximus/core.py:7940-7958</code>,
+<code>:8377-8394</code></td>
+<td>One filtered view, fail-closed in both directions</td>
+</tr>
+<tr>
+<td><code>inspeximus/probes/forget_emits_tombstone_probe.py</code></td>
+<td>A project auditing its own published wheel</td>
+</tr>
+<tr>
+<td><code>tests/test_core.py:20</code></td>
+<td>A negative eval and its positive control in one assertion</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/DanceNitra/inspeximus/commit/3b9223d8d1b43c68e46b538c135b67844510a5bd"><code class="commit-id" title="3b9223d8d1b43c68e46b538c135b67844510a5bd">3b9223d8…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: eighteen files scanned, five auto-run
+surfaces, one build-time execution point, five unpinned surfaces and six
+dependency files inside the seven-day cooldown. The README's comparative
+figures against other systems are the project's own measurements and
+were not reproduced. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
