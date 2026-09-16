@@ -123,14 +123,14 @@ content-hash dedup that would have stopped it coming back.</p>
               <strong>plur-ai/plur</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b" title="d005139ee82eb124466472190302a9bc1770693b">
+            <a class="meta-pill revision-pill" href="https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39" title="f6e97819a4518f198cd0c37404643038404f7e39">
               <span>Analyzed revision</span>
-              <code>d005139e…</code>
+              <code>f6e97819…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-08</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/plur-ai--plur" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -425,6 +425,25 @@ a folder, documented as writing nothing and bound to loopback.</p>
 <p>One naming issue is worth flagging for anyone reading the tool list:
 session end takes a parameter called engram suggestions and writes them
 straight through the learn path with no approval step.</p>
+<p><strong>An unparseable time fails in two different directions, and
+the module says why.</strong> A stored bound that cannot be parsed is
+treated as <em>absent</em> — the engram stays visible — because
+<em>"stored engrams have their fields validated by
+<code>TemporalSchema</code> and hiding content over a data error is the
+worse outcome."</em> A caller-supplied evaluation instant that cannot be
+parsed throws a <code>RangeError</code>, because <em>"it is an explicit
+argument, so an unparseable value throws ... rather than silently
+answering as of the present moment."</em></p>
+<p>The same malformed string fails open as data and closed as an
+argument, and the reasoning is the difference between them: a bad stored
+value is the store's problem and should not cost the reader a memory,
+while a bad <code>now</code> is the caller's question and answering a
+different one quietly is worse than refusing. The <code>now</code>
+option also accepts an RFC 3339 instant rather than only a date, with a
+date still resolving to the end of its day so that a
+<code>valid_until</code> equal to today is not expired — the behaviour
+the older lexical comparison happened to have, preserved deliberately
+rather than by accident.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Trust state — awarded.</strong> A discrete state that
@@ -664,6 +683,19 @@ ls benchmark/                                                        # one file:
 ls benchmark/run.ts benchmark/results/baseline-main-hybrid.json      # both absent; the self-audit points at them
 git show 19b74b5 --stat                                              # the harness removal: 2,238 lines</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39"><code class="commit-id" title="f6e97819a4518f198cd0c37404643038404f7e39">f6e97819…</code></a>
+— re-read at a commit dated 2026-09-16, 8 commits past the previous pin.
+All six marks re-tested and held, and the validity axis is better
+defended: an unparseable stored bound is treated as absent so a data
+error cannot hide a memory, while an unparseable caller-supplied
+<code>now</code> throws a <code>RangeError</code> rather than silently
+answering as of the present moment. The evaluation instant now accepts
+RFC 3339 as well as a date, with a date still resolving to the end of
+its day. Screened before reading: three auto-run surfaces, one
+build-time execution point, 13 unpinned dependency surfaces and three
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
 <p><strong>2026-09-08</strong> — <a
 href="https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b"><code class="commit-id" title="d005139ee82eb124466472190302a9bc1770693b">d005139e…</code></a>
 — first reading, at the head of <code>main</code>, on a commit from the

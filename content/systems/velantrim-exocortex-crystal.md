@@ -7,9 +7,9 @@ page_kind: system
 source_name: "velantrian/velantrim-exocortex-crystal"
 source_url: https://github.com/velantrian/velantrim-exocortex-crystal
 archive_name: "velantrian--velantrim-exocortex-crystal"
-revision: df4a651a2b4dd06df486e65cdbdcfe1090743135
-revision_url: https://github.com/velantrian/velantrim-exocortex-crystal/commit/df4a651a2b4dd06df486e65cdbdcfe1090743135
-analyzed_at: 2026-09-08
+revision: 3ed3a53ee9b8445a5f2ebf16046f782a3095555e
+revision_url: https://github.com/velantrian/velantrim-exocortex-crystal/commit/3ed3a53ee9b8445a5f2ebf16046f782a3095555e
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the immune memory: a durable table of rejected claim patterns keyed on the normalized value and consulted before the gate on every write | core/immune.py:85-122, core/immune.py:154-235, core/memory.py:188, core/ingest.py:262-267, core/ingest.py:292-302, core/imports.py:78-79, core/review.py:122-156, core/cli.py:380-388 | `record_threat` normalizes a pattern, derives `pattern_id` from the normalized text and upserts an `immune_memory` row with a type, a severity and an actor, appending a content-free audit event; `match_threat` finds a recorded pattern contained whole-token in an incoming claim above a severity floor; `screen` returns `BLOCK` on a match and `ingest`, `imports` and the review diagnosis refuse a blocked claim before the guardian and the truth gate, so the fact stays `Observed` in L1 and never reaches the canon; the writers are the `immune record` CLI command and, in strict-plus-learn mode, the ingest path itself on a contradiction; the limits are that erasure does not write to this table, that a force approval with a named actor and a reason overrides the block under an audited `review_force_approve` event, and that containment is whole-token, so a paraphrase passes | tests/test_immune.py (18 cases: `test_screen_admits_when_nothing_matches` beside `test_screen_blocks_recorded_threat_and_counts_hits`, `test_ingest_blocked_by_recorded_threat`, `test_ingest_strict_mode_blocks_and_learns`, `test_record_and_forget_are_audited`, `test_cli_immune_roundtrip`)"
@@ -384,6 +384,15 @@ about a fact. The agent-facing documentation (`docs/ai/README.md`) is a router
 with a source-of-truth order that ranks live GitHub, tests and CI above the
 prose, and a lifecycle overlay it tells a reader not to trust past its date.
 
+**The TODOs became known limitations, which is a different promise.** The
+pipeline and the truth gate each carried a `TODO` naming what was coming next —
+a full ESM transition matrix and Laplace confidence among them. Both now read
+*"Known limitation[s] (not scheduled — Crystal V1 is freeze/stability with no
+automatic next milestone)"*. Nothing about the code changed; what changed is
+what a reader is entitled to assume. A `TODO (next)` says the gap is temporary,
+and a project that stops promising is easier to evaluate than one that keeps a
+stale intention in the source.
+
 ## 9. Reliability, Safety, and Trust
 
 **What holds.** The gate's one invariant is not configurable; canonical
@@ -529,6 +538,8 @@ autonomous or semantic reader is declared not implemented.
 - `rg -n 'tenant|principal|user_id' core/memory.py` — no scope column on `facts`.
 
 ## History
+
+**2026-09-16** — [`3ed3a53ee9b8445a5f2ebf16046f782a3095555e`](https://github.com/velantrian/velantrim-exocortex-crystal/commit/3ed3a53ee9b8445a5f2ebf16046f782a3095555e) — re-read at a commit dated 2026-09-13, 11 commits past the previous pin. All five marks re-tested and held. The change is to what the source promises rather than to what it does: the `TODO` markers in the pipeline and the truth gate became *"[k]nown limitation[s] (not scheduled — Crystal V1 is freeze/stability with no automatic next milestone)"*, so a reader is no longer told a gap is temporary when nothing is scheduled to close it. Screened before reading: no auto-run surface, one build-time execution point, two unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-08** — [`df4a651a2b4dd06df486e65cdbdcfe1090743135`](https://github.com/velantrian/velantrim-exocortex-crystal/commit/df4a651a2b4dd06df486e65cdbdcfe1090743135) — re-read after the author's comments on [issue #473](https://github.com/velantrian/velantrim-exocortex-crystal/issues/473), which named `core/immune.py` as a persistent value-keyed rejection mechanism and asked where the atlas draws the tombstone boundary. One commit since the first pin, documentation only; every finding verified at both. `tombstone` awarded on the immune memory: a durable table keyed on the normalized claim, written by a curator or by the strict ingest path, and consulted before the gate by ingest, import and the review diagnosis, with its limits stated in section 9. The erasure receipt is unchanged and is not the tombstone. The `curator_runtime` open question is answered by its docstring and removed; the Fit paragraph names the Reader foundations that exist.
 

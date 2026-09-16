@@ -7,9 +7,9 @@ page_kind: system
 source_name: "plur-ai/plur"
 source_url: https://github.com/plur-ai/plur
 archive_name: "plur-ai--plur"
-revision: d005139ee82eb124466472190302a9bc1770693b
-revision_url: https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b
-analyzed_at: 2026-09-08
+revision: f6e97819a4518f198cd0c37404643038404f7e39
+revision_url: https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39
+analyzed_at: 2026-09-16
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "a commitment of draft that withholds an engram from injection while leaving it retrievable | packages/core/src/inject.ts:172-173, :657, :697, packages/mcp/src/tools.ts:1048, :1147, packages/core/src/index.ts:3440, :3489, packages/core/src/feedback.ts:45-53 | `commitment` is a five-value field — exploring, leaning, decided, locked, draft — and `skipForApproval` returns true for `draft`, which the injection loop uses to `continue` past the engram in both its selection and its spreading-activation pass; the producer is agent-reachable, since `plur_learn` and `plur_learn_batch` both take a `commitment` argument that reaches the persisted shape, and feedback cannot launder the value because `nextCommitment` returns an unrecognised state untouched. Combined with `status: retired`, filtered at index.ts:4837, the ladder is candidate, accepted, rejected | packages/core/test/draft-approval-gate.test.ts:38-67, packages/core/test/feedback.test.ts:126-129"
@@ -295,6 +295,23 @@ One naming issue is worth flagging for anyone reading the tool list: session end
 takes a parameter called engram suggestions and writes them straight through the
 learn path with no approval step.
 
+**An unparseable time fails in two different directions, and the module says
+why.** A stored bound that cannot be parsed is treated as *absent* — the engram
+stays visible — because *"stored engrams have their fields validated by
+`TemporalSchema` and hiding content over a data error is the worse outcome."* A
+caller-supplied evaluation instant that cannot be parsed throws a `RangeError`,
+because *"it is an explicit argument, so an unparseable value throws ... rather
+than silently answering as of the present moment."*
+
+The same malformed string fails open as data and closed as an argument, and the
+reasoning is the difference between them: a bad stored value is the store's
+problem and should not cost the reader a memory, while a bad `now` is the
+caller's question and answering a different one quietly is worse than refusing.
+The `now` option also accepts an RFC 3339 instant rather than only a date, with
+a date still resolving to the end of its day so that a `valid_until` equal to
+today is not expired — the behaviour the older lexical comparison happened to
+have, preserved deliberately rather than by accident.
+
 ## 9. Reliability, Safety, and Trust
 
 **Trust state — awarded.** A discrete state that withholds from injection while
@@ -462,5 +479,7 @@ git show 19b74b5 --stat                                              # the harne
 ```
 
 ## History
+
+**2026-09-16** — [`f6e97819a4518f198cd0c37404643038404f7e39`](https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39) — re-read at a commit dated 2026-09-16, 8 commits past the previous pin. All six marks re-tested and held, and the validity axis is better defended: an unparseable stored bound is treated as absent so a data error cannot hide a memory, while an unparseable caller-supplied `now` throws a `RangeError` rather than silently answering as of the present moment. The evaluation instant now accepts RFC 3339 as well as a date, with a date still resolving to the end of its day. Screened before reading: three auto-run surfaces, one build-time execution point, 13 unpinned dependency surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-08** — [`d005139ee82eb124466472190302a9bc1770693b`](https://github.com/plur-ai/plur/commit/d005139ee82eb124466472190302a9bc1770693b) — first reading, at the head of `main`, on a commit from the same day. Screened before anything was read: three auto-run surfaces (two plugin manifests and a hooks directory), one build-time execution point, twelve unpinned surfaces; nothing was installed or run, and the read was made from a full clone. Six marks. `trust_state` rests on a draft commitment enforced inside the injector at both its passes, with the caveat that nothing in this repository can approve one. `bitemporal`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` rest on the temporal block and its two independent filters, the segment-aware and exact-membership scope predicates, the fsynced monthly JSONL, the tension adjudication, and the three draft-gate exclusions with controls. `tombstone` is withheld on a decision rather than an omission: the dedup deliberately looks past retired rows and a committed test pins that. The benchmark position was verified rather than repeated — the harness was removed from this tree in `19b74b5` and lives in a separate repository the README names, so no published number is reproducible from this checkout, which the project's own self-audit document also states. The reading covers the engram schema, the write and dedup paths, retrieval and injection, the scope predicates, the history log and the tension queue; the packs and exchange subsystems, the sync outbox, the migration package and the Python adapters were treated as context.
