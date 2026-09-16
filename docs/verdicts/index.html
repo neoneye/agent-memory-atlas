@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 508 reports.</strong></p>
+<p><strong>This page covers all 509 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18803,6 +18803,66 @@ empty result as proof.</li>
 <li>Do not copy when: the store must enforce confidentiality or support
 erasure — here the sensitivity label is explicitly not a filter, and
 nothing can be removed at all.</li>
+</ul>
+<h3 id="kannaka-memory"><a
+href="../systems/kannaka-memory/"><code>kannaka-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>never let the wire write your verdict about the
+wire.</strong> <code>absorb_gate</code> is "the single write-side
+chokepoint every wire→store absorb path routes through", and its
+sanitisation runs "even when the gate is dormant" — clamping the wave
+fields and, critically, forcing <code>hallucinated</code> "to the local
+default, NEVER the wire value (an attacker must not be able to set/clear
+the immune flag over the wire)." The flag is the local node's judgement
+about a remote peer's claim, and consolidation filters on it, so a
+memory a node has judged fabricated cannot be woven into a belief. Four
+separate tests assert the sanitised output carries the local default,
+one of them named "the wire immune flag is never trusted." The
+generalisable rule: when a record carries a field representing
+<em>your</em> judgement of it, overwrite it on ingest rather than
+validating the remote one — validation can be wrong, overwriting
+cannot.</li>
+<li>Biggest risk: <strong>a bespoke licence and a README that makes
+mechanism indistinguishable from metaphor.</strong> The SPACE CHILD
+LICENSE v1.0 grants broad permissions for "Peaceful Purpose" and
+restricts use directed at armed aggression or the targeting of
+civilians; field-of-use restrictions of that kind are not open source
+under the OSI definition, whatever the intent, and a
+<code>LICENSE</code> file at the root of a Rust project reads as
+permissive unless someone says otherwise. Separately, "[m]emories don't
+get stored. They resonate", spiral cores and chiral hemispheres describe
+a genuine hyperdimensional-computing substrate —
+<code>encoding.rs</code> is a conventional text→embedding→hypervector
+pipeline with a pluggable backend — but a sceptical reader has no cheap
+way to establish that. And the flag gates consolidation, not recall, so
+a flagged memory is still returned to a caller that does not check the
+field.</li>
+<li>Most reusable component: <code>serve_guard.rs</code>'s docstring as
+a form. It names the exposure it closed — a node with a paid provider
+was "a public, unmetered endpoint for anyone on the bus" — states its
+invariant, explains where it deliberately departs from the project's own
+ADR ("[t]he ceiling is what matters, not where the ceiling lives"),
+derives the route from local config "and from nothing else" while
+collecting the wire's routing-shaped fields so it can log that they were
+ignored, caps hops so "two brainless nodes cannot bounce one question
+between them forever", and splits its rate limiter into
+check-before-work and commit-at-spend because "[a]n abuse control that a
+stranger can turn into an outage cheaper than the abuse is not a
+control."</li>
+<li>Maturity impression: 119,396 lines of Rust at version 0.16.5 with
+1,433 test functions, an <code>evals/</code> tree of containerised
+benchmark tasks, and a <code>bench/</code> directory.
+<code>provenance.rs</code> signs with domain-separated, length-prefixed
+canonical bytes, keeps a bounded fail-closed replay set, and makes
+<code>verify_mem</code> pure so it "never reads the clock". The memory
+core is a minority of a tree that also holds a swarm, a hive, QUBO
+tooling and research surfaces.</li>
+<li>Study when: your memory crosses a bus other people can publish to,
+and you need the boundary modules rather than the retrieval.</li>
+<li>Do not copy when: you need to say "this specific thing was wrong" —
+correction here is interference, with no validity interval, no
+supersession pointer and no epistemic vocabulary beyond one
+boolean.</li>
 </ul>
         </article>
       </div>
