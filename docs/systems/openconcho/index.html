@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A desktop and web client for
+self-hosted Honcho that browses, creates and deletes the derived
+conclusions in someone's memory server — grouping them into "dreams" it
+invents by time-clustering, and inferring a conclusion's type with a
+fallback that turns an unserved level into <code>explicit</code>.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OpenConcho — Agent Memory Atlas">
+    <meta property="og:description" content="A desktop and web client
+for self-hosted Honcho that browses, creates and deletes the derived
+conclusions in someone's memory server — grouping them into "dreams" it
+invents by time-clustering, and inferring a conclusion's type with a
+fallback that turns an unserved level into <code>explicit</code>.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenConcho — Agent Memory Atlas">
+    <meta name="twitter:description" content="A desktop and web client
+for self-hosted Honcho that browses, creates and deletes the derived
+conclusions in someone's memory server — grouping them into "dreams" it
+invents by time-clustering, and inferring a conclusion's type with a
+fallback that turns an unserved level into <code>explicit</code>.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OpenConcho — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OpenConcho",
+      "description": "A desktop and web client for self-hosted Honcho that browses, creates and deletes the derived conclusions in someone's memory server \u2014 grouping them into \\\"dreams\\\" it invents by time-clustering, and inferring a conclusion's type with a fallback that turns an unserved level into `explicit`.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An unknown conclusion level renders as the
+most certain one</p>
+          <h1>OpenConcho</h1>
+          <p class="document-deck">A desktop and web client for
+self-hosted Honcho that browses, creates and deletes the derived
+conclusions in someone's memory server — grouping them into "dreams" it
+invents by time-clustering, and inferring a conclusion's type with a
+fallback that turns an unserved level into <code>explicit</code>.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/offendingcommit/openconcho">
+              <span>Source</span>
+              <strong>offendingcommit/openconcho</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87" title="b5e25646d3f91e54c4aacf111c0f8ff734cead87">
+              <span>Analyzed revision</span>
+              <code>b5e25646…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/offendingcommit--openconcho" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>offendingcommit--openconcho</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OpenConcho is "[a] fast, privacy-first desktop &amp; web UI for
+self-hosted <a href="../honcho/">Honcho</a> instances" — MIT, version
+0.16.2, 18,136 lines of TypeScript across a web and a desktop package.
+It stores no memory. It is a window onto someone else's.</p>
+<p>That makes it unusual here and worth a report rather than a bullet,
+because the thing it is a window onto is the part of a memory system
+users almost never get to see: the conclusions a server has drawn about
+them. Honcho's conclusions are typed — <code>explicit</code>,
+<code>deductive</code>, <code>inductive</code>,
+<code>contradiction</code> — and OpenConcho browses them, creates them,
+and deletes them permanently, with a confirmation dialog that says
+so.</p>
+<p>Two things about how it renders them are worth knowing before
+trusting the view.</p>
+<p>The first is a fallback. <code>inferConclusionType</code> is one
+line:</p>
+<pre><code>return CONCLUSION_TYPES.find((t) =&gt; t === c.level) ?? &quot;explicit&quot;;</code></pre>
+<p>A conclusion whose <code>level</code> is missing, or carries a value
+this client does not recognise, is displayed as <code>explicit</code> —
+a thing the user said outright. The other three types are all inferences
+the server made, with progressively less warrant. So the failure
+direction is the wrong one: absence of information about how certain a
+belief is renders as maximum certainty.</p>
+<p>Whether that fires depends on the server, and the file says so itself
+in a comment that is more honest than most release notes: "The generated
+OpenAPI schema (Honcho 3.0.5) does not expose <code>level</code>,
+<code>premises</code>, or <code>reasoning_tree</code>, but live Honcho
+3.0.11 returns <code>level</code> on every conclusion." Against a
+3.0.5-era instance, every conclusion in the browser reads as
+explicit.</p>
+<p>The second is that a <strong>dream</strong> — the unit the whole
+interface is organised around, with its own route, panel and progress
+display — is not a Honcho object. The client builds it by grouping
+conclusions that share an observer, an observed peer and a session, and
+that fall within a configurable gap defaulting to sixty seconds. That is
+a reasonable visualisation and it is entirely the viewer's invention;
+nothing on the server agrees that these conclusions belong together.</p>
+<p>And the premise tree the interface exists to display cannot be filled
+in. <code>ReasoningTreeNode</code> is defined, the type is declared
+optional, and the comment states the position plainly:
+<code>premises</code> and <code>reasoning_tree</code> "are still
+unserved — the premise tree stays empty until Honcho ships them."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>conclusion</strong> is Honcho's, with a type and an
+optional level.</p>
+<p>A <strong>dream</strong> is OpenConcho's: a time-clustered run of
+conclusions sharing an observer, an observed peer and a session.</p>
+<p>An <strong>instance</strong> is a base URL and a token in
+<code>localStorage</code>, saved only if the transport rule allows
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the client stores no memory; it renders another server's conclusions, invents the dream grouping, and resolves an unserved level to the most certain type</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the client stores no memory; it renders another server&#39;s conclusions, invents the dream grouping, and resolves an unserved level to the most certain type
+flowchart TB
+    H[(&quot;Honcho instance&lt;br/&gt;(self-hosted)&quot;)] --&gt;|&quot;generated OpenAPI client&quot;| API[&quot;/v3/workspaces/.../conclusions&quot;]
+    API --&gt; C[&quot;Conclusion:&lt;br/&gt;explicit | deductive |&lt;br/&gt;inductive | contradiction&quot;]
+    C --&gt; INF{&quot;inferConclusionType&quot;}
+    INF --&gt;|&quot;level matches a known type&quot;| T[&quot;render that type&quot;]
+    INF --&gt;|&quot;level absent or unrecognised&lt;br/&gt;?? &#39;explicit&#39;&quot;| X[&quot;renders as EXPLICIT —&lt;br/&gt;the most certain of the four&quot;]
+    NOTE[&quot;schema is Honcho 3.0.5, which&lt;br/&gt;does not expose `level` at all;&lt;br/&gt;live 3.0.11 does&quot;] -.-&gt; INF
+    C --&gt; CLUS[&quot;client-side clustering:&lt;br/&gt;same observer + observed + session,&lt;br/&gt;gap &lt;= 60s&quot;]
+    CLUS --&gt; D[&quot;a DREAM — the unit the UI is&lt;br/&gt;built around, and not a&lt;br/&gt;Honcho object&quot;]
+    C --&gt; TREE[&quot;ReasoningTreeNode { conclusion_id, premises }&quot;]
+    TREE --&gt; EMPTY[&quot;always empty — premises and&lt;br/&gt;reasoning_tree &#39;are still unserved&#39;&quot;]
+    P[&quot;person&quot;] --&gt; BR[&quot;ConclusionBrowser&quot;]
+    BR --&gt; CR[&quot;CreateConclusionModal →&lt;br/&gt;writes a conclusion&quot;]
+    BR --&gt; DEL[&quot;ConfirmDialog: &#39;This conclusion&lt;br/&gt;will be permanently removed.&#39;&lt;br/&gt;→ DELETE .../conclusions/{id}&quot;]
+    CR &amp; DEL --&gt; H
+    CFG[&quot;instance config in localStorage&quot;] --&gt; GUARD{&quot;tokenTransportError&quot;}
+    GUARD --&gt;|&quot;https, or http to loopback&quot;| SAVE[&quot;saved&quot;]
+    GUARD --&gt;|&quot;http to anything else&quot;| REFUSE[&quot;&#39;API tokens require HTTPS&lt;br/&gt;unless connecting to localhost.&#39;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/web/src/api/queries.ts</code></td>
+<td>Every server call, including the five deletes</td>
+</tr>
+<tr>
+<td><code>packages/web/src/api/schema.d.ts</code></td>
+<td>The generated OpenAPI types, pinned at Honcho 3.0.5</td>
+</tr>
+<tr>
+<td><code>packages/web/src/lib/dreams.ts</code></td>
+<td>The conclusion type vocabulary, the clustering, and the schema-skew
+note</td>
+</tr>
+<tr>
+<td><code>packages/web/src/components/conclusions/ConclusionBrowser.tsx</code></td>
+<td>Browse, create, delete</td>
+</tr>
+<tr>
+<td><code>packages/web/src/lib/security.ts</code></td>
+<td>The token-transport rule</td>
+</tr>
+<tr>
+<td><code>packages/web/src/lib/config.ts</code></td>
+<td>Instance storage in <code>localStorage</code></td>
+</tr>
+<tr>
+<td><code>packages/desktop</code></td>
+<td>The desktop shell over the same web UI</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>lib/dreams.ts:14-60</code>. The whole report is in that file:
+the type vocabulary, the comment about which fields the server actually
+serves, the always-empty reasoning tree, the clustering that invents
+dreams, and the one-line fallback.</p>
+<p>Then <code>ConclusionBrowser.tsx:284-306</code> for the create and
+delete surfaces.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>None of its own, which is the correct design for a viewer. What it
+models locally is an instance: id, name, base URL, token — kept in
+<code>localStorage</code> under a current key, with a migration from a
+legacy key that removes the old entry after copying.</p>
+<p><code>localStorage</code> for a bearer token to someone's personal
+memory server is worth naming plainly. In the desktop build it is the
+embedded webview's store rather than an OS keychain, so any code running
+in that origin can read it. For a self-hosted, single-user tool this is
+a defensible trade; it is not the same guarantee as "privacy-first"
+suggests on first reading.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Honcho's API does the retrieval. OpenConcho filters and groups what
+comes back, and the grouping is the substantive part:
+<code>clusterDreams</code> with a <code>gapMs</code> defaulting to
+60,000, keyed on observer, observed and session.</p>
+<p>The consequence worth stating is that two conclusions drawn sixty-one
+seconds apart appear as separate dreams, and the same reasoning episode
+can split or merge as the gap constant changes. Nothing is lost — the
+conclusions are unchanged — but any count or narrative the interface
+presents at the dream level is an artifact of that constant.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Five deletes reach the server: workspace, session, session peers,
+conclusion and webhook endpoint. One create reaches it that matters for
+memory: a conclusion, written into the workspace from a modal.</p>
+<p>A person writing a conclusion by hand into a store whose other
+conclusions were inferred is an interesting capability and an unlabelled
+one. Honcho's <code>level</code> distinguishes how a conclusion was
+arrived at; nothing in this flow marks a hand-written conclusion as
+human-authored rather than machine-inferred, so it joins the same list
+under whatever level the API assigns it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None directly — no agent talks to OpenConcho. It is the human end of
+a Honcho deployment, which is precisely its value in this corpus: it is
+what a review surface for an inference-based memory system looks like
+when someone builds one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The token-transport rule is the one enforcement the client owns.
+<code>isSecureTokenTransport</code> returns true for
+<code>https:</code>, and for <code>http:</code> only when the host is
+loopback — <code>localhost</code>, <code>127.0.0.1</code>,
+<code>::1</code>, <code>[::1]</code>, <code>0.0.0.0</code> — and
+<code>tokenTransportError</code> turns that into "API tokens require
+HTTPS unless connecting to localhost." Both save paths in
+<code>SettingsForm</code> consult it when a token is present, so an
+instance carrying a token over plaintext HTTP to a LAN address cannot be
+saved. The loopback exemption is deliberate and correct for the
+self-hosting case.</p>
+<p>The fallback in <code>inferConclusionType</code> is the trust
+problem, and it is small enough to fix in a character: the failure case
+should be its own type — <code>unknown</code> — rendered as such, rather
+than collapsing into <code>explicit</code>. The distinction matters most
+precisely when it is missing, because a user reviewing what a system
+believes about them needs to know which beliefs it was <em>told</em> and
+which it <em>worked out</em>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Eighteen test files covering the dream clustering, dream progress,
+security rules, instance storage, discovery, dispatch, the dashboard and
+the playground. <code>security.test.ts</code> pins the transport rule in
+both directions, including <code>http://192.168.1.50:8000</code> as
+false — asserting that a LAN address is not treated as local, which is
+the case that would otherwise slip.</p>
+<p>There is no test asserting what <code>inferConclusionType</code> does
+with a missing level.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>If you build a review surface over an inference-based memory, make
+the derivation type impossible to lose. A reader deciding whether to
+delete a belief needs to know whether the system was told it or deduced
+it, and a <code>??</code> default to the most-certain label is the one
+direction that must never be the fallback.</p>
+<p>Name a client-side grouping as such in the interface. Dreams are a
+good visualisation; a user who deletes "a dream" should understand they
+are deleting n conclusions that a sixty-second heuristic put in one
+box.</p>
+<p>Copy the schema-skew comment habit. Recording "the generated schema
+is from 3.0.5, the live server is 3.0.11, these two fields are still
+unserved" in the type file is worth more than a changelog entry, because
+it is where the next person will be confused.</p>
+<p>And do build the surface. Very few systems in this corpus give a
+person any way to see what was concluded about them; fewer give them a
+delete button.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a hand-created conclusion is distinguishable from an inferred
+one on the server. Nothing in the create flow sets a level, and the
+atlas's <a href="../honcho/">Honcho report</a> was not re-read at this
+pin to check what the API assigns.</p>
+<p>Whether <code>premises</code> and <code>reasoning_tree</code> have
+since shipped. The comment records them as unserved as of the Honcho
+versions named; the reasoning-tree view is built and waiting.</p>
+<p>Whether the desktop build keeps tokens anywhere other than the
+webview's <code>localStorage</code>. The desktop package was not read in
+depth.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/web/src/lib/dreams.ts</code></td>
+<td>The type vocabulary, the schema-skew note, the clustering, and the
+fallback</td>
+</tr>
+<tr>
+<td><code>packages/web/src/components/conclusions/ConclusionBrowser.tsx</code></td>
+<td>Create, inspect, permanently delete</td>
+</tr>
+<tr>
+<td><code>packages/web/src/lib/security.ts</code></td>
+<td>The transport rule, and the loopback exemption</td>
+</tr>
+<tr>
+<td><code>packages/web/src/test/security.test.ts</code></td>
+<td>A LAN address asserted not to count as local</td>
+</tr>
+<tr>
+<td><code>packages/web/src/lib/config.ts</code></td>
+<td>Instance and token storage</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87"><code class="commit-id" title="b5e25646d3f91e54c4aacf111c0f8ff734cead87">b5e25646…</code></a>
+— first reading, at a commit dated 13 August 2026. Screened before
+opening, from a shallow clone: seventeen files scanned, one auto-run
+surface, three build-time execution points, three unpinned surfaces,
+nothing inside the dependency cooldown, and the <code>CLAUDE.md</code>
+and <code>AGENTS.md</code> read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

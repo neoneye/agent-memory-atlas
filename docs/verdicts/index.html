@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 498 reports.</strong></p>
+<p><strong>This page covers all 499 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18223,6 +18223,59 @@ predicates.</li>
 <li>Do not copy when: you wanted a memory system — this is the substrate
 underneath one, and the memory vocabulary in its README describes
 engines rather than mechanisms.</li>
+</ul>
+<h3 id="openconcho"><a
+href="../systems/openconcho/"><code>openconcho</code></a></h3>
+<ul>
+<li>Best idea: <strong>a surface where a person can read what a memory
+system concluded about them, and delete it.</strong>
+<code>ConclusionBrowser</code> lists <a
+href="../systems/honcho/">Honcho</a>'s typed conclusions —
+<code>explicit</code>, <code>deductive</code>, <code>inductive</code>,
+<code>contradiction</code> — writes new ones through a modal, and
+removes one through a dialog reading "This conclusion will be
+permanently removed", issuing
+<code>DELETE /v3/workspaces/{id}/conclusions/{id}</code> against the
+live instance. Very few systems in this corpus give a person any view of
+the beliefs inferred about them; fewer give them a delete button. The
+client is also candid in source about its server: a comment records that
+the generated schema is Honcho 3.0.5 while live 3.0.11 returns
+<code>level</code>, and that <code>premises</code> and
+<code>reasoning_tree</code> "are still unserved — the premise tree stays
+empty until Honcho ships them."</li>
+<li>Biggest risk: <strong>the fallback runs the wrong way.</strong>
+<code>inferConclusionType</code> is
+<code>CONCLUSION_TYPES.find((t) =&gt; t === c.level) ?? "explicit"</code>,
+so a conclusion whose level is missing or unrecognised renders as an
+explicit statement — the one type that means the user said it outright,
+and the most certain of the four. Against a server that does not serve
+<code>level</code>, which the adjacent comment says is exactly what the
+generated schema describes, every deduction and inductive leap is
+presented to the reader as something they told it. For a review surface,
+that is the one direction the default must never take, and no test
+covers a missing level. Separately, a "dream" — the unit the whole
+interface is organised around, with its own route, panel and progress
+display — is not a Honcho object: the client derives it by grouping
+conclusions sharing an observer, observed peer and session within a
+sixty-second gap, so dream-level counts and narratives are artifacts of
+that constant.</li>
+<li>Most reusable component: the schema-skew comment in
+<code>lib/dreams.ts</code>. Recording which fields the generated client
+believes in, which the live server actually returns, and which are still
+unimplemented — in the type file, where the next reader will be confused
+— is worth more than the same note in a changelog.</li>
+<li>Maturity impression: MIT, version 0.16.2, 18,136 lines of TypeScript
+across web and desktop packages, eighteen test files. The
+token-transport rule is the one thing it enforces itself — a token may
+be saved only for HTTPS or a loopback host — and
+<code>security.test.ts</code> pins <code>http://192.168.1.50:8000</code>
+as <em>not</em> local, which is the case that would otherwise slip.
+Instance tokens live in <code>localStorage</code>.</li>
+<li>Study when: you are building the human end of an inference-based
+memory and want to see what a conclusion browser looks like.</li>
+<li>Do not copy when: you need the store — this keeps none, and every
+mechanism the atlas usually asks about belongs to the Honcho instance
+behind it.</li>
 </ul>
         </article>
       </div>

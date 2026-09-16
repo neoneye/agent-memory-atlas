@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 437 of 498 screened at the report's current pin.**
+**Progress: 438 of 499 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 185 |
+| Repositories with an auto-run surface (`RUNS`) | 186 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 252 |
-| Repositories with build-time execution (`EXEC`) | 319 |
+| Repositories with build-time execution (`EXEC`) | 320 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -155,6 +155,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
+| [`openconcho`](../../content/systems/openconcho.md) | `.vscode/settings.json` |
 | [`openexecutive`](../../content/systems/openexecutive.md) | `.claude/settings.json`, `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`openhuman`](../../content/systems/openhuman.md) | `.claude/settings.json`, `.gitmodules`, `.vscode/settings.json` |
 | [`openkb`](../../content/systems/openkb.md) | `.claude-plugin/` |
