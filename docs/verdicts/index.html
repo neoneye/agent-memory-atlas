@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 517 reports.</strong></p>
+<p><strong>This page covers all 518 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19243,6 +19243,52 @@ time with a read on each.</li>
 <li>Do not copy when: you need something embeddable this week. Six
 marks: tombstone, trust state, bitemporal, scope enforced, audit log,
 negative eval.</li>
+</ul>
+<h3 id="temporalstore"><a
+href="../systems/temporalstore/"><code>temporalstore</code></a></h3>
+<ul>
+<li>Best idea: <strong>the lexical and cosine scales are merged on
+purpose, with the ceiling argued.</strong> Lexical matches saturate at
+half the cosine maximum so that "in a MIXED store, a strong semantic
+(embedded) match still outranks a purely lexical one, while un-embedded
+nodes remain rankable (never a flat 0) instead of collapsing to recency
+order". Every store with a backfill is a mixed store, and un-embedded
+rows scoring zero is how a hybrid ranker silently becomes a recency
+ranker.</li>
+<li>Biggest risk: <strong>the filter reads fields the writers stopped
+filling.</strong> <code>valid_until_ms</code> — the field that would
+close a world-time window — is marked "[d]eprecated hot-schema field:
+reserves this field" with no successor named and is set to
+<code>0</code> by every constructor in the tree, while
+<code>context_event_matches_filter</code> still tests it under
+<code>#[allow(deprecated)]</code>; the status check beside it reads an
+in-row field that is also deprecated and skipped on serialize, after
+status filtering moved to a <code>status_hash</code> secondary index.
+Both timestamps are on the row, but <code>primary_time_ms()</code>
+prefers ingestion time, so an as-of read answers what had arrived, not
+what was true.</li>
+<li>Most reusable component: the scale-merging constants in
+<code>context_workflow.rs</code> and the reasoning around them, and the
+<code>inline_payload</code> field comment explaining why a bool was
+defaulted explicitly — an absent field decoding to <code>false</code>
+"sends a reader to an <code>external_object_uri</code> that such a
+record does not carry. This type's own <code>Default</code> says true,
+and decoding it should not disagree with constructing it."</li>
+<li>Maturity impression: Apache-2.0, Rust, workspace version 0.1.0,
+646,492 lines across three languages with 2,404 test functions, a WAL,
+Raft, shared-storage clustering, fault injection, two SDKs, plugins for
+Claude and Codex, and a RESP surface. The storage engineering is well
+ahead of the memory semantics above it.</li>
+<li>Study when: you are merging lexical and vector scores into one
+ranking, or you want a worked example of consolidating a memory tier, a
+feature store and a counter tier behind one endpoint.</li>
+<li>Do not copy when: you need epistemic state, supersession, or
+isolation the store enforces — the scope rule has one flag-gated call
+site and the tenant key comes from the caller's own request with a
+shared default. No marks. And read the benchmark's footnote before its
+table: the 99.92% saving divides by a corpus the baseline arm never
+read, which the document says outright, while the 83% row beside it is
+the measured result.</li>
 </ul>
         </article>
       </div>

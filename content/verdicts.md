@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 517 reports.**
+**This page covers all 518 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4486,3 +4486,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 0.13.0, 232,178 lines with 1,642 test functions, suites named for what they check (belief, cognitive_consistency, conformance, governance, history, migrate), Python and TypeScript bindings, a WASM build, twenty-plus design documents and a written migration guide. Module headers throughout state what the module refuses to do and cite the spec section that asked for it.
 - Study when: you are deciding where a memory system's policy boundary lives, or you need a worked separation of valid time from transaction time with a read on each.
 - Do not copy when: you need something embeddable this week. Six marks: tombstone, trust state, bitemporal, scope enforced, audit log, negative eval.
+
+### [`temporalstore`](../systems/temporalstore/)
+- Best idea: **the lexical and cosine scales are merged on purpose, with the ceiling argued.** Lexical matches saturate at half the cosine maximum so that "in a MIXED store, a strong semantic (embedded) match still outranks a purely lexical one, while un-embedded nodes remain rankable (never a flat 0) instead of collapsing to recency order". Every store with a backfill is a mixed store, and un-embedded rows scoring zero is how a hybrid ranker silently becomes a recency ranker.
+- Biggest risk: **the filter reads fields the writers stopped filling.** `valid_until_ms` — the field that would close a world-time window — is marked "[d]eprecated hot-schema field: reserves this field" with no successor named and is set to `0` by every constructor in the tree, while `context_event_matches_filter` still tests it under `#[allow(deprecated)]`; the status check beside it reads an in-row field that is also deprecated and skipped on serialize, after status filtering moved to a `status_hash` secondary index. Both timestamps are on the row, but `primary_time_ms()` prefers ingestion time, so an as-of read answers what had arrived, not what was true.
+- Most reusable component: the scale-merging constants in `context_workflow.rs` and the reasoning around them, and the `inline_payload` field comment explaining why a bool was defaulted explicitly — an absent field decoding to `false` "sends a reader to an `external_object_uri` that such a record does not carry. This type's own `Default` says true, and decoding it should not disagree with constructing it."
+- Maturity impression: Apache-2.0, Rust, workspace version 0.1.0, 646,492 lines across three languages with 2,404 test functions, a WAL, Raft, shared-storage clustering, fault injection, two SDKs, plugins for Claude and Codex, and a RESP surface. The storage engineering is well ahead of the memory semantics above it.
+- Study when: you are merging lexical and vector scores into one ranking, or you want a worked example of consolidating a memory tier, a feature store and a counter tier behind one endpoint.
+- Do not copy when: you need epistemic state, supersession, or isolation the store enforces — the scope rule has one flag-gated call site and the tenant key comes from the caller's own request with a shared default. No marks. And read the benchmark's footnote before its table: the 99.92% saving divides by a corpus the baseline arm never read, which the document says outright, while the 83% row beside it is the measured result.

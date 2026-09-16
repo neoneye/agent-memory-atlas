@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 456 of 517 screened at the report's current pin.**
+**Progress: 457 of 518 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 193 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 269 |
-| Repositories with build-time execution (`EXEC`) | 335 |
+| Repositories with an auto-run surface (`RUNS`) | 194 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 270 |
+| Repositories with build-time execution (`EXEC`) | 336 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -202,6 +202,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tanglies-agentos`](../../content/systems/tanglies-agentos.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`telemem`](../../content/systems/telemem.md) | `server.json` |
+| [`temporalstore`](../../content/systems/temporalstore.md) | `.claude-plugin/`, `.gitmodules` |
 | [`the-librarian`](../../content/systems/the-librarian.md) | `.claude-plugin/` |
 | [`titen`](../../content/systems/titen.md) | `.claude-plugin/`, `server.json` |
 | [`token-optimizer`](../../content/systems/token-optimizer.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
