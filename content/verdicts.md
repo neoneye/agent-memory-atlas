@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 520 reports.**
+**This page covers all 521 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4510,3 +4510,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.54.2, 250,467 lines of TypeScript with 474 test files across unit, isolated, integration and end-to-end suites, thirteen adapter packages, an upgrade planner spanning three published packages, and comments that cite issue numbers and the bug each invariant fixed.
 - Study when: you have a scoping rule copied into more than one read path, or you want an example of a de-duplication gate that computes a signal and never suppresses a write.
 - Do not copy when: you need agents isolated from one another inside an instance. Three marks: trust state, scope enforced, negative eval — and read the scope evidence before relying on the third word.
+
+### [`theurian`](../systems/theurian/)
+- Best idea: **absence proved by indistinguishability, with a control against vacuity.** Three deployments — one withholding a set of records, one that never held them, one holding everything — and the requirement that the first two answer every query in a battery identically "on the wire, refusals included". The third exists because without it "an equality is satisfied by a build that wrote nothing, a query that matched nothing and a corpus whose plant was unreachable — three ways for this file to hold vacuously". Tests beside it pin the side channels: a withheld record never costs a visible one its slot, a visible record's bytes do not move when its neighbour is withheld, and the page boundary does not shift.
+- Biggest risk: **the governance claim is a workflow convention, and the README says so first.** "[T]here is no approval command and no approver field anywhere in this codebase, **and nothing in the code checks that the merge happened**" — `migrate apply` refuses an uncommitted migration, but a local commit on a local branch passes, "so it enforces the commit and not the merge". What is enforced is narrower and real: no MCP tool can write approved knowledge, and `system.capabilities` reports `writeTools: false`, so agents cannot approve because they cannot write. That humans approved rests on the team's pull-request discipline.
+- Most reusable component: `application/visibility.py`'s placement argument — ask whether a row may be shown while the retrievers are read rather than after they are fused, because "[a]sking it late is what made a withheld document able to occupy a candidate slot, and every number computed from those slots — `count`, `usedTokens`, `fusedScore`, `droppedForBudget` — move with it".
+- Maturity impression: Apache-2.0, Python 3.13+, 313,168 lines with 4,209 test functions across 244 files, ADRs, a threat model, a governance document, and comments that cite requirement ids and link the issues they closed — all at version 0.0.0 and self-labelled alpha.
+- Study when: you are writing a redaction or withholding path and have only tested that the content is absent, or you need a worked reason to ask the visibility question before ranking.
+- Do not copy when: you want a memory an agent can write — by design it cannot. Five marks: trust state, scope enforced, bitemporal, audit log, negative eval.
