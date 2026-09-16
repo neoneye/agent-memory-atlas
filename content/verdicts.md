@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 552 reports.**
+**This page covers all 553 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4766,3 +4766,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: no licence file, Rust, 203,205 lines over 226 files in nineteen crates, delegating storage to a published YantrikDB pin, with a red-team test demanding zero unauthorized hydrations on every read path and in every background lane. No auto-run surfaces at this pin; run detritus is committed, including two smoke databases' write-ahead files.
 - Study when: your audit exempts the owner, or your multi-user migration makes untagged rows shared.
 - Do not copy when: you need the belief model itself — that lives in the engine. Two marks: scope enforced, negative evals.
+
+### [`mnesio`](../systems/mnesio/)
+- Best idea: **a safety gate defined as a floor rather than as a setting.** `EvalReport::is_committable()` is three conjoined conditions — every canary passed, the safety probe passed, the objective delta at or above zero — and the claim around it is the part that usually goes unbacked: "setting every configurable gate threshold to its weakest value *still* cannot bypass the baseline." That is a committed test, `fully_relaxed_gates_still_reject_baseline_failure_through_pipeline`, which relaxes the gates and runs the whole compile pipeline before asserting the rejection, with unit tests tripping each condition alone and naming which invariant broke. Most safety gates this atlas reads are thresholds somebody can widen until they admit anything; this one has something underneath the thresholds.
+- Biggest risk: **no person reads what the gate lets through, and the evaluation behind it is unpinned.** A policy artifact that clears the floor activates without anyone reading it, which for a system whose subject is an agent rewriting its own prompts is the live question rather than an oversight. The floor's strength is that configuration cannot weaken it; the canary set and the objective feeding it have no equivalent guard, so a thinned canary set weakens the same floor from the other side. Erasure is crypto-shredding, which leaves the graph's structure in place and keys nothing on the shredded value, so the same content can return with no record that it was erased.
+- Most reusable component: `is_live_at`, four words of logic — `valid && known` — over two half-open intervals, because "'Live' here means both: the memory was valid at `at` *and* the system hadn't tombstoned it before `at` (transaction time)." Beside it, the traversal that carries scope and the instant into every hop and re-resolves each destination under the same pair, so a walk cannot leave its scope by following a relation.
+- Maturity impression: Apache-2.0, Rust, 58,766 lines over 152 files in twenty crates, with HTTP, MCP, Python and Node surfaces and a codebase-mapping CLI. The README discloses that its own install line "starts working at v0.1.1" because "v0.1.0 predates it and carries no binaries". One auto-run surface and twenty-five dependency files inside the cooldown at this pin.
+- Study when: your safety gate is a set of numbers a config file can widen.
+- Do not copy when: a rewritten policy should reach a person before it reaches production. Three marks: bitemporal, scope enforced, mutation audit.

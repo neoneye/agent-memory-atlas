@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 491 of 552 screened at the report's current pin.**
+**Progress: 492 of 553 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 208 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 300 |
-| Repositories with build-time execution (`EXEC`) | 359 |
+| Repositories with an auto-run surface (`RUNS`) | 209 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 301 |
+| Repositories with build-time execution (`EXEC`) | 360 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -150,6 +150,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mnemopi`](../../content/systems/mnemopi.md) | `.gitattributes` |
 | [`mnemosyne`](../../content/systems/mnemosyne.md) | `.githooks/` |
 | [`mnemoverse-mcp-memory-server`](../../content/systems/mnemoverse-mcp-memory-server.md) | `server.json` |
+| [`mnesio`](../../content/systems/mnesio.md) | `.mcp.json` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |

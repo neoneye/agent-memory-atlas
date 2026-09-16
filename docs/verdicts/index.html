@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 552 reports.</strong></p>
+<p><strong>This page covers all 553 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20778,6 +20778,52 @@ write-ahead files.</li>
 migration makes untagged rows shared.</li>
 <li>Do not copy when: you need the belief model itself — that lives in
 the engine. Two marks: scope enforced, negative evals.</li>
+</ul>
+<h3 id="mnesio"><a
+href="../systems/mnesio/"><code>mnesio</code></a></h3>
+<ul>
+<li>Best idea: <strong>a safety gate defined as a floor rather than as a
+setting.</strong> <code>EvalReport::is_committable()</code> is three
+conjoined conditions — every canary passed, the safety probe passed, the
+objective delta at or above zero — and the claim around it is the part
+that usually goes unbacked: "setting every configurable gate threshold
+to its weakest value <em>still</em> cannot bypass the baseline." That is
+a committed test,
+<code>fully_relaxed_gates_still_reject_baseline_failure_through_pipeline</code>,
+which relaxes the gates and runs the whole compile pipeline before
+asserting the rejection, with unit tests tripping each condition alone
+and naming which invariant broke. Most safety gates this atlas reads are
+thresholds somebody can widen until they admit anything; this one has
+something underneath the thresholds.</li>
+<li>Biggest risk: <strong>no person reads what the gate lets through,
+and the evaluation behind it is unpinned.</strong> A policy artifact
+that clears the floor activates without anyone reading it, which for a
+system whose subject is an agent rewriting its own prompts is the live
+question rather than an oversight. The floor's strength is that
+configuration cannot weaken it; the canary set and the objective feeding
+it have no equivalent guard, so a thinned canary set weakens the same
+floor from the other side. Erasure is crypto-shredding, which leaves the
+graph's structure in place and keys nothing on the shredded value, so
+the same content can return with no record that it was erased.</li>
+<li>Most reusable component: <code>is_live_at</code>, four words of
+logic — <code>valid &amp;&amp; known</code> — over two half-open
+intervals, because "'Live' here means both: the memory was valid at
+<code>at</code> <em>and</em> the system hadn't tombstoned it before
+<code>at</code> (transaction time)." Beside it, the traversal that
+carries scope and the instant into every hop and re-resolves each
+destination under the same pair, so a walk cannot leave its scope by
+following a relation.</li>
+<li>Maturity impression: Apache-2.0, Rust, 58,766 lines over 152 files
+in twenty crates, with HTTP, MCP, Python and Node surfaces and a
+codebase-mapping CLI. The README discloses that its own install line
+"starts working at v0.1.1" because "v0.1.0 predates it and carries no
+binaries". One auto-run surface and twenty-five dependency files inside
+the cooldown at this pin.</li>
+<li>Study when: your safety gate is a set of numbers a config file can
+widen.</li>
+<li>Do not copy when: a rewritten policy should reach a person before it
+reaches production. Three marks: bitemporal, scope enforced, mutation
+audit.</li>
 </ul>
         </article>
       </div>

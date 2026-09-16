@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory that compiles agent
+outcomes into versioned policy artifacts, where a bitemporal graph
+decides what was live at an instant and a baseline gate no configuration
+can relax stands between a proposal and a commit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mnesio — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory that compiles
+agent outcomes into versioned policy artifacts, where a bitemporal graph
+decides what was live at an instant and a baseline gate no configuration
+can relax stands between a proposal and a commit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mnesio — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory that
+compiles agent outcomes into versioned policy artifacts, where a
+bitemporal graph decides what was live at an instant and a baseline gate
+no configuration can relax stands between a proposal and a commit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mnesio — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mnesio",
+      "description": "A Rust memory that compiles agent outcomes into versioned policy artifacts, where a bitemporal graph decides what was live at an instant and a baseline gate no configuration can relax stands between a proposal and a commit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Setting every gate threshold to its weakest
+value still cannot commit a failing improvement</p>
+          <h1>mnesio</h1>
+          <p class="document-deck">A Rust memory that compiles agent
+outcomes into versioned policy artifacts, where a bitemporal graph
+decides what was live at an instant and a baseline gate no configuration
+can relax stands between a proposal and a commit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mnesio/mnesio">
+              <span>Source</span>
+              <strong>mnesio/mnesio</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mnesio/mnesio/commit/5831aa0ea0a359b44a3a28b64e7e9f7174d88970" title="5831aa0ea0a359b44a3a28b64e7e9f7174d88970">
+              <span>Analyzed revision</span>
+              <code>5831aa0e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mnesio--mnesio" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mnesio--mnesio</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mnesio is "[l]ong-term memory for AI agents that learns from
+outcomes, with a safety gate before every improvement" — Apache-2.0,
+Rust, 58,766 lines across 152 files in twenty crates, reachable over
+HTTP, MCP, Python and Node.</p>
+<p>Its claim is procedural rather than factual: it "turns real outcomes
+into improved, versioned policies: prompts, heuristics, and retrieval
+rules", so the agent "get[s] <em>better at doing things</em> over time,
+rather than only remembering more facts." Two loops run over one
+append-only event log — a compiler that batches outcomes into candidate
+<code>PolicyArtifact</code>s, and an evolution worker that retroactively
+re-tags and re-links memories on write.</p>
+<p><strong>The mechanism to take away is a gate defined as a floor
+rather than as a policy.</strong></p>
+<blockquote>
+<p>"<strong>Hard Rule #1: Nothing procedural commits without passing
+<code>EvalReport::is_committable()</code></strong> — canaries 100%,
+safety probe passing, objective Δ ≥ 0. … Mechanically enforced — setting
+every configurable gate threshold to its weakest value <em>still</em>
+cannot bypass the baseline. Held by a dedicated integration test on
+every commit."</p>
+</blockquote>
+<p>The function is three conjoined conditions and nothing else. The
+claim about configuration is the part that usually goes unbacked, and
+here it is a committed test —
+<code>fully_relaxed_gates_still_reject_baseline_failure_through_pipeline</code>
+— which relaxes the gates and runs the whole compile pipeline, asserting
+the rejection anyway. Beside it, unit tests trip each condition in
+isolation with messages naming the invariant that broke: "missing canary
+trips baseline", "failed probe trips baseline", "negative delta trips
+baseline". This atlas keeps finding systems whose safety gate is a
+threshold somebody can widen until it admits anything; this one has
+something underneath the thresholds.</p>
+<p><strong>The graph is bitemporal and says why.</strong> A node carries
+<code>valid_from</code>/<code>valid_to</code> from the memory's own
+time, and <code>tx_from</code>/<code>tx_to</code> from the system's, and
+<code>is_live_at</code> requires both: "'Live' here means both: the
+memory was valid at <code>at</code> <em>and</em> the system hadn't
+tombstoned it before <code>at</code> (transaction time)." The second
+axis exists for a stated failure — "[m]emory evolution invalidates the
+previous version and emits a new one … [a] flat 'current' graph would
+lose that lineage the moment the worker fires" — and ties into a replay
+invariant the view layer also holds: "[r]eplay the log up to
+<code>T</code> and you'd get the same graph."</p>
+<p><strong>Scope travels with the instant.</strong> Each node carries
+its <code>Scope</code> inline "so traversals can scope-filter without a
+join", and <code>scope: &amp;Scope</code> is a required argument at
+every step — including the re-resolution of each hop's destination, so a
+walk cannot leave its scope by following a relation.</p>
+<p><strong>What is missing is a person.</strong>
+<code>is_committable</code> is mechanical, and a policy artifact that
+clears it activates without anyone reading it. For a system whose
+subject is an agent rewriting its own behaviour, that is the interesting
+frontier rather than an oversight — and it is the reason the review mark
+is absent.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>outcome</strong> is evidence; a <strong>policy
+artifact</strong> is what the compiler proposes from it.</p>
+<p>A <strong>gate</strong> is a floor, not a setting.</p>
+<p>A <strong>node</strong> is live only when both clocks agree.</p>
+<p>A <strong>projection</strong> can be dropped, because the log
+cannot.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — outcomes are compiled into candidate policy artifacts that shadow-evaluate and commit only through a three-condition floor no configuration can relax, over an append-only log whose graph projection carries two time intervals and a scope on every node</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: outcomes are compiled into candidate policy artifacts that shadow-evaluate and commit only through a three-condition floor no configuration can relax, over an append-only log whose graph projection carries two time intervals and a scope on every node
+flowchart TB
+    OUT[&quot;batches of agent Outcomes&quot;] --&gt; REFLECT[&quot;reflect → propose K candidates →&lt;br/&gt;shadow-evaluate → Pareto-select&quot;]
+    REFLECT --&gt; CAND[&quot;a candidate PolicyArtifact:&lt;br/&gt;system prompt, heuristic or retrieval rule&quot;]
+    CAND --&gt; GATE{&quot;EvalReport::is_committable()&quot;}
+    GATE --&gt;|&quot;canaries_passed == canaries_total&quot;| C1[&quot;every canary, or nothing&quot;]
+    GATE --&gt;|&quot;safety_probe_passed&quot;| C2[&quot;the probe passed&quot;]
+    GATE --&gt;|&quot;objective_delta at or above zero&quot;| C3[&quot;no regression&quot;]
+    C1 &amp; C2 &amp; C3 --&gt; COMMIT[&quot;gated commit — a new artifact version&quot;]
+    GATE --&gt;|&quot;any one fails&quot;| REJECT[&quot;rejected&quot;]
+    RELAX[&quot;every configurable threshold set&lt;br/&gt;to its weakest value&quot;] -.-&gt;|&quot;still cannot bypass the baseline —&lt;br/&gt;fully_relaxed_gates_still_reject_baseline_failure_through_pipeline&lt;br/&gt;runs the WHOLE pipeline and asserts the rejection&quot;| GATE
+    NOHUMAN[&quot;no person reads the artifact —&lt;br/&gt;the floor is mechanical, not an approval&quot;] -.-&gt; COMMIT
+    W[&quot;a memory write&quot;] --&gt; LOG[(&quot;one append-only event log&quot;)]
+    COMMIT --&gt; LOG
+    EVOLVE[&quot;bounded async worker: retroactively&lt;br/&gt;re-tags and re-links related memories&quot;] --&gt; INV[&quot;MemoryInvalidated — emit a new version,&lt;br/&gt;never rewrite the old one&quot;]
+    INV --&gt; LOG
+    LOG --&gt; PROJ[(&quot;graph projection: nodes carry Scope, tags,&lt;br/&gt;valid_from/valid_to AND tx_from/tx_to&quot;)]
+    PROJ -.-&gt;|&quot;Hard Rule #4 — drop and rebuild;&lt;br/&gt;replay the log up to T and you get the same graph,&lt;br/&gt;and the view layer must be replay-stable across calls&quot;| REBUILD[&quot;the projection is disposable&quot;]
+    Q[&quot;a query: node(id, scope, as_of)&quot;] --&gt; LIVE{&quot;is_live_at(at)&quot;}
+    LIVE --&gt;|&quot;valid_from at or before at,&lt;br/&gt;and valid_to null or after it&quot;| V[&quot;valid — the memory&#39;s own time&quot;]
+    LIVE --&gt;|&quot;tx_from at or before at,&lt;br/&gt;and tx_to null or after it&quot;| K[&quot;known — the system&#39;s time&quot;]
+    V &amp; K -.-&gt;|&quot;&#39;Live here means BOTH&#39; — valid &amp;&amp; known&quot;| HIT[&quot;the node is in the graph at that instant&quot;]
+    TRAV[&quot;traversal: scope and as_of carried into every hop,&lt;br/&gt;each destination re-resolved through node(dst, scope, as_of)&quot;] --&gt; HIT
+    TRAV -.-&gt;|&quot;a walk cannot leave its scope&lt;br/&gt;by following a relation&quot;| SAFE[&quot;scope survives the traversal&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/mnesio-core/src/event.rs</code></td>
+<td>The event vocabulary, and <code>is_committable</code></td>
+</tr>
+<tr>
+<td><code>crates/mnesio-procedural/</code></td>
+<td>The reflective compiler, the gates, and their tests</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-graph/</code></td>
+<td>The bitemporal projection, scope-carrying traversal</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-privacy/</code></td>
+<td>Redaction and the crypto-shredding keyring</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-provenance/</code></td>
+<td>Point-in-time snapshots of what was believed</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-server</code>, <code>-mcp</code>,
+<code>-py</code></td>
+<td>HTTP, MCP and Python surfaces</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>crates/mnesio-core/src/event.rs:215-219</code> — the whole
+floor, in four lines.</p>
+<p><code>crates/mnesio-procedural/tests/compile_e2e.rs:237</code> — the
+test that makes the configuration claim checkable.</p>
+<p><code>crates/mnesio-graph/src/record.rs:118-146</code> — two
+intervals and a liveness test that needs both.</p>
+<p><code>crates/mnesio-graph/src/lib.rs:14-26</code> — why a flat
+current graph was not enough, and why scope sits inline.</p>
+<p><code>crates/mnesio-graph/src/traversal.rs:48-79</code> — scope and
+instant carried into every hop.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Memory nodes in a property graph, each with a scope, tags, keywords,
+an optional source reference, an evolution count and two time intervals;
+edges keyed on source, relation, destination and transaction start.
+Beside the graph, versioned policy artifacts with their evaluation
+reports. Both are projections of one append-only log.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical, vector and graph traversal, with the scope and the as-of
+instant threaded through every step rather than applied at the boundary,
+and each hop's destination re-resolved under the same pair.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A memory write appends an event and wakes a bounded worker that
+re-tags and re-links neighbours. A procedural improvement never writes
+directly: it is proposed, shadow-evaluated, Pareto-selected and then
+either committed through the gate or rejected.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An HTTP service, an MCP server, Python bindings, a Node SDK, and a
+<code>mnesio-code</code> CLI that maps a codebase with no server. The
+installer "verifies a SHA-256, refuses to overwrite a different tool of
+the same name, and does not touch your shell profile."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The gate floor and its test are the strongest part, with the
+bitemporal liveness rule and the replay invariant behind them. The
+weaker parts are that the evaluation behind the gate rests on canaries
+and an objective nobody has pinned to a corpus, that crypto-shredding
+leaves nothing keyed on the erased value, and that no person is
+consulted before a rewritten policy takes effect.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Unit tests that trip each baseline condition separately with a
+message naming it, an end-to-end suite covering the diversity gate,
+canary failure and the empty-reflection case, and the relaxed-gates test
+that holds the README's strongest claim. A benchmarks document sits
+beside three competitive-analysis files.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Put a floor under your thresholds. A gate that is only a set of
+configurable numbers can be widened until it admits anything, and the
+difference between a floor and a default is one test that relaxes
+everything and still expects a refusal.</p>
+<p>Make liveness require both clocks.
+<code>valid &amp;&amp; known</code> is four words, and it is the
+difference between "was true then" and "we knew it then".</p>
+<p>Carry the scope into the hop, not just into the query. A traversal
+that checks scope once and then follows edges is a traversal that leaves
+its scope.</p>
+<p>Let your projection be disposable. If the graph can be dropped and
+rebuilt from the log, the log is where correctness has to live — which
+is where it is easiest to keep.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a person belongs before a policy activates. The floor is
+mechanical and well-defended; what it cannot judge is whether a prompt
+rewrite that improves the objective is one the operator would have
+wanted, and the system's own subject matter makes that the live
+question.</p>
+<p>Whether the canary set and the objective should be pinned the way the
+gate is. The gate's strength is that a configuration cannot weaken it;
+the evaluation feeding it has no equivalent guard, so a thinned canary
+set weakens the same floor from the other side.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/mnesio-core/src/event.rs:215-219</code></td>
+<td>A safety floor small enough to read in one glance</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-procedural/tests/compile_e2e.rs:237</code></td>
+<td>Relax every threshold, expect the refusal anyway</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-graph/src/record.rs:138-146</code></td>
+<td>Liveness as the conjunction of two clocks</td>
+</tr>
+<tr>
+<td><code>crates/mnesio-graph/src/traversal.rs:56-79</code></td>
+<td>Scope re-resolved at every hop</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/mnesio/mnesio/commit/5831aa0ea0a359b44a3a28b64e7e9f7174d88970"><code class="commit-id" title="5831aa0ea0a359b44a3a28b64e7e9f7174d88970">5831aa0e…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone: one auto-run surface, three build-time
+execution points, three unpinned dependency surfaces and twenty-five
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run; the install script was read but not executed, and no
+benchmark or evaluation was reproduced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
