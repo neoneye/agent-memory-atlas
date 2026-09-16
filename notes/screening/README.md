@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 497 of 557 screened at the report's current pin.**
+**Progress: 498 of 558 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 58 report(s) have no record at all.
@@ -17,8 +17,8 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 213 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 306 |
+| Repositories with an auto-run surface (`RUNS`) | 214 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 307 |
 | Repositories with build-time execution (`EXEC`) | 363 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
@@ -116,6 +116,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
+| [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `server.json` |
 | [`light-mem`](../../content/systems/light-mem.md) | `.claude-plugin/`, `.claude/settings.json`, `.github/copilot-instructions.md` |
 | [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |

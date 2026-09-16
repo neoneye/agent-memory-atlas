@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 557 reports.</strong></p>
+<p><strong>This page covers all 558 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21050,6 +21050,64 @@ know whether every write path reaches it.</li>
 <li>Do not copy when: a rejected claim must stay rejected against the
 next identical write. Three marks: trust state, mutation audit, negative
 eval.</li>
+</ul>
+<h3 id="leteo"><a href="../systems/leteo/"><code>leteo</code></a></h3>
+<ul>
+<li>Best idea: <strong>put the measurement, and the bug, in the
+comment.</strong> The migration that adds a second full-text index does
+not announce an index; it states what each tokenizer can and cannot do
+and what the pair measured — a question with two of six words
+re-inflected answered "63% of the time here and 0% by the same store
+searched without a stemmer", quoted words found first 78% stemmed
+against 84% unstemmed, and the rank-position fusion of the two at 84.3%
+and 37.0% — with the price in the same breath: 5.1 MB of index on a 46
+MB store, 228 ms to build, 0.04 ms added to a save. A reader can
+disagree because the trade is on the page.</li>
+<li>Second idea: <strong>never let a measurement tool restate the query
+it measures.</strong> A benchmark that wrote its own copy of the search,
+with <code>ifnull(project, '')</code> where the product writes
+<code>project =</code>, "was measured for an afternoon before anybody
+noticed the product never issues it" — so the real query's weights are
+passed in rather than repeated. It is the sharpest instance of the bug
+class this codebase has learned to name: a rule written in more than one
+place, which also cost it a review window nothing could fire until a
+third hand-written copy was found.</li>
+<li>Biggest risk: <strong>every epistemic field is one step short of
+doing work.</strong> The state a reader sees — <code>active</code>,
+<code>needs_review</code>, <code>deleted</code> — is computed in Rust
+after the rows are already back from SQLite, so it labels a memory that
+was returned anyway and cannot withhold one; the only predicate that
+withholds is <code>deleted_at IS NULL</code>. Scope and project are
+narrowing arguments the caller may omit, and the suite pins the
+consequence rather than guarding it: "an empty scope is not a scope
+filter". The relation row records the actor, kind and model that judged
+it, and every shipped writer supplies <code>agent</code> or
+<code>system</code>, so the column built to tell a person from a machine
+has no path that writes a person. And both dedup lookups end
+<code>AND deleted_at IS NULL</code>, so a deleted memory is invisible to
+the checks that would notice the same thing being written again.</li>
+<li>Most reusable component: <code>Narrowing</code> — a builder that
+writes <code>AND col = ?n</code> when there is a value "and nothing at
+all when there is not — never a clause that has to be true for every
+row", because a column inside a disjunction with a parameter is not a
+usable index term when SQLite picks the plan, and the plan it settles on
+is <code>SCAN</code>. Measured at 5.7 ms against 0.015 ms on a store of
+3,587 memories, paid four times over by the session-opening context. The
+cost is one prepared-statement shape becoming two, which the statement
+cache holds.</li>
+<li>Maturity impression: MIT, Rust, version 0.2.1, 73,418 lines across
+121 files, one local SQLite file with two FTS5 indexes and no embedding
+model anywhere, a CLI of some thirty subcommands, twenty-two MCP tools,
+a terminal UI, agent hooks, an Obsidian export and an optional cloud
+sync, against 748 test attributes of which thirteen are ignored. Two
+auto-run surfaces and seven dependency files inside the cooldown at this
+pin.</li>
+<li>Study when: you are deciding whether a piece of state should be a
+column or a computation, or you want a model for writing the measurement
+behind a decision into the code that implements it.</li>
+<li>Do not copy when: you need the store itself to withhold a memory, or
+a project boundary that holds when the caller says nothing. No
+marks.</li>
 </ul>
         </article>
       </div>

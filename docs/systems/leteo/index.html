@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Rust memory for
+coding agents whose comments are a ledger of one bug hit repeatedly — a
+rule written in more than one place — and whose epistemic fields are
+each derived at read time, fixed to a single value, or omitted from the
+query when the caller leaves them out.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Leteo — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Rust memory
+for coding agents whose comments are a ledger of one bug hit repeatedly
+— a rule written in more than one place — and whose epistemic fields are
+each derived at read time, fixed to a single value, or omitted from the
+query when the caller leaves them out.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Leteo — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Rust memory
+for coding agents whose comments are a ledger of one bug hit repeatedly
+— a rule written in more than one place — and whose epistemic fields are
+each derived at read time, fixed to a single value, or omitted from the
+query when the caller leaves them out.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Leteo — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Leteo",
+      "description": "A local-first Rust memory for coding agents whose comments are a ledger of one bug hit repeatedly \u2014 a rule written in more than one place \u2014 and whose epistemic fields are each derived at read time, fixed to a single value, or omitted from the query when the caller leaves them out.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A blank scope is not a scope filter, and a
+test says so</p>
+          <h1>Leteo</h1>
+          <p class="document-deck">A local-first Rust memory for coding
+agents whose comments are a ledger of one bug hit repeatedly — a rule
+written in more than one place — and whose epistemic fields are each
+derived at read time, fixed to a single value, or omitted from the query
+when the caller leaves them out.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/asanabrial/leteo">
+              <span>Source</span>
+              <strong>asanabrial/leteo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/asanabrial/leteo/commit/f49917e4b9ffdf842e8f656a82867098487f789a" title="f49917e4b9ffdf842e8f656a82867098487f789a">
+              <span>Analyzed revision</span>
+              <code>f49917e4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/asanabrial--leteo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>asanabrial--leteo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Leteo is "[l]iving memory for AI agents. Light. Local. Yours." — MIT,
+Rust, version 0.2.1, 73,418 lines across 121 files, giving a coding
+agent "persistent memory, contextual retrieval, and continuous
+cognition" from one local SQLite file with no embedding model and no
+network in the memory path.</p>
+<p><strong>The thing worth reading here is the commentary, and it is
+unusual enough to lead with.</strong> Most codebases record what a
+decision was. This one records what it cost to find out, in numbers, and
+names the bug that motivated it. The migration that adds a second
+full-text index does not say "added an exact index"; it says what each
+tokenizer can and cannot do, and what the pair measured:</p>
+<blockquote>
+<p>"a question with two of six words re-inflected is answered 63% of the
+time here and 0% by the same store searched without a stemmer."</p>
+<p>"quoting six words straight out of a memory finds it first 78% of the
+time, against 84% unstemmed. Both are real, they pull in opposite
+directions, and no single tokenizer has both — the tokenizer is a
+property of the table."</p>
+</blockquote>
+<p>So there are two indexes and the search reads both, fused by the rank
+position each gave a memory rather than by score, which the same comment
+measures at 84.3% on quoted words and 37.0% on re-inflected ones against
+78.0% and 37.3% from the stemmed index alone. The cost is stated in the
+same breath: 5.1 MB of index on a 46 MB store, 228 ms to build once,
+0.03 ms on a search, and 0.04 ms — three per cent — on saving a memory.
+A reader can disagree with the trade because the trade is on the
+page.</p>
+<p><strong>The recurring bug this project has learned to name is a rule
+written in more than one place.</strong> It appears again and again in
+the comments, each time with the damage:</p>
+<blockquote>
+<p>"<code>REVIEW_WINDOWS</code> itself was consolidated after a third
+hand-written copy of these names let <code>policy</code> keep a window
+nothing could fire."</p>
+<p>"This is the fourth vocabulary to be consolidated for the same
+reason."</p>
+<p>"a hand-written copy with <code>ifnull(project, '')</code> where
+<code>Narrowing</code> writes <code>project =</code> was measured for an
+afternoon before anybody noticed the product never issues it."</p>
+</blockquote>
+<p>That last one is the sharpest, because the duplicate was in a
+<em>measurement tool</em>: a benchmark that wrote its own copy of the
+search query was measuring a search the product does not run. The fix
+was to pass the real query's weights in rather than let the tool restate
+them.</p>
+<p><strong>The same discipline explains why the scope predicate is
+shaped the way it is, and why this report awards no marks.</strong>
+<code>Narrowing::equals</code> writes
+<code>AND &lt;column&gt; = ?n</code> when there is a value "and nothing
+at all when there is not — never a clause that has to be true for every
+row", and the reason is a query plan, measured:</p>
+<blockquote>
+<p>"A column inside a disjunction with a parameter is therefore not a
+usable index term at plan time, and the plan it settles on is the one
+that works whichever way the parameter goes: <code>SCAN</code>. … On a
+store of 3,587 memories that is 5.7 ms against 0.015 ms, and the
+session-opening context pays it four times over."</p>
+</blockquote>
+<p>That is a good reason to build SQL per call. It also means the scope
+is a narrowing <em>argument</em>: a caller who passes nothing gets no
+scope clause, and the test suite pins exactly that —
+<code>"an empty scope is not a scope filter"</code>, with
+<code>"a real scope narrows"</code> beside it as the control that stops
+the first assertion passing by doing nothing. A predicate a caller may
+omit is not a boundary the store enforces, so
+<code>scope_enforced</code> is withheld on the shape of the query rather
+than on a missing feature.</p>
+<p><strong>The epistemic fields are all one step short of doing
+work.</strong> A memory's state is computed rather than stored:
+<code>Observation::state()</code> returns <code>deleted</code>,
+<code>needs_review</code> or <code>active</code> by looking at
+<code>deleted_at</code> and comparing <code>review_after</code> to the
+clock, in Rust, after the rows are already back from SQLite. It can
+label a result and cannot withhold one. The only predicate that
+withholds anything is <code>deleted_at IS NULL</code>. And the relation
+row that carries a judgement records <code>marked_by_actor</code>,
+<code>marked_by_kind</code> and <code>marked_by_model</code> — the
+provenance shape this atlas rewards, because it says <em>what kind of
+thing</em> decided — but every shipped writer supplies
+<code>"agent"</code> or <code>'system'</code>. The field built to tell a
+person from a machine has no path that writes a person.</p>
+<p><strong>Deletion is keyed on the row, not the claim.</strong> Both
+dedup lookups end with <code>AND deleted_at IS NULL</code>, so a memory
+somebody deleted is invisible to the two checks that would otherwise
+notice the same thing being written again. The prompt side comes closer
+than anything else here: <code>apply_prompt_upsert_tx</code> reads
+<code>prompt_deletions</code> <em>before</em> accepting an incoming
+prompt and drops the write when the arriving copy is not newer than the
+deletion. That is a deletion consulted on the write path, which most of
+this corpus does not manage — but it is keyed on the
+<code>sync_id</code>, so it settles a race between replicas about one
+row rather than remembering that a claim was rejected.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Leteo is a lexical memory with no model in the loop, and almost every
+question about it resolves by asking whether a thing is a column or a
+computation.</p>
+<p>Columns withhold: <code>deleted_at IS NULL</code> is in the SQL, so a
+deleted memory does not come back. Computations describe:
+<code>state()</code> runs after the query, so <code>needs_review</code>
+reaches the caller as a label on a row that was already returned. The
+scope sits in between — it is a column, and it is in the SQL only when
+the caller supplied a value.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a save is normalised and hashed, then routed to a revision, a duplicate count or an insert; retrieval runs BM25 over two full-text indexes of the same rows and fuses them by rank position, with the scope and project clauses present only when the caller passed a value; the state a reader sees is computed in Rust after the rows are back, so it can label a memory but cannot withhold one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a save is normalised and hashed, then routed to a revision, a duplicate count or an insert; retrieval runs BM25 over two full-text indexes of the same rows and fuses them by rank position, with the scope and project clauses present only when the caller passed a value; the state a reader sees is computed in Rust after the rows are back, so it can label a memory but cannot withhold one
+flowchart TB
+    SAVE[&quot;mem_save / leteo save&quot;]
+    NORM[&quot;normalize: strip &amp;lt;private&amp;gt; spans,&lt;br/&gt;cap length, fold the project&#39;s case,&lt;br/&gt;hash the folded body&quot;]
+    TK{&quot;does a memory hold&lt;br/&gt;this topic_key,&lt;br/&gt;in this project and scope?&quot;}
+    REV[&quot;REVISE in place:&lt;br/&gt;revision_count + 1,&lt;br/&gt;reschedule the review clock&quot;]
+    DUP{&quot;same normalized_hash, project,&lt;br/&gt;scope, type and title,&lt;br/&gt;inside the dedupe window?&quot;}
+    INC[&quot;duplicate_count + 1&quot;]
+    INS[(&quot;INSERT into observations&quot;)]
+    NOTE[&quot;both lookups end with deleted_at IS NULL,&lt;br/&gt;so a DELETED memory is not consulted here&quot;]
+
+    SAVE --&gt; NORM --&gt; TK
+    TK --&gt;|&quot;yes&quot;| REV
+    TK --&gt;|&quot;no&quot;| DUP
+    DUP --&gt;|&quot;yes&quot;| INC
+    DUP --&gt;|&quot;no&quot;| INS
+    NOTE -.-&gt; TK
+    NOTE -.-&gt; DUP
+
+    Q[&quot;mem_search(query, project, scope)&quot;]
+    N{&quot;Narrowing::equals —&lt;br/&gt;a clause when there is a value,&lt;br/&gt;NOTHING when there is not&quot;}
+    SQL[&quot;WHERE fts MATCH ?&lt;br/&gt;AND deleted_at IS NULL&lt;br/&gt;( AND project = ? )&lt;br/&gt;( AND scope = ? )&quot;]
+    F1[(&quot;observations_fts&lt;br/&gt;porter unicode61 — stemmed&quot;)]
+    F2[(&quot;observations_exact&lt;br/&gt;unicode61 — as written&quot;)]
+    FUSE[&quot;fuse by the RANK POSITION&lt;br/&gt;each index gave a memory,&lt;br/&gt;not by score&quot;]
+    ROWS[&quot;rows&quot;]
+    ST[&quot;Observation::state() runs HERE, in Rust:&lt;br/&gt;deleted · needs_review · active&quot;]
+    OUT[&quot;the answer, each row labelled&quot;]
+
+    Q --&gt; N --&gt; SQL
+    SQL --&gt; F1 --&gt; FUSE
+    SQL --&gt; F2 --&gt; FUSE
+    FUSE --&gt; ROWS --&gt; ST --&gt; OUT
+    N -.-&gt;|&quot;a caller who passes nothing&lt;br/&gt;gets no scope clause —&lt;br/&gt;&#39;an empty scope is not a scope filter&#39;&quot;| SQL
+    ST -.-&gt;|&quot;computed after the rows are back,&lt;br/&gt;so it can LABEL a memory&lt;br/&gt;but cannot WITHHOLD one&quot;| OUT
+    INS --&gt; F1</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store/</code></td>
+<td>The SQLite layer: observations, prompts, sessions, relations,
+search, wire and diagnostics, with <code>Narrowing</code> and the column
+lists shared across them</td>
+</tr>
+<tr>
+<td><code>src/memory/</code></td>
+<td>The model, the normalisation rules, the review windows and the
+relation vocabulary</td>
+</tr>
+<tr>
+<td><code>src/mcp/</code></td>
+<td>Twenty-two tools — the agent's surface</td>
+</tr>
+<tr>
+<td><code>src/cli/</code></td>
+<td>Some thirty subcommands, including <code>doctor</code>,
+<code>conflicts</code> and <code>timeline</code></td>
+</tr>
+<tr>
+<td><code>src/hooks/</code></td>
+<td>Session-start and session-end hooks that assemble the opening
+context</td>
+</tr>
+<tr>
+<td><code>src/sync/</code>, <code>src/cloud/</code></td>
+<td>An outbox of mutations, a chunked transfer, and an optional cloud
+server</td>
+</tr>
+<tr>
+<td><code>migrations/</code></td>
+<td>Four baseline files plus one, each carrying the argument for what it
+does</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/store/mod.rs:194-231</code> — <code>Narrowing</code>, and
+the plan argument that shapes it.</li>
+<li><code>src/store/search.rs:47-57</code> — the fused-search SQL, with
+type, project and scope each behind an <code>IS NULL</code>
+disjunction.</li>
+<li><code>src/store/observations.rs:228-270</code> — the topic-key
+revision lookup and the hash dedup lookup, both ending
+<code>AND deleted_at IS NULL</code>.</li>
+<li><code>src/memory/model.rs:105-122</code> — <code>state()</code>,
+computed from <code>deleted_at</code> and the review clock.</li>
+<li><code>src/memory/rules.rs:78-110</code> —
+<code>REVIEW_WINDOWS</code> and the calendar-month rule, with the three
+disagreeing copies it replaced.</li>
+<li><code>src/store/relations.rs:375-400</code> — the judgement write,
+recording actor, kind and model.</li>
+<li><code>src/store/wire.rs:400-430</code> — the prompt tombstone
+consulted before a synced write is accepted.</li>
+<li><code>src/store/wire.rs:610-631</code> — the journal prune, and why
+the outbox is not a record.</li>
+<li><code>migrations/0001_baseline_after_the_tables.sql</code> — the
+second index, with its measurements.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An observation carries <code>type</code>, <code>title</code>,
+<code>content</code>, <code>tool_name</code>, <code>project</code>,
+<code>scope</code> (defaulting to <code>project</code>),
+<code>topic_key</code>, <code>normalized_hash</code>,
+<code>revision_count</code>, <code>duplicate_count</code>,
+<code>last_seen_at</code>, <code>pinned</code>,
+<code>review_after</code>, <code>expires_at</code>,
+<code>created_at</code>, <code>updated_at</code> and
+<code>deleted_at</code>. The vector column inherited from the upstream
+schema is annotated as never written: "Leteo does not embed
+anything."</p>
+<p><code>type</code> is a write-time genre rather than an epistemic
+status, and it is the input to the review clock:
+<code>REVIEW_WINDOWS</code> gives <code>decision</code> six months,
+<code>policy</code> twelve and <code>preference</code> three, and every
+other kind none, because most kinds do not go stale. The window is
+counted in calendar months rather than thirty-day months, on the stated
+ground that "a decision is good for six months, not for a hundred and
+eighty days" — a distinction that had produced a four-day disagreement
+between three copies of the same rule.</p>
+<p>A relation row is the other memory unit: a <code>relation</code>
+verb, a <code>reason</code>, <code>evidence</code>, a
+<code>confidence</code>, a <code>judgment_status</code>, the actor, kind
+and model that marked it, and a supersession pointer.</p>
+<p>Every timestamp is a record time. There is no validity interval and
+no as-of read, so <code>bitemporal</code> is withheld on an absence.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is BM25 over two FTS5 external-content indexes of the same
+rows, fused by the position each index gave a memory rather than by
+combining scores — the choice the migration measures. The weights are a
+single constant passed into the query builder rather than restated by
+each caller, which is the fix for the benchmark that had been measuring
+a query nobody issued.</p>
+<p><code>deleted_at IS NULL</code> is in every listing. Type, project
+and scope are each behind <code>(?n IS NULL OR column = ?n)</code> in
+the raw SQL, and the <code>Narrowing</code> builder used by the other
+reads omits the clause entirely instead. A relation-aware candidate
+search additionally excludes memories already related to the one in
+hand, which is an existence test rather than a status test.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A save normalises first: <code>&lt;private&gt;</code> spans are
+stripped by regex before storage, the body is capped, and the project
+name is case-folded — the last because a prompt arriving over the sync
+wire once kept its spelling, so <code>Leteo</code> never matched the
+<code>leteo</code> every query narrows by and "that prompt was invisible
+to the opening context for ever."</p>
+<p>Then three outcomes in order. A memory holding the same
+<code>topic_key</code> in the same project and scope is revised in place
+with <code>revision_count</code> incremented and its review clock
+rescheduled. Otherwise an identical <code>normalized_hash</code> with
+the same project, scope, type and title inside a configurable window
+increments <code>duplicate_count</code>. Otherwise a new row is
+inserted.</p>
+<p>Both lookups end <code>AND deleted_at IS NULL</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Twenty-two MCP tools cover saving, searching, context assembly,
+pinning, reviewing, judging relations, comparing, timelines, stats and a
+doctor. The CLI covers the same ground for a person, plus
+<code>conflicts</code>, <code>export</code>, an Obsidian export, a
+terminal UI and the setup module that writes configuration for several
+agent clients at install time.</p>
+<p><code>mem_review</code> lists memories due for review and marks one
+reviewed. <code>mem_judge</code> records a verdict on a relation. Both
+are agent-facing, which is what decides the review mark below.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — withheld, on a derived state.</strong>
+<code>state()</code> is computed per row as it is serialised. Nothing in
+SQL consults it, and nothing can, because it does not exist until the
+rows are already back. <code>needs_review</code> therefore reaches an
+agent as a label beside a memory that was returned anyway.</p>
+<p><strong>Scope enforced — withheld, on an omittable
+predicate.</strong> The clause is present when a value is supplied and
+absent when it is not, for a measured query-plan reason. The test suite
+documents the consequence rather than guarding against it, asserting
+that an empty scope is not a scope filter and that a real one
+narrows.</p>
+<p><strong>Human review — withheld, on the producer.</strong> The
+provenance triple on a judgement is the right shape, and
+<code>marked_by_kind</code> exists precisely to say what kind of thing
+decided. Every production writer supplies <code>"agent"</code>, except
+the system path which writes <code>'system'</code> with
+<code>marked_by_actor = 'leteo'</code>. A search across the tree finds
+no path that records a person.</p>
+<p><strong>Tombstone — withheld, and the prompt path is the near
+miss.</strong> A deleted observation is excluded from both dedup
+lookups, so the same content can be written back with nothing to notice.
+<code>prompt_deletions</code> is consulted on the write path and does
+drop an incoming copy that is not newer than the deletion, which is more
+than most stores here do — but it is keyed on the row's identity, so it
+arbitrates replication rather than remembering a rejected claim.</p>
+<p><strong>Audit log — withheld.</strong> <code>sync_mutations</code> is
+an append-only journal of entity, operation and payload, and it is
+pruned: acknowledged rows older than a retention window are deleted,
+because "an unpruned journal roughly doubles the size of the database"
+and the window "leaves a few days of history for anyone debugging a sync
+problem." That is an outbox, honestly described as one.</p>
+<p><strong>Negative evaluation — withheld.</strong> The exclusion tests
+are count comparisons — a filtered count must be smaller than an
+unfiltered one — rather than assertions that a named memory does not
+come back. The one test that does assert non-leakage,
+<code>mutation_scoping_fails_closed_on_an_empty_allowlist</code>, has
+both halves the mark wants, including the control that the scoped
+project has rows to return; it is <code>#[ignore]</code>d behind a
+PostgreSQL the repository does not provide, and it asserts over a
+mutation listing rather than a memory retrieval.</p>
+<p><strong>What is genuinely defended</strong> is the content itself:
+<code>&lt;private&gt;</code> spans are stripped before storage, and
+tests assert the secret is absent from the stored body, from a generated
+summary and from the replicated copy.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>748 test attributes across the tree, thirteen of them
+<code>#[ignore]</code>d — eleven in the cloud-store file, which needs an
+external database. The retrieval numbers quoted in the migrations come
+from a measurement harness under <code>tools/</code>, and the comment
+beside the search query records why that harness now takes the product's
+own weights as an argument: a tool that restates the query measures a
+search nobody runs.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Put the measurement in the comment.</strong> Two indexes
+with their survival rates, a clause shape with its millisecond cost, a
+review window with the four-day disagreement that motivated folding
+three copies into one. Every one of those is a decision a reader can
+check rather than accept.</li>
+<li><strong>Never let a measurement tool restate the query.</strong>
+Pass the real one's parameters in. An afternoon of benchmarking a query
+the product does not issue is the cheapest version of this lesson.</li>
+<li><strong>Write the clause or write nothing.</strong>
+<code>(?1 IS NULL OR col = ?1)</code> costs the plan its index, because
+SQLite chooses before it knows the binding. Building the SQL per call
+trades one prepared shape for two the statement cache holds.</li>
+<li><strong>Decide whether a state is a column or a computation before
+you name it.</strong> A computed <code>needs_review</code> can label and
+cannot filter; if you want it to withhold, it has to be in the
+query.</li>
+<li><strong>If you record who decided, make sure something can record a
+person.</strong> A <code>marked_by_kind</code> whose every writer is a
+machine is a column that will look like provenance in a year's time and
+answer nothing.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a scope meant to be mandatory anywhere? The default is
+<code>project</code>, and the narrowing builder makes omission the
+caller's choice; which of the two is the intended contract is not
+written down.</li>
+<li>Will a person ever be a judge? The relation schema is ready for it —
+actor, kind and model — and the CLI lists and shows conflicts without a
+verb to settle one.</li>
+<li>Should a deleted memory block its own re-derivation? Dropping
+<code>deleted_at IS NULL</code> from the dedup lookups would do it, at
+the cost of surfacing a deleted row to the writer.</li>
+<li>What is <code>expires_at</code> for? It sits on every observation
+and no read path in this reading consults it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What lives there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/store/mod.rs</code></td>
+<td><code>Narrowing</code>, the shared column lists, and the BM25 weight
+constant</td>
+</tr>
+<tr>
+<td><code>src/store/search.rs</code></td>
+<td>The fused-search SQL and the two-index query</td>
+</tr>
+<tr>
+<td><code>src/store/observations.rs</code></td>
+<td>The save path: revision, duplicate count, insert, and the review
+reschedule</td>
+</tr>
+<tr>
+<td><code>src/store/relations.rs</code></td>
+<td>Judgement writes with actor, kind and model; the conflicts
+listing</td>
+</tr>
+<tr>
+<td><code>src/store/wire.rs</code></td>
+<td>The sync apply path, the prompt tombstone consult, and the journal
+prune</td>
+</tr>
+<tr>
+<td><code>src/memory/model.rs</code></td>
+<td><code>Observation</code>, and <code>state()</code></td>
+</tr>
+<tr>
+<td><code>src/memory/rules.rs</code></td>
+<td><code>REVIEW_WINDOWS</code>, the calendar-month rule, and the
+relation vocabulary</td>
+</tr>
+<tr>
+<td><code>src/memory/normalize.rs</code></td>
+<td>The <code>&lt;private&gt;</code> regex, the hash, and the field
+normalisation</td>
+</tr>
+<tr>
+<td><code>src/mcp/tools.rs</code></td>
+<td>The twenty-two tools</td>
+</tr>
+<tr>
+<td><code>migrations/0001_baseline_after_the_tables.sql</code></td>
+<td>The second full-text index with its measurements</td>
+</tr>
+<tr>
+<td><code>src/store/tests/search.rs</code></td>
+<td>The blank-versus-real narrowing test and its control</td>
+</tr>
+<tr>
+<td><code>src/cloud/cloudstore/tests.rs</code></td>
+<td>The scoping test, behind an external database</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;marked_by_kind&#39; src --include=&#39;*.rs&#39;          # every writer supplies &quot;agent&quot;; one system path writes &#39;system&#39;
+grep -rn &#39;valid_from\|valid_to\|as_of&#39; src --include=&#39;*.rs&#39;   # no validity axis; the hits are an effective_query and a port helper
+grep -rn &#39;judgment_status&#39; src --include=&#39;*.rs&#39;         # serialised and listed; no retrieval path filters on it
+grep -rn &#39;DELETE FROM sync_mutations&#39; src --include=&#39;*.rs&#39;    # the retention prune</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/asanabrial/leteo/commit/f49917e4b9ffdf842e8f656a82867098487f789a"><code class="commit-id" title="f49917e4b9ffdf842e8f656a82867098487f789a">f49917e4…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone: thirteen files scanned, two auto-run
+surfaces, no build-time execution point and no unpinned dependency
+surface, with seven dependency files inside the seven-day cooldown and
+<code>Cargo.lock</code> present. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run, and no benchmark
+was reproduced — the retrieval figures quoted are the project's own,
+from the migration comments that publish them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
