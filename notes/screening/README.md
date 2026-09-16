@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 499 of 559 screened at the report's current pin.**
+**Progress: 500 of 560 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 58 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 214 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 308 |
-| Repositories with build-time execution (`EXEC`) | 364 |
+| Repositories with an auto-run surface (`RUNS`) | 215 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 309 |
+| Repositories with build-time execution (`EXEC`) | 365 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -202,6 +202,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
 | [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes` |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
+| [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |

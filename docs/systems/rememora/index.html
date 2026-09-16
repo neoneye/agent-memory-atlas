@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A cross-agent Rust memory whose
+LLM-driven consolidation is bounded before the model is called, dry-run
+unless explicitly armed, journalled in the same transaction as the
+writes it describes, and whose release notes record removing the
+automatic hooks that used to run it unattended.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Rememora — Agent Memory Atlas">
+    <meta property="og:description" content="A cross-agent Rust memory
+whose LLM-driven consolidation is bounded before the model is called,
+dry-run unless explicitly armed, journalled in the same transaction as
+the writes it describes, and whose release notes record removing the
+automatic hooks that used to run it unattended.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rememora — Agent Memory Atlas">
+    <meta name="twitter:description" content="A cross-agent Rust memory
+whose LLM-driven consolidation is bounded before the model is called,
+dry-run unless explicitly armed, journalled in the same transaction as
+the writes it describes, and whose release notes record removing the
+automatic hooks that used to run it unattended.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Rememora — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Rememora",
+      "description": "A cross-agent Rust memory whose LLM-driven consolidation is bounded before the model is called, dry-run unless explicitly armed, journalled in the same transaction as the writes it describes, and whose release notes record removing the automatic hooks that used to run it unattended.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The blast radius of one hallucinated
+decision is five records</p>
+          <h1>Rememora</h1>
+          <p class="document-deck">A cross-agent Rust memory whose
+LLM-driven consolidation is bounded before the model is called, dry-run
+unless explicitly armed, journalled in the same transaction as the
+writes it describes, and whose release notes record removing the
+automatic hooks that used to run it unattended.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Rememora/rememora">
+              <span>Source</span>
+              <strong>Rememora/rememora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Rememora/rememora/commit/9fe78eba7d68b4387e867492268cc82ed104bbf3" title="9fe78eba7d68b4387e867492268cc82ed104bbf3">
+              <span>Analyzed revision</span>
+              <code>9fe78eba…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Rememora--rememora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Rememora--rememora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Rememora is "[p]ersistent, cross-agent memory for AI coding agents.
+One SQLite database, shared by every agent you use" — MIT, Rust, version
+1.7.0, 17,313 lines across 56 files with 345 tests, plus a Tauri desktop
+app and a benchmark harness. The premise is stated as a complaint:
+Claude Code, Codex and Gemini CLI "each lose context between sessions",
+and switching agents mid-task starts you from scratch.</p>
+<p><strong>The mechanism to take away is how it sizes its
+guards.</strong> Consolidation here is a language model reading a
+cluster of similar memories and deciding to merge, supersede or keep.
+Most systems in this corpus that do this bound the work by what the
+model can handle. Rememora bounds it by what a wrong answer would
+cost:</p>
+<blockquote>
+<p>"Largest number of memories one consolidation decision may supersede.
+This is the blast radius of a single LLM call. It is deliberately much
+smaller than <code>MAX_CLUSTER_SIZE</code> so that even a
+fully-hallucinated decision can only retire a handful of records."</p>
+</blockquote>
+<p><code>MAX_SUPERSEDE_PER_DECISION</code> is five;
+<code>MAX_CLUSTER_SIZE</code> is eight. The gap between those two
+numbers is the whole idea, and it only exists because someone asked what
+happens when the model is confidently wrong rather than when it is
+slow.</p>
+<p><strong>The cluster limit is a refusal, not a cap.</strong> A cluster
+over the limit is not trimmed and processed — it is skipped before a
+token is spent, with the reason handed back to the person:</p>
+<blockquote>
+<p>"cluster has {n} memories, over the safe limit of {MAX_CLUSTER_SIZE}
+— review it by hand"</p>
+</blockquote>
+<p>and the argument for why is written above it: clustering is
+transitive, so a large cluster "is more likely to be one bad edge
+chaining unrelated memories than a genuine pile of duplicates". That is
+a system declining to act on its own weakest inference rather than
+acting carefully.</p>
+<p><strong>Writing is armed, not assumed.</strong>
+<code>resolve_apply</code> is one line —
+<code>!dry_run &amp;&amp; (apply_flag || env_armed)</code> — so evolve
+is a dry run unless <code>--apply</code> is passed or
+<code>REMEMORA_APPLY=1</code> is set, and <code>--dry-run</code> beats
+both. The constant that holds the environment variable calls it the one
+that "arms the destructive path".</p>
+<p><strong>And the project removed the automation that would have gone
+around all of this.</strong> The v1.7.0 notes lead with it: Rememora "no
+longer wires any automatic Claude Code / Gemini CLI hooks",
+<code>setup --apply</code> "self-heals any existing install by stripping
+them out", and curation now runs from <code>rememora curate</code> or
+<code>rememora dream</code>, "never from an automatic hook". Taking away
+a feature that made the product feel autonomous, and shipping code that
+uninstalls it from machines that already had it, is a stronger signal
+than any flag default.</p>
+<p><strong>What retrieval withholds is a supersession.</strong>
+<code>contexts.superseded_by</code> is a pointer to the memory that
+replaced this one, and <code>superseded_by IS NULL</code> is appended to
+the full-text search, the vector nearest-neighbour search and the
+timeline — all three arms, not the one somebody remembered. The row
+survives with its content intact, so the history is readable and the
+replacement is named.</p>
+<p><strong>The honest limits are three.</strong> The epistemic
+vocabulary is one bit: superseded or not, with nothing for a claim that
+is disputed or believed on thin evidence, and the bit is set by a model.
+Reversibility is narrower than the release notes suggest — the undo
+journal stores and prints the SQL that would reverse a decision, and
+nothing executes it, which is why the cluster-size constant can still
+call consolidation "irreversible" without contradicting itself. And the
+project key does not bind: the search applies its URI prefix only when a
+project is supplied, in a database the design deliberately shares across
+every agent on the machine.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>One database, many agents, and every interesting rule is about what
+happens when something automated wants to change it.</p>
+<p>A memory is a row addressed by a <code>rememora://</code> URI. Agents
+write memories by calling the CLI over Bash. Curation reads session
+transcripts and proposes memories; consolidation clusters similar ones
+and asks a model what to do with each cluster. Both are commands, both
+write to an audit surface, and the second one refuses work it judges
+unsafe to hand a model.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — agents write memories into one shared SQLite database; consolidation clusters similar ones, refuses any cluster over the size limit before calling the model, caps how many memories one decision may retire, and writes an undo-journal row inside the same transaction as the supersession; every retrieval arm filters out superseded rows</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: agents write memories into one shared SQLite database; consolidation clusters similar ones, refuses any cluster over the size limit before calling the model, caps how many memories one decision may retire, and writes an undo-journal row inside the same transaction as the supersession; every retrieval arm filters out superseded rows
+flowchart TB
+    AG[&quot;Claude Code · Codex · Gemini CLI&lt;br/&gt;— all calling one CLI over Bash&quot;]
+    DB[(&quot;contexts — one SQLite database&lt;br/&gt;shared by every agent&lt;br/&gt;uri · category · content · importance&lt;br/&gt;superseded_by&quot;)]
+    CUR[&quot;rememora curate / dream —&lt;br/&gt;reads session transcripts ON DEMAND,&lt;br/&gt;never from an automatic hook&quot;]
+    CLOG[(&quot;curator_log — APPEND-ONLY&lt;br/&gt;action · context_id · reason · model&quot;)]
+
+    AG --&gt; DB
+    CUR --&gt; DB
+    CUR --&gt; CLOG
+
+    EV[&quot;rememora evolve&quot;]
+    ARM{&quot;resolve_apply =&lt;br/&gt;!dry_run AND (--apply OR REMEMORA_APPLY)&quot;}
+    DRY[&quot;dry run: print the plan,&lt;br/&gt;change nothing&quot;]
+    CL{&quot;cluster size &gt; MAX_CLUSTER_SIZE (8)?&quot;}
+    SKIP[&quot;SKIPPED before a token is spent —&lt;br/&gt;&#39;review it by hand&#39;&lt;br/&gt;(clustering is transitive, so a big cluster&lt;br/&gt;is more likely one bad edge)&quot;]
+    LLM[&quot;the model decides:&lt;br/&gt;merge · supersede · keep&quot;]
+    VAL{&quot;decision validates?&lt;br/&gt;at most MAX_SUPERSEDE_PER_DECISION (5)&quot;}
+    REJ[&quot;REJECTED whole,&lt;br/&gt;never partially applied&quot;]
+    TX{&quot;one transaction&quot;}
+    SUP[(&quot;UPDATE contexts&lt;br/&gt;SET superseded_by = the survivor&quot;)]
+    UNDO[(&quot;evolve_undo — APPEND-ONLY&lt;br/&gt;retired ids · survivor · created id&lt;br/&gt;undo_sql, the statement that reverses it&quot;)]
+
+    DB --&gt; EV --&gt; ARM
+    ARM --&gt;|&quot;not armed&quot;| DRY
+    ARM --&gt;|&quot;armed&quot;| CL
+    CL --&gt;|&quot;yes&quot;| SKIP
+    CL --&gt;|&quot;no&quot;| LLM --&gt; VAL
+    VAL --&gt;|&quot;no&quot;| REJ
+    VAL --&gt;|&quot;yes&quot;| TX
+    TX --&gt; SUP
+    TX --&gt; UNDO
+    UNDO -.-&gt;|&quot;written inside the decision&#39;s own transaction,&lt;br/&gt;so a rollback leaves no row&lt;br/&gt;claiming the decision happened&quot;| TX
+    UNDO -.-&gt;|&quot;stored and PRINTED —&lt;br/&gt;nothing executes it&quot;| HAND[&quot;an undo is a person running the SQL&quot;]
+
+    Q[&quot;search · vector knn · timeline&quot;]
+    F[&quot;every arm appends&lt;br/&gt;superseded_by IS NULL&quot;]
+    DB --&gt; Q --&gt; F --&gt; OUT[&quot;the memories an agent gets back&quot;]
+    SUP -.-&gt;|&quot;the row survives with its content;&lt;br/&gt;the pointer names the replacement&quot;| F</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/models/</code></td>
+<td>The context record, relations, watermarks and the curator log</td>
+</tr>
+<tr>
+<td><code>src/migrations/</code></td>
+<td>Numbered SQL migrations with their design commentary</td>
+</tr>
+<tr>
+<td><code>src/search.rs</code></td>
+<td>Full-text search with boolean grouping and a BM25 noise floor, and
+the vector arm</td>
+</tr>
+<tr>
+<td><code>src/propagate.rs</code></td>
+<td>Graph propagation across relations with a depth bound</td>
+</tr>
+<tr>
+<td><code>src/evolve.rs</code>, <code>src/commands/evolve.rs</code></td>
+<td>The clustering limits, the consolidation pass, and the undo
+journal</td>
+</tr>
+<tr>
+<td><code>src/curator.rs</code>,
+<code>src/commands/curate.rs</code></td>
+<td>Transcript extraction, on demand</td>
+</tr>
+<tr>
+<td><code>src/commands/setup.rs</code></td>
+<td>Installation, and the code that strips the hooks the project
+removed</td>
+</tr>
+<tr>
+<td><code>app/</code></td>
+<td>The Tauri desktop application</td>
+</tr>
+<tr>
+<td><code>bench/</code>, <code>tests/eval_retrieval.rs</code></td>
+<td>Retrieval measurement</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/evolve.rs:24-35</code> — <code>MAX_CLUSTER_SIZE</code> and
+<code>MAX_SUPERSEDE_PER_DECISION</code>, with the blast-radius
+argument.</li>
+<li><code>src/commands/evolve.rs:133-134</code> —
+<code>resolve_apply</code>, the arming rule.</li>
+<li><code>src/commands/evolve.rs:205-228</code> — the oversized-cluster
+refusal and the discarded-decision path.</li>
+<li><code>src/commands/evolve.rs:561-584</code> — the undo table and why
+it is created inside the decision transaction.</li>
+<li><code>src/commands/evolve.rs:691-710</code> —
+<code>append_undo</code>.</li>
+<li><code>src/models/context.rs:161</code> — the supersession
+write.</li>
+<li><code>src/search.rs:178</code>, <code>:403</code>,
+<code>src/timeline.rs:96</code> — <code>superseded_by IS NULL</code> on
+all three arms.</li>
+<li><code>src/migrations/003_curator.sql:27-40</code> — the curator
+audit log.</li>
+<li><code>src/commands/setup.rs:274-280</code> —
+<code>strip_rememora_hooks</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A context carries a <code>uri</code>, an optional
+<code>parent_uri</code>, a <code>context_type</code> constrained to
+memory, resource, skill or project, an optional <code>category</code>
+constrained to preference, entity, decision, event, case or pattern, a
+name, an abstract, an overview, the content, tags, the
+<code>source_agent</code> and <code>source_session</code>, an
+<code>importance</code>, an <code>active_count</code> and
+<code>superseded_by</code>.</p>
+<p>The schema comment explains the single-table choice: it "outperforms
+a table-per-kind design for long-tail entity types, and keeps
+hotness/importance ranking uniform across all memory categories".</p>
+<p><code>category</code> is a write-time genre and
+<code>importance</code> is a ranking input, so neither carries the trust
+mark; <code>superseded_by</code> is the one field retrieval consults to
+withhold. Sessions carry their own <code>status</code> — active, ended
+or transferred — which is a session lifecycle rather than a claim about
+a memory.</p>
+<p>Every timestamp is a record time. There is no validity interval and
+no as-of read, so <code>bitemporal</code> is withheld on an absence.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three arms, each filtering superseded rows. Full-text search supports
+grouped boolean expressions and applies a noise floor, with a comment
+explaining the number: FTS5 clamps non-positive IDF — a term in more
+than half the documents — to 1e-6, so a hit whose whole score comes from
+such terms lands around 1e-6 and is not a match. A vector arm searches
+context embeddings. Propagation walks relations to a bounded depth.</p>
+<p>Project scoping is a URI prefix, applied only when a project is
+passed.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>An agent saves a memory through the CLI. Curation reads transcripts
+on demand, tracking how far it has read in a <code>watermarks</code>
+table so a re-run does not re-extract, and writing a
+<code>curator_log</code> row for every action including
+<code>noop</code>.</p>
+<p>Consolidation is the pass with the guards. Clusters over eight
+memories are refused outright; the model is asked about the rest; a
+decision that fails validation is discarded whole "not partially
+applied, and the run continues with the next cluster"; an applied
+decision writes its supersessions and its undo row in one
+transaction.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The CLI is the interface, callable over Bash by any agent, with a
+Tauri desktop app beside it and a Homebrew tap for installation.
+<code>agent_invocations</code> and <code>hook_invocations</code> tables
+record who called what.</p>
+<p>The integration story is mostly about what was removed. v1.7.0
+stopped wiring lifecycle hooks into Claude Code and Gemini CLI, and
+<code>setup --apply</code> now strips any it previously wrote —
+"preserving all non-rememora user content untouched", dropping an event
+array that ends up empty rather than leaving it as
+<code>"Event": []</code>, and treating a missing file as a no-op rather
+than an error.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Human review — awarded.</strong> The dry-run default and the
+explicit arming are the gate; the oversized-cluster refusal is what
+actually routes work to a person, because it hands the cluster back with
+a reason rather than proceeding; and the hook removal is the strongest
+evidence, because it is a feature the project took away and wrote code
+to uninstall.</p>
+<p><strong>Audit log — awarded, and bounded.</strong> Two append-only
+records, one of them transactional, covering curation and consolidation.
+An ordinary save is not journalled, and the mark is awarded on what
+these two tables do rather than on coverage of every mutation.</p>
+<p><strong>Trust state — awarded, and thin.</strong> One bit and a
+pointer, consulted on all three retrieval arms. There is no vocabulary
+for a disputed or unverified claim, and the bit is a model's
+judgement.</p>
+<p><strong>Negative evaluation — awarded.</strong> The search cases
+assert presence and absence over the same populated result set, which is
+what stops a must-not assertion passing on an empty answer.</p>
+<p><strong>Tombstone — withheld.</strong> A superseded memory is
+retained and its replacement named, which is the right shape for
+history, but nothing is keyed on the memory's content and no write path
+consults the retired row. A claim consolidation removed from retrieval
+can be saved again as a new row.</p>
+<p><strong>Scope enforced — withheld.</strong> The project prefix is
+applied only when a project is supplied, in a database shared across
+every agent on the machine.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>345 test attributes, with behaviour tests organised by subject —
+<code>behavior_search</code>, <code>behavior_propagation</code>,
+<code>behavior_timeline</code>, <code>behavior_worktree</code>,
+<code>behavior_hotness</code> — plus a scenarios directory and a written
+<code>SCENARIOS.md</code>. <code>tests/eval_retrieval.rs</code> and the
+<code>bench/</code> directory carry retrieval measurement separately
+from the assertions.</p>
+<p>The consolidation tests are the load-bearing ones for this report:
+<code>test_applied_supersession_is_journalled_in_the_database</code>
+drives an armed run and checks that the journal row names the retired
+and surviving ids and that the recorded SQL "really does put the memory
+back".</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Size the cap by what a wrong answer costs.</strong> Five is
+not five because five memories fit in a prompt; it is five because a
+hallucinated decision should only be able to retire five records. Set
+the blast radius below the batch size, deliberately, and write down
+why.</li>
+<li><strong>Refuse the input you distrust rather than handling it
+carefully.</strong> A cluster built by transitive similarity is exactly
+where a bad edge hides, so the safe move is to hand it back, not to
+process it with more prompting.</li>
+<li><strong>Write the undo row in the same transaction as the
+change.</strong> It costs nothing and it buys the property that the
+journal cannot claim a decision that did not happen.</li>
+<li><strong>Store the statement that reverses it.</strong> Even
+unexecuted, a recorded <code>undo_sql</code> turns "we changed
+something" into "here is exactly what to run" — though if you say
+reversible in your release notes, say who runs it.</li>
+<li><strong>Removing your own automation is a legitimate safety
+change.</strong> This project shipped code that uninstalls hooks it had
+previously installed, rather than leaving them and documenting a
+flag.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will anything execute <code>undo_sql</code>? The journal has the
+statement, the ids and the timestamps; what is missing is the command
+that applies one and a column recording that it was applied.</li>
+<li>Should the project prefix be mandatory in a shared database? The
+design deliberately shares one store across agents, which is exactly the
+setting in which an omitted predicate reads across everything.</li>
+<li>Is one bit enough? A memory can be superseded or current, and
+nothing can say a claim is disputed, unverified, or believed on evidence
+the curator flagged as thin.</li>
+<li>What stops a consolidated claim returning? Nothing is keyed on
+content, so the same memory can be saved again after being retired.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What lives there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/evolve.rs</code></td>
+<td>The cluster and supersession limits with their rationale, and the
+BM25 noise floor</td>
+</tr>
+<tr>
+<td><code>src/commands/evolve.rs</code></td>
+<td>The consolidation pass, the arming rule, the refusals and the undo
+journal</td>
+</tr>
+<tr>
+<td><code>src/commands/curate.rs</code>,
+<code>src/curator.rs</code></td>
+<td>Transcript extraction on demand</td>
+</tr>
+<tr>
+<td><code>src/models/context.rs</code></td>
+<td>The context record, its loads and the supersession write</td>
+</tr>
+<tr>
+<td><code>src/models/watermark.rs</code></td>
+<td>The curator-log insert and the read watermark</td>
+</tr>
+<tr>
+<td><code>src/search.rs</code></td>
+<td>Both retrieval arms, each filtering superseded rows</td>
+</tr>
+<tr>
+<td><code>src/propagate.rs</code></td>
+<td>Depth-bounded graph propagation</td>
+</tr>
+<tr>
+<td><code>src/commands/setup.rs</code></td>
+<td>Installation, and <code>strip_rememora_hooks</code></td>
+</tr>
+<tr>
+<td><code>src/migrations/001_initial.sql</code></td>
+<td>Contexts, sessions and relations, with the single-table
+argument</td>
+</tr>
+<tr>
+<td><code>src/migrations/003_curator.sql</code></td>
+<td>The curator audit log and the consolidation-run record</td>
+</tr>
+<tr>
+<td><code>tests/behavior_search.rs</code></td>
+<td>The presence-and-absence search cases</td>
+</tr>
+<tr>
+<td><code>tests/behavior_propagation.rs</code></td>
+<td>The superseded-exclusion case</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;DELETE FROM curator_log\|UPDATE curator_log&#39; src --include=&#39;*.rs&#39;   # nothing: append-only
+grep -rn &#39;DELETE FROM evolve_undo\|UPDATE evolve_undo&#39; src --include=&#39;*.rs&#39;   # nothing: append-only
+grep -rn &#39;undo_sql&#39; src --include=&#39;*.rs&#39;                  # stored and printed; no execute
+grep -rn &#39;valid_from\|valid_to\|as_of&#39; src --include=&#39;*.rs&#39;   # no validity axis</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Rememora/rememora/commit/9fe78eba7d68b4387e867492268cc82ed104bbf3"><code class="commit-id" title="9fe78eba7d68b4387e867492268cc82ed104bbf3">9fe78eba…</code></a>
+— first reading, at a commit dated 15 September 2026, version 1.7.0.
+Screened before opening, from a full clone so dependency ages are the
+project's own rather than the clone's: fourteen files scanned, one
+auto-run surface, one build-time execution point, two unpinned
+dependency surfaces and two dependency files inside the seven-day
+cooldown, with <code>app/src-tauri/Cargo.lock</code> unchanged for 143
+days and <code>bench/pnpm-lock.yaml</code> for 168.
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> are addressed to a
+reading agent and were recorded as data. Nothing was installed, built or
+run, and no benchmark was reproduced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
