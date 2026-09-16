@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 529 reports.**
+**This page covers all 530 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4582,3 +4582,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: version 1.3.1, 97,044 lines of Python with 1,491 test functions across 182 files, a CLI, an MCP server with a shim for both `mcp` package spellings, hooks, a Docker image and a hardening document. Built by Who Visions; the name is Haitian Creole for "we have".
 - Study when: you embed user content and have not decided where redaction sits in the pipeline, or you are importing another tool's history and must decide which timestamp to keep.
 - Do not copy when: you need isolation between domains rather than organisation. One mark, bitemporal: `timestamp` is event time and `learned_utc` is when this node learned it, filtered independently, with imported traces stamped at their true era rather than at migration time.
+
+### [`edda`](../systems/edda/)
+- Best idea: **an approval binds to a subject, a commit and a moment.** "[A] verdict only satisfies a gate if it postdates the gate's `gate_entered_at`. Approving a subject BEFORE its gate opens (a pre-recorded verdict) therefore does not work — the gate ignores any verdict recorded before it entered `AWAITING_VERDICT`, even for the matching SHA." Pre-recording the approval it expects to need is exactly what an agent with a shell would do, and the freshness rule closes it. Beside that, the chain is checked on append — read the tail, refuse a mismatched parent, re-derive the event canonically — so a break cannot be written, with four tests injecting corruption through raw SQL to prove the check works.
+- Biggest risk: **the approver is a label.** `edda verdict approve|reject` records an `actor` string the caller supplies, with no authentication on that path and no requirement to hold the HMAC-sealed capability the authority module goes to such lengths over — so the gate blocks the conductor until something outside it responds, and what responded is self-asserted. Blob tombstones are likewise a record rather than a rule: keyed on the content hash, carrying the reason, and read only by an inspection command. Nothing in the ledger is epistemic, so a decision and its later reversal are two events related only by order.
+- Most reusable component: `validate_event_for_append` with `validate_event_hash` beside it — thirty lines that turn a detectable corruption into an unwritable one — and the four fault-injection tests that keep them honest.
+- Maturity impression: MIT or Apache-2.0, Rust, version 0.6.2 on crates.io, 213,521 lines across a dozen crates with 3,518 test functions, bridges for four harnesses, a conductor for parallel agents, and a second-provider review flow that records the reviewed SHA, the observed model and whether cost was measured or unmeasured.
+- Study when: you have a hash chain you have never broken on purpose, or a gate an agent could satisfy by approving in advance.
+- Do not copy when: you need to know who approved. One mark: audit log.

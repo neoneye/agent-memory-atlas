@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 529 reports.</strong></p>
+<p><strong>This page covers all 530 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19745,6 +19745,43 @@ organisation. One mark, bitemporal: <code>timestamp</code> is event time
 and <code>learned_utc</code> is when this node learned it, filtered
 independently, with imported traces stamped at their true era rather
 than at migration time.</li>
+</ul>
+<h3 id="edda"><a href="../systems/edda/"><code>edda</code></a></h3>
+<ul>
+<li>Best idea: <strong>an approval binds to a subject, a commit and a
+moment.</strong> "[A] verdict only satisfies a gate if it postdates the
+gate's <code>gate_entered_at</code>. Approving a subject BEFORE its gate
+opens (a pre-recorded verdict) therefore does not work — the gate
+ignores any verdict recorded before it entered
+<code>AWAITING_VERDICT</code>, even for the matching SHA." Pre-recording
+the approval it expects to need is exactly what an agent with a shell
+would do, and the freshness rule closes it. Beside that, the chain is
+checked on append — read the tail, refuse a mismatched parent, re-derive
+the event canonically — so a break cannot be written, with four tests
+injecting corruption through raw SQL to prove the check works.</li>
+<li>Biggest risk: <strong>the approver is a label.</strong>
+<code>edda verdict approve|reject</code> records an <code>actor</code>
+string the caller supplies, with no authentication on that path and no
+requirement to hold the HMAC-sealed capability the authority module goes
+to such lengths over — so the gate blocks the conductor until something
+outside it responds, and what responded is self-asserted. Blob
+tombstones are likewise a record rather than a rule: keyed on the
+content hash, carrying the reason, and read only by an inspection
+command. Nothing in the ledger is epistemic, so a decision and its later
+reversal are two events related only by order.</li>
+<li>Most reusable component: <code>validate_event_for_append</code> with
+<code>validate_event_hash</code> beside it — thirty lines that turn a
+detectable corruption into an unwritable one — and the four
+fault-injection tests that keep them honest.</li>
+<li>Maturity impression: MIT or Apache-2.0, Rust, version 0.6.2 on
+crates.io, 213,521 lines across a dozen crates with 3,518 test
+functions, bridges for four harnesses, a conductor for parallel agents,
+and a second-provider review flow that records the reviewed SHA, the
+observed model and whether cost was measured or unmeasured.</li>
+<li>Study when: you have a hash chain you have never broken on purpose,
+or a gate an agent could satisfy by approving in advance.</li>
+<li>Do not copy when: you need to know who approved. One mark: audit
+log.</li>
 </ul>
         </article>
       </div>
