@@ -1431,23 +1431,25 @@ And the schema puts the whole vocabulary in the database —
 <code>CHECK(status IN (...))</code>, range checks on importance 1–10 and
 confidence 0–1 — so no migration can introduce a state the code has
 never seen.</li>
-<li>Biggest risk: <strong>the epistemic vocabulary is mostly not
-wired.</strong> Of five statuses, <code>ARCHIVED</code> is the only one
-both written and read; <code>PENDING_CONFIRMATION</code> is written and
-never consulted, <code>OBSOLETE</code> is consulted and never written,
-<code>CONTRADICTED</code> is neither, <code>USER_CONFIRMED</code> has no
-writer, and <code>supersedes_id</code> has a column, a foreign key and
-three interface fields with nothing that assigns it. So a memory kept
-<em>because</em> it contradicted another is retrieved beside it at a
-two-point penalty on a scale where importance alone is worth twenty —
-and nothing can ever confirm it, because the source type that would is
-never written.</li>
-<li>Maturity impression: ~15,900 lines of TypeScript, 24 commits, seven
+<li>Biggest risk: <strong>the exclusion set is written out
+twice.</strong> The retriever and the pipeline's
+<code>getActiveMemories</code> each spell out which statuses are
+withheld, so a value added to one and forgotten in the other is excluded
+on one read path and returned on the other; the allowlist form
+(<code>status === ACTIVE</code>) would have failed loudly instead. The
+read path is the weaker half more generally — substring matching over a
+full table scan, no score floor, and an entity branch that suppresses
+the semantic store entirely when it hits. And
+<code>MemoryScope.PROJECT</code> is still queried by the cognitive
+processor with nothing assigning it, so that branch returns empty and
+reports nothing.</li>
+<li>Maturity impression: ~15,900 lines of TypeScript, 34 commits, seven
 packages, 204 tests, local Ollama, and a README that says it is not
-production-ready. Three capability marks — <code>trust_state</code>,
-<code>scope_enforced</code> and <code>negative_eval</code>, the last of
-them awarded only at the second reading. At the first, the single
-negative retrieval test asserted
+production-ready. Four capability marks — <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>; the last was awarded at the second reading
+and the mutation audit at the third. At the first, the single negative
+retrieval test asserted
 <code>results.every(m =&gt; m.status !== ARCHIVED)</code> against a
 database seeded with one archived row and nothing else, so it passed on
 an empty result — the vacuity this atlas keeps naming, with its own
@@ -1460,7 +1462,8 @@ caught up with.</li>
 <li>Do not copy when: you need the read path. Substring matching over a
 full table scan, no score floor, an entity branch that suppresses the
 semantic store entirely when it hits, and a correction that merges in
-place rather than linking to what it replaced.</li>
+place rather than linking to what it replaced. Four marks: trust state,
+scope enforced, mutation audit, negative eval.</li>
 </ul>
 <h3 id="a-mem"><a href="../systems/a-mem/"><code>a-mem</code></a></h3>
 <ul>

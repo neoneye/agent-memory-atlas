@@ -7,9 +7,9 @@ page_kind: system
 source_name: andrewyng/openworker
 source_url: https://github.com/andrewyng/openworker
 archive_name: "andrewyng--openworker"
-revision: 7fc3ee68e61b7e6610959a4068f15a2eda1e2630
-revision_url: https://github.com/andrewyng/openworker/commit/7fc3ee68e61b7e6610959a4068f15a2eda1e2630
-analyzed_at: 2026-08-25
+revision: 5bc10d928e0b64aae74313349a3b17bd19643ae2
+revision_url: https://github.com/andrewyng/openworker/commit/5bc10d928e0b64aae74313349a3b17bd19643ae2
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "the injection path, which passes scope and workspace explicitly | coworker/agent.py:409-411, coworker/memory/sqlite_store.py:74-95, coworker/memory/tools.py | the block of memories rendered into the system prompt is built from `memory_store.list(scope=Scope.GLOBAL)` plus `memory_store.list(scope=Scope.WORKSPACE, workspace=mem_ws)`, so a workspace memory reaches only the workspace it was written under. The store's `list` is the weaker half — it opens `SELECT * FROM memories WHERE 1 = 1` and appends a predicate only for each argument the caller supplies, all three of which default to `None`, so an unscoped call returns every row. The mark rests on the caller that feeds the model, and the report states in section 6 that `memory_read` is a third path with no scope check at all | tests/test_memory.py:43-48 asserts a sibling workspace lists nothing while the writing workspace lists one"
@@ -371,6 +371,8 @@ schema.
   `memory_forget`).
 
 ## History
+
+**2026-09-16** — [`5bc10d928e0b64aae74313349a3b17bd19643ae2`](https://github.com/andrewyng/openworker/commit/5bc10d928e0b64aae74313349a3b17bd19643ae2) — re-read at a commit dated 2026-09-03, 39 commits past the previous pin. All three marks re-tested and held. The change worth recording is a disclosure fix on the approval card rather than a change to the mechanism: an MCP tool now carries the destination of its call, stamped at registration from the server definition, so the card's scope chip can say *"leaves this computer → host"* instead of the catch-all *"stays on this computer"* it showed for everything. The chip is what a person reads before approving, and it had been telling them the same thing whether the call stayed local or did not. Screened before reading, from a full clone: no auto-run surface, three build-time execution points, two unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-25** — [`7fc3ee68e61b7e6610959a4068f15a2eda1e2630`](https://github.com/andrewyng/openworker/commit/7fc3ee68e61b7e6610959a4068f15a2eda1e2630) — re-pinned. Screened again before reading: no auto-run surface, three build-time execution surfaces, two unpinned surfaces and one dependency file inside the seven-day cooldown; nothing was installed and nothing was run. Two marks added, to three, and **both were earnable at the previous pin and were missed.**
 

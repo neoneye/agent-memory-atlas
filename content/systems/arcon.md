@@ -7,11 +7,12 @@ page_kind: system
 source_name: "vmDeshpande/Arcon"
 source_url: https://github.com/vmDeshpande/Arcon
 archive_name: "vmDeshpande--Arcon"
-revision: ef74011fe6d74959d901a593d42696fe4929aa30
-revision_url: https://github.com/vmDeshpande/Arcon/commit/ef74011fe6d74959d901a593d42696fe4929aa30
-analyzed_at: 2026-08-24
-capabilities: "trust_state, scope_enforced, negative_eval"
+revision: 85de09cdcf2ff0cb67a0335c75105e3bd5384936
+revision_url: https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936
+analyzed_at: 2026-09-16
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
+  audit_log: "an append-only mutation log carrying the status transition, both sides of the content and who asked for it | packages/memory/src/personal-memory.ts:198-215, :396-422, :424-425 | `memory_audit_log` holds `action`, `previous_status`, `new_status`, `previous_content`, `new_content`, `reason`, `source` and `created_at`, indexed on the memory and on the action. `recordMutation` is its only writer and holds the sole `INSERT`; a search of the tree for a `DELETE`, `UPDATE` or `DROP` against the table returns nothing, so rows are never removed or rewritten. Seven call sites cover the whole lifecycle — `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`, `REJECT` and `RESOLVE_CONTRADICTION` — and each row carries `source` as `user` or `system`, so a transition records whether a person or the machine caused it. Because both content columns are stored, the log holds what a memory said before it changed rather than only that it changed | packages/memory/tests/memory-audit.test.ts asserts a row is written for each of CREATE, UPDATE, SUPERSEDE, CONFIRM, REJECT and CONTRADICT, and that the query filters by action and by source"
   trust_state: "the memory status column, applied on both read paths | packages/memory/src/personal-memory.ts (`MemoryStatus`, `archiveMemory`, the `SUPERSEDED` write), pipeline/memory-pipeline.ts:123,:143,:243,:265,:335-337, retrieval/memory-retriever.ts:15-21 | six CHECK-constrained statuses, and `EXCLUDED_FROM_NORMAL_RETRIEVAL` holds five of them — `ARCHIVED`, `OBSOLETE`, `CONTRADICTED`, `PENDING_CONFIRMATION`, `SUPERSEDED` — so the field decides admissibility rather than weight. Three of the five have writers: `archiveMemory` sets `ARCHIVED`, the pipeline's `CONFLICT` branch sets `PENDING_CONFIRMATION`, and the supersede path sets the predecessor to `SUPERSEDED` while writing `supersedesId` on the successor, which is a complete correction lineage. The gaps to state with the mark: `CONTRADICTED` is excluded by three separate lists and assigned by nothing, `OBSOLETE` likewise, and `MemorySourceType.USER_CONFIRMED` has no writer at all — so a `PENDING_CONFIRMATION` memory is withheld from retrieval with no path out of the state | packages/memory/tests/memory-retriever.test.ts, phase-c-retrieval.test.ts, memory-pipeline.test.ts:395 asserts `newMemory.supersedesId === oldMemory.id`"
   scope_enforced: "the scope column, filtered before scoring | packages/memory/src/personal-memory.ts (`MemoryScope`, `scope: input.scope ?? MemoryScope.USER`), retrieval/memory-retriever.ts:51-59,:93,:158 | `scope` is a stored column with a five-value enum, and normal retrieval filters it twice — a hard restriction to `USER` or `ARCON` before scoring, so the companion's own beliefs and the human's are separable and neither can be reached by a query for the other, plus a `scope` parameter passed through to `listMemories`. Entity facts are fetched under `MemoryScope.ENTITY` on their own path. Two of the five values are not produced: `PROJECT` is queryable from the cognitive processor and never written, `CONVERSATION` appears nowhere outside the enum | packages/memory/tests/phase-c-retrieval.test.ts"
   negative_eval: "the retrieval suites | packages/memory/tests/memory-retriever.test.ts:157-212, tests/phase-c-retrieval.test.ts:80-110 | each negative case seeds a memory in an excluded status *and* a second memory matching the same query, then asserts both halves — `results.every((m) => m.status !== MemoryStatus.CONTRADICTED)` beside `results.some((m) => m.content === \"User likes tea\")`, and the same pair for `PENDING_CONFIRMATION`. The control is what makes the negative mean anything: `beforeEach` opens a fresh database per test, so an assertion over `every` alone would pass on an empty result | the tests are the mechanism"
@@ -293,6 +294,32 @@ memory context, the identity, the mood and the relationship profile, which is th
 architecture's actual thesis: memory is one input among several to how the
 companion speaks.
 
+**Every lifecycle move is now written down, with both sides of the change.**
+`memory_audit_log` records an `action`, the status before and after, the content
+before and after, a `reason` and a `source` of `user` or `system`. One function
+writes it, `recordMutation`, and it holds the table's only `INSERT`; no `DELETE`
+or `UPDATE` against the table exists anywhere in the tree. Seven call sites cover
+the lifecycle end to end — `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`,
+`REJECT` and `RESOLVE_CONTRADICTION` — and `memory-audit.test.ts` asserts a row
+for each, plus that the reader filters by action and by source. Storing
+`previous_content` alongside `new_content` is what makes it a record rather than
+a notification: the log holds what the memory said before it changed.
+
+**And extraction now refuses instruction-shaped content.**
+`containsInstructionPattern` screens a candidate before it can become a memory,
+with a committed case asserting that a candidate carrying an
+ignore-all-instructions pattern is rejected — the store declining to remember
+text whose purpose is to be obeyed later.
+
+**The status vocabulary is wired now, and each transition checks the state it
+is leaving.** `SUPERSEDED`, `CONTRADICTED`, `OBSOLETE` and
+`PENDING_CONFIRMATION` all have writers, and the moves out of them are guarded
+rather than assumed: confirming or rejecting refuses a memory whose status is
+not `PENDING_CONFIRMATION`, and resolving refuses one that is not
+`CONTRADICTED`. `supersedesId` is assigned on the write path, so the column that
+had a foreign key and no writer now records which memory replaced which. The
+pipeline reads `OBSOLETE` and `SUPERSEDED` when it selects what is live.
+
 ## 9. Reliability, Safety, and Trust
 
 **No audit of mutations.** No log table, no event record; a memory changes and
@@ -362,14 +389,10 @@ the ranking coefficients.
 
 ### Avoid
 
-- **Do not widen the exclusion filter past what the writers produce.**
-  `CONTRADICTED` is named in three separate exclusion lists and assigned nowhere;
-  the filter is dead weight and reads, in review, as coverage.
-- **Do not give a state an effect without giving it an exit.**
-  `PENDING_CONFIRMATION` is withheld from every read and the source type that
-  would resolve it has no writer, so the careful branch of the pipeline
-  produces rows that are invisible and permanent. An effect plus a dead end is
-  worse for the user than the previous no-effect-and-a-dead-end.
+- **Do not duplicate a denylist across two files.** The exclusion set is
+  written out in the retriever and again in the pipeline's `getActiveMemories`;
+  a new status has to be remembered in both, and the allowlist form
+  (`status === ACTIVE`) would have failed loudly instead.
 - **Do not duplicate a denylist across two files.** The same five-status
   exclusion set is written out in the retriever and again in the pipeline's
   `getActiveMemories`; a seventh status has to be remembered in both, and the
@@ -397,14 +420,12 @@ this reading agrees with it for reasons the README does not list.
 
 ## 12. Open Questions
 
-- **Who confirms a `PENDING_CONFIRMATION` memory?** No command, no surface, no
-  prompt, and `MemorySourceType.USER_CONFIRMED` has no writer. The likely answer
-  is a review screen in `apps/desktop` that does not exist yet — and with the
-  status excluded from every read, the `CONFLICT` branch produces rows that are
-  both invisible and permanent.
-- **What writes `CONTRADICTED`?** Three exclusion lists name it and nothing
-  assigns it. Either the detector that would set it is the next piece, or the
-  three lists are carrying a value the design has decided against.
+- **Where does a person meet a `PENDING_CONFIRMATION` memory?** The transitions
+  out of it exist and are guarded, but the surface that would show a waiting
+  conflict to someone is still the part this reading cannot find.
+- **Is the exclusion set still written twice?** The retriever and the
+  pipeline each spell it out, so a status added to one and forgotten in the
+  other would be excluded on one read path and returned on the other.
 - **What writes `MemoryScope.PROJECT`?** The cognitive processor resolves a
   `"project"` subject to that scope and queries it; no write path assigns it, so
   the branch returns empty and reports nothing.
@@ -441,6 +462,8 @@ this reading agrees with it for reasons the README does not list.
   vacuous negative), `packages/personality/tests/`, `packages/ai/tests/`
 
 ## History
+
+**2026-09-16** — [`85de09cdcf2ff0cb67a0335c75105e3bd5384936`](https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936) — re-read at a commit dated 2026-09-15, 10 commits past the previous pin. The three existing marks re-tested and held, and **`audit_log` is added**: `memory_audit_log` is an append-only table written by one function at seven call sites covering `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`, `REJECT` and `RESOLVE_CONTRADICTION`, carrying the status on both sides, the content on both sides, a reason and a `source` of `user` or `system`. No `DELETE`, `UPDATE` or `DROP` against it exists in the tree, and `memory-audit.test.ts` pins a row for each action and the reader's filters. A `PENDING_CONFIRMATION` status joins the lifecycle, and `containsInstructionPattern` screens a candidate before it can become a memory, with a committed case asserting an ignore-all-instructions payload is refused. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, nine unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-24** — [`ef74011fe6d74959d901a593d42696fe4929aa30`](https://github.com/vmDeshpande/Arcon/commit/ef74011fe6d74959d901a593d42696fe4929aa30) — second reading, three commits on, at v0.4.0. Screened again first: no auto-run surface, no build-time execution, nine unpinned surfaces and nine files inside the seven-day cooldown; nothing was installed and no test was run. Three marks where there were none. The status vocabulary gained a sixth value and an `EXCLUDED_FROM_NORMAL_RETRIEVAL` set covering five, so the field decides admissibility rather than weight; the supersede path writes `supersedesId` on the successor and retires the predecessor as `SUPERSEDED`, completing a correction lineage that was a column and three interface fields with no writer; `MemoryScope` arrived as a stored column filtered before scoring, restricting normal retrieval to the human's memories or the companion's own; and every negative retrieval test now seeds a matching control beside the excluded memory, so none of them can pass on an empty result. What did not move: `MemorySourceType.USER_CONFIRMED` still has no writer, and because `PENDING_CONFIRMATION` is now excluded from retrieval, a conflicting memory is withheld from every read and remains unresolvable. `CONTRADICTED` is named in three exclusion lists and assigned by nothing; `MemoryScope.PROJECT` is queried by the cognitive processor and written by nothing; `CONVERSATION` appears only in the enum. A reflection module and two phase test suites are new; the suite is 252 cases across 26 files.
 
