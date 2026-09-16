@@ -121,14 +121,14 @@ figure.</p>
               <strong>CodeAbra/iai-personal-memory-engine</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd" title="1043a41f025b64a2fea51634a56c1ee5bdf95edd">
+            <a class="meta-pill revision-pill" href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c" title="c400059ac860929936719fc70a66f57ee60c712c">
               <span>Analyzed revision</span>
-              <code>1043a41f…</code>
+              <code>c400059a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-03</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CodeAbra--iai-personal-memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -623,6 +623,35 @@ and <code>iai-mcp doctor</code>, <code>blob-quarantine</code>,
 <code>crypto rotate</code> and <code>recover-prior-key</code>. Adapting
 the engine to another host means writing a hook pair; the wrapper and
 socket are host-agnostic.</p>
+<p><strong>The append-only property is enforced rather than
+observed.</strong> Most stores in this corpus earn the mutation-audit
+mark because a search finds no <code>DELETE</code> against the table.
+Here the store refuses one: <code>HippoTable.delete()</code> raises
+<code>CanonicalSourceViolation</code> for the <code>events</code> table
+outright, because <em>"no legitimate path deletes events rows —
+tombstone instead,"</em> and the ban is unconditional since <em>"DELETE
+has no column concept to allow-list."</em></p>
+<p><code>update()</code> is the more careful half. Events content is
+write-once except the encryption envelope column, so a key rotation or a
+redaction ciphertext-swap can proceed while the content cannot be
+rewritten — and the check runs against a column-keyed mapping rather
+than the SQL, <em>"so this check is precise with zero SQL-parsing
+fragility."</em> The direction is what matters: <em>"an unknown column
+fails closed, so a new content column stays protected until deliberately
+added"</em> to the allow-list. Adding a column cannot quietly open a
+hole.</p>
+<p>The guard then states what it does not cover, which is the part worth
+copying with it: the connection-layer regex elsewhere is <em>"a
+best-effort backstop for raw <code>_conn.execute</code> paths that
+bypass this class entirely -- it does not claim completeness."</em></p>
+<p><strong>And a derived layer that runs ahead of its source is a hard
+failure.</strong> <code>watermark_fence.py</code> compares the episodic
+sidecar's <code>source_watermark</code> against the consolidation and
+session-pack watermarks. Lag is graded — current, lagging, or never run
+— but the inverse is not: derived ahead of source is a <em>"hard-FAIL,
+independent of any threshold."</em> A summary that claims to know more
+than the record it was built from is not a staleness problem to be
+tuned; it is an impossibility, and the fence treats it as one.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Provenance and audit.</strong> Per-row provenance lists and
@@ -872,6 +901,22 @@ ls CITATION*
 find tests -name &#39;test_*.py&#39; | wc -l
 grep -rh &#39;^def test_\|^    def test_&#39; tests | wc -l</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c"><code class="commit-id" title="c400059ac860929936719fc70a66f57ee60c712c">c400059a…</code></a>
+— re-read at a commit dated 2026-09-16, 7 commits past the previous pin,
+across 14,109 added lines. All three marks re-tested and held, and the
+mutation audit is better evidenced than it was: the store now refuses a
+deletion of an <code>events</code> row rather than merely never
+performing one, and <code>update()</code> restricts events content to
+the encryption envelope column with an allow-list that fails closed on
+an unknown column. The guard states its own limit — the connection-layer
+regex covering raw execute paths <em>"does not claim completeness."</em>
+<code>watermark_fence.py</code> is new and treats a derived layer
+running ahead of its source as a hard failure independent of any
+threshold, while grading ordinary lag. Screened before reading, from a
+full clone: one auto-run surface, four build-time execution points, two
+unpinned dependency surfaces and two dependency files inside the
+seven-day cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-03</strong> — <a
 href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd"><code class="commit-id" title="1043a41f025b64a2fea51634a56c1ee5bdf95edd">1043a41f…</code></a>
 — 38 commits on, at release 3.0.8. Screened before reading: <strong>1

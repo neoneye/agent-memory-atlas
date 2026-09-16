@@ -7,15 +7,15 @@ page_kind: system
 source_name: "PrimeIntellect-ai/prime-agent"
 source_url: https://github.com/PrimeIntellect-ai/prime-agent
 archive_name: "PrimeIntellect-ai--prime-agent"
-revision: 9bc00557489020e4dc981bef3111cb651c5955e7
-revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7
-analyzed_at: 2026-08-25
+revision: 66abc2a604fc42a220292a1ca4cf33ee60cb5733
+revision_url: https://github.com/PrimeIntellect-ai/prime-agent/commit/66abc2a604fc42a220292a1ca4cf33ee60cb5733
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "session listing for resume and branch, not the harness store | packages/coding-agent/src/core/session-manager.ts:739 | `sessionHeaderMatchesCwd` filters stored sessions against the caller's working directory before listing them for resume or branch, so a session recorded under another directory is not offered. The harness store is scoped differently and more weakly — see section 7 on what `applyRefinementProposal` does and does not check | unknown"
+  scope_enforced: "session listing for resume and branch, not the harness store | packages/coding-agent/src/core/session-manager.ts:882, :899 | `sessionHeaderMatchesCwd` filters stored sessions against the caller's working directory before listing them for resume or branch, so a session recorded under another directory is not offered. The harness store is scoped differently and more weakly — see section 7 on what `applyRefinementProposal` does and does not check | unknown"
   audit_log: "the refinement history, which records refused edits as well as applied ones | packages/coding-agent/src/core/refinement/refinement.ts:716 (`applyRefinementProposal`), `appendGlobalRefinement` writing `harness/refinements.jsonl` | every edit in a proposal lands in `appliedEdits` whether or not it took: an applied edit carries its `before` snapshot, and a refused one carries `applied: false` and an `error` naming the reason — a validation failure, `entry not found`, `entry already exists`, or `entry changed during refinement planning`, which is a compare-and-swap against the baseline snapshot. The whole record is appended, so the history holds what the harness declined to become as well as what it became | unknown"
   negative_eval: "conversation compaction, not memory retrieval | packages/coding-agent/test/compaction.test.ts | assertion that messagesToSummarize excludes the earlier summary | packages/coding-agent/test/compaction.test.ts"
 matrix:
@@ -528,6 +528,8 @@ asking.
   `compaction.test.ts`, `builtin-skills.test.ts`.
 
 ## History
+
+**2026-09-16** — [`66abc2a604fc42a220292a1ca4cf33ee60cb5733`](https://github.com/PrimeIntellect-ai/prime-agent/commit/66abc2a604fc42a220292a1ca4cf33ee60cb5733) — re-read at a commit dated 2026-09-16, 204 commits past the previous pin. All three marks re-tested and held. `sessionHeaderMatchesCwd` moved to `session-manager.ts:882` and is still applied before a session is offered for resume or branch. The refinement notice now prints each applied edit in a digest notation carrying the scope it touched — `action kind [scope:id] title: content` — with rollbacks printed through their own summaries, so the record a person reads names the scope of every edit rather than only the edit. Screened before reading, from a full clone: no auto-run surface, seven build-time execution points, 21 unpinned dependency surfaces and twelve dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-08-25** — [`9bc00557489020e4dc981bef3111cb651c5955e7`](https://github.com/PrimeIntellect-ai/prime-agent/commit/9bc00557489020e4dc981bef3111cb651c5955e7) — re-pinned six commits on. Screened again before reading: no auto-run surface, seven build-time execution surfaces, twenty-one unpinned surfaces and eight files inside the seven-day cooldown, plus a `.husky/pre-commit` payload that is inert until something points `core.hooksPath` at it; nothing was installed and nothing was run. Marks unchanged at `scope_enforced`, `audit_log` and `negative_eval`. The diff touches model catalogs, ACP quiescence, an IPython cell highlighter and the RLM depth default; `git diff --stat` over `src/core/refinement/` and `session-manager.ts` is empty, so every mechanism this report describes is byte-identical to the previous pin and was not re-derived.
 

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "infiniflow/ragflow"
 source_url: https://github.com/infiniflow/ragflow
 archive_name: "infiniflow--ragflow"
-revision: 880876f60ff8c30e023e42360d13688a0a021fdf
-revision_url: https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf
-analyzed_at: 2026-09-01
+revision: 7bc159d64e565d7fa93cd56b866772dad66edf31
+revision_url: https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, human_review, negative_eval"
 stack_storage: "elastic, redis, postgres"
 stack_retrieval: "lexical, vector"
@@ -553,6 +553,21 @@ another agent at this is a matter of `POST /messages` and `GET /messages/search`
 What does not port is the extraction policy, which lives entirely in the memory
 row.
 
+**A caller may attribute a message to someone else, but only one kind of caller
+can.** The message endpoint sets `effective_user_id = current_user.id` and then
+consults a client-supplied `user_id` *only* when `g.auth_type` is `AUTH_API` —
+so a server-side principal holding an API key can record a message on behalf of
+an end user, and a session-authenticated browser caller cannot. The override is
+a delegation with a gate, not a parameter anyone can send.
+
+What it logs is the better half. The comment states the ambiguity it is
+resolving — *"[t]he stored subject alone cannot say which path ran, since a
+client may send the principal's own id"* — so the line records whether the
+subject came from the client or the principal, and explicitly not the value:
+*"[r]ecord the decision, never the id, which identifies an end user."* The
+provenance of an attribution is kept while the identifier that would make the
+log itself a personal record is left out.
+
 ## 9. Reliability, Safety, and Trust
 
 **Provenance.** An entry knows the agent, the session, the optional user, and —
@@ -846,5 +861,7 @@ rg -n 'Skip\(|t.Skip' internal/service/memory_message_test.go
 ```
 
 ## History
+
+**2026-09-16** — [`7bc159d64e565d7fa93cd56b866772dad66edf31`](https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31) — re-read at a commit dated 2026-09-16, 444 commits past the previous pin. All three marks re-tested and held; the tenant predicate in `memory_api_service.py` is unchanged, admitting a memory only when its `tenant_id` is the caller's own or one they have joined. The addition worth recording is on the message endpoint: a client-supplied `user_id` is honoured only when the request authenticated as an API key, so attribution on behalf of an end user is a delegation available to a server-side principal and to nobody else — and the line that records it logs which path ran rather than the identifier, on the stated ground that the stored subject alone cannot distinguish them and that the id *"identifies an end user."* Screened before reading, from a clone deepened past the pin: one auto-run surface, 36 build-time execution points, eight unpinned dependency surfaces and eleven dependency files inside the seven-day cooldown — the shape of a large monorepo rather than a finding about the memory code. Nothing was installed, built or run.
 
 **2026-09-01** — [`880876f60ff8c30e023e42360d13688a0a021fdf`](https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf) — first reading, at 8,924 commits and 5,932 files since 12 December 2023, on a commit dated 1 September 2026. Screened before anything was read: **1 auto-run surface** (`.github/copilot-instructions.md` — a stale template still containing `(fill)` placeholders, an `app/` layout this repository does not have and a `requirements.txt` that does not exist in a tree managed by `pyproject.toml` and `uv.lock`), **36 build-time execution surfaces, 8 unpinned surfaces, and 9 files inside the seven-day cooldown**, `go.mod` and `go.sum` among them, changed the day of reading. Nothing from the checkout was executed in consequence: no `docker`, no `docker compose`, no `uv`, no `pip`, no `make`, no `go build`, no `go test`, no `npm`, and no script under `scripts/` or `bin/`. Every finding here comes from reading files and from `git log`. `AGENTS.md` and `CLAUDE.md` — the latter a symlink to the former — are addressed to a reading agent and open by telling it how to treat the codebase; both were read as data, neither directed this review, and their claims were checked against the tree rather than repeated. Scope was settled before writing: the retrieval-augmented-generation half of this repository is a document index and is not what the report covers; the Memory feature added on 10 December 2025 is. Three marks: `scope_enforced` on an accessible-id set resolved before the query and a `memory_id` predicate overwritten inside all four backend adapters, `human_review` on a Messages page whose `Enable` switch and `Forget` action both change what retrieval returns, and `negative_eval` on two Go cases asserting another tenant's memory never reaches the doc-engine filter over a fixture that seeds it. `tombstone`, `trust_state`, `bitemporal` and `audit_log` were each examined and withheld — `status` is a two-valued switch labelled `Enable`, and `valid_at` is the only clock on a message document. Four mechanisms were traced from the field back to every assignment rather than from the symbol to its callers, and reported as unwired: `storage_type: graph`, `invalid_at`, `zone_id`, and the Go server's `memory_size` and `forgetting_policy`.

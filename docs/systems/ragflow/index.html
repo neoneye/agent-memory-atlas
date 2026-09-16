@@ -120,14 +120,14 @@ the Go server never performs.</p>
               <strong>infiniflow/ragflow</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf" title="880876f60ff8c30e023e42360d13688a0a021fdf">
+            <a class="meta-pill revision-pill" href="https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31" title="7bc159d64e565d7fa93cd56b866772dad66edf31">
               <span>Analyzed revision</span>
-              <code>880876f6…</code>
+              <code>7bc159d6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-01</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/infiniflow--ragflow" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -824,6 +824,22 @@ is thin, so pointing another agent at this is a matter of
 <code>POST /messages</code> and <code>GET /messages/search</code>. What
 does not port is the extraction policy, which lives entirely in the
 memory row.</p>
+<p><strong>A caller may attribute a message to someone else, but only
+one kind of caller can.</strong> The message endpoint sets
+<code>effective_user_id = current_user.id</code> and then consults a
+client-supplied <code>user_id</code> <em>only</em> when
+<code>g.auth_type</code> is <code>AUTH_API</code> — so a server-side
+principal holding an API key can record a message on behalf of an end
+user, and a session-authenticated browser caller cannot. The override is
+a delegation with a gate, not a parameter anyone can send.</p>
+<p>What it logs is the better half. The comment states the ambiguity it
+is resolving — <em>"[t]he stored subject alone cannot say which path
+ran, since a client may send the principal's own id"</em> — so the line
+records whether the subject came from the client or the principal, and
+explicitly not the value: <em>"[r]ecord the decision, never the id,
+which identifies an end user."</em> The provenance of an attribution is
+kept while the identifier that would make the log itself a personal
+record is left out.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Provenance.</strong> An entry knows the agent, the session,
@@ -1159,6 +1175,24 @@ rg -in &#39;arxiv|bibtex|@article|@misc|citation|doi:&#39; README.md docs/
 ls CITATION*
 rg -n &#39;Skip\(|t.Skip&#39; internal/service/memory_message_test.go</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31"><code class="commit-id" title="7bc159d64e565d7fa93cd56b866772dad66edf31">7bc159d6…</code></a>
+— re-read at a commit dated 2026-09-16, 444 commits past the previous
+pin. All three marks re-tested and held; the tenant predicate in
+<code>memory_api_service.py</code> is unchanged, admitting a memory only
+when its <code>tenant_id</code> is the caller's own or one they have
+joined. The addition worth recording is on the message endpoint: a
+client-supplied <code>user_id</code> is honoured only when the request
+authenticated as an API key, so attribution on behalf of an end user is
+a delegation available to a server-side principal and to nobody else —
+and the line that records it logs which path ran rather than the
+identifier, on the stated ground that the stored subject alone cannot
+distinguish them and that the id <em>"identifies an end user."</em>
+Screened before reading, from a clone deepened past the pin: one
+auto-run surface, 36 build-time execution points, eight unpinned
+dependency surfaces and eleven dependency files inside the seven-day
+cooldown — the shape of a large monorepo rather than a finding about the
+memory code. Nothing was installed, built or run.</p>
 <p><strong>2026-09-01</strong> — <a
 href="https://github.com/infiniflow/ragflow/commit/880876f60ff8c30e023e42360d13688a0a021fdf"><code class="commit-id" title="880876f60ff8c30e023e42360d13688a0a021fdf">880876f6…</code></a>
 — first reading, at 8,924 commits and 5,932 files since 12 December

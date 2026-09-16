@@ -7,9 +7,9 @@ page_kind: system
 source_name: "CodeAbra/iai-personal-memory-engine"
 source_url: https://github.com/CodeAbra/iai-personal-memory-engine
 archive_name: "CodeAbra--iai-personal-memory-engine"
-revision: 1043a41f025b64a2fea51634a56c1ee5bdf95edd
-revision_url: https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd
-analyzed_at: 2026-09-03
+revision: c400059ac860929936719fc70a66f57ee60c712c
+revision_url: https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c
+analyzed_at: 2026-09-16
 capabilities: "audit_log, human_review, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector, graph"
@@ -460,6 +460,34 @@ The person's surfaces are BrainView — search, pin, fade, rescue, teach a file
 `crypto rotate` and `recover-prior-key`. Adapting the engine to another host
 means writing a hook pair; the wrapper and socket are host-agnostic.
 
+**The append-only property is enforced rather than observed.** Most stores in
+this corpus earn the mutation-audit mark because a search finds no `DELETE`
+against the table. Here the store refuses one: `HippoTable.delete()` raises
+`CanonicalSourceViolation` for the `events` table outright, because *"no
+legitimate path deletes events rows — tombstone instead,"* and the ban is
+unconditional since *"DELETE has no column concept to allow-list."*
+
+`update()` is the more careful half. Events content is write-once except the
+encryption envelope column, so a key rotation or a redaction ciphertext-swap can
+proceed while the content cannot be rewritten — and the check runs against a
+column-keyed mapping rather than the SQL, *"so this check is precise with zero
+SQL-parsing fragility."* The direction is what matters: *"an unknown column
+fails closed, so a new content column stays protected until deliberately added"*
+to the allow-list. Adding a column cannot quietly open a hole.
+
+The guard then states what it does not cover, which is the part worth copying
+with it: the connection-layer regex elsewhere is *"a best-effort backstop for
+raw `_conn.execute` paths that bypass this class entirely -- it does not claim
+completeness."*
+
+**And a derived layer that runs ahead of its source is a hard failure.**
+`watermark_fence.py` compares the episodic sidecar's `source_watermark` against
+the consolidation and session-pack watermarks. Lag is graded — current, lagging,
+or never run — but the inverse is not: derived ahead of source is a *"hard-FAIL,
+independent of any threshold."* A summary that claims to know more than the
+record it was built from is not a staleness problem to be tuned; it is an
+impossibility, and the fence treats it as one.
+
 ## 9. Reliability, Safety, and Trust
 
 **Provenance and audit.** Per-row provenance lists and an events table that
@@ -689,6 +717,8 @@ grep -rh '^def test_\|^    def test_' tests | wc -l
 ```
 
 ## History
+
+**2026-09-16** — [`c400059ac860929936719fc70a66f57ee60c712c`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c) — re-read at a commit dated 2026-09-16, 7 commits past the previous pin, across 14,109 added lines. All three marks re-tested and held, and the mutation audit is better evidenced than it was: the store now refuses a deletion of an `events` row rather than merely never performing one, and `update()` restricts events content to the encryption envelope column with an allow-list that fails closed on an unknown column. The guard states its own limit — the connection-layer regex covering raw execute paths *"does not claim completeness."* `watermark_fence.py` is new and treats a derived layer running ahead of its source as a hard failure independent of any threshold, while grading ordinary lag. Screened before reading, from a full clone: one auto-run surface, four build-time execution points, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-03** — [`1043a41f025b64a2fea51634a56c1ee5bdf95edd`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/1043a41f025b64a2fea51634a56c1ee5bdf95edd) — 38 commits on, at release 3.0.8. Screened before reading: **1 auto-run surface** (`.claude-plugin/marketplace.json`, a Claude Code plugin manifest present since 29 July 2026), 4 build-time execution paths (`setup.py`, the Tauri `build.rs`, two `conftest.py`), 2 unpinned manifests (`mcp-wrapper/package.json` behind a lockfile, `rust/iai_mcp_native/pyproject.toml` with none), every lockfile at least 13 days old; nothing installed, built or run. The mechanism moved little — 3.0.x fixed two resurrection paths, a torn snapshot, a `last_reviewed` that recall never stamped and a per-turn refresh that re-injected the whole brief — and the reading moved a great deal, because the previous entry was written from the README and the file index and not from the schema or the results directory. Four published claims were wrong at the previous pin and are corrected in the body: the head-to-head was described as run in one harness with MemPalace, where `BENCHMARKS.md` said at both pins that the baseline was a published number not re-run and the harness has no competitor mode; the report said no trust, provenance, tombstone or epistemic field existed, where `s5_trust_score`, `provenance_json`, `tombstoned_at` and `labile_until` were in the schema and `valid_to` was derived on the read path; it said the committed JSON covered only embedder comparisons, where seven contradiction-benchmark runs with environment tables were in `bench/results/`; and it withheld `audit_log` from an insert-only, encrypted `events` table that records every forgetting-side mutation. Direction: the benchmark posture was overstated and the mechanisms understated. One mark added, `audit_log`; `stack_source` promoted from seeded to reviewed with a lexical arm added and the native engine named. The B-classical gate in the two latest committed runs reads FAIL, which neither README nor `BENCHMARKS.md` mentions.
 
