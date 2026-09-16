@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 556 reports.</strong></p>
+<p><strong>This page covers all 557 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20963,6 +20963,63 @@ somebody has to remember, or your audit's actor field is filled in by
 the actor.</li>
 <li>Do not copy when: you need the store to say a memory has gone stale.
 Two marks: scope enforced, mutation audit.</li>
+</ul>
+<h3 id="cogz"><a href="../systems/cogz/"><code>cogz</code></a></h3>
+<ul>
+<li>Best idea: <strong>the status vocabulary is a state machine with a
+terminal value, written out as a transition table rather than as a
+convention.</strong> <code>src/storage/status.rs</code> fixes the legal
+moves in code and in its own doc comment — active to stale, rejected or
+superseded; stale back to active; rejected and superseded onward to
+pruned; pruned terminal — and <code>transition_status</code> returns a
+typed <code>IllegalTransition</code> naming both ends, with a unit test
+asserting every exit from <code>pruned</code> fails. The read paths then
+honour the column broadly, which is the half most systems skip: the
+batch fetch and entity query filter <code>status = 'active'</code>, the
+usage sweeps and doctor checks exclude <code>status != 'pruned'</code>,
+and KNN candidates are dropped by status before they can "consume KNN
+slots" rather than after, so a filtered result set does not silently
+shrink.</li>
+<li>Biggest risk: <strong>the lattice guards a door almost nothing goes
+through.</strong> <code>transition_status</code> has exactly one caller,
+<code>update_status</code>, and that has exactly one production caller,
+which passes the literal <code>"stale"</code> — a transition the machine
+permits from <code>active</code> unconditionally, so the guard never
+refuses anything actually attempted. The canonical record is markdown,
+and <code>EntityFile::parse</code> validates a hand-edited
+<code>status:</code> against <code>is_valid_status</code> — membership
+in the five-word list — then hands it to <code>update_entity</code>,
+which writes <code>status = ?6</code> with no reference to the table. A
+file edit can move an entity from active straight to pruned, or back out
+of the state documented as terminal. No production code writes
+<code>rejected</code> at all, so the only way to reject a claim is that
+unchecked door, and dedup then declines to consult the verdict by
+design: the candidate set is restricted to <code>active</code> on the
+stated ground that "a new observation that matches a rejected one is not
+a duplicate", so a rejected claim can be recorded again verbatim with
+nothing to object.</li>
+<li>Most reusable component: the delivery instrumentation.
+<code>deliveries</code> records each batch shown to the agent and
+<code>entity_usage</code> records <code>pending</code>, <code>hit</code>
+or <code>miss</code> per entity, with misses assigned when the next
+delivery boundary closes — two small tables that answer the question
+most memory systems cannot, whether any of the assembled context was
+read. The schema comment keeps it honest about its own standing: both
+tables are "[d]erived state ... disposable and rebuilt from agent
+activity, never from canonical files". No ranking path consumes the
+signal yet.</li>
+<li>Maturity impression: MIT, Rust, version 0.1.5, 31,088 lines over 145
+files, one binary with a CLI and an MCP server over stdio offering
+thirteen tools, markdown under <code>.cogz/</code> as the record with a
+rebuildable SQLite projection carrying FTS5 and a vector extension, plus
+lifecycle hooks, deferred consolidation and a secret scanner that
+refuses a write. No auto-run surface and two dependency files inside the
+cooldown at this pin.</li>
+<li>Study when: you have written an epistemic state machine and want to
+know whether every write path reaches it.</li>
+<li>Do not copy when: a rejected claim must stay rejected against the
+next identical write. Three marks: trust state, mutation audit, negative
+eval.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Rust memory for
+coding agents whose entity status is a documented state machine with a
+terminal value, enforced by a function called once in production and
+bypassed entirely by the markdown frontmatter a person edits.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CogZ — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Rust memory
+for coding agents whose entity status is a documented state machine with
+a terminal value, enforced by a function called once in production and
+bypassed entirely by the markdown frontmatter a person edits.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CogZ — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Rust memory
+for coding agents whose entity status is a documented state machine with
+a terminal value, enforced by a function called once in production and
+bypassed entirely by the markdown frontmatter a person edits.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CogZ — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CogZ",
+      "description": "A local-first Rust memory for coding agents whose entity status is a documented state machine with a terminal value, enforced by a function called once in production and bypassed entirely by the markdown frontmatter a person edits.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The status lattice is validated on the one
+path that only ever writes <code>stale</code></p>
+          <h1>CogZ</h1>
+          <p class="document-deck">A local-first Rust memory for coding
+agents whose entity status is a documented state machine with a terminal
+value, enforced by a function called once in production and bypassed
+entirely by the markdown frontmatter a person edits.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/balaianu/CogZ">
+              <span>Source</span>
+              <strong>balaianu/CogZ</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5" title="3b8486d8fae8bb5e13922a5246ea5ed161bbdff5">
+              <span>Analyzed revision</span>
+              <code>3b8486d8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/balaianu--CogZ" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>balaianu--CogZ</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CogZ is "[l]ocal-first, code-aware engineering cognition for AI
+coding agents" — MIT, Rust, version 0.1.5, 31,088 lines across 145 files
+in <code>src/</code>, giving "a coding agent persistent memory,
+contextual retrieval, and continuous cognition about a software
+repository — all running locally on your machine, no cloud services
+required."</p>
+<p><strong>The mechanism to take away is the two doors into the status
+column.</strong> CogZ does something this corpus rewards: it writes its
+epistemic vocabulary down as an enforceable machine rather than a set of
+strings. <code>src/storage/status.rs</code> opens with the lattice as a
+diagram in its own doc comment:</p>
+<blockquote>
+<pre class="text"><code>active    → stale | rejected | superseded
+stale     → active
+rejected  → pruned
+superseded→ pruned
+pruned    → (terminal)</code></pre>
+</blockquote>
+<p><code>transition_status</code> implements exactly that table and
+returns a typed <code>StorageError::IllegalTransition</code> naming the
+attempted move. A unit test asserts that every target out of
+<code>pruned</code> is an error. This is the real thing, and it is rarer
+than it should be.</p>
+<p><strong>The question a state machine has to answer is which writes go
+through it.</strong> <code>transition_status</code> has exactly one
+caller in the whole tree: <code>update_status</code>
+(<code>src/storage/crud.rs:220</code>), whose own doc comment describes
+it as the "[u]pdate only the status field (frontmatter-only change)"
+path that "[v]alidates the transition through the state machine."
+<code>update_status</code> in turn has exactly one production caller —
+<code>mark_deleted_as_stale</code> at
+<code>src/files/sync_ops.rs:156</code> — which passes the literal
+<code>"stale"</code>, guarding a transition the machine allows from
+<code>active</code> in every case.</p>
+<p>Every other write of a status goes around it. The canonical record in
+CogZ is the markdown file, and <code>EntityFile::parse</code> reads the
+frontmatter's <code>status:</code> value and validates it — but against
+membership, not motion:</p>
+<blockquote>
+<p>"invalid status '{}': must be one of active, stale, superseded,
+rejected, pruned"</p>
+</blockquote>
+<p>That check is <code>is_valid_status</code>, a lookup in
+<code>VALID_STATUSES</code>. The parsed value is copied into an
+<code>Entity</code> at <code>src/files/sync_ops.rs:113</code> and handed
+to <code>insert_entity</code> or <code>update_entity</code>, and
+<code>update_entity</code> writes <code>status = ?6</code> alongside
+title and content with no reference to the lattice. Editing a file can
+therefore move an entity from <code>active</code> directly to
+<code>pruned</code>, or lift one back out of the state the machine
+documents as terminal. The rule is spelled out correctly in the module
+that owns it and is not consulted on the path the product actually
+routes a person down.</p>
+<p><strong>The <code>rejected</code> value shows the gap at full
+width.</strong> Searching the tree for a production write of
+<code>"rejected"</code> returns nothing: every occurrence is in a test
+fixture or in the transition table itself. The status exists, the events
+vocabulary reserves <code>observation_rejected</code> for it, the prune
+path treats <code>rejected</code> as one of the two states eligible for
+tombstoning — and no shipped surface, CLI or MCP, ever sets it. The only
+way to reject a claim is to open the markdown and type the word, through
+the door that does not check.</p>
+<p><strong>What happens next is the part worth copying, in the
+negative.</strong> Having a rejected verdict is useful only if something
+consults it later. CogZ's deduplication explicitly declines to, and says
+so:</p>
+<blockquote>
+<p>"Only compare against active entities. Stale, rejected, superseded,
+and pruned entities should not trigger duplicate warnings — a new
+observation that matches a rejected one is not a duplicate."</p>
+</blockquote>
+<p>That is a coherent position about <em>warnings</em> — you do not want
+a resurfacing claim flagged as redundant with a corpse. But it is also
+the exact inverse of a tombstone, and it is the reason this report
+withholds that mark. The rejected value is keyed to a row, not to its
+content, and no write path consults it, so a claim a person threw out
+can be recorded again verbatim and nothing in the system registers that
+it has been here before. The judgement is not retained where a judgement
+has to live: on the next attempt to write the same thing.</p>
+<p><strong>The event log, by contrast, keeps more than it needs
+to.</strong> <code>events</code> is append-only in the strict sense —
+<code>record_event</code> holds the only INSERT, and no DELETE against
+the table exists anywhere in the tree — and the edit events carry the
+prior text in their payload as <code>old_content</code>. That makes it a
+genuine mutation record rather than a notification stream. It also means
+the cascade delete has a seam: when a pruned tombstone exceeds its
+retention limit, <code>delete_entity_cascade</code> runs
+<code>UPDATE events SET entity_id = NULL</code> to satisfy the foreign
+key and then deletes the entity, so the event row survives with its
+<code>old_content</code> intact and its link to the entity erased. The
+body text outlives the deletion; only the label saying whose it was goes
+away.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>CogZ is a filesystem-of-record with a disposable index, and almost
+every question about it resolves by asking which of the two is being
+written.</p>
+<p>The markdown files under <code>.cogz/</code> are canonical. The
+SQLite database is a projection that <code>cogz reset</code> throws away
+and rebuilds. This is a good split, and CogZ is disciplined about it in
+the places where it matters most: the usage tables are annotated as
+"[d]erived state ... disposable and rebuilt from agent activity, never
+from canonical files," and the code entities derived from source are
+kept separate from the file-backed ones.</p>
+<p>The trouble is that validation lives on the projection side while
+authorship lives on the canonical side. The state machine is a
+storage-layer function; the person edits a file. Between them sits a
+parser that checks spelling and a generic upsert that checks
+nothing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — two write paths reach the same status column — the guarded one is called once in production and only ever writes stale, while the path a person edits is checked for membership in the vocabulary and never for a legal transition</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: two write paths reach the same status column — the guarded one is called once in production and only ever writes stale, while the path a person edits is checked for membership in the vocabulary and never for a legal transition
+flowchart TB
+    LATTICE[&quot;src/storage/status.rs — the documented lattice:&lt;br/&gt;active to stale, rejected, superseded&lt;br/&gt;stale back to active&lt;br/&gt;rejected and superseded to pruned&lt;br/&gt;pruned is TERMINAL&quot;]
+    LATTICE --&gt; TS[&quot;transition_status(current, next)&lt;br/&gt;returns IllegalTransition naming both ends&quot;]
+    TS --&gt; US[&quot;update_status — crud.rs:220&lt;br/&gt;THE ONLY CALLER of transition_status&quot;]
+    US --&gt; ONE[&quot;one production caller: sync_ops.rs:156&lt;br/&gt;passes the literal &#39;stale&#39;&quot;]
+    ONE -.-&gt;|&quot;a transition the machine permits&lt;br/&gt;from active unconditionally&quot;| MOOT[&quot;the guard never refuses anything&lt;br/&gt;that is actually attempted&quot;]
+
+    HUMAN[&quot;a person edits .cogz/observations/x.md&lt;br/&gt;and types status: rejected&quot;] --&gt; PARSE{&quot;EntityFile::parse — entities.rs:229-242&quot;}
+    PARSE --&gt;|&quot;is_valid_status: is the word&lt;br/&gt;one of the five?&quot;| OK[&quot;accepted&quot;]
+    PARSE -.-&gt;|&quot;transition_status is NEVER called here&quot;| GAP[&quot;no check that the move is legal&quot;]
+    OK --&gt; EF[&quot;entity_from_file — sync_ops.rs:113&lt;br/&gt;status copied straight across&quot;]
+    EF --&gt; UE[&quot;update_entity / insert_entity&lt;br/&gt;UPDATE entities SET ... status = ?6&quot;]
+    UE --&gt; COL[(&quot;entities.status&lt;br/&gt;active · stale · superseded · rejected · pruned&quot;)]
+    US --&gt; COL
+    GAP -.-&gt;|&quot;active straight to pruned, or back out&lt;br/&gt;of the state declared terminal&quot;| COL
+
+    COL --&gt; READS[&quot;the reads DO honour the column:&lt;br/&gt;crud_batch.rs:33, :80 · query.rs:291, :301&lt;br/&gt;usage.rs:186 · doctor/checks.rs:293 · KNN filter&quot;]
+    READS --&gt; MARK[&quot;trust_state — earned on the read path&quot;]
+
+    REJ[&quot;no production code writes &#39;rejected&#39;&lt;br/&gt;every occurrence is a test fixture&quot;] -.-&gt;|&quot;the only way to reject a claim&lt;br/&gt;is the unchecked door&quot;| HUMAN
+    COL --&gt; DEDUP{&quot;check_duplicate — dedup.rs:72-76&quot;}
+    DEDUP --&gt;|&quot;candidate set restricted to active:&lt;br/&gt;&#39;a new observation that matches&lt;br/&gt;a rejected one is not a duplicate&#39;&quot;| NOTOMB[&quot;the rejected value is NOT consulted on write&quot;]
+    NOTOMB -.-&gt;|&quot;a rejected claim can be recorded again&lt;br/&gt;verbatim and nothing objects&quot;| WITHHELD[&quot;no tombstone mark&quot;]
+    DEDUP --&gt; FLAG[&quot;dedup_flagged and duplicate_warning&quot;]
+    FLAG --&gt;|&quot;returned in the MCP response —&lt;br/&gt;entity_helpers.rs:176-178&quot;| AGENT[&quot;to the agent that just wrote the entity&quot;]
+    AGENT -.-&gt;|&quot;the reviewer is the writer&quot;| NOHR[&quot;no human_review mark&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/files/</code></td>
+<td>The canonical layer: markdown with YAML frontmatter, parsed into
+<code>EntityFile</code>, synced into SQLite</td>
+</tr>
+<tr>
+<td><code>src/storage/</code></td>
+<td>SQLite schema, migrations, CRUD, the status state machine,
+embeddings, and the events and usage tables</td>
+</tr>
+<tr>
+<td><code>src/search/</code></td>
+<td>Hybrid FTS5 and vector retrieval with graph expansion over the edges
+table</td>
+</tr>
+<tr>
+<td><code>src/context/</code></td>
+<td>Context-pack assembly: ranking, compression, and token
+budgeting</td>
+</tr>
+<tr>
+<td><code>src/consolidate/</code></td>
+<td>Deduplication, contradiction detection, observation-to-rule
+promotion, and duplicate merging</td>
+</tr>
+<tr>
+<td><code>src/mcp/</code></td>
+<td>Thirteen MCP tools over stdio — the agent's surface</td>
+</tr>
+<tr>
+<td><code>src/hooks/</code></td>
+<td>Lifecycle events from an agent harness, which drive delivery
+tracking and hit detection</td>
+</tr>
+<tr>
+<td><code>src/doctor/</code></td>
+<td>Integrity checks, the prune path, and the dead-weight report</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/storage/status.rs:16-38</code> —
+<code>transition_status</code>, the lattice in code.</li>
+<li><code>src/storage/crud.rs:220-243</code> —
+<code>update_status</code>, the only caller of the above.</li>
+<li><code>src/files/sync_ops.rs:156</code> — the only production call to
+<code>update_status</code>, passing <code>"stale"</code>.</li>
+<li><code>src/files/entities.rs:229-242</code> — frontmatter status
+parsed and checked for membership only.</li>
+<li><code>src/files/sync_ops.rs:113</code> — the file's status copied
+into the <code>Entity</code> bound for an unguarded upsert.</li>
+<li><code>src/storage/crud.rs:193-210</code> —
+<code>update_entity</code>, writing <code>status = ?6</code> with no
+transition check.</li>
+<li><code>src/storage/events.rs:78-90</code> —
+<code>record_event</code>, the single INSERT into the event log.</li>
+<li><code>src/files/events.rs:33-47</code> — the edit event that carries
+<code>old_content</code>.</li>
+<li><code>src/storage/crud_batch.rs:154-162</code> — the cascade delete
+that nulls <code>entity_id</code> and keeps the payload.</li>
+<li><code>src/consolidate/dedup.rs:72-76</code> — the candidate set
+restricted to <code>active</code>, with its rationale.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An entity is a markdown file with frontmatter carrying
+<code>id</code>, <code>title</code>, <code>type</code>,
+<code>status</code>, <code>created_at</code>, <code>updated_at</code>
+and <code>references</code>; anything else in the frontmatter is folded
+into a JSON <code>properties</code> column. Three file-backed types
+exist — observation, rule, knowledge — alongside code entities
+(function, class, file, module) derived from the source tree and managed
+by the index layer rather than by files.</p>
+<p>The SQLite mirror adds <code>content_hash</code> for change detection
+and the <code>status</code> column this report is largely about. Edges
+live in their own table; an FTS5 external-content table is kept in sync
+by insert, delete and update triggers. Time is single-axis:
+<code>created_at</code> and <code>updated_at</code> are write-time
+stamps, with no separate field for when a claim was true as distinct
+from when it was recorded, so no bitemporal mark applies.</p>
+<p>There is no scope key. Separation is one database per repository
+checkout, which is a reasonable choice for a local-first tool and is not
+a stored predicate any read path enforces, so no scope mark applies
+either.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is hybrid: FTS5 lexical search and vector KNN, combined and
+then expanded across the graph. Status filtering runs at every layer —
+the batch fetch and the entity query append
+<code>status = 'active'</code>, the usage and doctor sweeps exclude
+<code>status != 'pruned'</code>, and
+<code>src/storage/embeddings.rs:261</code> excludes by status before
+candidates "consume KNN slots," which is the right place for it:
+filtering after the nearest-neighbour cut would silently shrink the
+result set rather than fill it with live rows.</p>
+<p><code>graph_retrieve</code> takes the status filter as an explicit
+parameter, and <code>respects_status_filter</code> is the test that pins
+it. Context assembly then ranks, applies MMR for diversity, and
+compresses to a token budget.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Two checks run on every insert. Title matching compares against
+existing entities — case-insensitively, then fuzzily — and embedding
+similarity flags a duplicate above a configured cosine threshold. Both
+degrade gracefully: without an embedding model only the title check
+runs.</p>
+<p>The candidate set for both is capped, and the code says so honestly:
+<code>get_entities_by_type(conn, entity_type, Some("active"), 100)</code>,
+with a warning logged when the set hits the cap noting that "duplicates
+of older {entity_type} entities may be missed." That is a real scale
+limit stated plainly rather than hidden, and it belongs in any
+assessment of how much the dedup layer can be relied on.</p>
+<p>A secret scanner runs before the write and refuses it on a match,
+with the preview truncated to four characters so the refusal message
+does not itself leak the credential — a small detail done correctly.</p>
+<p>Consolidation runs deferred: supported observations are promoted to
+rules, confirmed duplicates merged with the loser marked
+<code>superseded</code> and carrying a <code>superseded_by</code>
+frontmatter field that graph expansion follows to reach the survivor.
+Knowledge is "flagged, not auto-merged (human-curated)," and rules are
+"surfaced for review, not auto-merged."</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Thirteen MCP tools cover recording observations, creating rules and
+knowledge, querying each type, search, context assembly, status,
+listing, consolidation and event capture. Lifecycle hooks are the other
+half: <code>session_start</code> and <code>prompt_submit</code> print a
+context pack for injection, <code>file_save</code> triggers a
+single-file reindex, <code>session_end</code> runs consolidation.</p>
+<p><code>post_tool_use</code> is where the usage loop closes.
+<code>detect_touched_entities</code> compares the tool's file path and
+result against what a pending delivery surfaced, and
+<code>record_hits</code> marks those rows <code>hit</code>. The comment
+there records a lesson worth repeating:</p>
+<blockquote>
+<p>"We no longer auto-create observation files for every tool use — that
+flooded <code>.cogz/observations/</code> with low-value entries. The
+agent decides what's salient via the <code>record_observation</code> MCP
+tool."</p>
+</blockquote>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The event log is the strongest instrument. It is append-only with a
+single writer, scoped deliberately to domain mutations rather than
+indexing operations, and its edit rows carry pre-images. The
+qualification is the cascade delete, which preserves the payload and
+nulls the entity link, so the retention limit that removes a pruned
+tombstone does not remove the text that tombstone was hiding.</p>
+<p>The usage instrumentation is the most interesting thing CogZ builds
+and the most under-used. <code>deliveries</code> records each batch
+shown to the agent; <code>entity_usage</code> records
+<code>pending</code>, <code>hit</code> or <code>miss</code> per entity,
+with misses assigned at the next delivery boundary. This is the
+measurement most memory systems in this corpus never take — whether the
+context they assembled was looked at. But no ranking path reads it. The
+signal terminates in the doctor's dead-weight report, which lists
+entities never delivered since a timestamp. The loop is instrumented and
+not closed, which is a defensible early-stage choice and worth knowing
+before assuming the system learns from delivery outcomes.</p>
+<p>The dedup and contradiction flags do not reach a person. They are
+returned in the MCP tool response at
+<code>src/mcp/entity_helpers.rs:176-178</code> to the agent that
+performed the write, so the entity that judges the duplicate is the
+entity that created it. No human_review mark follows: the test is on the
+approver, and here the approver is the writer.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests live beside the code as <code>#[cfg(test)]</code> modules and
+dedicated <code>*_tests.rs</code> files.
+<code>respects_status_filter</code> is the retrieval-level negative test
+described above, with its positive control. The status module tests the
+transition table directly, including that every move out of
+<code>pruned</code> fails. <code>fresh_db_has_all_tables</code> checks
+the migration chain end to end.</p>
+<p>What is missing is a test that the frontmatter path respects the
+lattice — which is unsurprising, because it does not. The state
+machine's tests assert the function behaves; nothing asserts that the
+function is the only way in.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>The status lattice is worth copying, and so is the lesson about where
+to put it. A transition table in a storage module is a description of
+intent; it becomes an invariant only when every write path is routed
+through it. If your canonical representation is a file a person edits,
+the parser is the enforcement point, and <code>is_valid_status</code> is
+the wrong check there — the right one takes the current value as well as
+the new one.</p>
+<p>The KNN status filter placement is a detail worth stealing outright:
+exclude by status before the nearest-neighbour cut, not after, so a
+filtered result set does not silently shrink.</p>
+<p>The delivery and usage tables are the cheapest honest instrument
+here. Recording <code>hit</code>, <code>miss</code> and
+<code>pending</code> per delivered entity costs two small tables and
+answers the question most memory systems cannot: was any of this read?
+Build it early, even if nothing consumes it yet.</p>
+<p>And the dedup cap warning is a model for how to state a limit. The
+code does not pretend the comparison is exhaustive; it logs that
+duplicates of older entities may be missed when the candidate set
+saturates.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should the frontmatter parser call <code>transition_status</code>
+against the current database value? That would make the lattice binding
+on the path people use, at the cost of rejecting hand-edits the parser
+currently accepts.</li>
+<li>What surface is intended to write <code>rejected</code>? The status,
+its event type and its prune eligibility are all built; only the
+producer is missing.</li>
+<li>Once a claim is rejected, should a later identical write be told?
+The current rationale for excluding rejected rows from dedup is sound
+for duplicate <em>warnings</em>, but it leaves no mechanism that notices
+a rejected claim returning.</li>
+<li>Will the usage outcomes feed ranking? The data is being collected in
+a shape that would support it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What lives there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/storage/status.rs</code></td>
+<td>The transition table, <code>VALID_STATUSES</code>, and their
+tests</td>
+</tr>
+<tr>
+<td><code>src/storage/crud.rs</code></td>
+<td>Entity insert, update, <code>update_status</code>, and counts</td>
+</tr>
+<tr>
+<td><code>src/storage/crud_batch.rs</code></td>
+<td>Batch fetch and update, tombstoning, cascade delete</td>
+</tr>
+<tr>
+<td><code>src/storage/events.rs</code></td>
+<td><code>EventType</code>, <code>record_event</code>, and event
+queries</td>
+</tr>
+<tr>
+<td><code>src/storage/usage.rs</code></td>
+<td>Deliveries, hits, misses, and the dead-weight query</td>
+</tr>
+<tr>
+<td><code>src/storage/schema.rs</code></td>
+<td>Tables, indexes, FTS5 triggers, and the migration chain</td>
+</tr>
+<tr>
+<td><code>src/files/entities.rs</code></td>
+<td>Frontmatter parsing and the <code>is_valid_status</code> check</td>
+</tr>
+<tr>
+<td><code>src/files/sync_ops.rs</code></td>
+<td>File-to-row sync and <code>mark_deleted_as_stale</code></td>
+</tr>
+<tr>
+<td><code>src/consolidate/dedup.rs</code></td>
+<td>Title and embedding duplicate detection</td>
+</tr>
+<tr>
+<td><code>src/consolidate/merge.rs</code></td>
+<td>Superseded marking via canonical frontmatter</td>
+</tr>
+<tr>
+<td><code>src/search/graph_retrieval_tests.rs</code></td>
+<td><code>respects_status_filter</code> and its positive control</td>
+</tr>
+<tr>
+<td><code>src/mcp/entity_helpers.rs</code></td>
+<td>The write path that returns dedup flags to the agent</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5"><code class="commit-id" title="3b8486d8fae8bb5e13922a5246ea5ed161bbdff5">3b8486d8…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: three files scanned, no auto-run surface,
+no build-time execution point and no unpinned dependency surface, with
+two dependency files inside the seven-day cooldown and
+<code>Cargo.lock</code> present. <code>AGENTS.md</code> is addressed to
+a reading agent and was recorded as data. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
