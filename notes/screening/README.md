@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 471 of 532 screened at the report's current pin.**
+**Progress: 472 of 533 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 199 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 284 |
-| Repositories with build-time execution (`EXEC`) | 346 |
+| Repositories with an auto-run surface (`RUNS`) | 200 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 285 |
+| Repositories with build-time execution (`EXEC`) | 347 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -60,6 +60,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`claude-mem-lite`](../../content/systems/claude-mem-lite.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`claude-self-reflect`](../../content/systems/claude-self-reflect.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json` |
 | [`claude-total-memory`](../../content/systems/claude-total-memory.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
+| [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `mcp.json`, `server.json` |

@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A persistent coding memory whose
+semantic-search context has the scope-enforcement flag removed by type
+so a caller cannot turn it off, and whose attribution layer refuses a
+causal claim without a preregistered randomized contrast.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="codemem — Agent Memory Atlas">
+    <meta property="og:description" content="A persistent coding memory
+whose semantic-search context has the scope-enforcement flag removed by
+type so a caller cannot turn it off, and whose attribution layer refuses
+a causal claim without a preregistered randomized contrast.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="codemem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A persistent coding memory
+whose semantic-search context has the scope-enforcement flag removed by
+type so a caller cannot turn it off, and whose attribution layer refuses
+a causal claim without a preregistered randomized contrast.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>codemem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "codemem",
+      "description": "A persistent coding memory whose semantic-search context has the scope-enforcement flag removed by type so a caller cannot turn it off, and whose attribution layer refuses a causal claim without a preregistered randomized contrast.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The flag that could disable the read
+boundary is typed out of the caller's reach</p>
+          <h1>codemem</h1>
+          <p class="document-deck">A persistent coding memory whose
+semantic-search context has the scope-enforcement flag removed by type
+so a caller cannot turn it off, and whose attribution layer refuses a
+causal claim without a preregistered randomized contrast.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kunickiaj/codemem">
+              <span>Source</span>
+              <strong>kunickiaj/codemem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kunickiaj/codemem/commit/6391c66b1d1ea9757ba9a984076bb2f15673a3b7" title="6391c66b1d1ea9757ba9a984076bb2f15673a3b7">
+              <span>Analyzed revision</span>
+              <code>6391c66b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kunickiaj--codemem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>kunickiaj--codemem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>codemem is "persistent coding memory across sessions, machines, and
+teammates" for OpenCode, Claude Code and Codex — MIT, TypeScript,
+375,155 lines across a dozen packages with 290 test files, local SQLite
+with FTS5 and <code>sqlite-vec</code>, optional peer-to-peer sync, and
+automatic context injection. Its opening line is the problem statement:
+"The code is still there. The reasoning usually isn't."</p>
+<p>Two mechanisms are enforced by the type system rather than by
+discipline, and they are why this report exists.</p>
+<p><strong>The flag that could disable the read boundary is removed from
+the caller's type.</strong> Scope visibility is an opt-in filter-context
+flag, documented as opt-in "so low-level filter unit tests and
+non-memory callers can keep using the pure filter builder, while
+store/search paths can make scope visibility a hard invariant". Every
+real read path passes <code>true</code> — search, automatic recall, the
+store, export/import, the vector path, the viewer's stats routes.
+Caller-supplied <code>include_scope_ids</code> and
+<code>exclude_scope_ids</code> are "an explicit narrowing layer … always
+intersected with the central scope-visibility gate", so an argument can
+shrink the visible set and never grow it.</p>
+<p>Then the part worth copying:</p>
+<pre class="ts"><code>// Deliberately omits `enforceScopeVisibility` so semantic callers can never
+// disable the local read boundary — scopeVisibleFilterContext() always forces
+// it on below.
+export type SemanticSearchScopeContext = Omit&lt;OwnershipFilterContext, &quot;enforceScopeVisibility&quot;&gt;;</code></pre>
+<p>The semantic-search entry point is the one a caller constructs a
+context for, and the field that could turn the boundary off is
+subtracted from that type. The function sets it to <code>true</code>
+itself. A reviewer does not have to notice a missing flag, because the
+flag cannot be written.</p>
+<p><strong>One catalog for every tool-exposed filter, with the failure
+direction named.</strong> The filter schema is "[s]ingle source of truth
+for the filter keys and value types accepted by both memory tool
+surfaces", pinned to the MCP tool schemas "by an exact parity test", and
+the reason is stated rather than assumed:</p>
+<blockquote>
+<p>"Keeping one catalog means a filter added here cannot be silently
+omitted from either surface, so exclusion filters can never fail open
+and return broader results than the client requested."</p>
+</blockquote>
+<p>An exclusion filter a surface forgot to implement does not error — it
+returns more than was asked for. Naming that is what makes the parity
+test worth maintaining.</p>
+<p><strong>And then there is the attribution layer, which is unlike
+anything else in this corpus.</strong> Retrieval attempts and exposures
+are ledgered; outcomes carry evidence; an assessment labels a memory's
+impact <code>helpful | irrelevant | stale | harmful | unknown</code> on
+one of seven bases — temporal follow-up, source-location overlap,
+explicit reference, content overlap, human review, blinded evaluator,
+randomized contrast. And an assessment declares a claim type:
+<code>observational</code> or <code>causal</code>.</p>
+<p>The gate on the second one:</p>
+<blockquote>
+<p>"causal claims require a linked preregistered randomized contrast
+with complete retained cells and uncertainty"</p>
+</blockquote>
+<p>thrown unless the basis <em>is</em> a randomized contrast, the
+contrast validates, every witness row is retention-pinned, and each
+carries both an <code>experiment.cells_complete</code> and an
+<code>experiment.uncertainty_reported</code> reference code. A memory
+system that will not let you record "this memory helped" as a causal
+claim without a preregistered randomised design, complete cells,
+retained evidence and a reported uncertainty. Most systems here assert
+that their memory improves outcomes; this one encodes the standard such
+an assertion would have to meet.</p>
+<p><strong>It is not wired up yet, and the file says so.</strong> "These
+pre-writer validation gates define initial v1 semantics. Once production
+writers are enabled, semantic rule changes require a contract version
+bump." <code>recordAttributionAssessment</code> has no caller outside
+its own module. So the contract and its 5,052 lines of tests exist ahead
+of the writers — which is a legitimate order to build in, and means a
+reader should not take the taxonomy as a description of what the product
+records today.</p>
+<p>The impact label is diagnostic in the same way: a
+<code>harmful</code> assessment is counted in a diagnostics view and
+filters nothing, so nothing withholds a memory judged harmful. And
+retrieval carries no epistemic state of its own — no status, no
+provenance class, no supersession on the read path.</p>
+<p>One more artifact deserves mention. The recall evaluation runs "the
+immutable historical source and frozen harness separately", asserting
+the pinned commit's tree hash and individual blob hashes against a
+manifest, and pinning the fixture digest and provenance in the report.
+Re-running an evaluation against a cryptographically pinned snapshot of
+the code that produced it is a standard very few benchmarks in this
+corpus meet.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>scope</strong> is what this device may read, and the switch
+that turns the check off does not exist where a caller can reach it.</p>
+<p>A <strong>filter</strong> is declared once, or it fails open
+somewhere.</p>
+<p>An <strong>attribution</strong> says how it knows, and a causal one
+has to have run an experiment.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every read path enables the scope gate, caller filters can only intersect with it, and the semantic path has the disabling flag removed from its context type</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every read path enables the scope gate, caller filters can only intersect with it, and the semantic path has the disabling flag removed from its context type
+flowchart TB
+    Q[&quot;a read: search · automatic recall · store ·&lt;br/&gt;export/import · vectors · viewer stats&quot;] --&gt; CTX[&quot;build the filter context&quot;]
+    CTX --&gt; FLAG{&quot;enforceScopeVisibility&quot;}
+    FLAG --&gt;|&quot;every real read path passes true&quot;| GATE[&quot;central scope-visibility gate:&lt;br/&gt;scope_id IN (resolved visible set),&lt;br/&gt;or an EXISTS fallback&quot;]
+    SEM[&quot;semanticSearch&#39;s caller context&quot;] --&gt; OMIT[&quot;SemanticSearchScopeContext =&lt;br/&gt;Omit&amp;lt;OwnershipFilterContext,&lt;br/&gt;&#39;enforceScopeVisibility&#39;&amp;gt;&quot;]
+    OMIT -.-&gt;|&quot;&#39;so semantic callers can never disable&lt;br/&gt;the local read boundary&#39; —&lt;br/&gt;the field is subtracted from the type&quot;| FORCE[&quot;scopeVisibleFilterContext() sets it true&quot;]
+    FORCE --&gt; GATE
+    ARGS[&quot;caller filters: include_scope_ids,&lt;br/&gt;exclude_scope_ids, visibility&quot;] --&gt;|&quot;&#39;an explicit narrowing layer … always&lt;br/&gt;intersected with the central gate&#39; —&lt;br/&gt;can shrink, never grow&quot;| GATE
+    GATE --&gt; RES[&quot;BM25 + sqlite-vec, merged and re-ranked,&lt;br/&gt;injected into every prompt;&lt;br/&gt;memories already in context not repeated&quot;]
+    CAT[&quot;one filter catalog, pinned to the MCP&lt;br/&gt;tool schemas by an exact parity test&quot;] -.-&gt;|&quot;&#39;so exclusion filters can never fail open&lt;br/&gt;and return broader results than&lt;br/&gt;the client requested&#39;&quot;| ARGS
+    RES --&gt; LED[(&quot;retrieval ledger:&lt;br/&gt;attempts and exposures&quot;)]
+    LED --&gt; OUT[(&quot;outcome evidence&quot;)]
+    OUT --&gt; ASSESS{&quot;attribution assessment —&lt;br/&gt;impact: helpful · irrelevant · stale ·&lt;br/&gt;harmful · unknown&quot;}
+    ASSESS --&gt;|&quot;claimType = observational&quot;| OK[&quot;recorded&quot;]
+    ASSESS --&gt;|&quot;claimType = causal&quot;| GATE2{&quot;basis == randomized_contrast?&lt;br/&gt;witnesses retention-pinned?&lt;br/&gt;experiment.cells_complete AND&lt;br/&gt;experiment.uncertainty_reported?&quot;}
+    GATE2 --&gt;|&quot;no&quot;| THROW[&quot;throws: &#39;causal claims require a linked&lt;br/&gt;preregistered randomized contrast with&lt;br/&gt;complete retained cells and uncertainty&#39;&quot;]
+    GATE2 --&gt;|&quot;yes&quot;| OK
+    NOTE[&quot;&#39;pre-writer validation gates define&lt;br/&gt;initial v1 semantics&#39; — no production&lt;br/&gt;caller outside this module yet&quot;] -.-&gt; ASSESS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/filters.ts</code></td>
+<td>The scope gate and the clause builder</td>
+</tr>
+<tr>
+<td><code>packages/core/src/vectors.ts</code></td>
+<td>Semantic search, and the type that removes the flag</td>
+</tr>
+<tr>
+<td><code>packages/core/src/memory-filter-schema.ts</code></td>
+<td>One catalog for both tool surfaces</td>
+</tr>
+<tr>
+<td><code>packages/core/src/attribution-assessment.ts</code></td>
+<td>Impact labels, bases, and the causal gate</td>
+</tr>
+<tr>
+<td><code>packages/core/src/retrieval-ledger.ts</code>,
+<code>outcome-evidence.ts</code></td>
+<td>Attempts, exposures, outcomes</td>
+</tr>
+<tr>
+<td><code>packages/viewer-server/</code>, <code>plugins/</code></td>
+<td>The viewer, sync routes, and harness plugins</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>packages/core/src/vectors.ts:105-117</code> — a flag subtracted
+from a type, and why.</p>
+<p><code>packages/core/src/filters.ts:22-36</code>,
+<code>:299-308</code> — opt-in by design, enabled everywhere, and
+intersection rather than widening.</p>
+<p><code>packages/core/src/memory-filter-schema.ts:1-13</code> — one
+catalog, and the failure it prevents.</p>
+<p><code>packages/core/src/attribution-assessment.ts:1185-1222</code> —
+what a causal claim costs.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Memory items with a kind, project, scope id, visibility, session and
+timestamps, beside a retrieval ledger of attempts and exposures and an
+outcome-evidence store. The interesting shape is that second half: the
+system models <em>whether a retrieved memory did any good</em> as
+first-class data rather than as an intuition.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 BM25 and <code>sqlite-vec</code> merged and re-ranked, injected
+automatically, with unchanged memories already in the agent's context
+not repeated — a small deduplication against the context window itself
+that keeps injection from crowding out the conversation.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>An observer processes sessions through the configured model provider,
+and the README says plainly that this "can incur costs or consume plan
+usage" — a disclosure most tools with an LLM extraction step leave to
+the reader's bill.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Plugins for OpenCode 1 and 2 (the latter marked beta), Claude Code
+and Codex hooks, an MCP server, and a viewer. Screening flags two
+auto-run surfaces and eight unpinned dependency surfaces at this
+pin.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The read boundary is the enforced part, and it is enforced well. The
+epistemic part — whether a memory helped, and on what basis anyone could
+claim it — is specified rigorously and not yet populated.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>290 test files, including a 20,198-line viewer-server suite and a
+5,052-line attribution suite, plus a frozen-harness evaluation that
+verifies the pinned commit's tree and blob hashes and the fixture digest
+before scoring. Nothing was installed or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Subtract the dangerous flag from the caller's type.
+<code>Omit&lt;Context, "enforceX"&gt;</code> on the path most likely to
+forget is a review comment the compiler makes for you.</p>
+<p>Declare every filter key once, and say which way an omission fails.
+"Exclusion filters can never fail open" is the sentence that justifies
+the parity test to whoever inherits it.</p>
+<p>Separate an observational claim from a causal one before you need to.
+Once "memory improves outcomes" is something you want to say, the design
+that would support it has to have existed beforehand — preregistered,
+cells complete, uncertainty reported.</p>
+<p>And pin the evidence a claim rests on. Retention-pinning the witness
+rows means the experiment behind a causal claim cannot be
+garbage-collected out from under it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>When the attribution writers land. The gates, the contract version
+and the tests are in place; nothing calls them.</p>
+<p>Whether a harmful assessment will ever withhold. Today it is counted
+in diagnostics and filters nothing.</p>
+<p>What the sync path does with scope visibility. Replication carries
+selected scopes across machines, and the boundary on the receiving side
+was not traced.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/vectors.ts:105-117</code></td>
+<td>A flag the caller cannot write</td>
+</tr>
+<tr>
+<td><code>packages/core/src/filters.ts:22-36</code>,
+<code>:299-308</code></td>
+<td>A gate every read enables, and filters that only narrow</td>
+</tr>
+<tr>
+<td><code>packages/core/src/memory-filter-schema.ts:1-13</code></td>
+<td>One catalog, and the direction an omission fails</td>
+</tr>
+<tr>
+<td><code>packages/core/src/attribution-assessment.ts:16-28</code>,
+<code>:1185-1222</code></td>
+<td>Seven bases, two claim types, and one refusal</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/kunickiaj/codemem/commit/6391c66b1d1ea9757ba9a984076bb2f15673a3b7"><code class="commit-id" title="6391c66b1d1ea9757ba9a984076bb2f15673a3b7">6391c66b…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: thirty-three files scanned, two auto-run
+surfaces, one build-time execution point, eight unpinned surfaces and
+fourteen dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

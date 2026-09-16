@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 532 reports.**
+**This page covers all 533 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4606,3 +4606,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Python 3.10+, 91,867 lines with 1,603 test functions across 218 files, zero runtime dependencies, tests that assert the README's own table matches the regenerated result so the published number cannot drift from the computed one.
 - Study when: you are publishing a memory benchmark, or you want a worked model of correction as a relation rather than a replacement.
 - Do not copy when: you need a store. One mark, negative eval: the pass condition requires no superseded claim to return as current **and** full recall of what is current, so the negative half cannot be satisfied by returning nothing.
+
+### [`codemem`](../systems/codemem/)
+- Best idea: **the flag that could disable the read boundary is removed from the caller's type.** `SemanticSearchScopeContext = Omit<OwnershipFilterContext, "enforceScopeVisibility">` — "[d]eliberately omits `enforceScopeVisibility` so semantic callers can never disable the local read boundary" — on the path most likely to forget it, with the function forcing the flag on itself. Beside it, one filter catalog pinned to the MCP schemas by an exact parity test, justified by naming the failure direction: "exclusion filters can never fail open and return broader results than the client requested".
+- Biggest risk: **the epistemic layer is specified and not yet wired.** The attribution module refuses a causal claim unless the basis is a randomized contrast whose witnesses are retention-pinned and carry `experiment.cells_complete` and `experiment.uncertainty_reported` — but "[t]hese pre-writer validation gates define initial v1 semantics", and `recordAttributionAssessment` has no caller outside its own module. A `harmful` impact label is counted in diagnostics and filters nothing, so nothing withholds a memory judged harmful, and the read path carries no status, provenance class or supersession.
+- Most reusable component: `attribution-assessment.ts`'s vocabulary and its one refusal — impact labels, seven bases, and the split between an observational and a causal claim with the second gated on a preregistered design. Almost nothing in this corpus is in a position to enforce "causal claims require a linked preregistered randomized contrast with complete retained cells and uncertainty".
+- Maturity impression: MIT, 375,155 lines of TypeScript across a dozen packages with 290 test files, a frozen-harness evaluation that verifies the pinned commit's tree and blob hashes before scoring, a coordinator, peer-to-peer replication and a viewer server. Eight unpinned dependency surfaces at this pin, and the README discloses that observer processing "can incur costs or consume plan usage".
+- Study when: you have a read boundary enforced by convention and want it enforced by a type, or you are about to claim your memory improves outcomes.
+- Do not copy when: you need the attribution taxonomy to describe what the system records today. One mark: scope enforced.
