@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python memory that merges
+extractions into one record per composite key, with a source ledger of
+pre-merge inputs so removing a document re-merges the survivors rather
+than leaving residue.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="OntoMem — Agent Memory Atlas">
+    <meta property="og:description" content="A Python memory that merges
+extractions into one record per composite key, with a source ledger of
+pre-merge inputs so removing a document re-merges the survivors rather
+than leaving residue.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OntoMem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python memory that
+merges extractions into one record per composite key, with a source
+ledger of pre-merge inputs so removing a document re-merges the
+survivors rather than leaving residue.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>OntoMem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "OntoMem",
+      "description": "A Python memory that merges extractions into one record per composite key, with a source ledger of pre-merge inputs so removing a document re-merges the survivors rather than leaving residue.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A destructive merge can only be undone by
+keeping what went into it</p>
+          <h1>OntoMem</h1>
+          <p class="document-deck">A Python memory that merges
+extractions into one record per composite key, with a source ledger of
+pre-merge inputs so removing a document re-merges the survivors rather
+than leaving residue.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yifanfeng97/ontomem">
+              <span>Source</span>
+              <strong>yifanfeng97/ontomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yifanfeng97/ontomem/commit/154bf488ebffc9d4e99df62f6b416195bbbb23f1" title="154bf488ebffc9d4e99df62f6b416195bbbb23f1">
+              <span>Analyzed revision</span>
+              <code>154bf488…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yifanfeng97--ontomem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yifanfeng97--ontomem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>OntoMem is "The Self-Consolidating Memory" — Apache-2.0, Python,
+version 0.6.0, 5,774 lines across 36 files, published to PyPI. Its pitch
+is a contrast: "[g]ive your AI agent a 'coherent' memory, not just
+'fragmented' retrieval." Rather than appending extractions and ranking
+them later, it merges each new extraction into the existing record for a
+composite key — <code>user_id + date</code>, say — so what the store
+holds is one consolidated object per key rather than a pile of
+observations about it.</p>
+<p><strong>That design creates a problem, and the interesting part of
+this repository is its answer.</strong> A destructive merge cannot be
+undone from the merged result: once three documents have been folded
+into one record, nothing in that record says which of them contributed
+what, so removing one document means deleting everything it touched. The
+source ledger exists for exactly that, and says so:</p>
+<blockquote>
+<p>"because merges are destructive, the only way to remove a source's
+contributions precisely is to re-merge the surviving sources' raw
+results for the affected keys."</p>
+</blockquote>
+<p>With <code>track_sources=True</code>, each document's raw pre-merge
+extraction is kept, and <code>remove_source(strategy="exact")</code>
+recomputes every affected key from the survivors while deleting only the
+keys nothing else contributed to. The coarse strategy is kept and named
+rather than quietly avoided — <code>strategy="touched"</code> deletes
+every key the source touched, which is what a store without a ledger has
+to do. The cost is stated as a number, "~1.5-2x storage overhead", and
+bounded deliberately: only the current version per source is
+retained.</p>
+<p><strong>Two smaller mechanisms are worth lifting.</strong> The FAISS
+index writes an <code>index.meta.json</code> companion recording the
+embedder signature and refuses vectors from a different embedding space,
+which converts a silent similarity-is-nonsense failure into a refusal at
+load. And <code>edit()</code> — removing one wrong fact from a record
+without rewriting the rest — validates key-invariance and offers a dry
+run, so a semantic edit cannot quietly move the record to a different
+key.</p>
+<p><strong>What is absent is epistemic state.</strong> A merged record
+carries no status, no validity interval, no recorded-at, no confidence
+and no supersession link. The store answers with the current merged
+value for a key and has no vocabulary for a claim that has stopped being
+true, one nobody has checked, or one a person corrected. That is a
+coherent choice for the consolidation problem it is solving and it is
+the reason this report carries no capability marks.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>key</strong> is the unit, and the record under it is always
+current.</p>
+<p>A <strong>merge</strong> is destructive, which is why the inputs are
+kept.</p>
+<p>A <strong>rollback</strong> is a re-merge of whoever is left.</p>
+<p>An <strong>index</strong> refuses vectors that came from a different
+embedder.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extractions from several documents merge destructively into one record per composite key, and the source ledger keeps each document's raw pre-merge results so removing one re-merges the survivors rather than deleting every key it touched</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extractions from several documents merge destructively into one record per composite key, and the source ledger keeps each document&#39;s raw pre-merge results so removing one re-merges the survivors rather than deleting every key it touched
+flowchart TB
+    D1[&quot;document A&quot;] --&gt; EX[&quot;extraction into a caller-supplied&lt;br/&gt;Pydantic schema&quot;]
+    D2[&quot;document B&quot;] --&gt; EX
+    D3[&quot;document C&quot;] --&gt; EX
+    EX --&gt; LEDGER[(&quot;source ledger, when track_sources=True —&lt;br/&gt;each source&#39;s RAW pre-merge results,&lt;br/&gt;current version only, ~1.5-2x storage&quot;)]
+    EX --&gt; MERGE{&quot;merge into the record for&lt;br/&gt;composite key user_id + date&quot;}
+    MERGE --&gt; STORE[(&quot;one merged record per key —&lt;br/&gt;no status, no validity, no confidence,&lt;br/&gt;no supersession link&quot;)]
+    STORE --&gt; IDX[(&quot;FAISS index + index.meta.json&lt;br/&gt;recording the embedder signature&quot;)]
+    IDX -.-&gt;|&quot;a vector from a different embedding space&lt;br/&gt;is refused at load rather than silently&lt;br/&gt;producing nonsense similarity&quot;| SAFE[&quot;a silent failure made loud&quot;]
+    IDX --&gt; SEARCH[&quot;vector search, plus O(1) secondary lookups;&lt;br/&gt;optional source_ids and tags filters,&lt;br/&gt;union semantics across contributors&quot;]
+    SEARCH -.-&gt;|&quot;the filters are the caller&#39;s, supplied per query —&lt;br/&gt;no stored key is applied on the caller&#39;s behalf&quot;| NOSCOPE[&quot;no scope-enforced mark&quot;]
+    RM[&quot;remove_source(source_id)&quot;] --&gt; STRAT{&quot;strategy&quot;}
+    STRAT --&gt;|&quot;exact (default)&quot;| EXACT[&quot;re-merge the affected keys from the&lt;br/&gt;SURVIVING sources&#39; raw results;&lt;br/&gt;delete only keys nobody else contributed to&quot;]
+    STRAT --&gt;|&quot;touched&quot;| COARSE[&quot;delete every key the source touched —&lt;br/&gt;what a store without the ledger must do&quot;]
+    LEDGER --&gt; EXACT
+    EXACT -.-&gt;|&quot;&#39;because merges are destructive, the only way to&lt;br/&gt;remove a source&#39;s contributions precisely is to&lt;br/&gt;re-merge the surviving sources&#39; raw results&#39;&quot;| WHY[&quot;the ledger&#39;s whole reason&quot;]
+    EXACT --&gt; STORE
+    RM -.-&gt;|&quot;nothing is keyed on what was removed, so re-adding&lt;br/&gt;the same document restores the same claims&lt;br/&gt;with no record that it was ever dropped&quot;| NOTOMB[&quot;no tombstone mark&quot;]
+    EDIT[&quot;edit(): remove one wrong fact,&lt;br/&gt;keep the rest&quot;] -.-&gt;|&quot;key-invariance validated, dry run available,&lt;br/&gt;vector refreshed in place&quot;| STORE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ontomem/core/omem.py</code></td>
+<td>The store: add, merge, search, index maintenance, rollback</td>
+</tr>
+<tr>
+<td><code>ontomem/core/sources.py</code></td>
+<td>The ledger entry, and the argument for keeping it</td>
+</tr>
+<tr>
+<td><code>ontomem/merger/classic_merger</code></td>
+<td>Deterministic merging</td>
+</tr>
+<tr>
+<td><code>ontomem/merger/llm_merger</code></td>
+<td>Model-assisted merging and semantic editing</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Unit, integration and fixture suites over the merge and rollback
+paths</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>ontomem/core/sources.py:1-9</code> — why a consolidating store
+has to keep its inputs.</p>
+<p><code>ontomem/core/omem.py:936-948</code> — the two rollback
+strategies, and what each costs.</p>
+<p><code>ontomem/core/omem.py:1264</code>, <code>:1282-1299</code>,
+<code>:1354-1355</code> — the embedder signature written and
+checked.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One merged record per composite key, shaped by a Pydantic model the
+caller defines, with secondary lookups mapping custom keys to primary
+keys by reference rather than by copying data. When the ledger is on,
+each contributing document's raw extraction sits beside the merged
+result, one current version per source.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector search over the merged records with FAISS, O(1) secondary
+lookups for queries by a non-primary attribute, and an optional
+restriction to named source ids or tags — matching a key when any of its
+contributing sources fits the filter, which is the right semantics for
+attribution and the wrong one for isolation.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add(items, source_id=...)</code> extracts and merges.
+<code>sync_index()</code> patches the vector index in place rather than
+rebuilding it, <code>suspended_index()</code> batches mutations without
+dropping it, and <code>upsert_source()</code> replaces a document in one
+step. Merging is either deterministic or LLM-assisted, chosen by the
+caller.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None beyond the library: no server, no MCP surface, no hooks. It is a
+component for a pipeline that already knows when to write.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the ledger, the embedder signature check, and
+the key-invariance validation on a semantic edit. The absent part is any
+notion of a claim's standing — the store holds the current merged value
+and has no way to say that a value is suspect, expired, or corrected
+rather than simply replaced.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Unit, integration and fixture suites run in CI, covering merging,
+index maintenance and the rollback strategies. There are no committed
+cases asserting that particular material must not be retrieved, which
+follows from there being no read path that withholds.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>If your write path merges, keep the inputs. The moment you
+consolidate, you have given up the ability to remove one contributor
+unless you stored what each one contributed — and the day you need that
+is the day somebody asks you to delete a document.</p>
+<p>Name the coarse fallback and ship it beside the precise one.
+<code>strategy="touched"</code> is what everyone else does by necessity;
+having both makes the cost of the precise path visible.</p>
+<p>Write your embedder's signature next to your index. A vector store
+silently mixing two embedding spaces returns plausible nonsense, and a
+signature turns that into a refusal.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a status field is wanted on a merged record. The
+consolidation model assumes the newest extraction is the best one, which
+holds for daily snapshots and does not hold for a fact somebody later
+disputes.</p>
+<p>Whether the ledger should become append-only. Keeping one current
+version per source bounds the overhead and is what makes rollback exact;
+it also means the store cannot say what a key looked like before the
+last merge, which is a question the same users will eventually ask.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ontomem/core/sources.py:1-9</code></td>
+<td>The clearest statement of why a merging store needs a ledger</td>
+</tr>
+<tr>
+<td><code>ontomem/core/omem.py:936-948</code></td>
+<td>Exact rollback beside the coarse one it replaces</td>
+</tr>
+<tr>
+<td><code>ontomem/core/omem.py:1282-1299</code></td>
+<td>An embedder signature that makes a silent failure loud</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yifanfeng97/ontomem/commit/154bf488ebffc9d4e99df62f6b416195bbbb23f1"><code class="commit-id" title="154bf488ebffc9d4e99df62f6b416195bbbb23f1">154bf488…</code></a>
+— first reading, at a commit dated 4 September 2026. Screened before
+opening, from a shallow clone: four files scanned, no auto-run surfaces,
+one build-time execution point, no unpinned surfaces and nothing inside
+the seven-day cooldown, with <code>uv.lock</code> present. Nothing was
+installed, built or run, and no embedding model was loaded.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

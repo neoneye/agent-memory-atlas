@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **550 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **551 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -466,6 +466,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/omnimem/"><span class="az-id">OmniMem</span><span class="az-what">Dead ends that stay dead</span><code class="az-repo">richarvey/OmniMem</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/omnimemory/"><span class="az-id">OmniMemory</span><span class="az-what">A gate that tests whether the gate discriminates</span><code class="az-repo">OmniNode-ai/omnimemory</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/omninode-knowledge-base/"><span class="az-id">OmniNode Knowledge Base</span><span class="az-what">Every claim needs evidence, and none has any</span><code class="az-repo">OmniNode-ai/knowledge-base</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
+<li><a class="az-row" href="../systems/ontomem/"><span class="az-id">OntoMem</span><span class="az-what">A destructive merge can only be undone by keeping what went into it</span><code class="az-repo">yifanfeng97/ontomem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/open-brain/"><span class="az-id">Open Brain</span><span class="az-what">A governance layer over empty tables</span><code class="az-repo">benclawbot/open-brain</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/open-knowledge-format/"><span class="az-id">Open Knowledge Format</span><span class="az-what">Who confirmed it, and until when</span><code class="az-repo">GoogleCloudPlatform/open-knowledge-format</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/open-second-brain/"><span class="az-id">Open Second Brain</span><span class="az-what">A rejection the next dream cannot undo</span><code class="az-repo">itechmeat/open-second-brain</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>

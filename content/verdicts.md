@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 550 reports.**
+**This page covers all 551 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4750,3 +4750,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, JavaScript, 287,058 lines over 1,563 files, Node 22.13 or newer, three binaries including an MCP server and a pre-execution guard, a separate threat model, a CLA and CODEOWNERS, and tests beside each module. No auto-run surfaces at this pin, and six dependency files inside the cooldown.
 - Study when: your review surface records who the request said approved it.
 - Do not copy when: you are one person, and the separation of duties would be theatre. Four marks: trust state, scope enforced, mutation audit, review.
+
+### [`ontomem`](../systems/ontomem/)
+- Best idea: **keeping the inputs because the merge destroys them.** OntoMem consolidates each new extraction into one record per composite key, and its source ledger exists for the consequence: "because merges are destructive, the only way to remove a source's contributions precisely is to re-merge the surviving sources' raw results for the affected keys." With the ledger on, `remove_source(strategy="exact")` recomputes every affected key from the survivors and deletes only those nothing else contributed to. The coarse alternative ships beside it and is named rather than hidden — `strategy="touched"` deletes every key the source touched, which is what a store without a ledger is forced to do — and the overhead is stated as a number, "~1.5-2x storage", bounded by keeping only the current version per source.
+- Biggest risk: **nothing carries epistemic state.** A merged record has no status, no validity interval, no recorded-at, no confidence and no supersession link, so a claim that stopped being true, one nobody checked and one verified this morning are the same object. Scoping is a caller-supplied search filter over `source_ids` and `tags` with union semantics, so a key matches when any contributor fits and nothing separates one tenant from another. And deletion has no memory: `remove_source` reverses a document's contribution and keys nothing on what was removed, so re-adding the same document restores the same claims with no sign the store was once asked to drop them.
+- Most reusable component: the embedder signature. The FAISS index writes an `index.meta.json` companion recording which embedder produced its vectors and refuses vectors from a different embedding space, which converts a silent similarity-is-nonsense bug into a refusal at load. Beside it, `edit()` validates key-invariance before applying a semantic edit, so removing one wrong fact cannot quietly move the record to a different key.
+- Maturity impression: Apache-2.0, Python, version 0.6.0, 5,774 lines over 36 files, on PyPI with a documentation site and CI, a deterministic merger beside an LLM one, and incremental index maintenance. No auto-run surfaces and nothing inside the cooldown at this pin.
+- Study when: your write path merges and somebody may later ask you to delete one document.
+- Do not copy when: a record needs to say how much it should be trusted. No marks.

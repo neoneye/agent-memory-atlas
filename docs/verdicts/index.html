@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 550 reports.</strong></p>
+<p><strong>This page covers all 551 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20681,6 +20681,49 @@ approved it.</li>
 <li>Do not copy when: you are one person, and the separation of duties
 would be theatre. Four marks: trust state, scope enforced, mutation
 audit, review.</li>
+</ul>
+<h3 id="ontomem"><a
+href="../systems/ontomem/"><code>ontomem</code></a></h3>
+<ul>
+<li>Best idea: <strong>keeping the inputs because the merge destroys
+them.</strong> OntoMem consolidates each new extraction into one record
+per composite key, and its source ledger exists for the consequence:
+"because merges are destructive, the only way to remove a source's
+contributions precisely is to re-merge the surviving sources' raw
+results for the affected keys." With the ledger on,
+<code>remove_source(strategy="exact")</code> recomputes every affected
+key from the survivors and deletes only those nothing else contributed
+to. The coarse alternative ships beside it and is named rather than
+hidden — <code>strategy="touched"</code> deletes every key the source
+touched, which is what a store without a ledger is forced to do — and
+the overhead is stated as a number, "~1.5-2x storage", bounded by
+keeping only the current version per source.</li>
+<li>Biggest risk: <strong>nothing carries epistemic state.</strong> A
+merged record has no status, no validity interval, no recorded-at, no
+confidence and no supersession link, so a claim that stopped being true,
+one nobody checked and one verified this morning are the same object.
+Scoping is a caller-supplied search filter over <code>source_ids</code>
+and <code>tags</code> with union semantics, so a key matches when any
+contributor fits and nothing separates one tenant from another. And
+deletion has no memory: <code>remove_source</code> reverses a document's
+contribution and keys nothing on what was removed, so re-adding the same
+document restores the same claims with no sign the store was once asked
+to drop them.</li>
+<li>Most reusable component: the embedder signature. The FAISS index
+writes an <code>index.meta.json</code> companion recording which
+embedder produced its vectors and refuses vectors from a different
+embedding space, which converts a silent similarity-is-nonsense bug into
+a refusal at load. Beside it, <code>edit()</code> validates
+key-invariance before applying a semantic edit, so removing one wrong
+fact cannot quietly move the record to a different key.</li>
+<li>Maturity impression: Apache-2.0, Python, version 0.6.0, 5,774 lines
+over 36 files, on PyPI with a documentation site and CI, a deterministic
+merger beside an LLM one, and incremental index maintenance. No auto-run
+surfaces and nothing inside the cooldown at this pin.</li>
+<li>Study when: your write path merges and somebody may later ask you to
+delete one document.</li>
+<li>Do not copy when: a record needs to say how much it should be
+trusted. No marks.</li>
 </ul>
         </article>
       </div>
