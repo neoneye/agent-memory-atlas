@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 554 reports.</strong></p>
+<p><strong>This page covers all 555 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20869,6 +20869,50 @@ inside the cooldown at this pin.</li>
 in one direction.</li>
 <li>Do not copy when: nobody will write the keys. One mark: negative
 evals.</li>
+</ul>
+<h3 id="gaius"><a href="../systems/gaius/"><code>gaius</code></a></h3>
+<ul>
+<li>Best idea: <strong>an enforcement pass that states its ceiling
+before its purpose.</strong> <code>corpus_audit</code> reclassifies
+flagged facts from <code>auto</code> to <code>pending</code> and bounds
+itself three ways in its own header — "<strong>DEMOTE-ONLY</strong> —
+never tombstones, never DELETEs", "[t]ouches ONLY
+<code>review_state</code> — <code>confidence_source</code> is left
+untouched", and "[r]eversible — an operator flips
+<code>review_state</code> back to <code>auto</code> to undo." A sweep
+that cannot destroy and cannot overwrite the field recording why a fact
+was believed is one an operator can afford to run unattended, which is
+this project's whole posture. The three states then do different work: a
+read filters <code>review_state != 'rejected'</code> so a rejected fact
+keeps its row and leaves the corpus, while <code>pending</code> stays
+retrievable under a 0.6x penalty — withholding and demotion kept apart
+rather than collapsed into one confidence number.</li>
+<li>Biggest risk: <strong>the scope predicate is not uniform.</strong>
+<code>domain</code> sits on every fact and most reads carry
+<code>WHERE domain = ?</code>, but <code>maturity.py</code> builds the
+clause as <code>"AND domain = ?" if parsed.domain else ""</code>, so a
+caller supplying no domain gets the whole corpus from that path —
+isolation holding where somebody wrote it carefully and lapsing where it
+was treated as an option. <code>tombstoned_at</code> is a dedup marker
+rather than a rejected-value record, so a rejected fact can be
+re-extracted from a later session and written back as new. And nobody
+stands in the pipeline by design: "[r]uns unattended — extract → promote
+→ inject with no human in the hot path; correction is optional."</li>
+<li>Most reusable component: the deduplication. Rows sharing a fact key
+are folded into the oldest, with confirmation counts summed and the
+agents, sessions, principals and model families unioned rather than
+picked — so the evidence that several independent runs agreed survives
+the merge that removes the duplicates, instead of being collapsed to
+whichever row won.</li>
+<li>Maturity impression: Apache-2.0, Python, 29,474 lines over 79 files
+in one offline SQLite file with BM25 and sqlite-vec, a CLI and MCP
+server, hooks for four coding agents, and hard gates that
+<code>exit:2</code> on force-push, unconfirmed live-trade and
+prod-delete. Four auto-run surfaces at this pin.</li>
+<li>Study when: your cleanup pass can delete, or your one confidence
+number is doing two jobs.</li>
+<li>Do not copy when: a person must stand between extraction and
+injection. Two marks: trust state, review.</li>
 </ul>
         </article>
       </div>

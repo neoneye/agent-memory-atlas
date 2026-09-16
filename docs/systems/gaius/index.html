@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An ops memory for coding agents
+that runs unattended by design, where a flagged fact is reclassified
+into a ranking penalty rather than removed, and behavioural gates exit
+non-zero on force-push and prod-delete.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="gaius — Agent Memory Atlas">
+    <meta property="og:description" content="An ops memory for coding
+agents that runs unattended by design, where a flagged fact is
+reclassified into a ranking penalty rather than removed, and behavioural
+gates exit non-zero on force-push and prod-delete.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="gaius — Agent Memory Atlas">
+    <meta name="twitter:description" content="An ops memory for coding
+agents that runs unattended by design, where a flagged fact is
+reclassified into a ranking penalty rather than removed, and behavioural
+gates exit non-zero on force-push and prod-delete.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>gaius — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "gaius",
+      "description": "An ops memory for coding agents that runs unattended by design, where a flagged fact is reclassified into a ranking penalty rather than removed, and behavioural gates exit non-zero on force-push and prod-delete.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The enforcement pass can only demote, never
+tombstone and never delete</p>
+          <h1>gaius</h1>
+          <p class="document-deck">An ops memory for coding agents that
+runs unattended by design, where a flagged fact is reclassified into a
+ranking penalty rather than removed, and behavioural gates exit non-zero
+on force-push and prod-delete.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jkubo/gaius">
+              <span>Source</span>
+              <strong>jkubo/gaius</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329" title="b720bdb6ba0f8d2b8e76f7e843493affad9cd329">
+              <span>Analyzed revision</span>
+              <code>b720bdb6…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jkubo--gaius" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jkubo--gaius</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>gaius is an "[o]ps memory lifecycle manager for AI coding agents" —
+Apache-2.0, Python, 29,474 lines across 79 files, one SQLite file with
+BM25 and sqlite-vec and no network. It extracts facts from Claude Code,
+Gemini CLI, Grok and Codex sessions, "ranks them into an inject-ready
+corpus, enforces behavioral gates, and prevents you from breaking prod
+at 3am."</p>
+<p>Its three claims are stated as things other tools skip, and the first
+of them is unusual to advertise:</p>
+<blockquote>
+<p>"<strong>Runs unattended</strong> — extract → promote → inject with
+no human in the hot path; correction is optional."</p>
+</blockquote>
+<p>Most systems in this corpus imply a person somewhere and leave the
+reader to discover there isn't one. gaius says so on the first screen,
+which changes how the rest should be read.</p>
+<p><strong>The mechanism worth carrying is an enforcement pass that
+states its own limits before its purpose.</strong>
+<code>corpus_audit</code> reclassifies flagged facts from
+<code>auto</code> to <code>pending</code>, and the module header bounds
+it three ways:</p>
+<blockquote>
+<p>"• DEMOTE-ONLY — never tombstones, never DELETEs." "• Touches ONLY
+<code>review_state</code> — <code>confidence_source</code> is left
+untouched…" "• Reversible — an operator flips <code>review_state</code>
+back to <code>auto</code> to undo."</p>
+</blockquote>
+<p>The three values then do different work. A read filters
+<code>review_state != 'rejected'</code>, so a rejected fact keeps its
+row and leaves the corpus; a <code>pending</code> fact stays retrievable
+under "the ranker's 0.6x pending" penalty. Withholding and demotion are
+separate outcomes rather than one slider, which is the distinction this
+atlas most often finds collapsed.</p>
+<p><strong>The gates prevent rather than advise.</strong> "[H]ard gates
+<code>exit:2</code> on force-push, unconfirmed live-trade, prod-delete"
+— a non-zero exit rather than a warning in a log.</p>
+<p><strong>And the deduplication preserves the evidence it
+merges.</strong> Rows sharing a fact key are folded into the oldest,
+with confirmation counts summed and the agents, sessions, principals and
+model families unioned rather than picked — so the fact that several
+independent runs agreed survives the merge that removes the
+duplicates.</p>
+<p><strong>The gap is a familiar one.</strong> <code>domain</code> is on
+every fact and most reads carry <code>WHERE domain = ?</code>, but the
+maturity path builds the clause as
+<code>"AND domain = ?" if parsed.domain else ""</code> — the isolation
+holds where somebody wrote it carefully and lapses where it was treated
+as an option.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> is extracted, promoted and injected without
+anyone approving it.</p>
+<p>A <strong>review state</strong> either withholds or discounts, and
+the two are not the same.</p>
+<p>An <strong>audit pass</strong> may demote and may not destroy.</p>
+<p>A <strong>gate</strong> exits non-zero; it does not warn.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — facts are extracted and promoted unattended, an audit pass may only demote a flagged fact into a ranking penalty, rejected facts leave the corpus while pending ones stay at a discount, and behavioural gates refuse an action with a non-zero exit</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: facts are extracted and promoted unattended, an audit pass may only demote a flagged fact into a ranking penalty, rejected facts leave the corpus while pending ones stay at a discount, and behavioural gates refuse an action with a non-zero exit
+flowchart TB
+    SESS[&quot;Claude Code · Gemini CLI · Grok · Codex sessions&quot;] --&gt; EX[&quot;extract&quot;]
+    EX --&gt; PROMOTE[&quot;promote — no human in the hot path;&lt;br/&gt;&#39;correction is optional&#39;&quot;]
+    PROMOTE --&gt; F[(&quot;facts: domain · fact_key · fact_text ·&lt;br/&gt;confirmation_count · agents · sessions · principals ·&lt;br/&gt;provenance · score · outcome · review_state · tombstoned_at&quot;)]
+    DEDUP[&quot;rows sharing a fact_key&quot;] --&gt; MERGE[&quot;keep the OLDEST row, SUM the confirmation counts,&lt;br/&gt;UNION agents, sessions, principals, model families&quot;]
+    MERGE -.-&gt;|&quot;the evidence that several independent runs agreed&lt;br/&gt;survives the merge that removes the duplicates&quot;| F
+    MERGE --&gt; TOMB[&quot;losers get tombstoned_at, embeddings dropped&quot;]
+    TOMB -.-&gt;|&quot;a dedup marker, not a rejected-value record —&lt;br/&gt;nothing is keyed on the value, so a later session&lt;br/&gt;can re-extract it as new&quot;| NOTOMB[&quot;no tombstone mark&quot;]
+    AUDIT[&quot;corpus_audit: flag a fact&quot;] --&gt; DEMOTE[&quot;review_state: auto → pending&quot;]
+    DEMOTE -.-&gt;|&quot;DEMOTE-ONLY — never tombstones, never DELETEs;&lt;br/&gt;touches ONLY review_state, so confidence_source&lt;br/&gt;survives; reversible by an operator&quot;| SAFE[&quot;a sweep you can run unattended&quot;]
+    DEMOTE --&gt; F
+    OPER[&quot;an operator disagrees&quot;] --&gt; FLIP[&quot;flip review_state back to auto&quot;]
+    FLIP --&gt; F
+    F --&gt; READ{&quot;retrieval&quot;}
+    READ --&gt;|&quot;review_state = &#39;rejected&#39;&quot;| OUT1[&quot;excluded from the corpus —&lt;br/&gt;the row stays in the table&quot;]
+    READ --&gt;|&quot;review_state = &#39;pending&#39;&quot;| OUT2[&quot;retrieved at a 0.6x penalty&quot;]
+    READ --&gt;|&quot;review_state = &#39;auto&#39;&quot;| OUT3[&quot;ranked normally&quot;]
+    READ --&gt; DOM{&quot;WHERE domain = ?&quot;}
+    DOM -.-&gt;|&quot;most reads carry it; maturity builds the clause as&lt;br/&gt;&#39;AND domain = ?&#39; if parsed.domain else &#39;&#39; —&lt;br/&gt;so one path returns the whole corpus&quot;| NOSCOPE[&quot;no scope-enforced mark&quot;]
+    GATES[&quot;behavioural gates&quot;] -.-&gt;|&quot;exit:2 on force-push, unconfirmed live-trade,&lt;br/&gt;prod-delete — refuses the action rather than&lt;br/&gt;logging a warning about it&quot;| ACT[&quot;the action does not happen&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gaius/facts.py</code></td>
+<td>The schema, the dedup merge, and the read filters</td>
+</tr>
+<tr>
+<td><code>gaius/corpus_audit.py</code></td>
+<td>The demote-only enforcement pass and its stated bounds</td>
+</tr>
+<tr>
+<td><code>gaius/concord.py</code></td>
+<td>Single-winner resource claims, enforced by a partial unique
+index</td>
+</tr>
+<tr>
+<td><code>gaius/maturity.py</code></td>
+<td>The ranked-set pass, and the conditional domain clause</td>
+</tr>
+<tr>
+<td><code>gaius/_core.py</code></td>
+<td>The command table, including a retired verb kept as a signpost</td>
+</tr>
+<tr>
+<td><code>hooks/</code>, <code>benchmarks/</code></td>
+<td>Agent integrations and measurement</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>gaius/corpus_audit.py:53-62</code> — an enforcement pass that
+says what it may not do before saying what it does.</p>
+<p><code>gaius/facts.py:443</code> — the read filter that makes
+<code>rejected</code> mean something.</p>
+<p><code>gaius/facts.py:36-80</code> — a merge that unions the evidence
+rather than choosing among it.</p>
+<p><code>gaius/maturity.py:407</code> — the conditional scope
+clause.</p>
+<p><code>gaius/concord.py:154-158</code> — a partial unique index as
+"the atomic single-winner claim", where "the loser is told, never
+queued".</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Facts keyed by domain and fact key, carrying the agents, sessions,
+principals and model families that produced them, a confirmation count,
+a provenance record, a score, an outcome, a review state and a tombstone
+column; sessions, domains, entities and triples beside them, with a
+separate claims table for resource coordination.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 with optional sqlite-vec semantic search over facts that are
+neither tombstoned nor rejected, with pending facts carried at a
+discount rather than dropped, ranked by a composite score.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction and promotion run unattended. Duplicates are merged rather
+than deduplicated destructively. The audit pass demotes. Behavioural
+gates sit in front of dangerous actions and exit non-zero rather than
+recording an opinion.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server and hooks for the agents whose sessions it
+reads, with an offline core and semantic and MCP extras.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the bounded sweep, the separation of withholding
+from demotion, the evidence-preserving merge and gates that refuse. The
+limits are a scope clause that one path treats as optional, a tombstone
+column that is a dedup marker rather than a rejected-value record, and a
+pipeline that by design does not wait for a person.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A benchmarks directory sits beside the package, and the corpus audit
+is written to be run repeatedly and reversed, which is its own kind of
+check. There are no committed cases asserting that particular material
+must not be retrieved.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Bound your enforcement pass in its own header, and bound it downward.
+"Never tombstones, never DELETEs" is what makes a sweep something an
+operator will actually let run.</p>
+<p>Keep withholding and demotion as different states. A single
+confidence number cannot express "do not use this" and "use this last"
+at the same time.</p>
+<p>Union your evidence when you merge. Summing confirmation counts and
+unioning the agents that produced a fact keeps the reason it was
+believed; picking a winner discards it.</p>
+<p>Write your scope clause unconditionally. The path that makes it
+optional is the path that returns somebody else's corpus.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the maturity path's optional domain clause is deliberate.
+Every other read carries the predicate, which makes the one that does
+not look like an oversight rather than a decision.</p>
+<p>Whether <code>rejected</code> should be keyed on the value. A
+rejected fact leaves the corpus and a later session can extract the same
+claim again, so the rejection protects the corpus once rather than
+standing.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gaius/corpus_audit.py:53-62</code></td>
+<td>A pass that states its own ceiling first</td>
+</tr>
+<tr>
+<td><code>gaius/facts.py:443</code></td>
+<td>Withholding and demotion as different states</td>
+</tr>
+<tr>
+<td><code>gaius/facts.py:36-80</code></td>
+<td>Merging duplicates without discarding the agreement</td>
+</tr>
+<tr>
+<td><code>gaius/maturity.py:407</code></td>
+<td>The scope clause that became optional</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329"><code class="commit-id" title="b720bdb6ba0f8d2b8e76f7e843493affad9cd329">b720bdb6…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: four auto-run surfaces, one build-time
+execution point, no unpinned dependency surfaces and two dependency
+files inside the seven-day cooldown. Nothing was installed, built or
+run, and no session transcript was extracted.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

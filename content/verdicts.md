@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 554 reports.**
+**This page covers all 555 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4782,3 +4782,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Rust, one binary with an MCP server, a panel mode with a priced round and an objection ledger where each is "taken, refused with a reason, or escalated", architecture decision records that carry their own `Search for:` lines, and committed LongMemEval results with per-question hypotheses declared alongside the run. Four auto-run surfaces and twelve dependency files inside the cooldown at this pin.
 - Study when: your system can abstain and you have measured it once, in one direction.
 - Do not copy when: nobody will write the keys. One mark: negative evals.
+
+### [`gaius`](../systems/gaius/)
+- Best idea: **an enforcement pass that states its ceiling before its purpose.** `corpus_audit` reclassifies flagged facts from `auto` to `pending` and bounds itself three ways in its own header — "**DEMOTE-ONLY** — never tombstones, never DELETEs", "[t]ouches ONLY `review_state` — `confidence_source` is left untouched", and "[r]eversible — an operator flips `review_state` back to `auto` to undo." A sweep that cannot destroy and cannot overwrite the field recording why a fact was believed is one an operator can afford to run unattended, which is this project's whole posture. The three states then do different work: a read filters `review_state != 'rejected'` so a rejected fact keeps its row and leaves the corpus, while `pending` stays retrievable under a 0.6x penalty — withholding and demotion kept apart rather than collapsed into one confidence number.
+- Biggest risk: **the scope predicate is not uniform.** `domain` sits on every fact and most reads carry `WHERE domain = ?`, but `maturity.py` builds the clause as `"AND domain = ?" if parsed.domain else ""`, so a caller supplying no domain gets the whole corpus from that path — isolation holding where somebody wrote it carefully and lapsing where it was treated as an option. `tombstoned_at` is a dedup marker rather than a rejected-value record, so a rejected fact can be re-extracted from a later session and written back as new. And nobody stands in the pipeline by design: "[r]uns unattended — extract → promote → inject with no human in the hot path; correction is optional."
+- Most reusable component: the deduplication. Rows sharing a fact key are folded into the oldest, with confirmation counts summed and the agents, sessions, principals and model families unioned rather than picked — so the evidence that several independent runs agreed survives the merge that removes the duplicates, instead of being collapsed to whichever row won.
+- Maturity impression: Apache-2.0, Python, 29,474 lines over 79 files in one offline SQLite file with BM25 and sqlite-vec, a CLI and MCP server, hooks for four coding agents, and hard gates that `exit:2` on force-push, unconfirmed live-trade and prod-delete. Four auto-run surfaces at this pin.
+- Study when: your cleanup pass can delete, or your one confidence number is doing two jobs.
+- Do not copy when: a person must stand between extraction and injection. Two marks: trust state, review.
