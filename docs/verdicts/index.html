@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 510 reports.</strong></p>
+<p><strong>This page covers all 511 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18920,6 +18920,54 @@ shape of the experiment that would tell you whether it works.</li>
 <li>Do not copy when: you need the memory mechanism — by the project's
 own evidence that is the least demonstrated part of this system. No
 marks.</li>
+</ul>
+<h3 id="longterm-memory-mcp"><a
+href="../systems/longterm-memory-mcp/"><code>longterm-memory-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>the whole forgetting policy is one table a user
+can read.</strong> <code>DECAY_CONFIG</code> gives a half-life per
+memory type — ephemeral 10 days, task 30, conversation 45, general 60,
+preference 90, fact 120 — a floor per type so nothing decays to nothing,
+and a protected-tag set of <code>core</code>, <code>identity</code> and
+<code>pinned</code> that exempts a memory from decay entirely;
+<code>computeDecay</code> is four lines of exponential, rounded to the
+nearest half and clamped up to the floor. Most decay in this corpus is
+an untuned constant or a model spread across three files. Beside it sits
+a write-amplification decision made deliberately rather than discovered:
+decay and reinforcement are recomputed on every access and persisted
+only past a named threshold — <code>shouldWriteDecay</code> at a drop of
+0.5, and a reinforcement accumulator banking 0.1 per access that writes
+back at 0.5 and caps at 10 — which is load-bearing because
+<code>sql.js</code> exports and rewrites the entire database file on
+each persist.</li>
+<li>Biggest risk: <strong>nothing here is epistemic.</strong>
+<code>memory_type</code> is a genre chosen at write time and
+<code>importance</code> is a continuous weight; neither withholds
+anything from retrieval. There is no status, no provenance beyond a free
+JSON metadata blob, no supersession, no validity interval and no record
+of what changed. Dedup is an exact content hash, so the same fact
+phrased differently is two rows that can then disagree with nothing to
+reconcile them. Deletion is a hard delete, and
+<code>delete_all_memories</code> is described in the README as
+irreversible with no confirmation in the tool contract.</li>
+<li>Most reusable component: <code>decay.ts</code> in full — sixty-five
+lines holding the half-life table, the floors, the protected tags and
+both write-back thresholds. Naming the threshold
+(<code>writebackStep</code>) is what lets the next reader see the trade
+instead of rediscovering it.</li>
+<li>Maturity impression: MIT, version 1.4.4, 2,763 lines of TypeScript
+with 109 tests across unit, integration and benchmark suites — including
+a schema-migration test against a versioned <code>schema_meta</code>,
+which is more discipline than a 508-line store usually gets, and
+benchmarks for the decay path that runs on every access. Fully local by
+design: SQLite through a WASM build, MiniLM embeddings in process, no
+API key anywhere, installed by <code>npx</code>, with a companion Claude
+Code skill that ships the prompt-side half.</li>
+<li>Study when: you need a forgetting policy you can hand to a user, or
+an example of deciding when a computed value earns a write.</li>
+<li>Do not copy when: two statements of the same fact must be reconciled
+— exact-hash dedup does not see them, and nothing else here does either.
+No marks.</li>
 </ul>
         </article>
       </div>

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 449 of 510 screened at the report's current pin.**
+**Progress: 450 of 511 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 190 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 262 |
-| Repositories with build-time execution (`EXEC`) | 329 |
+| Repositories with an auto-run surface (`RUNS`) | 191 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 263 |
+| Repositories with build-time execution (`EXEC`) | 330 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -111,6 +111,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`linggen-memory`](../../content/systems/linggen-memory.md) | `.claude-plugin/` |
 | [`llm-wiki-memory`](../../content/systems/llm-wiki-memory.md) | `.cursor/rules/` |
 | [`lobu`](../../content/systems/lobu.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitmodules`, `server.json` |
+| [`longterm-memory-mcp`](../../content/systems/longterm-memory-mcp.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`lorekit`](../../content/systems/lorekit.md) | `.claude-plugin/` |
 | [`lossless-context-mcp`](../../content/systems/lossless-context-mcp.md) | `hooks/`, `server.json` |
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |

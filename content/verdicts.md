@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 510 reports.**
+**This page covers all 511 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4430,3 +4430,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: dual-licensed AGPL-3.0 and Apache-2.0, version 0.2.0, 326,308 lines of Rust with 4,071 test functions plus TypeScript and Python surfaces, an MCP memory server, a desktop app and a web UI. The memory table's FTS5 mirror is maintained by all three triggers — insert, delete and update — which is the complete set. An opt-in summariser consolidates episodics into a verified `semantic_fact` and expires the sources it consumed, so the fact becomes the only account of them.
 - Study when: you are about to ship a memory feature and want the shape of the experiment that would tell you whether it works.
 - Do not copy when: you need the memory mechanism — by the project's own evidence that is the least demonstrated part of this system. No marks.
+
+### [`longterm-memory-mcp`](../systems/longterm-memory-mcp/)
+- Best idea: **the whole forgetting policy is one table a user can read.** `DECAY_CONFIG` gives a half-life per memory type — ephemeral 10 days, task 30, conversation 45, general 60, preference 90, fact 120 — a floor per type so nothing decays to nothing, and a protected-tag set of `core`, `identity` and `pinned` that exempts a memory from decay entirely; `computeDecay` is four lines of exponential, rounded to the nearest half and clamped up to the floor. Most decay in this corpus is an untuned constant or a model spread across three files. Beside it sits a write-amplification decision made deliberately rather than discovered: decay and reinforcement are recomputed on every access and persisted only past a named threshold — `shouldWriteDecay` at a drop of 0.5, and a reinforcement accumulator banking 0.1 per access that writes back at 0.5 and caps at 10 — which is load-bearing because `sql.js` exports and rewrites the entire database file on each persist.
+- Biggest risk: **nothing here is epistemic.** `memory_type` is a genre chosen at write time and `importance` is a continuous weight; neither withholds anything from retrieval. There is no status, no provenance beyond a free JSON metadata blob, no supersession, no validity interval and no record of what changed. Dedup is an exact content hash, so the same fact phrased differently is two rows that can then disagree with nothing to reconcile them. Deletion is a hard delete, and `delete_all_memories` is described in the README as irreversible with no confirmation in the tool contract.
+- Most reusable component: `decay.ts` in full — sixty-five lines holding the half-life table, the floors, the protected tags and both write-back thresholds. Naming the threshold (`writebackStep`) is what lets the next reader see the trade instead of rediscovering it.
+- Maturity impression: MIT, version 1.4.4, 2,763 lines of TypeScript with 109 tests across unit, integration and benchmark suites — including a schema-migration test against a versioned `schema_meta`, which is more discipline than a 508-line store usually gets, and benchmarks for the decay path that runs on every access. Fully local by design: SQLite through a WASM build, MiniLM embeddings in process, no API key anywhere, installed by `npx`, with a companion Claude Code skill that ships the prompt-side half.
+- Study when: you need a forgetting policy you can hand to a user, or an example of deciding when a computed value earns a write.
+- Do not copy when: two statements of the same fact must be reconciled — exact-hash dedup does not see them, and nothing else here does either. No marks.
