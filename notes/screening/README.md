@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 433 of 494 screened at the report's current pin.**
+**Progress: 434 of 495 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 184 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 248 |
-| Repositories with build-time execution (`EXEC`) | 315 |
+| Repositories with an auto-run surface (`RUNS`) | 185 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 249 |
+| Repositories with build-time execution (`EXEC`) | 316 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -148,6 +148,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`noosphere`](../../content/systems/noosphere.md) | `.github/copilot-instructions.md` |
 | [`nornicdb`](../../content/systems/nornicdb.md) | `.githooks/` |
 | [`obsidian-mind`](../../content/systems/obsidian-mind.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json` |
+| [`oh-my-hermes`](../../content/systems/oh-my-hermes.md) | `.opencode/` |
 | [`omega-memory`](../../content/systems/omega-memory.md) | `.mcp.json`, `hooks/`, `server.json`, `smithery.yaml` |
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.githooks/` |
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |

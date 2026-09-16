@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An operating layer over
+NousResearch's Hermes Agent whose project memory admits nothing into the
+prompt without an admission state, staged as a candidate, decided per
+item by a reviewer, and stamped into the record as either manually or
+automatically approved — with an operation ledger and crash recovery
+behind the batch paths, and the plain approval path writing no operation
+at all.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="oh-my-hermes — Agent Memory Atlas">
+    <meta property="og:description" content="An operating layer over
+NousResearch's Hermes Agent whose project memory admits nothing into the
+prompt without an admission state, staged as a candidate, decided per
+item by a reviewer, and stamped into the record as either manually or
+automatically approved — with an operation ledger and crash recovery
+behind the batch paths, and the plain approval path writing no operation
+at all.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="oh-my-hermes — Agent Memory Atlas">
+    <meta name="twitter:description" content="An operating layer over
+NousResearch's Hermes Agent whose project memory admits nothing into the
+prompt without an admission state, staged as a candidate, decided per
+item by a reviewer, and stamped into the record as either manually or
+automatically approved — with an operation ledger and crash recovery
+behind the batch paths, and the plain approval path writing no operation
+at all.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>oh-my-hermes — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "oh-my-hermes",
+      "description": "An operating layer over NousResearch's Hermes Agent whose project memory admits nothing into the prompt without an admission state, staged as a candidate, decided per item by a reviewer, and stamped into the record as either manually or automatically approved \u2014 with an operation ledger and crash recovery behind the batch paths, and the plain approval path writing no operation at all.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Approval is a state the record carries, not
+an event that happened</p>
+          <h1>oh-my-hermes</h1>
+          <p class="document-deck">An operating layer over
+NousResearch's Hermes Agent whose project memory admits nothing into the
+prompt without an admission state, staged as a candidate, decided per
+item by a reviewer, and stamped into the record as either manually or
+automatically approved — with an operation ledger and crash recovery
+behind the batch paths, and the plain approval path writing no operation
+at all.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rlaope/oh-my-hermes">
+              <span>Source</span>
+              <strong>rlaope/oh-my-hermes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rlaope/oh-my-hermes/commit/1827c9d95e6438a2a58a4ca5b7291937e236a709" title="1827c9d95e6438a2a58a4ca5b7291937e236a709">
+              <span>Analyzed revision</span>
+              <code>1827c9d9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rlaope--oh-my-hermes" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>rlaope--oh-my-hermes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>oh-my-hermes is an operating layer for NousResearch's Hermes Agent —
+MIT, Python, version 2.0.3, 387,713 lines across 720 test files, of
+which roughly 20,000 lines and 43 test files are memory. Its pitch is
+"[i]nstall once. Keep Hermes. Add a stronger operating layer," and the
+memory half of that layer is the most elaborate admission-control
+machinery in this corpus.</p>
+<p>The organising idea is worth stating precisely, because most systems
+here get it the other way round. Approval is not an event that happened
+and was logged. It is a <strong>state the record carries</strong>, and
+every surface that would put a record in front of a model checks it
+again.</p>
+<p><code>write_memory_block</code> decides where a block is even stored
+based on it: "[p]ersist only approved revisions to the active store;
+stage all others." Replay re-checks it. <code>read_memory_block</code>
+is documented as reading and structurally validating "without granting
+replay trust" — validation and trust are kept as separate things, which
+is a distinction most of this corpus collapses.</p>
+<p>The vocabulary has two approved values, not one:
+<code>approved_manual</code> and <code>approved_auto_safe</code>. A
+record admitted automatically under the <code>auto-safe</code> policy
+mode is permanently marked as such. It is trusted for replay exactly as
+much as a human-approved one, but you can always tell which it was — the
+kind of honesty that costs nothing to implement and that almost nobody
+bothers with.</p>
+<p>The human path is three separate commands and refuses to collapse
+them. <code>memory batch-stage</code> writes candidates whose own
+control payload says they are "review-only and never prompt eligible."
+<code>memory batch-review</code> demands "one exact remember, refuse, or
+defer decision for every staged item." <code>memory batch-apply</code>
+prints <code>review_required</code> and changes nothing until it is
+rerun with <code>--apply</code>. If any decision is not exactly
+<code>remember</code>, the apply raises "unapproved or unsafe batch
+review."</p>
+<p>And the single-candidate approval carries the best comment in the
+repository, because it records a bug that had already been fixed:
+reading the candidate outside the store lock made the staleness guard
+advisory, since a recapture landing between the revision check and the
+record write "would be approved on the reviewer's behalf, with the stale
+check having already passed." The fix is a read-check-write under one
+non-reentrant hold, and the comment states the guarantee it buys — "no
+write on a stale card."</p>
+<p>The finding is that this discipline is not applied uniformly. That
+same <code>approve_project_memory_candidate</code> — the ordinary path
+by which a record enters the store — writes no operation record, while
+the batch, lifecycle, migration and principal-assignment paths all run
+through <code>run_memory_operation</code> with its state machine and
+receipt. The per-candidate review file is keyed
+<code>review_{candidate_id}</code> and written with
+<code>atomic_write_json</code>, so approving a candidate twice
+overwrites the first decision. And
+<code>prune_expired_memory_evidence</code> removes operations and
+tombstones older than thirty days while the records they admitted
+stay.</p>
+<p>The state is durable. The evidence for it is not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>candidate</strong> is captured, safety-evaluated, and not
+prompt-eligible.</p>
+<p>A <strong>decision</strong> is <code>remember</code>,
+<code>refuse</code> or <code>defer</code>, recorded per item.</p>
+<p>A <strong>record</strong> is a candidate that carries an
+<code>admission</code> block: a state, the review id, the reviewer
+label, the admission time and the policy version.</p>
+<p>An <strong>operation</strong> wraps a multi-step mutation in a state
+machine — prepared, applying, interrupted, completed, failed, corrupt —
+with a receipt and a recovery count, so an interrupted write is
+resumable rather than ambiguous.</p>
+<p>A <strong>tombstone</strong> records that a record id at a revision
+was forgotten or moved scope. It does not record the value.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nothing reaches a prompt without an admission state, and the same two approved values are re-checked at the write that chooses the destination and again at replay — but the evidence behind an admission is written by different mechanisms per path, and expires</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: nothing reaches a prompt without an admission state, and the same two approved values are re-checked at the write that chooses the destination and again at replay — but the evidence behind an admission is written by different mechanisms per path, and expires
+flowchart TB
+    CAP[&quot;capture&quot;] --&gt; CAND[(&quot;candidates/ —&lt;br/&gt;&#39;review-only and never&lt;br/&gt;prompt eligible&#39;&quot;)]
+    CAND --&gt; SAFE{&quot;safety re-evaluated&lt;br/&gt;at APPROVAL time,&lt;br/&gt;not only at capture&quot;}
+    SAFE --&gt;|&quot;blocked&quot;| REJ[&quot;must be rejected or&lt;br/&gt;recaptured without&lt;br/&gt;protected raw content&quot;]
+    SAFE --&gt;|&quot;safe&quot;| MODE{&quot;policy mode&quot;}
+    MODE --&gt;|&quot;review-first&quot;| STAGE[&quot;memory batch-stage&quot;]
+    STAGE --&gt; REVIEW[&quot;memory batch-review —&lt;br/&gt;one exact remember,&lt;br/&gt;refuse or defer per item&quot;]
+    REVIEW --&gt; APPLY{&quot;memory batch-apply&quot;}
+    APPLY --&gt;|&quot;no --apply&quot;| NOOP[&quot;prints review_required,&lt;br/&gt;changes nothing&quot;]
+    APPLY --&gt;|&quot;--apply, all remember&quot;| AM[&quot;admission.state =&lt;br/&gt;approved_manual&quot;]
+    APPLY --&gt;|&quot;any non-remember&quot;| ERR[&quot;raises &#39;unapproved or&lt;br/&gt;unsafe batch review&#39;&quot;]
+    MODE --&gt;|&quot;auto-safe&quot;| AA[&quot;admission.state =&lt;br/&gt;approved_auto_safe —&lt;br/&gt;no person involved,&lt;br/&gt;but permanently labelled&quot;]
+    AM --&gt; REC[(&quot;records/&quot;)]
+    AA --&gt; REC
+    REC --&gt; W{&quot;write_memory_block:&lt;br/&gt;state in {approved_manual,&lt;br/&gt;approved_auto_safe}?&quot;}
+    W --&gt;|&quot;yes&quot;| ACTIVE[(&quot;active store&quot;)]
+    W --&gt;|&quot;no&quot;| STAGED[(&quot;candidate path&quot;)]
+    ACTIVE --&gt; REPLAY{&quot;replay re-checks&lt;br/&gt;the same two states&quot;}
+    REPLAY --&gt; PROMPT[&quot;prompt&quot;]
+    LOCK[&quot;single-candidate approval:&lt;br/&gt;read, staleness check and write&lt;br/&gt;under ONE lock hold —&lt;br/&gt;outside it, a recapture &#39;would be&lt;br/&gt;approved on the reviewer&#39;s behalf&#39;&quot;] -.-&gt; AM
+    OPS[(&quot;operations/ — state machine&lt;br/&gt;+ receipt + recovery count&quot;)] -.-&gt;|&quot;covers batch, lifecycle,&lt;br/&gt;migration, assignment&quot;| REC
+    OPS -.-&gt;|&quot;NOT the plain&lt;br/&gt;approve path&quot;| GAP[&quot;approve_project_memory_candidate&lt;br/&gt;writes no operation&quot;]
+    PRUNE[&quot;prune_expired_memory_evidence:&lt;br/&gt;operations and tombstones&lt;br/&gt;deleted after 30 days —&lt;br/&gt;the records they admitted stay&quot;] -.-&gt; OPS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/workflows/memory.py</code></td>
+<td>Capture, approval, records, candidates, reviews — 5,126 lines</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_store.py</code></td>
+<td>Operations, tombstones, recovery, evidence pruning</td>
+</tr>
+<tr>
+<td><code>src/workflows/_memory_store_validation.py</code></td>
+<td>The schemas: operation, receipt, tombstone, step outcomes</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_batches.py</code></td>
+<td>Stage, review, apply, and the post-apply fidelity check</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_lifecycle*.py</code></td>
+<td>Staleness, demotion, retirement, reapproval</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_principal*.py</code></td>
+<td>Principal assignment and migration with rollback</td>
+</tr>
+<tr>
+<td><code>src/plugin_bundle/omh/memory_blocks.py</code></td>
+<td>Where admission decides the storage destination</td>
+</tr>
+<tr>
+<td><code>src/plugin_bundle/omh/memory_block_replay.py</code></td>
+<td>The second check, at replay</td>
+</tr>
+<tr>
+<td><code>src/commands/memory.py</code></td>
+<td>The three-step CLI</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>memory.py:1265-1328</code> is the one to read. It is forty
+lines that contain a re-evaluated safety policy, a fail-closed branch
+for lifecycle candidates that would otherwise mint a garbage record and
+block the real reapproval, a read-check-write under one lock, and the
+comment explaining why.</p>
+<p>Then <code>memory_blocks.py:218-228</code>, for admission deciding
+the destination rather than only the filter.</p>
+<p>Then <code>memory_batches.py:370-445</code> — the fidelity check,
+which verifies after an apply that the item really left
+<code>items</code> and that a tombstone exists carrying the right
+operation id, candidate item id and review id. Verifying that a write
+did what the receipt says is a step almost nothing else here takes.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record carries a summary, a revision, a scope, a retention class of
+<code>standard</code>, <code>durable</code> or <code>volatile</code>, a
+revalidation schedule, a safety evaluation, and the admission block.
+Schemas are versioned as strings — <code>memory_operation/v1</code>,
+<code>memory_tombstone/v1</code> — and validated with exact field sets:
+<code>set(record) - _OPERATION_FIELDS</code> rejects unknown keys rather
+than ignoring them, and the receipt check requires
+<code>set(receipt) == MEMORY_RECEIPT_FIELDS</code> exactly.</p>
+<p>Identifiers are constrained by regex — a <code>_SAFE_TOKEN</code>
+pattern and a <code>_GENERATED_MEMORY_REF</code> pattern that spells out
+the legal shapes of candidate, record and review ids — and every path
+helper calls <code>_assert_under_memory_root</code> before touching a
+file. For a store addressed by caller-supplied ids written to a
+filesystem, that is the right level of paranoia.</p>
+<p>A tombstone carries <code>record_id</code>, <code>revision</code>,
+<code>scope</code>, <code>operation_id</code>, <code>reason_code</code>,
+<code>actor_class</code>, <code>tombstoned_at</code> and
+<code>expires_at</code>. What it does not carry is the value. It marks
+that a particular record at a particular revision was forgotten; it does
+not prevent the same content being captured again tomorrow, approved,
+and admitted under a new id. That is why the <code>tombstone</code> mark
+is withheld here despite the name.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall is scoped lookup over the record index with ranking. The
+interesting surface is the second one.</p>
+<p>Rejected decisions are not discarded. They are retrievable through a
+distinct <code>rejected_decision_recall/v1</code> surface that returns
+each match with <code>approved_memory: false</code>,
+<code>renderable_as_instruction: false</code>, a
+<code>surface_kind</code> of <code>reviewed_negative_decision</code>,
+and a boundary string stating it is a "reviewed-decision surface only",
+"separate from approved-memory recall" and "never auto-attached to a
+coding prompt."</p>
+<p>That is the right shape for a refusal: a person can ask what was
+rejected and why, and the model cannot be handed it as an instruction.
+Legacy v1 rejections come back flagged <code>legacy: true</code>,
+<code>authoritative: false</code>, with an
+<code>eligibility_reason</code> of
+<code>eligible_legacy_read_only</code> — an old record is readable
+without being treated as current.</p>
+<p>Superseded and corrected decisions are excluded from the ranked
+surface before ranking, and the test asserts they carry no
+<code>match_score</code> — the exclusion is structural, not a
+post-filter.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Capture writes a candidate. Approval promotes it. Nothing skips the
+candidate stage.</p>
+<p>The safety evaluation runs twice: once at capture, and again inside
+the approval lock, where
+<code>evaluate_renderable_strings(candidate)</code> must still return
+<code>safe</code> or the approval raises "project memory candidate no
+longer passes the current safety policy." A candidate captured under a
+looser policy cannot be admitted under a tightened one. Approval
+metadata is itself checked for credential-like strings and refused if it
+contains them.</p>
+<p>Batch apply writes items only after <code>_approved_reviews</code>
+confirms every decision is <code>remember</code>, stamps each with its
+admission block, and then verifies the result against the expected end
+state — including that a forgotten item is absent from
+<code>items</code> <em>and</em> has a tombstone linked to the right
+operation and review.</p>
+<p>The uneven part is the evidence. <code>run_memory_operation</code> is
+called from <code>memory_batches.py</code> twice, from
+<code>memory_lifecycle_executor.py</code>, from
+<code>memory_principal_migration.py</code> for both migration and
+rollback, and from <code>memory_principal_assignment.py</code>. It is
+not called from <code>approve_project_memory_candidate</code>, which
+writes the record, the updated candidate, the review decision and the
+index directly under the store lock. The lock makes that write
+consistent; it does not leave a resumable operation record behind, so an
+interrupted plain approval is recovered by the index rebuild rather than
+by the operation recovery that exists for every other path.</p>
+<p>And the review decision it writes is not an append.
+<code>review_id</code> is <code>f"review_{candidate_id}"</code> and
+<code>_write_project_memory_review_decision</code> calls
+<code>atomic_write_json</code> on the path derived from it. One file per
+candidate, overwritten. The current decision is durable; the sequence of
+decisions is not.</p>
+<p>Together with <code>prune_expired_memory_evidence</code> — which
+deletes operations and tombstones older than
+<code>retention_days</code>, default thirty — the picture is a store
+where admission states outlive the evidence that produced them. A record
+approved a year ago still says <code>approved_manual</code> with a
+review id; the review file may have been overwritten by a reapproval and
+the operation pruned.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The layer installs alongside Hermes rather than forking it, which is
+the same posture Inno Agent takes toward the Pi SDK and the opposite of
+a vendored rewrite. Memory reaches the model as blocks by label and
+tier, assembled from the active store, and the replay path is the second
+admission check rather than a trusting read.</p>
+<p>The CLI is the review surface. There is no web UI for approval here;
+the reviewer edits a decisions JSON file and runs a command. For an
+operator-facing tool that is a defensible choice, and it makes the
+decision artifact itself reviewable and diffable.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The operation state machine is the strongest reliability mechanism
+here. Six states, a <code>recovery_count</code>, per-step outcomes drawn
+from a closed set (<code>applied</code>, <code>already_present</code>,
+<code>copied</code>, <code>moved</code>, <code>written</code>,
+<code>removed</code>, <code>already_absent</code>,
+<code>rewritten</code>), and a <code>recover_memory_operations</code>
+entry point. The <code>already_present</code> and
+<code>already_absent</code> outcomes are what make recovery idempotent,
+and having them as first-class outcomes rather than inferred no-ops is
+the detail that makes a resumable write actually resumable.</p>
+<p>The <code>auto-safe</code> mode deserves a clear statement rather
+than a warning. Three modes exist — <code>off</code>,
+<code>review-first</code>, <code>auto-safe</code> — and a deployment
+picks one. Under <code>auto-safe</code>, a candidate that passes the
+safety evaluation is admitted with no person in the loop. That is a
+legitimate configuration, and the design handles it about as well as it
+can be handled: the record is stamped <code>approved_auto_safe</code>,
+so the distinction survives into every later read, audit and migration.
+The risk is not that the mode exists; it is that
+<code>approved_auto_safe</code> and <code>approved_manual</code> are
+treated identically by every gate that consumes them. Nothing downstream
+can require a human-approved record specifically, because no read path
+distinguishes the two.</p>
+<p><code>read_memory_block</code> returning <code>None</code> for a
+symlink or a non-file, and the <code>is_directory_link</code> check in
+the store, are the kind of filesystem-level defences that matter for a
+store rooted in a user-writable home directory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Forty-three memory test files out of 720, covering admission,
+governance policy, retention, lifecycle, migration, principals,
+operations, batches, recall, prefetch, provider posture and sync
+fidelity. There is also a <code>benchmarks/</code> tree and a
+<code>memory_evaluation.py</code> that synthesises artifact fixtures
+across retention classes and admission states.</p>
+<p><code>test_rejected_decision_recall.py</code> is the one to read.
+Asserting that excluded decisions carry no <code>match_score</code> —
+that they were dropped before ranking rather than ranked and hidden — is
+a stronger claim than "they are not returned," and it is the assertion
+that would catch a future refactor moving the filter after the
+scorer.</p>
+<p>What is not tested is the seam this report names: nothing asserts
+that a plain approval leaves an operation record, because it does not,
+and nothing asserts anything about a candidate's decision history across
+two approvals.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make approval a state on the record, not an event in a log, and
+re-check it at every surface that could put the record in front of a
+model. A log says something was approved once; a state says this record
+is approved now, and the check is local to the read that matters.</p>
+<p>Keep <code>approved_manual</code> and <code>approved_auto_safe</code>
+as distinct values even if every current consumer treats them the same.
+The cost is one string; the benefit is that a year later you can answer
+"which of these did a person actually look at?" without archaeology.
+Then go one step further than this system does and let a policy require
+the manual value where it matters.</p>
+<p>Re-run the safety policy at admission, not only at capture. A
+candidate sitting in a queue was evaluated under whatever rules applied
+when it was written, and those are the wrong rules by the time someone
+approves it.</p>
+<p>Do the read, the staleness check and the write under one lock hold.
+The comment in <code>memory.py:1267-1275</code> is worth copying
+verbatim into your own code review checklist: a guard that reads outside
+the lock it protects is advisory, and an approval that lands on a card
+the reviewer did not see is the specific failure it permits.</p>
+<p>If you write tombstones, decide whether they are deletion receipts or
+rejections. These are receipts — keyed on record id and revision,
+verified after an apply, pruned after thirty days. That is a good
+receipt and it is not a defence against the same content being
+re-captured and re-approved. If you want the second thing, key on the
+value.</p>
+<p>Do not let the evidence expire before the state it justifies. If
+admission states are permanent and operations are pruned at thirty days,
+then after a month the store asserts approvals it can no longer
+substantiate.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the plain approval path is intended to run through an
+operation. Every other mutation path does, the machinery is already
+imported in that module, and the omission reads more like an
+order-of-development artifact than a decision.</p>
+<p>Whether the deterministic <code>review_id</code> is meant to make
+reapproval idempotent or is an oversight.
+<code>test_memory_reapproval_path.py</code> exists and the lifecycle
+reapproval executor routes lifecycle candidates away from the plain
+path, so the case was clearly thought about; what happens to the
+superseded decision record was not stated anywhere read here.</p>
+<p>Which Hermes Agent revision this layer targets. The README badges
+NousResearch's repository but <code>pyproject.toml</code> records no pin
+on it, so the pairing was not verifiable at a commit.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/workflows/memory.py:1265-1328</code></td>
+<td>The approval, the lock, and the comment about the bug it fixes</td>
+</tr>
+<tr>
+<td><code>src/plugin_bundle/omh/memory_blocks.py</code></td>
+<td>Admission deciding the storage destination, not just the filter</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_batches.py</code></td>
+<td>Stage, review, apply, and the post-apply fidelity check</td>
+</tr>
+<tr>
+<td><code>src/workflows/_memory_store_validation.py</code></td>
+<td>Exact-field schema validation and the safe-id patterns</td>
+</tr>
+<tr>
+<td><code>src/workflows/memory_store.py</code></td>
+<td>The operation state machine, recovery, and the evidence prune</td>
+</tr>
+<tr>
+<td><code>src/commands/memory.py:637-700</code></td>
+<td>Three commands, and an apply that refuses without
+<code>--apply</code></td>
+</tr>
+<tr>
+<td><code>tests/test_rejected_decision_recall.py</code></td>
+<td>Excluded before ranking, asserted by the absent score</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/rlaope/oh-my-hermes/commit/1827c9d95e6438a2a58a4ca5b7291937e236a709"><code class="commit-id" title="1827c9d95e6438a2a58a4ca5b7291937e236a709">1827c9d9…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: nine files scanned, one auto-run surface,
+three build-time execution points, one unpinned surface, one dependency
+file inside the seven-day cooldown, and the <code>CLAUDE.md</code> and
+<code>AGENTS.md</code> read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
